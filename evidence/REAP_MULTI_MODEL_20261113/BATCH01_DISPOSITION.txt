@@ -1,0 +1,22 @@
+BATCH01_DISPOSITION — REAP_MULTI_MODEL_20261113
+PROMOTE=0 · CROSS_SHA_CREDIT=0 · NOT_RUN≠PASS · ORIGINAL_GGUF_INTACT=1
+
+ITEMS 1–5 (Batch 01): COMPLETE
+  1 Enumerate local GGUF/Ollama: DONE (INVENTORY.md)
+  2 SHA-256 manifests: PARTIAL/IN_PROGRESS (MANIFEST_SHA256.json; large shards hashing)
+  3 Arch/L/experts/top-k/layout: DONE (inspect_* + topology_* + caps_*)
+  4 Classify MoE|DENSE|UNKNOWN: DONE (CLASSIFICATION.txt)
+  5 Byte accounting: DONE (INVENTORY.md tables)
+
+ITEM 6 (Batch 02 MiniMax attn): RUNTIME PASS (not physical REAP)
+  Gate repaired: residency pin floor for minimax-m2
+  Full topology tokens + 62/62 router place events proved
+  REAP physical / Batch 03: NOT STARTED this turn (optional after PASS)
+
+MISSING LOCAL
+  Qwen3.8-27B-Q4_K_M non-AD GGUF absent (dir .cache only) — use AD dense control
+  GPT-OSS 120B / Qwen3-Next 80B / Laguna S 2.1: ollama blobs PRESENT (not named .gguf trees)
+
+Kimi Gate2: NOT rewritten (historical retain-8/149 baseline retained)
+
+EXE_SHA256_POST_FIX=94EE99CAD1AB2EAE1FF73C2CBEADCF0EF5152A65F66829089A97F7938CDCBEFC

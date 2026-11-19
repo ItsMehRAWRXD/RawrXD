@@ -1,0 +1,17 @@
+FIRST_DIVERGENT_OP=PENDING
+PROMOTE=0 CERTIFIED=0 CROSS_SHA=0
+NOT_INVENTED=1
+
+DEEP2_DIGESTS=LIVE (DIGEST_SHA256=A34235EF… BFBC31E)
+REFERENCE_TENSORS=ABSENT
+COMPARE=NOT_RUN
+
+REMAINING_EXECUTABLE_GATE=
+  REFERENCE_DECODE_PASS
+  binary=G:\~dev\llama-direct\vulkan\llama-cli.exe OR F:\OllamaModels\llama.cpp\llama-cli.exe
+  model=Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+  required_flags=--no-repack (else CPU_REPACK~482GiB)
+  observed_fail_modes=
+    CPU_REPACK OOM without -nr
+    mmap warmup/decode stall with -nr -ngl 0 (0 tokens, multi-minute)
+    Vulkan OOM with -ngl 99 -nr

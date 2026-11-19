@@ -1,0 +1,17 @@
+OLD:
+    // qProj must hold: (a) numHeads*headDim for MLA, (b) hiddenSize for standard Q,
+    // (c) hiddenSize + 2*kvDim for fused QKV, or (d) 2*hiddenSize for Qwen3.5 gated attention.
+    // Allocate for worst case.
+    size_t kvDim = config.numKVHeads > 0 ? config.numKVHeads * headDim : config.numHeads * headDim;
+    size_t qProjSize = config.useMLA ? (config.numHeads * headDim) : (2 * hiddenSize + 2 * kvDim);
+
+NEW:
+    // qProj must hold: (a) numHeads*headDim for MLA, (b) hiddenSize for standard Q,
+    // (c) hiddenSize + 2*kvDim for fused QKV, or (d) 2*numHeads*headDim for
+    // Qwen3.5/3.6 gated attention (query+gate interleaved).
+    // Allocate for worst case.
+    size_t kvDim = config.numKVHeads > 0 ? config.numKVHeads * headDim : config.numHeads * headDim;
+    size_t gatedQ = 2 * config.numHeads * headDim;
+    size_t qProjSize = config.useMLA
+                           ? (config.numHeads * headDim)
+                           : (std::max)(2 * hiddenSize + 2 * kvDim, gatedQ);

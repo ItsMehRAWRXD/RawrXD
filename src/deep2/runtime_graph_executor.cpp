@@ -2,6 +2,7 @@
 // runtime_graph_executor.cpp  --  RAWRXD_DEEP2_RUNTIME_DISPATCH
 // ============================================================================
 #include "runtime_graph_executor.hpp"
+#include <limits>
 
 #include <algorithm>
 #include <cmath>
@@ -1111,15 +1112,32 @@ float* Executor::WeightData(int32_t slot, size_t& floats_out) {
 // ---------------------------------------------------------------------------
 // Kernels
 // ---------------------------------------------------------------------------
+bool Executor::DequantCached(int32_t slot, size_t need, std::vector<float>& out) {
+    out.clear();
+    if (slot < 0 || need == 0) return false;
+    auto it = dequant_cache_.find(slot);
+    if (it != dequant_cache_.end() && it->second.size() >= need) {
+        out = it->second;
+        out.resize(need);
+        return true;
+    }
+    if (static_cast<size_t>(slot) >= tensors_.size()) return false;
+    std::vector<float> fresh;
+    const size_t got = DequantPrefix(tensors_[(size_t)slot], fresh, need);
+    if (got < need) return false;
+    fresh.resize(need);
+    out = fresh;
+    dequant_cache_[slot] = std::move(fresh);
+    return true;
+}
+
 bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
                          std::vector<float>& y) {
     if (in.b < 0) { last_error_ = "rmsnorm: no weight slot"; return false; }
-    const TensorRec& w = tensors_[(size_t)in.b];
     std::vector<float> wf;
-    if (!DequantPrefix(w, wf, x.size()) || wf.size() < x.size()) {
+    if (!DequantCached(in.b, x.size(), wf) || wf.size() < x.size()) {
         last_error_ = "rmsnorm: weight too small block=" + std::to_string(in.block) +
-                      " tensor=" + w.name +
-                      " decoded=" + std::to_string(wf.size()) +
+                      " tensor=" + tensors_[(size_t)in.b].name +
                       " activation=" + std::to_string(x.size());
         return false;
     }
@@ -1709,7 +1727,8 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // if it differs here the defect is in the projection or its input.
     if (const char* dumpPrefix = std::getenv("DEEP2_DUMP_QKV")) {
         char dp[600];
-        std::snprintf(dp, sizeof(dp), "%s.blk%d.qkv.f32", dumpPrefix, (int)in.block);
+        std::snprintf(dp, sizeof(dp), "%s.blk%d.%s.qkv.f32", dumpPrefix,
+                      (int)in.block, force_cpu_ ? "cpu" : "gpu");
         if (std::FILE* df = std::fopen(dp, "wb")) {
             std::fwrite(q.data(), sizeof(float), q.size(), df);
             std::fwrite(k.data(), sizeof(float), k.size(), df);
@@ -1835,6 +1854,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // rope.scaling.type "yarn"; an empty type (llama, qwen, gemma, nemotron)
     // keeps plain, unscaled RoPE so their angles are untouched.
     const bool yarn = (spec_.rope_scaling_type == "yarn");
+    const std::string archLower = [&] {
+        std::string s = spec_.architecture;
+        for (char& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        return s;
+    }();
+    // llama.cpp selects IMROPE for Qwen3.5.  Its text path still uses the
+    // four-section interleaved schedule [11,11,10,0]; language positions feed
+    // the temporal lane and the unused spatial/extra lanes remain zero.
+    const bool qwen35Imrope = archLower == "qwen35" || archLower == "qwen35moe";
+    constexpr size_t kQwen35MropeSections[4] = {11, 11, 10, 0};
 
     // RoPE: the ROTARY slice only. In MLA that is the last qk_rope dims of q
     // and of k; in a GQA model it is the whole head. Rotating the entire head
@@ -1904,7 +1933,11 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             if (rope_adjacent) {
                 // NORM: pair i is elements (2i, 2i+1), rotated by angle i.
                 for (size_t i = 0; 2 * i + 1 < lim; ++i) {
-                    const double theta = RopeAngle(position, i, nDims, yarn);
+                    const double theta = qwen35Imrope
+                        ? ((i % (kQwen35MropeSections[0] + kQwen35MropeSections[1] +
+                                 kQwen35MropeSections[2] + kQwen35MropeSections[3])) % 3 == 0
+                            ? RopeAngle(position, i, nDims, yarn) : 0.0)
+                        : RopeAngle(position, i, nDims, yarn);
                     const float c = (float)std::cos(theta), s = (float)std::sin(theta);
                     const float a = p[2 * i], b = p[2 * i + 1];
                     p[2 * i]     = a * c - b * s;
@@ -1920,7 +1953,11 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                 // pairs are (0,32), (1,33), ... for a 64-element rotary slice.
                 const size_t nOff = nDims / 2;
                 for (size_t i = 0; i < nOff && 2 * i < lim; ++i) {
-                    const double theta = RopeAngle(position, i, nDims, yarn);
+                    const double theta = qwen35Imrope
+                        ? ((i % (kQwen35MropeSections[0] + kQwen35MropeSections[1] +
+                                 kQwen35MropeSections[2] + kQwen35MropeSections[3])) % 3 == 0
+                            ? RopeAngle(position, i, nDims, yarn) : 0.0)
+                        : RopeAngle(position, i, nDims, yarn);
                     const float c = (float)std::cos(theta), s = (float)std::sin(theta);
                     const float a = p[i], b = p[i + nOff];
                     p[i]        = a * c - b * s;
@@ -2109,8 +2146,80 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     //   gpu fail: linear: x=3072 n_in=2048 weight=blk.0.attn_output.weight
     const size_t outW = vPerHead;
     y.assign(H * outW, 0.0f);
-    // DEEP2_VULKAN_SUBMIT_OPT_001: opt-in GPU AttnDecode (GQA/MHA only).
+    // Qwen3.5 gated attention has already produced normalized/rotated Q and K
+    // above and the cache stores the same representation.  Pack Q and the
+    // per-lane gate into the dedicated Vulkan input and keep the attention
+    // reduction on the device.  Identity norm weights and ropeDim=0 prevent
+    // applying either transform twice.
     bool gpu_attn_done = false;
+    if (qwen35Gated && !force_cpu_ &&
+        std::getenv("DEEP2_RUNTIME_GPU_QWEN35_GATED")) {
+        auto& gpu = ::Deep2::GetDeep2VulkanCompute();
+        // The graph executor can be used without Deep2Engine's forward-arena
+        // bootstrap.  Ensure the singleton owning these buffers is configured
+        // before uploading the first gated-attention token; otherwise the
+        // accessors legally return empty DeviceBuf objects.
+        if (!gpu.EnsureForwardArena(
+                static_cast<uint32_t>(H * qPerHead),
+                static_cast<uint32_t>(H * qPerHead),
+                static_cast<uint32_t>(H),
+                static_cast<uint32_t>(hk),
+                static_cast<uint32_t>(qPerHead),
+                static_cast<uint32_t>(std::max<size_t>(T, 1)), 1u)) {
+            err = "attention: Qwen3.5 gated arena initialization failed";
+            return false;
+        }
+        std::vector<float> packed(H * qPerHead * 2u, 0.0f);
+        for (size_t h = 0; h < H; ++h) {
+            std::copy_n(qr.data() + h * qPerHead, qPerHead,
+                        packed.data() + h * qPerHead * 2u);
+            std::copy_n(gate.data() + h * qPerHead, qPerHead,
+                        packed.data() + h * qPerHead * 2u + qPerHead);
+        }
+        std::vector<float> ones(qPerHead, 1.0f);
+        if (std::getenv("DEEP2_RUNTIME_GPU_QWEN35_GATED_TRACE")) {
+            std::fprintf(stderr,
+                "[QWEN35_GPU] q_elements=%zu q_bytes=%zu arena_q=%llu "
+                "k_elements=%zu arena_k=%llu v_elements=%zu arena_v=%llu\n",
+                packed.size(), packed.size() * sizeof(float),
+                static_cast<unsigned long long>(gpu.ArenaQ().size),
+                K.size(), static_cast<unsigned long long>(gpu.ArenaKCache().size),
+                V.size(), static_cast<unsigned long long>(gpu.ArenaVCache().size));
+            std::fflush(stderr);
+        }
+        if (!gpu.UploadVector(gpu.ArenaQ(), packed.data(), packed.size())) {
+            err = "attention: Qwen3.5 gated Q upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaKCache(), K.data(), K.size())) {
+            err = "attention: Qwen3.5 gated K upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaVCache(), V.data(), V.size())) {
+            err = "attention: Qwen3.5 gated V upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaGate(), ones.data(), ones.size())) {
+            err = "attention: Qwen3.5 gated Q-norm upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaUp(), ones.data(), ones.size())) {
+            err = "attention: Qwen3.5 gated K-norm upload failed"; return false;
+        }
+        if (!gpu.DispatchQwen35GatedAttention(
+                gpu.ArenaQ(), gpu.ArenaKCache(), gpu.ArenaVCache(),
+                gpu.ArenaGate(), gpu.ArenaUp(), gpu.ArenaAttn(),
+                static_cast<uint32_t>(qPerHead), static_cast<uint32_t>(H),
+                static_cast<uint32_t>(hk), static_cast<uint32_t>(T), 0u,
+                static_cast<uint32_t>(2u * qPerHead), 1.0f,
+                static_cast<float>(scoreScale), static_cast<float>(spec_.rms_eps))) {
+            err = "attention: Qwen3.5 Vulkan gated dispatch failed";
+            return false;
+        }
+        if (!gpu.DownloadVector(gpu.ArenaAttn(), y.data(), y.size())) {
+            err = "attention: Qwen3.5 Vulkan gated output readback failed";
+            return false;
+        }
+        ++gpu_calls_;
+        gpu_attn_done = true;
+    }
+    // DEEP2_VULKAN_SUBMIT_OPT_001: opt-in GPU AttnDecode (GQA/MHA only).
     if (!isMla && !qwen35Gated && !force_cpu_ &&
         qPerHead == outW && kPerHead == qPerHead && kvW == vW &&
         std::getenv("DEEP2_RUNTIME_GPU_ATTN") != nullptr) {
@@ -2199,10 +2308,29 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             const float* kp = K.data() + t * kvW + g * kPerHead;
             const float* krope = kp + kRopeOff;
             double acc = 0.0;
-            for (size_t d = 0; d < nopeD; ++d) acc += double(qp[d]) * double(kp[d]);
-            for (size_t i = 0; i < ropeLen; ++i) acc += double(qrope[i]) * double(krope[i]);
+            if (qwen35Gated) {
+                // qwen35: partial RoPE on [0, ropeLen), the rest of the head is
+                // unrotated. The score must cover the FULL head (qPerHead dims),
+                // not just the RoPE slice. Dotting only ropeLen drops the
+                // (headDim - ropeDim) no-rope channels; at pos0 the 1-element
+                // softmax hides it, at pos1 it corrupts every full-attn block.
+                for (size_t i = 0; i < ropeLen && i < qPerHead; ++i)
+                    acc += double(qrope[i]) * double(krope[i]);
+                for (size_t d = ropeLen; d < qPerHead; ++d)
+                    acc += double(qp[d]) * double(kp[d]);
+            } else {
+                for (size_t d = 0; d < nopeD; ++d) acc += double(qp[d]) * double(kp[d]);
+                for (size_t i = 0; i < ropeLen; ++i) acc += double(qrope[i]) * double(krope[i]);
+            }
             scores[t] = (float)(acc * scoreScale);
         }
+        // Focused internals dump for the divergent (block 3, head 16) at pos1:
+        // pre-softmax scores, post-softmax weights, the mapped V vectors, and the
+        // AV output. Gated by DEEP2_ATTN_INTERNALS=<dir>; one file per (pos,head).
+        const bool dumpInternals =
+            std::getenv("DEEP2_ATTN_INTERNALS") && in.block == 3 && h == 16;
+        std::vector<float> preScores;
+        if (dumpInternals) preScores = scores;
         SoftmaxVec(scores);
         // Score witness (head 0 only, block 0, once per position). This is the
         // quantity an independent reference computes from the file's own bytes;
@@ -2228,6 +2356,51 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             const float s = scores[t];
             for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
         }
+        if (dumpInternals) {
+            const char* dir = std::getenv("DEEP2_ATTN_INTERNALS");
+            char base[1200];
+            std::snprintf(base, sizeof(base), "%s/blk3_h16_p%zu",
+                          dir ? dir : ".", position);
+            std::string stem(base);
+            auto wr = [&](const char* suffix, const std::vector<float>& v) {
+                std::FILE* f = std::fopen((stem + suffix).c_str(), "wb");
+                if (f) { std::fwrite(v.data(), sizeof(float), v.size(), f); std::fclose(f); }
+            };
+            wr("_preScores.f32", preScores);
+            wr("_postScores.f32", std::vector<float>(scores.begin(), scores.end()));
+            std::vector<float> vv(vPerHead * T);
+            for (size_t t = 0; t < T; ++t) {
+                const float* vp = V.data() + t * vW + g * vPerHead;
+                std::copy_n(vp, vPerHead, vv.data() + t * vPerHead);
+            }
+            wr("_V.f32", vv);
+            // Post-RoPE Q (head h) and K (head g) exactly as consumed by the score.
+            wr("_qr.f32", std::vector<float>(qr.begin() + h * qPerHead,
+                                             qr.begin() + (h + 1) * qPerHead));
+            std::vector<float> kk(T * kPerHead);
+            for (size_t t = 0; t < T; ++t) {
+                const float* kp = K.data() + t * kvW + g * kPerHead;
+                std::copy_n(kp, kPerHead, kk.data() + t * kPerHead);
+            }
+            wr("_kr.f32", kk);
+            wr("_AV.f32", std::vector<float>(op, op + outW));
+            std::fprintf(stderr, "[attn-internals] block=3 head=16 pos=%zu group=%zu T=%zu written\n",
+                         position, g, T);
+        }
+    }
+
+    // Diagnostic: capture the PRE-gate context so gated-context assembly can be
+    // validated independently of the sigmoid gate. Additive; gated by the same
+    // compare-dump switch and it does not alter y.
+    if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+        compareDir && *compareDir && in.block >= 0 && in.block < 64) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/attn_preGate_blk%d_p%zu.%s.f32",
+                      compareDir, (int)in.block, position, force_cpu_ ? "cpu" : "gpu");
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(y.data(), sizeof(float), y.size(), f);
+            std::fclose(f);
+        }
     }
 
     if (qwen35Gated) {
@@ -2237,6 +2410,17 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         }
         for (size_t i = 0; i < y.size(); ++i)
             y[i] *= 1.0f / (1.0f + std::exp(-gate[i]));
+    }
+
+    if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+        compareDir && *compareDir && in.block >= 0 && in.block < 64) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/attn_ctx_blk%d.%s.f32",
+                      compareDir, (int)in.block, force_cpu_ ? "cpu" : "gpu");
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(y.data(), sizeof(float), y.size(), f);
+            std::fclose(f);
+        }
     }
 
     // Env-gated dump of the GQA-expanded attention buffer (the pre-O_proj
@@ -2279,6 +2463,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                 // output is narrower than the projection's declared input.
                 y.resize(projIn, 0.0f);
             } else {
+                if (std::getenv("ATTN_TRACE")) {
+                    std::fprintf(stderr,
+                                 "[attn-geom-fail] arch=%s block=%d H=%zu hk=%zu "
+                                 "qWidth=%zu kWidth=%zu vWidth=%zu qPerHead=%zu "
+                                 "kPerHead=%zu vPerHead=%zu proj_dims=[%zu,%zu]\n",
+                                 spec_.architecture.c_str(), (int)in.block, H, hk,
+                                 qWidth, kWidth, vWidth, qPerHead, kPerHead, vPerHead,
+                                 proj.dims.size() > 0 ? (size_t)proj.dims[0] : 0,
+                                 proj.dims.size() > 1 ? (size_t)proj.dims[1] : 0);
+                }
                 err = "attention geometry mismatch: attention output width " +
                       std::to_string(y.size()) + " (heads=" + std::to_string(H) +
                       " x value_width=" + std::to_string(vPerHead) +
@@ -2595,6 +2789,23 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {
     y.assign(spec_.embd, 0.0f);
+    const char* moeDumpDir = std::getenv("DEEP2_MOE_COMPARE_DUMP_DIR");
+    int moeDumpBlock = -1;
+    if (const char* e = std::getenv("DEEP2_MOE_COMPARE_DUMP_BLOCK"))
+        moeDumpBlock = std::atoi(e);
+    const bool moeDump = moeDumpDir && *moeDumpDir &&
+                         (moeDumpBlock < 0 || moeDumpBlock == moe.block);
+    const char* moeSide = force_cpu_ ? "cpu" : "gpu";
+    auto dumpMoe = [&](const char* tag, const float* data, size_t count) {
+        if (!moeDump || !data || count == 0) return;
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/blk%d.%s.%s.f32",
+                      moeDumpDir, (int)moe.block, moeSide, tag);
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(data, sizeof(float), count, f);
+            std::fclose(f);
+        }
+    };
     // RAWRXD_MULTI_GPU: route ALL of this MoE block's expert dots (up/gate/down,
     // routed + shared) to the device that owns the block.
     const DevScope dev_scope(BlockVkByIndex((uint32_t)moe.block));
@@ -2736,6 +2947,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
 
     std::vector<float> g(ffn), u(ffn);
     size_t expertsProcessed = 0;
+    dumpMoe("input", x.data(), x.size());
 
     // RAWRXD_DEEP2_LEGACY_QUANT_GPU_001: expert matmuls dispatch through the
     // SAME quant-dot fast path as every linear projection. The expert bank is
@@ -3100,6 +3312,19 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         std::fflush(stderr);
         (void)ds;
     }
+    if (moeDump) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/blk%d.%s.routing.txt",
+                      moeDumpDir, (int)moe.block, moeSide);
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fprintf(f, "count=%zu\n", nSel);
+            for (size_t e = 0; e < nSel; ++e)
+                std::fprintf(f, "%zu %u %.9g\n", e, ids[e], (double)w[e]);
+            std::fclose(f);
+        }
+    }
+    dumpMoe("up", uAll.data(), uAll.size());
+    dumpMoe("gate", gAll.data(), gAll.size());
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
@@ -3145,9 +3370,14 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         for (size_t j = 0; j < ffn; ++j)
         {
             const float s = 1.0f / (1.0f + std::exp(-g[j]));
-            hAll[e * ffn + j] = g[j] * s * u[j];
+                    hAll[e * ffn + j] = s * u[j];
         }
     }
+    // Diagnostic snapshot: capture hidden immediately after SwiGLU,
+    // owning its memory so the snapshot survives any later buffer reuse.
+    std::vector<float> hidden_snapshot(hAll.begin(), hAll.end());
+    dumpMoe("hidden_snapshot", hidden_snapshot.data(), hidden_snapshot.size());
+    dumpMoe("hidden", hAll.data(), hAll.size());
 
     // ---- phase 2: every selected expert's down-projection --------------------
     const bool dShapeAll = (dKind >= 0) && (dIn % (dKind >= 2 ? 32u : 256u) == 0) &&
@@ -3263,6 +3493,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             }
         }
     }
+    dumpMoe("down", dyAll.data(), dyAll.size());
 
     // ---- routing-weighted accumulation ---------------------------------------
     for (size_t e = 0; e < nSel; ++e)
@@ -3271,6 +3502,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         for (size_t i = 0; i < olen; ++i)
             y[i] += w[e] * dyAll[e * embd + i];
     }
+    dumpMoe("output", y.data(), y.size());
     if (std::getenv("MOE_TRACE")) {
         double ys = 0.0;
         for (size_t i = 0; i < olen && i < 4096; ++i) ys += y[i];
@@ -3755,7 +3987,12 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                         return false;
                     }
                     ts[t].act["attn"] = y;
-                    if (!in.outName.empty()) ts[t].act[in.outName] = y;
+                    // ResidualAdd consumes the stable attention projection
+                    // name when the graph leaves Attention::outName empty.
+                    // Publish that alias on the normal path just as the
+                    // gated-attention path does; otherwise the producer has
+                    // completed but the consumer cannot resolve its tensor.
+                    ts[t].act[in.outName.empty() ? std::string("attn_proj") : in.outName] = y;
                     ts[t].hidden = y;
                 }
                 break;
@@ -4141,6 +4378,77 @@ case OpKind::LmHead: {
 bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (!bound_) { last_error_ = "not bound"; return false; }
     last_error_.clear();
+    if (execution_context_ && execution_context_->device_admission &&
+        !execution_context_->device_admission(execution_context_->device_index)) {
+        last_error_ = "request device admission denied";
+        if (!execution_context_->request_id.empty())
+            last_error_ += " (" + execution_context_->request_id + ")";
+        return false;
+    }
+    struct MemoryReservationGuard {
+        std::shared_ptr<std::atomic_size_t> counter;
+        size_t bytes = 0;
+        std::function<void()> completion_wait;
+        ~MemoryReservationGuard() {
+            if (completion_wait) completion_wait();
+            if (counter && bytes) counter->fetch_sub(bytes, std::memory_order_acq_rel);
+        }
+    } reservation;
+    if (execution_context_ && execution_context_->reserved_memory_bytes &&
+        execution_context_->reservation_bytes) {
+        reservation.counter = execution_context_->reserved_memory_bytes;
+        reservation.bytes = execution_context_->reservation_bytes;
+        reservation.completion_wait = execution_context_->gpu_completion_wait;
+        if (!reservation.completion_wait) {
+            reservation.completion_wait = []() {
+                (void)QuantDot::ForceHostSync();
+            };
+        }
+        const size_t budget = execution_context_->memory_budget_bytes;
+        size_t current = reservation.counter->load(std::memory_order_acquire);
+        for (;;) {
+            if (current > (std::numeric_limits<size_t>::max)() - reservation.bytes ||
+                (budget && (current > budget || reservation.bytes > budget - current))) {
+                last_error_ = "request memory reservation denied";
+                return false;
+            }
+            if (reservation.counter->compare_exchange_weak(
+                    current, current + reservation.bytes,
+                    std::memory_order_acq_rel, std::memory_order_acquire)) break;
+        }
+    }
+    const auto cancelled = [this]() -> bool {
+        if (!execution_context_) return false;
+        if (execution_context_->cancel &&
+            execution_context_->cancel->load(std::memory_order_acquire)) {
+            last_error_ = "request cancelled";
+            if (!execution_context_->request_id.empty())
+                last_error_ += " (" + execution_context_->request_id + ")";
+            return true;
+        }
+        if (execution_context_->memory_admission &&
+            !execution_context_->memory_admission(execution_context_->memory_budget_bytes)) {
+            last_error_ = "request memory budget denied";
+            if (!execution_context_->request_id.empty())
+                last_error_ += " (" + execution_context_->request_id + ")";
+            return true;
+        }
+        if (execution_context_->synchronization_ready &&
+            !execution_context_->synchronization_ready()) {
+            last_error_ = "request synchronization state is not ready";
+            return true;
+        }
+        return false;
+    };
+    if (cancelled()) return false;
+    // Weight pins are a per-token residency lease.  The graph pins every
+    // quantized tensor it touches so command recording cannot evict it, but
+    // retaining the previous token's pins prevents the LRU window from
+    // reclaiming the final layer before the LM head is uploaded.  Release the
+    // completed token's lease before admitting the next token's weights.
+    if (!force_cpu_) {
+        ::Deep2::GetDeep2VulkanCompute().UnpinAllWeights();
+    }
     last_token_ = token;
     if (std::getenv("RR_TRACE_TOKEN")) std::fprintf(stderr, "  [token] pos=%zu token=%u cache_sizes=%zu,%zu,...\n", position, token, kv_k_.empty()?0:kv_k_[0].size(), kv_v_.empty()?0:kv_v_[0].size());
     position_ = position;
@@ -4282,6 +4590,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     std::unordered_map<int, double> op_timing_ms;
     std::unordered_map<int, size_t> op_timing_count;
     double dot_batch_flush_ms = 0.0;
+    int residency_block = -1;
     auto flush_group = [&]() {
         const auto flush_started = std::chrono::steady_clock::now();
         const bool ok = FlushDotBatch();
@@ -4305,7 +4614,32 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     };
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
+        if (cancelled()) return false;
+        if (execution_context_ && execution_context_->cancel &&
+            execution_context_->cancel->load(std::memory_order_acquire)) {
+            last_error_ = "request cancelled during execution";
+            if (!execution_context_->request_id.empty())
+                last_error_ += " (" + execution_context_->request_id + ")";
+            return false;
+        }
         const auto& in = program_[pc];
+        // Quantized weight pins are scoped to one transformer block.  Keeping
+        // every previously visited block pinned turns the streaming cache into
+        // a full-model allocation and eventually makes even small allocations
+        // fail with VK_ERROR_OUT_OF_DEVICE_MEMORY.  Release the completed
+        // block before admitting the next block's weights; the current
+        // operation pins whatever it needs again through the normal path.
+        if (!force_cpu_ && in.block != residency_block) {
+            // Trim the Deep2 weight cache (the cache TrimUnpinnedWeightCache
+            // lives on). QuantDot::DispatchDevice() returns the canonical
+            // VulkanCompute, a different class that has no such method, so the
+            // residency trim must target the Deep2 singleton directly.
+            ::Deep2::GetDeep2VulkanCompute().TrimUnpinnedWeightCache(
+                residency_block < 0 ? UINT32_MAX :
+                    static_cast<uint32_t>(residency_block));
+            (void)QuantDot::TrimUnpinnedQuantWeights();
+            residency_block = in.block;
+        }
         // FLIGHT RECORDER: publish progress for this op BEFORE executing it, so
         // a watchdog observing a long-running op still sees the engine is
         // advancing. The event records the op kind and its program counter,
@@ -4413,8 +4747,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             }
             case OpKind::Linear: {
                 if (std::getenv("LINEAR_TRACE")) {
-                    std::fprintf(stderr, "[exec] Linear block=%d bName='%s' bSlot=%d aName='%s' outName='%s' xi=%zu\n",
+                    const TensorRec& traceWeight = tensors_[(size_t)in.b];
+                    std::fprintf(stderr, "[exec] Linear block=%d bName='%s' bSlot=%d type=%d dims=[%zu,%zu] aName='%s' outName='%s' xi=%zu\n",
                                  (int)in.block, in.bName.c_str(), (int)in.b,
+                                 (int)traceWeight.ggml_type,
+                                 traceWeight.dims.size() > 0 ? (size_t)traceWeight.dims[0] : 0,
+                                 traceWeight.dims.size() > 1 ? (size_t)traceWeight.dims[1] : 0,
                                  in.aName.c_str(), in.outName.c_str(), xi.size());
                 }
                 // RAWRXD_GATE7_TPS_001: bind the output straight to its arena
@@ -4427,6 +4765,37 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 // join_batch_ is the loop-scope group decision above: the batch
                 // is already open when it is true.
                 if (!OpLinear(in.b, xi, y, e, join_batch_)) { last_error_ = e; return false; }
+                if (std::getenv("DEEP2_Q4K_EXACT_CHECK") &&
+                    in.b >= 0 && static_cast<size_t>(in.b) < tensors_.size() &&
+                    in.bName.find(".attn_output.weight") != std::string::npos &&
+                    tensors_[(size_t)in.b].ggml_type == GGML_TYPE_Q4_K) {
+                    const TensorRec& wt = tensors_[(size_t)in.b];
+                    const size_t nIn = static_cast<size_t>(wt.dims[0]);
+                    const size_t nOut = static_cast<size_t>(wt.dims[1]);
+                    const size_t rowBytes = (nIn / 256u) * 144u;
+                    const ggml_type_traits* tr = ggml_get_type_traits(wt.ggml_type);
+                    std::vector<float> row(nIn, 0.0f);
+                    double worst = 0.0, exactNorm = 0.0;
+                    size_t worstRow = 0;
+                    if (tr && tr->to_float && nIn == xi.size() && nOut == y.size()) {
+                        for (size_t r = 0; r < nOut; ++r) {
+                            tr->to_float(reinterpret_cast<const uint8_t*>(wt.data) + r * rowBytes,
+                                         row.data(), static_cast<int64_t>(nIn));
+                            double exact = 0.0;
+                            for (size_t c = 0; c < nIn; ++c)
+                                exact += static_cast<double>(row[c]) * xi[c];
+                            const double d = std::fabs(exact - static_cast<double>(y[r]));
+                            exactNorm += exact * exact;
+                            if (d > worst) { worst = d; worstRow = r; }
+                        }
+                        std::fprintf(stderr,
+                                     "[q4k-exact] block=%d path=%s rows=%zu cols=%zu "
+                                     "max_abs=%.9g worst_row=%zu exact_l2=%.9g\n",
+                                     (int)in.block, force_cpu_ ? "cpu" : "gpu",
+                                     nOut, nIn, worst, worstRow, std::sqrt(exactNorm));
+                        std::fflush(stderr);
+                    }
+                }
                 // ---- attention projection bias: y = W x + b ---------------
                 // Qwen2.5 and friends ship attn_q/k/v.bias tensors (in
                 // qwen2.5-coder-1.5b, blk.0.attn_k.bias alone has L2 ~1237 --
@@ -4475,6 +4844,17 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     }
                     // no sibling and no declaration -> bias-free, unchanged
                 }
+                if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+                    compareDir && *compareDir && in.block >= 0 && in.block < 64 &&
+                    in.bName.find(".attn_output.weight") != std::string::npos) {
+                    char path[1024];
+                    std::snprintf(path, sizeof(path), "%s/attn_proj_blk%d.%s.f32",
+                                  compareDir, (int)in.block, force_cpu_ ? "cpu" : "gpu");
+                    if (std::FILE* f = std::fopen(path, "wb")) {
+                        std::fwrite(y.data(), sizeof(float), y.size(), f);
+                        std::fclose(f);
+                    }
+                }
                 // Env-gated FFN-chain dumps. The Linear op's INPUT for
                 // ffn_gate IS the FFN_NORM output (the norm feeds only the two
                 // projections), so one hook captures NORM/GATE/UP/DOWN and the
@@ -4482,8 +4862,8 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (const char* ffnPrefix = std::getenv("DEEP2_DUMP_FFN")) {
                     auto dumpVec = [&](const std::vector<float>& v, const char* tag) {
                         char dp[600];
-                        std::snprintf(dp, sizeof(dp), "%s.blk%d.%s.f32", ffnPrefix,
-                                      (int)in.block, tag);
+                        std::snprintf(dp, sizeof(dp), "%s.%s.blk%d.%s.f32", ffnPrefix,
+                                      force_cpu_ ? "cpu" : "gpu", (int)in.block, tag);
                         if (std::FILE* df = std::fopen(dp, "wb")) {
                             std::fwrite(v.data(), sizeof(float), v.size(), df);
                             std::fclose(df);
@@ -4652,7 +5032,10 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 }
                 if (!OpAttention(in, qv, kv, vv, y, position, e)) { last_error_ = e; return false; }
                 arena("attn") = y;
-                if (!in.outName.empty()) arena(in.outName) = y;
+                // Keep the graph's canonical attention-projection name alive
+                // for the following residual add. This is publication of the
+                // real result, not a fallback tensor or a bypass.
+                arena(in.outName.empty() ? std::string("attn_proj") : in.outName) = y;
                 hidden_ = y;
                 break;
             }
@@ -4718,6 +5101,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     y[i] = (i < resid->size() ? (*resid)[i] : 0.0f)
                          + (i < add->size() ? (*add)[i] : 0.0f);
                 hidden_ = y;
+                if (const char* dumpDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+                    dumpDir && *dumpDir && in.block >= 0 && in.block < 64) {
+                    char path[1024];
+                    std::snprintf(path, sizeof(path), "%s/blk%d.%s.%s.f32",
+                                  dumpDir, (int)in.block,
+                                  force_cpu_ ? "cpu" : "gpu",
+                                  in.outName.empty() ? "resid" : in.outName.c_str());
+                    if (std::FILE* f = std::fopen(path, "wb")) {
+                        std::fwrite(hidden_.data(), sizeof(float), hidden_.size(), f);
+                        std::fclose(f);
+                    }
+                }
                 arena(in.outName.empty() ? std::string("resid") : in.outName) = y;
                 // Per-block hidden-state witness. The engine's own receipts
                 // only compare Deep2 against Deep2, so a divergence against an
@@ -4964,6 +5359,44 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 op_traces_.push_back(tr);
             }
         }
+        // ISOLATED REPLAY: if DEEP2_REPLAY_DIR is set, overwrite this op's
+        // output activation with the llama.cpp reference so the NEXT op runs on
+        // reference input (CPU-out-of-op-N-1 -> op-N). The computed output was
+        // already recorded in the trace above, so the comparison still sees
+// Deep2's real arithmetic; only the forward input is sanitized.
+        if (const char* replayDir = std::getenv("DEEP2_REPLAY_DIR");
+            replayDir && *replayDir && !in.outName.empty() && in.outName[0] != '<' &&
+            in.block >= 0) {
+            std::vector<std::string> cands;
+            const std::string L = std::to_string(in.block);
+            const std::string& nm = in.outName;
+            if (nm == "attn_norm")      cands = {"attn_norm_L" + L + ".bin"};
+            else if (nm == "attn_proj") cands = {"attn_proj_L" + L + "__dup1.bin", "attn_proj_L" + L + ".bin"};
+            else if (nm == "gate")      cands = {"ffn_gate_L" + L + ".bin"};
+            else if (nm == "up")        cands = {"ffn_up_L" + L + ".bin"};
+    else if (nm == "swiglu")    cands = {"ffn_swiglu_L" + L + ".bin"};
+    else if (nm == "ffn_out")   cands = {"ffn_down_L" + L + ".bin"};
+    else if (nm == "resid2")    cands = {"resid2_L" + L + "__dup1.bin", "resid2_L" + L + ".bin"};
+    else if (nm == "resid_in")  cands = {"resid_in_L" + L + ".bin"};
+    auto it = act.find(in.outName);
+    if (it != act.end() && !it->second.empty()) {
+        for (const auto& c : cands) {
+            std::string path = std::string(replayDir) + "/pos" +
+                               std::to_string(position_) + "/" + c;
+            FILE* f = std::fopen(path.c_str(), "rb");
+            if (!f) continue;
+            std::vector<float> ref(it->second.size());
+            size_t n = std::fread(ref.data(), sizeof(float), ref.size(), f);
+            std::fclose(f);
+            if (n == it->second.size()) {
+                std::copy(ref.begin(), ref.end(), it->second.begin());
+                std::fprintf(stderr, "[REPLAY] blk%d %s <- %s (pos%zu)\n",
+                             in.block, in.outName.c_str(), c.c_str(), position_);
+            }
+            break;
+        }
+    }
+        }
     }
 
     if (dot_batch_open_ && !flush_group()) {
@@ -5119,6 +5552,9 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
     // Vulkan shader consumes this field directly, so do not leave the
     // generic descriptor default (1.0) on the production path.
     descriptor.scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+    // The GDN q/k L2-norm and output RMSNorm must use the model's RMS epsilon
+    // (llama.cpp: hparams.f_norm_rms_eps), not the generic descriptor default.
+    descriptor.epsilon = static_cast<float>(spec_.rms_eps);
     descriptor.stride = descriptor.channels;
     descriptor.qkv_stride = static_cast<uint32_t>(qkv.size());
     descriptor.gate_stride = static_cast<uint32_t>(z.size());
@@ -5192,6 +5628,7 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
         std::fflush(stderr);
     }
     dumpGdnVector("mixed", mixed);
+    dumpGdnVector("qkv_preconv", qkv);
     dumpGdnVector("beta_logits", beta);
     dumpGdnVector("alpha_logits", alpha);
     dumpGdnVector("a_log", aLog);
@@ -5293,6 +5730,16 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
     }
     std::vector<float> projected;
     if (!OpLinear(outSlot, y, projected, err)) return false;
+    if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+        compareDir && *compareDir && in.block >= 0 && in.block < 64) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/gdn_proj_blk%d.%s.f32",
+                      compareDir, (int)in.block, force_cpu_ ? "cpu" : "gpu");
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(projected.data(), sizeof(float), projected.size(), f);
+            std::fclose(f);
+        }
+    }
     y.swap(projected);
     return true;
 }

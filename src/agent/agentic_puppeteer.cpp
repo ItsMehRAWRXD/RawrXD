@@ -3,6 +3,9 @@
 #include "qt_block.h"
 #include "core/qt_elimination.h"
 #include <algorithm>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 // Base AgenticPuppeteer Implementation
 
@@ -87,10 +90,12 @@ CorrectionResult AgenticPuppeteer::correctResponse(const QString& originalRespon
 
 CorrectionResult AgenticPuppeteer::correctJsonResponse(const QJsonObject& response, const QString& context)
 {
-    QJsonDocument doc(response);
-    QString jsonStr = doc.toJson(QJsonDocument::Compact);
+    // QJsonObject is nlohmann::json, QJsonDocument is NativeJson class
+    std::string jsonStr = response.dump();
+    json parsed = NativeJson::fromJson(jsonStr);
+    QString result = QString::fromStdString(NativeJson::toJson(parsed));
     
-    return correctResponse(jsonStr, context);
+    return correctResponse(result, context);
 }
 
 FailureType AgenticPuppeteer::detectFailure(const QString& response)

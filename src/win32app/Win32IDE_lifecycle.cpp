@@ -104,6 +104,7 @@ constexpr int kPanelProblemsListId = 1312;
 constexpr UINT kMsgReclaimDocTabs = WM_APP + 0x44;
 constexpr UINT kMsgFinishDocTabs = WM_APP + 0x45;
 constexpr UINT kMsgFinishSession = WM_APP + 0x46;
+constexpr UINT kMsgDeferredClosePrompt = WM_APP + 0x50;
 // W3: createPowerShellPanel TabCtrl_SetCurSel fires TCN_SELCHANGE â†’
 // hidePowerShellPanel â†’ sync onSize during WM_CREATE (0xC000041D / AV).
 thread_local int g_onSizeDepth = 0;
@@ -221,6 +222,37 @@ LRESULT Win32IDE::handleThemeControlColor(UINT message, WPARAM wParam, LPARAM lP
     return reinterpret_cast<LRESULT>(m_backgroundBrush);
 }
 
+#include <cstdarg>
+
+// --- Temporary Execute-path diagnostics (P0 terminal routing) ----------------
+// Append-only trace so the Execute chain is observable from outside the
+// process. Logs handles, ids and lengths only — never command text.
+static unsigned long long g_execTraceSeq = 0;
+static void ExecTrace(const char* fmt, ...)
+{
+    // Gated once at the single entry point: with RAWRXD_EXEC_TRACE unset this
+    // performs no file I/O at all. Enable with RAWRXD_EXEC_TRACE=1.
+    static const bool enabled = [] {
+        char v[8]{};
+        const DWORD n = GetEnvironmentVariableA("RAWRXD_EXEC_TRACE", v, sizeof(v));
+        return n > 0 && n < sizeof(v) && v[0] == '1';
+    }();
+    if (!enabled) return;
+
+    char dir[MAX_PATH]{};
+    if (!GetTempPathA(MAX_PATH, dir)) return;
+    char path[MAX_PATH]{};
+    _snprintf_s(path, sizeof(path), _TRUNCATE, "%srawrxd_execute_trace.log", dir);
+    FILE* f = nullptr;
+    if (fopen_s(&f, path, "a") != 0 || !f) return;
+    std::fprintf(f, "[pid=%lu tid=%lu seq=%llu] ",
+                 (unsigned long)GetCurrentProcessId(),
+                 (unsigned long)GetCurrentThreadId(), ++g_execTraceSeq);
+    va_list ap; va_start(ap, fmt); std::vfprintf(f, fmt, ap); va_end(ap);
+    std::fputc('\n', f);
+    std::fclose(f);
+}
+
 LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     // The instance pointer is stored in GWLP_USERDATA by WM_NCCREATE, which is
@@ -271,8 +303,11 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             if (ide && ide->m_agenticLoopBridge) {
                 ide->m_agenticLoopBridge->Cancel();
             }
-            if (ide && (!ide->hasUnsavedBuffers() || ide->promptSaveAllChanges())) {
-                ide->saveIdeSession();
+            // Defer the save prompt to a posted message to avoid modal dialog deadlock in WM_CLOSE.
+            if (ide) {
+                PostMessageA(hwnd, kMsgDeferredClosePrompt, 0, 0);
+            } else {
+                // No IDE instance, just close
                 DestroyWindow(hwnd);
             }
             return 0;
@@ -285,8 +320,10 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 if (ide && ide->m_agenticLoopBridge) {
                     ide->m_agenticLoopBridge->Cancel();
                 }
-                if (ide && (!ide->hasUnsavedBuffers() || ide->promptSaveAllChanges())) {
-                    ide->saveIdeSession();
+                // Defer to the same close prompt logic.
+                if (ide) {
+                    PostMessageA(hwnd, kMsgDeferredClosePrompt, 0, 0);
+                } else {
                     DestroyWindow(hwnd);
                 }
                 return 0;
@@ -501,6 +538,52 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     return 0;
                 }
                 const int command = static_cast<int>(LOWORD(wParam));
+                ExecTrace("WM_COMMAND hwnd=%p id=%d code=%u lparam=%p expectExec=%p",
+                          (void*)hwnd, command, (unsigned)HIWORD(wParam),
+                          (void*)lParam, (void*)ide->m_hwndPanelTerminalExecute);
+                // Execute on the docked Terminal panel. The control id comes from
+                // Win32IDE.h (single declaration shared with the creation site) and
+                // the sender HWND is required to match: the Execute control is a
+                // standard BS_PUSHBUTTON child, so a genuine BN_CLICKED always
+                // carries its HWND in lParam. Accepting a null sender would let any
+                // control sharing this numeric id run terminal input.
+                if (command == IDC_PANEL_TERMINAL_EXECUTE &&
+                    HIWORD(wParam) == BN_CLICKED &&
+                    reinterpret_cast<HWND>(lParam) ==
+                        ide->m_hwndPanelTerminalExecute) {
+                    char text[8192]{};
+                    if (ide->m_hwndPanelTerminalInput) {
+                        GetWindowTextA(ide->m_hwndPanelTerminalInput, text,
+                                       static_cast<int>(sizeof(text)));
+                        ExecTrace("EXECUTE id_match=%d sender_match=%d input_len=%d",
+                                  command == IDC_PANEL_TERMINAL_EXECUTE ? 1 : 0,
+                                  reinterpret_cast<HWND>(lParam) ==
+                                      ide->m_hwndPanelTerminalExecute ? 1 : 0,
+                                  (int)std::strlen(text));
+                        if (text[0]) {
+                            // Pane lifecycle is owned by the IDE, not this
+                            // handler: reuse a running shell if one exists,
+                            // create/start one only if it does not, and never
+                            // clear the input unless the command was delivered.
+                            const bool ensured = ide->ensureTerminalRunningForCommand();
+                            TerminalPane* pane = ide->getActiveTerminalPane();
+                            const bool running =
+                                (pane && pane->manager && pane->manager->isRunning());
+                            ExecTrace("TERMINAL_ENSURE ok=%d pane=%p running=%d",
+                                      ensured ? 1 : 0, (void*)pane, running ? 1 : 0);
+                            if (ensured && running) {
+                                std::string commandText(text);
+                                commandText += "\n";
+                                pane->manager->writeInput(commandText);
+                                ExecTrace("INPUT_WRITE transport=%d bytes=%d",
+                                          (int)pane->manager->transport(),
+                                          (int)commandText.size());
+                                SetWindowTextA(ide->m_hwndPanelTerminalInput, "");
+                            }
+                        }
+                    }
+                    return 0;
+                }
                 // PowerShell panel controls live in a child panel, but some
                 // Windows message paths notify the frame instead of the
                 // panel subclass.  Handle those IDs here before the legacy
@@ -890,9 +973,17 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             if (ide && update) {
                 if (update->kind == TerminalUiUpdate::Kind::Output) {
                     ide->onTerminalOutput(update->paneId, update->text);
+                    ExecTrace("UI_OUTPUT pane=%d len=%zu head=%.40s",
+                              (int)update->paneId, update->text.size(),
+                              update->text.c_str());
                 } else if (update->kind == TerminalUiUpdate::Kind::Error) {
                     ide->onTerminalError(update->paneId, update->text);
+                    ExecTrace("UI_ERROR pane=%d len=%zu head=%.40s",
+                              (int)update->paneId, update->text.size(),
+                              update->text.c_str());
                 } else {
+                    ExecTrace("UI_FINISHED pane=%d exit=%d",
+                              (int)update->paneId, update->exitCode);
                     {
                         std::ofstream receipt("F:\\rawrxd\\evidence\\RAWRXD_BUILD_RECEIPT_latest.log",
                                               std::ios::app);
@@ -908,6 +999,10 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                         " exit=" + std::to_string(update->exitCode) +
                         " status=" + (update->exitCode == 0 ? std::string("PASS") : std::string("FAIL")) +
                         "\n", "Output", update->exitCode == 0 ? OutputSeverity::Info : OutputSeverity::Error);
+                    if (ide->m_hwndPanelTerminal && IsWindowVisible(ide->m_hwndPanelTerminal)) {
+                        ide->appendText(ide->m_hwndPanelTerminal,
+                            "\n[Terminal exit code: " + std::to_string(update->exitCode) + "]\n");
+                    }
                     // Keep terminal HWNDs alive after Build/fixture exit so
                     // Output/Problems GUI E2E can still enum children. Mark
                     // inactive only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â do not HideWindow the pane controls.
@@ -920,6 +1015,23 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 }
             }
             delete update;
+            return 0;
+        }
+        case kMsgDeferredClosePrompt: {
+            // Deferred close prompt - runs outside WM_CLOSE to avoid modal deadlock.
+            if (ide) {
+                if (ide->hasUnsavedBuffers()) {
+                    // Show the save prompt. If user cancels, abort close.
+                    if (!ide->promptSaveAllChanges()) {
+                        return 0;
+                    }
+                }
+                // Proceed with close
+                ide->saveIdeSession();
+                DestroyWindow(hwnd);
+            } else {
+                DestroyWindow(hwnd);
+            }
             return 0;
         }
         default:
@@ -2412,11 +2524,11 @@ bool Win32IDE::createWindow()
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = m_hInstance;
-    wc.hIcon = LoadIconA(nullptr, IDI_APPLICATION);
-    wc.hCursor = LoadCursorA(nullptr, IDC_ARROW);
+    wc.hIcon = LoadIconA(nullptr, MAKEINTRESOURCEA(32512));  // IDI_APPLICATION
+    wc.hCursor = LoadCursorA(nullptr, MAKEINTRESOURCEA(32512));  // IDC_ARROW
     wc.hbrBackground = reinterpret_cast<HBRUSH>(static_cast<intptr_t>(COLOR_WINDOW) + 1);
     wc.lpszClassName = kWindowClass;
-    wc.hIconSm = LoadIconA(nullptr, IDI_APPLICATION);
+    wc.hIconSm = LoadIconA(nullptr, MAKEINTRESOURCEA(32512));  // IDI_APPLICATION
 
     if (!RegisterClassExA(&wc)) {
         const DWORD err = GetLastError();
@@ -2873,9 +2985,22 @@ void Win32IDE::onSize(int width, int height)
             }
             const int panelBodyH = std::max(0, bottomHeight - 26);
             if (m_hwndPanelTerminal && IsWindow(m_hwndPanelTerminal)) {
+                const int inputH = onTerminalTab ? 30 : 0;
                 MoveWindow(m_hwndPanelTerminal, 0, 26, std::max(0, width),
-                           panelBodyH, TRUE);
+                           std::max(0, panelBodyH - inputH), TRUE);
                 ShowWindow(m_hwndPanelTerminal, onTerminalTab ? SW_SHOW : SW_HIDE);
+            }
+            if (m_hwndPanelTerminalInput && IsWindow(m_hwndPanelTerminalInput)) {
+                const int inputY = 26 + std::max(0, panelBodyH - 28);
+                MoveWindow(m_hwndPanelTerminalInput, 4, inputY,
+                           std::max(80, width - 94), 24, TRUE);
+                ShowWindow(m_hwndPanelTerminalInput, onTerminalTab ? SW_SHOW : SW_HIDE);
+            }
+            if (m_hwndPanelTerminalExecute && IsWindow(m_hwndPanelTerminalExecute)) {
+                const int inputY = 26 + std::max(0, panelBodyH - 28);
+                MoveWindow(m_hwndPanelTerminalExecute, std::max(4, width - 86), inputY,
+                           82, 24, TRUE);
+                ShowWindow(m_hwndPanelTerminalExecute, onTerminalTab ? SW_SHOW : SW_HIDE);
             }
             if (m_hwndPanelOutput && IsWindow(m_hwndPanelOutput)) {
                 MoveWindow(m_hwndPanelOutput, 0, 26, std::max(0, width),

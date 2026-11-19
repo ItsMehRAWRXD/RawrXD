@@ -40,11 +40,16 @@ enum GgufValueType : uint32_t {
 
 // ── GGML tensor types, with block geometry from the reference layout ────────
 // The numeric IDs are authoritative: read from the ggml.h that this build
-// actually uses (3rdparty/ggml/include/ggml.h:380). An earlier version of this
-// table guessed IDs 4-7 and 14, which silently produced wrong row sizes for
-// every K-quant tensor and cascaded into bogus "past EOF" and "overlap"
-// failures. IDs beyond 15 are deliberately UNKNOWN so the auditor fails closed
-// rather than inventing geometry.
+// actually uses (3rdparty/ggml/include/ggml.h:381-421). An earlier version of
+// this table guessed IDs 4-7 and 14, which silently produced wrong row sizes
+// for every K-quant tensor and cascaded into bogus "past EOF" and "overlap"
+// failures.
+//
+// The table previously stopped at 15 and declared everything above UNKNOWN.
+// That made the auditor fail closed on BF16, which is type 30 and is what the
+// Laguna and Nemotron REAP exports actually store their expert bodies in —
+// so the tool rejected two real, valid models with "unknown ggml type 30".
+// Block geometry below is the reference layout from ggml-common.h.
 struct TypeInfo {
     const char* name;
     uint32_t blockElems;   ///< elements per block
@@ -52,24 +57,48 @@ struct TypeInfo {
 };
 
 static const TypeInfo kTypes[] = {
-    /*0  F32   */ {"F32",   1,   4},
-    /*1  F16   */ {"F16",   1,   2},
-    /*2  Q4_0  */ {"Q4_0",  32,  18},
-    /*3  Q4_1  */ {"Q4_1",  32,  20},
+    /*0  F32      */ {"F32",       1,   4},
+    /*1  F16      */ {"F16",       1,   2},
+    /*2  Q4_0     */ {"Q4_0",      32,  18},
+    /*3  Q4_1     */ {"Q4_1",      32,  20},
     /*4  (removed in ggml: Q4_2) */ {"REMOVED_Q4_2", 0, 0},
     /*5  (removed in ggml: Q4_3) */ {"REMOVED_Q4_3", 0, 0},
-    /*6  Q5_0  */ {"Q5_0",  32,  22},
-    /*7  Q5_1  */ {"Q5_1",  32,  24},
-    /*8  Q8_0  */ {"Q8_0",  32,  34},
-    /*9  Q8_1  */ {"Q8_1",  32,  36},
-    /*10 Q2_K  */ {"Q2_K",  256, 84},
-    /*11 Q3_K  */ {"Q3_K",  256, 110},
-    /*12 Q4_K  */ {"Q4_K",  256, 144},
-    /*13 Q5_K  */ {"Q5_K",  256, 176},
-    /*14 Q6_K  */ {"Q6_K",  256, 210},
-    /*15 Q8_K  */ {"Q8_K",  256, 292},
+    /*6  Q5_0     */ {"Q5_0",      32,  22},
+    /*7  Q5_1     */ {"Q5_1",      32,  24},
+    /*8  Q8_0     */ {"Q8_0",      32,  34},
+    /*9  Q8_1     */ {"Q8_1",      32,  36},
+    /*10 Q2_K     */ {"Q2_K",      256, 84},
+    /*11 Q3_K     */ {"Q3_K",      256, 110},
+    /*12 Q4_K     */ {"Q4_K",      256, 144},
+    /*13 Q5_K     */ {"Q5_K",      256, 176},
+    /*14 Q6_K     */ {"Q6_K",      256, 210},
+    /*15 Q8_K     */ {"Q8_K",      256, 292},
+    /*16 IQ2_XXS  */ {"IQ2_XXS",   256, 66},
+    /*17 IQ2_XS   */ {"IQ2_XS",    256, 74},
+    /*18 IQ3_XXS  */ {"IQ3_XXS",   256, 98},
+    /*19 IQ1_S    */ {"IQ1_S",     256, 50},
+    /*20 IQ4_NL   */ {"IQ4_NL",    32,  18},
+    /*21 IQ3_S    */ {"IQ3_S",     256, 110},
+    /*22 IQ2_S    */ {"IQ2_S",     256, 82},
+    /*23 IQ4_XS   */ {"IQ4_XS",    256, 136},
+    /*24 I8       */ {"I8",        1,   1},
+    /*25 I16      */ {"I16",       1,   2},
+    /*26 I32      */ {"I32",       1,   4},
+    /*27 I64      */ {"I64",       1,   8},
+    /*28 F64      */ {"F64",       1,   8},
+    /*29 IQ1_M    */ {"IQ1_M",     256, 56},
+    /*30 BF16     */ {"BF16",      1,   2},
+    /*31 (removed: Q4_0_4_4)     */ {"REMOVED_Q4_0_4_4", 0, 0},
+    /*32 (removed: Q4_0_4_8)     */ {"REMOVED_Q4_0_4_8", 0, 0},
+    /*33 (removed: Q4_0_8_8)     */ {"REMOVED_Q4_0_8_8", 0, 0},
+    /*34 TQ1_0    */ {"TQ1_0",     256, 54},
+    /*35 TQ2_0    */ {"TQ2_0",     256, 66},
+    /*36 (removed: IQ4_NL_4_4)   */ {"REMOVED_IQ4_NL_4_4", 0, 0},
+    /*37 (removed: IQ4_NL_4_8)   */ {"REMOVED_IQ4_NL_4_8", 0, 0},
+    /*38 (removed: IQ4_NL_8_8)   */ {"REMOVED_IQ4_NL_8_8", 0, 0},
+    /*39 MXFP4    */ {"MXFP4",     32,  17},
 };
-constexpr int kTypeCount = 16;
+constexpr int kTypeCount = 40;
 
 static const TypeInfo& typeInfo(uint32_t t) {
     static const TypeInfo kUnknown{"UNKNOWN", 0, 0};
@@ -189,23 +218,44 @@ int main(int argc, char** argv) {
     for (int i = 2; i < argc; ++i)
         if (!std::strcmp(argv[i], "--json") && i + 1 < argc) jsonPath = argv[++i];
 
-    // ── read the whole file ────────────────────────────────────────────────
+    // ── size the file, then read only the header region ───────────────────
+    // Two bugs lived here. (1) ftell() returns a 32-bit long on Windows, so
+    // any model over 2 GiB wrapped negative and was reported as "is empty" —
+    // which silently failed every real GGUF. (2) The whole file was slurped
+    // into RAM, so a 16 GiB export demanded 16 GiB of address space even
+    // though only the header, metadata and tensor infos are ever parsed.
+    // GGUF puts all of those at the front; the tensor payload is never read.
     FILE* f = fopen(path, "rb");
     if (!f) {
         printf("  [FAIL] cannot open %s\n", path);
         printf("PARITY_STATUS=FAIL\n");
         return 4;
     }
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if (fsize <= 0) {
+#ifdef _WIN32
+    _fseeki64(f, 0, SEEK_END);
+    const long long fsizeWide = _ftelli64(f);
+    _fseeki64(f, 0, SEEK_SET);
+#else
+    fseeko(f, 0, SEEK_END);
+    const long long fsizeWide = static_cast<long long>(ftello(f));
+    fseeko(f, 0, SEEK_SET);
+#endif
+    if (fsizeWide <= 0) {
         printf("  [FAIL] %s is empty\n", path);
         fclose(f);
         printf("PARITY_STATUS=FAIL\n");
         return 4;
     }
-    std::vector<uint8_t> data(static_cast<size_t>(fsize));
+    const uint64_t fsize = static_cast<uint64_t>(fsizeWide);
+
+    // 256 MiB covers every realistic metadata block (the largest Qwen3.5-class
+    // vocabularies are ~250k tokens, a few MB) plus every tensor info. If the
+    // infos ever run past this, parsing fails loudly below rather than
+    // silently auditing a truncated view.
+    const uint64_t kPrefixBytes = 256ull * 1024ull * 1024ull;
+    const size_t prefixLen =
+        static_cast<size_t>(fsize < kPrefixBytes ? fsize : kPrefixBytes);
+    std::vector<uint8_t> data(prefixLen);
     if (fread(data.data(), 1, data.size(), f) != data.size()) {
         printf("  [FAIL] short read on %s\n", path);
         fclose(f);
@@ -213,7 +263,8 @@ int main(int argc, char** argv) {
         return 4;
     }
     fclose(f);
-    printf("=== GGUF geometry audit: %s (%ld bytes) ===\n", path, fsize);
+    printf("=== GGUF geometry audit: %s (%llu bytes) ===\n", path,
+           static_cast<unsigned long long>(fsize));
     fflush(stdout);
 
     // ── 1. header ─────────────────────────────────────────────────────────
@@ -351,7 +402,7 @@ int main(int argc, char** argv) {
 
     // ── 6. alignment of the data section start ────────────────────────────
     const uint64_t dataStart = (r.pos + alignment - 1) / alignment * alignment;
-    report(dataStart <= data.size(),
+    report(dataStart <= fsize,
            "tensor data section start " + std::to_string(dataStart) +
            " is within the file");
     printf("           data section starts at offset %llu\n",
@@ -359,6 +410,7 @@ int main(int argc, char** argv) {
     fflush(stdout);
 
     // ── 7. per-tensor offsets, bounds, overlaps, truncation ───────────────
+    // Bounds are checked against the true file size, not the in-memory prefix.
     uint64_t maxEnd = 0, minOffset = UINT64_MAX;
     std::vector<std::pair<uint64_t, uint64_t>> spans;
     spans.reserve(tensors.size());
@@ -376,11 +428,11 @@ int main(int argc, char** argv) {
         bool allInBounds = true;
         std::string bad;
         for (const auto& t : tensors) {
-            if (t.absOffset > data.size() || t.absOffset + t.totalBytes > data.size()) {
+            if (t.absOffset > fsize || t.absOffset + t.totalBytes > fsize) {
                 allInBounds = false;
                 bad = "tensor '" + t.name + "' ends at " +
                       std::to_string(t.absOffset + t.totalBytes) +
-                      " but the file is " + std::to_string(data.size());
+                      " but the file is " + std::to_string(fsize);
                 break;
             }
         }
@@ -409,9 +461,9 @@ int main(int argc, char** argv) {
     {
         // Truncation: the last tensor must not run past EOF, and the data
         // region must actually cover every tensor.
-        report(maxEnd <= data.size(),
+        report(maxEnd <= fsize,
                "highest tensor end " + std::to_string(maxEnd) +
-               " is covered by the file (" + std::to_string(data.size()) + ")");
+               " is covered by the file (" + std::to_string(fsize) + ")");
     }
 
     {
@@ -461,8 +513,8 @@ int main(int argc, char** argv) {
     if (jsonPath) {
         FILE* j = fopen(jsonPath, "wb");
         if (j) {
-            fprintf(j, "{\n  \"file\": \"%s\",\n  \"file_bytes\": %zu,\n",
-                    path, data.size());
+            fprintf(j, "{\n  \"file\": \"%s\",\n  \"file_bytes\": %llu,\n",
+                    path, static_cast<unsigned long long>(fsize));
             fprintf(j, "  \"version\": %u,\n", version);
             fprintf(j, "  \"tensor_count\": %llu,\n",
                     static_cast<unsigned long long>(tensorCount));
@@ -475,10 +527,21 @@ int main(int argc, char** argv) {
             for (size_t i = 0; i < tensors.size(); ++i) {
                 const auto& t = tensors[i];
                 const TypeInfo& ti = typeInfo(t.type);
+                // dims are emitted because expert count lives in a fused
+                // tensor's trailing dimension, never in the tensor count:
+                // a 256-expert and a 199-expert Qwen3.6 export both report
+                // 733 tensors. Without dims the report cannot show that the
+                // reduction actually happened.
+                std::string dimList;
+                for (size_t d = 0; d < t.dims.size(); ++d) {
+                    if (d) dimList += ", ";
+                    dimList += std::to_string(t.dims[d]);
+                }
                 fprintf(j, "    {\"name\": \"%s\", \"type\": \"%s\", \"ggml_type\": %u, "
+                           "\"dims\": [%s], "
                            "\"row_len\": %llu, \"row_bytes\": %llu, "
                            "\"total_bytes\": %llu, \"abs_offset\": %llu}%s\n",
-                        t.name.c_str(), ti.name, t.type,
+                        t.name.c_str(), ti.name, t.type, dimList.c_str(),
                         static_cast<unsigned long long>(t.rowLen),
                         static_cast<unsigned long long>(t.rowBytes),
                         static_cast<unsigned long long>(t.totalBytes),

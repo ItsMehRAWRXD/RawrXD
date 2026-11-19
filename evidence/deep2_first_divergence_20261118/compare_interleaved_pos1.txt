@@ -1,0 +1,724 @@
+pos=1 deep2_tensors=721 ref_tensors=751
+SKIP     blk= -1 pc=  0 token_embd.weight size=5120   (no reference boundary)
+SKIP     blk=  0 pc=  1 resid_in         size=5120   (no reference boundary)
+OK       blk=  0 pc=  2 attn_norm        size=5120   cos=1.000000000 max_abs=2.38419e-07 rms=4.55677e-08  ref=attn_norm_L0.bin
+OK       blk=  0 pc=  3 attn_proj        size=5120   cos=1.000000000 max_abs=5.72205e-06 rms=3.80671e-07  ref=attn_proj_L0__dup1.bin
+SKIP     blk=  0 pc=  4 resid1           size=5120   (no reference boundary)
+SKIP     blk=  0 pc=  5 ffn_norm         size=5120   (no reference boundary)
+OK       blk=  0 pc=  6 gate             size=17408  cos=0.999999968 max_abs=0.000543475 rms=0.000120351  ref=ffn_gate_L0.bin
+OK       blk=  0 pc=  7 up               size=17408  cos=0.999999960 max_abs=0.000423251 rms=0.000117101  ref=ffn_up_L0.bin
+OK       blk=  0 pc=  8 swiglu           size=17408  cos=0.999999942 max_abs=0.000581384 rms=4.77713e-05  ref=ffn_swiglu_L0.bin
+DIVERGE  blk=  0 pc=  9 ffn_out          size=5120   cos=0.999999371 max_abs=0.0027639 rms=0.000678866  ref=ffn_down_L0.bin
+DIVERGE  blk=  0 pc= 10 resid2           size=5120   cos=0.999998820 max_abs=0.00276336 rms=0.000678874  ref=resid2_L0__dup1.bin
+SKIP     blk=  1 pc= 11 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  1 pc= 12 attn_norm        size=5120   cos=0.999998623 max_abs=0.00767803 rms=0.0015402  ref=attn_norm_L1.bin
+DIVERGE  blk=  1 pc= 13 attn_proj        size=5120   cos=0.999949289 max_abs=0.0127189 rms=0.000718169  ref=attn_proj_L1__dup1.bin
+SKIP     blk=  1 pc= 14 resid1           size=5120   (no reference boundary)
+SKIP     blk=  1 pc= 15 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  1 pc= 16 gate             size=17408  cos=0.999980262 max_abs=0.0157972 rms=0.00414614  ref=ffn_gate_L1.bin
+DIVERGE  blk=  1 pc= 17 up               size=17408  cos=0.999979316 max_abs=0.016655 rms=0.00408153  ref=ffn_up_L1.bin
+DIVERGE  blk=  1 pc= 18 swiglu           size=17408  cos=0.999971501 max_abs=0.0361137 rms=0.00201467  ref=ffn_swiglu_L1.bin
+DIVERGE  blk=  1 pc= 19 ffn_out          size=5120   cos=0.999898887 max_abs=0.0425772 rms=0.00633632  ref=ffn_down_L1.bin
+DIVERGE  blk=  1 pc= 20 resid2           size=5120   cos=0.999953332 max_abs=0.0297842 rms=0.00640771  ref=resid2_L1__dup1.bin
+SKIP     blk=  2 pc= 21 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  2 pc= 22 attn_norm        size=5120   cos=0.999950543 max_abs=0.0387514 rms=0.0100965  ref=attn_norm_L2.bin
+DIVERGE  blk=  2 pc= 23 attn_proj        size=5120   cos=0.999956598 max_abs=0.108929 rms=0.00499359  ref=attn_proj_L2__dup1.bin
+SKIP     blk=  2 pc= 24 resid1           size=5120   (no reference boundary)
+SKIP     blk=  2 pc= 25 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  2 pc= 26 gate             size=17408  cos=0.999917174 max_abs=0.0355223 rms=0.00795311  ref=ffn_gate_L2.bin
+DIVERGE  blk=  2 pc= 27 up               size=17408  cos=0.999862081 max_abs=0.0344503 rms=0.00762342  ref=ffn_up_L2.bin
+DIVERGE  blk=  2 pc= 28 swiglu           size=17408  cos=0.999837199 max_abs=0.0621557 rms=0.00215704  ref=ffn_swiglu_L2.bin
+DIVERGE  blk=  2 pc= 29 ffn_out          size=5120   cos=0.999615770 max_abs=0.0959637 rms=0.00465678  ref=ffn_down_L2.bin
+DIVERGE  blk=  2 pc= 30 resid2           size=5120   cos=0.999960961 max_abs=0.0348371 rms=0.00869739  ref=resid2_L2__dup1.bin
+SKIP     blk=  3 pc= 31 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  3 pc= 32 attn_norm        size=5120   cos=0.999963130 max_abs=0.0426968 rms=0.0110817  ref=attn_norm_L3.bin
+DIVERGE  blk=  3 pc= 33 q                size=12288  cos=0.999945542 max_abs=0.149473 rms=0.0309116  ref=q_L3.bin
+DIVERGE  blk=  3 pc= 34 k                size=1024   cos=0.999797004 max_abs=0.0871599 rms=0.0277599  ref=k_L3.bin
+DIVERGE  blk=  3 pc= 35 v                size=1024   cos=0.999568933 max_abs=0.111909 rms=0.0322804  ref=v_L3.bin
+SKIP     blk=  3 pc= 36 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk=  3 pc= 37 attn_proj        size=5120   cos=0.998432966 max_abs=1.13416 rms=0.0289532  ref=attn_proj_L3.bin
+SKIP     blk=  3 pc= 38 resid1           size=5120   (no reference boundary)
+SKIP     blk=  3 pc= 39 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  3 pc= 40 gate             size=17408  cos=0.999205633 max_abs=0.0783734 rms=0.016811  ref=ffn_gate_L3.bin
+DIVERGE  blk=  3 pc= 41 up               size=17408  cos=0.999045785 max_abs=0.0724418 rms=0.0155406  ref=ffn_up_L3.bin
+DIVERGE  blk=  3 pc= 42 swiglu           size=17408  cos=0.998539434 max_abs=0.226422 rms=0.00415068  ref=ffn_swiglu_L3.bin
+DIVERGE  blk=  3 pc= 43 ffn_out          size=5120   cos=0.998400103 max_abs=0.197397 rms=0.00711813  ref=ffn_down_L3.bin
+DIVERGE  blk=  3 pc= 44 resid2           size=5120   cos=0.999766378 max_abs=1.34837 rms=0.0321819  ref=resid2_L3.bin
+SKIP     blk=  4 pc= 45 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  4 pc= 46 attn_norm        size=5120   cos=0.999366141 max_abs=0.125259 rms=0.0233764  ref=attn_norm_L4.bin
+DIVERGE  blk=  4 pc= 47 attn_proj        size=5120   cos=0.997689085 max_abs=0.242755 rms=0.00631433  ref=attn_proj_L4__dup1.bin
+SKIP     blk=  4 pc= 48 resid1           size=5120   (no reference boundary)
+SKIP     blk=  4 pc= 49 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  4 pc= 50 gate             size=17408  cos=0.999185397 max_abs=0.0902395 rms=0.0193654  ref=ffn_gate_L4.bin
+DIVERGE  blk=  4 pc= 51 up               size=17408  cos=0.999074729 max_abs=0.0702144 rms=0.0164384  ref=ffn_up_L4.bin
+DIVERGE  blk=  4 pc= 52 swiglu           size=17408  cos=0.998122075 max_abs=0.0648829 rms=0.00433289  ref=ffn_swiglu_L4.bin
+DIVERGE  blk=  4 pc= 53 ffn_out          size=5120   cos=0.998074969 max_abs=0.0250066 rms=0.00663148  ref=ffn_down_L4.bin
+DIVERGE  blk=  4 pc= 54 resid2           size=5120   cos=0.999750625 max_abs=1.5768 rms=0.0347037  ref=resid2_L4__dup1.bin
+SKIP     blk=  5 pc= 55 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  5 pc= 56 attn_norm        size=5120   cos=0.999422448 max_abs=0.142891 rms=0.0239107  ref=attn_norm_L5.bin
+DIVERGE  blk=  5 pc= 57 attn_proj        size=5120   cos=0.998384775 max_abs=0.21471 rms=0.00562152  ref=attn_proj_L5__dup1.bin
+SKIP     blk=  5 pc= 58 resid1           size=5120   (no reference boundary)
+SKIP     blk=  5 pc= 59 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  5 pc= 60 gate             size=17408  cos=0.999257412 max_abs=0.0688637 rms=0.0178148  ref=ffn_gate_L5.bin
+DIVERGE  blk=  5 pc= 61 up               size=17408  cos=0.999062358 max_abs=0.0715279 rms=0.0163125  ref=ffn_up_L5.bin
+DIVERGE  blk=  5 pc= 62 swiglu           size=17408  cos=0.998980847 max_abs=0.36807 rms=0.00504603  ref=ffn_swiglu_L5.bin
+DIVERGE  blk=  5 pc= 63 ffn_out          size=5120   cos=0.998744813 max_abs=0.0477632 rms=0.00796849  ref=ffn_down_L5.bin
+DIVERGE  blk=  5 pc= 64 resid2           size=5120   cos=0.999737277 max_abs=1.74374 rms=0.0370784  ref=resid2_L5__dup1.bin
+SKIP     blk=  6 pc= 65 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  6 pc= 66 attn_norm        size=5120   cos=0.999513444 max_abs=0.239918 rms=0.0241487  ref=attn_norm_L6.bin
+DIVERGE  blk=  6 pc= 67 attn_proj        size=5120   cos=0.998655983 max_abs=0.268302 rms=0.00987227  ref=attn_proj_L6__dup1.bin
+SKIP     blk=  6 pc= 68 resid1           size=5120   (no reference boundary)
+SKIP     blk=  6 pc= 69 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  6 pc= 70 gate             size=17408  cos=0.999203558 max_abs=0.0751188 rms=0.0195297  ref=ffn_gate_L6.bin
+DIVERGE  blk=  6 pc= 71 up               size=17408  cos=0.999003351 max_abs=0.088749 rms=0.0176776  ref=ffn_up_L6.bin
+DIVERGE  blk=  6 pc= 72 swiglu           size=17408  cos=0.998168155 max_abs=0.070993 rms=0.00468959  ref=ffn_swiglu_L6.bin
+DIVERGE  blk=  6 pc= 73 ffn_out          size=5120   cos=0.998349722 max_abs=0.0481707 rms=0.00737101  ref=ffn_down_L6.bin
+DIVERGE  blk=  6 pc= 74 resid2           size=5120   cos=0.999690247 max_abs=1.49134 rms=0.0360605  ref=resid2_L6__dup1.bin
+SKIP     blk=  7 pc= 75 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  7 pc= 76 attn_norm        size=5120   cos=0.999716168 max_abs=0.598053 rms=0.0288915  ref=attn_norm_L7.bin
+DIVERGE  blk=  7 pc= 77 q                size=12288  cos=0.999849976 max_abs=0.301252 rms=0.0599106  ref=q_L7.bin
+DIVERGE  blk=  7 pc= 78 k                size=1024   cos=0.999330599 max_abs=0.199015 rms=0.052616  ref=k_L7.bin
+DIVERGE  blk=  7 pc= 79 v                size=1024   cos=0.998760914 max_abs=0.213049 rms=0.0497244  ref=v_L7.bin
+SKIP     blk=  7 pc= 80 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk=  7 pc= 81 attn_proj        size=5120   cos=0.766187035 max_abs=6.06897 rms=0.0974607  ref=attn_proj_L7.bin
+SKIP     blk=  7 pc= 82 resid1           size=5120   (no reference boundary)
+SKIP     blk=  7 pc= 83 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  7 pc= 84 gate             size=17408  cos=0.993556322 max_abs=0.371166 rms=0.0567592  ref=ffn_gate_L7.bin
+DIVERGE  blk=  7 pc= 85 up               size=17408  cos=0.995667592 max_abs=0.356106 rms=0.0462854  ref=ffn_up_L7.bin
+DIVERGE  blk=  7 pc= 86 swiglu           size=17408  cos=0.985607318 max_abs=0.394841 rms=0.017723  ref=ffn_swiglu_L7.bin
+DIVERGE  blk=  7 pc= 87 ffn_out          size=5120   cos=0.981995958 max_abs=0.369781 rms=0.0288858  ref=ffn_down_L7.bin
+DIVERGE  blk=  7 pc= 88 resid2           size=5120   cos=0.997635388 max_abs=7.19053 rms=0.119312  ref=resid2_L7.bin
+SKIP     blk=  8 pc= 89 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  8 pc= 90 attn_norm        size=5120   cos=0.996511352 max_abs=0.986597 rms=0.0687287  ref=attn_norm_L8.bin
+DIVERGE  blk=  8 pc= 91 attn_proj        size=5120   cos=0.984079148 max_abs=6.05411 rms=0.0912169  ref=attn_proj_L8__dup1.bin
+SKIP     blk=  8 pc= 92 resid1           size=5120   (no reference boundary)
+SKIP     blk=  8 pc= 93 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  8 pc= 94 gate             size=17408  cos=0.996418286 max_abs=0.259818 rms=0.0386524  ref=ffn_gate_L8.bin
+DIVERGE  blk=  8 pc= 95 up               size=17408  cos=0.995564862 max_abs=0.394345 rms=0.0342432  ref=ffn_up_L8.bin
+DIVERGE  blk=  8 pc= 96 swiglu           size=17408  cos=0.991408929 max_abs=0.188641 rms=0.00848813  ref=ffn_swiglu_L8.bin
+DIVERGE  blk=  8 pc= 97 ffn_out          size=5120   cos=0.992530921 max_abs=0.254747 rms=0.0144671  ref=ffn_down_L8.bin
+DIVERGE  blk=  8 pc= 98 resid2           size=5120   cos=0.999098254 max_abs=0.881668 rms=0.0668716  ref=resid2_L8__dup1.bin
+SKIP     blk=  9 pc= 99 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk=  9 pc=100 attn_norm        size=5120   cos=0.997841562 max_abs=0.48253 rms=0.0451868  ref=attn_norm_L9.bin
+DIVERGE  blk=  9 pc=101 attn_proj        size=5120   cos=0.993321864 max_abs=0.65252 rms=0.0179304  ref=attn_proj_L9__dup1.bin
+SKIP     blk=  9 pc=102 resid1           size=5120   (no reference boundary)
+SKIP     blk=  9 pc=103 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk=  9 pc=104 gate             size=17408  cos=0.996729329 max_abs=0.226757 rms=0.0341771  ref=ffn_gate_L9.bin
+DIVERGE  blk=  9 pc=105 up               size=17408  cos=0.995978960 max_abs=0.225 rms=0.0317388  ref=ffn_up_L9.bin
+DIVERGE  blk=  9 pc=106 swiglu           size=17408  cos=0.995367786 max_abs=0.116457 rms=0.00782036  ref=ffn_swiglu_L9.bin
+DIVERGE  blk=  9 pc=107 ffn_out          size=5120   cos=0.994894272 max_abs=0.0765792 rms=0.0123181  ref=ffn_down_L9.bin
+DIVERGE  blk=  9 pc=108 resid2           size=5120   cos=0.999153380 max_abs=0.747097 rms=0.0662564  ref=resid2_L9__dup1.bin
+SKIP     blk= 10 pc=109 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 10 pc=110 attn_norm        size=5120   cos=0.998072064 max_abs=0.479161 rms=0.042975  ref=attn_norm_L10.bin
+DIVERGE  blk= 10 pc=111 attn_proj        size=5120   cos=0.996077934 max_abs=0.436089 rms=0.0150918  ref=attn_proj_L10__dup1.bin
+SKIP     blk= 10 pc=112 resid1           size=5120   (no reference boundary)
+SKIP     blk= 10 pc=113 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 10 pc=114 gate             size=17408  cos=0.997286617 max_abs=0.323651 rms=0.0321082  ref=ffn_gate_L10.bin
+DIVERGE  blk= 10 pc=115 up               size=17408  cos=0.996522387 max_abs=0.188133 rms=0.030027  ref=ffn_up_L10.bin
+DIVERGE  blk= 10 pc=116 swiglu           size=17408  cos=0.993168891 max_abs=0.358808 rms=0.00794769  ref=ffn_swiglu_L10.bin
+DIVERGE  blk= 10 pc=117 ffn_out          size=5120   cos=0.993808220 max_abs=0.0472133 rms=0.0123583  ref=ffn_down_L10.bin
+DIVERGE  blk= 10 pc=118 resid2           size=5120   cos=0.999204091 max_abs=0.762671 rms=0.0673007  ref=resid2_L10__dup1.bin
+SKIP     blk= 11 pc=119 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 11 pc=120 attn_norm        size=5120   cos=0.999190641 max_abs=0.745848 rms=0.0442637  ref=attn_norm_L11.bin
+DIVERGE  blk= 11 pc=121 q                size=12288  cos=0.999573354 max_abs=0.643834 rms=0.105409  ref=q_L11.bin
+DIVERGE  blk= 11 pc=122 k                size=1024   cos=0.997586102 max_abs=0.308482 rms=0.0785092  ref=k_L11.bin
+DIVERGE  blk= 11 pc=123 v                size=1024   cos=0.995643777 max_abs=0.671935 rms=0.0814107  ref=v_L11.bin
+SKIP     blk= 11 pc=124 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 11 pc=125 attn_proj        size=5120   cos=0.887303497 max_abs=1.87134 rms=0.0421267  ref=attn_proj_L11.bin
+SKIP     blk= 11 pc=126 resid1           size=5120   (no reference boundary)
+SKIP     blk= 11 pc=127 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 11 pc=128 gate             size=17408  cos=0.996126315 max_abs=0.277259 rms=0.0395176  ref=ffn_gate_L11.bin
+DIVERGE  blk= 11 pc=129 up               size=17408  cos=0.995113022 max_abs=0.234762 rms=0.0375543  ref=ffn_up_L11.bin
+DIVERGE  blk= 11 pc=130 swiglu           size=17408  cos=0.990174695 max_abs=0.278756 rms=0.0101913  ref=ffn_swiglu_L11.bin
+DIVERGE  blk= 11 pc=131 ffn_out          size=5120   cos=0.988828511 max_abs=0.139132 rms=0.0170766  ref=ffn_down_L11.bin
+DIVERGE  blk= 11 pc=132 resid2           size=5120   cos=0.998890912 max_abs=1.91724 rms=0.0802657  ref=resid2_L11.bin
+SKIP     blk= 12 pc=133 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 12 pc=134 attn_norm        size=5120   cos=0.997841096 max_abs=0.636393 rms=0.0486654  ref=attn_norm_L12.bin
+DIVERGE  blk= 12 pc=135 attn_proj        size=5120   cos=0.992470963 max_abs=0.534841 rms=0.0177648  ref=attn_proj_L12__dup1.bin
+SKIP     blk= 12 pc=136 resid1           size=5120   (no reference boundary)
+SKIP     blk= 12 pc=137 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 12 pc=138 gate             size=17408  cos=0.996553513 max_abs=0.237129 rms=0.0378574  ref=ffn_gate_L12.bin
+DIVERGE  blk= 12 pc=139 up               size=17408  cos=0.995578273 max_abs=0.306131 rms=0.0369284  ref=ffn_up_L12.bin
+DIVERGE  blk= 12 pc=140 swiglu           size=17408  cos=0.991550620 max_abs=0.210924 rms=0.0101743  ref=ffn_swiglu_L12.bin
+DIVERGE  blk= 12 pc=141 ffn_out          size=5120   cos=0.991711789 max_abs=0.0599945 rms=0.0157896  ref=ffn_down_L12.bin
+DIVERGE  blk= 12 pc=142 resid2           size=5120   cos=0.998911430 max_abs=1.33398 rms=0.0781417  ref=resid2_L12__dup1.bin
+SKIP     blk= 13 pc=143 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 13 pc=144 attn_norm        size=5120   cos=0.997875927 max_abs=0.511792 rms=0.0484007  ref=attn_norm_L13.bin
+DIVERGE  blk= 13 pc=145 attn_proj        size=5120   cos=0.995696232 max_abs=0.759698 rms=0.0215896  ref=attn_proj_L13__dup1.bin
+SKIP     blk= 13 pc=146 resid1           size=5120   (no reference boundary)
+SKIP     blk= 13 pc=147 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 13 pc=148 gate             size=17408  cos=0.997216847 max_abs=0.188911 rms=0.0366742  ref=ffn_gate_L13.bin
+DIVERGE  blk= 13 pc=149 up               size=17408  cos=0.996014660 max_abs=0.241171 rms=0.0342142  ref=ffn_up_L13.bin
+DIVERGE  blk= 13 pc=150 swiglu           size=17408  cos=0.993377261 max_abs=0.51007 rms=0.00994806  ref=ffn_swiglu_L13.bin
+DIVERGE  blk= 13 pc=151 ffn_out          size=5120   cos=0.993337635 max_abs=0.0618084 rms=0.0165883  ref=ffn_down_L13.bin
+DIVERGE  blk= 13 pc=152 resid2           size=5120   cos=0.999022252 max_abs=0.89555 rms=0.0776613  ref=resid2_L13__dup1.bin
+SKIP     blk= 14 pc=153 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 14 pc=154 attn_norm        size=5120   cos=0.998233704 max_abs=0.505007 rms=0.0455969  ref=attn_norm_L14.bin
+DIVERGE  blk= 14 pc=155 attn_proj        size=5120   cos=0.994540725 max_abs=0.613691 rms=0.0167202  ref=attn_proj_L14__dup1.bin
+SKIP     blk= 14 pc=156 resid1           size=5120   (no reference boundary)
+SKIP     blk= 14 pc=157 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 14 pc=158 gate             size=17408  cos=0.997189734 max_abs=0.157174 rms=0.0365279  ref=ffn_gate_L14.bin
+DIVERGE  blk= 14 pc=159 up               size=17408  cos=0.996435737 max_abs=0.171479 rms=0.0324937  ref=ffn_up_L14.bin
+DIVERGE  blk= 14 pc=160 swiglu           size=17408  cos=0.993912496 max_abs=0.15758 rms=0.00874263  ref=ffn_swiglu_L14.bin
+DIVERGE  blk= 14 pc=161 ffn_out          size=5120   cos=0.993948462 max_abs=0.0590088 rms=0.0147814  ref=ffn_down_L14.bin
+DIVERGE  blk= 14 pc=162 resid2           size=5120   cos=0.999062081 max_abs=0.822395 rms=0.0759998  ref=resid2_L14__dup1.bin
+SKIP     blk= 15 pc=163 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 15 pc=164 attn_norm        size=5120   cos=0.998880935 max_abs=0.719357 rms=0.0461935  ref=attn_norm_L15.bin
+DIVERGE  blk= 15 pc=165 q                size=12288  cos=0.999641567 max_abs=0.399752 rms=0.0839295  ref=q_L15.bin
+DIVERGE  blk= 15 pc=166 k                size=1024   cos=0.998069435 max_abs=0.290938 rms=0.070509  ref=k_L15.bin
+DIVERGE  blk= 15 pc=167 v                size=1024   cos=0.996013492 max_abs=0.317663 rms=0.0749946  ref=v_L15.bin
+SKIP     blk= 15 pc=168 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 15 pc=169 attn_proj        size=5120   cos=0.798452961 max_abs=0.613477 rms=0.0450248  ref=attn_proj_L15.bin
+SKIP     blk= 15 pc=170 resid1           size=5120   (no reference boundary)
+SKIP     blk= 15 pc=171 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 15 pc=172 gate             size=17408  cos=0.995921467 max_abs=0.2162 rms=0.04311  ref=ffn_gate_L15.bin
+DIVERGE  blk= 15 pc=173 up               size=17408  cos=0.994535160 max_abs=0.193809 rms=0.0405147  ref=ffn_up_L15.bin
+DIVERGE  blk= 15 pc=174 swiglu           size=17408  cos=0.989345715 max_abs=0.473179 rms=0.0118175  ref=ffn_swiglu_L15.bin
+DIVERGE  blk= 15 pc=175 ffn_out          size=5120   cos=0.988934115 max_abs=0.0952569 rms=0.0192679  ref=ffn_down_L15.bin
+DIVERGE  blk= 15 pc=176 resid2           size=5120   cos=0.998765426 max_abs=0.79006 rms=0.0871017  ref=resid2_L15.bin
+SKIP     blk= 16 pc=177 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 16 pc=178 attn_norm        size=5120   cos=0.997630572 max_abs=0.335666 rms=0.0512228  ref=attn_norm_L16.bin
+DIVERGE  blk= 16 pc=179 attn_proj        size=5120   cos=0.993944632 max_abs=0.142068 rms=0.015359  ref=attn_proj_L16__dup1.bin
+SKIP     blk= 16 pc=180 resid1           size=5120   (no reference boundary)
+SKIP     blk= 16 pc=181 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 16 pc=182 gate             size=17408  cos=0.996609792 max_abs=0.270276 rms=0.0426142  ref=ffn_gate_L16.bin
+DIVERGE  blk= 16 pc=183 up               size=17408  cos=0.995194013 max_abs=0.217691 rms=0.0405581  ref=ffn_up_L16.bin
+DIVERGE  blk= 16 pc=184 swiglu           size=17408  cos=0.991084189 max_abs=0.284957 rms=0.0116373  ref=ffn_swiglu_L16.bin
+DIVERGE  blk= 16 pc=185 ffn_out          size=5120   cos=0.991054730 max_abs=0.0912912 rms=0.0192581  ref=ffn_down_L16.bin
+DIVERGE  blk= 16 pc=186 resid2           size=5120   cos=0.998724937 max_abs=0.750847 rms=0.0850583  ref=resid2_L16__dup1.bin
+SKIP     blk= 17 pc=187 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 17 pc=188 attn_norm        size=5120   cos=0.997721072 max_abs=0.340881 rms=0.0522099  ref=attn_norm_L17.bin
+DIVERGE  blk= 17 pc=189 attn_proj        size=5120   cos=0.991506165 max_abs=0.0760639 rms=0.0180752  ref=attn_proj_L17__dup1.bin
+SKIP     blk= 17 pc=190 resid1           size=5120   (no reference boundary)
+SKIP     blk= 17 pc=191 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 17 pc=192 gate             size=17408  cos=0.996563923 max_abs=0.201996 rms=0.0440936  ref=ffn_gate_L17.bin
+DIVERGE  blk= 17 pc=193 up               size=17408  cos=0.995799972 max_abs=0.218307 rms=0.0403582  ref=ffn_up_L17.bin
+DIVERGE  blk= 17 pc=194 swiglu           size=17408  cos=0.992997919 max_abs=0.324089 rms=0.0129334  ref=ffn_swiglu_L17.bin
+DIVERGE  blk= 17 pc=195 ffn_out          size=5120   cos=0.993519683 max_abs=0.17078 rms=0.0215638  ref=ffn_down_L17.bin
+DIVERGE  blk= 17 pc=196 resid2           size=5120   cos=0.998643226 max_abs=0.701677 rms=0.0853545  ref=resid2_L17__dup1.bin
+SKIP     blk= 18 pc=197 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 18 pc=198 attn_norm        size=5120   cos=0.997797169 max_abs=0.347519 rms=0.0532898  ref=attn_norm_L18.bin
+DIVERGE  blk= 18 pc=199 attn_proj        size=5120   cos=0.997956903 max_abs=0.115921 rms=0.0197763  ref=attn_proj_L18__dup1.bin
+SKIP     blk= 18 pc=200 resid1           size=5120   (no reference boundary)
+SKIP     blk= 18 pc=201 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 18 pc=202 gate             size=17408  cos=0.997427701 max_abs=0.204784 rms=0.0486408  ref=ffn_gate_L18.bin
+DIVERGE  blk= 18 pc=203 up               size=17408  cos=0.996266426 max_abs=0.215526 rms=0.045964  ref=ffn_up_L18.bin
+DIVERGE  blk= 18 pc=204 swiglu           size=17408  cos=0.992504855 max_abs=0.422003 rms=0.0168948  ref=ffn_swiglu_L18.bin
+DIVERGE  blk= 18 pc=205 ffn_out          size=5120   cos=0.992662849 max_abs=0.603097 rms=0.02846  ref=ffn_down_L18.bin
+DIVERGE  blk= 18 pc=206 resid2           size=5120   cos=0.998244292 max_abs=0.909615 rms=0.0873934  ref=resid2_L18__dup1.bin
+SKIP     blk= 19 pc=207 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 19 pc=208 attn_norm        size=5120   cos=0.997977664 max_abs=0.298841 rms=0.0608026  ref=attn_norm_L19.bin
+DIVERGE  blk= 19 pc=209 q                size=12288  cos=0.999229943 max_abs=0.381284 rms=0.0906077  ref=q_L19.bin
+DIVERGE  blk= 19 pc=210 k                size=1024   cos=0.997956126 max_abs=0.29668 rms=0.0862486  ref=k_L19.bin
+DIVERGE  blk= 19 pc=211 v                size=1024   cos=0.996227244 max_abs=0.449323 rms=0.0849734  ref=v_L19.bin
+SKIP     blk= 19 pc=212 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 19 pc=213 attn_proj        size=5120   cos=0.742319657 max_abs=0.475951 rms=0.131382  ref=attn_proj_L19.bin
+SKIP     blk= 19 pc=214 resid1           size=5120   (no reference boundary)
+SKIP     blk= 19 pc=215 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 19 pc=216 gate             size=17408  cos=0.986784326 max_abs=0.572387 rms=0.119393  ref=ffn_gate_L19.bin
+DIVERGE  blk= 19 pc=217 up               size=17408  cos=0.982377286 max_abs=0.538756 rms=0.0981474  ref=ffn_up_L19.bin
+DIVERGE  blk= 19 pc=218 swiglu           size=17408  cos=0.962400800 max_abs=1.09628 rms=0.03636  ref=ffn_swiglu_L19.bin
+DIVERGE  blk= 19 pc=219 ffn_out          size=5120   cos=0.971766165 max_abs=0.64639 rms=0.0609746  ref=ffn_down_L19.bin
+DIVERGE  blk= 19 pc=220 resid2           size=5120   cos=0.992365488 max_abs=0.726929 rms=0.161434  ref=resid2_L19.bin
+SKIP     blk= 20 pc=221 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 20 pc=222 attn_norm        size=5120   cos=0.990303615 max_abs=0.495361 rms=0.134058  ref=attn_norm_L20.bin
+DIVERGE  blk= 20 pc=223 attn_proj        size=5120   cos=0.980949254 max_abs=1.27914 rms=0.0626909  ref=attn_proj_L20__dup1.bin
+SKIP     blk= 20 pc=224 resid1           size=5120   (no reference boundary)
+SKIP     blk= 20 pc=225 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 20 pc=226 gate             size=17408  cos=0.989056405 max_abs=0.462116 rms=0.100481  ref=ffn_gate_L20.bin
+DIVERGE  blk= 20 pc=227 up               size=17408  cos=0.982383901 max_abs=0.414522 rms=0.0929305  ref=ffn_up_L20.bin
+DIVERGE  blk= 20 pc=228 swiglu           size=17408  cos=0.972700786 max_abs=0.789819 rms=0.0306564  ref=ffn_swiglu_L20.bin
+DIVERGE  blk= 20 pc=229 ffn_out          size=5120   cos=0.979008007 max_abs=0.193612 rms=0.0497261  ref=ffn_down_L20.bin
+DIVERGE  blk= 20 pc=230 resid2           size=5120   cos=0.992941705 max_abs=2.11609 rms=0.162637  ref=resid2_L20__dup1.bin
+SKIP     blk= 21 pc=231 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 21 pc=232 attn_norm        size=5120   cos=0.990785330 max_abs=0.504835 rms=0.134275  ref=attn_norm_L21.bin
+DIVERGE  blk= 21 pc=233 attn_proj        size=5120   cos=0.991040262 max_abs=3.2489 rms=0.0599002  ref=attn_proj_L21__dup1.bin
+SKIP     blk= 21 pc=234 resid1           size=5120   (no reference boundary)
+SKIP     blk= 21 pc=235 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 21 pc=236 gate             size=17408  cos=0.988950844 max_abs=0.436792 rms=0.0886325  ref=ffn_gate_L21.bin
+DIVERGE  blk= 21 pc=237 up               size=17408  cos=0.983594175 max_abs=0.407892 rms=0.0829582  ref=ffn_up_L21.bin
+DIVERGE  blk= 21 pc=238 swiglu           size=17408  cos=0.967888193 max_abs=0.575648 rms=0.0251074  ref=ffn_swiglu_L21.bin
+DIVERGE  blk= 21 pc=239 ffn_out          size=5120   cos=0.970246055 max_abs=0.168861 rms=0.039116  ref=ffn_down_L21.bin
+DIVERGE  blk= 21 pc=240 resid2           size=5120   cos=0.994319989 max_abs=1.30167 rms=0.157681  ref=resid2_L21__dup1.bin
+SKIP     blk= 22 pc=241 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 22 pc=242 attn_norm        size=5120   cos=0.991468491 max_abs=0.580181 rms=0.114306  ref=attn_norm_L22.bin
+DIVERGE  blk= 22 pc=243 attn_proj        size=5120   cos=0.980333313 max_abs=1.17716 rms=0.0335027  ref=attn_proj_L22__dup1.bin
+SKIP     blk= 22 pc=244 resid1           size=5120   (no reference boundary)
+SKIP     blk= 22 pc=245 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 22 pc=246 gate             size=17408  cos=0.993020263 max_abs=0.514272 rms=0.0893194  ref=ffn_gate_L22.bin
+DIVERGE  blk= 22 pc=247 up               size=17408  cos=0.984358747 max_abs=0.353985 rms=0.0813085  ref=ffn_up_L22.bin
+DIVERGE  blk= 22 pc=248 swiglu           size=17408  cos=0.976399185 max_abs=0.601288 rms=0.024529  ref=ffn_swiglu_L22.bin
+DIVERGE  blk= 22 pc=249 ffn_out          size=5120   cos=0.977126721 max_abs=0.638783 rms=0.0389795  ref=ffn_down_L22.bin
+DIVERGE  blk= 22 pc=250 resid2           size=5120   cos=0.994848811 max_abs=1.84004 rms=0.152008  ref=resid2_L22__dup1.bin
+SKIP     blk= 23 pc=251 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 23 pc=252 attn_norm        size=5120   cos=0.994246489 max_abs=0.773586 rms=0.102714  ref=attn_norm_L23.bin
+DIVERGE  blk= 23 pc=253 q                size=12288  cos=0.997816167 max_abs=0.776366 rms=0.137037  ref=q_L23.bin
+DIVERGE  blk= 23 pc=254 k                size=1024   cos=0.991450330 max_abs=0.526497 rms=0.151339  ref=k_L23.bin
+DIVERGE  blk= 23 pc=255 v                size=1024   cos=0.985251227 max_abs=0.592276 rms=0.141985  ref=v_L23.bin
+SKIP     blk= 23 pc=256 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 23 pc=257 attn_proj        size=5120   cos=0.725613786 max_abs=0.867874 rms=0.0997141  ref=attn_proj_L23.bin
+SKIP     blk= 23 pc=258 resid1           size=5120   (no reference boundary)
+SKIP     blk= 23 pc=259 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 23 pc=260 gate             size=17408  cos=0.984797260 max_abs=0.434031 rms=0.106509  ref=ffn_gate_L23.bin
+DIVERGE  blk= 23 pc=261 up               size=17408  cos=0.977621238 max_abs=0.458496 rms=0.0937005  ref=ffn_up_L23.bin
+DIVERGE  blk= 23 pc=262 swiglu           size=17408  cos=0.955822555 max_abs=0.667769 rms=0.028003  ref=ffn_swiglu_L23.bin
+DIVERGE  blk= 23 pc=263 ffn_out          size=5120   cos=0.957330421 max_abs=0.154475 rms=0.0446087  ref=ffn_down_L23.bin
+DIVERGE  blk= 23 pc=264 resid2           size=5120   cos=0.993183393 max_abs=0.983147 rms=0.168098  ref=resid2_L23.bin
+SKIP     blk= 24 pc=265 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 24 pc=266 attn_norm        size=5120   cos=0.990576816 max_abs=0.683713 rms=0.119189  ref=attn_norm_L24.bin
+DIVERGE  blk= 24 pc=267 attn_proj        size=5120   cos=0.975075129 max_abs=1.75312 rms=0.0447206  ref=attn_proj_L24__dup1.bin
+SKIP     blk= 24 pc=268 resid1           size=5120   (no reference boundary)
+SKIP     blk= 24 pc=269 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 24 pc=270 gate             size=17408  cos=0.989138367 max_abs=0.403075 rms=0.0946837  ref=ffn_gate_L24.bin
+DIVERGE  blk= 24 pc=271 up               size=17408  cos=0.979644001 max_abs=0.44217 rms=0.0916575  ref=ffn_up_L24.bin
+DIVERGE  blk= 24 pc=272 swiglu           size=17408  cos=0.971287934 max_abs=0.428337 rms=0.0267973  ref=ffn_swiglu_L24.bin
+DIVERGE  blk= 24 pc=273 ffn_out          size=5120   cos=0.968838913 max_abs=0.201032 rms=0.0447493  ref=ffn_down_L24.bin
+DIVERGE  blk= 24 pc=274 resid2           size=5120   cos=0.993834735 max_abs=2.54622 rms=0.16185  ref=resid2_L24__dup1.bin
+SKIP     blk= 25 pc=275 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 25 pc=276 attn_norm        size=5120   cos=0.992038827 max_abs=0.859005 rms=0.112206  ref=attn_norm_L25.bin
+DIVERGE  blk= 25 pc=277 attn_proj        size=5120   cos=0.990178887 max_abs=0.234029 rms=0.0261125  ref=attn_proj_L25__dup1.bin
+SKIP     blk= 25 pc=278 resid1           size=5120   (no reference boundary)
+SKIP     blk= 25 pc=279 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 25 pc=280 gate             size=17408  cos=0.989562176 max_abs=0.413197 rms=0.0884929  ref=ffn_gate_L25.bin
+DIVERGE  blk= 25 pc=281 up               size=17408  cos=0.982737362 max_abs=0.422776 rms=0.0871607  ref=ffn_up_L25.bin
+DIVERGE  blk= 25 pc=282 swiglu           size=17408  cos=0.972535475 max_abs=0.619073 rms=0.0276501  ref=ffn_swiglu_L25.bin
+DIVERGE  blk= 25 pc=283 ffn_out          size=5120   cos=0.972317014 max_abs=0.480447 rms=0.045013  ref=ffn_down_L25.bin
+DIVERGE  blk= 25 pc=284 resid2           size=5120   cos=0.994126007 max_abs=1.9008 rms=0.153555  ref=resid2_L25__dup1.bin
+SKIP     blk= 26 pc=285 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 26 pc=286 attn_norm        size=5120   cos=0.992602443 max_abs=0.710266 rms=0.105718  ref=attn_norm_L26.bin
+DIVERGE  blk= 26 pc=287 attn_proj        size=5120   cos=0.988483925 max_abs=0.276244 rms=0.0292701  ref=attn_proj_L26__dup1.bin
+SKIP     blk= 26 pc=288 resid1           size=5120   (no reference boundary)
+SKIP     blk= 26 pc=289 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 26 pc=290 gate             size=17408  cos=0.989982430 max_abs=0.390729 rms=0.0885133  ref=ffn_gate_L26.bin
+DIVERGE  blk= 26 pc=291 up               size=17408  cos=0.985436110 max_abs=0.352675 rms=0.0871407  ref=ffn_up_L26.bin
+DIVERGE  blk= 26 pc=292 swiglu           size=17408  cos=0.978426202 max_abs=1.55237 rms=0.0317219  ref=ffn_swiglu_L26.bin
+DIVERGE  blk= 26 pc=293 ffn_out          size=5120   cos=0.978959355 max_abs=0.281114 rms=0.0523959  ref=ffn_down_L26.bin
+DIVERGE  blk= 26 pc=294 resid2           size=5120   cos=0.993848659 max_abs=1.34344 rms=0.148766  ref=resid2_L26__dup1.bin
+SKIP     blk= 27 pc=295 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 27 pc=296 attn_norm        size=5120   cos=0.993866177 max_abs=0.680168 rms=0.107898  ref=attn_norm_L27.bin
+DIVERGE  blk= 27 pc=297 q                size=12288  cos=0.998084471 max_abs=0.777678 rms=0.143721  ref=q_L27.bin
+DIVERGE  blk= 27 pc=298 k                size=1024   cos=0.992944245 max_abs=0.571991 rms=0.15548  ref=k_L27.bin
+DIVERGE  blk= 27 pc=299 v                size=1024   cos=0.988661959 max_abs=0.713734 rms=0.152972  ref=v_L27.bin
+SKIP     blk= 27 pc=300 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 27 pc=301 attn_proj        size=5120   cos=0.882714428 max_abs=1.56606 rms=0.0804162  ref=attn_proj_L27.bin
+SKIP     blk= 27 pc=302 resid1           size=5120   (no reference boundary)
+SKIP     blk= 27 pc=303 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 27 pc=304 gate             size=17408  cos=0.987982769 max_abs=1.06201 rms=0.109883  ref=ffn_gate_L27.bin
+DIVERGE  blk= 27 pc=305 up               size=17408  cos=0.980057492 max_abs=0.790848 rms=0.107536  ref=ffn_up_L27.bin
+DIVERGE  blk= 27 pc=306 swiglu           size=17408  cos=0.965348018 max_abs=1.02706 rms=0.0384436  ref=ffn_swiglu_L27.bin
+DIVERGE  blk= 27 pc=307 ffn_out          size=5120   cos=0.964112773 max_abs=0.518744 rms=0.0655903  ref=ffn_down_L27.bin
+DIVERGE  blk= 27 pc=308 resid2           size=5120   cos=0.992421538 max_abs=0.741364 rms=0.154539  ref=resid2_L27.bin
+SKIP     blk= 28 pc=309 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 28 pc=310 attn_norm        size=5120   cos=0.990877877 max_abs=0.540873 rms=0.118315  ref=attn_norm_L28.bin
+DIVERGE  blk= 28 pc=311 attn_proj        size=5120   cos=0.982597031 max_abs=0.220997 rms=0.0251543  ref=attn_proj_L28__dup1.bin
+SKIP     blk= 28 pc=312 resid1           size=5120   (no reference boundary)
+SKIP     blk= 28 pc=313 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 28 pc=314 gate             size=17408  cos=0.990843869 max_abs=0.408805 rms=0.0955779  ref=ffn_gate_L28.bin
+DIVERGE  blk= 28 pc=315 up               size=17408  cos=0.983494034 max_abs=0.484376 rms=0.0980673  ref=ffn_up_L28.bin
+DIVERGE  blk= 28 pc=316 swiglu           size=17408  cos=0.974142851 max_abs=0.622349 rms=0.0330829  ref=ffn_swiglu_L28.bin
+DIVERGE  blk= 28 pc=317 ffn_out          size=5120   cos=0.974090398 max_abs=0.196931 rms=0.0549447  ref=ffn_down_L28.bin
+DIVERGE  blk= 28 pc=318 resid2           size=5120   cos=0.992614750 max_abs=1.04444 rms=0.147786  ref=resid2_L28__dup1.bin
+SKIP     blk= 29 pc=319 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 29 pc=320 attn_norm        size=5120   cos=0.991046874 max_abs=0.473909 rms=0.118745  ref=attn_norm_L29.bin
+DIVERGE  blk= 29 pc=321 attn_proj        size=5120   cos=0.983467140 max_abs=0.0909791 rms=0.0192915  ref=attn_proj_L29__dup1.bin
+SKIP     blk= 29 pc=322 resid1           size=5120   (no reference boundary)
+SKIP     blk= 29 pc=323 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 29 pc=324 gate             size=17408  cos=0.991157135 max_abs=0.423284 rms=0.0909041  ref=ffn_gate_L29.bin
+DIVERGE  blk= 29 pc=325 up               size=17408  cos=0.985009946 max_abs=0.425938 rms=0.0930566  ref=ffn_up_L29.bin
+DIVERGE  blk= 29 pc=326 swiglu           size=17408  cos=0.973869483 max_abs=0.474428 rms=0.0308636  ref=ffn_swiglu_L29.bin
+DIVERGE  blk= 29 pc=327 ffn_out          size=5120   cos=0.973473464 max_abs=0.221655 rms=0.0508037  ref=ffn_down_L29.bin
+DIVERGE  blk= 29 pc=328 resid2           size=5120   cos=0.992638762 max_abs=0.746803 rms=0.142293  ref=resid2_L29__dup1.bin
+SKIP     blk= 30 pc=329 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 30 pc=330 attn_norm        size=5120   cos=0.991904468 max_abs=0.530282 rms=0.114754  ref=attn_norm_L30.bin
+DIVERGE  blk= 30 pc=331 attn_proj        size=5120   cos=0.977942513 max_abs=0.397598 rms=0.0291475  ref=attn_proj_L30__dup1.bin
+SKIP     blk= 30 pc=332 resid1           size=5120   (no reference boundary)
+SKIP     blk= 30 pc=333 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 30 pc=334 gate             size=17408  cos=0.991520753 max_abs=0.391911 rms=0.086739  ref=ffn_gate_L30.bin
+DIVERGE  blk= 30 pc=335 up               size=17408  cos=0.985651445 max_abs=0.448083 rms=0.091634  ref=ffn_up_L30.bin
+DIVERGE  blk= 30 pc=336 swiglu           size=17408  cos=0.976815453 max_abs=0.460976 rms=0.0306092  ref=ffn_swiglu_L30.bin
+DIVERGE  blk= 30 pc=337 ffn_out          size=5120   cos=0.976521694 max_abs=0.195043 rms=0.0503105  ref=ffn_down_L30.bin
+DIVERGE  blk= 30 pc=338 resid2           size=5120   cos=0.993020677 max_abs=0.629795 rms=0.137902  ref=resid2_L30__dup1.bin
+SKIP     blk= 31 pc=339 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 31 pc=340 attn_norm        size=5120   cos=0.993213428 max_abs=0.669147 rms=0.112497  ref=attn_norm_L31.bin
+DIVERGE  blk= 31 pc=341 q                size=12288  cos=0.998111411 max_abs=0.75044 rms=0.132139  ref=q_L31.bin
+DIVERGE  blk= 31 pc=342 k                size=1024   cos=0.993982919 max_abs=0.479114 rms=0.1355  ref=k_L31.bin
+DIVERGE  blk= 31 pc=343 v                size=1024   cos=0.990041862 max_abs=0.822428 rms=0.141578  ref=v_L31.bin
+SKIP     blk= 31 pc=344 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 31 pc=345 attn_proj        size=5120   cos=0.741923728 max_abs=1.1517 rms=0.082258  ref=attn_proj_L31.bin
+SKIP     blk= 31 pc=346 resid1           size=5120   (no reference boundary)
+SKIP     blk= 31 pc=347 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 31 pc=348 gate             size=17408  cos=0.983421496 max_abs=0.581484 rms=0.114392  ref=ffn_gate_L31.bin
+DIVERGE  blk= 31 pc=349 up               size=17408  cos=0.976355263 max_abs=0.541803 rms=0.117654  ref=ffn_up_L31.bin
+DIVERGE  blk= 31 pc=350 swiglu           size=17408  cos=0.960197654 max_abs=0.949033 rms=0.0447702  ref=ffn_swiglu_L31.bin
+DIVERGE  blk= 31 pc=351 ffn_out          size=5120   cos=0.959974736 max_abs=0.369025 rms=0.0741499  ref=ffn_down_L31.bin
+DIVERGE  blk= 31 pc=352 resid2           size=5120   cos=0.989953975 max_abs=0.711693 rms=0.161496  ref=resid2_L31.bin
+SKIP     blk= 32 pc=353 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 32 pc=354 attn_norm        size=5120   cos=0.987990339 max_abs=0.634998 rms=0.137319  ref=attn_norm_L32.bin
+DIVERGE  blk= 32 pc=355 attn_proj        size=5120   cos=0.978129717 max_abs=0.437684 rms=0.0202586  ref=attn_proj_L32__dup1.bin
+SKIP     blk= 32 pc=356 resid1           size=5120   (no reference boundary)
+SKIP     blk= 32 pc=357 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 32 pc=358 gate             size=17408  cos=0.986039242 max_abs=0.547023 rms=0.113138  ref=ffn_gate_L32.bin
+DIVERGE  blk= 32 pc=359 up               size=17408  cos=0.977759738 max_abs=0.659253 rms=0.11985  ref=ffn_up_L32.bin
+DIVERGE  blk= 32 pc=360 swiglu           size=17408  cos=0.960981671 max_abs=0.807576 rms=0.0422003  ref=ffn_swiglu_L32.bin
+DIVERGE  blk= 32 pc=361 ffn_out          size=5120   cos=0.959852950 max_abs=0.466538 rms=0.0692301  ref=ffn_down_L32.bin
+DIVERGE  blk= 32 pc=362 resid2           size=5120   cos=0.989816404 max_abs=0.718816 rms=0.157952  ref=resid2_L32__dup1.bin
+SKIP     blk= 33 pc=363 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 33 pc=364 attn_norm        size=5120   cos=0.988130405 max_abs=0.621813 rms=0.1433  ref=attn_norm_L33.bin
+DIVERGE  blk= 33 pc=365 attn_proj        size=5120   cos=0.980254940 max_abs=0.844938 rms=0.0316612  ref=attn_proj_L33__dup1.bin
+SKIP     blk= 33 pc=366 resid1           size=5120   (no reference boundary)
+SKIP     blk= 33 pc=367 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 33 pc=368 gate             size=17408  cos=0.986178822 max_abs=0.588726 rms=0.111749  ref=ffn_gate_L33.bin
+DIVERGE  blk= 33 pc=369 up               size=17408  cos=0.980373854 max_abs=0.604632 rms=0.116242  ref=ffn_up_L33.bin
+DIVERGE  blk= 33 pc=370 swiglu           size=17408  cos=0.966955022 max_abs=1.14343 rms=0.0429094  ref=ffn_swiglu_L33.bin
+DIVERGE  blk= 33 pc=371 ffn_out          size=5120   cos=0.966827691 max_abs=0.47741 rms=0.0711017  ref=ffn_down_L33.bin
+DIVERGE  blk= 33 pc=372 resid2           size=5120   cos=0.990302768 max_abs=0.61824 rms=0.155829  ref=resid2_L33__dup1.bin
+SKIP     blk= 34 pc=373 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 34 pc=374 attn_norm        size=5120   cos=0.989036866 max_abs=0.531727 rms=0.138529  ref=attn_norm_L34.bin
+DIVERGE  blk= 34 pc=375 attn_proj        size=5120   cos=0.975194843 max_abs=0.986623 rms=0.03302  ref=attn_proj_L34__dup1.bin
+SKIP     blk= 34 pc=376 resid1           size=5120   (no reference boundary)
+SKIP     blk= 34 pc=377 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 34 pc=378 gate             size=17408  cos=0.990132530 max_abs=0.554489 rms=0.104965  ref=ffn_gate_L34.bin
+DIVERGE  blk= 34 pc=379 up               size=17408  cos=0.982624912 max_abs=0.471137 rms=0.11442  ref=ffn_up_L34.bin
+DIVERGE  blk= 34 pc=380 swiglu           size=17408  cos=0.979329353 max_abs=0.653681 rms=0.0426554  ref=ffn_swiglu_L34.bin
+DIVERGE  blk= 34 pc=381 ffn_out          size=5120   cos=0.978307449 max_abs=0.613253 rms=0.0683785  ref=ffn_down_L34.bin
+DIVERGE  blk= 34 pc=382 resid2           size=5120   cos=0.989648092 max_abs=1.5125 rms=0.154943  ref=resid2_L34__dup1.bin
+SKIP     blk= 35 pc=383 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 35 pc=384 attn_norm        size=5120   cos=0.989814556 max_abs=1.1975 rms=0.143827  ref=attn_norm_L35.bin
+DIVERGE  blk= 35 pc=385 q                size=12288  cos=0.997818737 max_abs=0.66317 rms=0.145998  ref=q_L35.bin
+DIVERGE  blk= 35 pc=386 k                size=1024   cos=0.991291687 max_abs=0.746674 rms=0.179551  ref=k_L35.bin
+DIVERGE  blk= 35 pc=387 v                size=1024   cos=0.985069804 max_abs=0.73843 rms=0.198042  ref=v_L35.bin
+SKIP     blk= 35 pc=388 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 35 pc=389 attn_proj        size=5120   cos=0.690604611 max_abs=0.975216 rms=0.0947719  ref=attn_proj_L35.bin
+SKIP     blk= 35 pc=390 resid1           size=5120   (no reference boundary)
+SKIP     blk= 35 pc=391 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 35 pc=392 gate             size=17408  cos=0.984713638 max_abs=0.556985 rms=0.127866  ref=ffn_gate_L35.bin
+DIVERGE  blk= 35 pc=393 up               size=17408  cos=0.972643857 max_abs=1.14714 rms=0.138246  ref=ffn_up_L35.bin
+DIVERGE  blk= 35 pc=394 swiglu           size=17408  cos=0.924868478 max_abs=5.84035 rms=0.0663988  ref=ffn_swiglu_L35.bin
+DIVERGE  blk= 35 pc=395 ffn_out          size=5120   cos=0.926554492 max_abs=1.18724 rms=0.103623  ref=ffn_down_L35.bin
+DIVERGE  blk= 35 pc=396 resid2           size=5120   cos=0.984105464 max_abs=1.30047 rms=0.19129  ref=resid2_L35.bin
+SKIP     blk= 36 pc=397 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 36 pc=398 attn_norm        size=5120   cos=0.982585177 max_abs=1.36727 rms=0.194053  ref=attn_norm_L36.bin
+DIVERGE  blk= 36 pc=399 attn_proj        size=5120   cos=0.932703038 max_abs=2.34828 rms=0.0568532  ref=attn_proj_L36__dup1.bin
+SKIP     blk= 36 pc=400 resid1           size=5120   (no reference boundary)
+SKIP     blk= 36 pc=401 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 36 pc=402 gate             size=17408  cos=0.979590758 max_abs=0.689251 rms=0.138917  ref=ffn_gate_L36.bin
+DIVERGE  blk= 36 pc=403 up               size=17408  cos=0.968180333 max_abs=0.771026 rms=0.140523  ref=ffn_up_L36.bin
+DIVERGE  blk= 36 pc=404 swiglu           size=17408  cos=0.947156659 max_abs=1.79044 rms=0.0498544  ref=ffn_swiglu_L36.bin
+DIVERGE  blk= 36 pc=405 ffn_out          size=5120   cos=0.945675377 max_abs=0.348699 rms=0.0775216  ref=ffn_down_L36.bin
+DIVERGE  blk= 36 pc=406 resid2           size=5120   cos=0.982749232 max_abs=1.13938 rms=0.198192  ref=resid2_L36__dup1.bin
+SKIP     blk= 37 pc=407 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 37 pc=408 attn_norm        size=5120   cos=0.981257604 max_abs=0.863012 rms=0.205712  ref=attn_norm_L37.bin
+DIVERGE  blk= 37 pc=409 attn_proj        size=5120   cos=0.978783176 max_abs=0.673828 rms=0.0393627  ref=attn_proj_L37__dup1.bin
+SKIP     blk= 37 pc=410 resid1           size=5120   (no reference boundary)
+SKIP     blk= 37 pc=411 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 37 pc=412 gate             size=17408  cos=0.977956022 max_abs=0.69192 rms=0.136742  ref=ffn_gate_L37.bin
+DIVERGE  blk= 37 pc=413 up               size=17408  cos=0.966167607 max_abs=1.03614 rms=0.137847  ref=ffn_up_L37.bin
+DIVERGE  blk= 37 pc=414 swiglu           size=17408  cos=0.936761205 max_abs=0.814132 rms=0.0459483  ref=ffn_swiglu_L37.bin
+DIVERGE  blk= 37 pc=415 ffn_out          size=5120   cos=0.939048620 max_abs=0.305314 rms=0.0697196  ref=ffn_down_L37.bin
+DIVERGE  blk= 37 pc=416 resid2           size=5120   cos=0.984150769 max_abs=1.50789 rms=0.198331  ref=resid2_L37__dup1.bin
+SKIP     blk= 38 pc=417 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 38 pc=418 attn_norm        size=5120   cos=0.980243967 max_abs=0.815515 rms=0.192307  ref=attn_norm_L38.bin
+DIVERGE  blk= 38 pc=419 attn_proj        size=5120   cos=0.935747257 max_abs=1.81271 rms=0.0511853  ref=attn_proj_L38__dup1.bin
+SKIP     blk= 38 pc=420 resid1           size=5120   (no reference boundary)
+SKIP     blk= 38 pc=421 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 38 pc=422 gate             size=17408  cos=0.982920867 max_abs=0.895455 rms=0.157979  ref=ffn_gate_L38.bin
+DIVERGE  blk= 38 pc=423 up               size=17408  cos=0.967084167 max_abs=0.583315 rms=0.142482  ref=ffn_up_L38.bin
+DIVERGE  blk= 38 pc=424 swiglu           size=17408  cos=0.942840617 max_abs=0.554044 rms=0.0497487  ref=ffn_swiglu_L38.bin
+DIVERGE  blk= 38 pc=425 ffn_out          size=5120   cos=0.963141940 max_abs=0.283036 rms=0.0744499  ref=ffn_down_L38.bin
+DIVERGE  blk= 38 pc=426 resid2           size=5120   cos=0.985393164 max_abs=0.819401 rms=0.196992  ref=resid2_L38__dup1.bin
+SKIP     blk= 39 pc=427 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 39 pc=428 attn_norm        size=5120   cos=0.985379987 max_abs=0.782903 rms=0.171473  ref=attn_norm_L39.bin
+DIVERGE  blk= 39 pc=429 q                size=12288  cos=0.996326311 max_abs=0.806827 rms=0.184177  ref=q_L39.bin
+DIVERGE  blk= 39 pc=430 k                size=1024   cos=0.988566564 max_abs=0.734344 rms=0.190012  ref=k_L39.bin
+DIVERGE  blk= 39 pc=431 v                size=1024   cos=0.973388787 max_abs=0.738667 rms=0.22611  ref=v_L39.bin
+SKIP     blk= 39 pc=432 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 39 pc=433 attn_proj        size=5120   cos=0.774663907 max_abs=1.3295 rms=0.0608482  ref=attn_proj_L39.bin
+SKIP     blk= 39 pc=434 resid1           size=5120   (no reference boundary)
+SKIP     blk= 39 pc=435 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 39 pc=436 gate             size=17408  cos=0.979580409 max_abs=0.671013 rms=0.154674  ref=ffn_gate_L39.bin
+DIVERGE  blk= 39 pc=437 up               size=17408  cos=0.961004415 max_abs=0.742351 rms=0.144612  ref=ffn_up_L39.bin
+DIVERGE  blk= 39 pc=438 swiglu           size=17408  cos=0.951639046 max_abs=2.02982 rms=0.0472928  ref=ffn_swiglu_L39.bin
+DIVERGE  blk= 39 pc=439 ffn_out          size=5120   cos=0.947281874 max_abs=0.285568 rms=0.0728845  ref=ffn_down_L39.bin
+DIVERGE  blk= 39 pc=440 resid2           size=5120   cos=0.983451758 max_abs=1.90993 rms=0.199386  ref=resid2_L39.bin
+SKIP     blk= 40 pc=441 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 40 pc=442 attn_norm        size=5120   cos=0.980924564 max_abs=1.3977 rms=0.189103  ref=attn_norm_L40.bin
+DIVERGE  blk= 40 pc=443 attn_proj        size=5120   cos=0.960240742 max_abs=1.70885 rms=0.0405794  ref=attn_proj_L40__dup1.bin
+SKIP     blk= 40 pc=444 resid1           size=5120   (no reference boundary)
+SKIP     blk= 40 pc=445 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 40 pc=446 gate             size=17408  cos=0.976366173 max_abs=0.638924 rms=0.151672  ref=ffn_gate_L40.bin
+DIVERGE  blk= 40 pc=447 up               size=17408  cos=0.961186394 max_abs=0.561525 rms=0.141943  ref=ffn_up_L40.bin
+DIVERGE  blk= 40 pc=448 swiglu           size=17408  cos=0.931962246 max_abs=0.472615 rms=0.0446079  ref=ffn_swiglu_L40.bin
+DIVERGE  blk= 40 pc=449 ffn_out          size=5120   cos=0.933822888 max_abs=0.633338 rms=0.0679559  ref=ffn_down_L40.bin
+DIVERGE  blk= 40 pc=450 resid2           size=5120   cos=0.985466736 max_abs=0.752093 rms=0.191142  ref=resid2_L40__dup1.bin
+SKIP     blk= 41 pc=451 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 41 pc=452 attn_norm        size=5120   cos=0.982503957 max_abs=0.81419 rms=0.175299  ref=attn_norm_L41.bin
+DIVERGE  blk= 41 pc=453 attn_proj        size=5120   cos=0.973297910 max_abs=0.197518 rms=0.0262029  ref=attn_proj_L41__dup1.bin
+SKIP     blk= 41 pc=454 resid1           size=5120   (no reference boundary)
+SKIP     blk= 41 pc=455 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 41 pc=456 gate             size=17408  cos=0.975980637 max_abs=0.878336 rms=0.139342  ref=ffn_gate_L41.bin
+DIVERGE  blk= 41 pc=457 up               size=17408  cos=0.962942435 max_abs=0.729453 rms=0.137624  ref=ffn_up_L41.bin
+DIVERGE  blk= 41 pc=458 swiglu           size=17408  cos=0.953000193 max_abs=0.619567 rms=0.0430217  ref=ffn_swiglu_L41.bin
+DIVERGE  blk= 41 pc=459 ffn_out          size=5120   cos=0.952738721 max_abs=0.247742 rms=0.0661867  ref=ffn_down_L41.bin
+DIVERGE  blk= 41 pc=460 resid2           size=5120   cos=0.985965704 max_abs=0.77136 rms=0.187585  ref=resid2_L41__dup1.bin
+SKIP     blk= 42 pc=461 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 42 pc=462 attn_norm        size=5120   cos=0.983893465 max_abs=0.696676 rms=0.16747  ref=attn_norm_L42.bin
+DIVERGE  blk= 42 pc=463 attn_proj        size=5120   cos=0.959004471 max_abs=0.556223 rms=0.0292574  ref=attn_proj_L42__dup1.bin
+SKIP     blk= 42 pc=464 resid1           size=5120   (no reference boundary)
+SKIP     blk= 42 pc=465 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 42 pc=466 gate             size=17408  cos=0.976932334 max_abs=0.639639 rms=0.133346  ref=ffn_gate_L42.bin
+DIVERGE  blk= 42 pc=467 up               size=17408  cos=0.967445183 max_abs=0.589553 rms=0.136047  ref=ffn_up_L42.bin
+DIVERGE  blk= 42 pc=468 swiglu           size=17408  cos=0.957186587 max_abs=0.784926 rms=0.0461102  ref=ffn_swiglu_L42.bin
+DIVERGE  blk= 42 pc=469 ffn_out          size=5120   cos=0.950145961 max_abs=0.821515 rms=0.0712813  ref=ffn_down_L42.bin
+DIVERGE  blk= 42 pc=470 resid2           size=5120   cos=0.984882993 max_abs=1.87601 rms=0.192375  ref=resid2_L42__dup1.bin
+SKIP     blk= 43 pc=471 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 43 pc=472 attn_norm        size=5120   cos=0.986696438 max_abs=0.864586 rms=0.17247  ref=attn_norm_L43.bin
+DIVERGE  blk= 43 pc=473 q                size=12288  cos=0.996495070 max_abs=1.29463 rms=0.187873  ref=q_L43.bin
+DIVERGE  blk= 43 pc=474 k                size=1024   cos=0.985831431 max_abs=0.9549 rms=0.216629  ref=k_L43.bin
+DIVERGE  blk= 43 pc=475 v                size=1024   cos=0.977400208 max_abs=0.824493 rms=0.246932  ref=v_L43.bin
+SKIP     blk= 43 pc=476 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 43 pc=477 attn_proj        size=5120   cos=0.405821872 max_abs=1.44775 rms=0.188725  ref=attn_proj_L43.bin
+SKIP     blk= 43 pc=478 resid1           size=5120   (no reference boundary)
+SKIP     blk= 43 pc=479 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 43 pc=480 gate             size=17408  cos=0.956622586 max_abs=6.40736 rms=0.202297  ref=ffn_gate_L43.bin
+DIVERGE  blk= 43 pc=481 up               size=17408  cos=0.930034857 max_abs=5.09794 rms=0.205989  ref=ffn_up_L43.bin
+DIVERGE  blk= 43 pc=482 swiglu           size=17408  cos=0.607247603 max_abs=18.2632 rms=0.15785  ref=ffn_swiglu_L43.bin
+DIVERGE  blk= 43 pc=483 ffn_out          size=5120   cos=0.658023977 max_abs=0.964035 rms=0.226037  ref=ffn_down_L43.bin
+DIVERGE  blk= 43 pc=484 resid2           size=5120   cos=0.976292419 max_abs=1.31285 rms=0.237336  ref=resid2_L43.bin
+SKIP     blk= 44 pc=485 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 44 pc=486 attn_norm        size=5120   cos=0.971964828 max_abs=0.860742 rms=0.215055  ref=attn_norm_L44.bin
+DIVERGE  blk= 44 pc=487 attn_proj        size=5120   cos=0.946321439 max_abs=0.731603 rms=0.0332135  ref=attn_proj_L44__dup1.bin
+SKIP     blk= 44 pc=488 resid1           size=5120   (no reference boundary)
+SKIP     blk= 44 pc=489 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 44 pc=490 gate             size=17408  cos=0.968442505 max_abs=2.05608 rms=0.170683  ref=ffn_gate_L44.bin
+DIVERGE  blk= 44 pc=491 up               size=17408  cos=0.943904790 max_abs=2.13452 rms=0.181629  ref=ffn_up_L44.bin
+DIVERGE  blk= 44 pc=492 swiglu           size=17408  cos=0.897486386 max_abs=2.31174 rms=0.063587  ref=ffn_swiglu_L44.bin
+DIVERGE  blk= 44 pc=493 ffn_out          size=5120   cos=0.900918600 max_abs=0.379357 rms=0.099831  ref=ffn_down_L44.bin
+DIVERGE  blk= 44 pc=494 resid2           size=5120   cos=0.976603438 max_abs=1.30198 rms=0.23484  ref=resid2_L44__dup1.bin
+SKIP     blk= 45 pc=495 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 45 pc=496 attn_norm        size=5120   cos=0.971049023 max_abs=0.737129 rms=0.216911  ref=attn_norm_L45.bin
+DIVERGE  blk= 45 pc=497 attn_proj        size=5120   cos=0.933003870 max_abs=0.145527 rms=0.0363358  ref=attn_proj_L45__dup1.bin
+SKIP     blk= 45 pc=498 resid1           size=5120   (no reference boundary)
+SKIP     blk= 45 pc=499 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 45 pc=500 gate             size=17408  cos=0.968251442 max_abs=1.08216 rms=0.165946  ref=ffn_gate_L45.bin
+DIVERGE  blk= 45 pc=501 up               size=17408  cos=0.947466742 max_abs=1.00375 rms=0.179795  ref=ffn_up_L45.bin
+DIVERGE  blk= 45 pc=502 swiglu           size=17408  cos=0.909707477 max_abs=0.87795 rms=0.0586361  ref=ffn_swiglu_L45.bin
+DIVERGE  blk= 45 pc=503 ffn_out          size=5120   cos=0.905502476 max_abs=0.563186 rms=0.0932122  ref=ffn_down_L45.bin
+DIVERGE  blk= 45 pc=504 resid2           size=5120   cos=0.975419845 max_abs=1.28893 rms=0.236903  ref=resid2_L45__dup1.bin
+SKIP     blk= 46 pc=505 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 46 pc=506 attn_norm        size=5120   cos=0.972320457 max_abs=0.824334 rms=0.220249  ref=attn_norm_L46.bin
+DIVERGE  blk= 46 pc=507 attn_proj        size=5120   cos=0.928960708 max_abs=0.817821 rms=0.0487118  ref=attn_proj_L46__dup1.bin
+SKIP     blk= 46 pc=508 resid1           size=5120   (no reference boundary)
+SKIP     blk= 46 pc=509 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 46 pc=510 gate             size=17408  cos=0.970002666 max_abs=0.827803 rms=0.16756  ref=ffn_gate_L46.bin
+DIVERGE  blk= 46 pc=511 up               size=17408  cos=0.949357986 max_abs=0.851577 rms=0.182291  ref=ffn_up_L46.bin
+DIVERGE  blk= 46 pc=512 swiglu           size=17408  cos=0.905318938 max_abs=2.08949 rms=0.0639093  ref=ffn_swiglu_L46.bin
+DIVERGE  blk= 46 pc=513 ffn_out          size=5120   cos=0.911898685 max_abs=1.52965 rms=0.100721  ref=ffn_down_L46.bin
+DIVERGE  blk= 46 pc=514 resid2           size=5120   cos=0.974923058 max_abs=2.81376 rms=0.239291  ref=resid2_L46__dup1.bin
+SKIP     blk= 47 pc=515 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 47 pc=516 attn_norm        size=5120   cos=0.975958155 max_abs=1.39724 rms=0.229919  ref=attn_norm_L47.bin
+DIVERGE  blk= 47 pc=517 q                size=12288  cos=0.994425147 max_abs=2.1531 rms=0.268417  ref=q_L47.bin
+DIVERGE  blk= 47 pc=518 k                size=1024   cos=0.982600843 max_abs=0.849987 rms=0.2349  ref=k_L47.bin
+DIVERGE  blk= 47 pc=519 v                size=1024   cos=0.961249073 max_abs=1.69539 rms=0.347733  ref=v_L47.bin
+SKIP     blk= 47 pc=520 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 47 pc=521 attn_proj        size=5120   cos=0.911197842 max_abs=0.159341 rms=0.0384147  ref=attn_proj_L47.bin
+SKIP     blk= 47 pc=522 resid1           size=5120   (no reference boundary)
+SKIP     blk= 47 pc=523 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 47 pc=524 gate             size=17408  cos=0.974074921 max_abs=1.10185 rms=0.1763  ref=ffn_gate_L47.bin
+DIVERGE  blk= 47 pc=525 up               size=17408  cos=0.948045089 max_abs=0.915454 rms=0.18828  ref=ffn_up_L47.bin
+DIVERGE  blk= 47 pc=526 swiglu           size=17408  cos=0.929449571 max_abs=2.10847 rms=0.0676664  ref=ffn_swiglu_L47.bin
+DIVERGE  blk= 47 pc=527 ffn_out          size=5120   cos=0.929118205 max_abs=0.443977 rms=0.108851  ref=ffn_down_L47.bin
+DIVERGE  blk= 47 pc=528 resid2           size=5120   cos=0.977510030 max_abs=2.50173 rms=0.244558  ref=resid2_L47.bin
+SKIP     blk= 48 pc=529 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 48 pc=530 attn_norm        size=5120   cos=0.974105370 max_abs=0.777107 rms=0.214065  ref=attn_norm_L48.bin
+DIVERGE  blk= 48 pc=531 attn_proj        size=5120   cos=0.948562719 max_abs=0.127066 rms=0.0281152  ref=attn_proj_L48__dup1.bin
+SKIP     blk= 48 pc=532 resid1           size=5120   (no reference boundary)
+SKIP     blk= 48 pc=533 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 48 pc=534 gate             size=17408  cos=0.974395687 max_abs=1.14449 rms=0.173622  ref=ffn_gate_L48.bin
+DIVERGE  blk= 48 pc=535 up               size=17408  cos=0.953107476 max_abs=0.896747 rms=0.181749  ref=ffn_up_L48.bin
+DIVERGE  blk= 48 pc=536 swiglu           size=17408  cos=0.921765586 max_abs=1.18635 rms=0.066405  ref=ffn_swiglu_L48.bin
+DIVERGE  blk= 48 pc=537 ffn_out          size=5120   cos=0.921693770 max_abs=0.391031 rms=0.105079  ref=ffn_down_L48.bin
+DIVERGE  blk= 48 pc=538 resid2           size=5120   cos=0.976133303 max_abs=2.87633 rms=0.248088  ref=resid2_L48__dup1.bin
+SKIP     blk= 49 pc=539 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 49 pc=540 attn_norm        size=5120   cos=0.973477890 max_abs=0.895644 rms=0.227134  ref=attn_norm_L49.bin
+DIVERGE  blk= 49 pc=541 attn_proj        size=5120   cos=0.943291027 max_abs=0.154754 rms=0.0405807  ref=attn_proj_L49__dup1.bin
+SKIP     blk= 49 pc=542 resid1           size=5120   (no reference boundary)
+SKIP     blk= 49 pc=543 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 49 pc=544 gate             size=17408  cos=0.976620105 max_abs=1.34077 rms=0.173087  ref=ffn_gate_L49.bin
+DIVERGE  blk= 49 pc=545 up               size=17408  cos=0.957729536 max_abs=0.884469 rms=0.185058  ref=ffn_up_L49.bin
+DIVERGE  blk= 49 pc=546 swiglu           size=17408  cos=0.926692436 max_abs=2.19944 rms=0.0752395  ref=ffn_swiglu_L49.bin
+DIVERGE  blk= 49 pc=547 ffn_out          size=5120   cos=0.925514619 max_abs=0.449748 rms=0.118995  ref=ffn_down_L49.bin
+DIVERGE  blk= 49 pc=548 resid2           size=5120   cos=0.975709502 max_abs=2.70763 rms=0.249291  ref=resid2_L49__dup1.bin
+SKIP     blk= 50 pc=549 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 50 pc=550 attn_norm        size=5120   cos=0.973945899 max_abs=1.04169 rms=0.227059  ref=attn_norm_L50.bin
+DIVERGE  blk= 50 pc=551 attn_proj        size=5120   cos=0.921697742 max_abs=2.61417 rms=0.0594758  ref=attn_proj_L50__dup1.bin
+SKIP     blk= 50 pc=552 resid1           size=5120   (no reference boundary)
+SKIP     blk= 50 pc=553 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 50 pc=554 gate             size=17408  cos=0.985521785 max_abs=1.46008 rms=0.189021  ref=ffn_gate_L50.bin
+DIVERGE  blk= 50 pc=555 up               size=17408  cos=0.969348469 max_abs=0.946487 rms=0.196445  ref=ffn_up_L50.bin
+DIVERGE  blk= 50 pc=556 swiglu           size=17408  cos=0.925395831 max_abs=3.45083 rms=0.0989681  ref=ffn_swiglu_L50.bin
+DIVERGE  blk= 50 pc=557 ffn_out          size=5120   cos=0.927843456 max_abs=1.58662 rms=0.154778  ref=ffn_down_L50.bin
+DIVERGE  blk= 50 pc=558 resid2           size=5120   cos=0.973198555 max_abs=2.00423 rms=0.263336  ref=resid2_L50__dup1.bin
+SKIP     blk= 51 pc=559 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 51 pc=560 attn_norm        size=5120   cos=0.974991223 max_abs=2.71219 rms=0.246165  ref=attn_norm_L51.bin
+DIVERGE  blk= 51 pc=561 q                size=12288  cos=0.995357118 max_abs=1.40419 rms=0.245611  ref=q_L51.bin
+DIVERGE  blk= 51 pc=562 k                size=1024   cos=0.986552737 max_abs=0.856011 rms=0.251331  ref=k_L51.bin
+DIVERGE  blk= 51 pc=563 v                size=1024   cos=0.971254203 max_abs=2.08317 rms=0.436859  ref=v_L51.bin
+SKIP     blk= 51 pc=564 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 51 pc=565 attn_proj        size=5120   cos=0.874484433 max_abs=0.853667 rms=0.0638255  ref=attn_proj_L51.bin
+SKIP     blk= 51 pc=566 resid1           size=5120   (no reference boundary)
+SKIP     blk= 51 pc=567 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 51 pc=568 gate             size=17408  cos=0.985513801 max_abs=1.68221 rms=0.198938  ref=ffn_gate_L51.bin
+DIVERGE  blk= 51 pc=569 up               size=17408  cos=0.966080731 max_abs=0.984791 rms=0.207569  ref=ffn_up_L51.bin
+DIVERGE  blk= 51 pc=570 swiglu           size=17408  cos=0.942461550 max_abs=2.32895 rms=0.0927663  ref=ffn_swiglu_L51.bin
+DIVERGE  blk= 51 pc=571 ffn_out          size=5120   cos=0.942486908 max_abs=0.538115 rms=0.14929  ref=ffn_down_L51.bin
+DIVERGE  blk= 51 pc=572 resid2           size=5120   cos=0.968780336 max_abs=2.24395 rms=0.286712  ref=resid2_L51.bin
+SKIP     blk= 52 pc=573 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 52 pc=574 attn_norm        size=5120   cos=0.967232331 max_abs=2.89508 rms=0.277424  ref=attn_norm_L52.bin
+DIVERGE  blk= 52 pc=575 attn_proj        size=5120   cos=0.975552244 max_abs=0.638216 rms=0.0598512  ref=attn_proj_L52__dup1.bin
+SKIP     blk= 52 pc=576 resid1           size=5120   (no reference boundary)
+SKIP     blk= 52 pc=577 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 52 pc=578 gate             size=17408  cos=0.984949502 max_abs=1.77248 rms=0.233522  ref=ffn_gate_L52.bin
+DIVERGE  blk= 52 pc=579 up               size=17408  cos=0.965183714 max_abs=1.18749 rms=0.225148  ref=ffn_up_L52.bin
+DIVERGE  blk= 52 pc=580 swiglu           size=17408  cos=0.921339758 max_abs=4.01615 rms=0.11367  ref=ffn_swiglu_L52.bin
+DIVERGE  blk= 52 pc=581 ffn_out          size=5120   cos=0.921221501 max_abs=1.06421 rms=0.175378  ref=ffn_down_L52.bin
+DIVERGE  blk= 52 pc=582 resid2           size=5120   cos=0.964843015 max_abs=3.94384 rms=0.326055  ref=resid2_L52__dup1.bin
+SKIP     blk= 53 pc=583 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 53 pc=584 attn_norm        size=5120   cos=0.963292913 max_abs=3.69217 rms=0.294406  ref=attn_norm_L53.bin
+DIVERGE  blk= 53 pc=585 attn_proj        size=5120   cos=0.924556870 max_abs=3.33332 rms=0.0848557  ref=attn_proj_L53__dup1.bin
+SKIP     blk= 53 pc=586 resid1           size=5120   (no reference boundary)
+SKIP     blk= 53 pc=587 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 53 pc=588 gate             size=17408  cos=0.984850274 max_abs=1.91301 rms=0.254125  ref=ffn_gate_L53.bin
+DIVERGE  blk= 53 pc=589 up               size=17408  cos=0.965881092 max_abs=1.67142 rms=0.245969  ref=ffn_up_L53.bin
+DIVERGE  blk= 53 pc=590 swiglu           size=17408  cos=0.909440295 max_abs=3.10098 rms=0.122053  ref=ffn_swiglu_L53.bin
+DIVERGE  blk= 53 pc=591 ffn_out          size=5120   cos=0.910414545 max_abs=0.899191 rms=0.189119  ref=ffn_down_L53.bin
+DIVERGE  blk= 53 pc=592 resid2           size=5120   cos=0.958360005 max_abs=6.93978 rms=0.385704  ref=resid2_L53__dup1.bin
+SKIP     blk= 54 pc=593 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 54 pc=594 attn_norm        size=5120   cos=0.957394819 max_abs=4.52145 rms=0.311481  ref=attn_norm_L54.bin
+DIVERGE  blk= 54 pc=595 attn_proj        size=5120   cos=0.949572841 max_abs=3.35256 rms=0.093441  ref=attn_proj_L54__dup1.bin
+SKIP     blk= 54 pc=596 resid1           size=5120   (no reference boundary)
+SKIP     blk= 54 pc=597 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 54 pc=598 gate             size=17408  cos=0.986049208 max_abs=2.14964 rms=0.295793  ref=ffn_gate_L54.bin
+DIVERGE  blk= 54 pc=599 up               size=17408  cos=0.977921517 max_abs=2.03193 rms=0.299431  ref=ffn_up_L54.bin
+DIVERGE  blk= 54 pc=600 swiglu           size=17408  cos=0.924373975 max_abs=4.58759 rms=0.162016  ref=ffn_swiglu_L54.bin
+DIVERGE  blk= 54 pc=601 ffn_out          size=5120   cos=0.932083436 max_abs=3.02955 rms=0.249615  ref=ffn_down_L54.bin
+DIVERGE  blk= 54 pc=602 resid2           size=5120   cos=0.956873244 max_abs=7.26278 rms=0.465646  ref=resid2_L54__dup1.bin
+SKIP     blk= 55 pc=603 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 55 pc=604 attn_norm        size=5120   cos=0.963903453 max_abs=4.66951 rms=0.323993  ref=attn_norm_L55.bin
+DIVERGE  blk= 55 pc=605 q                size=12288  cos=0.993464537 max_abs=2.39499 rms=0.399997  ref=q_L55.bin
+DIVERGE  blk= 55 pc=606 k                size=1024   cos=0.990276825 max_abs=1.18989 rms=0.327094  ref=k_L55.bin
+DIVERGE  blk= 55 pc=607 v                size=1024   cos=0.944599174 max_abs=4.15713 rms=0.743077  ref=v_L55.bin
+SKIP     blk= 55 pc=608 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 55 pc=609 attn_proj        size=5120   cos=0.888592989 max_abs=1.19113 rms=0.088355  ref=attn_proj_L55.bin
+SKIP     blk= 55 pc=610 resid1           size=5120   (no reference boundary)
+SKIP     blk= 55 pc=611 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 55 pc=612 gate             size=17408  cos=0.984842441 max_abs=3.02129 rms=0.300861  ref=ffn_gate_L55.bin
+DIVERGE  blk= 55 pc=613 up               size=17408  cos=0.955990916 max_abs=1.54579 rms=0.285388  ref=ffn_up_L55.bin
+DIVERGE  blk= 55 pc=614 swiglu           size=17408  cos=0.913941558 max_abs=4.66209 rms=0.157875  ref=ffn_swiglu_L55.bin
+DIVERGE  blk= 55 pc=615 ffn_out          size=5120   cos=0.918054865 max_abs=5.05768 rms=0.255592  ref=ffn_down_L55.bin
+DIVERGE  blk= 55 pc=616 resid2           size=5120   cos=0.955135719 max_abs=3.39623 rms=0.525693  ref=resid2_L55.bin
+SKIP     blk= 56 pc=617 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 56 pc=618 attn_norm        size=5120   cos=0.951316289 max_abs=1.92865 rms=0.337548  ref=attn_norm_L56.bin
+DIVERGE  blk= 56 pc=619 attn_proj        size=5120   cos=0.952232264 max_abs=0.981193 rms=0.10451  ref=attn_proj_L56__dup1.bin
+SKIP     blk= 56 pc=620 resid1           size=5120   (no reference boundary)
+SKIP     blk= 56 pc=621 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 56 pc=622 gate             size=17408  cos=0.985530522 max_abs=2.40845 rms=0.307482  ref=ffn_gate_L56.bin
+DIVERGE  blk= 56 pc=623 up               size=17408  cos=0.956457772 max_abs=1.58048 rms=0.28598  ref=ffn_up_L56.bin
+DIVERGE  blk= 56 pc=624 swiglu           size=17408  cos=0.906261087 max_abs=4.23477 rms=0.15076  ref=ffn_swiglu_L56.bin
+DIVERGE  blk= 56 pc=625 ffn_out          size=5120   cos=0.904308118 max_abs=0.837681 rms=0.23505  ref=ffn_down_L56.bin
+DIVERGE  blk= 56 pc=626 resid2           size=5120   cos=0.954064210 max_abs=4.11977 rms=0.593085  ref=resid2_L56__dup1.bin
+SKIP     blk= 57 pc=627 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 57 pc=628 attn_norm        size=5120   cos=0.950467924 max_abs=2.19661 rms=0.346104  ref=attn_norm_L57.bin
+DIVERGE  blk= 57 pc=629 attn_proj        size=5120   cos=0.967089196 max_abs=0.463329 rms=0.0993012  ref=attn_proj_L57__dup1.bin
+SKIP     blk= 57 pc=630 resid1           size=5120   (no reference boundary)
+SKIP     blk= 57 pc=631 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 57 pc=632 gate             size=17408  cos=0.987839690 max_abs=1.66349 rms=0.321921  ref=ffn_gate_L57.bin
+DIVERGE  blk= 57 pc=633 up               size=17408  cos=0.957047393 max_abs=1.38761 rms=0.305442  ref=ffn_up_L57.bin
+DIVERGE  blk= 57 pc=634 swiglu           size=17408  cos=0.906043645 max_abs=5.94938 rms=0.126935  ref=ffn_swiglu_L57.bin
+DIVERGE  blk= 57 pc=635 ffn_out          size=5120   cos=0.892239628 max_abs=0.771323 rms=0.202  ref=ffn_down_L57.bin
+DIVERGE  blk= 57 pc=636 resid2           size=5120   cos=0.956261092 max_abs=4.2434 rms=0.637843  ref=resid2_L57__dup1.bin
+SKIP     blk= 58 pc=637 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 58 pc=638 attn_norm        size=5120   cos=0.947877357 max_abs=1.93158 rms=0.338346  ref=attn_norm_L58.bin
+DIVERGE  blk= 58 pc=639 attn_proj        size=5120   cos=0.963882046 max_abs=0.580419 rms=0.123469  ref=attn_proj_L58__dup1.bin
+SKIP     blk= 58 pc=640 resid1           size=5120   (no reference boundary)
+SKIP     blk= 58 pc=641 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 58 pc=642 gate             size=17408  cos=0.986252220 max_abs=2.59418 rms=0.330804  ref=ffn_gate_L58.bin
+DIVERGE  blk= 58 pc=643 up               size=17408  cos=0.956008459 max_abs=1.54684 rms=0.319076  ref=ffn_up_L58.bin
+DIVERGE  blk= 58 pc=644 swiglu           size=17408  cos=0.945182151 max_abs=12.5556 rms=0.166708  ref=ffn_swiglu_L58.bin
+DIVERGE  blk= 58 pc=645 ffn_out          size=5120   cos=0.956391921 max_abs=11.9412 rms=0.274578  ref=ffn_down_L58.bin
+DIVERGE  blk= 58 pc=646 resid2           size=5120   cos=0.969980995 max_abs=7.92484 rms=0.710112  ref=resid2_L58__dup1.bin
+SKIP     blk= 59 pc=647 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 59 pc=648 attn_norm        size=5120   cos=0.967621708 max_abs=2.63517 rms=0.296072  ref=attn_norm_L59.bin
+DIVERGE  blk= 59 pc=649 q                size=12288  cos=0.991373567 max_abs=2.12339 rms=0.352301  ref=q_L59.bin
+DIVERGE  blk= 59 pc=650 k                size=1024   cos=0.986102024 max_abs=1.50443 rms=0.300318  ref=k_L59.bin
+DIVERGE  blk= 59 pc=651 v                size=1024   cos=0.962675036 max_abs=6.97911 rms=1.03298  ref=v_L59.bin
+SKIP     blk= 59 pc=652 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 59 pc=653 attn_proj        size=5120   cos=0.949405320 max_abs=7.93792 rms=0.202932  ref=attn_proj_L59.bin
+SKIP     blk= 59 pc=654 resid1           size=5120   (no reference boundary)
+SKIP     blk= 59 pc=655 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 59 pc=656 gate             size=17408  cos=0.980293091 max_abs=3.14593 rms=0.336636  ref=ffn_gate_L59.bin
+DIVERGE  blk= 59 pc=657 up               size=17408  cos=0.949430889 max_abs=1.91515 rms=0.335652  ref=ffn_up_L59.bin
+DIVERGE  blk= 59 pc=658 swiglu           size=17408  cos=0.903300262 max_abs=5.63183 rms=0.16934  ref=ffn_swiglu_L59.bin
+DIVERGE  blk= 59 pc=659 ffn_out          size=5120   cos=0.892746079 max_abs=4.14039 rms=0.273558  ref=ffn_down_L59.bin
+DIVERGE  blk= 59 pc=660 resid2           size=5120   cos=0.958049662 max_abs=4.21662 rms=0.770563  ref=resid2_L59.bin
+SKIP     blk= 60 pc=661 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 60 pc=662 attn_norm        size=5120   cos=0.949632664 max_abs=1.90397 rms=0.352217  ref=attn_norm_L60.bin
+DIVERGE  blk= 60 pc=663 attn_proj        size=5120   cos=0.933116721 max_abs=3.86361 rms=0.151418  ref=attn_proj_L60__dup1.bin
+SKIP     blk= 60 pc=664 resid1           size=5120   (no reference boundary)
+SKIP     blk= 60 pc=665 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 60 pc=666 gate             size=17408  cos=0.972086313 max_abs=3.48743 rms=0.36068  ref=ffn_gate_L60.bin
+DIVERGE  blk= 60 pc=667 up               size=17408  cos=0.945664141 max_abs=2.7962 rms=0.350877  ref=ffn_up_L60.bin
+DIVERGE  blk= 60 pc=668 swiglu           size=17408  cos=0.828614191 max_abs=10.6538 rms=0.232246  ref=ffn_swiglu_L60.bin
+DIVERGE  blk= 60 pc=669 ffn_out          size=5120   cos=0.843415331 max_abs=1.44062 rms=0.375204  ref=ffn_down_L60.bin
+DIVERGE  blk= 60 pc=670 resid2           size=5120   cos=0.958830819 max_abs=5.05408 rms=0.882418  ref=resid2_L60__dup1.bin
+SKIP     blk= 61 pc=671 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 61 pc=672 attn_norm        size=5120   cos=0.944470325 max_abs=1.80862 rms=0.327454  ref=attn_norm_L61.bin
+DIVERGE  blk= 61 pc=673 attn_proj        size=5120   cos=0.937590279 max_abs=1.53586 rms=0.15653  ref=attn_proj_L61__dup1.bin
+SKIP     blk= 61 pc=674 resid1           size=5120   (no reference boundary)
+SKIP     blk= 61 pc=675 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 61 pc=676 gate             size=17408  cos=0.968002602 max_abs=3.11146 rms=0.397149  ref=ffn_gate_L61.bin
+DIVERGE  blk= 61 pc=677 up               size=17408  cos=0.951405111 max_abs=2.69882 rms=0.354173  ref=ffn_up_L61.bin
+DIVERGE  blk= 61 pc=678 swiglu           size=17408  cos=0.870662166 max_abs=7.20078 rms=0.24008  ref=ffn_swiglu_L61.bin
+DIVERGE  blk= 61 pc=679 ffn_out          size=5120   cos=0.872116421 max_abs=1.46181 rms=0.40434  ref=ffn_down_L61.bin
+DIVERGE  blk= 61 pc=680 resid2           size=5120   cos=0.956684144 max_abs=5.31571 rms=1.00484  ref=resid2_L61__dup1.bin
+SKIP     blk= 62 pc=681 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 62 pc=682 attn_norm        size=5120   cos=0.954190747 max_abs=1.79292 rms=0.337889  ref=attn_norm_L62.bin
+DIVERGE  blk= 62 pc=683 attn_proj        size=5120   cos=0.949407786 max_abs=1.82906 rms=0.210085  ref=attn_proj_L62__dup1.bin
+SKIP     blk= 62 pc=684 resid1           size=5120   (no reference boundary)
+SKIP     blk= 62 pc=685 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 62 pc=686 gate             size=17408  cos=0.963941392 max_abs=3.4906 rms=0.431744  ref=ffn_gate_L62.bin
+DIVERGE  blk= 62 pc=687 up               size=17408  cos=0.966793388 max_abs=2.41696 rms=0.364024  ref=ffn_up_L62.bin
+DIVERGE  blk= 62 pc=688 swiglu           size=17408  cos=0.888402181 max_abs=15.6326 rms=0.378666  ref=ffn_swiglu_L62.bin
+DIVERGE  blk= 62 pc=689 ffn_out          size=5120   cos=0.886132238 max_abs=5.54576 rms=0.650301  ref=ffn_down_L62.bin
+DIVERGE  blk= 62 pc=690 resid2           size=5120   cos=0.954491714 max_abs=5.77444 rms=1.23577  ref=resid2_L62__dup1.bin
+SKIP     blk= 63 pc=691 resid_in         size=5120   (no reference boundary)
+DIVERGE  blk= 63 pc=692 attn_norm        size=5120   cos=0.956300100 max_abs=2.40403 rms=0.346828  ref=attn_norm_L63.bin
+DIVERGE  blk= 63 pc=693 q                size=12288  cos=0.989775385 max_abs=2.33731 rms=0.378884  ref=q_L63.bin
+DIVERGE  blk= 63 pc=694 k                size=1024   cos=0.978030621 max_abs=2.0111 rms=0.41254  ref=k_L63.bin
+DIVERGE  blk= 63 pc=695 v                size=1024   cos=0.985000112 max_abs=7.64918 rms=0.939535  ref=v_L63.bin
+SKIP     blk= 63 pc=696 attn_out         size=6144   (no reference boundary)
+DIVERGE  blk= 63 pc=697 attn_proj        size=5120   cos=0.921885340 max_abs=5.54182 rms=0.485237  ref=attn_proj_L63.bin
+SKIP     blk= 63 pc=698 resid1           size=5120   (no reference boundary)
+SKIP     blk= 63 pc=699 ffn_norm         size=5120   (no reference boundary)
+DIVERGE  blk= 63 pc=700 gate             size=17408  cos=0.968818993 max_abs=2.96847 rms=0.45261  ref=ffn_gate_L63.bin
+DIVERGE  blk= 63 pc=701 up               size=17408  cos=0.972280603 max_abs=3.09837 rms=0.394537  ref=ffn_up_L63.bin
+DIVERGE  blk= 63 pc=702 swiglu           size=17408  cos=0.936359038 max_abs=18.9657 rms=0.577967  ref=ffn_swiglu_L63.bin
+DIVERGE  blk= 63 pc=703 ffn_out          size=5120   cos=0.950990118 max_abs=29.9788 rms=1.16077  ref=ffn_down_L63.bin
+DIVERGE  blk= 63 pc=704 resid2           size=5120   cos=0.934453018 max_abs=23.6784 rms=1.78855  ref=resid2_L63.bin
+SKIP     blk= 64 pc=705 resid_in         size=5120   (no reference boundary)
+SKIP     blk= 64 pc=706 attn_norm        size=5120   (no reference boundary)
+SKIP     blk= 64 pc=707 q                size=12288  (no reference boundary)
+SKIP     blk= 64 pc=708 k                size=1024   (no reference boundary)
+SKIP     blk= 64 pc=709 v                size=1024   (no reference boundary)
+SKIP     blk= 64 pc=710 attn_out         size=6144   (no reference boundary)
+SKIP     blk= 64 pc=711 attn_proj        size=5120   (no reference boundary)
+SKIP     blk= 64 pc=712 resid1           size=5120   (no reference boundary)
+SKIP     blk= 64 pc=713 ffn_norm         size=5120   (no reference boundary)
+SKIP     blk= 64 pc=714 gate             size=17408  (no reference boundary)
+SKIP     blk= 64 pc=715 up               size=17408  (no reference boundary)
+SKIP     blk= 64 pc=716 swiglu           size=17408  (no reference boundary)
+SKIP     blk= 64 pc=717 ffn_out          size=5120   (no reference boundary)
+SKIP     blk= 64 pc=718 resid2           size=5120   (no reference boundary)
+SKIP     blk= -1 pc=720 logits           size=5120   (no reference boundary)
+SKIP final_hidden (missing file)
+DIVERGE  logits       size=248320  cos=0.947163904 max_abs=6.00886 rms=1.00976
+FIRST_DIVERGENCE pos=1 blk=0 pc=9 op=ffn_out size=5120 cos=0.999999371 max_abs=0.0027639 ref=ffn_down_L0.bin

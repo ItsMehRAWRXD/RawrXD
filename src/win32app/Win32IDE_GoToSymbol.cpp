@@ -331,7 +331,15 @@ void filterSymbols()
             return;
         }
 
-        std::string queryUtf8(query.begin(), query.end());
+        // Convert wide query to UTF-8 without narrowing loss
+        std::string queryUtf8;
+        if (!query.empty()) {
+            int len = WideCharToMultiByte(CP_UTF8, 0, query.c_str(), -1, nullptr, 0, nullptr, nullptr);
+            if (len > 0) {
+                queryUtf8.resize(static_cast<size_t>(len - 1));
+                WideCharToMultiByte(CP_UTF8, 0, query.c_str(), -1, &queryUtf8[0], static_cast<int>(queryUtf8.size() + 1), nullptr, nullptr);
+            }
+        }
         s_gts.pIDE->refreshWorkspaceSymbolPickerResults(queryUtf8);
 
         populateList();
@@ -375,7 +383,7 @@ static void populateList()
         lvi.iItem = i;
         lvi.iSubItem = 0;
         lvi.pszText = const_cast<LPWSTR>(s_displayStrings.back().c_str());
-        ListView_InsertItem(s_gts.hwndList, &lvi);
+        SendMessageW(s_gts.hwndList, LVM_INSERTITEMW, 0, reinterpret_cast<LPARAM>(&lvi));
 
         // Column 1: kind
         {
@@ -503,13 +511,14 @@ static void showGoToSymbolPickerImpl(Win32IDE* ide, bool workspaceMode)
     lvc.mask = LVCF_WIDTH | LVCF_TEXT;
     lvc.cx = popW - 16 - 180 - 60;
     lvc.pszText = (LPWSTR)L"Symbol";
-    ListView_InsertColumn(s_gts.hwndList, 0, &lvc);
+    // Wide column insert: control is WC_LISTVIEWW and lvc is LVCOLUMNW.
+    SendMessageW(s_gts.hwndList, LVM_INSERTCOLUMNW, 0, reinterpret_cast<LPARAM>(&lvc));
     lvc.cx = 180;
     lvc.pszText = (LPWSTR)(workspaceMode ? L"Container / File" : L"Kind");
-    ListView_InsertColumn(s_gts.hwndList, 1, &lvc);
+    SendMessageW(s_gts.hwndList, LVM_INSERTCOLUMNW, 1, reinterpret_cast<LPARAM>(&lvc));
     lvc.cx = 60;
     lvc.pszText = (LPWSTR)L"Line";
-    ListView_InsertColumn(s_gts.hwndList, 2, &lvc);
+    SendMessageW(s_gts.hwndList, LVM_INSERTCOLUMNW, 2, reinterpret_cast<LPARAM>(&lvc));
 
     HFONT hFont = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                               CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");

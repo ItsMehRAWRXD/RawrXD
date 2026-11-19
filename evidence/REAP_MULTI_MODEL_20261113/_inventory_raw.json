@@ -1,0 +1,112 @@
+[
+    {
+        "Id":  "MiniMax-M2.7-Q4_K_M",
+        "Priority":  "P0",
+        "Note":  "3-shard MoE",
+        "Present":  true,
+        "ShardCount":  3,
+        "Bytes":  138342384448,
+        "GiB":  128.84,
+        "FirstShard":  "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+        "Paths":  "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf|F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf|F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf"
+    },
+    {
+        "Id":  "Kimi-K2-Instruct-0905-Q4_K_M",
+        "Priority":  "P0",
+        "Note":  "retain-8/149 baseline",
+        "Present":  true,
+        "ShardCount":  13,
+        "Bytes":  621245224864,
+        "GiB":  578.58,
+        "FirstShard":  "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+        "Paths":  "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf|F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf"
+    },
+    {
+        "Id":  "Qwen3.6-35B-A3B-Q4_K_M",
+        "Priority":  "P1",
+        "Note":  "MoE A3B",
+        "Present":  true,
+        "ShardCount":  1,
+        "Bytes":  21166757728,
+        "GiB":  19.71,
+        "FirstShard":  "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf",
+        "Paths":  "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf"
+    },
+    {
+        "Id":  "DeepSeek-R1-Q4_K_M",
+        "Priority":  "P1",
+        "Note":  "11-shard MoE",
+        "Present":  true,
+        "ShardCount":  11,
+        "Bytes":  404430188064,
+        "GiB":  376.65,
+        "FirstShard":  "F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf",
+        "Paths":  "F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00002-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00003-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00004-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00005-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00006-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00007-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00008-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00009-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00010-of-00011.gguf|F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00011-of-00011.gguf"
+    },
+    {
+        "Id":  "Qwen3.8-27B-Q4_K_M",
+        "Priority":  "CONTROL",
+        "Note":  "dense baseline",
+        "Present":  false,
+        "ShardCount":  0,
+        "Bytes":  0,
+        "GiB":  0,
+        "FirstShard":  "",
+        "Paths":  ""
+    },
+    {
+        "Id":  "Qwen3.8-27B-AD-Q4_K_M",
+        "Priority":  "CONTROL",
+        "Note":  "dense baseline",
+        "Present":  true,
+        "ShardCount":  1,
+        "Bytes":  17120781792,
+        "GiB":  15.94,
+        "FirstShard":  "F:\\OllamaModels\\Qwen3.8-27B-AD-Q4_K_M\\Qwen3.8-27B-AD-Q4_K_M.gguf",
+        "Paths":  "F:\\OllamaModels\\Qwen3.8-27B-AD-Q4_K_M\\Qwen3.8-27B-AD-Q4_K_M.gguf"
+    },
+    {
+        "Id":  "Qwen2.5-Coder-14B-Q8_0",
+        "Priority":  "CONTROL",
+        "Note":  "dense baseline",
+        "Present":  true,
+        "ShardCount":  1,
+        "Bytes":  15701597632,
+        "GiB":  14.62,
+        "FirstShard":  "F:\\OllamaModels\\Qwen2.5-Coder-14B-Instruct-Q8_0\\qwen2.5-coder-14b-instruct-q8_0.gguf",
+        "Paths":  "F:\\OllamaModels\\Qwen2.5-Coder-14B-Instruct-Q8_0\\qwen2.5-coder-14b-instruct-q8_0.gguf"
+    },
+    {
+        "Id":  "GLM-4.7-Flash-Q4_K_M",
+        "Priority":  "P2",
+        "Note":  "inventory",
+        "Present":  true,
+        "ShardCount":  1,
+        "Bytes":  18132721120,
+        "GiB":  16.89,
+        "FirstShard":  "F:\\OllamaModels\\GLM-4.7-Flash-GGUF\\GLM-4.7-Flash-Q4_K_M.gguf",
+        "Paths":  "F:\\OllamaModels\\GLM-4.7-Flash-GGUF\\GLM-4.7-Flash-Q4_K_M.gguf"
+    },
+    {
+        "Id":  "Qwen3.8-Flash-Next",
+        "Priority":  "P1",
+        "Note":  "scan for Next/80B-ish",
+        "Present":  true,
+        "ShardCount":  2,
+        "Bytes":  84930920928,
+        "GiB":  79.1,
+        "FirstShard":  "F:\\OllamaModels\\Qwen3.8-Flash-Next-GGUF\\Qwen3.8-Flash-Next-AD-IQ1_M-M64\\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf",
+        "Paths":  "F:\\OllamaModels\\Qwen3.8-Flash-Next-GGUF\\Qwen3.8-Flash-Next-AD-IQ1_M-M64\\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf|F:\\OllamaModels\\Qwen3.8-Flash-Next-GGUF\\Qwen3.8-Flash-Next-AD-IQ1_M-M64\\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00002-of-00002.gguf"
+    },
+    {
+        "Id":  "Laguna-S-2.1",
+        "Priority":  "P2",
+        "Note":  "search name",
+        "Present":  false,
+        "ShardCount":  0,
+        "Bytes":  0,
+        "GiB":  0,
+        "FirstShard":  "",
+        "Paths":  ""
+    }
+]

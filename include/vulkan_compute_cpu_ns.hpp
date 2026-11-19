@@ -64,6 +64,9 @@ public:
     VulkanCompute();
     ~VulkanCompute();
 
+    // Check if Vulkan backend is initialized
+    bool initialized() const noexcept { return initialized_; }
+
     VulkanCompute(const VulkanCompute&)            = delete;
     VulkanCompute& operator=(const VulkanCompute&) = delete;
     VulkanCompute(VulkanCompute&&)                 = delete;
@@ -164,6 +167,12 @@ public:
                             DeviceBuf& out, uint32_t seqLen, uint32_t headDim,
                             uint32_t nHeads, uint32_t kvHeads, float scale,
                             uint32_t layer);
+    // CSPD experimental path (off by default; enable with DEEP2_CSPD=1).
+    bool IsCspdEnabled() const;
+    bool DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+                                   DeviceBuf& out, uint32_t headDim,
+                                   uint32_t nHeads, uint32_t kvHeads,
+                                   uint32_t seqLen, float scale, uint32_t layer);
     bool AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim,
                   uint32_t pos, uint32_t nHeads);
 
@@ -333,6 +342,27 @@ public:
 
     // ---- Device info --------------------------------------------------------
     const VulkanDeviceInfo& GetDeviceInfo() const;
+
+    // ---- MoE Router and Expert FFN -------------------------------------------
+    // Use the backend's GpuWeightView type for API compatibility
+    using GpuWeightView = Deep2::GpuWeightView;
+
+    // Router: logits = routerWeights * hiddenState, then softmax + top-k on host
+    // Returns true on success, fills expertIds and weights with top-k results
+    bool DispatchRouter(const GpuWeightView& routerWeights,
+                        const float* hiddenState,
+                        std::vector<int>& expertIds,
+                        std::vector<float>& weights,
+                        int topK);
+
+    // Expert FFN: gate/up SwiGLU -> down projection on GPU
+    // Returns true on successful GPU dispatch and download
+    bool RunExpertFFN(const GpuWeightView& gate,
+                      const GpuWeightView& up,
+                      const GpuWeightView& down,
+                      const float* input, float* output,
+                      uint32_t hidden, uint32_t intermediate,
+                      uint64_t epoch);
 
 private:
     // Host-side preparation of a quantized weight into a resident F32 window.

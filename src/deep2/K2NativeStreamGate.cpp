@@ -388,10 +388,15 @@ RawrXD::QuantType QuantFromGgml(int ggmlType) {
     switch (ggmlType) {
         case 0:  return RawrXD::QuantType::F32;
         case 1:  return RawrXD::QuantType::F16;
+        case 10: return RawrXD::QuantType::Q2_K;
+        case 11: return RawrXD::QuantType::Q3_K;
         case 8:  return RawrXD::QuantType::Q8_0;
         case 12: return RawrXD::QuantType::Q4_K;
+        case 13: return RawrXD::QuantType::Q5_K;
         case 14: return RawrXD::QuantType::Q6_K;
-        default: return RawrXD::QuantType::Q4_K;
+        case 20: return RawrXD::QuantType::IQ4_NL;
+        case 30: return RawrXD::QuantType::BF16;
+        default: return RawrXD::QuantType::UNKNOWN;
     }
 }
 
@@ -411,9 +416,14 @@ RawrXD::TensorView MakeTensorView(const uint8_t* data,
     switch (qt) {
         case RawrXD::QuantType::F32: desc.blockSize = 1; desc.blockSizeBytes = 4; break;
         case RawrXD::QuantType::F16: desc.blockSize = 1; desc.blockSizeBytes = 2; break;
+        case RawrXD::QuantType::BF16: desc.blockSize = 1; desc.blockSizeBytes = 2; break;
         case RawrXD::QuantType::Q8_0: desc.blockSize = 32; desc.blockSizeBytes = 34; break;
+        case RawrXD::QuantType::Q2_K: desc.blockSize = 256; desc.blockSizeBytes = 84; break;
+        case RawrXD::QuantType::Q3_K: desc.blockSize = 256; desc.blockSizeBytes = 110; break;
         case RawrXD::QuantType::Q4_K: desc.blockSize = 256; desc.blockSizeBytes = 144; break;
+        case RawrXD::QuantType::Q5_K: desc.blockSize = 256; desc.blockSizeBytes = 176; break;
         case RawrXD::QuantType::Q6_K: desc.blockSize = 256; desc.blockSizeBytes = 210; break;
+        case RawrXD::QuantType::IQ4_NL: desc.blockSize = 32; desc.blockSizeBytes = 18; break;
         default: desc.blockSize = 1; desc.blockSizeBytes = 1; break;
     }
     return RawrXD::TensorView::FromResident(desc);
@@ -1448,8 +1458,15 @@ Result Run(const fs::path& shardDir,
     for (uint32_t step = 0; step < cfg.streamTokens; ++step) {
         std::string stepErr;
         Deep2::StepEnter(step, cfg.streamTokens);
-        if (step == 0u)
+        fprintf(stderr, "K2_BOUNDARY AFTER_STEP_ENTER step=%u token=%d\n", step, curToken);
+        fflush(stderr);
+        if (step == 0u) {
+            fprintf(stderr, "K2_BOUNDARY BEFORE_FIRST_TOKEN_EVENT step=%u\n", step);
+            fflush(stderr);
             Deep2::Ev512::HostEmitFirstTokenBoundary(0, cfg.streamTokens);
+            fprintf(stderr, "K2_BOUNDARY AFTER_FIRST_TOKEN_EVENT step=%u\n", step);
+            fflush(stderr);
+        }
         if ((step % 32u) == 0u) {
             fprintf(stderr,
                     "STREAM_HEARTBEAT STEP=%u/%u TEARDOWN_WITNESS=0\n",
@@ -1457,7 +1474,13 @@ Result Run(const fs::path& shardDir,
             fflush(stderr);
         }
         try {
+        fprintf(stderr, "K2_BOUNDARY BEFORE_EMBED_TRACE step=%u\n", step);
+        fflush(stderr);
         MlaTrace("K2_STEP_BEFORE_EMBED step=%u token=%d\n", step, curToken);
+        fprintf(stderr, "K2_BOUNDARY AFTER_EMBED_TRACE step=%u\n", step);
+        fflush(stderr);
+        fprintf(stderr, "K2_BOUNDARY BEFORE_EMBED_LOOKUP step=%u\n", step);
+        fflush(stderr);
         if (!LookupRealTokenEmbed(embed, k2cfg, curToken, hidden.data(), stepErr)) {
             result.error = stepErr;
             Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
@@ -1478,6 +1501,8 @@ Result Run(const fs::path& shardDir,
             result.finalResidencyBytes = g_currentResidency;
             return result;
         }
+        fprintf(stderr, "K2_BOUNDARY AFTER_EMBED_LOOKUP step=%u\n", step);
+        fflush(stderr);
         MlaTrace("K2_STEP_AFTER_EMBED step=%u\n", step);
         memcpy(preMla.data(), hidden.data(), hiddenDim * sizeof(float));
         MlaTrace("K2_STEP_BEFORE_MLA step=%u layers=%u\n", step, layerDepth);

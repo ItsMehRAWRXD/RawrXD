@@ -66,6 +66,28 @@ void StartupTrace(const char* message)
     if (trace) trace << message << '\n';
 }
 
+static WNDPROC g_statusBarPreviousProc = nullptr;
+
+LRESULT CALLBACK RawrxdStatusBarProbe(HWND hwnd, UINT message,
+                                       WPARAM wParam, LPARAM lParam)
+{
+    char line[256]{};
+    sprintf_s(line, "STATUSBAR hwnd=0x%p thread=%lu msg=0x%04X w=0x%llX l=0x%llX",
+              static_cast<void*>(hwnd), GetCurrentThreadId(), message,
+              static_cast<unsigned long long>(wParam),
+              static_cast<unsigned long long>(lParam));
+    StartupTrace(line);
+    if (message == WM_NCDESTROY) {
+        const WNDPROC previous = g_statusBarPreviousProc;
+        g_statusBarPreviousProc = nullptr;
+        return previous ? CallWindowProcW(previous, hwnd, message, wParam, lParam)
+                        : DefWindowProcW(hwnd, message, wParam, lParam);
+    }
+    return g_statusBarPreviousProc
+        ? CallWindowProcW(g_statusBarPreviousProc, hwnd, message, wParam, lParam)
+        : DefWindowProcW(hwnd, message, wParam, lParam);
+}
+
 // Process-lifetime chat session id (env RAWRXD_CHAT_SESSION_ID or pid+tick).
 static std::string g_chatSessionId;
 static std::string g_chatRunId;
@@ -3756,6 +3778,18 @@ void Win32IDE::createStatusBar(HWND hwnd)
         return;
     }
 
+    char creation[256]{};
+    sprintf_s(creation,
+              "STATUSBAR_CREATE hwnd=0x%p thread=%lu owner_thread=%lu style=0x%08lX exstyle=0x%08lX",
+              static_cast<void*>(m_hwndStatusBar), GetCurrentThreadId(),
+              GetWindowThreadProcessId(hwnd, nullptr),
+              static_cast<unsigned long>(GetWindowLongPtrW(m_hwndStatusBar, GWL_STYLE)),
+              static_cast<unsigned long>(GetWindowLongPtrW(m_hwndStatusBar, GWL_EXSTYLE)));
+    StartupTrace(creation);
+    g_statusBarPreviousProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
+        m_hwndStatusBar, GWLP_WNDPROC,
+        reinterpret_cast<LONG_PTR>(&RawrxdStatusBarProbe)));
+
     int parts[] = {200, 400, -1};
     SendMessage(m_hwndStatusBar, SB_SETPARTS, 3, (LPARAM)parts);
     SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, (LPARAM)"Ready");
@@ -4157,6 +4191,12 @@ bool Win32IDE::saveFileAs()
 
 void Win32IDE::startPowerShell()
 {
+    // The persisted layout may leave the four-panel dock hidden. Starting a
+    // shell from the Terminal menu must make the actual docked Terminal
+    // surface visible before the child process is launched, otherwise the
+    // live input/Execute HWNDs remain valid but unreachable.
+    ensurePanelVisible();
+    switchPanelTab(PanelTab::Terminal);
     TerminalPane* pane = getActiveTerminalPane();
     if (!pane || !pane->manager) return;
     stopTerminal();
@@ -4172,6 +4212,42 @@ void Win32IDE::startPowerShell()
         updateMenuEnableStates();
         appendToOutput("PowerShell started...\n", "Output", OutputSeverity::Info);
     }
+}
+
+bool Win32IDE::ensureTerminalRunningForCommand()
+{
+    // Used by the docked Terminal's Execute button. startPowerShell() cannot be
+    // reused here: it returns without doing anything when no pane exists yet
+    // (a fresh launch has none) and it calls stopTerminal() unconditionally,
+    // which would kill a live session on every Execute press.
+    ensurePanelVisible();
+    switchPanelTab(PanelTab::Terminal);
+
+    TerminalPane* pane = getActiveTerminalPane();
+    if (!pane) {
+        // createTerminalPane() pushes into m_terminalPanes and then calls
+        // setActiveTerminalPane(), so the active id is valid afterwards. No
+        // pointer is held across the call because the vector may reallocate.
+        if (createTerminalPane(Win32TerminalManager::PowerShell, "Terminal") < 0)
+            return false;
+        pane = getActiveTerminalPane();
+    }
+    if (!pane || !pane->manager)
+        return false;
+
+    if (!pane->manager->isRunning()) {
+        if (!pane->manager->start(Win32TerminalManager::PowerShell))
+            return false;
+        // start() reports running once CreateProcess succeeds, but the child's
+        // stdin pump still needs a moment before the first write is honoured
+        // (the same race startPowerShell() mitigates with a 100 ms pause).
+        Sleep(100);
+        appendText(pane->hwnd, "PowerShell started...\r\n");
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 1, (LPARAM)"PowerShell");
+        updateMenuEnableStates();
+    }
+
+    return pane->manager->isRunning();
 }
 
 void Win32IDE::startCommandPrompt()
@@ -4304,6 +4380,9 @@ void Win32IDE::onTerminalOutput(int paneId, const std::string& output)
     if (pane && pane->hwnd) {
         appendText(pane->hwnd, cleaned);
     }
+    if (m_hwndPanelTerminal && IsWindowVisible(m_hwndPanelTerminal)) {
+        appendText(m_hwndPanelTerminal, cleaned);
+    }
     appendToOutput(cleaned, "Terminal", OutputSeverity::Info);
     appendToOutput(cleaned, "Build", OutputSeverity::Info);
     // Carry incomplete ConPTY lines + strip VT before MSVC/gcc match.
@@ -4318,6 +4397,9 @@ void Win32IDE::onTerminalError(int paneId, const std::string& error)
     const std::string cleaned = stripAnsiForDiag(error);
     if (pane && pane->hwnd) {
         appendText(pane->hwnd, cleaned);
+    }
+    if (m_hwndPanelTerminal && IsWindowVisible(m_hwndPanelTerminal)) {
+        appendText(m_hwndPanelTerminal, cleaned);
     }
     appendToOutput(cleaned, "Errors", OutputSeverity::Error);
     appendToOutput(cleaned, "Build", OutputSeverity::Error);
@@ -4773,7 +4855,11 @@ void Win32IDE::createOutputTabs()
 
     for (int i = 0; i < defCount; ++i) {
         TCITEMA tie{}; tie.mask = TCIF_TEXT; tie.pszText = const_cast<char*>(defs[i].text);
-        TabCtrl_InsertItem(m_hwndOutputTabs, i, &tie);
+        // TCM_INSERTITEMA (ANSI) — TabCtrl_InsertItem maps to the W variant under
+        // UNICODE, which would reinterpret this TCITEMA/pszText as UTF-16 and
+        // render the labels as CJK mojibake.
+        SendMessageA(m_hwndOutputTabs, TCM_INSERTITEMA, static_cast<WPARAM>(i),
+                     reinterpret_cast<LPARAM>(&tie));
 
         HWND hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
             WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
@@ -4800,7 +4886,8 @@ void Win32IDE::createOutputTabs()
     TCITEMA powerShellTab{};
     powerShellTab.mask = TCIF_TEXT;
     powerShellTab.pszText = const_cast<char*>("PowerShell");
-    TabCtrl_InsertItem(m_hwndOutputTabs, defCount, &powerShellTab);
+    SendMessageA(m_hwndOutputTabs, TCM_INSERTITEMA, static_cast<WPARAM>(defCount),
+                 reinterpret_cast<LPARAM>(&powerShellTab));
     m_activeOutputTab = "Output";
     appendToOutput("Output ready. Select a channel to view build, tool, and runtime messages.\r\n",
                    "Output", OutputSeverity::Info);
@@ -4822,7 +4909,7 @@ void Win32IDE::createOutputTabs()
                     return DefSubclassProc(splitter, message, wParam, lParam);
                 }
                 if (message == WM_SETCURSOR) {
-                    SetCursor(LoadCursorA(nullptr, IDC_SIZENS));
+                    SetCursor(LoadCursorW(nullptr, MAKEINTRESOURCEW(IDC_SIZENS)));
                     return TRUE;
                 }
                 if (message == WM_LBUTTONDOWN) {
@@ -7304,7 +7391,10 @@ bool Win32IDE::executeGitCommand(const std::string& command, std::string& output
     if (cmdMutable) free(cmdMutable);
     if (ok) {
         
-        WaitForSingleObject(pi.hProcess, 5000);  // 5 second timeout
+        const DWORD waitResult = WaitForSingleObject(pi.hProcess, 5000);  // 5 second timeout
+        DWORD exitCode = STILL_ACTIVE;
+        if (waitResult == WAIT_OBJECT_0)
+            GetExitCodeProcess(pi.hProcess, &exitCode);
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         
@@ -7318,7 +7408,7 @@ bool Win32IDE::executeGitCommand(const std::string& command, std::string& output
             file.close();
             DeleteFileA(tempFile.c_str());
         }
-        return true;
+        return waitResult == WAIT_OBJECT_0 && exitCode == 0;
     }
     return false;
 }
@@ -8617,7 +8707,9 @@ void Win32IDE::updateChatSessionTabs()
             TCITEMA item{};
             item.mask = TCIF_TEXT;
             item.pszText = const_cast<char*>(session.label.c_str());
-            TabCtrl_InsertItem(m_hwndChatSessionTabs, static_cast<int>(i), &item);
+            // ANSI insert — see TCM_INSERTITEMA note in createOutputPanel().
+            SendMessageA(m_hwndChatSessionTabs, TCM_INSERTITEMA, static_cast<WPARAM>(i),
+                         reinterpret_cast<LPARAM>(&item));
         }
         if (m_activeChatSession >= 0 &&
             m_activeChatSession < static_cast<int>(m_chatSessions.size())) {
@@ -9263,7 +9355,21 @@ void Win32IDE::HandleCopilotSend() {
     // Do not touch the model ComboBox on the Send stack (comctl32 crash
     // boundary). Trust the already-selected route from the harness/UI.
     if (m_selectedChatModel.identifier.empty()) {
-        onModelSelectionChanged();
+        const LRESULT row = m_hwndModelSelector
+            ? SendMessageA(m_hwndModelSelector, CB_GETCURSEL, 0, 0) : CB_ERR;
+        if (row >= 0 && m_hwndModelSelector) {
+            const LRESULT itemData = SendMessageA(m_hwndModelSelector,
+                CB_GETITEMDATA, static_cast<WPARAM>(row), 0);
+            if (itemData >= 0 && static_cast<size_t>(itemData) < m_availableModels.size()) {
+                // Resolve the already-published selection without invoking
+                // invalidateNativeGhostText(), control rebuilds, or nested
+                // notification handlers from the Send callback stack.
+                m_selectedChatModel = m_availableModels[static_cast<size_t>(itemData)];
+                if (auto* session = activeChatSession()) session->model = m_selectedChatModel;
+                if (m_selectedChatModel.source == ChatModelEntry::Source::Ollama)
+                    m_ollamaModelOverride = m_selectedChatModel.identifier;
+            }
+        }
     }
     if (m_selectedChatModel.identifier.empty()) {
         m_inferenceRunning.store(false, std::memory_order_release);

@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QFont>
 #include <QFontMetrics>
+#include <QKeyEvent>
 
 AIChatPanel::AIChatPanel(QWidget* parent)
     : QWidget(parent)
@@ -56,12 +57,10 @@ void AIChatPanel::setupUI()
     inputLayout->setContentsMargins(10, 8, 10, 8);
     inputLayout->setSpacing(8);
     
-    m_inputField = new QLineEdit(inputContainer);
+    m_inputField = new QTextEdit(inputContainer);
     m_inputField->setPlaceholderText("Ask AI anything...");
     m_inputField->setMinimumHeight(32);
-    
-    connect(m_inputField, &QLineEdit::returnPressed,
-            this, &AIChatPanel::onSendClicked);
+        m_inputField->setMaximumHeight(96);
     
     m_sendButton = new QPushButton("Send", inputContainer);
     m_sendButton->setMinimumWidth(70);
@@ -124,7 +123,7 @@ void AIChatPanel::applyDarkTheme()
             background-color: #1e1e1e;
             border: none;
         }
-        QLineEdit {
+        QTextEdit {
             background-color: #3c3c3c;
             color: #cccccc;
             border: 1px solid #3e3e42;
@@ -132,7 +131,7 @@ void AIChatPanel::applyDarkTheme()
             padding: 6px 10px;
             selection-background-color: #094771;
         }
-        QLineEdit:focus {
+                QTextEdit:focus {
             border: 1px solid #007acc;
         }
         QPushButton {
@@ -271,6 +270,18 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     layout->addWidget(timeLabel, 0, msg.role == Message::User ? Qt::AlignRight : Qt::AlignLeft);
     
     return container;
+}
+
+void AIChatPanel::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Return && (event->modifiers() & Qt::ControlModifier)) {
+        // Ctrl+Enter: send the message
+        onSendClicked();
+        event->accept();
+        return;
+    }
+    // Default: Enter inserts newline (QTextEdit behavior)
+    QTextEdit::keyPressEvent(event);
 }
 
 void AIChatPanel::onSendClicked()

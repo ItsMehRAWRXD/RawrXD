@@ -52,6 +52,19 @@ namespace RawrXD { namespace LSPServer { class RawrXDLSPServer; } }
 #define IDC_TERMTAB_PROFILE 9302
 #define IDC_TERMTAB_FIRST 9310
 #endif
+
+// Docked Terminal panel child controls. These MUST stay unique across the
+// whole IDE: WM_COMMAND handlers dispatch on the numeric id, and several
+// translation units #define their own local ids. 1315/1316 collided with
+// IDC_DEBUGGER_BREAKPOINTS / IDC_DEBUGGER_WATCH in Win32IDE.cpp, so a
+// BN_CLICKED from the debugger reached the terminal Execute handler.
+// 10930/10931 sit clear of IDC_SEARCH_* (10901-10911) and IDC_TASK_* (11640+).
+#ifndef IDC_PANEL_TERMINAL_INPUT
+#define IDC_PANEL_TERMINAL_INPUT 10930
+#endif
+#ifndef IDC_PANEL_TERMINAL_EXECUTE
+#define IDC_PANEL_TERMINAL_EXECUTE 10931
+#endif
 #ifndef IDM_LSP_SERVER_START
 #define IDM_LSP_SERVER_START            9200
 #define IDM_LSP_SERVER_STOP             9201
@@ -858,6 +871,13 @@ private:
 
     // Terminal operations (original)
     void startPowerShell();
+
+    // Docked-Terminal Execute contract: guarantee the panel is visible on the
+    // Terminal tab, that a pane and its manager exist, and that the shell is
+    // running with a usable input transport — without stopping an already
+    // running session. Returns false when a pane or process could not be
+    // created; callers must then keep the pending command rather than drop it.
+    bool ensureTerminalRunningForCommand();
     void startCommandPrompt();
     void stopTerminal();
     void executeCommand();
@@ -2937,6 +2957,8 @@ public:
     // Stable panel-body HWNDs (IDs 1302/1303) for P07 VisId probes.
     // Distinct from peer m_terminalPanes / legacy m_outputWindows strip.
     HWND m_hwndPanelTerminal = nullptr;
+    HWND m_hwndPanelTerminalInput = nullptr;
+    HWND m_hwndPanelTerminalExecute = nullptr;
     HWND m_hwndPanelOutput = nullptr;
     HWND m_hwndProblemsListView = nullptr;
     PanelTab m_activePanelTab = PanelTab::Terminal;

@@ -1,0 +1,80 @@
+﻿# MiniMax M2.7 Physical REAP (Batch 03 items 11-15)
+UTC_LOCAL=2026-11-13
+DISPOSITION=PHYSICAL_RUNTIME_MINIMAX
+PROMOTE=0
+TIP_CLIMB=HOLD
+ORIGINAL_GGUF_INTACT=1
+CROSS_SHA_CREDIT=0
+NOT_RUN_NE_PASS=1
+
+## Tooling
+EXE=F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe
+EXE_SHA256=C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16
+CMD=rawr-reap runtime <MiniMax-00001-of-00003.gguf> --target 30GB/8 --prompt Hello --max-tokens 2 --receipt MINIMAX_PHYSICAL_RECEIPT.json
+BRANCH=evidence/reap-multi-model-20261113
+PR=https://github.com/ItsMehRAWRXD/RawrXD/pull/82
+
+## 11 Budget-admissible retain
+POLICY=BUDGET_UNIFORM_UNCERTIFIED
+TOP_K=8
+EXPERTS_PER_LAYER=256
+MOE_LAYERS=61
+TARGET_WS_BYTES=18146955085
+BYTES_PER_EXPERT_ALL_LAYERS=530178048
+RETAINED_EXPERT_COUNT=29
+RETAINED_EXPERT_SLICES=1769
+FLOOR=retained>=topK
+INVENTORY_LINE=[PHYSICAL_INVENTORY] shards=3 tensors=809 disk=138342384448 routed=135725580288 keep=2608516096 E=256 bpe=530178048 
+
+## 12 Architecture-specific expert masks
+injection_mode=PHYSICAL_STREAM_EXPERT_REDUCE
+streamer_path=ReapPhysicalBank+MoEWeightProxy
+physical_reduce=True
+mode=PHYSICAL_STREAM
+selection_policy=BUDGET_UNIFORM_UNCERTIFIED
+bank=ReapPhysicalBank retained=[0,RETAINED) router_mask=-inf acquire_deny
+pin=[MULTISHARD_RESIDENCY] minimax pin floor from=18146955085 to=20822580045 non_expert=2608516096 
+bind=[MULTISHARD_BIND] standard tensors bound layers=62 experts=256 topk=8 shared=0 expertDim=1536 mappings=560
+
+## 13 Excluded acquisition impossible
+ROUTE_OK=992
+ROUTE_DENIED=0
+ACQUIRE_OK=992
+ACQUIRE_DENIED=0
+TOPK_MISMATCH=0
+EXCLUDED_ACQUIRES=0
+NOTE=Router masks pruned ids; host Place + MoEWeightProxy deny pruned acquires. ACQUIRE_DENIED=0 on this run because pruned experts were never selected.
+
+## 14 Tokens through reduced topology
+status=PASS
+generation_completed=True
+generated_tokens=2
+output=姬被
+LIVE_K2_MOE_PLACE_EVENTS=124
+gen=[AGENT] GENERATION_RECEIPT prompt=1 generated=2 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+runtime_status=ACTIVE_RUNTIME_ROUTER_RESIDENCY
+effective_experts=8
+
+## 15 Retained bytes vs inventory (PROXY vs COMPLETE)
+REPACKED_MODEL_BYTES_KIND=PROXY_PLAN_SCOPE
+ACCOUNTING_COMPLETE=1
+ORIGINAL_MODEL_BYTES=138342384448
+ROUTED_EXPERT_BYTES=135725580288
+SHARED_KEEP_BYTES=2608516096
+RETAINED_EXPERT_BYTES=15375163392
+REPACKED_MODEL_BYTES=17983679488
+PRUNED_EXPERT_BYTES=120350416896
+BATCH01_COMPLETE_EXPERT_BYTES=135725580288
+BATCH01_COMPLETE_NON_EXPERT_BYTES=2616804160
+RECONCILE_ROUTED=MATCH_BATCH01 (135725580288 == 135725580288)
+RECONCILE_KEEP=MATCH_PIN_FLOOR_NON_EXPERT (2608516096 == 2608516096); BATCH01 listed 2616804160 (delta=-8288064 vs that table)
+SCOPE=PROXY_PLAN_SCOPE (not a certified standalone GGUF rewrite)
+writer_invoked=False
+source_immutable=True
+
+## Gates
+PHYSICAL_RUNTIME_PASS=1
+TOKENS_GE_2=1
+EXCLUDED_ACQUIRES_EQ_0=1
+PHYSICAL_REDUCE_ACTIVE=1
+PROMOTE=0

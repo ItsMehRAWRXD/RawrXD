@@ -1,53 +1,47 @@
-param(
-  [string]$RefDir  = "F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\llama_ref_gen",
-  [string]$CmpDir  = "F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\ref_repro_f16",
-  [int]$Positions  = 19
-)
+$dc = Join-Path $env:TEMP 'kilo\batch_inv\ref_single'
+$dg = Join-Path $env:TEMP 'kilo\batch_inv\ref_batch'
+$dc2 = Join-Path $env:TEMP 'kilo\batch_inv\cpu_single'
+$dg2 = Join-Path $env:TEMP 'kilo\batch_inv\cpu_batch'
+$dg3 = Join-Path $env:TEMP 'kilo\batch_inv\gpu_single'
+$dg4 = Join-Path $env:TEMP 'kilo\batch_inv\gpu_batch'
 
-function Read-Floats([string]$path) {
-  $bytes = [System.IO.File]::ReadAllBytes($path)
-  $n = $bytes.Length / 4
-  $floats = New-Object float[] $n
-  [System.Buffer]::BlockCopy($bytes, 0, $floats, 0, $bytes.Length)
-  return $floats
+function LoadF($p) {
+    $b = [System.IO.File]::ReadAllBytes($p)
+    $f = New-Object 'float[]' ($b.Length/4)
+    [System.Buffer]::BlockCopy($b, 0, $f, 0, $b.Length)
+    return $f
 }
 
-$totalMatch = 0
-$worstCos = 1.0
-$worstDiff = 0.0
-$worstPos = -1
-
-for ($p = 0; $p -lt $Positions; $p++) {
-  $refPath = Join-Path $RefDir ("ref_logits_pos{0}.bin" -f $p)
-  $cmpPath = Join-Path $CmpDir ("ref_logits_pos{0}.bin" -f $p)
-  if (-not (Test-Path $refPath) -or -not (Test-Path $cmpPath)) {
-    Write-Output ("pos{0}: MISSING" -f $p)
-    continue
-  }
-  $a = Read-Floats $refPath
-  $b = Read-Floats $cmpPath
-  $n = $a.Length
-  $dot = 0.0; $na = 0.0; $nb = 0.0; $maxDiff = 0.0
-  $argA = 0; $argB = 0
-  for ($i = 0; $i -lt $n; $i++) {
-    $x = $a[$i]; $y = $b[$i]
-    $dot += $x * $y
-    $na += $x * $x
-    $nb += $y * $y
-    $d = [Math]::Abs($x - $y)
-    if ($d -gt $maxDiff) { $maxDiff = $d }
-    if ($x -gt $a[$argA]) { $argA = $i }
-    if ($y -gt $b[$argB]) { $argB = $i }
-  }
-  $cos = $dot / ([Math]::Sqrt($na) * [Math]::Sqrt($nb))
-  $match = ($argA -eq $argB)
-  if ($match) { $totalMatch++ }
-  if ($cos -lt $worstCos) { $worstCos = $cos; $worstPos = $p }
-  if ($maxDiff -gt $worstDiff) { $worstDiff = $maxDiff }
-  Write-Output ("pos{0,2}: cos={1:F9} maxdiff={2:E4} argmax_ref={3} argmax_cmp={4} {5}" -f $p, $cos, $maxDiff, $argA, $argB, $(if ($match) {"MATCH"} else {"MISMATCH"}))
+function Compare-Logits($a, $b, $name) {
+    $n = $a.Length
+    $max = 0.0
+    $sum = 0.0
+    $dif = 0
+    for ($i = 0; $i -lt $n; $i++) {
+        $d = [Math]::Abs($a[$i] - $b[$i])
+        if ($d -gt 0) { $dif++ }
+        if ($d -gt $max) { $max = $d }
+        $sum += $d * $d
+    }
+    $rms = [Math]::Sqrt($sum / $n)
+    return ("  {0}: diff={1}/{2} max_abs={3} rms={4}" -f $name, $dif, $n, [math]::Round($max,6), [math]::Round([math]::Sqrt($sum/$n),6))
 }
 
-Write-Output ("---")
-Write-Output ("argmax matches: {0}/{1}" -f $totalMatch, $Positions)
-Write-Output ("worst cos: {0:F9} (pos {1})" -f $worstCos, $worstPos)
-Write-Output ("worst maxdiff: {0:E4}" -f $worstDiff)
+$refs1 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\ref_single\ref_logits_pos0.bin')
+$refb1 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\ref_batch\ref_logits_pos0.bin')
+$cpus1 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\cpu_single\d2_logits_pos0.bin')
+$cpub1 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\cpu_batch\d2_logits_pos0.bin')
+$gpus1 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\gpu_single\d2_logits_pos0.bin')
+$gpub1 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\gpu_batch\d2_logits_pos0.bin')
+$refb2 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\ref_batch\ref_logits_pos1.bin')
+$cpub2 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\cpu_batch\d2_logits_pos1.bin')
+$gpub2 = LoadF (Join-Path $env:TEMP 'kilo\batch_inv\gpu_batch\d2_logits_pos1.bin')
+
+Write-Host "=== POS 0 ==="
+Compare-Logits $refs1 $cpus1 "REF_SINGLE_vs_CPU_SINGLE"
+Compare-Logits $refb1 $cpub1 "REF_BATCH_vs_CPU_BATCH"
+Compare-Logits $refs1 $gpus1 "REF_SINGLE_vs_GPU_SINGLE"
+Compare-Logits $refb1 $gpub1 "REF_BATCH_vs_GPU_BATCH"
+Compare-Logits $refs1 $refb1 "REF_SINGLE_vs_REF_BATCH"
+Compare-Logits $cpus1 $cpub1 "CPU_SINGLE_vs_CPU_BATCH"
+Compare-Logits $gpus1 $gpub1 "GPU_SINGLE_vs_GPU_BATCH"

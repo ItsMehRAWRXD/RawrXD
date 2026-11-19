@@ -1,0 +1,43 @@
+OLD:
+        if (qRows == 0 || kRows == 0 || vRows == 0)
+        {
+            g.detail = "layer " + std::to_string(i) +
+                       " has incomplete attention tensors";
+            return false;
+        }
+        if ((qRows % mw.numHeads) != 0)
+        {
+            g.detail = "layer " + std::to_string(i) +
+                       " Q rows are not divisible by numHeads";
+            return false;
+        }
+        const size_t layerHeadDim = qRows / mw.numHeads;
+        if (layerHeadDim == 0)
+        {
+            g.detail = "layer " + std::to_string(i) + " derived headDim=0";
+            return false;
+        }
+
+NEW:
+        if (qRows == 0 || kRows == 0 || vRows == 0)
+        {
+            g.detail = "layer " + std::to_string(i) +
+                       " has incomplete attention tensors";
+            return false;
+        }
+        const bool qwenGatedQ =
+            mw.keyLength > 0 &&
+            qRows == 2 * mw.numHeads * mw.keyLength;
+        if (!qwenGatedQ && (qRows % mw.numHeads) != 0)
+        {
+            g.detail = "layer " + std::to_string(i) +
+                       " Q rows are not divisible by numHeads";
+            return false;
+        }
+        const size_t layerHeadDim =
+            qwenGatedQ ? mw.keyLength : (qRows / mw.numHeads);
+        if (layerHeadDim == 0)
+        {
+            g.detail = "layer " + std::to_string(i) + " derived headDim=0";
+            return false;
+        }

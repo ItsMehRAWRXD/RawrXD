@@ -5,33 +5,41 @@
 #include <string>
 
 void Win32IDE::gitStage(const std::string& file) {
-    appendToOutput("[Git] Stage: " + file + "\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git add -- \"" + file + "\"", output);
+    appendToOutput("[Git] Stage: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 void Win32IDE::gitCommit(const std::string& message) {
-    appendToOutput("[Git] Commit: " + message + "\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git commit -m \"" + message + "\"", output);
+    appendToOutput("[Git] Commit: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 void Win32IDE::gitPush() {
-    appendToOutput("[Git] Push.\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git push", output);
+    appendToOutput("[Git] Push: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 void Win32IDE::gitPull() {
-    appendToOutput("[Git] Pull.\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git pull", output);
+    appendToOutput("[Git] Pull: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 void Win32IDE::gitBranch(const std::string& name) {
-    appendToOutput("[Git] Branch: " + name + "\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git switch -c \"" + name + "\"", output);
+    appendToOutput("[Git] Branch: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 void Win32IDE::gitStash() {
-    appendToOutput("[Git] Stash.\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git stash", output);
+    appendToOutput("[Git] Stash: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 void Win32IDE::gitCherryPick(const std::string& commit) {
-    appendToOutput("[Git] Cherry-pick: " + commit + "\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git cherry-pick \"" + commit + "\"", output);
+    appendToOutput("[Git] Cherry-pick: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 void Win32IDE::gitStatus() {
-    appendToOutput("[Git] Status.\n", "Git", OutputSeverity::Info);
+    std::string output; const bool ok = executeGitCommand("git status --short", output);
+    appendToOutput("[Git] Status: " + (ok ? output : "command failed\n"), "Git", ok ? OutputSeverity::Info : OutputSeverity::Error);
 }

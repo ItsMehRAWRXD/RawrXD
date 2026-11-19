@@ -1,0 +1,18 @@
+G09_REAP_TIP15 GATE4 export admission 20261113
+PROMOTE=0 CERTIFIED=0
+DISPOSITION=NOT_RUN
+TOOL=F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe
+CMD=reap <kimi-00001> --target-size 22GB --active-experts 8 --expert-budget 20GB --quality-floor 0.0 --selection-output selection_blocked.json --output-model sidecar_out
+EXIT=4
+status=BLOCKED
+reason=REAP_REWRITE_NOT_AUTHORIZED_BY_REFERENCE_PARITY
+calibration_complete=false
+internal_prefill_parity=false
+write_allowed=false
+gguf_rewrite_complete=false
+output_bytes=0
+ORIGINAL_GGUF_INTACT=1
+SHARD1_BYTES=46304135840 MEASURED (unchanged)
+REAP_MODEL_SHA256=NOT_RUN
+MISSING_INPUT=authorized calibration receipt with calibration_complete+referenceParity; --authorize-rewrite
+NOTE=transformMoEGGUF surface present on rawr-reap; stream --reap path remains source-immutable

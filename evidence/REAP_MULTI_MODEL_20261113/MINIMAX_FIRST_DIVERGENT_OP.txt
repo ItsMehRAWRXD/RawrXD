@@ -1,0 +1,25 @@
+MINIMAX_FIRST_DIVERGENT_OP
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 ORIGINAL_GGUF_INTACT=1
+ISSUE=#83
+
+CLAIMED_SYMPTOM: S08_ATTN_DUMP K~1e24 V~1e12 (B03 T4 R1 STDERR)
+ROOT_CAUSE: DIAGNOSTIC_ORDER_BUG ? S08 dumped kProj/vProj BEFORE LinearW (uninit)
+POST_LINEARW_EVIDENCE (same run, QKV_PROJ after fill):
+  q ~ 1e-2..4e-2 finite
+  k ~ 1e-3..8e-2 finite
+  v ~ 1e-3..2e-2 finite
+FALSE_POSITIVE=1 for pre-proj S08 K/V magnitudes
+
+GEOMETRY (GGUF/runtime):
+  arch=minimax-m2 hidden=3072 heads=48 kvHeads=8 headDim=128
+  wq=6144x3072 type=12(Q4_K) wk=1024x3072 type=12 wv=1024x3072 type=14(Q6_K)
+  ropeTheta=5000000
+
+CODE_FIX_LANDED_ON_F:
+  S08/QKV dump moved POST_LINEARW + [FIRST_DIVERGENT_OP] probe
+  computeExpertFFN zeros gate/up/output before accumulate GEMV
+  ffnOutput sized max(hidden,ffnDim); MoE path fill-zero
+
+QUALITY: still OPEN (output ???? on sealed C9A5564C T4) ? NOT production
+NEXT: rebuild rawr-reap when peer unlocks EXE; route smoke; meaningful logits gate
+EXE_COORD: see EXE_REBUILD_COORD.txt ? do not fight 4de77ea3

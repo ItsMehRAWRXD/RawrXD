@@ -1,6 +1,8 @@
 #version 450
 
+#ifdef RTE16
 #include "rte.glsl"
+#endif
 #include "types.glsl"
 
 #if defined(SET_ROWS) && QUANT_K == 1

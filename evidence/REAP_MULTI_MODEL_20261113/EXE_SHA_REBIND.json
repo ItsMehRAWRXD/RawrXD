@@ -1,0 +1,12 @@
+{
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "CROSS_SHA_CREDIT": 0,
+  "SEALED_C9A5564C": "C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16",
+  "LIVE_EXE": "F:\\rawrxd\\build_reap\\bin-msvc\\rawr-reap.exe",
+  "LIVE_SHA256": "73A108B60715A547C7A55280ACF1EFB411A84ACB934C93F9089B3EB3A79B51E8",
+  "CURRENT_EXE_REBOUND": 1,
+  "NOTE": "Live EXE rebound from sealed C9A5564C; peer rebuild after UTF-8 MoE + attn diag. Do not credit across SHA.",
+  "GDN_WIP_985A745C": "F:\\rawrxd\\build_reap\\bin-msvc\\rawr-reap.GDN_WIP_985A745C.exe",
+  "TS": "2026-11-13T07:09:37.2219323-05:00"
+}

@@ -1,0 +1,1 @@
+{"dtype":"f32","prefix":"u32_layer,u64_step,u32_kind,u32_expert,f32_weight,u32_count,f32_output[]","kinds":{"0":"shared_contribution","1":"routed_pre_weight"},"layer":13,"generation_step":0,"records":63,"shared_records":9,"routed_records":54,"model_sha256":"5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046"}

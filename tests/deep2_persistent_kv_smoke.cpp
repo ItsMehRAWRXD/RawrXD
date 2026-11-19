@@ -15,6 +15,7 @@
 #include "KVCache.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -33,9 +34,29 @@ static void check(bool condition, const char *message)
 
 int main(int argc, char **argv)
 {
-    const char *modelPath = argc > 1
-                                ? argv[1]
-                                : "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+    // This lifecycle test validates KV semantics, not Vulkan device bring-up.
+    // Keep it deterministic and independent of whatever GPU workloads are
+    // resident on the developer machine; GPU acceptance has separate tests.
+#ifdef _WIN32
+    _putenv_s("RAWR_REAP_CPU_ONLY", "1");
+#else
+    setenv("RAWR_REAP_CPU_ONLY", "1", 1);
+#endif
+    const char *modelPath = argc > 1 ? argv[1] : nullptr;
+    if (!modelPath) {
+        if (const char *configured = std::getenv("RAWRXD_PERSISTENT_KV_MODEL");
+            configured && *configured) modelPath = configured;
+    }
+    if (!modelPath) {
+        std::printf("SKIP: explicit persistent KV model required\n");
+        return 77;
+    }
+    if (FILE *probe = std::fopen(modelPath, "rb")) {
+        std::fclose(probe);
+    } else {
+        std::printf("SKIP: persistent KV model unavailable: %s\n", modelPath);
+        return 77;
+    }
 
     // --- KV capacity enforcement (API boundary) ---
     {
@@ -76,11 +97,16 @@ int main(int argc, char **argv)
     cfg.maxSeqLen = 512;
 
     Deep2Engine engine;
+    engine.enableVulkan(false);
+    std::printf("S02_STAGE initialize\n");
+    std::fflush(stdout);
     if (!engine.initialize(cfg))
     {
         std::printf("FAIL: engine initialize\n");
         return 20;
     }
+    std::printf("S02_STAGE load_model\n");
+    std::fflush(stdout);
     if (!engine.loadModel(modelPath))
     {
         std::printf("FAIL: engine loadModel %s\n", modelPath);
@@ -95,6 +121,8 @@ int main(int argc, char **argv)
     }
 
     const std::string promptText = "The capital of France is";
+    std::printf("S02_STAGE tokenize\n");
+    std::fflush(stdout);
     const std::vector<int> prompt = engine.tokenize(promptText);
     if (prompt.empty())
     {
@@ -104,6 +132,10 @@ int main(int argc, char **argv)
 
     GenerationOptions opts;
     opts.maxTokens = 8;
+    if (const char *limit = std::getenv("RAWRXD_PERSISTENT_KV_MAX_TOKENS")) {
+        const long parsed = std::strtol(limit, nullptr, 10);
+        if (parsed > 0 && parsed <= 64) opts.maxTokens = static_cast<size_t>(parsed);
+    }
     opts.temperature = 0.0f;
     opts.topK = 1;
     opts.topP = 1.0f;
@@ -122,6 +154,8 @@ int main(int argc, char **argv)
     };
 
     InferenceStats stats{};
+    std::printf("S02_STAGE generate_1\n");
+    std::fflush(stdout);
     const size_t generated =
         engine.generate(prompt.data(), prompt.size(), out.data(), opts.maxTokens, &stats, callback);
 

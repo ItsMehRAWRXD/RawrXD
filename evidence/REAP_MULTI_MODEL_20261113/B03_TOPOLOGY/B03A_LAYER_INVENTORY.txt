@@ -1,0 +1,48 @@
+GLOBAL_SHARDS=3 TOTAL=809
+shard0 tensors=288 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+shard1 tensors=299 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf
+shard2 tensors=222 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf
+--- layer 0 n=13 ---
+  s0 blk.0.attn_k.weight dims=[3072, 1024] type=12
+  s0 blk.0.attn_k_norm.weight dims=[1024] type=0
+  s0 blk.0.attn_norm.weight dims=[3072] type=0
+  s0 blk.0.attn_output.weight dims=[6144, 3072] type=12
+  s0 blk.0.attn_q.weight dims=[3072, 6144] type=12
+  s0 blk.0.attn_q_norm.weight dims=[6144] type=0
+  s0 blk.0.attn_v.weight dims=[3072, 1024] type=14
+  s0 blk.0.exp_probs_b.bias dims=[256] type=0
+  s0 blk.0.ffn_gate_inp.weight dims=[3072, 256] type=0
+  s0 blk.0.ffn_norm.weight dims=[3072] type=0
+--- layer 1 n=13 ---
+  s0 blk.1.attn_k.weight dims=[3072, 1024] type=12
+  s0 blk.1.attn_k_norm.weight dims=[1024] type=0
+  s0 blk.1.attn_norm.weight dims=[3072] type=0
+  s0 blk.1.attn_output.weight dims=[6144, 3072] type=12
+  s0 blk.1.attn_q.weight dims=[3072, 6144] type=12
+  s0 blk.1.attn_q_norm.weight dims=[6144] type=0
+  s0 blk.1.attn_v.weight dims=[3072, 1024] type=14
+  s0 blk.1.exp_probs_b.bias dims=[256] type=0
+  s0 blk.1.ffn_gate_inp.weight dims=[3072, 256] type=0
+  s0 blk.1.ffn_norm.weight dims=[3072] type=0
+--- layer 31 n=13 ---
+  s1 blk.31.attn_k.weight dims=[3072, 1024] type=12
+  s1 blk.31.attn_k_norm.weight dims=[1024] type=0
+  s1 blk.31.attn_norm.weight dims=[3072] type=0
+  s1 blk.31.attn_output.weight dims=[6144, 3072] type=12
+  s1 blk.31.attn_q.weight dims=[3072, 6144] type=12
+  s1 blk.31.attn_q_norm.weight dims=[6144] type=0
+  s1 blk.31.attn_v.weight dims=[3072, 1024] type=12
+  s1 blk.31.exp_probs_b.bias dims=[256] type=0
+  s1 blk.31.ffn_gate_inp.weight dims=[3072, 256] type=0
+  s1 blk.31.ffn_norm.weight dims=[3072] type=0
+--- layer 61 n=13 ---
+  s2 blk.61.attn_k.weight dims=[3072, 1024] type=12
+  s2 blk.61.attn_k_norm.weight dims=[1024] type=0
+  s2 blk.61.attn_norm.weight dims=[3072] type=0
+  s2 blk.61.attn_output.weight dims=[6144, 3072] type=12
+  s2 blk.61.attn_q.weight dims=[3072, 6144] type=12
+  s2 blk.61.attn_q_norm.weight dims=[6144] type=0
+  s2 blk.61.attn_v.weight dims=[3072, 1024] type=14
+  s2 blk.61.exp_probs_b.bias dims=[256] type=0
+  s2 blk.61.ffn_gate_inp.weight dims=[3072, 256] type=0
+  s2 blk.61.ffn_norm.weight dims=[3072] type=0

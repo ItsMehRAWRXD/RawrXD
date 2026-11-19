@@ -1,0 +1,7 @@
+POST /v1/chat/completions HTTP/1.1
+Host: 127.0.0.1:11435
+Connection: close
+Content-Type: application/json
+Content-Length: 138
+
+{"model": "reap16-glm-4_7-flash:latest", "messages": [{"role": "user", "content": "Reply exactly OK"}], "stream": true, "max_tokens": 128}

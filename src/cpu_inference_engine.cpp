@@ -197,32 +197,6 @@ namespace CPUOps {
 }
 
 // --- Internal Helpers ---
-static void DequantizeTensorPtr(const uint8_t* raw_data, size_t raw_size, float* out, size_t count, TensorType type) {
-    if (type == TensorType::Q4_0) {
-        CPUOps::DequantizeQ4_0(raw_data, out, count);
-    } else if (type == TensorType::Q8_0) {
-        CPUOps::DequantizeQ8_0(raw_data, out, count);
-    } else {
-        // F32 is a direct copy.  Unknown/unsupported quantized formats must
-        // never be treated as F32: doing so reads past the compressed tensor
-        // and was the source of the bridge's 0xC0000409 generation crash.
-        const size_t requested = count * sizeof(float);
-        if (type == TensorType::F32) {
-            const size_t copied = std::min(raw_size, requested);
-            if (copied) std::memcpy(out, raw_data, copied);
-            if (copied < requested) {
-                std::memset(reinterpret_cast<uint8_t*>(out) + copied, 0, requested - copied);
-            }
-        } else {
-            std::fill(out, out + count, 0.0f);
-        }
-    }
-}
-
-static void DequantizeTensor(const std::vector<uint8_t>& raw, float* out, size_t count, TensorType type) {
-    DequantizeTensorPtr(raw.data(), raw.size(), out, count, type);
-}
-
 // --- CPUInferenceEngine Implementation ---
 
 CPUInferenceEngine::CPUInferenceEngine() 
@@ -444,36 +418,13 @@ void CPUInferenceEngine::MultiHeadAttention(const float* query, const float* key
     }
 }
 
-void CPUInferenceEngine::TransformerLayer(const float* input, float* output, int layer_idx, int seq_len) {
+void CPUInferenceEngine::TransformerLayer(const float* input, float* output, int layer_idx, int seq_len, uint32_t deviceId) {
     std::string prefix = "blk." + std::to_string(layer_idx) + ".";
     
     std::vector<float> norm1(m_embeddingDim);
     std::memcpy(norm1.data(), input, m_embeddingDim * sizeof(float));
     
-    auto ApplyNorm = [&](const std::string& suffix, float* data) {
-         std::string name = prefix + suffix;
-         std::vector<uint8_t> raw;
-         if (m_loader->GetTensorData(name, raw)) {
-             CPUOps::RMSNorm(data, m_embeddingDim, 1e-6f);
-             TensorType type = TensorType::F32;
-             if (m_weights.count(name)) type = m_weights[name].type;
-             // Norm tensors are normally F32.  Never reinterpret a
-             // compressed/short tensor as float weights: that permits an
-             // out-of-bounds read inside VectorMul and terminates the worker
-             // through the CRT invalid-parameter handler.
-             if (type == TensorType::F32 && raw.size() >= m_embeddingDim * sizeof(float)) {
-                 CPUOps::VectorMul(data, reinterpret_cast<const float*>(raw.data()), data, m_embeddingDim);
-             } else if (type == TensorType::Q4_0 || type == TensorType::Q8_0) {
-                 std::vector<float> weights(m_embeddingDim, 0.0f);
-                 DequantizeTensor(raw, weights.data(), m_embeddingDim, type);
-                 CPUOps::VectorMul(data, weights.data(), data, m_embeddingDim);
-             }
-         } else {
-             CPUOps::RMSNorm(data, m_embeddingDim, 1e-6f);
-         }
-    };
-    
-    ApplyNorm("attn_norm.weight", norm1.data());
+    this->ApplyNorm(prefix + "attn_norm.weight", norm1.data());
     
     std::vector<float> attn_out(m_embeddingDim);
     MultiHeadAttention(norm1.data(), norm1.data(), norm1.data(), attn_out.data(), 
@@ -483,7 +434,7 @@ void CPUInferenceEngine::TransformerLayer(const float* input, float* output, int
     CPUOps::VectorAdd(input, attn_out.data(), resid1.data(), m_embeddingDim);
     
     std::vector<float> norm2 = resid1;
-    ApplyNorm("ffn_norm.weight", norm2.data());
+    this->ApplyNorm(prefix + "ffn_norm.weight", norm2.data());
     
     std::vector<float> ffn_out(m_embeddingDim);
     FeedForward(norm2.data(), ffn_out.data(), layer_idx);
@@ -893,6 +844,37 @@ std::string CPUInferenceEngine::infer(const std::string& prompt, int max_tokens)
     GenerateStreaming(tokens, max_tokens, [&](const std::string& s) { result += s; }, [&]() { done.set_value(); });
     future.wait();
     return result;
+}
+
+// DequantizeTensor: dispatch to the appropriate quant-specific dequantizer
+void CPUInferenceEngine::DequantizeTensor(const std::vector<uint8_t>& src, float* dst, size_t size, TensorType type) {
+    if (src.empty() || dst == nullptr || size == 0) return;
+    const uint8_t* srcData = src.data();
+    switch (type) {
+        case TensorType::F32:
+            std::memcpy(dst, srcData, size * sizeof(float));
+            break;
+        case TensorType::F16:
+            CPUOps::DequantizeF16(srcData, dst, (int)size);
+            break;
+        case TensorType::Q4_0:
+            CPUOps::DequantizeQ4_0(srcData, dst, (int)size);
+            break;
+        case TensorType::Q8_0:
+            CPUOps::DequantizeQ8_0(srcData, dst, (int)size);
+            break;
+        case TensorType::Q4_K:
+        case TensorType::Q5_K:
+        case TensorType::Q6_K:
+        case TensorType::Q2_K:
+        case TensorType::Q3_K:
+            CPUOps::DequantizeQ4_K(srcData, dst, (int)size);
+            break;
+        default:
+            // Unknown type: zero-fill for safety
+            std::memset(dst, 0, size * sizeof(float));
+            break;
+    }
 }
 
 } // namespace RawrXD

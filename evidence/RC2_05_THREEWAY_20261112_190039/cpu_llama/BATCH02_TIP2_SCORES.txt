@@ -1,0 +1,15 @@
+﻿BATCH02 TIP2 SCORES/SOFTMAX/AV/KV INSTRUMENTATION
+ASOF=2026-11-12T20:32:03-05:00
+FIRST_OP_EXACT=L0_ATTN_PRE_O @ tip2_step(pos10) maxAbs=6.777961e-01
+  Q/K/V PRE_ROPE MATCH vs RuntimeGraph; attend>1 ⇒ scores/softmax/AV path
+ROOT_CAUSE=Deep2Engine applyRoPE used NORM adjacent pairing on qwen2;
+  RuntimeGraph/llama use NEOX (i, i+n/2). Pos0 hides defect (angles=0).
+OFFLINE_PROOF=
+  eng Q_POST vs NORM_eng maxAbs~8e-6 MATCH
+  eng Q_POST vs NEOX(pre) maxAbs~2.84e1 MISMATCH
+  RT q dump matches eng Q_PRE (pre-rope)
+INSTRUMENT=DEEP2_TIP2_ATTN_DUMP=1 in AttentionWithCache (layer0 head0 attend==11)
+  Witness after NEOX fix: ROPE_NEOX_TIP2=1; TIP2_ATTN/TIP2_KV dumps present
+storeKvRoundTrip=PRESERVED
+DO_NOT_REOPEN_Q4K_ACT=1
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD

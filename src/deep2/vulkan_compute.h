@@ -93,6 +93,7 @@ public:
         VkBuffer buffer = VK_NULL_HANDLE;
         VkDeviceMemory memory = VK_NULL_HANDLE;
         VkDeviceSize size = 0;
+        VkDeviceSize allocationSize = 0;
         VkMemoryPropertyFlags memoryFlags = 0;
         uint64_t id = 0;
         explicit operator bool() const noexcept {
@@ -114,6 +115,9 @@ public:
         // stale async ticket can never publish into a newer residency
         // generation.
         uint64_t generation = 0;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in the corresponding wait/cancel path.
+        bool inFlight_ = false;
     };
 
     explicit VulkanCompute(uint32_t physicalOrdinal = 0);
@@ -220,6 +224,18 @@ public:
                             DeviceBuf& out, uint32_t headDim,
                             uint32_t heads, uint32_t kvHeads,
                             uint32_t seqLen, float scale, uint32_t layer);
+    bool DispatchQwen35GatedAttention(DeviceBuf& qGate, DeviceBuf& kCache,
+                                      DeviceBuf& vCache, DeviceBuf& qNorm,
+                                      DeviceBuf& kNorm, DeviceBuf& out,
+                                      uint32_t headDim, uint32_t heads,
+                                      uint32_t kvHeads, uint32_t seqLen,
+                                      uint32_t ropeDim, uint32_t qgStride,
+                                      float theta, float scale, float eps);
+
+    bool DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+                                   DeviceBuf& out, uint32_t headDim,
+                                   uint32_t heads, uint32_t kvHeads,
+                                   uint32_t seqLen, float scale, uint32_t layer);
 
     bool DispatchGemvDevice(const float* weights, uint64_t key,
                             DeviceBuf& input, DeviceBuf& output,
@@ -254,6 +270,16 @@ public:
                       uint32_t hidden, uint32_t intermediate,
                       uint64_t epoch);
 
+    // GPU MoE Router: computes logits = W * x, returns top-k expert indices and weights
+    // routerWeights: [numExperts, hiddenDim] in row-major (GGUF ffn_gate_inp layout)
+    // hiddenState: [hiddenDim]
+    // Returns true on success, fills expertIds and weights with top-k results
+    bool DispatchRouter(const GpuWeightView& routerWeights,
+                        const float* hiddenState,
+                        std::vector<int>& expertIds,
+                        std::vector<float>& weights,
+                        int topK);
+
     bool RunMLAAttentionHost(const float* q,
                              const float* k,
                              const float* v,
@@ -268,6 +294,43 @@ public:
                              float scale,
                              uint64_t epoch);
     void ResetMLACache();
+
+    // MLA Attention Decode
+    // Dispatches the MLA (Multi-head Latent Attention) decode kernel
+    // q: query buffer (ArenaQ)
+    // kb: key buffer (MlaKb)
+    // vb: value buffer (MlaVb)
+    // kpe: key positional encoding buffer (MlaKpe)
+    // out: output buffer (ArenaAttn)
+    // qkDim: Q/K dimension (qkNope + qkRope)
+    // vDim: value dimension (vHeadDim)
+    // nope: Q/K no-RoPE dimension
+    // rope: RoPE dimension
+    // nHeads: number of attention heads
+    // pos: token position
+    // theta: RoPE theta
+    // scale: attention scale
+    // ropeScale: RoPE scale factor
+    // layer: layer index
+    // Returns true on success
+    bool DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf& vb,
+                               DeviceBuf& kpe, DeviceBuf& out,
+                               uint32_t qkDim, uint32_t vDim, uint32_t nope, uint32_t rope,
+                               uint32_t nHeads, uint32_t pos, float theta,
+                               float scale, float ropeScale, uint32_t layer);
+
+    // Initialize MLA attention with model dimensions
+    // nHeads: number of attention heads
+    // qkDim: Q/K dimension (qkNope + qkRope)
+    // vDim: value dimension (vHeadDim)
+    // nope: Q/K no-RoPE dimension
+    // rope: RoPE dimension
+    // maxSeq: maximum sequence length
+    // nLayers: number of layers
+    // Returns true on success
+    bool EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim,
+                       uint32_t nope, uint32_t rope, uint32_t maxSeq,
+                       uint32_t nLayers);
 
     DeviceBuf& ArenaHidden()   { return arenaHidden_; }
     DeviceBuf& ArenaAttnW()    { return arenaAttnW_; }
@@ -363,6 +426,43 @@ public:
     static_assert(offsetof(SpecAttnPush, scale)    == 28);
     static_assert(sizeof(SpecAttnPush) == 32);
 
+    // ========== CSPD Split-KV Attention (experimental, off by default) ==========
+    bool createCspdReduceSetLayout();
+    bool IsCspdEnabled() const { return cspdEnabled_; }
+    bool cspdEnabled_ = false;
+    VkPipeline cspdPartialPipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout cspdPartialPipelineLayout_ = VK_NULL_HANDLE;
+    VkPipeline cspdReducePipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout cspdReducePipelineLayout_ = VK_NULL_HANDLE;
+    VkDescriptorSetLayout cspdReduceSetLayout_ = VK_NULL_HANDLE;
+    DeviceBuf cspdScratch_;
+    uint64_t cspdDecodeNs_ = 0;
+
+    // CSPD push constant structs
+    struct CspdPartialPush {
+        uint32_t headDim = 0, heads = 0, kvHeads = 0, seqLen = 0;
+        uint32_t kvDim = 0, layerBase = 0, chunkTokens = 0, numChunks = 0;
+        float scale = 0.0f;
+    };
+    static_assert(offsetof(CspdPartialPush, headDim) == 0);
+    static_assert(offsetof(CspdPartialPush, heads) == 4);
+    static_assert(offsetof(CspdPartialPush, kvHeads) == 8);
+    static_assert(offsetof(CspdPartialPush, seqLen) == 12);
+    static_assert(offsetof(CspdPartialPush, kvDim) == 16);
+    static_assert(offsetof(CspdPartialPush, layerBase) == 20);
+    static_assert(offsetof(CspdPartialPush, chunkTokens) == 24);
+    static_assert(offsetof(CspdPartialPush, numChunks) == 28);
+    static_assert(offsetof(CspdPartialPush, scale) == 32);
+    static_assert(sizeof(CspdPartialPush) == 36);
+
+    struct CspdReducePush {
+        uint32_t headDim = 0, heads = 0, numChunks = 0, reserved = 0;
+    };
+    static_assert(offsetof(CspdReducePush, headDim) == 0);
+    static_assert(offsetof(CspdReducePush, heads) == 4);
+    static_assert(offsetof(CspdReducePush, numChunks) == 8);
+    static_assert(sizeof(CspdReducePush) == 16);
+
     // ========== KV mirror ==========
     bool EnsureSpecKvMirror(uint32_t layers, uint32_t kvHeads,
                             uint32_t headDim, uint32_t maxSeq);
@@ -434,6 +534,10 @@ public:
     // ========== Weight pinning ==========
     bool PinWeightView(const GpuWeightView& view);
     void UnpinAllWeights();
+    // Complete all synchronous work, then reclaim every unpinned streamed
+    // weight allocation.  This is the block-boundary residency operation used
+    // by the graph executor for models larger than device-local VRAM.
+    bool TrimUnpinnedWeightCache(uint32_t completedBlock = UINT32_MAX);
     // MoE graph ownership barrier. While held, resident-object eviction is
     // refused so a fused expert graph cannot lose a published weight view.
     void BeginMoePinHold() noexcept { moePinHolds_.fetch_add(1, std::memory_order_acq_rel); }
@@ -564,6 +668,9 @@ public:
         VkQueryPool query = VK_NULL_HANDLE;
         size_t bytes = 0;
         bool active = false;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in WaitDownloadAsync.
+        bool inFlight_ = false;
     };
     bool SubmitDownloadAsync(
         DeviceBuf& src, size_t bytes, DownloadTicket& ticket);
@@ -717,6 +824,9 @@ public:
         VkFence fence = VK_NULL_HANDLE;
         VkQueryPool query = VK_NULL_HANDLE;
         bool active = false;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in WaitQ4KResidentAsync / CancelQ4KAsync.
+        bool inFlight_ = false;
     };
     bool BeginQ4KResidentAsync(
         const GpuWeightView& weight, DeviceBuf& input, DeviceBuf& output,
@@ -793,6 +903,9 @@ public:
         uint32_t ringSlot = UINT32_MAX;
         size_t bytes = 0;
         bool active = false;
+        // Count of gated submits still in flight (compute + transfer).
+        // Cleared (with g_gpuInFlight decrements) in WaitTimelineDownload.
+        uint32_t inFlight_ = 0;
     };
     bool SubmitQ4KThenDownloadTimeline(
         const GpuWeightView& weight, DeviceBuf& input, DeviceBuf& output,
@@ -1039,6 +1152,9 @@ public:
         VkCommandBuffer cmd = VK_NULL_HANDLE;
         VkFence fence = VK_NULL_HANDLE;
         bool active = false;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in WaitHiddenCopy.
+        bool inFlight_ = false;
     };
     bool CaptureVerifiedHiddenTimeline(
         DeviceBuf& hiddenBatch, uint32_t tokenIndex,
@@ -1374,6 +1490,12 @@ public:
         weightBudgetBytes_ = budgetBytes;
     }
 
+    public:
+        // Public wrapper for test access - delegates to private createBuffer
+        bool createBufferPublic(VkDeviceSize bytes, VkBufferUsageFlags usage,
+                                VkMemoryPropertyFlags required,
+                                DeviceBuf& out);
+
 private:
     struct WeightCacheEntry {
         DeviceBuf buffer{};
@@ -1421,10 +1543,18 @@ private:
                                 uint32_t pushBytes,
                                 VkPipelineLayout& pipelineLayout,
                                 VkPipeline& pipeline);
+    bool ensureQwen35GatedPipeline();
 
     bool createBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
                       VkMemoryPropertyFlags required,
                       DeviceBuf& out);
+    // Reuse exact-size device-local scratch allocations between dispatches.
+    // This is part of the private buffer ownership contract; keep the
+    // declaration adjacent to createBuffer so the implementation cannot
+    // drift into a free helper with inaccessible DeviceBuf state.
+    bool getScratchBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
+                          VkMemoryPropertyFlags required,
+                          DeviceBuf& out);
     void destroyBuffer(DeviceBuf& b);
     bool uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes);
     bool downloadFromBuffer(const DeviceBuf& src, void* dst, size_t bytes);
@@ -1434,6 +1564,11 @@ private:
                        GpuWorkKind kind, uint64_t bytes, uint64_t epoch,
                        GpuWorkInterval* interval = nullptr,
                        uint64_t timeoutNs = UINT64_MAX);
+    // Gate-protected submit helper: increments g_gpuInFlight before
+    // vkQueueSubmit and decrements it on submit failure. Caller manages
+    // the gate lock; on success the caller must decrement in_flight via
+    // the ticket's inFlight_ flag in the corresponding wait/cancel path.
+    VkResult gatedSubmit(VkQueue queue, const VkSubmitInfo* si, VkFence fence);
     bool recordCopy(VkCommandBuffer cmd, const DeviceBuf& src, DeviceBuf& dst,
                     VkDeviceSize bytes, VkDeviceSize srcOffset = 0,
                     VkDeviceSize dstOffset = 0);
@@ -1508,7 +1643,18 @@ private:
     VkPipeline opsPipeline_ = VK_NULL_HANDLE;
     VkPipeline qPipeline_ = VK_NULL_HANDLE;
     VkPipeline qNvfp4Pipeline_ = VK_NULL_HANDLE;
+    VkPipeline q40Pipeline_ = VK_NULL_HANDLE;
     VkPipeline gdnPipeline_ = VK_NULL_HANDLE;
+
+        // MLA attention pipeline
+        VkPipeline mlaPipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout mlaPipelineLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout mlaSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSet mlaDescriptorSet_ = VK_NULL_HANDLE;
+        VkPipeline qwen35GatedPipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout qwen35GatedPipelineLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout qwen35GatedSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSet qwen35GatedDescriptorSet_ = VK_NULL_HANDLE;
 
     bool calibratedAvailable_ = false;
     VkTimeDomainEXT hostTimeDomain_ = VK_TIME_DOMAIN_DEVICE_EXT;
@@ -1630,6 +1776,17 @@ private:
     // owner/block identity supplied by RuntimeGraphExecutor. A state buffer
     // is never reused across a geometry change or an explicit reset.
     std::unordered_map<uint64_t, DeviceBuf> gdnStates_;
+
+    // Reusable DEVICE_LOCAL scratch buffers keyed by exact byte size.
+    //
+    // GDN stateful dispatch previously created and destroyed eight buffers per
+    // call. With one call per token per layer, a prefill produced thousands of
+    // vkAllocateMemory/vkFreeMemory cycles on DEVICE_LOCAL memory, which both
+    // fragmented VRAM and exhausted it (VK_ERROR_OUT_OF_DEVICE_MEMORY, rc=-2)
+    // on large models. These entries are long-lived and reused in place, so the
+    // steady state performs no device allocation at all. Each dispatch submits
+    // and waits before returning (endSubmitWait), so reuse is race-free.
+    std::unordered_map<VkDeviceSize, DeviceBuf> scratchBuffers_;
 
     uint64_t gemvSuccess_ = 0;
     uint64_t weightUploads_ = 0;

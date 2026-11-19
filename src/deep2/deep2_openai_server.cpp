@@ -662,6 +662,17 @@ bool OpenAIServer::run(uint16_t port) {
         return false;
     }
 
+    // Loopback-only listener. An earlier revision bound INADDR_ANY on a dual-stack
+    // socket to make "localhost" work when a client resolved it to ::1. That also
+    // exposed an UNAUTHENTICATED inference API on every non-loopback interface,
+    // which is unacceptable for a local-only workstation. This revision keeps the
+    // original IPv4-loopback scope: reachable from this machine, not the network.
+    //
+    // A client that resolves "localhost" to ::1 will still be refused. Use the
+    // literal http://127.0.0.1:<port>/v1 form for OpenAI-compatible clients.
+    // Serving both loopback families requires a second socket on ::1 and a
+    // select() over both in the accept loop; that is a deliberate follow-up, not
+    // a reason to widen the bind here.
     pImpl->listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pImpl->listenSocket == INVALID_SOCKET) {
         std::fprintf(stderr, "[OpenAI] socket() failed\n");

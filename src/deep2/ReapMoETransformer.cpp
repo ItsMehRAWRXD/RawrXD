@@ -12,6 +12,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <unordered_set>
 #include <unordered_map>
 
 namespace Deep2 {
@@ -88,53 +89,94 @@ bool writeString(std::ofstream& out, const std::string& value) {
 }
 
 bool scalarBytes(uint32_t type, size_t& bytes) {
+    // GGUF specification types 0-12 are supported.
+    // Types 8 (STRING) and 9 (ARRAY) are not scalars; callers should handle
+    // them via the dedicated STRING/ARRAY branches in readValue().
     switch (type) {
-    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-        bytes = (type == 0 || type == 1) ? 1 : 4;
-        if (type == 2 || type == 3) bytes = 2;
-        if (type == 4 || type == 5 || type == 6) bytes = 4;
-        if (type == 7) bytes = 1;
+    case 0: // UINT8   = 1 byte
+        bytes = 1;
         return true;
-    case 10: case 11: case 12: return false;
-    default: break;
+    case 1: // INT8    = 1 byte
+        bytes = 1;
+        return true;
+    case 2: // UINT16  = 2 bytes
+        bytes = 2;
+        return true;
+    case 3: // INT16   = 2 bytes
+        bytes = 2;
+        return true;
+    case 4: // UINT32  = 4 bytes
+        bytes = 4;
+        return true;
+    case 5: // INT32   = 4 bytes
+        bytes = 4;
+        return true;
+    case 6: // FLOAT32 = 4 bytes
+        bytes = 4;
+        return true;
+    case 7: // BOOL    = 1 byte
+        bytes = 1;
+        return true;
+    case 10: // UINT64  = 8 bytes
+        bytes = 8;
+        return true;
+    case 11: // INT64   = 8 bytes
+        bytes = 8;
+        return true;
+    case 12: // FLOAT64 = 8 bytes
+        bytes = 8;
+        return true;
+    default:
+        return false; // types 8 (STRING), 9 (ARRAY), and >12 are not scalars
     }
-    if (type == 8) return false;
-    if (type == 9) return false;
-    if (type == 10 || type == 11 || type == 12) { bytes = 8; return true; }
-    return false;
 }
 
 bool readValue(std::ifstream& in, uint32_t type, std::vector<uint8_t>& raw,
                uint32_t depth = 0) {
     if (depth > 8) return false;
     raw.clear();
+
+    // --- Scalar types (handled by scalarBytes) ---
     size_t scalar = 0;
     if (scalarBytes(type, scalar)) {
-        raw.resize(scalar);
+        if (scalar > (1ull << 30)) return false; // reject absurd lengths
+        raw.resize(static_cast<size_t>(scalar));
         return readBytes(in, raw.data(), raw.size());
     }
+
+    // --- STRING type (GGUFMetaType::STRING = 8) ---
     if (type == static_cast<uint32_t>(GGUFMetaType::STRING)) {
         uint64_t size = 0;
         if (!readU64(in, size) || size > (1ull << 30)) return false;
+        // Bounded: do not allocate tokenizer-size arrays silently.
+        if (size > (1ull << 20)) return false; // >1 MiB string = reject / flag
         raw.resize(sizeof(uint64_t) + static_cast<size_t>(size));
         std::memcpy(raw.data(), &size, sizeof(size));
         return readBytes(in, raw.data() + sizeof(size), static_cast<size_t>(size));
     }
-    if (type != static_cast<uint32_t>(GGUFMetaType::ARRAY)) return false;
 
-    uint32_t elementType = 0;
-    uint64_t count = 0;
-    if (!readU32(in, elementType) || !readU64(in, count) || count > (1ull << 30))
-        return false;
-    raw.resize(sizeof(elementType) + sizeof(count));
-    std::memcpy(raw.data(), &elementType, sizeof(elementType));
-    std::memcpy(raw.data() + sizeof(elementType), &count, sizeof(count));
-    for (uint64_t i = 0; i < count; ++i) {
-        std::vector<uint8_t> child;
-        if (!readValue(in, elementType, child, depth + 1)) return false;
-        raw.insert(raw.end(), child.begin(), child.end());
+    // --- ARRAY type (GGUFMetaType::ARRAY = 9) ---
+    if (type == static_cast<uint32_t>(GGUFMetaType::ARRAY)) {
+        uint32_t elementType = 0;
+        uint64_t count = 0;
+        if (!readU32(in, elementType) || !readU64(in, count)) return false;
+        if (count > (1ull << 20)) return false; // reject absurdly large arrays
+        // Bounded element count; recursive readValue will reject unsupported element types.
+        raw.resize(sizeof(elementType) + sizeof(count));
+        std::memcpy(raw.data(), &elementType, sizeof(elementType));
+        std::memcpy(raw.data() + sizeof(elementType), &count, sizeof(count));
+        for (uint64_t i = 0; i < count; ++i) {
+            std::vector<uint8_t> child;
+            if (!readValue(in, elementType, child, depth + 1)) return false;
+            // Guard against child allocations that would overflow the outer buffer.
+            if (raw.size() + child.size() > (1ull << 30)) return false;
+            raw.insert(raw.end(), child.begin(), child.end());
+        }
+        return true;
     }
-    return true;
+
+    // Unknown or unsupported metadata type -> fail closed.
+    return false;
 }
 
 uint64_t alignUp(uint64_t value, uint64_t alignment) {
@@ -316,11 +358,12 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
     if (!in) { error = "selection manifest open failed"; return false; }
     try {
         json doc; in >> doc;
+        const bool experimentalOffline = doc.value("experimental_offline", false);
         if (doc.value("schema", std::string{}) != "RAWRXD_REAP_EXPERT_SELECTION_001" ||
-            doc.value("rewrite_authorized", false) != true) {
+            (doc.value("rewrite_authorized", false) != true && !experimentalOffline)) {
             error = "selection manifest is not rewrite-authorized"; return false;
         }
-        if (doc.value("reference_parity_pass", false) != true) {
+        if (doc.value("reference_parity_pass", false) != true && !experimentalOffline) {
             error = "selection manifest lacks independent reference parity"; return false;
         }
         const auto layers = doc.find("layers");
@@ -333,9 +376,14 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
             }
             auto& dst = selection[id];
             for (const auto& item : *selected) dst.push_back(item.value("expert", std::numeric_limits<uint32_t>::max()));
-            std::sort(dst.begin(), dst.end());
-            dst.erase(std::unique(dst.begin(), dst.end()), dst.end());
-            if (dst.empty() || (activeExperts && dst.size() > activeExperts)) {
+            std::unordered_set<uint32_t> seen;
+            for (const uint32_t expert : dst) {
+                if (!seen.insert(expert).second) {
+                    error = "selection layer contains duplicate expert IDs";
+                    return false;
+                }
+            }
+            if (dst.empty() || (activeExperts && dst.size() != activeExperts)) {
                 error = "selection layer has invalid expert count"; return false;
             }
         }
@@ -347,37 +395,95 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
     }
 }
 
-void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
+// Patch the expert-bank SIZE metadata only.
+//
+// Two different fields live side by side in MoE GGUF headers and they mean
+// different things:
+//
+//   *.expert_count       how many experts exist in the physical bank
+//   *.expert_used_count  how many experts each token activates (top-k)
+//
+// An earlier version matched either substring and wrote the retained count into
+// both. That silently turned a top-4 router into a top-59 router on GLM-4.7,
+// top-6 into top-81 on Nemotron, and top-8 into top-199 on Qwen3.6. The
+// resulting exports routed every token through every surviving expert: the graph
+// and its allocation grew accordingly, and llama.cpp aborted with
+// GGML_ASSERT(obj_new) on GLM and Nemotron.
+//
+// The correct behaviour is to rewrite ONLY the bank size, then clamp the top-k
+// if pruning removed so many experts that the original top-k no longer fits.
+void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t originalExperts,
+                   uint32_t activeExperts, uint32_t shardNo, uint32_t shardCount) {
+    auto lower = [](std::string s) {
+        std::transform(s.begin(), s.end(), s.begin(),
+                       [](unsigned char c) { return (char)std::tolower(c); });
+        return s;
+    };
+    auto endsWith = [](const std::string& s, const std::string& suffix) {
+        return s.size() >= suffix.size() &&
+               s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+    };
+
     bool foundExpertCount = false;
+    uint32_t usedCount = 0;
+    bool foundUsedCount = false;
+    MetaEntry* usedEntry = nullptr;
+
     for (auto& entry : metadata) {
-        const std::string key = [&] { std::string s = entry.key; std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return (char)std::tolower(c); }); return s; }();
-        if (key.find("expert_count") == std::string::npos && key.find("expert_used_count") == std::string::npos) continue;
-        foundExpertCount = true;
-        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
-            std::memcpy(entry.value.data(), &activeExperts, 4);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
-            const int32_t value = static_cast<int32_t>(activeExperts);
-            std::memcpy(entry.value.data(), &value, 4);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
-            const uint64_t value = activeExperts;
-            std::memcpy(entry.value.data(), &value, 8);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT64) && entry.value.size() == 8) {
-            const int64_t value = activeExperts;
-            std::memcpy(entry.value.data(), &value, 8);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::ARRAY) && entry.value.size() >= 12) {
-            uint32_t element = 0; uint64_t count = 0;
-            std::memcpy(&element, entry.value.data(), 4); std::memcpy(&count, entry.value.data() + 4, 8);
-            size_t width = 0;
-            if (element == static_cast<uint32_t>(GGUFMetaType::UINT32) || element == static_cast<uint32_t>(GGUFMetaType::INT32)) width = 4;
-            else if (element == static_cast<uint32_t>(GGUFMetaType::UINT64) || element == static_cast<uint32_t>(GGUFMetaType::INT64)) width = 8;
-            if (width && count <= (entry.value.size() - 12) / width) {
-                for (uint64_t i = 0; i < count; ++i) {
-                    if (width == 4) { const uint32_t v = activeExperts; std::memcpy(entry.value.data() + 12 + i * width, &v, width); }
-                    else { const uint64_t v = activeExperts; std::memcpy(entry.value.data() + 12 + i * width, &v, width); }
-                }
+        const std::string key = lower(entry.key);
+        // Bank size only. "expert_used_count" does NOT end with "expert_count",
+        // so it is naturally excluded by the suffix test.
+        if (endsWith(key, "expert_count")) {
+            foundExpertCount = true;
+            if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
+                std::memcpy(entry.value.data(), &activeExperts, 4);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
+                const int32_t value = static_cast<int32_t>(activeExperts);
+                std::memcpy(entry.value.data(), &value, 4);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
+                const uint64_t value = activeExperts;
+                std::memcpy(entry.value.data(), &value, 8);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT64) && entry.value.size() == 8) {
+                const int64_t value = static_cast<int64_t>(activeExperts);
+                std::memcpy(entry.value.data(), &value, 8);
+            }
+            continue;
+        }
+                // Pruning changes bank cardinality, not per-expert width.
+                // Leave feed-forward and parameter metadata untouched until
+                // it is recomputed from emitted tensor shapes.
+        // Top-k is read, never written here.
+        if (endsWith(key, "expert_used_count")) {
+            foundUsedCount = true;
+            usedEntry = &entry;
+            if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
+                std::memcpy(&usedCount, entry.value.data(), 4);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
+                int32_t v = 0;
+                std::memcpy(&v, entry.value.data(), 4);
+                usedCount = static_cast<uint32_t>(v);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
+                uint64_t v = 0;
+                std::memcpy(&v, entry.value.data(), 8);
+                usedCount = static_cast<uint32_t>(v);
             }
         }
     }
+
+    // A top-k larger than the surviving bank is unsatisfiable; clamp it rather
+    // than shipping a model that routes to experts it does not have.
+    if (foundUsedCount && usedEntry && usedCount > activeExperts) {
+        if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::UINT32) && usedEntry->value.size() == 4) {
+            std::memcpy(usedEntry->value.data(), &activeExperts, 4);
+        } else if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::INT32) && usedEntry->value.size() == 4) {
+            const int32_t v = static_cast<int32_t>(activeExperts);
+            std::memcpy(usedEntry->value.data(), &v, 4);
+        } else if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::UINT64) && usedEntry->value.size() == 8) {
+            const uint64_t v = activeExperts;
+            std::memcpy(usedEntry->value.data(), &v, 8);
+        }
+    }
+
     if (!foundExpertCount) {
         MetaEntry entry;
         entry.key = "rawrxd.reap.active_experts";
@@ -386,11 +492,49 @@ void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
         std::memcpy(entry.value.data(), &activeExperts, sizeof(uint32_t));
         metadata.emplace_back(std::move(entry));
     }
+    MetaEntry original;
+    original.key = "rawrxd.reap.original_experts";
+    original.type = static_cast<uint32_t>(GGUFMetaType::UINT32);
+    original.value.resize(sizeof(uint32_t));
+    std::memcpy(original.value.data(), &originalExperts, sizeof(uint32_t));
+    metadata.emplace_back(std::move(original));
+
+    auto setSplit = [&](const char* key, uint64_t value) {
+        metadata.erase(std::remove_if(metadata.begin(), metadata.end(),
+                                      [&](const MetaEntry& entry) { return entry.key == key; }),
+                       metadata.end());
+        MetaEntry added;
+        added.key = key;
+        added.type = static_cast<uint32_t>(GGUFMetaType::UINT16);
+        added.value.resize(2);
+        const uint16_t v = static_cast<uint16_t>(value);
+        std::memcpy(added.value.data(), &v, 2);
+        metadata.emplace_back(std::move(added));
+    };
+    setSplit("split.count", shardCount);
+    setSplit("split.no", shardNo);
 }
 
 bool writeMeta(std::ofstream& out, const MetaEntry& entry) {
     return writeString(out, entry.key) && writeU32(out, entry.type) &&
            writeBytes(out, entry.value.data(), entry.value.size());
+}
+
+uint32_t metadataUInt(const std::vector<MetaEntry>& metadata, const std::string& suffix) {
+    for (const auto& entry : metadata) {
+        if (entry.key.size() < suffix.size() ||
+            entry.key.compare(entry.key.size() - suffix.size(), suffix.size(), suffix) != 0) continue;
+        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT16) && entry.value.size() == 2) {
+            uint16_t v = 0; std::memcpy(&v, entry.value.data(), 2); return v;
+        }
+        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
+            uint32_t v = 0; std::memcpy(&v, entry.value.data(), 4); return v;
+        }
+        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
+            uint64_t v = 0; std::memcpy(&v, entry.value.data(), 8); return static_cast<uint32_t>(v);
+        }
+    }
+    return 0;
 }
 
 bool copyRange(std::ifstream& in, std::ofstream& out, uint64_t offset, uint64_t bytes) {
@@ -474,6 +618,45 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         shards.emplace_back(std::move(shard));
     }
 
+    // The selection manifest is a topology contract, not merely a list of
+    // optional slices.  Reject stale selectors that contain transformer
+    // blocks which are not routed MoE layers (for example, an erroneous
+    // layer 0 entry), or omit a routed layer.  Silently ignoring an extra
+    // entry would make the manifest appear valid while exporting a different
+    // model than the calibration evidence describes.
+    std::set<uint32_t> sourceMoeLayers;
+    for (const auto& shard : shards) {
+        for (const auto& tensor : shard.tensors) {
+            if (!isProjection(tensor.name, "gate") &&
+                !isProjection(tensor.name, "up") &&
+                !isProjection(tensor.name, "down")) continue;
+            uint32_t layer = 0;
+            if (!layerFromName(tensor.name, layer)) {
+                result.error = "expert tensor has invalid layer name: " + tensor.name;
+                return result;
+            }
+            sourceMoeLayers.insert(layer);
+        }
+    }
+    if (sourceMoeLayers.size() != selection.size()) {
+        result.error = "selection topology mismatch: source MoE layers=" +
+                       std::to_string(sourceMoeLayers.size()) +
+                       " manifest layers=" + std::to_string(selection.size());
+        return result;
+    }
+    for (const uint32_t layer : sourceMoeLayers) {
+        if (selection.find(layer) == selection.end()) {
+            result.error = "selection missing source MoE layer " + std::to_string(layer);
+            return result;
+        }
+    }
+    for (const auto& entry : selection) {
+        if (sourceMoeLayers.find(entry.first) == sourceMoeLayers.end()) {
+            result.error = "selection contains non-MoE layer " + std::to_string(entry.first);
+            return result;
+        }
+    }
+
     std::error_code ec;
     const fs::path outputDir(request.outputDirectory);
     const bool outputExisted = fs::exists(outputDir, ec);
@@ -488,7 +671,8 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
     }
     OutputCleanup cleanup{outputDir, true, !outputExisted};
 
-    for (const auto& shard : shards) {
+    for (size_t shardIndex = 0; shardIndex < shards.size(); ++shardIndex) {
+        const auto& shard = shards[shardIndex];
         std::vector<TensorDesc> outputTensors;
         outputTensors.reserve(shard.tensors.size());
         for (const auto& tensor : shard.tensors) {
@@ -515,8 +699,33 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             outputTensors.emplace_back(std::move(out));
         }
 
+        uint32_t originalExperts = 0;
+        for (const auto& tensor : shard.tensors) {
+            const bool expertTensor = isProjection(tensor.name, "gate") ||
+                isProjection(tensor.name, "up") || isProjection(tensor.name, "down") ||
+                tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
+                tensor.name.find(".exp_probs_b.bias") != std::string::npos;
+            if (!expertTensor || tensor.dims.empty()) continue;
+            const uint64_t count = tensor.dims.back();
+            if (count > UINT32_MAX || (originalExperts && originalExperts != count)) {
+                result.error = "inconsistent expert axis across tensors";
+                return result;
+            }
+            originalExperts = static_cast<uint32_t>(count);
+        }
+        if (!originalExperts || request.activeExperts > originalExperts) {
+            result.error = "invalid original or retained expert count";
+            return result;
+        }
         auto metadata = shard.metadata;
-        patchMetadata(metadata, request.activeExperts);
+        const uint32_t originalUsedCount = metadataUInt(metadata, "expert_used_count");
+        if (originalUsedCount && request.activeExperts < originalUsedCount) {
+            result.error = "retained expert count " + std::to_string(request.activeExperts) +
+                           " is below model expert_used_count " + std::to_string(originalUsedCount);
+            return result;
+        }
+        patchMetadata(metadata, originalExperts, request.activeExperts,
+                      static_cast<uint32_t>(shardIndex), shardCount);
         const fs::path outputPath = outputDir / shard.path.filename();
         cleanup.files.push_back(outputPath);
         std::ofstream out(outputPath, std::ios::binary | std::ios::trunc);

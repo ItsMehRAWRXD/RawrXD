@@ -1,0 +1,18 @@
+{
+  "schema": "rawrxd.reap.qwen36_disposition.v1",
+  "utc": "2026-11-13",
+  "promote": 0,
+  "tip_climb": "HOLD",
+  "cross_sha_credit": 0,
+  "original_gguf_intact": 1,
+  "gguf": "F:\\OllamaModels\\Qwen3.6-35B-A3B-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf",
+  "gguf_sha256": "4AC6A06BCE551257267F49AD2226F8671A22519CCC1A4DDE9D5B433D1F2A410D",
+  "exe": "F:\\rawrxd\\build_reap\\bin-msvc\\rawr-reap.exe",
+  "exe_sha256": "C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16",
+  "git_sha": "bd26a619da6f1890ab3ade31ca6a0570c22c3568",
+  "full_topology": "FAIL",
+  "physical_reap": "NOT_RUN",
+  "generated_tokens": 0,
+  "abort": "SSM_FATAL_missing_Mamba2_tensors_qwen_GDN_misroute",
+  "quality": "OPEN"
+}

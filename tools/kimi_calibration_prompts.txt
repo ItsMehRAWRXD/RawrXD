@@ -1,0 +1,32 @@
+Write a Python function that reads JSONL and returns records with valid timestamps.
+Explain how to debug a failing C++ build on Windows and list the evidence to collect.
+Design a small REST endpoint with validation, structured errors, and a unit test.
+Implement binary search in Python and explain its complexity.
+What is the difference between a process and a thread?
+Calculate 37 multiplied by 24 and show the arithmetic.
+Explain the Pythagorean theorem in a concise way.
+Write a SQL query that returns the top five customers by total order value.
+Create a C++ RAII wrapper for a Windows HANDLE.
+How should an HTTP client handle retries and exponential backoff?
+Write a unit test for a function that parses an ISO 8601 timestamp.
+Explain why a hash table lookup is usually constant time.
+Generate a minimal PowerShell script that lists files larger than one gigabyte.
+What are the tradeoffs between threads and asynchronous I/O?
+Write a Python context manager that opens and safely closes a file.
+Explain how to diagnose a memory leak in a native Windows application.
+Return the first ten Fibonacci numbers as a JSON array.
+Design a schema for users, projects, and project membership in SQL.
+Write a C++ function that validates UTF-8 input.
+Explain the difference between precision and recall with a simple example.
+Create a JSON object describing a software release with version, date, and changes.
+How would you safely migrate a database column without downtime?
+Write a Python decorator that measures function execution time.
+Explain what a mutex protects and when a lock-free structure may help.
+Produce a concise checklist for reviewing a pull request.
+Write a function that topologically sorts a directed acyclic graph.
+What causes a deadlock and how can it be prevented?
+Generate a small HTML form with accessible labels and server-side validation notes.
+Explain how TLS protects data in transit.
+Write a CMake configuration for a C++ executable with one library dependency.
+Give a step-by-step plan to investigate a failing integration test.
+Summarize the difference between quantization and pruning in neural networks.

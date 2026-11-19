@@ -6,6 +6,8 @@
 #ifndef DEEP2_ENGINE_H
 #define DEEP2_ENGINE_H
 
+// All project and standard library includes MUST be BEFORE namespace Deep2
+// to avoid polluting std:: into Deep2::std::
 #include "ReverseIntegration.hpp"
 #include "mars/MARSController.hpp"
 #include "ThreadPool.h"
@@ -64,6 +66,7 @@
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "Deep2GpuForward.hpp"
 #include "reap/ReapRuntimePlan.hpp"
+// Standard library includes - must be BEFORE namespace Deep2
 #include <memory>
 #include <string>
 #include <vector>
@@ -556,6 +559,10 @@ namespace Deep2
         bool isVulkanStrictNoCpuFallback() const { return vulkanStrictNoCpuFallback_; }
         bool isVulkanEnabled() const { return vulkanEnabled_; }
         bool isVulkanInitialized() const { return vulkanInitialized_; }
+        /// Select a specific Vulkan device by name needle for enableVulkan().
+        /// Empty (default) uses the policy-selected primary device.
+        void setVulkanDeviceNeedle(const char *needle) { vulkanDeviceNeedle_ = needle ? needle : ""; }
+        const std::string &vulkanDeviceNeedle() const { return vulkanDeviceNeedle_; }
         CPUInference::VulkanCompute *getVulkanCompute() const { return getVulkanComputeSlot(0); }
         CPUInference::VulkanCompute *getVulkanComputeSlot(unsigned slot) const;
         unsigned vulkanDeviceCount() const { return (unsigned)vulkanDevices_.size(); }
@@ -789,6 +796,89 @@ namespace Deep2
         // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
         void computeLogits(const float *hiddenState, float *logits);
 
+        // Optional, synchronous observation of the exact logits buffer the
+        // sampler is about to consume (CPU-side, unchanged, not recomputed).
+        // Disabled by default; installing an observer must not alter sampling,
+        // ordering or allocation.
+        struct ReferenceObservation {
+            uint64_t generation_step;
+            uint32_t vocabulary_size;
+            const float* logits;
+            uint64_t logits_count;
+        };
+        using ReferenceObserver = bool (*)(const ReferenceObservation&, void*);
+        void SetReferenceObserver(ReferenceObserver observer, void* userData) {
+            referenceObserver_ = observer;
+            referenceObserverUser_ = userData;
+            referenceStep_ = 0;
+        }
+
+        // Weighted accumulated MoE output, captured AFTER every selected expert
+        // contribution (and the shared expert, when present) has been weighted
+        // and summed into the layer output, and BEFORE the residual add that
+        // forwardLayer performs. Includes the shared expert.
+        struct MoEReferenceObservation {
+            uint32_t layer_index;
+            uint64_t generation_step;
+            uint32_t element_count;
+            const float* weighted_moe_output;
+        };
+        using MoEReferenceObserver = bool (*)(const MoEReferenceObservation&, void*);
+        // layerIndex selects one layer; generationStep == UINT64_MAX captures
+        // the first observed step for that layer only.
+        void SetMoEReferenceObserver(MoEReferenceObserver observer, void* userData,
+                                     uint32_t layerIndex, uint64_t generationStep) {
+            moeReferenceObserver_ = observer;
+            moeReferenceObserverUser_ = userData;
+            moeReferenceLayer_ = layerIndex;
+            moeReferenceStep_ = generationStep;
+        }
+
+        // Routing decision actually applied at this layer: the selected expert
+        // ids in execution order and the post-normalisation weights used to
+        // scale their outputs, plus the activation entering the experts.
+        // Router probabilities are NOT the same thing as these applied weights.
+        struct MoERoutingObservation {
+            uint32_t layer;
+            uint64_t generation_step;
+            uint32_t hidden_size;
+            const float* expert_input;
+            uint32_t selected_count;
+            const uint32_t* expert_ids;
+            const float* applied_weights;
+        };
+        using MoERoutingObserver = bool (*)(const MoERoutingObservation&, void*);
+        void SetMoERoutingObserver(MoERoutingObserver observer, void* userData,
+                                   uint32_t layerIndex, uint64_t generationStep) {
+            moeRoutingObserver_ = observer;
+            moeRoutingObserverUser_ = userData;
+            moeRoutingLayer_ = layerIndex;
+            moeRoutingStep_ = generationStep;
+        }
+
+        // Engine-produced expert outputs, captured where the engine produces
+        // them. This is the reference a reimplementation must match — not a
+        // second copy of the same arithmetic.
+        //   kind 0 = shared expert (already accumulated into the layer output)
+        //   kind 1 = routed expert output BEFORE its routing weight is applied
+        struct MoEExpertOutputObservation {
+            uint32_t layer;
+            uint64_t generation_step;
+            uint32_t kind;
+            uint32_t expert_id;
+            float applied_weight;
+            uint32_t element_count;
+            const float* output;
+        };
+        using MoEExpertOutputObserver = bool (*)(const MoEExpertOutputObservation&, void*);
+        void SetMoEExpertOutputObserver(MoEExpertOutputObserver observer, void* userData,
+                                        uint32_t layerIndex, uint64_t generationStep) {
+            moeExpertOutObserver_ = observer;
+            moeExpertOutObserverUser_ = userData;
+            moeExpertOutLayer_ = layerIndex;
+            moeExpertOutStep_ = generationStep;
+        }
+
         // ------------------------------------------------------------------------
         // MARS: Dynamic Dual-GPU VRAM Hotpatch
         // ------------------------------------------------------------------------
@@ -905,6 +995,9 @@ namespace Deep2
         // MARS: Dynamic dual-GPU VRAM orchestration
         std::unique_ptr<MARS::MARSController> marsController_;
         bool marsEnabled_ = false;
+        // When Vulkan owns model buffers, MARS may provide controller/telemetry
+        // services but must not create a second set of tensor leases.
+        bool marsExternalVulkanOwnership_ = false;
         bool marsWeightsPlaced_ = false;
         std::unordered_map<size_t, MARS::VRAMLease *> marsLayerLeases_; // layer -> lease
         uint64_t marsNextTensorId_ = 1;
@@ -1032,7 +1125,8 @@ namespace Deep2
         bool vulkanInitialized_ = false;
         bool vulkanStrictNoCpuFallback_ = false;
         bool vulkanStrictViolation_ = false;
-        uint64_t vulkanGemvOk_ = 0;
+        std::string vulkanDeviceNeedle_ = {};
+uint64_t vulkanGemvOk_ = 0;
         uint64_t vulkanGemvFail_ = 0;
         uint64_t vulkanGpuWeightBytes_ = 0;
         uint64_t vulkanGpuTensorBytes_ = 0;
@@ -1040,6 +1134,14 @@ namespace Deep2
         uint64_t vulkanUnplannedFallbacks_ = 0;
         uint64_t plannedCpuGemvOps_ = 0;
         uint64_t plannedGpuGemvOps_ = 0;
+        uint64_t workEpoch_ = 1;  // Incremented per forward pass for GPU dispatch tracking
+        
+        // GPU MoE metrics
+        uint64_t moeRouterGpuDispatches_ = 0;
+        uint64_t moeExpertGpuDispatches_ = 0;
+        uint64_t moeRouterCpuFallbacks_ = 0;
+        uint64_t moeExpertCpuFallbacks_ = 0;
+        
         GpuForwardCounters gpuFwd_{};
         bool gpuFwdCommitted_ = false;
         std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
@@ -1064,6 +1166,32 @@ namespace Deep2
         float *ffnOutput = nullptr;
         size_t ffnOutputCapacity = 0; // element capacity for shared projection scratch
         float *logits = nullptr;
+
+        // Reference-observation hook state (see SetReferenceObserver).
+        ReferenceObserver referenceObserver_ = nullptr;
+        void* referenceObserverUser_ = nullptr;
+        uint64_t referenceStep_ = 0;
+
+        // Weighted-MoE boundary observer (see SetMoEReferenceObserver).
+        MoEReferenceObserver moeReferenceObserver_ = nullptr;
+        void* moeReferenceObserverUser_ = nullptr;
+        uint32_t moeReferenceLayer_ = 0xFFFFFFFFu;
+        uint64_t moeReferenceStep_ = 0xFFFFFFFFFFFFFFFFull;
+        bool moeReferenceDone_ = false;
+
+        // Routing-decision observer (see SetMoERoutingObserver).
+        MoERoutingObserver moeRoutingObserver_ = nullptr;
+        void* moeRoutingObserverUser_ = nullptr;
+        uint32_t moeRoutingLayer_ = 0xFFFFFFFFu;
+        uint64_t moeRoutingStep_ = 0xFFFFFFFFFFFFFFFFull;
+        bool moeRoutingDone_ = false;
+
+        // Engine expert-output observer (see SetMoEExpertOutputObserver).
+        MoEExpertOutputObserver moeExpertOutObserver_ = nullptr;
+        void* moeExpertOutObserverUser_ = nullptr;
+        uint32_t moeExpertOutLayer_ = 0xFFFFFFFFu;
+        uint64_t moeExpertOutStep_ = 0xFFFFFFFFFFFFFFFFull;
+        bool moeExpertOutActive_ = false;
         float *qProj = nullptr;
         float *kProj = nullptr;
         float *vProj = nullptr;
@@ -1096,6 +1224,16 @@ namespace Deep2
         size_t ssmMambaDState = 0;   // d_state from bound tensors
         size_t ssmMambaDConvKernel = 0;   // d_conv kernel size
         size_t ssmMambaDConvDim = 0;      // d_conv_dim channel count
+
+        // Qwen GDN host state (hybrid Qwen path; unused by MiniMax)
+        std::vector<std::vector<float>> gdnState_;
+        std::vector<std::vector<float>> gdnConvState_;
+        std::vector<uint8_t> gdnGpuActive_;
+        uint32_t gdnStateSize_ = 0;
+        uint32_t gdnGroupCount_ = 0;
+        uint32_t gdnInnerSize_ = 0;
+        uint32_t gdnConvKernel_ = 0;
+        bool gdnMetaBound_ = false;
 
         // ── SSM / Mamba member set ──────────────────────────────────────────
         // SSM/Mamba geometry (loaded from GGUF tensors)
@@ -1184,6 +1322,9 @@ namespace Deep2
 
         // SSM / Mamba forward pass (selective scan + causal conv1d)
         void computeSSM(size_t layer, const float *input, float *output);
+
+        // Qwen3.5/3.6 gated delta-net (product path; MiniMax does not use)
+        void computeGDN(size_t layer, const float *input, float *output);
 
         // Sampling
         int sampleToken(const float *logits);

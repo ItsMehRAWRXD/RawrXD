@@ -1,0 +1,95 @@
+{
+  "results": {
+    "warmup": {
+      "attempts": 24,
+      "final_status": null,
+      "ttfb_s": null,
+      "outcome": null,
+      "seconds": 91.46
+    },
+    "A1_control": {
+      "short_ttfb_s": 1.806,
+      "short_total_s": 4.622,
+      "short_status": 502,
+      "short_outcome": "eof",
+      "long_stream": {
+        "status": 502,
+        "bytes": 217,
+        "outcome": "eof",
+        "t_first": 1.8121616840362549
+      },
+      "note": "short request issued at +2s while long generation active (no disconnect)"
+    },
+    "A2_cancel": {
+      "short_ttfb_s": 1.802,
+      "short_total_s": 1.819,
+      "short_status": 502,
+      "short_outcome": "eof",
+      "second_short_ttfb_s": 1.809,
+      "second_short_status": 502,
+      "note": "long stream RST at +2s, short request issued immediately after"
+    },
+    "A_differential": {
+      "control_ttfb_s": 1.806,
+      "cancel_ttfb_s": 1.802,
+      "control_status": 502,
+      "cancel_status": 502,
+      "second_cancel_status": 502,
+      "pass": false
+    },
+    "B_decode_tps": {
+      "4000": {
+        "http_status": 200,
+        "outcome": "eof",
+        "bytes": 11074,
+        "eval_count": 64,
+        "eval_duration_ns": 790548000,
+        "decode_tps": 80.96,
+        "prompt_eval_count": 4006,
+        "prompt_eval_duration_ns": 3002231000,
+        "prompt_prefill_tps": 1334.34,
+        "total_duration_ns": 16440664900
+      },
+      "16000": {
+        "http_status": 200,
+        "outcome": "eof",
+        "bytes": 10858,
+        "eval_count": 64,
+        "eval_duration_ns": 1663510000,
+        "decode_tps": 38.47,
+        "prompt_eval_count": 16006,
+        "prompt_eval_duration_ns": 33963328000,
+        "prompt_prefill_tps": 471.27,
+        "total_duration_ns": 35639777600
+      },
+      "32000": {
+        "http_status": 200,
+        "outcome": "eof",
+        "bytes": 10957,
+        "eval_count": 64,
+        "eval_duration_ns": 2869546000,
+        "decode_tps": 22.3,
+        "prompt_eval_count": 32006,
+        "prompt_eval_duration_ns": 115107267000,
+        "prompt_prefill_tps": 278.05,
+        "total_duration_ns": 117994190900
+      },
+      "64000": {
+        "http_status": 200,
+        "outcome": "eof",
+        "bytes": 11126,
+        "eval_count": 64,
+        "eval_duration_ns": 5366113000,
+        "decode_tps": 11.93,
+        "prompt_eval_count": 64006,
+        "prompt_eval_duration_ns": 468650376000,
+        "prompt_prefill_tps": 136.58,
+        "total_duration_ns": 474049513600
+      }
+    },
+    "exe_sha256": "3f26366fa2f9db70c8e155685ebdcdf545362f645c1b22dbb3f226193a2b8616",
+    "git_sha": "4e57fc4bde2732ca384c3749a7902453d04b64d4",
+    "ollama_ps": "NAME                           ID              SIZE     PROCESSOR    CONTEXT    RUNNER      UNTIL              \nreap16-glm-4_7-flash:latest    72b287f6eab5    21 GB    100% GPU     65536      llamacpp    4 minutes from now    \n"
+  },
+  "generated_at": "2026-11-14T19:44:27-0500"
+}

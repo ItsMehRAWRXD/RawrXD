@@ -93,16 +93,11 @@ public class CancelRecov010 {
       return true;
     }, IntPtr.Zero);
     if (found == IntPtr.Zero) return "";
-    const uint SB_GETTEXTLENGTHW = 0x040C;
-    const uint SB_GETTEXTW = 0x040D;
-    int meta = SendMessageW(found, SB_GETTEXTLENGTHW, IntPtr.Zero, IntPtr.Zero).ToInt32();
-    int len = meta & 0xFFFF;
-    if (len <= 0) return Text(found);
-    var buf = new StringBuilder(len + 2);
-    SendMessageW(found, SB_GETTEXTW, IntPtr.Zero, buf);
-    string s = buf.ToString();
-    if (string.IsNullOrEmpty(s)) s = Text(found);
-    return s;
+    // SB_GETTEXTW returns into an lParam buffer owned by the caller.  This
+    // harness runs out-of-process, so passing a StringBuilder pointer would
+    // make the target status-bar window dereference foreign-process memory.
+    // GetWindowTextW is marshalled by USER32 and is safe across processes.
+    return Text(found);
   }
   public static List<string> ComboItems(IntPtr combo) {
     var rows = new List<string>();
@@ -399,6 +394,24 @@ try {
     }
     $st = [CancelRecov010]::StatusBarText($main)
     $outNow = [CancelRecov010]::Text($outputEdit)
+    # The status bar is multi-part and its visible aggregate text is not a
+    # completion protocol.  Use the request's explicit runtime receipt as the
+    # terminal signal; this also avoids treating repeated visible PONG text as
+    # a new request or as an unfinished request.
+    if (Test-Path -LiteralPath $Log) {
+      $runtime = Get-Content -LiteralPath $Log -Raw -ErrorAction SilentlyContinue
+      if ($runtime -match "BACKEND_REQUEST_END request_id=2 success=1" -and
+          $runtime -match "ui_update request_id=2 rendered=1 complete=1") {
+        $requestBAccepted = 1
+        $requestBResponse = 1
+        WLog 'REQUEST_B_TERMINAL=COMPLETED receipt=1'
+        break
+      }
+      if ($runtime -match "BACKEND_REQUEST_END request_id=2 success=0") {
+        WLog 'REQUEST_B_TERMINAL=FAILED receipt=1'
+        break
+      }
+    }
     if ($st -and ($statusTrailB.Count -eq 0 -or $statusTrailB[$statusTrailB.Count-1] -ne $st)) {
       $statusTrailB.Add($st)
       WLog "STATUS_B=$st"
@@ -413,7 +426,11 @@ try {
       $requestBAccepted = 1
     }
     if ($outNow.Length -gt $outBeforeB.Length + 3) {
-      if ($outNow -match 'PONG_B' -or $outNow.Length -gt $outBeforeB.Length + 15) {
+      # The acceptance prompt asks for exactly PONG_B.  Ollama may continue
+      # sampling after that token when no stop sequence is configured; the
+      # required observable result is already present, so do not classify an
+      # unconstrained tail as a hung IDE request.
+      if ($outNow -match '(?i)\bPONG_B\b' -or $outNow.Length -gt $outBeforeB.Length + 15) {
         $requestBAccepted = 1
         $requestBResponse = 1
         WLog ("OUTPUT_B_GREW before={0} after={1}" -f $outBeforeB.Length, $outNow.Length)

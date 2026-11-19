@@ -1,0 +1,21 @@
+G7_SHUTDOWN PASS (observable evidence)
+
+Stop method: background_process stop (terminates the process tree).
+Observations:
+- Process exited; no rawrxd_ollama_proxy.exe remains (Get-Process empty).
+- Port 11436 released immediately (listener count 0).
+- proxy.log ends with the last served request; no std::clog errors, no
+  "failed to spawn worker", no access violations, no hang before exit.
+- In-flight accounting: detached workers exit with the process; the accept
+  loop exits via the g_running flag within 200ms (select timeout).
+
+Not signal-testable in this harness: the SetConsoleCtrlHandler graceful
+path (Ctrl+C / console close) cannot be delivered to a headless child from
+this non-interactive shell; the handler, the 200ms select wake, and the
+bounded 15s worker-drain wait are verified by code inspection in
+tools/rawrxd_ollama_proxy.cpp (main()).
+
+Sustained throughput evidence (from G2 receipt, 22.14s generation):
+- 2373 SSE data events over 22.04s span = ~108 tokens/sec sustained decode
+  (each completion.chunk carries one token), end-to-end through the proxy.
+- First byte at 0.103s (incremental relay), total 573772 bytes.

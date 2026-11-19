@@ -39,7 +39,7 @@ static void usage() {
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
                  "[--selection-output <selection.json>] [--output-model <dir>] "
-                 "[--authorize-rewrite] [--output <plan.json>]\n";
+                 "[--authorize-rewrite] [--experimental-offline] [--output <plan.json>]\n";
 }
 
 static std::string json_quote(const std::string& s);
@@ -583,6 +583,9 @@ struct CalibrationEvidence {
     bool internalPrefillParity = false;
     bool referenceParity = false;
     uint64_t generated = 0;
+    uint64_t corpusPrompts = 0;
+    uint64_t promptTokens = 0;
+    uint64_t decodeTokens = 0;
     std::vector<CalibrationMetric> metrics;
     std::string reason;
 };
@@ -601,7 +604,9 @@ static bool loadCalibrationEvidence(const std::string& path,
             out.reason = "unsupported calibration receipt schema";
             return false;
         }
-        if (doc.value("model", std::string{}) != model) {
+        const std::string receiptModel = doc.value("model", std::string{});
+        const std::string requestedName = fs::path(model).filename().string();
+        if (receiptModel != model && receiptModel != requestedName) {
             out.reason = "calibration receipt model does not match request";
             return false;
         }
@@ -614,6 +619,14 @@ static bool loadCalibrationEvidence(const std::string& path,
         out.internalPrefillParity = doc.value("prefill_parity_pass", false);
         out.referenceParity = doc.value("reference_parity_pass", false);
         out.generated = doc.value("generated", uint64_t{0});
+        out.corpusPrompts = doc.value("corpus_prompts", uint64_t{0});
+        out.promptTokens = doc.value("prompt_tokens", uint64_t{0});
+        out.decodeTokens = doc.value("decode_tokens", uint64_t{0});
+        if (out.decodeTokens == 0)
+            out.decodeTokens = doc.value("total_tokens", uint64_t{0});
+        // reap-calibrate writes a completed manifest with layer-nested expert
+        // scores.  Flatten that real output here so the planner consumes the
+        // same measured routing data as the legacy probe receipt.
         const auto it = doc.find("metrics");
         if (it != doc.end() && it->is_array()) {
             for (const auto& item : *it) {
@@ -628,6 +641,65 @@ static bool loadCalibrationEvidence(const std::string& path,
                     ? std::max(0.0, activation) + std::max(0.0, weight)
                     : 0.0;
                 out.metrics.push_back(metric);
+            }
+        }
+        const auto layers = doc.find("layers");
+        if (out.metrics.empty() && layers != doc.end() && layers->is_array()) {
+            for (const auto& layer : *layers) {
+                if (!layer.is_object()) continue;
+                const uint32_t layerId = layer.value("layer", 0u);
+                const auto experts = layer.find("experts");
+                if (experts == layer.end() || !experts->is_array()) continue;
+                for (const auto& item : *experts) {
+                    if (!item.is_object()) continue;
+                    CalibrationMetric metric;
+                    metric.layer = layerId;
+                    metric.expert = item.value("expert_id", 0u);
+                    metric.routeCount = item.value("route_count", uint64_t{0});
+                    const double activation = item.value("activation_sum", 0.0);
+                    const double weight = item.value("weight_sum", 0.0);
+                    metric.score = std::isfinite(activation) && std::isfinite(weight)
+                        ? std::max(0.0, activation) + std::max(0.0, weight)
+                        : 0.0;
+                    out.metrics.push_back(metric);
+                }
+            }
+        }
+        // The completed CLI manifest stores prompt coverage in the adjacent
+        // checkpoint.  Read it only as evidence metadata; routing scores still
+        // come exclusively from the final calibration manifest.
+        if (out.corpusPrompts == 0 || out.decodeTokens == 0) {
+            std::ifstream checkpoint(fs::path(path).parent_path() / "calibration_checkpoint.json",
+                                     std::ios::binary);
+            if (checkpoint) {
+                std::string checkpointText((std::istreambuf_iterator<char>(checkpoint)), {});
+                try {
+                    const json checkpointDoc = json::parse(checkpointText);
+                    const auto prompts = checkpointDoc.find("prompts");
+                    if (prompts != checkpointDoc.end() && prompts->is_array())
+                        out.corpusPrompts = prompts->size();
+                    out.decodeTokens = checkpointDoc.value("total_tokens", uint64_t{0});
+                } catch (...) {
+                    // Older calibration builds emitted unescaped Windows
+                    // paths in this auxiliary checkpoint.  Preserve the
+                    // measured manifest and recover only coverage counts from
+                    // its fixed-schema fields; routing scores never come from
+                    // this fallback.
+                    size_t pos = 0;
+                    while ((pos = checkpointText.find("\"hash\"", pos)) != std::string::npos) {
+                        ++out.corpusPrompts;
+                        pos += 6;
+                    }
+                    const std::string marker = "\"total_tokens\":";
+                    pos = checkpointText.find(marker);
+                    if (pos == std::string::npos)
+                        pos = checkpointText.find("\"total_tokens\": ");
+                    if (pos != std::string::npos) {
+                        pos += marker.size();
+                        while (pos < checkpointText.size() && std::isspace(static_cast<unsigned char>(checkpointText[pos]))) ++pos;
+                        try { out.decodeTokens = std::stoull(checkpointText.substr(pos)); } catch (...) {}
+                    }
+                }
             }
         }
         out.parsed = true;
@@ -653,10 +725,23 @@ static bool writeSelectionManifest(const std::string& path,
                                    uint64_t targetSize,
                                    bool qualityFloorPass,
                                    bool authorizeRewrite,
+                                   bool experimentalOffline,
                                    std::string& error) {
     if (path.empty()) return true;
     if (evidence.metrics.empty()) {
         error = "no route metrics available for expert selection";
+        return false;
+    }
+    // One-token probes produce exactly one routed expert set per layer.  They
+    // are useful diagnostics, but cannot support a static physical reduction:
+    // the selected set would be based on a single token and may be unrelated
+    // to the requested workload.  Keep this gate here, before any manifest is
+    // authorized, so callers cannot accidentally promote probe data.
+    constexpr uint64_t kMinimumCalibrationPrompts = 3;
+    constexpr uint64_t kMinimumCalibrationDecodeTokens = 32;
+    if (evidence.corpusPrompts < kMinimumCalibrationPrompts ||
+        evidence.decodeTokens < kMinimumCalibrationDecodeTokens) {
+        error = "calibration coverage insufficient: require at least 3 prompts and 32 decoded tokens";
         return false;
     }
     std::map<uint32_t, std::unordered_map<uint32_t, double>> byLayer;
@@ -665,28 +750,54 @@ static bool writeSelectionManifest(const std::string& path,
 
     json layers = json::array();
     uint64_t selected = 0;
-    for (auto& layer : byLayer) {
-        std::vector<std::pair<uint32_t, double>> ranked(layer.second.begin(), layer.second.end());
+    std::set<uint32_t> topologyLayers(inventory.moeLayers.begin(), inventory.moeLayers.end());
+    for (const auto& layer : byLayer) {
+        if (topologyLayers.find(layer.first) == topologyLayers.end()) {
+            error = "route metrics contain non-MoE layer " + std::to_string(layer.first);
+            return false;
+        }
+    }
+    for (const uint32_t layerId : inventory.moeLayers) {
+        const auto metricsIt = byLayer.find(layerId);
+        if (metricsIt == byLayer.end()) {
+            error = "route metrics missing MoE layer " + std::to_string(layerId);
+            return false;
+        }
+        std::vector<std::pair<uint32_t, double>> ranked(metricsIt->second.begin(), metricsIt->second.end());
         std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
             if (a.second != b.second) return a.second > b.second;
             return a.first < b.first;
         });
-        if (ranked.size() > activeExperts) ranked.resize(static_cast<size_t>(activeExperts));
+        if (activeExperts == 0 || ranked.size() < activeExperts) {
+            error = "route metrics contain fewer than active experts for MoE layer " +
+                    std::to_string(layerId);
+            return false;
+        }
+        const uint64_t packedExpertCount = inventory.maxExpertsPerLayer;
+        std::set<uint32_t> seen;
+        for (const auto& item : ranked) {
+            if (item.first >= packedExpertCount || !seen.insert(item.first).second) {
+                error = "invalid or duplicate expert id for MoE layer " + std::to_string(layerId);
+                return false;
+            }
+        }
+        ranked.resize(static_cast<size_t>(activeExperts));
         selected += ranked.size();
         json experts = json::array();
         for (const auto& item : ranked)
             experts.push_back({{"expert", item.first}, {"score", item.second}});
-        layers.push_back({{"layer", layer.first}, {"selected", experts}});
+        layers.push_back({{"layer", layerId}, {"selected", experts}});
     }
     if (inventory.moeLayers.empty()) {
         error = "model contains no complete MoE expert projection layers";
         return false;
     }
-    for (const uint32_t layer : inventory.moeLayers) {
-        if (byLayer.find(layer) == byLayer.end()) {
-            error = "route metrics missing MoE layer " + std::to_string(layer);
-            return false;
-        }
+    const uint64_t expectedSelected =
+        static_cast<uint64_t>(inventory.moeLayers.size()) * activeExperts;
+    if (selected != expectedSelected) {
+        error = "selection topology mismatch: expected " + std::to_string(expectedSelected) +
+                " expert slices, got " + std::to_string(selected);
+        return false;
     }
     const uint64_t logical = inventory.logicalExperts ? inventory.logicalExperts : 1;
     if (inventory.expertBytes != 0 && selected > std::numeric_limits<uint64_t>::max() / inventory.expertBytes) {
@@ -718,8 +829,12 @@ static bool writeSelectionManifest(const std::string& path,
         {"expert_budget", expertBudget},
         {"deterministic_tie_break", "expert_id_ascending"},
         {"source_metrics", evidence.metrics.size()},
+        {"corpus_prompts", evidence.corpusPrompts},
+        {"prompt_tokens", evidence.promptTokens},
+        {"decode_tokens", evidence.decodeTokens},
         {"layers", layers},
         {"reference_parity_pass", evidence.referenceParity},
+        {"experimental_offline", experimentalOffline},
         {"quality_floor_pass", qualityFloorPass},
         {"rewrite_authorized", authorizeRewrite && qualityFloorPass && evidence.calibrationComplete && evidence.referenceParity},
         {"reason", evidence.calibrationComplete
@@ -746,11 +861,16 @@ static int reapPlan(int argc, char** argv) {
     std::string outputModelPath;
     std::string outputPath;
     bool authorizeRewrite = false;
+    bool experimentalOffline = false;
     bool targetSizeSeen = false;
     for (int i = 3; i < argc; ++i) {
         const std::string option = argv[i];
         if (option == "--authorize-rewrite") {
             authorizeRewrite = true;
+            continue;
+        }
+        if (option == "--experimental-offline") {
+            experimentalOffline = true;
             continue;
         }
         if (i + 1 >= argc) { usage(); return 2; }
@@ -831,7 +951,8 @@ static int reapPlan(int argc, char** argv) {
                                calibration, inventory, request.activeExperts,
                                request.expertBudgetBytes, request.targetSizeBytes,
                                admission.qualityFloorPass,
-                               authorizeRewrite,
+                               authorizeRewrite || experimentalOffline,
+                               experimentalOffline,
                                selectionError);
     if (!selectionOutputPath.empty() && !selectionWritten && status == "BLOCKED" &&
         !selectionError.empty()) {
@@ -840,10 +961,11 @@ static int reapPlan(int argc, char** argv) {
 
     Deep2::ReapMoETransformResult transform;
     if (!outputModelPath.empty()) {
-        if (!selectionWritten || !authorizeRewrite || !admission.transformationEnabled ||
-            !admission.rewriterCertified || !admission.selectionComplete ||
-            !admission.qualityFloorPass || !calibration.calibrationComplete ||
-            !calibration.referenceParity) {
+        if (!selectionWritten || (!authorizeRewrite && !experimentalOffline) ||
+            (!experimentalOffline && !admission.transformationEnabled) ||
+            (!experimentalOffline && (!admission.rewriterCertified || !admission.selectionComplete)) ||
+            (!experimentalOffline && (!admission.qualityFloorPass || !calibration.calibrationComplete ||
+            !calibration.referenceParity))) {
             transform.error = "REAP_REWRITE_NOT_AUTHORIZED_BY_REFERENCE_PARITY";
         } else {
             Deep2::ReapMoETransformRequest transformRequest;
@@ -905,6 +1027,12 @@ static int reapPlan(int argc, char** argv) {
 }
 
 static int runtimeInjection(int argc, char** argv) {
+#if !RAWR_REAP_RUNTIME_AVAILABLE
+    (void)argc;
+    (void)argv;
+    std::cerr << "REAP_RUNTIME_UNAVAILABLE: CPU-only build excludes the Vulkan-backed Deep2 runtime\n";
+    return 4;
+#else
     if (argc < 5) { usage(); return 2; }
     RawrXD::Reap::RuntimeRequest request;
     request.model = argv[2];
@@ -933,6 +1061,7 @@ static int runtimeInjection(int argc, char** argv) {
     const auto result = RawrXD::Reap::RunRuntime(request);
     std::cout << result.receipt;
     return result.exitCode;
+#endif
 }
 
 int main(int argc, char** argv) {

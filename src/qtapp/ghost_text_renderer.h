@@ -13,6 +13,7 @@
 #include <QPainter>
 #include <QTextCursor>
 #include <QString>
+#include <QStringList>
 #include <QTimer>
 #include <QMap>
 

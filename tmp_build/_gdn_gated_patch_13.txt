@@ -1,0 +1,54 @@
+OLD:
+        modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
+        modelWeights.useMLA = false;
+
+        // ── Qwen3.5 hybrid architecture: infer numHeads from Q tensor ──
+        // The qwen35 metadata may report numHeads=16, but the actual Q tensor
+        // has output=8192 = 32 heads × 256 headDim. Infer from tensor shape.
+        if (meta.architecture == "qwen35")
+        {
+            for (const auto& t : ggufResult.tensors)
+            {
+                // Look for attn_q.weight on a non-SSM layer (e.g. blk.3)
+                if (t.name.find("attn_q.weight") != std::string::npos && t.name.find("blk.3.") != std::string::npos)
+                {
+                    // GGUF dims are [cols, rows] = [in, out]; dimensions[0]=in, dimensions[1]=out
+                    size_t qOut = t.dimensions.size() >= 2 ? t.dimensions[1] : 0;
+                    if (qOut > modelWeights.hiddenDim && modelWeights.headDim > 0)
+                    {
+                        size_t inferredHeads = qOut / modelWeights.headDim;
+                        if (inferredHeads != modelWeights.numHeads)
+                        {
+                            printf("[Deep2Engine] Qwen3.5: inferring numHeads=%zu from Q tensor (out=%zu, headDim=%zu, "
+                                   "metadata said %zu)\n",
+                                   inferredHeads, qOut, modelWeights.headDim, modelWeights.numHeads);
+                            modelWeights.numHeads = inferredHeads;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+NEW:
+        modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
+        modelWeights.useMLA = false;
+
+        // Qwen3.5/3.6 hybrid: attention.key_length is the real head dim.
+        // Gated attn_q is 2*H*key_length; never infer headDim as qRows/H.
+        if (meta.architecture == "qwen35" || meta.architecture == "qwen35moe")
+        {
+            if (meta.keyLength > 0)
+            {
+                modelWeights.keyLength = meta.keyLength;
+                modelWeights.valueLength =
+                    meta.valueLength > 0 ? meta.valueLength : meta.keyLength;
+                modelWeights.headDim = meta.keyLength;
+                printf("[Deep2Engine] Qwen hybrid: headDim=%zu from attention.key_length "
+                       "(heads=%zu kv=%zu)\n",
+                       modelWeights.headDim, modelWeights.numHeads,
+                       modelWeights.numKVHeads);
+            }
+        }
+    }

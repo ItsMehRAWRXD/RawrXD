@@ -1,0 +1,55 @@
+OLD:
+        // Do not trust stale architecture metadata for RoPE geometry.  The
+        // projection tensor rows are authoritative: applying a metadata KV
+        // head count to a smaller K projection writes past kProj and corrupts
+        // the residual stream.  Nemotron-H is the concrete case: metadata can
+        // report 40 KV heads while the loaded K tensor is 8*128 = 1024 rows.
+        if ((lw.wq.rows % numHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu Q rows=%zu not divisible by heads=%zu\n",
+                    layer, lw.wq.rows, numHeads);
+            fflush(stderr);
+            throw std::runtime_error("Q projection geometry mismatch");
+        }
+        const size_t weightHeadDim = lw.wq.rows / numHeads;
+        if (weightHeadDim == 0 || (lw.wk.rows % weightHeadDim) != 0 || (lw.wv.rows % weightHeadDim) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu incompatible Q/K/V rows q=%zu k=%zu v=%zu "
+                    "heads=%zu headDim=%zu\n",
+                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads, weightHeadDim);
+            fflush(stderr);
+            throw std::runtime_error("Q/K/V projection geometry mismatch");
+        }
+
+NEW:
+        // Qwen3.5/3.6 full-attn: attn_q is 2*H*key_length with per-head
+        // [query|gate] interleaved. Head dim comes from key_length metadata.
+        const size_t keyLen =
+            modelWeights.keyLength > 0 ? modelWeights.keyLength : headDim;
+        qwenGatedAttn =
+            keyLen > 0 && lw.wq.rows == 2 * numHeads * keyLen &&
+            lw.attnQNorm.data != nullptr;
+        if (!qwenGatedAttn && (lw.wq.rows % numHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu Q rows=%zu not divisible by heads=%zu\n",
+                    layer, lw.wq.rows, numHeads);
+            fflush(stderr);
+            throw std::runtime_error("Q projection geometry mismatch");
+        }
+        const size_t weightHeadDim =
+            qwenGatedAttn ? keyLen : (lw.wq.rows / numHeads);
+        if (qwenGatedAttn)
+            qwenGate.assign(numHeads * weightHeadDim, 0.0f);
+        if (weightHeadDim == 0 || (lw.wk.rows % weightHeadDim) != 0 || (lw.wv.rows % weightHeadDim) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu incompatible Q/K/V rows q=%zu k=%zu v=%zu "
+                    "heads=%zu headDim=%zu gated=%d\n",
+                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads, weightHeadDim,
+                    qwenGatedAttn ? 1 : 0);
+            fflush(stderr);
+            throw std::runtime_error("Q/K/V projection geometry mismatch");
+        }

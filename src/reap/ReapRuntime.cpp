@@ -1,8 +1,10 @@
 #include "ReapRuntime.hpp"
 
 #include "reap/ReapRuntimePlan.hpp"
+#include "reap/ReapPhysicalReduce.hpp"
 #include "Deep2Engine.h"
 #include "deep2/RawrModelAlias.hpp"
+#include "deep2/ReapPhysicalBank.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -106,6 +108,20 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
         return result;
     }
 
+    PhysicalReducePlan physical{};
+    if (!BuildPhysicalReducePlan(plan, physical, error)) {
+        result.receipt = "{\"status\":\"PHYSICAL_PLAN_FAILED\",\"reason\":" +
+                         quote(error) +
+                         ",\"writer_invoked\":false,\"source_immutable\":true}\n";
+        return result;
+    }
+    ApplyPhysicalReducePlan(physical);
+    if (physical.physicalRepresentation) {
+        plan.injectionMode = "PHYSICAL_STREAM_EXPERT_REDUCE";
+        plan.streamerPath = "ReapPhysicalBank+MoEWeightProxy";
+        plan.reason = physical.reason;
+    }
+
     Deep2::Deep2Engine engine;
     RuntimeInjection injection{};
     injection.parameterCount = target.parameterCount;
@@ -147,9 +163,15 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
     }
 
     const bool loadPass = loaded;
+    // STAGED after configure is not success. Require ACTIVE_* apply evidence.
+    const bool reapApplied =
+        configuredReceipt.status == "ACTIVE_DENSE_MODEL" ||
+        ((configuredReceipt.status.rfind("ACTIVE_", 0) == 0) &&
+         configuredReceipt.workingSetConfigured &&
+         configuredReceipt.routeConfigured);
     const bool runtimePass = loadPass && generationPass &&
                              configuredReceipt.sourceImmutable &&
-                             configuredReceipt.active;
+                             reapApplied;
     std::ostringstream receipt;
     receipt << "{\"schema\":\"rawrxd.reap.runtime_receipt.v1\""
             << ",\"status\":" << quote(runtimePass ? "PASS" : (loadPass ? "PARTIAL" : "LOAD_FAILED"))
@@ -168,7 +190,22 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
             << ",\"prompt_tokens\":" << generation.promptTokens
             << ",\"load_ms\":" << elapsedLoad
             << ",\"output\":" << quote(generated)
-            << ",\"writer_invoked\":false,\"source_immutable\":true}\n";
+            << ",\"physical\":" << PhysicalReduceReceiptJson(physical)
+            << ",\"stream_correctness\":{"
+            << "\"ROUTE_OK\":" << Deep2::ReapPhysicalRouteOk()
+            << ",\"ROUTE_DENIED\":" << Deep2::ReapPhysicalRouteDenied()
+            << ",\"ACQUIRE_OK\":" << Deep2::ReapPhysicalAcquireOk()
+            << ",\"ACQUIRE_DENIED\":" << Deep2::ReapPhysicalAcquireDenied()
+            << ",\"TOPK_MISMATCH\":" << Deep2::ReapPhysicalTopKMismatch()
+            << ",\"PASS\":"
+            << ((Deep2::ReapPhysicalRouteDenied() == 0 &&
+                 Deep2::ReapPhysicalTopKMismatch() == 0)
+                    ? "true"
+                    : "false")
+            << "}"
+            << ",\"writer_invoked\":" << (physical.writerInvoked ? "true" : "false")
+            << ",\"source_immutable\":true}\n";
+    ClearPhysicalReducePlan();
     result.receipt = receipt.str();
     result.exitCode = runtimePass ? 0 : 4;
     if (!request.receiptPath.empty()) {

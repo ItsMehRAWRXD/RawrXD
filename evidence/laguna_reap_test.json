@@ -1,0 +1,1 @@
+{"model":"reap16-laguna-s-2_1:latest","messages":[{"role":"user","content":"What is the capital of France? Answer in one sentence."}],"stream":false,"options":{"temperature":0,"num_predict":64}}

@@ -6,11 +6,91 @@
 #include <fstream>
 #include <mutex>
 #include <atomic>
+#include <dbghelp.h>
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
 #include "Win32IDE_ExtHostWire.h"
 #endif
 
 namespace {
+LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
+{
+    CreateDirectoryA("F:\\rawrxd\\evidence\\production_win32_crash_20261118", nullptr);
+    const char* path = "F:\\rawrxd\\evidence\\production_win32_crash_20261118\\RawrXD-Win32IDE-Native.dmp";
+    HANDLE file = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file != INVALID_HANDLE_VALUE) {
+        MINIDUMP_EXCEPTION_INFORMATION info{};
+        info.ThreadId = GetCurrentThreadId();
+        info.ExceptionPointers = ep;
+        info.ClientPointers = FALSE;
+        MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file,
+                          static_cast<MINIDUMP_TYPE>(
+                              MiniDumpWithDataSegs | MiniDumpWithHandleData |
+                              MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules),
+                          ep ? &info : nullptr, nullptr, nullptr);
+        CloseHandle(file);
+    }
+    HANDLE log = CreateFileA(
+        "F:\\rawrxd\\evidence\\production_win32_crash_20261118\\exception_stack.txt",
+        GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (log != INVALID_HANDLE_VALUE) {
+        SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
+        if (SymInitialize(GetCurrentProcess(), "F:\\rawrxd\\build\\bin\\Release", TRUE)) {
+            void* frames[64]{};
+            const USHORT count = CaptureStackBackTrace(0, 64, frames, nullptr);
+            char line[512];
+            DWORD written = 0;
+            auto writeLine = [&](const char* text) {
+                WriteFile(log, text, static_cast<DWORD>(std::strlen(text)), &written, nullptr);
+            };
+            const auto* record = ep ? ep->ExceptionRecord : nullptr;
+            const auto* context = ep ? ep->ContextRecord : nullptr;
+            std::snprintf(line, sizeof(line),
+                          "fault=0x%08lX access=%llu address=0x%llX rip=0x%llX rsp=0x%llX rbp=0x%llX rcx=0x%llX rdx=0x%llX r8=0x%llX r9=0x%llX\n",
+                          record ? record->ExceptionCode : 0,
+                          record && record->NumberParameters > 0
+                              ? static_cast<unsigned long long>(record->ExceptionInformation[0]) : 0ull,
+                          record && record->NumberParameters > 1
+                              ? static_cast<unsigned long long>(record->ExceptionInformation[1]) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rip) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rsp) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rbp) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rcx) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rdx) : 0ull,
+                          context ? static_cast<unsigned long long>(context->R8) : 0ull,
+                          context ? static_cast<unsigned long long>(context->R9) : 0ull);
+            writeLine(line);
+            std::snprintf(line, sizeof(line), "exception=0x%08lX thread=%lu frames=%u\n",
+                          record ? record->ExceptionCode : 0,
+                          GetCurrentThreadId(), static_cast<unsigned>(count));
+            writeLine(line);
+            for (USHORT i = 0; i < count; ++i) {
+                const DWORD64 address = reinterpret_cast<DWORD64>(frames[i]);
+                alignas(SYMBOL_INFO) char storage[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
+                auto* symbol = reinterpret_cast<PSYMBOL_INFO>(storage);
+                symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+                symbol->MaxNameLen = MAX_SYM_NAME;
+                DWORD64 displacement = 0;
+                if (SymFromAddr(GetCurrentProcess(), address, &displacement, symbol)) {
+                    std::snprintf(line, sizeof(line), "#%u %s+0x%llX @0x%llX\n",
+                                  static_cast<unsigned>(i), symbol->Name,
+                                  static_cast<unsigned long long>(displacement),
+                                  static_cast<unsigned long long>(address));
+                } else {
+                    std::snprintf(line, sizeof(line), "#%u <unknown> @0x%llX\n",
+                                  static_cast<unsigned>(i),
+                                  static_cast<unsigned long long>(address));
+                }
+                writeLine(line);
+            }
+            SymCleanup(GetCurrentProcess());
+        }
+        CloseHandle(log);
+    }
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 void startupTrace(const char* message)
 {
     std::ofstream trace("F:\\rawrxd\\startup_trace.log", std::ios::app);
@@ -181,6 +261,7 @@ void applyUserDataDirFromCmdLine(const char* lpCmdLine)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    SetUnhandledExceptionFilter(rawrxdUnhandledException);
     startupTrace("WinMain entered");
     startupTrace(lpCmdLine && *lpCmdLine ? lpCmdLine : "WinMain command line empty");
     applyUserDataDirFromCmdLine(lpCmdLine);

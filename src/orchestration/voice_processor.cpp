@@ -67,11 +67,13 @@ void VoiceProcessor::setupAudioFormat()
     // Get default audio input device
     m_audioDevice = Qt6AudioHelper::getDefaultInputDevice();
     
-    logStructured("DEBUG", "Audio format configured", QJsonObject{
-        {"sampleRate", m_audioFormat.sampleRate()},
-        {"channelCount", m_audioFormat.channelCount()},
-        {"sampleFormat", static_cast<int>(m_audioFormat.sampleFormat())}
-    });
+    logStructured("DEBUG", "Audio format configured", [&]() {
+        QJsonObject obj;
+        obj["sampleRate"] = static_cast<int>(m_audioFormat.sampleRate);
+        obj["channelCount"] = static_cast<int>(m_audioFormat.channelCount);
+        obj["bitsPerSample"] = static_cast<int>(m_audioFormat.bitsPerSample);
+        return obj;
+    }());
 }
 
 bool VoiceProcessor::startRecording()
@@ -81,14 +83,22 @@ bool VoiceProcessor::startRecording()
     QMutexLocker locker(&m_stateMutex);
     
     if (m_isRecording) {
-        logStructured("WARN", "Recording already in progress", QJsonObject{{"state", "already_recording"}});
+        logStructured("WARN", "Recording already in progress", [&]() {
+            QJsonObject obj;
+            obj["state"] = "already_recording";
+            return obj;
+        }());
         return false;
     }
     
     try {
         // Qt 6: Use QMediaDevices instead of QAudioDeviceInfo
         if (!Qt6AudioHelper::isFormatSupported(m_audioDevice, m_audioFormat)) {
-            logStructured("ERROR", "Audio format not supported by device", QJsonObject{{"device", m_audioDevice.description()}});
+            logStructured("ERROR", "Audio format not supported by device", [&]() {
+                QJsonObject obj;
+                obj["device"] = QString::fromStdString(m_audioDevice.name);
+                return obj;
+            }());
             QMutexLocker metricsLocker(&m_metricsMutex);
             m_metrics.errorCount++;
             emit errorOccurred("Audio format not supported");
@@ -96,7 +106,17 @@ bool VoiceProcessor::startRecording()
         }
         
         // Qt 6: QAudioInput renamed to QAudioSource
-        m_audioSource = new QAudioSource(m_audioDevice, m_audioFormat, this);
+        // Convert custom AudioFormat/AudioDevice to Qt types for QAudioSource
+        QAudioFormat qtFormat;
+        qtFormat.setSampleRate(m_audioFormat.sampleRate);
+        qtFormat.setChannelCount(m_audioFormat.channelCount);
+        qtFormat.setSampleFormat(QAudioFormat::Int16);
+        
+        QAudioDevice qtDevice;
+        // Use default input device (default constructed QAudioDevice is the default)
+        qtDevice = QAudioDevice();
+        
+        m_audioSource = new QAudioSource(qtDevice, qtFormat, this);
         connect(m_audioSource, &QAudioSource::stateChanged, this, &VoiceProcessor::handleAudioStateChanged);
         
         m_audioBuffer->close();
@@ -121,11 +141,13 @@ bool VoiceProcessor::startRecording()
         auto endTime = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
         
-        logStructured("INFO", "Recording started", QJsonObject{
-            {"device", m_audioDevice.description()},
-            {"maxDurationMs", config.maxRecordingDurationMs},
-            {"startLatencyMs", static_cast<qint64>(duration.count())}
-        });
+        logStructured("INFO", "Recording started", [&]() {
+            QJsonObject obj;
+            obj["device"] = QString::fromStdString(m_audioDevice.name);
+            obj["maxDurationMs"] = config.maxRecordingDurationMs;
+            obj["startLatencyMs"] = static_cast<qint64>(duration.count());
+            return obj;
+        }());
         
         emit recordingStarted();
         return true;

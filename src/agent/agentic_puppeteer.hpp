@@ -1,9 +1,14 @@
+#pragma no_moc
 // agentic_puppeteer.hpp - Response correction via pattern matching
 #pragma once
 
-#include "qt_block.h"
-#include "core/qt_elimination.h"
-#include <memory>
+#include <QObject>
+#include <QString>
+#include <QStringList>
+#include <QJsonObject>
+#include <QMutex>
+#include <QHash>
+#include <cstdint>
 
 // Failure types the puppeteer can correct
 enum class FailureType {
@@ -32,10 +37,11 @@ struct CorrectionResult {
 };
 
 // Base puppeteer for general response correction
-class AgenticPuppeteer : public NativeObject
+class AgenticPuppeteer : public QObject
 {
+    Q_OBJECT
 public:
-    explicit AgenticPuppeteer(NativeObject* parent = nullptr);
+    explicit AgenticPuppeteer(QObject* parent = nullptr);
     ~AgenticPuppeteer() override;
 
     // Main correction API

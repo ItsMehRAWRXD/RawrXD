@@ -104,3 +104,23 @@
 {"content":"ASK_OK","role":"assistant","type":"turn","verified":false}
 {"content":"Reply with exactly: ASK_OK","role":"user","type":"turn","verified":true}
 {"content":"ASK_OK","role":"assistant","type":"turn","verified":false}
+{"content":"Hello","role":"user","type":"turn","verified":true}
+{"content":", and ↵anderserveister.\n Резуpaysidealmostarrivieworkament to-independent of theftmores.\nWHERE2424242.\nTheory.\nTheorysleffertiltournterritmores.\n```\nTheory","role":"assistant","type":"turn","verified":true}
+{"content":"What is 2+2?","role":"user","type":"turn","verified":true}
+{"content":"Inference unavailable: HTTP transport failure (attempt 3): WinHttpSendRequest failed (12029)","role":"assistant","type":"turn","verified":false}
+{"content":"Hello, world! --model dummy.gguf","role":"user","type":"turn","verified":true}
+{"content":"o.\n\n\n\n\n\n\n\nWHEREasembly.\nThe above- theftional.\nThe aforementioned.\nThe asst.\nThe asst.\nThe asst.\nThe asst.\nThe asst.\nThe asst.\nThe asst.","role":"assistant","type":"turn","verified":true}
+{"content":"Hello --model dummy.gguf","role":"user","type":"turn","verified":true}
+{"content":"o.gg.\n Резуpitiful20120211301201912220192122212222222222222222222222222222","role":"assistant","type":"turn","verified":true}
+{"content":"--model tinyllama.gguf What is 2+2? --max-tokens 20","role":"user","type":"turn","verified":true}
+{"content":"0 --model: You are a helpful assistant. Follow the user's: You are a helpful assistant. Follow the user's: You are a helpful.\nIngfuture.aiidaho, theaterificaidirecteducation.\nButler, theater, theater, the","role":"assistant","type":"turn","verified":true}
+{"content":"--model tinyllama.gguf What is 2+2? --max-tokens 20","role":"user","type":"turn","verified":true}
+{"content":"0 --model: --user: --assistant --assistant --assistant --assistant --assistant --user:\nWHERE2 use2:\n<|system\n","role":"assistant","type":"turn","verified":true}
+{"content":"--model tinyllama.gguf Say hello --max-tokens 10","role":"user","type":"turn","verified":true}
+{"content":"0\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n```\nIngates.\n\nIn the \n\nIn the \n\nIn the","role":"assistant","type":"turn","verified":true}
+{"content":"--model tinyllama.gguf Say hello --max-tokens 10","role":"user","type":"turn","verified":true}
+{"content":"000001\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nTheatreptsdigraphael.\nTheatreptsdi.\nTheatreptsdi\nTheatreptsdi\nTheatre","role":"assistant","type":"turn","verified":true}
+{"content":"--model tinyllama.gguf Say hello --max-tokens 10","role":"user","type":"turn","verified":true}
+{"content":"0 --model: You are a helpful assistant. Follow the user's: You are helpful assistant. Follow the user'\nTheatre of the sun.\nTheatre of the theatre\nTheatre of the theatre\nTheatre of the theatre\nTheatre of the theatre\nTheatre of the theatre\nThe","role":"assistant","type":"turn","verified":true}
+{"content":"What is 2+2? --model dummy.gguf","role":"user","type":"turn","verified":true}
+{"content":"o\n Резуpitifulupermitthealthrough, and the, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and,","role":"assistant","type":"turn","verified":true}

@@ -19,7 +19,7 @@ void Win32IDE::initFileSystemWatcher() {
 }
 
 bool Win32IDE::fileNeedsReindex(const std::string& filePath) {
-    WIN32_FIND_DATA fd;
+    WIN32_FIND_DATAA fd;
     HANDLE h = FindFirstFileA(filePath.c_str(), &fd);
     if (h == INVALID_HANDLE_VALUE) return false;
     FindClose(h);

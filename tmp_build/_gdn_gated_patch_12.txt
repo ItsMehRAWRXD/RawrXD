@@ -1,0 +1,19 @@
+OLD:
+    size_t projectedQDim = (numHeads > 0 && headDim > 0) ? numHeads * headDim : hiddenDim;
+
+    const bool miniMaxQDiag = layer == 0 && std::getenv("DEEP2_MINIMAX_Q_DIAG") != nullptr;
+    const auto emitMiniMaxQDiag = [&](const char* stage, const float* values, size_t count)
+    {
+        if (!miniMaxQDiag || !values || count == 0)
+            return;
+
+NEW:
+    size_t projectedQDim = (numHeads > 0 && headDim > 0) ? numHeads * headDim : hiddenDim;
+    bool qwenGatedAttn = false;
+    std::vector<float> qwenGate;
+
+    const bool miniMaxQDiag = layer == 0 && std::getenv("DEEP2_MINIMAX_Q_DIAG") != nullptr;
+    const auto emitMiniMaxQDiag = [&](const char* stage, const float* values, size_t count)
+    {
+        if (!miniMaxQDiag || !values || count == 0)
+            return;

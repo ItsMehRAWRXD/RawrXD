@@ -1,0 +1,61 @@
+G09_REAP MILESTONE DISPOSITION 20261113
+USER_LOCKED=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+MOTD_ACK=1
+
+## Disposition table
+
+FIELD                         | 8-EXPERT                         | 149-EXPERT (Tip15 bind)
+------------------------------|----------------------------------|---------------------------------
+PHYSICAL_RUNTIME_REACHED      | 1                                | 1
+TOKENS_COMMITTED              | 2                                | 2
+TOKEN_IDS                     | 82319,82319                      | 82406,82406
+EXCLUDED_EXPERT_ACQUIRES      | 0                                | 0
+RETAINED_EXPERT_COUNT         | 8                                | 149
+ROUTE_OK / ROUTE_DENIED       | 960 / 0                          | 960 / 0
+EXIT                          | 0                                | 0
+FAIL_PHASE                    | NONE                             | NONE
+EXE_SHA256                    | BAF119D6C34EFF0B...9A7AC433      | C921BB4AEC351B13...85DFA09B
+GIT                           | ebef170ebd                       | 04b25b93fd
+PEAK_RAM                      | ~5.19 GiB WS approx              | LIVE_CACHE_PEAK ~4.49 GiB
+QUALITY_PARITY                | NOT_RUN                          | NOT_RUN
+MODEL_SIZE_ACCOUNTING         | COMPLETE_INV+PROXY_PLAN          | COMPLETE_INV+PROXY_PLAN
+CERTIFIED                     | 0                                | 0
+PROMOTE                       | 0                                | 0
+
+## Locked keys (verified)
+PHYSICAL_RUNTIME_REACHED_8=1
+TOKENS_COMMITTED_8=2
+EXCLUDED_EXPERT_ACQUIRES_8=0
+PHYSICAL_RUNTIME_REACHED_149=1
+TOKENS_COMMITTED_149=2
+EXCLUDED_EXPERT_ACQUIRES_149=0
+QUALITY_PARITY=OPEN (NOT_RUN; deterministic prompts held)
+MODEL_SIZE_ACCOUNTING=COMPLETE_INVENTORY_PROXY_PLAN (see MODEL_SIZE_ACCOUNTING.txt; ~19GB ≠ full Kimi)
+CERTIFIED=0
+PROMOTE=0
+
+## Evidence paths
+F:\rawrxd\evidence\G09_REAP_PHYSICAL_20261113\HARDGATE_DISPOSITION.txt
+F:\rawrxd\evidence\G09_REAP_PHYSICAL_20261113\RUNTIME_PROOF.txt
+F:\rawrxd\evidence\G09_REAP_PHYSICAL_20261113\RUNTIME_PROOF_149.txt
+F:\rawrxd\evidence\G09_REAP_PHYSICAL_20261113\MODEL_SIZE_ACCOUNTING.txt
+F:\rawrxd\evidence\G09_REAP_PHYSICAL_20261113\hardgate_physical.json
+F:\rawrxd\evidence\G09_REAP_PHYSICAL_20261113\hardgate.out.txt
+F:\rawrxd\evidence\G09_REAP_PHYSICAL_20261113\hardgate.err.txt
+G:\~dev\rawrxd\evidence\REAP_TIP_PORT_001\k2gen\physical\G09_HARDGATE\
+G:\~dev\rawrxd\evidence\REAP_TIP_PORT_001\k2gen\physical\G09_HARDGATE_149\
+
+## Repeatability
+REPEAT_8=PASS @ EXE ECB45BC9D80FD8D303A733D2F9DA5EDCC1DF62EFC3065478A6539E8A5CF5E792
+  TOKENS=82319,82319 ROUTE_OK=960 ACQUIRE_OK=960 ACQUIRE_DENIED=0 EXIT=0
+  SEE=hardgate_repeat8.json / REPEAT_8_PRE.txt / REPEAT_8_POST.txt
+REPEAT_149=MEASURED once @ EXE C921BB4A (pre-acquire-wire); ACQUIRE_OK receipt=0 then
+SAME_EXE_RERUN_BAF119D6=SUPERSEDED (locked hardgate SHA preserved in RUNTIME_PROOF; repeat uses instrumented EXE)
+
+## Tip15 note
+Tip15 plan 80a4cf6551 (149/384) is topology-bind via RAWRXD_REAP_RETAINED=149.
+Budget-correct Tip16 path (--reap 30GB/8, no override) retains 8 — do not redefine Tip14 residency.

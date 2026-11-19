@@ -1,0 +1,1062 @@
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Num KV Heads: 32
+  Head Dim: 128
+  Max Seq Len: 0
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+  ThreadPool: 32 threads (auto-detected)
+[Deep2Engine] KV_CACHE_DEFERRED reason=initialize (model not bound)
+[flight] Recorder started: _flight.jsonl
+[Deep2Device] PnP name=AMD Radeon(TM) Graphics PROBLEM_CODE=43 RESET_ATTEMPTED=0 RESET_OK=0 RESET_SKIPPED=1 RESET_REQUIRES_ELEVATION=0 ACCESS_DENIED=0 HEALTHY=0 instance=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF6EFDF66B0 dequant=00007FF6EFDF92B0 GetGEMV(12)=00007FF6EFDF66B0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=2 ramAvail=40914MB vram=32479MB L=32 pressure=0
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+FUTURE_CONSUMERS=0
+FUTURE_PAGES=0
+FUTURE_POOL_GROWS=0
+FUTURE_GENERATION=0
+FUTURE_GENERATE_BEGIN=0
+FUTURE_CONSUMER_HITS=0
+FUTURE_CONSUMER_MISSES=0
+FUTURE_PREFETCH_HITS=0
+FUTURE_PREFETCH_LATE=0
+FUTURE_STALL_NS=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[Deep2Device] PnP name=AMD Radeon(TM) Graphics PROBLEM_CODE=43 RESET_ATTEMPTED=0 RESET_OK=0 RESET_SKIPPED=1 RESET_REQUIRES_ELEVATION=0 ACCESS_DENIED=0 HEALTHY=0 instance=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[Deep2Device] PnP name=AMD Radeon(TM) Graphics PROBLEM_CODE=43 RESET_ATTEMPTED=0 RESET_OK=0 RESET_SKIPPED=1 RESET_REQUIRES_ELEVATION=0 ACCESS_DENIED=0 HEALTHY=0 instance=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+[Deep2Device] PnP name=AMD Radeon(TM) Graphics PROBLEM_CODE=43 RESET_ATTEMPTED=0 RESET_OK=0 RESET_SKIPPED=1 RESET_REQUIRES_ELEVATION=0 ACCESS_DENIED=0 HEALTHY=0 instance=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[Deep2Device] PnP name=AMD Radeon(TM) Graphics PROBLEM_CODE=43 RESET_ATTEMPTED=0 RESET_OK=0 RESET_SKIPPED=1 RESET_REQUIRES_ELEVATION=0 ACCESS_DENIED=0 HEALTHY=0 instance=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+[Deep2Device] PnP name=AMD Radeon(TM) Graphics PROBLEM_CODE=43 RESET_ATTEMPTED=0 RESET_OK=0 RESET_SKIPPED=1 RESET_REQUIRES_ELEVATION=0 ACCESS_DENIED=0 HEALTHY=0 instance=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Scheduler thread started
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=2
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized from ExecutionPolicy (ram=42949672960 vram=12884901888)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[NVMeStream] defer: empty path (await shard dir)
+[Deep2Engine] NVMe defer until openK2ShardDirectory
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] Loading model from: F:\rawrxd\models\tinyllama.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\models\tinyllama.gguf mode=GPU_SINGLE devices=1 kv_per_token=6336 max_ctx_est=18446744073709532481
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Context length from metadata: 2048 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] Layer topology: 22 attention, 0 SSM, 0 unknown of 22 total
+[Deep2Engine] KV cache sized for 22 attention layers (SSM layers excluded)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=64 modelWeights.headDim=64 kvHeads=4
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000002D25A534F30  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000002D25A534F30  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000002D25A534F30  Registered 'output.weight': shard=0 offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000002D25A534F30  registered=201 tensors  bytes=667078656  max=536870912
+[Deep2Engine] ElasticResidencyManager: registered all tensors
+[Deep2Engine] ATTN_GEOMETRY_RECONCILED headDim=64 qHeads=32 kvHeads=4
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[[Deep2Device] PnP name=AMD Radeon(TM) Graphics PROBLEM_CODE=43 RESET_ATTEMPTED=0 RESET_OK=0 RESET_SKIPPED=1 RESET_REQUIRES_ELEVATION=0 ACCESS_DENIED=0 HEALTHY=0 instance=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1 pp=1 rr=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[EMBED_DUMP] token=450 norm=3.911481e-01 first8=-9.741545e-03 1.002145e-02 1.990294e-02 -4.800797e-03 2.610326e-03 2.610326e-03 2.610326e-03 -4.800797e-03
+[QKV_DIAG] ropeTheta=10000.0 wq(rows=2048 cols=2048 type=12) wk(rows=256 cols=2048 type=12) wv(rows=256 cols=2048 type=14) bq(cols=0 type=0 b0=0.000000e+00) bk(cols=0 type=0 b0=0.000000e+00) bv(cols=0 type=0 b0=0.000000e+00)
+[GEMV_DUMP] blk.0.attn_q.weight y0..5=-3.550535e-02 6.642669e-02 -1.218418e-01 -3.963023e-02 -4.430580e-02 3.596351e-02
+[QKV_PROJ] normed_in 4.425296e-03 6.878517e-03 1.509966e-01 1.534561e-02 -1.739741e-03 -4.310404e-03
+[QKV_PROJ] q -3.550535e-02 6.642669e-02 -1.218418e-01 -3.963023e-02 -4.430580e-02 3.596351e-02
+[QKV_PROJ] k -9.499500e-02 -4.243377e-01 3.081975e-01 -9.146680e-02 -6.321288e-02 -2.691293e-01
+[QKV_PROJ] v -2.592020e-03 2.547117e-03 -1.504587e-03 -1.782591e-03 2.285139e-03 3.815076e-03
+Deep2Engine] KV_CACHE_CONFIGURED reason=loadModel layers=22 positions=2048 kvHeads=4 headDim=64
+[Deep2Engine] Model loaded successfully (201 tensors)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=0
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000165B5
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000165B5
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019237
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+DEEP2_DEVICE_2_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:13C0:0000000000000000
+DEEP2_DEVICE_2_VRAM_BYTES=0
+DEEP2_DEVICE_2_SCORE=0
+DEEP2_DEVICE_2_DUTY=EXCLUDED
+DEEP2_DEVICE_2_PROBLEM_CODE=43
+DEEP2_DEVICE_2_HEALTHY=0
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=1
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+MODEL=F:\rawrxd\models\tinyllama.gguf
+KV_GEOMETRY valid=1 layers=22 positions=2048 kvHeads=4 headDim=64 weightHeads=32 weightKVHeads=4 weightHeadDim=64 currentLen=0 detail=ok
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=000002D1D2376580 sizeBytes=36864000 rows=32000 cols=2048
+[MARS] Placed 'layer_0' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_1' (26.59 MB) on GPU1 (priority=1.00)
+[MARS] Placed 'layer_2' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_3' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_4' (26.59 MB) on GPU1 (priority=1.00)
+[MARS] Placed 'layer_5' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_6' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_7' (26.59 MB) on GPU1 (priority=1.00)
+[MARS] Placed 'layer_8' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_9' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_10' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Placed 'layer_11' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_12' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_13' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Placed 'layer_14' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_15' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_16' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Placed 'layer_17' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_18' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_19' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Placed 'layer_20' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_21' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Placed 'layer_1' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Placed 'layer_4' (26.59 MB) on GPU0 (priority=1.0[HIDDEN_DUMP] h0..5=2.777972e+00 1.840759e+00 -3.352160e-01 1.466417e+00 -5.286257e-01 -1.268407e+00
+[LOGIT_DIAG] top5: 263=12.122961 278=12.041944 3681=11.958311 5982=11.846222 884=11.743669
+0)
+[MARS] Placed 'layer_5' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Placed 'layer_7' (26.59 MB) on GPU0 (priority=1.00)
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Placed 'layer_10' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_11' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Placed 'layer_13' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Placed 'layer_16' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_17' (23.62 MB) on GPU1 (priority=1.00)
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Placed 'layer_19' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Placed 'layer_21' (23.62 MB) on GPU0 (priority=1.00)
+[MARS] Placed 'layer_0' (26.59 MB) on GPU1 (priority=1.00)
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+H11_PREFILL_PARITY
+  model=F:\rawrxd\models\tinyllama.gguf
+  prompt_tokens=5
+  chunk_tokens=4
+  layers=22 kv_heads=4 head_dim=64
+  serial_tokens_done=5
+  batched_tokens_done=5
+  kv_rows_serial=5
+  kv_rows_batched=5
+  kv_rows_match=1
+  kv_byte_exact=1
+  max_abs_hidden=0.000000e+00
+  rmse_hidden=0.000000e+00
+  max_abs_kv=0.000000e+00
+  rmse_kv=0.000000e+00
+  max_abs_logits=0.000000e+00
+  max_abs_overall=0.000000e+00
+  first_mismatch_hidden_index=0 value=0.000000e+00
+  first_mismatch_kv_flat_index=0 value=0.000000e+00
+  tolerance=1e-03
+  verdict=PASS
+PREFILL_PARITY_MAX_REL=0
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=5
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=2
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=44
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=2
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[AGENT] PREFILL_DONE prompt_tokens=5 prefill_ms=553.809
+[AGENT] DECODE_BEGIN max_out=2
+[DBG] stateNorm=8.491296e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=263 eosId=2
+[AGENT] TOKEN id=263 piece= a
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[DBG] stateNorm=8.499546e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=4272 eosId=2
+[Deep2Engine] Generation complete: 2 tokens in 700.59 ms (E2E 2.85 TPS)
+[Deep2Engine] PREFILL: 5 tok in 553.81 ms (9.03 tok/s) | DECODE: 2 tok in 146.75 ms (13.63 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q6_K      calls=     804  ms=     294.101  MACs=    5089787904  ms/MAC=0.000000
+  IQ2_XS    calls=     122  ms=     255.597  MACs=     854589440  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=     549.697  MACs=    5944377344
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+  output.weight                                   2       35.206      131072000       17.603
+  blk.1.ffn_down.weight                           6       21.204       69206016        3.534
+  blk.18.ffn_down.weight                          6       19.390       69206016        3.232
+  blk.7.ffn_down.weight                           6       19.346       69206016        3.224
+  blk.8.ffn_down.weight                           6       19.250       69206016        3.208
+  blk.4.ffn_down.weight                           6       19.153       69206016        3.192
+  blk.0.ffn_down.weight                           6       18.950       69206016        3.158
+  blk.20.ffn_down.weight                          6       18.708       69206016        3.118
+  blk.9.ffn_down.weight                           6       18.524       69206016        3.087
+  blk.12.ffn_down.weight                          6       18.281       69206016        3.047
+  blk.15.ffn_down.weight                          6       17.990       69206016        2.998
+  blk.3.attn_output.weight                        6        7.422       25165824        1.237
+  blk.0.attn_v.weight                             6        5.141        3145728        0.857
+  blk.20.attn_v.weight                            6        4.408        3145728        0.735
+  blk.2.ffn_gate.weight                           6        4.198       69206016        0.700
+  blk.2.attn_q.weight                             6        4.148       25165824        0.691
+  blk.6.attn_v.weight                             6        4.121        3145728        0.687
+  blk.16.ffn_down.weight                          6        4.000       69206016        0.667
+  blk.6.ffn_gate.weight                           6        3.772       69206016        0.629
+  blk.9.attn_v.weight                             6        3.641        3145728        0.607
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 6
+layerCount         = 132
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 664.732
+totalLayerMs       = 651.214
+totalEmbedMs       = 0.026
+totalLogitsMs      = 35.318
+totalAttnMs        = 252.268
+totalFfnMs         = 331.661
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgForwardMs       = 110.789
+avgLayerMs         = 4.933
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         118678 us
+GPU compute time:      0 us
+Prefetch hits:         1870
+Prefetch misses:       209
+Prefetch hit rate:     89.95%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  3222
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=209 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=89.95%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=636/2304 MB, warmStaged=0/288 MB, hot=523/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: UNKNOWN
+[AGENT] POST_GENERATE generated=2 tokens
+[AGENT] GENERATION_RECEIPT prompt=5 generated=2 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=5
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=2
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=44
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=2
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[AGENT] PREFILL_DONE prompt_tokens=5 prefill_ms=559.417
+[AGENT] DECODE_BEGIN max_out=2
+[DBG] stateNorm=8.491296e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=263 eosId=2
+[AGENT] TOKEN id=263 piece= a
+[MARS] Tensor 'layer_0' already exists on GPU0
+[MARS] Tensor 'layer_1' already exists on GPU0
+[MARS] Tensor 'layer_2' already exists on GPU0
+[MARS] Tensor 'layer_3' already exists on GPU0
+[MARS] Tensor 'layer_4' already exists on GPU0
+[MARS] Tensor 'layer_5' already exists on GPU0
+[MARS] Tensor 'layer_6' already exists on GPU0
+[MARS] Tensor 'layer_7' already exists on GPU0
+[MARS] Tensor 'layer_8' already exists on GPU0
+[MARS] Tensor 'layer_9' already exists on GPU0
+[MARS] Tensor 'layer_10' already exists on GPU0
+[MARS] Tensor 'layer_11' already exists on GPU0
+[MARS] Tensor 'layer_12' already exists on GPU0
+[MARS] Tensor 'layer_13' already exists on GPU0
+[MARS] Tensor 'layer_14' already exists on GPU0
+[MARS] Tensor 'layer_15' already exists on GPU0
+[MARS] Tensor 'layer_16' already exists on GPU0
+[MARS] Tensor 'layer_17' already exists on GPU0
+[MARS] Tensor 'layer_18' already exists on GPU0
+[MARS] Tensor 'layer_19' already exists on GPU0
+[MARS] Tensor 'layer_20' already exists on GPU0
+[MARS] Tensor 'layer_21' already exists on GPU0
+[DBG] stateNorm=8.499546e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=4272 eosId=2
+[Deep2Engine] Generation complete: 2 tokens in 707.22 ms (E2E 2.83 TPS)
+[Deep2Engine] PREFILL: 5 tok in 559.42 ms (8.94 tok/s) | DECODE: 2 tok in 147.78 ms (13.53 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q6_K      calls=     804  ms=     296.677  MACs=    5089787904  ms/MAC=0.000000
+  IQ2_XS    calls=     122  ms=     266.196  MACs=     854589440  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=     562.873  MACs=    5944377344
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+  output.weight                                   2       33.887      131072000       16.944
+  blk.1.ffn_down.weight                           6       22.418       69206016        3.736
+  blk.9.ffn_down.weight                           6       21.477       69206016        3.580
+  blk.12.ffn_down.weight                          6       20.805       69206016        3.468
+  blk.7.ffn_down.weight                           6       20.736       69206016        3.456
+  blk.0.ffn_down.weight                           6       20.205       69206016        3.368
+  blk.8.ffn_down.weight                           6       20.173       69206016        3.362
+  blk.4.ffn_down.weight                           6       20.156       69206016        3.359
+  blk.15.ffn_down.weight                          6       20.081       69206016        3.347
+  blk.20.ffn_down.weight                          6       19.943       69206016        3.324
+  blk.18.ffn_down.weight                          6       19.440       69206016        3.240
+  blk.20.attn_output.weight                       6        5.882       25165824        0.980
+  blk.8.ffn_gate.weight                           6        3.943       69206016        0.657
+  blk.20.attn_v.weight                            6        3.905        3145728        0.651
+  blk.16.attn_q.weight                            6        3.766       25165824        0.628
+  blk.9.attn_v.weight                             6        3.763        3145728        0.627
+  blk.21.attn_q.weight                            6        3.748       25165824        0.625
+  blk.12.attn_v.weight                            6        3.571        3145728        0.595
+  blk.5.ffn_up.weight                             6        3.475       69206016        0.579
+  blk.21.attn_output.weight                       6        3.285       25165824        0.548
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 6
+layerCount         = 132
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 672.615
+totalLayerMs       = 658.673
+totalEmbedMs       = 0.025
+totalLogitsMs      = 34.024
+totalAttnMs        = 247.898
+totalFfnMs         = 345.420
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgForwardMs       = 112.103
+avgLayerMs         = 4.990
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         118678 us
+GPU compute time:      0 us
+Prefetch hits:         3004
+Prefetch misses:       209
+Prefetch hit rate:     93.50%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  4154
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=209 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=93.50%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=636/2304 MB, warmStaged=0/288 MB, hot=523/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: UNKNOWN
+[AGENT] POST_GENERATE generated=2 tokens
+[AGENT] GENERATION_RECEIPT prompt=5 generated=2 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+TOKEN_IDS_A=263,4272
+TOKEN_IDS_B=263,4272
+TOKEN_ID_MATCH=1 GENERATED=2 PREFILL_PARITY_OK=1
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MARS] Shutdown complete. Total allocated: 844.76 MB, Total freed: 844.76 MB
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+[ResidencyManager] Shutdown complete

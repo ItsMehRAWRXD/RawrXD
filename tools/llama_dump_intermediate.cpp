@@ -1,345 +1,451 @@
-// llama_dump_intermediate.cpp
-// Dumps intermediate tensors layer-by-layer for teacher-forced token positions
-// Uses llama.cpp's graph eval callback to capture tensor outputs
+// ============================================================================
+// llama_dump_intermediate.cpp -- per-layer REFERENCE oracle for Deep2
+// ============================================================================
+// Purpose
+//   Export the SAME tensor boundaries Deep2 already exports, from llama.cpp,
+//   so the FIRST divergent operator can be named instead of inferred from
+//   final logits. Final-logit comparison cannot separate "wrong attention"
+//   from "wrong FFN" from "wrong output projection"; per-layer capture can.
+//
+// Critical fixes over the previous revision (do not regress these):
+//
+//   1. ASK SEMANTICS. ggml's eval callback fires TWICE per node: once with
+//      ask=true BEFORE the node is computed (the return value may skip it),
+//      and once with ask=false AFTER. The previous revision ignored `ask` and
+//      copied t->data unconditionally, so every "captured" tensor was read
+//      before it existed - garbage that would silently poison any comparison.
+//      We now capture ONLY when ask == false.
+//
+//   2. OPERATOR BOUNDARY AMBIGUITY. llama.cpp produces BOTH
+//        kqv_out-<L>   the concatenated head outputs (attention BEFORE O_proj)
+//        attn_out-<L>  the result after the O_proj matmul (attention AFTER)
+//      Collapsing both into one name is exactly the "is attn_out before or
+//      after output projection" trap. They are now exported as distinct
+//      boundaries: attn_preproj and attn_proj.
+//
+//   3. DIMENSIONS ARE NOT HARDCODED. n_embd and n_vocab are queried from the
+//      model. A hardcoded 3072/128256 silently truncates any other model and
+//      turns a size mismatch into a bogus numerical error.
+//
+//   4. A MANIFEST IS EMITTED. Every dump records raw ggml name, element count
+//      and shape, so an alignment step can prove shapes match element-for-
+//      element before any tolerance is applied.
+//
+// Usage:
+//   llama_dump_intermediate.exe <model.gguf> <tokens_file> <output_dir>
+//                               [--max-layer N] [--no-hidden] [--no-logits]
+//
+// Output layout (one subdirectory per position):
+//   <out>/pos<0>/<boundary>.bin          float32, ggml order (ne[0] fastest)
+//   <out>/pos<0>/manifest.txt            name raw_name ne0 ne1 ne2 ne3 elems
+//   <out>/pos<0>/logits.bin              full vocabulary logits (optional)
+//   <out>/pos<0>/final_hidden.bin        final hidden state (optional)
+// ============================================================================
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <vector>
+#include <cstdint>
 #include <string>
-#include <filesystem>
+#include <vector>
 #include <unordered_map>
 #include <unordered_set>
 #include <mutex>
+#include <filesystem>
+#include <algorithm>
+
 #include "llama.h"
 #include "ggml.h"
 #include "ggml-backend.h"
 
 namespace fs = std::filesystem;
 
-struct TensorDump {
-    std::string name;
+namespace {
+
+struct Dump {
+    std::string boundary;      // our stable name, e.g. "attn_proj"
+    std::string raw_name;      // the ggml node name it came from
+    int layer = -1;
+    int64_t ne[4] = {0, 0, 0, 0};
+    int64_t elems = 0;
     std::vector<float> data;
-    std::vector<int64_t> shape;
-    int pos;
-    int layer;
 };
 
-static std::vector<TensorDump> g_dumps;
-static int g_current_pos = 0;
-static std::string g_out_dir;
-static int g_n_vocab = 128256;
-static std::mutex g_dump_mutex;
-static std::unordered_set<std::string> g_captured_keys;
+std::mutex              g_mu;
+std::vector<Dump>       g_dumps;
+int                     g_pos = 0;
+std::string             g_out_dir;
+int                     g_n_embd  = 0;
+int                     g_n_vocab = 0;
+int                     g_max_layer = -1;   // <0 = all
 
-// Reset the captured set (called between positions)
-void reset_captured_set() {
-    extern std::unordered_set<std::string> g_captured_keys;
-    std::lock_guard<std::mutex> lock(g_dump_mutex);
-    g_captured_keys.clear();
+// Raw llama.cpp node names differ between graph shapes and releases. The match
+// table is ordered most-specific-first, because "attn_out" is a prefix of
+// nothing but "kqv_out" must not be swallowed by an "attn_out" rule.
+struct Rule {
+    const char* needle;
+    const char* boundary;
+};
+
+const Rule kRules[] = {
+    // ---- attention pre-projection (BEFORE O_proj) -------------------------
+    { "kqv_out",        "attn_preproj"   },
+    // ---- attention post-projection (AFTER O_proj) -------------------------
+    { "attn_out",       "attn_proj"      },
+    // ---- query/key/value, post-RoPE ---------------------------------------
+    { "Qcur",           "q"              },
+    { "Kcur",           "k"              },
+    { "Vcur",           "v"              },
+    { "Qcur_roped",     "q"              },
+    { "Kcur_roped",     "k"              },
+    // ---- norms ------------------------------------------------------------
+    { "attn_norm",      "attn_norm"      },
+    { "ffn_norm",       "ffn_norm"       },
+    { "result_norm",    "out_norm"       },
+    // ---- FFN --------------------------------------------------------------
+    { "ffn_gate",       "ffn_gate"       },
+    { "ffn_up",         "ffn_up"         },
+    { "ffn_swiglu",     "ffn_swiglu"     },
+    // llama.cpp names the down-projection RESULT "ffn_out-<L>" (the weight is
+    // ffn_down); both spellings must map to the same Deep2 boundary.
+    { "ffn_out",        "ffn_down"       },
+    { "ffn_down",       "ffn_down"       },
+    // ---- block residual / layer boundaries --------------------------------
+    { "l_out",          "resid2"         },   // block output (residual after FFN)
+    { "ffn_inp",        "attn_resid"     },   // residual AFTER attention (pre-FFN)
+    { "inpL",           "resid_in"       },   // block input (residual entering)
+    { "inp_tokens",     "token_embd"     },
+    { "result_output",  "logits"         },
+};
+
+// Layer index is the suffix after the last '-'. Returns -1 when absent.
+int ExtractLayer(const std::string& n) {
+    const size_t dash = n.rfind('-');
+    if (dash == std::string::npos || dash + 1 >= n.size()) return -1;
+    const std::string tail = n.substr(dash + 1);
+    if (tail.empty()) return -1;
+    for (char c : tail) if (c < '0' || c > '9') return -1;
+    try { return std::stoi(tail); } catch (...) { return -1; }
 }
 
-// Map tensor names to our simplified names
-static std::string simplify_name(const char* name) {
-    if (!name) return "";
-    std::string n(name);
-    
-    // Match llama.cpp tensor names (format: name-layer)
-    // e.g., attn_norm-0, Qcur-0, attn_out-0, ffn_norm-0, ffn_gate-0, ffn_up-0, ffn_swiglu-0, ffn_out-0, l_out-0
-    if (n.find("embd") != std::string::npos && n.find("result") == std::string::npos && n.find("inp_") == std::string::npos) {
-        return "embd";
-    } else if (n.find("attn_norm") != std::string::npos) {
-        return "attn_norm";
-    } else if (n.find("Qcur") != std::string::npos) {
-        return "q";
-    } else if (n.find("Kcur") != std::string::npos) {
-        return "k";
-    } else if (n.find("Vcur") != std::string::npos) {
-        return "v";
-    } else if (n.find("attn_out") != std::string::npos || n.find("kqv_out") != std::string::npos) {
-        return "attn_out";
-    } else if (n.find("ffn_norm") != std::string::npos) {
-        return "ffn_norm";
-    } else if (n.find("ffn_gate") != std::string::npos) {
-        return "gate";
-    } else if (n.find("ffn_up") != std::string::npos) {
-        return "up";
-    } else if (n.find("ffn_swiglu") != std::string::npos) {
-        return "swiglu";
-    } else if (n.find("ffn_out") != std::string::npos) {
-        return "ffn_out";
-    } else if (n.find("l_out") != std::string::npos) {
-        return "resid";
-    } else if (n.find("result_norm") != std::string::npos) {
-        return "out_norm";
-    } else if (n.find("result_output") != std::string::npos) {
-        return "logits";
+const char* MatchBoundary(const std::string& n) {
+    // Longest matching needle wins; ties broken by table order.
+    const char* best = nullptr;
+    size_t best_len = 0;
+    for (const auto& r : kRules) {
+        const size_t len = std::strlen(r.needle);
+        if (len < best_len) continue;
+        if (n.find(r.needle) != std::string::npos) {
+            best = r.boundary;
+            best_len = len;
+        }
     }
-    return "";
+    return best;
 }
 
-// Extract layer index from tensor name (format: name-X where X is layer number)
-static int extract_layer(const char* name) {
-    if (!name) return -1;
-    std::string n(name);
-    
-    // Look for pattern: name-X where X is the layer number
-    size_t dash_pos = n.rfind('-');
-    if (dash_pos != std::string::npos && dash_pos + 1 < n.length()) {
-        std::string layer_str = n.substr(dash_pos + 1);
-        // Check if it's a pure number
-        bool all_digits = true;
-        for (char c : layer_str) {
-            if (!std::isdigit(c)) {
-                all_digits = false;
-                break;
-            }
-        }
-        if (all_digits && !layer_str.empty()) {
-            try {
-                return std::stoi(layer_str);
-            } catch (...) {
-                return -1;
-            }
-        }
-    }
-    
-    // Also check for "blk." pattern (fallback)
-    size_t pos = n.find("blk.");
-    if (pos != std::string::npos) {
-        size_t end = n.find('.', pos + 4);
-        if (end != std::string::npos) {
-            std::string layer_str = n.substr(pos + 4, end - pos - 4);
-            try {
-                return std::stoi(layer_str);
-            } catch (...) {
-                return -1;
-            }
-        }
-    }
-    return -1;
-}
-
-// Callback function for ggml graph execution
-static bool graph_node_callback(struct ggml_tensor * t, bool ask, void * user_data) {
-    (void)user_data;
-    (void)ask;
-    
+bool GraphNodeCallback(ggml_tensor* t, bool ask, void* /*user_data*/) {
+    // (1) ASK SEMANTICS. Only the post-compute callback has valid data.
+    if (ask) return true;
     if (!t || !t->data || !t->name) return true;
-    
-    // DEBUG: Print all tensor names to understand naming
-    static int call_count = 0;
-    static FILE* debug_f = nullptr;
-    if (!debug_f) {
-        debug_f = std::fopen("F:/rawrxd/evidence/deep2_gate_a/ref_bin/debug_callback.txt", "w");
-    }
-    if (debug_f && call_count < 500) {
-        std::fprintf(debug_f, "CALLBACK[%d]: name=%s, type=%d, ne=[%lld,%lld,%lld,%lld]\n", 
-                    call_count, t->name, t->type, t->ne[0], t->ne[1], t->ne[2], t->ne[3]);
-        std::fflush(debug_f);
-        call_count++;
-    }
-    
-    std::string simple_name = simplify_name(t->name);
-    if (simple_name.empty()) return true;
-    
-    int layer = extract_layer(t->name);
-    
-    // Only handle F32 tensors for now
-    if (t->type != GGML_TYPE_F32) {
-        return true;
-    }
-    
-    size_t n_elements = 1;
-    for (int i = 0; i < GGML_MAX_DIMS; i++) {
-        if (t->ne[i] > 1) n_elements *= t->ne[i];
-    }
-    
-    if (n_elements == 0) return true;
-    
-    std::vector<float> data(n_elements);
-    float * src = (float *)t->data;
-    std::memcpy(data.data(), src, n_elements * sizeof(float));
-    
-    // Shape
-    std::vector<int64_t> shape;
-    for (int i = 0; i < GGML_MAX_DIMS; i++) {
-        if (t->ne[i] > 0) shape.push_back(t->ne[i]);
-    }
-    
-    std::string full_name = simple_name;
-    if (layer >= 0) {
-        full_name += "_layer" + std::to_string(layer);
-    }
-    
-    TensorDump dump;
-    dump.name = full_name;
-    dump.data = std::move(data);
-    dump.shape = std::move(shape);
-    dump.pos = g_current_pos;
-    dump.layer = layer;
-    
-    std::lock_guard<std::mutex> lock(g_dump_mutex);
-    g_dumps.push_back(std::move(dump));
-    
+
+    // Activations we want are F32; quantised weights are not boundaries.
+    if (t->type != GGML_TYPE_F32) return true;
+
+    const std::string raw(t->name);
+    // (a) "(view)" nodes are aliases of a real node (Kcur/Qcur viewed into
+    //     head layout for the mask path). They carry no layer suffix, so they
+    //     all landed in an L=-1 bucket and buried the real tensors in
+    //     __dupN noise. The canonical node with a real layer suffix is the
+    //     boundary we want.
+    if (raw.find("(view)") != std::string::npos) return true;
+
+    const char* boundary = MatchBoundary(raw);
+    if (!boundary) return true;
+
+    const int layer = ExtractLayer(raw);
+    if (layer < 0) return true;          // unlayered nodes are not boundaries
+    if (g_max_layer >= 0 && layer > g_max_layer) return true;
+
+    const int64_t ne0 = t->ne[0];
+    const int64_t ne1 = t->ne[1];
+    const int64_t ne2 = t->ne[2];
+    const int64_t ne3 = t->ne[3];
+    const int64_t elems = ggml_nelements(t);
+    if (elems <= 0) return true;
+
+    // Reject absurdly large nodes: the vocabulary logits tensor is exported
+    // explicitly, and anything else this big is not a layer boundary.
+    if (elems > (int64_t) 256 * 1024 * 1024) return true;
+
+    Dump d;
+    d.boundary = boundary;
+    d.raw_name = raw;
+    d.layer    = layer;
+    d.ne[0] = ne0; d.ne[1] = ne1; d.ne[2] = ne2; d.ne[3] = ne3;
+    d.elems    = elems;
+    d.data.resize((size_t) elems);
+    std::memcpy(d.data.data(), t->data, (size_t) elems * sizeof(float));
+
+    std::lock_guard<std::mutex> lk(g_mu);
+    g_dumps.push_back(std::move(d));
     return true;
 }
 
-void print_usage(const char* argv0) {
-    std::fprintf(stderr, "Usage: %s <model.gguf> <tokens_file> <output_dir> [n_vocab]\n", argv0);
-    std::fprintf(stderr, "  tokens_file: text file with space-separated token IDs\n");
-    std::fprintf(stderr, "  output_dir: directory to write ref_*_pos*.bin files\n");
+// Last writer wins per (layer, boundary). When a boundary appears more than
+// once for the same layer (different graph stages / aliases) the later node is
+// the one that survives to the residual stream, which is what we compare.
+std::string Disambiguate(const std::string& base,
+                         const std::unordered_map<std::string, int>& seen) {
+    auto it = seen.find(base);
+    if (it == seen.end()) return base;
+    return base + "__dup" + std::to_string(it->second);
 }
+
+} // namespace
 
 int main(int argc, char* argv[]) {
     if (argc < 4) {
-        print_usage(argv[0]);
+        std::fprintf(stderr,
+            "usage: %s <model.gguf> <tokens_file> <output_dir> "
+            "[--max-layer N] [--no-hidden] [--no-logits]\n", argv[0]);
         return 1;
     }
 
-    const char* model_path = argv[1];
+    const char* model_path  = argv[1];
     const char* tokens_file = argv[2];
     g_out_dir = argv[3];
-    g_n_vocab = argc > 4 ? std::atoi(argv[4]) : 128256;
 
-    // Read token IDs from file
-    FILE* tf = std::fopen(tokens_file, "r");
-    if (!tf) {
-        std::fprintf(stderr, "Failed to open tokens file: %s\n", tokens_file);
-        return 1;
+    bool want_hidden = true;
+    bool want_logits = true;
+    for (int i = 4; i < argc; ++i) {
+        const std::string a = argv[i];
+        if (a == "--max-layer" && i + 1 < argc) {
+            g_max_layer = std::atoi(argv[++i]);
+        } else if (a == "--no-hidden") {
+            want_hidden = false;
+        } else if (a == "--no-logits") {
+            want_logits = false;
+        } else {
+            std::fprintf(stderr, "unknown arg %s\n", a.c_str());
+            return 1;
+        }
     }
-    
+
+    // ---- tokens -----------------------------------------------------------
     std::vector<llama_token> tokens;
-    llama_token tok;
-    while (std::fscanf(tf, "%d", &tok) == 1) {
-        tokens.push_back(tok);
-    }
-    std::fclose(tf);
-    
-    if (tokens.empty()) {
-        std::fprintf(stderr, "No tokens found in file\n");
+    if (FILE* tf = std::fopen(tokens_file, "r")) {
+        int v = 0;
+        while (std::fscanf(tf, "%d", &v) == 1) tokens.push_back((llama_token) v);
+        std::fclose(tf);
+    } else {
+        std::fprintf(stderr, "cannot open tokens file: %s\n", tokens_file);
         return 1;
     }
-    
-    std::printf("Loaded %zu tokens from %s\n", tokens.size(), tokens_file);
+    if (tokens.empty()) {
+        std::fprintf(stderr, "no tokens in %s\n", tokens_file);
+        return 1;
+    }
+    std::printf("tokens: %zu (first=%d last=%d)\n", tokens.size(),
+                (int) tokens.front(), (int) tokens.back());
 
-    // Initialize llama.cpp
+    // ---- model ------------------------------------------------------------
     llama_backend_init();
 
-    // Load model
-    llama_model_params model_params = llama_model_default_params();
-    model_params.n_gpu_layers = 0; // CPU only
-    struct llama_model* model = llama_model_load_from_file(model_path, model_params);
-    if (!model) {
-        std::fprintf(stderr, "Failed to load model: %s\n", model_path);
-        return 1;
-    }
+    llama_model_params mp = llama_model_default_params();
+    mp.n_gpu_layers = 0;                      // CPU: node data is host-valid
 
-    // Create context with callback
-    llama_context_params ctx_params = llama_context_default_params();
-    ctx_params.n_ctx = 1024;
-    ctx_params.n_batch = 1024;
-    ctx_params.embeddings = true;
-    ctx_params.cb_eval = graph_node_callback;
-    ctx_params.cb_eval_user_data = nullptr;
-    
-    struct llama_context* ctx = llama_init_from_model(model, ctx_params);
-    if (!ctx) {
-        std::fprintf(stderr, "Failed to create context\n");
-        llama_model_free(model);
+    llama_model* model = llama_model_load_from_file(model_path, mp);
+    if (!model) {
+        std::fprintf(stderr, "model load failed: %s\n", model_path);
         return 2;
     }
 
-    // Create output directory
-    fs::create_directories(g_out_dir);
+    // (3) dimensions come from the model, never from a constant.
+    g_n_embd  = llama_model_n_embd(model);
+    const llama_vocab* vocab = llama_model_get_vocab(model);
+    g_n_vocab = vocab ? llama_vocab_n_tokens(vocab) : 0;
+    const int n_layer = llama_model_n_layer(model);
 
-    // Process each position
+    std::printf("model: n_embd=%d n_vocab=%d n_layer=%d\n",
+                g_n_embd, g_n_vocab, n_layer);
+    if (g_n_embd <= 0 || g_n_vocab <= 0) {
+        std::fprintf(stderr, "model reported invalid geometry\n");
+        return 3;
+    }
+
+    // ---- context ----------------------------------------------------------
+    llama_context_params cp = llama_context_default_params();
+    cp.n_ctx       = (uint32_t) (tokens.size() > 1024 ? tokens.size() : 1024);
+    cp.n_batch     = (uint32_t) (tokens.size() > 1024 ? tokens.size() : 1024);
+    cp.embeddings  = true;                    // required for embeddings_ith
+    cp.cb_eval     = GraphNodeCallback;
+    cp.cb_eval_user_data = nullptr;
+
+    llama_context* ctx = llama_init_from_model(model, cp);
+    if (!ctx) {
+        std::fprintf(stderr, "context creation failed\n");
+        return 4;
+    }
+
+    std::error_code ec;
+    fs::create_directories(fs::path(g_out_dir), ec);
+
+    // ---- per-position capture --------------------------------------------
     for (size_t pos = 0; pos < tokens.size(); ++pos) {
-        g_current_pos = pos;
-        g_dumps.clear();
+        g_pos = (int) pos;
+        {
+            std::lock_guard<std::mutex> lk(g_mu);
+            g_dumps.clear();
+        }
 
-        // Create batch with single token at correct position
         llama_batch batch = llama_batch_init(1, 0, 1);
         if (!batch.token) {
             std::fprintf(stderr, "llama_batch_init failed at pos %zu\n", pos);
-            return 4;
+            return 5;
         }
-        batch.n_tokens = 1;
-        batch.token[0] = tokens[pos];
-        batch.pos[0] = pos;
+        batch.n_tokens   = 1;
+        batch.token[0]   = tokens[pos];
+        batch.pos[0]     = (llama_pos) pos;
         batch.n_seq_id[0] = 1;
         batch.seq_id[0][0] = 0;
-        batch.logits[0] = 1;
+        batch.logits[0]  = 1;
 
-        // Decode
         if (llama_decode(ctx, batch) != 0) {
             std::fprintf(stderr, "llama_decode failed at pos %zu\n", pos);
             llama_batch_free(batch);
-            return 5;
+            return 6;
         }
 
-        // Save captured intermediate tensors
-        // Use a per-(pos,layer,name) counter so multiple graph stages
-        // (raw GEMV [N] vs reshaped [H,D]) get distinct filenames.
-        std::unordered_map<std::string,int> stage_counter;
-        for (const auto& dump : g_dumps) {
-            std::string base = "ref_pos" + std::to_string(pos) + "_layer" +
-                               std::to_string(dump.layer) + "_" + dump.name;
-            int idx = stage_counter[base]++;
-            std::string fname = base;
-            if (idx > 0) fname += "_stage" + std::to_string(idx);
-            
-            char path[512];
-            std::snprintf(path, sizeof(path), "%s/%s.bin", g_out_dir.c_str(), fname.c_str());
-            FILE* f = std::fopen(path, "wb");
-            if (f) {
-                std::fwrite(dump.data.data(), sizeof(float), dump.data.size(), f);
-                std::fclose(f);
+        std::vector<Dump> captured;
+        {
+            std::lock_guard<std::mutex> lk(g_mu);
+            captured.swap(g_dumps);
+        }
+
+        // ---- M9: synthesize resid_in per layer -----------------------------
+        // The residual stream entering layer L is exactly the block output of
+        // layer L-1 (l_out / resid2): llama.cpp sets inpL = cur at the end of
+        // each block. The block-input node itself is unnamed in the vendored
+        // deepseek2 graph, so we chain resid2_{L-1} -> resid_in_L here. Layer-0
+        // residual is the token embedding (token_embd) when the graph names it.
+        {
+            std::unordered_map<int, Dump> resid2_by_layer;
+            int max_l = -1;
+            for (const auto& d : captured) {
+                if (d.boundary == "resid2") resid2_by_layer[d.layer] = d;
+                if (d.layer > max_l) max_l = d.layer;
             }
-        }
-
-        // Get logits
-        float* logits = llama_get_logits_ith(ctx, 0);
-        if (!logits) {
-            std::fprintf(stderr, "llama_get_logits_ith returned null at pos %zu\n", pos);
-            llama_batch_free(batch);
-            return 6;
-        }
-
-        // Save logits
-        char path[512];
-        std::snprintf(path, sizeof(path), "%s/ref_logits_pos%zu.bin", g_out_dir.c_str(), pos);
-        FILE* f = std::fopen(path, "wb");
-        if (!f) {
-            std::fprintf(stderr, "Failed to open %s\n", path);
-            llama_batch_free(batch);
-            return 6;
-        }
-        size_t written = std::fwrite(logits, sizeof(float), g_n_vocab, f);
-        std::fclose(f);
-        if (written != (size_t)g_n_vocab) {
-            std::fprintf(stderr, "Incomplete write: %zu/%d\n", written, g_n_vocab);
-            return 7;
-        }
-        std::printf("Wrote ref_logits_pos%zu.bin (%d floats)\n", pos, g_n_vocab);
-
-        // Get embeddings (final hidden state before LM-head)
-        const float* embeddings = llama_get_embeddings_ith(ctx, 0);
-        if (embeddings) {
-            std::snprintf(path, sizeof(path), "%s/ref_hidden_pos%zu.bin", g_out_dir.c_str(), pos);
-            f = std::fopen(path, "wb");
-            if (f) {
-                size_t hidden_written = std::fwrite(embeddings, sizeof(float), 3072, f);
-                std::fclose(f);
-                if (hidden_written == 3072) {
-                    std::printf("Wrote ref_hidden_pos%zu.bin (%zu floats)\n", pos, hidden_written);
-                } else {
-                    std::fprintf(stderr, "Incomplete hidden write: %zu/3072\n", hidden_written);
+            std::vector<Dump> synth;
+            for (int L = 1; L <= max_l; ++L) {
+                auto it = resid2_by_layer.find(L - 1);
+                if (it == resid2_by_layer.end()) continue;
+                Dump d;
+                d.boundary = "resid_in";
+                d.raw_name = "derived:resid2_" + std::to_string(L - 1);
+                d.layer    = L;
+                d.ne[0] = it->second.ne[0]; d.ne[1] = it->second.ne[1];
+                d.ne[2] = it->second.ne[2]; d.ne[3] = it->second.ne[3];
+                d.elems    = it->second.elems;
+                d.data     = it->second.data;
+                synth.push_back(std::move(d));
+            }
+            for (const auto& d : captured) {
+                if (d.boundary == "token_embd" && d.layer == 0) {
+                    Dump d0 = d;
+                    d0.boundary = "resid_in";
+                    d0.raw_name = "derived:token_embd";
+                    d0.layer = 0;
+                    synth.push_back(std::move(d0));
+                    break;
                 }
             }
-        } else {
-            std::fprintf(stderr, "llama_get_embeddings_ith returned null at pos %zu\n", pos);
+            captured.insert(captured.end(), synth.begin(), synth.end());
         }
 
+        char dirbuf[64];
+        std::snprintf(dirbuf, sizeof(dirbuf), "pos%zu", pos);
+        const fs::path dir = fs::path(g_out_dir) / dirbuf;
+        fs::create_directories(dir, ec);
+
+        // Manifest. Shape is recorded so an alignment step can prove that the
+        // reference and native tensors describe the same elements.
+        std::string manifest;
+        manifest += "# boundary raw_name layer ne0 ne1 ne2 ne3 elems bytes\n";
+
+        std::unordered_map<std::string, int> seen;
+        int written = 0;
+        for (auto& d : captured) {
+            // Skip the global logits tensor here; it is written explicitly.
+            if (d.boundary == "logits") continue;
+
+            const std::string key =
+                d.boundary + "_L" + std::to_string(d.layer);
+            const std::string fname = Disambiguate(key, seen) + ".bin";
+            seen[key]++;
+
+            const fs::path out = dir / fname;
+            FILE* f = std::fopen(out.string().c_str(), "wb");
+            if (!f) {
+                std::fprintf(stderr, "cannot write %s\n", out.string().c_str());
+                continue;
+            }
+            const size_t n = (size_t) d.elems;
+            const size_t w = std::fwrite(d.data.data(), sizeof(float), n, f);
+            std::fclose(f);
+            if (w != n) {
+                std::fprintf(stderr, "short write on %s\n", out.string().c_str());
+                continue;
+            }
+
+            char line[512];
+            std::snprintf(line, sizeof(line),
+                          "%s %s %d %lld %lld %lld %lld %lld %lld\n",
+                          fname.c_str(), d.raw_name.c_str(), d.layer,
+                          (long long) d.ne[0], (long long) d.ne[1],
+                          (long long) d.ne[2], (long long) d.ne[3],
+                          (long long) d.elems, (long long) (n * sizeof(float)));
+            manifest += line;
+            ++written;
+        }
+        if (FILE* mf = std::fopen((dir / "manifest.txt").string().c_str(), "wb")) {
+            std::fwrite(manifest.data(), 1, manifest.size(), mf);
+            std::fclose(mf);
+        }
+
+        // ---- logits ------------------------------------------------------
+        if (want_logits) {
+            const float* logits = llama_get_logits_ith(ctx, 0);
+            if (!logits) {
+                std::fprintf(stderr, "get_logits_ith null at pos %zu\n", pos);
+            } else {
+                const fs::path out = dir / "logits.bin";
+                if (FILE* f = std::fopen(out.string().c_str(), "wb")) {
+                    const size_t w = std::fwrite(logits, sizeof(float),
+                                                 (size_t) g_n_vocab, f);
+                    std::fclose(f);
+                    if (w != (size_t) g_n_vocab)
+                        std::fprintf(stderr, "short logits write pos %zu\n", pos);
+                }
+            }
+        }
+
+        // ---- final hidden ------------------------------------------------
+        if (want_hidden) {
+            const float* hid = llama_get_embeddings_ith(ctx, 0);
+            if (!hid) {
+                std::fprintf(stderr, "get_embeddings_ith null at pos %zu\n", pos);
+            } else {
+                const fs::path out = dir / "final_hidden.bin";
+                if (FILE* f = std::fopen(out.string().c_str(), "wb")) {
+                    const size_t w = std::fwrite(hid, sizeof(float),
+                                                 (size_t) g_n_embd, f);
+                    std::fclose(f);
+                    if (w != (size_t) g_n_embd)
+                        std::fprintf(stderr, "short hidden write pos %zu\n", pos);
+                }
+            }
+        }
+
+        std::printf("pos %zu: %d boundary tensors\n", pos, written);
         llama_batch_free(batch);
     }
 

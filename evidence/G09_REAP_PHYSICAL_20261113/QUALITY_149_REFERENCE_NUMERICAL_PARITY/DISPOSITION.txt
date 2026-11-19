@@ -1,0 +1,18 @@
+DISPOSITION QUALITY_149_REFERENCE_NUMERICAL_PARITY
+PROMOTE=0 CERTIFIED=0 CROSS_SHA=0 COHERENT_USEFUL=0
+
+DONE:
+  - Wired RAWRXD_STAGE_DIGEST onto product K2 path
+    (runK2NativeStreamPartial / ForwardMLALayers + KimiK2Router + lm_head ARGMAX)
+  - Rebuilt digest EXE SHA=A34235EF028343F6504DBD1F6A946AB05DECCB7FCC0CCD0521C391909BFBC31E
+    ≠ sealed 23978A6A; CROSS_SHA=0
+  - Emitted layer0–2 / token0 digests (see DIGESTS_EXTRACTED.txt)
+  - Confirmed K2 sigmoid×scale router (w sum≈2.827); L0 dense
+
+NOT_DONE:
+  - FIRST_DIVERGENT_OP (no reference tensors)
+  - REFERENCE_GENERATION (CPU_REPACK / mmap stall / VK OOM)
+  - retain-8 (held)
+
+GATE=REFERENCE_DECODE_PASS (--no-repack completing ≥1 greedy token)
+OR offline layer0 oracle with matching digests

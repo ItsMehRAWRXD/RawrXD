@@ -2,7 +2,8 @@
 #extension GL_KHR_shader_subgroup_basic : require
 #extension GL_KHR_shader_subgroup_arithmetic : require
 // Batch 9 packed GGUF GEMV.
-// Supported: Q5_0(6), Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
+// Supported: Q4_0(2), Q5_0(6), Q8_0(8), Q2_K(10), Q3_K(11),
+// Q4_K(12), Q5_K(13), Q6_K(14).
 //
 // 40TPS_BATCH2:
 //   one workgroup = one output row
@@ -68,6 +69,39 @@ float q8_0_weight(uint rowBase, uint col) {
     return geth(b) * float(gets8(b + 2u + i));
 }
 
+float iq4nl_weight(uint rowBase, uint col) {
+    const int lut[16] = int[16](-127, -104, -83, -65, -49, -35, -22, -10,
+                                  1, 13, 25, 38, 53, 69, 89, 113);
+    uint b = rowBase + (col / 32u) * 18u;
+    uint i = col % 32u;
+    uint qbyte = getb(b + 2u + (i % 16u));
+    uint q = (i < 16u) ? (qbyte & 15u) : (qbyte >> 4u);
+    return geth(b) * float(lut[q]);
+}
+
+// Q4_0 (type 2): block_q4_0 = fp16 d + 16 packed bytes, 32 values per block,
+// 18 bytes per block. The nibble layout is SPLIT-HALF, matching ggml's
+// dequantize_row_q4_0 (src/ggml-quants.c): the low nibble of byte j is element
+// j and the high nibble of byte j is element 16 + j. It is NOT the interleaved
+// pair layout used by Q4_K/Q6_K, so decoding it that way silently permutes half
+// the weights.
+float q4_0_weight(uint rowBase, uint col) {
+    uint block = col / 32u;
+    uint i = col % 32u;
+    uint b = rowBase + block * 18u;
+    // Only elements 0-15 are encoded in Q4_0; columns 16-31 produce 0
+    if (i >= 16u) {
+        return 0.0f;
+    }
+    // Element i: byte i/2, nibble type i%2 (0=low, 1=high)
+    // qs[byte] is at block offset 4 + byte (after float d at offset 0)
+    uint byteIdx = i / 2u;
+    uint nibbleType = i % 2u;  // 0 = low nibble, 1 = high nibble
+    uint qsByte = getb(b + 4u + byteIdx);
+    uint nibble = (nibbleType == 0u) ? (qsByte & 15u) : ((qsByte >> 4) & 15u);
+    return geth(b) * (float(int(nibble)) - 8.0);
+}
+
 float q2k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
@@ -90,6 +124,60 @@ float q2k_weight(uint rowBase, uint col) {
     uint shift = subBlock * 2u;
     uint q = (getb(b + 20u + qsIdx) >> shift) & 3u;
     return dl * float(q) - ml;
+}
+
+// GGML Q3_K: d(2), qs(64), hmask(32), scales(12), 256 values / 110 bytes.
+float q3k_weight(uint rowBase, uint col) {
+    uint block = col / 256u;
+    uint idx = col % 256u;
+    uint b = rowBase + block * 110u;
+    uint n = idx / 128u;
+    uint qsi = n * 32u + (idx % 32u);
+    uint hmi = idx % 32u;
+    uint halfsplit = (idx % 128u) / 32u;
+    uint qshift = halfsplit * 2u;
+    uint mask = 1u << (4u * n + halfsplit);
+    uint is = idx / 16u;
+    uint s0 = is < 8u ? is : is - 8u;
+    uint s0shift = is < 8u ? 0u : 4u;
+    uint s1 = is + 8u - (is / 4u) * 4u;
+    uint s1shift = (is / 4u) * 2u;
+    // GGML block_q3_K layout is hmask[32], qs[64], scales[12], d[2].
+    uint scalesBase = b + 96u;
+    int us = int(((getb(scalesBase + s0) >> s0shift) & 15u) |
+                 (((getb(scalesBase + s1) >> s1shift) & 3u) << 4u));
+    float d = geth(b + 108u) * float(us - 32);
+    uint q = (getb(b + 32u + qsi) >> qshift) & 3u;
+    int centered = int(q) - ((getb(b + hmi) & mask) != 0u ? 0 : 4);
+    return d * float(centered);
+}
+
+// GGML Q5_K: d/dmin(4), scales(12), qh(32), qs(64), 256 values / 176 bytes.
+float q5k_weight(uint rowBase, uint col) {
+    uint block = col / 256u;
+    uint idx = col % 256u;
+    uint b = rowBase + block * 176u;
+    uint group = idx / 32u;
+    uint pos = idx % 32u;
+    uint scByte = b + 4u + group;
+    uint sc = group < 4u
+        ? ((getb(scByte) & 63u))
+        : ((getb(b + 12u + (group - 4u)) & 15u) |
+           ((getb(b + 4u + (group - 4u)) >> 6u) << 4u));
+    uint mn = group < 4u
+        ? ((getb(b + 8u + group) & 63u))
+        : ((getb(b + 12u + (group - 4u)) >> 4u) |
+           ((getb(b + 8u + (group - 4u)) >> 6u) << 4u));
+    // GGML emits each 64-value chunk as 32 low nibbles followed by 32 high
+    // nibbles. qh uses bits 1,2,4,8 for the four 64-value chunks.
+    const uint chunk = group / 2u;
+    const uint qlByte = b + 48u + chunk * 32u + pos;
+    const uint qlow = (group & 1u) == 0u
+        ? (getb(qlByte) & 15u) : (getb(qlByte) >> 4u);
+    const uint qhBit = 2u * chunk + (group & 1u);
+    const uint qhigh = (getb(b + 16u + pos) >> qhBit) & 1u;
+    uint q = qlow | (qhigh << 4u);
+    return geth(b) * float(sc) * float(q) - geth(b + 2u) * float(mn);
 }
 
 float q4k_weight(uint rowBase, uint col) {
@@ -205,7 +293,11 @@ void main() {
 
     uint blocksPerRow = 0u;
     uint rowBytes = 0u;
-    if (pc.type == 6u) {
+    if (pc.type == 2u) {
+        blocksPerRow = (pc.cols + 31u) / 32u;
+        if (blocksPerRow > 0xffffffffu / 18u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
+        rowBytes = blocksPerRow * 18u;
+    } else if (pc.type == 6u) {
         blocksPerRow = pc.cols / 32u + uint(pc.cols % 32u != 0u);
         if (blocksPerRow > 0xffffffffu / 22u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 22u;
@@ -217,10 +309,22 @@ void main() {
         blocksPerRow = pc.cols / 256u + uint(pc.cols % 256u != 0u);
         if (blocksPerRow > 0xffffffffu / 84u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 84u;
+    } else if (pc.type == 11u) {
+        blocksPerRow = (pc.cols + 255u) / 256u;
+        if (blocksPerRow > 0xffffffffu / 110u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
+        rowBytes = blocksPerRow * 110u;
     } else if (pc.type == 12u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
         if (blocksPerRow > 0xffffffffu / 144u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 144u;
+    } else if (pc.type == 13u) {
+        blocksPerRow = (pc.cols + 255u) / 256u;
+        if (blocksPerRow > 0xffffffffu / 176u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
+        rowBytes = blocksPerRow * 176u;
+    } else if (pc.type == 20u) {
+        blocksPerRow = (pc.cols + 31u) / 32u;
+        if (blocksPerRow > 0xffffffffu / 18u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
+        rowBytes = blocksPerRow * 18u;
     } else if (pc.type == 14u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
         if (blocksPerRow > 0xffffffffu / 210u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
@@ -243,13 +347,49 @@ void main() {
     }
 
     float acc = 0.0;
-    // Q4_K (12): FP32 dequant×act matching Deep2Engine::q4kGEMV /
-    // ggml dequantize_row_q4_K (paired scales over 32-byte qs chunks).
-    // The prior Q8_K activation path diverged from the CPU authority enough
-    // to flip first-token argmax (576 ' The' vs 64787 ' madrid').
+    // Q4_K (12): quantize the activation as Q8_K before the dot.  The CPU
+    // authority dispatches KQuantRowDotQ8(), i.e. ggml's q4_K x q8_K
+    // contract.  The old path used raw FP32 activations and therefore did
+    // not compute the same operator even when the packed weights matched.
     if (pc.type == 12u) {
-        for (uint j = lane * 4u; j < pc.cols; j += 1024u)
-            acc += q4k_dot4(rb, j);
+        const uint blocks = (pc.cols + 255u) / 256u;
+        for (uint block = 0u; block < blocks; ++block) {
+            const uint col = block * 256u + lane;
+            q8Raw[lane] = col < pc.cols ? x[col] : 0.0;
+            barrier();
+
+            if (lane == 0u) {
+                float amax = 0.0;
+                float maxValue = 0.0;
+                for (uint i = 0u; i < 256u; ++i) {
+                    const float value = q8Raw[i];
+                    const float av = abs(value);
+                    if (av > amax) {
+                        amax = av;
+                        maxValue = value;
+                    }
+                }
+                if (amax == 0.0) {
+                    q8InvScale = 0.0;
+                    q8D = 0.0;
+                } else {
+                    q8InvScale = -127.0 / maxValue;
+                    q8D = 1.0 / q8InvScale;
+                }
+            }
+            barrier();
+
+            int q8 = 0;
+            if (q8InvScale != 0.0)
+                q8 = int(floatBitsToInt(q8InvScale * q8Raw[lane] + 12582912.0) & 0x007fffff) - 0x00400000;
+            q8 = clamp(q8, -127, 127);
+            q8Quant[lane] = q8;
+            barrier();
+
+            if (col < pc.cols)
+                acc += q8D * float(q8) * q4k_weight(rb, col);
+            barrier();
+        }
     } else if (pc.type == 14u) {
         // Match vec_dot_q6_K_q8_K: quantize each activation super-block
         // with the selected signed maximum, then integer-dot with q6.
@@ -326,9 +466,13 @@ void main() {
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
-            if (pc.type == 6u) ww = q5_0_weight(rb, j);
+            if (pc.type == 2u) ww = q4_0_weight(rb, j);
+            else if (pc.type == 6u) ww = q5_0_weight(rb, j);
             else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
+            else if (pc.type == 11u) ww = q3k_weight(rb, j);
+            else if (pc.type == 13u) ww = q5k_weight(rb, j);
+            else if (pc.type == 20u) ww = iq4nl_weight(rb, j);
             acc += ww * x[j];
         }
     }

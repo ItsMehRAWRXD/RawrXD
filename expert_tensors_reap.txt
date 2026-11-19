@@ -1,0 +1,662 @@
+===FILE F:/OllamaModels/blobs/sha256-b8371deb0dfd3efaee090eb886d7d435f94fb28a3a54692f4326c65b67b1da24 TOTAL 814
+EXPERT_COUNT 329
+EXP 'blk.1.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.1.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.1.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.1.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.1.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.1.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.1.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.2.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.2.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.2.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.2.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.2.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.2.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.2.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.3.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.3.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.3.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.3.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.3.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.3.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.3.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.4.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.4.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.4.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.4.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.4.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.4.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.4.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.5.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.5.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.5.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.5.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.5.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.5.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.5.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.6.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.6.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.6.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.6.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.6.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.6.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.6.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.7.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.7.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.7.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.7.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.7.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.7.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.7.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.8.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.8.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.8.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.8.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.8.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.8.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.8.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.9.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.9.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.9.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.9.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.9.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.9.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.9.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.10.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.10.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.10.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.10.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.10.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.10.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.10.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.11.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.11.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.11.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.11.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.11.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.11.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.11.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.12.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.12.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.12.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.12.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.12.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.12.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.12.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.13.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.13.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.13.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.13.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.13.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.13.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.13.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.14.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.14.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.14.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.14.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.14.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.14.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.14.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.15.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.15.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.15.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.15.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.15.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.15.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.15.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.16.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.16.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.16.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.16.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.16.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.16.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.16.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.17.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.17.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.17.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.17.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.17.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.17.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.17.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.18.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.18.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.18.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.18.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.18.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.18.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.18.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.19.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.19.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.19.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.19.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.19.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.19.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.19.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.20.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.20.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.20.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.20.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.20.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.20.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.20.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.21.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.21.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.21.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.21.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.21.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.21.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.21.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.22.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.22.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.22.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.22.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.22.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.22.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.22.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.23.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.23.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.23.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.23.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.23.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.23.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.23.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.24.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.24.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.24.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.24.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.24.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.24.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.24.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.25.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.25.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.25.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.25.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.25.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.25.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.25.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.26.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.26.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.26.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.26.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.26.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.26.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.26.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.27.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.27.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.27.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.27.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.27.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.27.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.27.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.28.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.28.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.28.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.28.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.28.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.28.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.28.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.29.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.29.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.29.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.29.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.29.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.29.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.29.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.30.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.30.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.30.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.30.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.30.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.30.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.30.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.31.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.31.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.31.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.31.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.31.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.31.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.31.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.32.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.32.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.32.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.32.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.32.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.32.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.32.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.33.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.33.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.33.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.33.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.33.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.33.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.33.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.34.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.34.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.34.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.34.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.34.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.34.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.34.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.35.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.35.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.35.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.35.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.35.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.35.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.35.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.36.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.36.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.36.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.36.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.36.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.36.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.36.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.37.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.37.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.37.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.37.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.37.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.37.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.37.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.38.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.38.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.38.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.38.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.38.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.38.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.38.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.39.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.39.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.39.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.39.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.39.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.39.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=12 ne=110100480 nb=61931520
+EXP 'blk.39.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.40.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.40.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.40.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.40.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.40.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.40.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.40.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.41.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.41.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.41.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.41.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.41.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.41.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.41.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.42.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.42.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.42.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.42.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.42.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.42.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.42.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.43.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.43.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.43.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.43.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.43.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.43.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.43.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.44.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.44.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.44.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.44.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.44.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.44.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.44.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.45.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.45.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.45.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.45.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.45.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.45.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.45.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.46.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.46.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.46.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.46.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.46.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.46.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.46.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.47.exp_probs_b.bias' shape=[np.uint64(35)] type=0 ne=35 nb=140
+EXP 'blk.47.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.47.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.47.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.47.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.47.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(35)] type=30 ne=110100480 nb=220200960
+EXP 'blk.47.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+===FILE F:/OllamaModels/blobs/sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8 TOTAL 814
+EXPERT_COUNT 329
+EXP 'blk.1.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.1.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.1.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.1.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.1.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.1.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.1.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.2.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.2.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.2.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.2.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.2.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.2.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.2.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.3.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.3.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.3.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.3.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.3.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.3.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.3.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.4.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.4.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.4.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.4.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.4.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.4.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.4.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.5.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.5.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.5.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.5.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.5.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.5.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.5.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.6.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.6.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.6.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.6.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.6.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.6.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.6.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.7.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.7.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.7.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.7.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.7.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.7.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.7.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.8.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.8.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.8.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.8.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.8.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.8.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.8.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.9.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.9.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.9.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.9.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.9.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.9.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.9.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.10.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.10.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.10.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.10.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.10.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.10.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.10.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.11.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.11.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.11.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.11.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.11.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.11.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.11.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.12.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.12.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.12.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.12.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.12.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.12.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.12.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.13.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.13.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.13.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.13.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.13.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.13.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.13.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.14.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.14.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.14.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.14.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.14.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.14.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.14.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.15.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.15.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.15.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.15.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.15.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.15.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.15.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.16.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.16.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.16.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.16.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.16.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.16.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.16.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.17.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.17.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.17.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.17.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.17.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.17.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.17.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.18.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.18.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.18.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.18.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.18.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.18.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.18.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.19.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.19.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.19.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.19.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.19.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.19.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.19.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.20.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.20.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.20.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.20.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.20.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.20.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.20.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.21.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.21.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.21.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.21.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.21.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.21.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.21.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.22.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.22.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.22.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.22.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.22.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.22.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.22.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.23.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.23.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.23.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.23.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.23.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.23.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.23.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.24.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.24.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.24.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.24.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.24.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.24.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.24.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.25.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.25.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.25.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.25.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.25.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.25.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.25.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.26.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.26.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.26.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.26.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.26.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.26.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.26.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.27.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.27.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.27.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.27.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.27.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.27.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.27.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.28.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.28.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.28.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.28.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.28.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.28.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.28.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.29.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.29.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.29.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.29.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.29.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.29.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.29.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.30.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.30.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.30.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.30.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.30.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.30.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.30.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.31.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.31.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.31.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.31.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.31.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.31.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.31.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.32.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.32.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.32.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.32.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.32.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.32.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.32.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.33.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.33.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.33.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.33.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.33.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.33.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.33.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.34.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.34.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.34.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.34.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.34.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.34.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.34.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.35.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.35.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.35.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.35.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.35.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.35.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.35.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.36.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.36.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.36.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.36.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.36.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.36.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.36.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.37.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.37.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.37.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.37.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.37.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.37.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.37.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.38.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.38.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.38.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.38.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.38.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.38.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.38.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.39.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.39.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.39.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.39.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.39.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.39.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=12 ne=805306368 nb=452984832
+EXP 'blk.39.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.40.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.40.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.40.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.40.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.40.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.40.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.40.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.41.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.41.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.41.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.41.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.41.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.41.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.41.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.42.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.42.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.42.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.42.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.42.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.42.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.42.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.43.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.43.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.43.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.43.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.43.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.43.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.43.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.44.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.44.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.44.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.44.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.44.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.44.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.44.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.45.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.45.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.45.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.45.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.45.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.45.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.45.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.46.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.46.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.46.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.46.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.46.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.46.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.46.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.47.exp_probs_b.bias' shape=[np.uint64(256)] type=0 ne=256 nb=1024
+EXP 'blk.47.ffn_down_exps.weight' shape=[np.uint64(1024), np.uint64(3072), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.47.ffn_down_shexp.weight' shape=[np.uint64(1024), np.uint64(3072)] type=8 ne=3145728 nb=3342336
+EXP 'blk.47.ffn_gate_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.47.ffn_gate_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336
+EXP 'blk.47.ffn_up_exps.weight' shape=[np.uint64(3072), np.uint64(1024), np.uint64(256)] type=30 ne=805306368 nb=1610612736
+EXP 'blk.47.ffn_up_shexp.weight' shape=[np.uint64(3072), np.uint64(1024)] type=8 ne=3145728 nb=3342336

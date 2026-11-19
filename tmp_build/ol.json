@@ -1,0 +1,1 @@
+{"model":"reap16-glm-4_7-flash:latest","messages":[{"role":"user","content":"Print numbers 1 to 5, one per line. Code only."}],"stream":false,"max_tokens":120}

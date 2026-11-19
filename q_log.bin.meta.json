@@ -1,0 +1,1 @@
+{"dtype":"f32","layout":"contiguous","step_prefix":"u64","vocab":102400,"steps":2,"model_sha256":"5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046","boundary":"pre_sampling_logits"}

@@ -1,0 +1,6 @@
+﻿# Qwen36 runtime proof excerpts (logs gitignored as *.log)
+[PHYSICAL_INVENTORY] shards=1 tensors=733 disk=21166757728 routed=19503513600 keep=1652255232 E=256 bpe=76185600 
+apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[Deep2Engine] Mamba-2 SSM: 30 
+[SSM_FATAL] layer=0 missing required Mamba-2 SSM tensors (hasSSM=1 ssmIn=0000000000000000 ssmOut=0000029CDC971060 
+[B3_ABORT] prefill exception at pos=0: SSM missing required Mamba-2 tensors
+[AGENT] GENERATION_RECEIPT prompt=1 generated=0 completed=0 cancelled=0 stop_reason=12 stop=EXCEPTION

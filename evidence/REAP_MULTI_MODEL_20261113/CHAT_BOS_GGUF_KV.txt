@@ -1,0 +1,19 @@
+﻿magic=GGUF ver=3 tensors=288 kv=44
+general.architecture = 'minimax-m2'
+general.name = 'MiniMax M2.7'
+minimax-m2.block_count = 62
+minimax-m2.context_length = 196608
+minimax-m2.embedding_length = 3072
+minimax-m2.feed_forward_length = 1536
+minimax-m2.attention.head_count = 48
+minimax-m2.attention.head_count_kv = 8
+minimax-m2.expert_count = 256
+minimax-m2.expert_used_count = 8
+minimax-m2.expert_gating_func = 2
+minimax-m2.attention.key_length = 128
+minimax-m2.expert_feed_forward_length = 1536
+minimax-m2.rope.dimension_count = 64
+tokenizer.ggml.pre = 'minimax-m2'
+tokenizer.ggml.bos_token_id = 200034
+tokenizer.ggml.eos_token_id = 200020
+tokenizer.chat_template LEN=6512

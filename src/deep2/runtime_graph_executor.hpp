@@ -29,6 +29,10 @@
 #include <cstdint>
 #include <cstddef>
 #include <chrono>
+#include <atomic>
+#include <functional>
+#include <memory>
+#include <mutex>
 #include <map>
 #include <optional>
 #include <string>
@@ -112,6 +116,23 @@ struct BindStats {
     double cold_start_ms = 0, steady_kernel_ms = 0, dispatch_ms = 0, total_ms = 0;
 };
 
+// Request-owned execution state.  This is deliberately independent of Qt and
+// of the process-wide Vulkan device: callers can cancel or bound one request
+// without tearing down shared model/device state.
+struct ExecutionContext {
+    std::string request_id;
+    std::string model_id;
+    uint32_t device_index = 0;
+    std::function<bool(uint32_t)> device_admission;
+    size_t memory_budget_bytes = 0;
+    std::shared_ptr<std::atomic_size_t> reserved_memory_bytes;
+    size_t reservation_bytes = 0;
+    std::shared_ptr<std::atomic_bool> cancel;
+    std::function<bool(size_t)> memory_admission;
+    std::function<void()> gpu_completion_wait;
+    std::function<bool()> synchronization_ready;
+};
+
 class Executor {
 public:
     Executor() = default;
@@ -131,6 +152,22 @@ public:
 
     // Run one token at `position`. Returns false on any kernel failure.
     bool ExecuteToken(uint32_t token, size_t position);
+    bool ExecuteToken(uint32_t token, size_t position,
+                      std::shared_ptr<const ExecutionContext> context) {
+        std::lock_guard<std::mutex> guard(invocation_mutex_);
+        SetExecutionContext(std::move(context));
+        const bool ok = ExecuteToken(token, position);
+        ClearExecutionContext();
+        return ok;
+    }
+
+    void SetExecutionContext(std::shared_ptr<const ExecutionContext> context) {
+        execution_context_ = std::move(context);
+    }
+    void ClearExecutionContext() { execution_context_.reset(); }
+    std::shared_ptr<const ExecutionContext> ExecutionContextState() const {
+        return execution_context_;
+    }
 
     // RAWRXD_DEEP2_D1_BATCHED_PREFILL: multi-token prefill. Ops run
     // op-major / token-minor: every Linear op queues one dot PER TOKEN into a
@@ -458,6 +495,18 @@ private:
           std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
       };
       std::vector<SsmWeightCache> ssm_weights_;
+
+      // Weight tensors are immutable after Bind, but OpRmsNorm re-ran
+      // DequantPrefix on the same slot for every token in a prefill batch,
+      // i.e. P dequantizations per layer for identical bytes. This cache holds
+      // the dequantized FP32 form of a slot for the life of the executor, so
+      // the element-wise path reads it once. Keyed by tensor slot; a cached
+      // entry is only reused when it already covers the requested length.
+      std::unordered_map<int32_t, std::vector<float>> dequant_cache_;
+      // Returns the dequantized FP32 form of `slot`, decoding it at most once.
+      // `need` is the number of elements the caller requires; a cached vector
+      // shorter than that is re-decoded. Returns false on decode failure.
+      bool DequantCached(int32_t slot, size_t need, std::vector<float>& out);
       // Optional SSM profiling counters. They remain dormant unless
       // DEEP2_SSM_PROFILE=1 is set, so production execution has no logging
       // cost while controlled runs can separate cache and recurrent work.
@@ -492,6 +541,8 @@ private:
     std::vector<OpTrace> op_traces_;
     bool trace_ops_ = false;
     bool trace_capture_values_ = false;
+    std::shared_ptr<const ExecutionContext> execution_context_;
+    mutable std::mutex invocation_mutex_;
 
     // RAWRXD_DEEP2_STRATA_S01..S08: expert residency ledger + policy switches.
     Strata::ExpertResidencyLedger strata_ledger_;

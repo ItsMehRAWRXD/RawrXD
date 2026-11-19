@@ -1,0 +1,25 @@
+﻿# MiniMax M2.7 physical retain budget (Batch 03 item 11)
+ORIGINAL_BYTES=138342384448
+EXPERT_BYTES=135725580288
+NON_EXPERT_BYTES=2608516096
+EXPERTS_PER_LAYER=256
+MOE_LAYERS=61
+TOP_K=8
+BYTES_PER_EXPERT_ALL_LAYERS=530178048
+
+# BuildPhysicalReducePlan: retained = max(topK, (budget-keep)/bytesPerExpertAllLayers)
+# Measured --target 30GB/8:
+#   target_ws=18146955085 keep=2608516096 -> retained=29
+ADMISSIBLE_TABLE (disk/WS proxy):
+  8GB  -> retained~11 (topkOk)
+  16GB -> retained~27
+  30GB -> retained=29 (MEASURED)
+  32GB -> retained~59
+  48GB -> retained~92
+  64GB -> retained~124
+FLOOR: retained >= top-k 8
+POLICY: BUDGET_UNIFORM_UNCERTIFIED (unless RAWRXD_REAP_RETAINED override)
+SELECTED_RUN: --target 30GB/8 (budget-admissible; MEASURED retained=29)
+OPTIONAL_HARDGATE: RAWRXD_REAP_RETAINED=8 for explicit retain-8 mask
+EXE_SHA256=C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16
+PROMOTE=0

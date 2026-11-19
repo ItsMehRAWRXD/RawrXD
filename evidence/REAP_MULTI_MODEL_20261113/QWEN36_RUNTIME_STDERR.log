@@ -1,0 +1,173 @@
+[MOE_KEYS_DIAG] Scanning 37 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   qwen35moe.attention.head_count = 16
+[MOE_KEYS_DIAG]   qwen35moe.attention.head_count_kv = 2
+[MOE_KEYS_DIAG]   qwen35moe.attention.key_length = 256
+[MOE_KEYS_DIAG]   qwen35moe.attention.layer_norm_rms_epsilon = 1e-06
+[MOE_KEYS_DIAG]   qwen35moe.attention.value_length = 256
+[MOE_KEYS_DIAG]   qwen35moe.block_count = 40
+[MOE_KEYS_DIAG]   qwen35moe.context_length = 262144
+[MOE_KEYS_DIAG]   qwen35moe.embedding_length = 2048
+[MOE_KEYS_DIAG]   qwen35moe.expert_count = 256
+[MOE_KEYS_DIAG]   qwen35moe.expert_feed_forward_length = 512
+[MOE_KEYS_DIAG]   qwen35moe.expert_shared_feed_forward_length = 512
+[MOE_KEYS_DIAG]   qwen35moe.expert_used_count = 8
+[MOE_KEYS_DIAG]   qwen35moe.full_attention_interval = 4
+[MOE_KEYS_DIAG]   qwen35moe.rope.dimension_count = 64
+[MOE_KEYS_DIAG]   qwen35moe.rope.freq_base = 1e+07
+[MOE_KEYS_DIAG]   qwen35moe.ssm.conv_kernel = 4
+[MOE_KEYS_DIAG]   qwen35moe.ssm.group_count = 16
+[MOE_KEYS_DIAG]   qwen35moe.ssm.inner_size = 4096
+[MOE_KEYS_DIAG]   qwen35moe.ssm.state_size = 128
+[MOE_KEYS_DIAG]   qwen35moe.ssm.time_step_rank = 32
+[PHYSICAL_INVENTORY] shards=1 tensors=733 disk=21166757728 routed=19503513600 keep=1652255232 E=256 bpe=76185600 budget=610369188 retained=8 repacked=2261740032 policy=BUDGET_UNIFORM_UNCERTIFIED
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 37 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   qwen35moe.attention.head_count = 16
+[MOE_KEYS_DIAG]   qwen35moe.attention.head_count_kv = 2
+[MOE_KEYS_DIAG]   qwen35moe.attention.key_length = 256
+[MOE_KEYS_DIAG]   qwen35moe.attention.layer_norm_rms_epsilon = 1e-06
+[MOE_KEYS_DIAG]   qwen35moe.attention.value_length = 256
+[MOE_KEYS_DIAG]   qwen35moe.block_count = 40
+[MOE_KEYS_DIAG]   qwen35moe.context_length = 262144
+[MOE_KEYS_DIAG]   qwen35moe.embedding_length = 2048
+[MOE_KEYS_DIAG]   qwen35moe.expert_count = 256
+[MOE_KEYS_DIAG]   qwen35moe.expert_feed_forward_length = 512
+[MOE_KEYS_DIAG]   qwen35moe.expert_shared_feed_forward_length = 512
+[MOE_KEYS_DIAG]   qwen35moe.expert_used_count = 8
+[MOE_KEYS_DIAG]   qwen35moe.full_attention_interval = 4
+[MOE_KEYS_DIAG]   qwen35moe.rope.dimension_count = 64
+[MOE_KEYS_DIAG]   qwen35moe.rope.freq_base = 1e+07
+[MOE_KEYS_DIAG]   qwen35moe.ssm.conv_kernel = 4
+[MOE_KEYS_DIAG]   qwen35moe.ssm.group_count = 16
+[MOE_KEYS_DIAG]   qwen35moe.ssm.inner_size = 4096
+[MOE_KEYS_DIAG]   qwen35moe.ssm.state_size = 128
+[MOE_KEYS_DIAG]   qwen35moe.ssm.time_step_rank = 32
+[MOE_KEYS_DIAG] Scanning 37 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   qwen35moe.attention.head_count = 16
+[MOE_KEYS_DIAG]   qwen35moe.attention.head_count_kv = 2
+[MOE_KEYS_DIAG]   qwen35moe.attention.key_length = 256
+[MOE_KEYS_DIAG]   qwen35moe.attention.layer_norm_rms_epsilon = 1e-06
+[MOE_KEYS_DIAG]   qwen35moe.attention.value_length = 256
+[MOE_KEYS_DIAG]   qwen35moe.block_count = 40
+[MOE_KEYS_DIAG]   qwen35moe.context_length = 262144
+[MOE_KEYS_DIAG]   qwen35moe.embedding_length = 2048
+[MOE_KEYS_DIAG]   qwen35moe.expert_count = 256
+[MOE_KEYS_DIAG]   qwen35moe.expert_feed_forward_length = 512
+[MOE_KEYS_DIAG]   qwen35moe.expert_shared_feed_forward_length = 512
+[MOE_KEYS_DIAG]   qwen35moe.expert_used_count = 8
+[MOE_KEYS_DIAG]   qwen35moe.full_attention_interval = 4
+[MOE_KEYS_DIAG]   qwen35moe.rope.dimension_count = 64
+[MOE_KEYS_DIAG]   qwen35moe.rope.freq_base = 1e+07
+[MOE_KEYS_DIAG]   qwen35moe.ssm.conv_kernel = 4
+[MOE_KEYS_DIAG]   qwen35moe.ssm.group_count = 16
+[MOE_KEYS_DIAG]   qwen35moe.ssm.inner_size = 4096
+[MOE_KEYS_DIAG]   qwen35moe.ssm.state_size = 128
+[MOE_KEYS_DIAG]   qwen35moe.ssm.time_step_rank = 32
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=248320\n[REAP_TOKENIZER] merges=247587\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=248320\n[REAP_TOKENIZER] merges=247587\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[Deep2Engine] Qwen GDN: 30 hybrid GDN layers detected (meta_bound=1 state=128 groups=16) — product GDN path
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[ModelFit] KV budget caps context: requested=262144 fit=250494 (kv_bytes_per_token=11520)
+ParseIndex: tensors=733 kv=41
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[EMBED_DUMP] token=9419 norm=6.096160e-01 first8=1.203358e-02 3.213763e-03 7.623672e-03 1.644349e-02 -1.196146e-03 -1.883578e-02 -2.765560e-02 7.623672e-03
+[POSTBIAS_DUMP] blk.0.attn_qkv.weight y0..5=-1.119070e+00 -9.831009e-01 -1.055733e+00 -1.792526e+00 -1.039825e+00 4.029526e-01 bias0=0.000000e+00
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[Q_AFTER] q0..5=-5.763036e-02 -3.579221e-02 2.694973e-01 4.331658e-01 5.167955e-01 -3.969405e-01
+[HIDDEN_DUMP] h0..5=-1.203911e+00 -2.281583e+00 -3.131027e+00 1.752334e+00 -7.227822e-01 1.801298e+00
+[LOGIT_DIAG] top5: 193925=14.111469 211669=12.643638 51687=12.526598 95173=12.202381 163661=12.118589
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q6_K      calls=     170  ms=    1422.543  MACs=    1042022400  ms/MAC=0.000001
+  IQ2_XS    calls=      21  ms=    1630.097  MACs=     749731840  ms/MAC=0.000002
+  TOTAL     calls=       0  ms=    3052.640  MACs=    1791754240
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+[AGENT] GENERATION_RECEIPT prompt=1 generated=1 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=40
+[LIFE] unloadModel FreeTensorData ggufResult (733 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END

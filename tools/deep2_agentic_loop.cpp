@@ -43,6 +43,10 @@
 #include <set>
 #include <sstream>
 #include <iomanip>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <direct.h>
+#include <io.h>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -169,7 +173,7 @@ struct Args
     // SAMPLING: configurable temperature instead of hard-coded greedy (temp=0)
     float temperature = 0.8f;
     // CONTEXT: minuscule context sizes for local models (e.g. 128 tokens)
-    int context_size = 128;
+    int context_size = 65536;
     // CLOUD ROUTING: --provider selects inference backend
     //   deep2 = local GGUF via Deep2Engine (default)
     //   kilo = Kilo Gateway (free models)
@@ -292,6 +296,38 @@ bool WriteFile(const std::string& p, const std::string& s)
     const size_t n = std::fwrite(s.data(), 1, s.size(), f);
     std::fclose(f);
     return n == s.size();
+}
+
+// True only for a regular file. Directories, missing paths and unreadable
+// entries must stay failures so CREATE mode can never be inferred from a
+// path that exists but cannot hold source text.
+bool FileExists(const std::string& p)
+{
+    struct stat st;
+    if (::stat(p.c_str(), &st) != 0)
+        return false;
+    return (st.st_mode & S_IFREG) != 0;
+}
+
+// True when the path exists but is not a regular file (directory, device, ...).
+bool PathIsNonRegular(const std::string& p)
+{
+    struct stat st;
+    if (::stat(p.c_str(), &st) != 0)
+        return false;
+    return (st.st_mode & S_IFREG) == 0;
+}
+
+// Remove a file created by this agent during rollback. Returns true when the
+// path no longer exists afterwards.
+bool RemoveFileIfPresent(const std::string& p)
+{
+    struct stat st;
+    if (::stat(p.c_str(), &st) != 0)
+        return true; // already absent
+    if ((st.st_mode & S_IFREG) == 0)
+        return false; // never delete a directory or device
+    return std::remove(p.c_str()) == 0;
 }
 
 std::string Trim(const std::string& s)
@@ -2706,6 +2742,7 @@ struct PatchTransaction
     bool committed = false;
     bool rolled_back = false;
     bool structural_valid = false;
+    bool before_exists = false;   // CREATE mode when false: rollback must delete
     size_t changed_lines = 0;
 };
 
@@ -2971,13 +3008,15 @@ class PatchManager
     static bool WriteManifest(const std::filesystem::path& dir,
                               const std::string& state,
                               const std::string& target,
-                              const std::filesystem::path& backup)
+                              const std::filesystem::path& backup,
+                              bool before_exists = false)
     {
         std::ofstream f(dir / "manifest.txt", std::ios::trunc);
         if (!f) return false;
         f << "state=" << state << "\n"
           << "target=" << target << "\n"
-          << "backup=" << backup.string() << "\n";
+          << "backup=" << backup.string() << "\n"
+          << "before_exists=" << (before_exists ? "1" : "0") << "\n";
         f.flush();
         return f.good();
     }
@@ -3012,7 +3051,7 @@ class PatchManager
             const auto manifest = entry.path() / "manifest.txt";
             std::ifstream f(manifest);
             if (!f) continue;
-            std::string line, state, target, backup;
+            std::string line, state, target, backup, before_exists_str;
             while (std::getline(f, line))
             {
                 const size_t eq = line.find('=');
@@ -3022,27 +3061,45 @@ class PatchManager
                 if (key == "state") state = value;
                 else if (key == "target") target = value;
                 else if (key == "backup") backup = value;
+                else if (key == "before_exists") before_exists_str = value;
             }
             if (state != "pending" || target.empty() || backup.empty()) continue;
+            bool before_exists = (before_exists_str == "1");
             const std::string targetPath = SafeWorkPath(workdir_, target);
-            const std::string before = ReadFile(backup);
-            if (targetPath.empty() || before.empty())
+            if (targetPath.empty())
             {
-                WriteManifest(entry.path(), "recovery_failed", target, backup);
+                WriteManifest(entry.path(), "recovery_failed", target, backup, before_exists);
                 Logf_("[recovery] FAILED target=%s transaction=%s\n",
                       target.c_str(), entry.path().string().c_str());
                 continue;
             }
-            if (WriteFile(targetPath, before))
+            bool ok = false;
+            if (!before_exists) {
+                // CREATE mode: delete the file
+                ok = RemoveFileIfPresent(targetPath);
+            } else {
+                // REPAIR mode: restore bytes
+                const std::string before = ReadFile(backup);
+                if (before.empty() && !before_exists) {
+                    // CREATE mode with no backup is fine (empty file was created)
+                    ok = RemoveFileIfPresent(targetPath);
+                } else if (!before.empty()) {
+                    ok = WriteFile(targetPath, before);
+                } else {
+                    // REPAIR with empty backup and file existed - error
+                    ok = false;
+                }
+            }
+            if (ok)
             {
-                WriteManifest(entry.path(), "recovered", target, backup);
+                WriteManifest(entry.path(), "recovered", target, backup, before_exists);
                 Logf_("[recovery] RESTORED target=%s transaction=%s\n",
                       target.c_str(), entry.path().string().c_str());
             }
             else
             {
-                WriteManifest(entry.path(), "recovery_failed", target, backup);
-                Logf_("[recovery] FAILED_WRITE target=%s transaction=%s\n",
+                WriteManifest(entry.path(), "recovery_failed", target, backup, before_exists);
+                Logf_("[recovery] FAILED target=%s transaction=%s\n",
                       target.c_str(), entry.path().string().c_str());
             }
         }
@@ -3064,18 +3121,26 @@ public:
     {
         const std::string targetPath = SafeWorkPath(workdir_, rel_path);
         if (targetPath.empty()) return false;
-        std::string content = ReadFile(targetPath);
-        if (content.empty()) return false;
+        if (PathIsNonRegular(targetPath)) return false; // directory/device = hard fail
+        
+        bool before_exists = FileExists(targetPath);
+        std::string content;
+        if (before_exists) {
+            content = ReadFile(targetPath);
+        }
+        
         PatchTransaction tx;
         tx.file_path = rel_path;
         tx.before_content = content;
+        tx.before_exists = before_exists;
+        
         const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
         active_transaction_ = recovery_root_ / ("txn_" + std::to_string(stamp));
         std::error_code ec;
         std::filesystem::create_directories(active_transaction_, ec);
         active_backup_ = active_transaction_ / "before.bin";
         if (ec || !WriteFile(active_backup_.string(), content) ||
-            !WriteManifest(active_transaction_, "pending", rel_path, active_backup_))
+            !WriteManifest(active_transaction_, "pending", rel_path, active_backup_, before_exists))
             return false;
         transactions_.push_back(tx);
         return true;
@@ -3175,7 +3240,7 @@ public:
         }
         tx.committed = true;
         if (!active_transaction_.empty())
-            WriteManifest(active_transaction_, "verified", tx.file_path, active_backup_);
+            WriteManifest(active_transaction_, "verified", tx.file_path, active_backup_, tx.before_exists);
         return true;
     }
 
@@ -3185,10 +3250,15 @@ public:
         auto& tx = transactions_.back();
         if (tx.file_path != rel_path) return false;
         const std::string targetPath = SafeWorkPath(workdir_, rel_path);
-        const bool ok = !targetPath.empty() && WriteFile(targetPath, tx.before_content);
+        bool ok = false;
+        if (!tx.before_exists) {
+            ok = RemoveFileIfPresent(targetPath); // CREATE: delete the file
+        } else {
+            ok = !targetPath.empty() && WriteFile(targetPath, tx.before_content); // REPAIR: restore bytes
+        }
         tx.rolled_back = ok;
         if (ok && !active_transaction_.empty())
-            WriteManifest(active_transaction_, "rolled_back", tx.file_path, active_backup_);
+            WriteManifest(active_transaction_, "rolled_back", tx.file_path, active_backup_, tx.before_exists);
         return ok;
     }
 
@@ -3198,7 +3268,7 @@ public:
         {
             transactions_.back().committed = true;
             if (!active_transaction_.empty())
-                WriteManifest(active_transaction_, "committed", rel_path, active_backup_);
+                WriteManifest(active_transaction_, "committed", rel_path, active_backup_, transactions_.back().before_exists);
         }
     }
 
@@ -3381,7 +3451,8 @@ static bool LooksLikeFilesystemModelPath(const std::string& model)
 
 static OllamaReply OllamaChat(const std::string& model,
                               const std::vector<std::pair<std::string, std::string>>& messages,
-                              int max_tokens, int context_size, float temperature)
+                              int max_tokens, int context_size, float temperature,
+                              bool allow_thinking = false)
 {
     OllamaReply result;
     const auto t0 = std::chrono::steady_clock::now();
@@ -3444,7 +3515,7 @@ static OllamaReply OllamaChat(const std::string& model,
         WinHttpCloseHandle(session);
         return result;
     }
-    HINTERNET request = WinHttpOpenRequest(connection, L"POST", L"/api/chat",
+    HINTERNET request = WinHttpOpenRequest(connection, L"POST", L"/api/generate",
                                            nullptr, WINHTTP_NO_REFERER,
                                            WINHTTP_DEFAULT_ACCEPT_TYPES,
                                            secure ? WINHTTP_FLAG_SECURE : 0);
@@ -3458,10 +3529,21 @@ static OllamaReply OllamaChat(const std::string& model,
     nlohmann::json body;
     body["model"] = model;
     body["stream"] = false;
-    body["think"] = false;
+    body["think"] = allow_thinking;
     body["options"] = {{"temperature", temperature}, {"num_predict", max_tokens},
                         {"num_ctx", context_size}};
-    body["messages"] = nlohmann::json::array();
+
+    // Flatten the conversation into ONE prompt and use the raw completion path.
+    //
+    // The model's GGUF carries a multimodal Jinja chat_template that opens with
+    // "{%- set image_count = namespace(value=0) %}". Ollama's template renderer
+    // (minja) does not implement namespace(), so rendering falls back to plain
+    // concatenation: the model receives the raw instruction text as content to
+    // continue and echoes the system prompt back verbatim. Every prior protocol
+    // failure traced to that. Sending a single prompt string bypasses template
+    // rendering entirely, which is the shape already verified to produce correct
+    // output from this same model.
+    std::string flatPrompt;
     for (const auto& message : messages)
     {
         // Host must not abort on CP1252 punctuation in tool feedback (MSVC
@@ -3489,8 +3571,16 @@ static OllamaReply OllamaChat(const std::string& model,
             content.append(raw, i, need + 1);
             i += need + 1;
         }
-        body["messages"].push_back({{"role", message.first}, {"content", content}});
+        // No role labels and no trailing "Assistant:" cue. This export behaves as a
+        // completion model: any turn-boundary scaffolding is continued verbatim,
+        // which produced a degenerate "User:/Assistant:" loop. The only request
+        // shape verified to work is a plain instruction with no scaffolding.
+        if (!flatPrompt.empty()) flatPrompt += "\n\n";
+        flatPrompt += content;
     }
+    body["prompt"] = flatPrompt;
+    // raw:true guarantees the server does not attempt to render a chat template.
+    body["raw"] = true;
     const std::string payload = body.dump();
     Logf_("[ollama] REQUEST_SEND endpoint=%s model=%s messages=%zu payload_bytes=%zu "
           "max_tokens=%d ctx=%d\n",
@@ -3632,10 +3722,22 @@ static int OllamaAgentRun(const Args& args)
     std::error_code ec;
     std::filesystem::create_directories(args.workdir, ec);
     const std::string targetPath = SafeWorkPath(args.workdir, args.target_file);
-    if (targetPath.empty() || ReadFile(targetPath).empty())
+    // An unsafe path is always fatal: it is the traversal guard and must not be
+    // relaxed. A MISSING file is NOT fatal — it means this is a creation task, and
+    // the agent's whole purpose is to write that file. The previous code required
+    // ReadFile(targetPath) to be non-empty, so a fresh task could never start and
+    // every run aborted here with "target file is missing or unsafe". Whether the
+    // file pre-exists now selects create-vs-repair mode instead of gating the run.
+    if (targetPath.empty())
     {
-        Logf_("OLLAMA_AGENT_VERDICT FAIL: target file is missing or unsafe: %s\n", args.target_file.c_str());
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: target path is unsafe: %s\n", args.target_file.c_str());
         return 1;
+    }
+    const bool targetExists = std::filesystem::exists(targetPath, ec);
+    if (!targetExists)
+    {
+        Logf_("[ollama] target file does not exist yet; running in CREATE mode for %s\n",
+              targetPath.c_str());
     }
     const std::string buildCmd = args.build_command;
     const std::string runCmd = args.run_command;
@@ -3673,33 +3775,17 @@ static int OllamaAgentRun(const Args& args)
     Logf_("OLLAMA_AGENT_MOTD_SHA256 %s\n", policyHash.c_str());
     std::vector<std::pair<std::string, std::string>> messages;
     messages.push_back({"system",
-        "You are the RawrXD autonomous coding agent. Use exactly one tool command per reply, with no prose.\n"
-        "Your FIRST tokens MUST be the literal prefix TOOL (T-O-O-L then space).\n"
-        "Allowed commands:\n"
-        "TOOL read <relative-path>\n"
-        "TOOL write <relative-path> @@<complete-file-content>@@\n"
-        "TOOL build\nTOOL test\nTOOL finish\n"
-        "Few-shot legal replies (one per turn):\n"
-        "TOOL read bug.cpp\n"
-        "TOOL write bug.cpp @@#include <cstdio>\n"
-        "int undeclared_fn(int a) { return a; }\n"
-        "int add(int a, int b) { return a + b; }\n"
-        "int main() {\n"
-        "  (void)undeclared_fn(1);\n"
-        "  std::printf(\"AGENT_RESULT=%d\\n\", add(2, 3));\n"
-        "  return 0;\n"
-        "}\n@@\n"
-        "Inside @@...@@ emit REAL newlines (0x0A), never the two characters \\n.\n"
-        "Keep each #include alone on its own line to avoid MSVC C4067.\n"
-        "MSVC runs with warnings-as-errors (/WX): unused parameters (C4100) fail.\n"
-        "Arity bugs (C2660): prefer fixing the CALL SITE (e.g. undeclared_fn(1))\n"
-        "rather than adding unused parameters to the callee.\n"
-        "If a write is rolled back for wrong AGENT_RESULT after a compile-only fix,\n"
-        "you MUST issue another TOOL write with a different body (e.g. change\n"
-        "return a - b; to return a + b;) until write committed.\n"
-        "Do not delete add() or simplify away required symbols.\n"
-        "Never resubmit a write payload that already failed validation.\n"
-        "All paths are relative to the workspace. Read the target before editing.\n"});
+        // Deliberately minimal. This export behaves as a completion model: the
+        // previous ~1.5 KB preamble pushed it off-distribution and it answered by
+        // echoing the instructions or looping on "TOol build". Short, in-distribution
+        // instructions are the only shape verified to produce correct output, and the
+        // validator below does the enforcement the preamble was trying to do.
+        "Reply with one line only. No prose. No markdown.\n"
+        "TOOL read " + args.target_file + "\n"
+        "TOOL write " + args.target_file + " @@<full file content>@@\n"
+        "TOOL build\n"
+        "TOOL test\n"
+        "TOOL finish\n"});
     messages.push_back({"user", args.task.empty() ? "Inspect the target, make the requested fix, then build and test it." : args.task});
     const std::string beforeHash = SHA256_Hash(ReadFile(targetPath));
     const std::string originalSource = ReadFile(targetPath);
@@ -3723,7 +3809,35 @@ static int OllamaAgentRun(const Args& args)
         try
         {
             reply = OllamaChat(args.model, messages, args.max_new,
-                               std::max(256, args.context_size), args.temperature);
+                               std::max(4096, args.context_size), args.temperature);
+            // Bounded recovery for hybrid reasoning models: with think=false an
+            // Ollama server can return HTTP 200 with an empty completion and no
+            // thinking field to fall back on. Retry exactly once with thinking
+            // permitted. The retried text goes through the same strict TOOL
+            // validator downstream; thinking text is never executed directly.
+            // The empty-completion error is raised INSIDE OllamaChat, so requiring
+            // error.empty() here excluded exactly the case this retry exists for.
+            const bool emptyCompletion =
+                reply.content.empty() &&
+                (reply.error.empty() ||
+                 reply.error.find("no message content") != std::string::npos);
+            if (emptyCompletion)
+            {
+                Logf_("[ollama step %d] EMPTY_COMPLETION: bounded retry with thinking enabled\n", step);
+                OllamaReply retry = OllamaChat(args.model, messages, args.max_new,
+                                               std::max(4096, args.context_size), args.temperature,
+                                               true);
+                if (!retry.content.empty())
+                {
+                    Logf_("[ollama step %d] THINK_RETRY_OK bytes=%zu\n", step, retry.content.size());
+                    reply = std::move(retry);
+                }
+                else
+                {
+                    Logf_("[ollama step %d] EMPTY_COMPLETION_AFTER_RETRY error=%s\n",
+                          step, retry.error.c_str());
+                }
+            }
         }
         catch (const std::exception& ex)
         {
@@ -3781,6 +3895,7 @@ static int OllamaAgentRun(const Args& args)
             if (path.empty()) { valid = false; result = "unsafe relative path rejected"; exitCode = -1; }
             else
             {
+                const bool existed = FileExists(path);
                 result = ReadFile(path);
                 if (result.find('\0') != std::string::npos)
                 {
@@ -3789,7 +3904,26 @@ static int OllamaAgentRun(const Args& args)
                     result = "Binary content is not a source-text observation. Read the source target with TOOL read " +
                              args.target_file;
                 }
-                else if (!result.empty())
+                else if (existed && result.empty())
+                {
+                    // Existing but empty (or unreadable-as-text): this is a real
+                    // observation and authorizes a write.
+                    const std::string readKey = WorkspacePathKey(args.workdir, action.arg1);
+                    if (!readKey.empty()) readFiles.insert(readKey);
+                    readSeen = !targetKey.empty() && readFiles.find(targetKey) != readFiles.end();
+                    result = "TARGET_PRESENT_EMPTY (0 bytes)";
+                }
+                else if (!existed)
+                {
+                    // CREATE mode: an absent target is an explicit, successful
+                    // observation. Without this the model could never be
+                    // authorized to create a new file.
+                    const std::string readKey = WorkspacePathKey(args.workdir, action.arg1);
+                    if (!readKey.empty()) readFiles.insert(readKey);
+                    readSeen = !targetKey.empty() && readFiles.find(targetKey) != readFiles.end();
+                    result = "TARGET_ABSENT";
+                }
+                else
                 {
                     const std::string readKey = WorkspacePathKey(args.workdir, action.arg1);
                     if (!readKey.empty()) readFiles.insert(readKey);

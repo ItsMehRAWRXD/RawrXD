@@ -1,0 +1,3 @@
+WFDE_BP_HIT=1
+STOP_REASON=breakpoint:break_site
+API=WaitForDebugEvent

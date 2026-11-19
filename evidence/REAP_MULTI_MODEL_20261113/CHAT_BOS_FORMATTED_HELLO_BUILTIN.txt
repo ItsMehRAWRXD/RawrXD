@@ -1,0 +1,6 @@
+]~!b[]~b]system
+You are a helpful assistant. Your name is MiniMax-M2.7 and is built by MiniMax.[e~[
+]~b]user
+Hello[e~[
+]~b]ai
+<think>

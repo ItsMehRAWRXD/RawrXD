@@ -1,0 +1,4 @@
+﻿CASE=RAW_HELLO EXIT=0 MS=61602 status=PASS prompt_tokens=1 tokens=8 output=[姬姬Qu外包,=&&#&#]
+CASE=USER_ASST EXIT=0 MS=122223 status=PASS prompt_tokens=9 tokens=8 output=[LLL】LLLL]
+CASE=BOS_HELLO EXIT=0 MS=80912 status=PASS prompt_tokens=3 tokens=8 output=[这样200444004]
+CASE=MINIMAX_STYLE EXIT=0 MS=41413 NO_RECEIPT

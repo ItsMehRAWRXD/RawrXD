@@ -1,0 +1,5 @@
+START_149_RETRY=2026-11-13T03:49:38.7129478-05:00
+PROMPT=Write a Python function is_prime(n) that returns True if n is prime. Include a short docstring and handle n < 2. Output only the function.
+N=32 TEMP=0 SEED=0 RETAINED=149 LAUNCH=Start-Process
+EXIT=-1
+END_149=2026-11-13T03:49:55.9845038-05:00

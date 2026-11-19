@@ -1,0 +1,295 @@
+[Deep2Engine] Loading model from: F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf mode=GPU_SINGLE devices=1 kv_per_token=11520 max_ctx_est=250494
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\Qwen3.6-35B-A3B-GGUF)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'qwen35moe'  hidden=2048 layers=40 heads=16 kvHeads=2 inter=0 vocab=248320
+[Deep2Engine] PARTIAL_ROPE_META n_rot=64 key_length=256 (apply first n_rot dims only)
+[Deep2Engine] Qwen hybrid: headDim=256 from attention.key_length (heads=16 kv=2)
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=248320 bos=248044 eos=248046 (Spm::encode)
+[ATTN_GATE] Mapped blk.0.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=1x32 type=0)
+[SSM_MAP] blk.0.ssm_alpha.weight -> ssmAlpha (dims=32x2048 type=12)
+[SSM_MAP] blk.0.ssm_beta.weight -> ssmBeta (dims=32x2048 type=12)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=8192x4 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=1x32 type=0)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=1x128 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=2048x4096 type=12)
+[ATTN_GATE] Mapped blk.1.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.10.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.12.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.13.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.14.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.16.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.17.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.18.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.2.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.20.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.21.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.22.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.24.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.25.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.26.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.28.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.29.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.30.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.32.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.33.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.34.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.36.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.37.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.38.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.4.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.5.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.6.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.8.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[ATTN_GATE] Mapped blk.9.attn_gate.weight to attnO (rows=4096 cols=2048 type=12)
+[Deep2Engine] Layer topology: 10 attention, 30 SSM, 0 unknown of 40 total
+[Deep2Engine] KV cache sized for 10 attention layers (SSM layers excluded)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=256 modelWeights.headDim=256 kvHeads=2
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001C06C29A2B0  Registered 'blk.0.attn_norm.weight': shard=0 offset=0 bytes=8192  |  registry_size=1  registeredBytes=8192  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000001C06C29A2B0  Registered 'blk.10.ssm_dt.bias': shard=0 offset=0 bytes=128  |  registry_size=100  registeredBytes=113457408  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000001C06C29A2B0  Registered 'blk.21.ssm_out.weight': shard=0 offset=0 bytes=4718592  |  registry_size=200  registeredBytes=241775360  zeroOffset=200  maxResidentBytes=536870912
+[ResidencyManager] this=000001C06C29A2B0  Registered 'blk.33.attn_gate.weight': shard=0 offset=0 bytes=4718592  |  registry_size=300  registeredBytes=370100992  zeroOffset=300  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001C06C29A2B0  registered=363 tensors  bytes=1148164608  max=536870912
+[Deep2Engine] ATTN_GEOMETRY_RECONCILED headDim=256 qHeads=16 kvHeads=2
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF694A0DDC0 dequant=00007FF694A10A10 GetGEMV(12)=00007FF694A0DDC0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=10 page=8 virtualMax=250494 heads=2 dim=256
+[KVCache] HOT_BYTES=327680 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV_CACHE_CONFIGURED reason=loadModel layers=10 positions=250494 kvHeads=2 headDim=256
+[Deep2Engine] Model loaded successfully (733 tensors)
+[Deep2Engine] MoE model: 256 experts, top-8, 0 shared
+[Deep2Engine] MoE streaming loader ready
+[Deep2Engine] MoE dims: expertDim=512 sharedExpertDim=512 sharedCount=0
+[Deep2Engine] Injected router weights for 40 layers
+[Deep2Engine] RouterPrefetchTelemetry initialized: 40 layers x 256 experts
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=0
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000016788
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000016788
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001C00D
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:000000000001941A
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=1
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=40 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=40
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=40 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=2212000000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[Deep2Engine] embedToken: type=12 vocabSize=248320 hiddenDim=2048 data=000001C0876D6D60 sizeBytes=286064640 rows=248320 cols=2048
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=5283.114
+[AGENT] DECODE_BEGIN max_out=1
+[DBG] stateNorm=1.020939e+02 finite=1 pos=1
+[DBG] nonFiniteLogits=0 vocabSize=248320
+[DBG] sampled token=193925 eosId=248046
+[AGENT] TOKEN id=193925 piece= addir
+[Deep2Engine] Generation complete: 1 tokens in 6485.18 ms (E2E 0.15 TPS)
+[Deep2Engine] PREFILL: 1 tok in 5283.11 ms (0.19 tok/s) | DECODE: 1 tok in 1202.04 ms (0.83 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=170
+DEEP2_GPU_Q6K_PACKED_OPS=21
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 1
+layerCount         = 40
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 5282.303
+totalLayerMs       = 5278.818
+totalEmbedMs       = 0.389
+totalLogitsMs      = 1200.729
+totalAttnMs        = 3144.643
+totalFfnMs         = 2053.441
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgForwardMs       = 5282.303
+avgLayerMs         = 131.970
+============================================================
+
+============================================================
+MOE_PROXY_STATS
+============================================================
+totalRequests      = 320
+cacheHits          = 312
+bytesStreamed      = 609484800
+avgLatencyMs       = 0.154
+asyncPrefetchSub   = 0
+asyncPrefetchDone  = 0
+asyncReadyAtComp   = 0
+asyncPrefetchLate  = 0
+fenceWaitUs        = 0
+syncFallbacks      = 0
+============================================================
+
+============================================================
+ROUTER PREFETCH TELEMETRY REPORT
+============================================================
+Prefetch Hits:   3
+Prefetch Misses: 317
+Hit Rate:        0.94%
+Total Transfer:  0 us
+Total GPU Wait:  0 us
+Total Compute:   723528 us
+------------------------------------------------------------
+ASYNC VULKAN TRANSFER
+------------------------------------------------------------
+Async Submitted: 0
+Async Completed: 0
+Ready @ Compute: 0
+Async Late:      0
+Async Ready Rate:0.00%
+Fence Wait:      0 us
+Sync Fallbacks:  0
+============================================================
+[AGENT] POST_GENERATE generated=1 tokens

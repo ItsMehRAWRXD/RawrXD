@@ -1,0 +1,12 @@
+load_backend: loaded RPC backend from G:\~dev\llama-direct\vulkan\ggml-rpc.dll
+ggml_vulkan: Found 2 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon AI PRO R9700 (AMD proprietary driver) | uma: 0 | fp16: 1 | bf16: 1 | warp size: 64 | shared memory: 32768 | int dot: 1 | matrix cores: KHR_coopmat
+ggml_vulkan: 1 = AMD Radeon RX 7800 XT (AMD proprietary driver) | uma: 0 | fp16: 1 | bf16: 1 | warp size: 64 | shared memory: 32768 | int dot: 1 | matrix cores: KHR_coopmat
+load_backend: loaded Vulkan backend from G:\~dev\llama-direct\vulkan\ggml-vulkan.dll
+load_backend: loaded CPU backend from G:\~dev\llama-direct\vulkan\ggml-cpu-zen4.dll
+ggml_backend_cpu_buffer_type_alloc_buffer: failed to allocate buffer of size 478804967424
+alloc_tensor_range: failed to allocate CPU_REPACK buffer of size 478804967424
+llama_model_load: error loading model: unable to allocate CPU_REPACK buffer
+llama_model_load_from_file_impl: failed to load model
+common_init_from_params: failed to load model 'F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf'
+srv    load_model: failed to load model, 'F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf'

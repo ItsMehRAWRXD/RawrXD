@@ -1,0 +1,1 @@
+{"model":"deep2-local","messages":[{"role":"user","content":"Write a C++17 program printing 1 to 5, one per line. Code only, no explanation."}],"max_tokens":900,"stream":true,"temperature":0}

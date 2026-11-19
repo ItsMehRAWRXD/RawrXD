@@ -25,6 +25,11 @@ int main(int argc, char** argv) {
     }
     std::printf("MODEL=%s\n%s\n", gguf, eng.kvGeometryReceipt().c_str());
 
+    // Force CPU-only for parity test so both serial and batched prefill write
+    // to the same CPU KV cache. GPU forward bypasses the CPU cache, which
+    // would make serial KV all zeros vs batched real values.
+    eng.enableVulkan(false);
+
     auto ids = eng.tokenize(prompt);
     if (ids.empty()) {
         std::printf("TOKENIZE_FAIL=1\n");

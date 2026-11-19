@@ -1,0 +1,31 @@
+OLD:
+    if (preOCount == 0 || preOCount > preOWorkspace)
+        preOCount = (attnConcat > 0 && attnConcat <= preOWorkspace)
+                        ? attnConcat
+                        : hiddenDim;
+    Deep2ValidateVector("ATTN_PRE_WO", layer, output, preOCount);
+
+    // Output projection: attn concat -> residual (wo: [hiddenDim, attnConcat]).
+    // Qwen fused QKV may omit a separate O proj; MLA uses attnO.
+
+NEW:
+    if (preOCount == 0 || preOCount > preOWorkspace)
+        preOCount = (attnConcat > 0 && attnConcat <= preOWorkspace)
+                        ? attnConcat
+                        : hiddenDim;
+    if (qwenGatedAttn)
+    {
+        if (qwenGate.size() != preOCount)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu gated attn gate width=%zu != preO=%zu\n",
+                    layer, qwenGate.size(), preOCount);
+            throw std::runtime_error("qwen gated attention gate width mismatch");
+        }
+        for (size_t i = 0; i < preOCount; ++i)
+            output[i] *= 1.0f / (1.0f + expf(-qwenGate[i]));
+    }
+    Deep2ValidateVector("ATTN_PRE_WO", layer, output, preOCount);
+
+    // Output projection: attn concat -> residual (wo: [hiddenDim, attnConcat]).
+    // Qwen fused QKV may omit a separate O proj; MLA uses attnO.

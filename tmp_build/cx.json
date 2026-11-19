@@ -1,0 +1,1 @@
+{"model":"deep2-local","messages":[{"role":"user","content":"Count slowly from 1 to 400, one number per line."}],"max_tokens":2000,"stream":true}

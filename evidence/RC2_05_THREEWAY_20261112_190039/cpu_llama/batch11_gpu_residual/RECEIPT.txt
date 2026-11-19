@@ -1,0 +1,54 @@
+BATCH11 GPU residual Track A follow-up (fail-closed)
+ASOF=2026-11-12T21:47:30-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+CROSS_SHA_CREDIT=0 SPV_TOUCHED=0
+SPV_QGEMV=ADA48968E30D7BB1A4D849545F4642DC8DF6E1CCB9872F2B63B4491665D52C75
+
+AUTHORITY (BATCH10 sealed; tip14/FA not reopened):
+  FIRST_OP_BEYOND_LINEAR=FLASH_ATTN
+  LLAMA_FAOFF_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+  prior 29213 = FA-on/GPU contamination
+
+PRE_FIX LIVE EXE (credit gate):
+  PATH=F:\rawrxd\build_reap\bin\aggregate_decode_single_smoke.exe
+  EXE_SHA256=E6A387C3272E4B0A3E1EC44FE96DB7B2DEDE5E4CB4B3E0E6108620F6DA7452B7
+  MATCH_HARD_GATE=1
+
+PRE_FIX GPU remasure (2nd gen; this EXE; default batched):
+  GPU_16=576,15,13,15,15,16,11,220,15,13,15,15,15,16,11,220
+  FIRST_MIS vs FAOFF=@1 (15 vs 23192)
+  DEEP2_REAL_GPU_FORWARD=1 batchedMatMulCount=196 PREFILL_BATCHED=1
+  tip0=576 MATCH; tip1 decode garbage
+
+A/B dump (same EXE E6A387C3; DEEP2_BATCHED_PREFILL=0):
+  GPU_16_NOBATCH=576,23192,16895,63762,374,279,2790,1372,315,16895,7525,429,646,387,10660,304
+  FIRST_MIS=@9 (16895 vs CPU/FAOFF 821) — historical residual restored
+  batchedMatMulCount=0
+
+FIRST_OP=GPU_HOST_KV_HANDOFF_AFTER_BATCHED_PREFILL
+  Host LinearWBatched/prefillBatched writes host KV only; GPU decode does not
+  ingest that KV → tip1 basin collapse. SPV/attn/lm_head NOT implicated
+  (tokenwise GPU restores historical @9; SPV ADA48968 untouched).
+  Prefer host-side gate (no blind SPIR-V).
+
+FIX (host-side minimal):
+  generate(): useBatchedPrefill requires !vulkanEnabled_
+  receipt: PREFILL_BATCHED=0 reason=GPU_HOST_KV_HANDOFF (CPU keeps batched)
+  CPU path unchanged (batchedMatMulCount=196; FA-off exact)
+
+POST_FIX LIVE EXE (new remasure; no cross-SHA credit):
+  EXE_SHA256=0AC0481DD26979FF3155D1F427C32BA94E932B9A7395D9EC8CB668C5B84371F4
+  GPU_16=576,23192,16895,63762,374,279,2790,1372,315,16895,7525,429,646,387,10660,304
+  CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+  LLAMA_FAOFF_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+  EXACT16_CPU_VS_FAOFF=1
+  GPU_CPU_FIRST_MIS=@9 (16895 vs 821)
+  FIRST_OP_REMAINING=@9 GPU residual (decode/attn path; not this gate)
+  THREE_WAY_EXACT=0
+  RC2_05_PASS=0
+  GPU markers: PREFILL_BATCHED=0 reason=GPU_HOST_KV_HANDOFF; batchedMatMulCount=0
+  CPU markers: PREFILL_BATCHED=1; batchedMatMulCount=196; RAWR_REAP_CPU_ONLY=1
+
+NEOX + F16 KV held. SPV ADA48968 untouched.
+NEXT=GPU @9 residual dump (host/device attn after tokenwise prefill); no FA reopen.
+PROMOTE=0

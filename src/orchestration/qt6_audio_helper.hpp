@@ -6,12 +6,18 @@
 #include <windows.h>
 #include <mmdeviceapi.h>
 #include <audioclient.h>
+#include <propkey.h>
 #include <vector>
 #include <string>
 #include <cstdint>
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "uuid.lib")
+
+// Fallback definition for Windows property key if propkey.h is unavailable
+#if !defined(PKEY_Device_FriendlyName)
+#define PKEY_Device_FriendlyName {0x0f8b94fc, 0x84fb, 0x4746, {0xa5, 0x44, 0xc3, 0x27, 0x9b, 0x6c, 0x7a, 0x27}}
+#endif
 
 // Audio format specification (QT-free equivalent of QAudioFormat)
 struct AudioFormat {
@@ -83,6 +89,14 @@ public:
     // Check if a format is supported by the device
     static bool isFormatSupported(const AudioDevice& /*device*/, const AudioFormat& format) {
         // WASAPI supports standard PCM formats; validate basic parameters
+        return format.sampleRate > 0
+            && format.channelCount > 0
+            && (format.bitsPerSample == 16 || format.bitsPerSample == 32)
+            && format.channelCount <= 8;
+    }
+
+    // Single-argument overload for format validation without device check
+    static bool isFormatSupported(const AudioFormat& format) {
         return format.sampleRate > 0
             && format.channelCount > 0
             && (format.bitsPerSample == 16 || format.bitsPerSample == 32)
@@ -178,3 +192,6 @@ private:
         return result;
     }
 };
+
+// Qt6-compatible alias for the WASAPI audio helper
+using Qt6AudioHelper = AudioHelper;

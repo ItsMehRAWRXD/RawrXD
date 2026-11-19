@@ -205,6 +205,7 @@ public:
     uint64_t WeightResidencyEpoch() const;    // submissions issued so far
     uint64_t CompletedWeightEpoch() const;    // submissions whose fence has signalled
     uint64_t BudgetOverrides() const;         // evictions deferred (all pinned)
+    size_t TrimUnpinnedQuantWeights();
     // 0 = LRU (default, the historical policy), 1 = hotness (STRATA_S08).
     void SetWeightCachePolicy(int policy) { weight_cache_policy_ = policy; }
     int WeightCachePolicy() const { return weight_cache_policy_; }

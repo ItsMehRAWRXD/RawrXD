@@ -15,6 +15,8 @@
 #include "command_palette.hpp"
 #include "ai_chat_panel.hpp"
 #include "agent_chat_breadcrumb.hpp"
+#include "TerminalWidget.h"
+#include "../core/problems_aggregator.h"
 // GGUF metadata quick reader
 #include "../ai/streaming_gguf_loader_qt.h"
 // Model loader threaded helper
@@ -513,26 +515,45 @@ void MainWindow::createVSCodeLayout()
     m_panelStack->setStyleSheet("QStackedWidget { background-color: #1e1e1e; }");
     
     // Terminal tab
-    QPlainTextEdit* terminalView = new QPlainTextEdit(m_bottomPanel);
-    terminalView->setStyleSheet("QPlainTextEdit { background-color: #1e1e1e; color: #0dff00; font-family: 'Consolas', monospace; font-size: 10pt; }");
-    terminalView->appendPlainText("PS E:\\> ");
-    m_panelStack->addWidget(terminalView);
+    m_terminalWidget = new TerminalWidget(m_bottomPanel);
+    m_terminalWidget->initialize();
+    m_panelStack->addWidget(m_terminalWidget);
     
     // Output tab
-    QPlainTextEdit* outputView = new QPlainTextEdit(m_bottomPanel);
-    outputView->setStyleSheet("QPlainTextEdit { background-color: #1e1e1e; color: #e0e0e0; font-family: 'Consolas', monospace; font-size: 10pt; }");
-    outputView->appendPlainText("[INFO] Ready to process...");
-    m_panelStack->addWidget(outputView);
+    m_outputView = new QPlainTextEdit(m_bottomPanel);
+    m_outputView->setStyleSheet("QPlainTextEdit { background-color: #1e1e1e; color: #e0e0e0; font-family: 'Consolas', monospace; font-size: 10pt; }");
+    m_outputView->appendPlainText("[INFO] Ready to process...");
+    m_panelStack->addWidget(m_outputView);
     
     // Problems tab
-    QWidget* problemsView = new QWidget(m_bottomPanel);
-    QVBoxLayout* problemsLayout = new QVBoxLayout(problemsView);
+    m_problemsView = new QWidget(m_bottomPanel);
+    QVBoxLayout* problemsLayout = new QVBoxLayout(m_problemsView);
     problemsLayout->setContentsMargins(10, 10, 10, 10);
-    QLabel* problemsLabel = new QLabel("No problems detected", problemsView);
-    problemsLabel->setStyleSheet("QLabel { color: #e0e0e0; }");
-    problemsLayout->addWidget(problemsLabel);
+    
+    // Problems list widget with click-to-line support
+    QListWidget* problemsList = new QListWidget(m_problemsView);
+    problemsList->setStyleSheet("QListWidget { background-color: #1e1e1e; color: #e0e0e0; border: 1px solid #3c3c3c; }");
+    problemsLayout->addWidget(problemsList);
+    
+    // Connect problems list item click to editor navigation (stored for later use)
+    connect(problemsList, &QListWidget::itemClicked, this, [this, problemsList](QListWidgetItem* item) {
+        if (!item) return;
+        // Parse file:line from item data
+        QString text = item->text();
+        // Format: "file.cpp:10:5 - Error message"
+        // Extract file and line
+        QRegExp rx("([^:]+):(\\d+):(\\d+)");
+        if (rx.search(text)) {
+            QString filePath = rx.captured(1);
+            int line = rx.captured(2).toInt();
+            // Navigate to file:line in editor
+            // This would need editor integration - for now just show status
+            statusBar()->showMessage(QString("Problem: %1").arg(text), 5000);
+        }
+    });
+    
     problemsLayout->addStretch();
-    m_panelStack->addWidget(problemsView);
+    m_panelStack->addWidget(m_problemsView);
     
     // Debug Console tab
     QPlainTextEdit* debugConsole = new QPlainTextEdit(m_bottomPanel);
@@ -599,7 +620,10 @@ void MainWindow::createVSCodeLayout()
     // Connect terminal tab buttons
     connect(terminalTabBtn, &QPushButton::clicked, this, [this]() { m_panelStack->setCurrentIndex(0); });
     connect(outputTabBtn, &QPushButton::clicked, this, [this]() { m_panelStack->setCurrentIndex(1); });
-    connect(problemsTabBtn, &QPushButton::clicked, this, [this]() { m_panelStack->setCurrentIndex(2); });
+    connect(problemsTabBtn, &QPushButton::clicked, this, [this]() { 
+        m_panelStack->setCurrentIndex(2); 
+        refreshProblemsList(); 
+    });
     connect(debugTabBtn, &QPushButton::clicked, this, [this]() { 
         if (m_hexMagConsole) m_panelStack->setCurrentWidget(m_hexMagConsole); 
         else m_panelStack->setCurrentIndex(3); 
@@ -632,6 +656,67 @@ void MainWindow::applyDarkTheme()
 MainWindow::~MainWindow()
 {
     // Cleanup
+}
+
+void MainWindow::refreshProblemsList()
+{
+    if (!m_problemsView) return;
+    
+    // Find the problems list widget in the problems view
+    QListWidget* problemsList = m_problemsView->findChild<QListWidget*>();
+    if (!problemsList) return;
+    
+    problemsList->clear();
+    
+    // Get problems from the aggregator
+    const auto& problems = RawrXD::ProblemsAggregator::instance().getProblems();
+    
+    for (const auto& p : problems) {
+        QString severityStr;
+        switch (p.severity) {
+            case 1: severityStr = "Error"; break;
+            case 2: severityStr = "Warning"; break;
+            case 3: severityStr = "Info"; break;
+            case 4: severityStr = "Hint"; break;
+            default: severityStr = "Unknown"; break;
+        }
+        
+        QString filePath = QString::fromStdString(p.path);
+        QString message = QString::fromStdString(p.message);
+        QString code = QString::fromStdString(p.code);
+        
+        QString displayText;
+        if (!filePath.isEmpty()) {
+            displayText = QString("%1:%2:%3 - %4 [%5] (%6)")
+                .arg(filePath)
+                .arg(p.line)
+                .arg(p.column)
+                .arg(message)
+                .arg(severityStr)
+                .arg(code.isEmpty() ? "" : code);
+        } else {
+            displayText = QString("%1 - %2 [%3]")
+                .arg(message)
+                .arg(severityStr)
+                .arg(code.isEmpty() ? "" : code);
+        }
+        
+        QListWidgetItem* item = new QListWidgetItem(displayText, problemsList);
+        item->setData(Qt::UserRole, displayText);
+        
+        // Set color based on severity
+        if (p.severity == 1) {
+            item->setForeground(QColor("#ff5555")); // Red for errors
+        } else if (p.severity == 2) {
+            item->setForeground(QColor("#ffaa55")); // Orange for warnings
+        } else {
+            item->setForeground(QColor("#e0e0e0")); // Default for info/hint
+        }
+    }
+    
+    if (problemsList->count() == 0) {
+        problemsList->addItem("No problems detected");
+    }
 }
 
 void MainWindow::setAppState(std::shared_ptr<void> state)
@@ -3291,6 +3376,9 @@ void MainWindow::onBuildStarted() {
                                    .arg(QDateTime::currentDateTime().toString("hh:mm:ss")));
         }
     }
+    
+    // Clear build problems from Problems panel
+    ProblemsAggregator::instance().clear("Build");
     
     MetricsCollector::instance().incrementCounter("builds_started");
     
@@ -7756,8 +7844,11 @@ void MainWindow::toggleCompileCurrentFile()
             }
             
             // Log to output panel if available
-            if (!output.isEmpty()) {
-                qDebug() << "Compiler output:" << output;
+            if (!output.isEmpty() && m_outputView) {
+                m_outputView->appendPlainText(QString("[BUILD OUT] %1\n").arg(output));
+            }
+            if (!errors.isEmpty() && m_outputView) {
+                m_outputView->appendPlainText(QString("[BUILD ERR] %1\n").arg(errors));
             }
         } else {
             statusBar()->showMessage(tr("❌ Compilation failed: %1").arg(fi.fileName()), 5000);
@@ -7778,6 +7869,58 @@ void MainWindow::toggleCompileCurrentFile()
                 notificationCenter_->notify(tr("Compilation Failed"),
                     tr("%1 compilation failed").arg(fi.fileName()),
                     NotificationLevel::Error);
+            }
+            
+            // Log errors to output panel
+            if (!errorMsg.isEmpty() && m_outputView) {
+                m_outputView->appendPlainText(QString("[BUILD ERR] %1\n").arg(errorMsg));
+            }
+            
+            // Report to Problems panel
+            if (!errorMsg.isEmpty()) {
+                QList<QString> lines = errorMsg.split('\n');
+                for (const QString& line : lines) {
+                    if (line.trimmed().isEmpty()) continue;
+                    // Try to parse "file:line:col - message [severity] (code)" format
+                    QRegExp rx(R"((.+?):(\d+):(\d+)\s*-\s*(.+?)(?:\s*\[(\w+)\])?(?:\s*\((.+?)\))?$)");
+                    if (rx.indexIn(line) >= 0) {
+                        QString filePath = rx.captured(1).trimmed();
+                        int lineNum = rx.captured(2).toInt();
+                        int colNum = rx.captured(3).toInt();
+                        QString msg = rx.captured(4).trimmed();
+                        QString sevStr = rx.captured(5).trimmed();
+                        QString code = rx.captured(6).trimmed();
+                        
+                        int severity = 1; // Error
+                        if (!sevStr.isEmpty()) {
+                            if (sevStr == "Warning" || sevStr == "warning") severity = 2;
+                            else if (sevStr == "Info" || sevStr == "info") severity = 3;
+                            else if (sevStr == "Hint" || sevStr == "hint") severity = 4;
+                        }
+                        
+                        ProblemsAggregator::instance().add(
+                            "Build",
+                            filePath.toStdString(),
+                            lineNum,
+                            colNum,
+                            severity,
+                            code.toStdString(),
+                            msg.toStdString()
+                        );
+                    } else {
+                        // Fallback: generic error without file:line:col
+                        ProblemsAggregator::instance().add(
+                            "Build",
+                            fi.fileName().toStdString(),
+                            1,
+                            1,
+                            1,
+                            "",
+                            errorMsg.toStdString()
+                        );
+                    }
+                }
+                refreshProblemsList();
             }
         }
         
@@ -7876,15 +8019,25 @@ void MainWindow::toggleBuildProject()
     // Monitor output
     connect(compiler, &QProcess::readyReadStandardOutput, this, [this, compiler]() {
         QString output = QString::fromUtf8(compiler->readAllStandardOutput());
-        if (!output.isEmpty() && m_hexMagConsole) {
-            m_hexMagConsole->appendPlainText(output);
+        if (!output.isEmpty()) {
+            if (m_hexMagConsole) {
+                m_hexMagConsole->appendPlainText(output);
+            }
+            if (m_outputView) {
+                m_outputView->appendPlainText(QString("[BUILD OUT] %1\n").arg(output));
+            }
         }
     });
     
     connect(compiler, &QProcess::readyReadStandardError, this, [this, compiler]() {
         QString error = QString::fromUtf8(compiler->readAllStandardError());
-        if (!error.isEmpty() && m_hexMagConsole) {
-            m_hexMagConsole->appendPlainText("[ERROR] " + error);
+        if (!error.isEmpty()) {
+            if (m_hexMagConsole) {
+                m_hexMagConsole->appendPlainText("[ERROR] " + error);
+            }
+            if (m_outputView) {
+                m_outputView->appendPlainText(QString("[BUILD ERR] %1\n").arg(error));
+            }
         }
     });
     
@@ -7926,6 +8079,58 @@ void MainWindow::toggleBuildProject()
             QString errors = compiler->readAllStandardError();
             QMessageBox::warning(this, tr("Build Failed"),
                 tr("Build failed with exit code %1\n\nErrors:\n%2").arg(exitCode).arg(errors.left(1000)));
+            
+            // Log errors to output panel
+            if (!errors.isEmpty() && m_outputView) {
+                m_outputView->appendPlainText(QString("[BUILD ERR] %1\n").arg(errors));
+            }
+            
+            // Report to Problems panel
+            if (!errors.isEmpty()) {
+                QList<QString> lines = errors.split('\n');
+                for (const QString& line : lines) {
+                    if (line.trimmed().isEmpty()) continue;
+                    // Try to parse "file:line:col - message [severity] (code)" format
+                    QRegExp rx(R"((.+?):(\d+):(\d+)\s*-\s*(.+?)(?:\s*\[(\w+)\])?(?:\s*\((.+?)\))?$)");
+                    if (rx.indexIn(line) >= 0) {
+                        QString filePath = rx.captured(1).trimmed();
+                        int lineNum = rx.captured(2).toInt();
+                        int colNum = rx.captured(3).toInt();
+                        QString msg = rx.captured(4).trimmed();
+                        QString sevStr = rx.captured(5).trimmed();
+                        QString code = rx.captured(6).trimmed();
+                        
+                        int severity = 1; // Error
+                        if (!sevStr.isEmpty()) {
+                            if (sevStr == "Warning" || sevStr == "warning") severity = 2;
+                            else if (sevStr == "Info" || sevStr == "info") severity = 3;
+                            else if (sevStr == "Hint" || sevStr == "hint") severity = 4;
+                        }
+                        
+                        ProblemsAggregator::instance().add(
+                            "Build",
+                            filePath.toStdString(),
+                            lineNum,
+                            colNum,
+                            severity,
+                            code.toStdString(),
+                            msg.toStdString()
+                        );
+                    } else {
+                        // Fallback: generic error without file:line:col
+                        ProblemsAggregator::instance().add(
+                            "Build",
+                            projectDir.toStdString(),
+                            1,
+                            1,
+                            1,
+                            "",
+                            line.toStdString()
+                        );
+                    }
+                }
+                refreshProblemsList();
+            }
         }
         compiler->deleteLater();
     });

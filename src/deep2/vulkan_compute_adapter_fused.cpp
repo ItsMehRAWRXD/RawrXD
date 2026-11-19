@@ -340,11 +340,43 @@ bool VulkanCompute::DispatchGEMVPacked(const void* packed, size_t bytes,
                                        const float* input, float* output,
                                        uint32_t rows, uint32_t cols,
                                        uint64_t cacheKey) {
-    (void)packed; (void)bytes; (void)input; (void)output;
-    (void)rows; (void)cols; (void)cacheKey;
-    // Same reason as DispatchGemvPacked: no GGML type reaches this entry point,
-    // so the kernel cannot be selected honestly.
-    return false;
+    // This adapter is called only by the K2 Q4_K MLA path.  The old
+    // implementation returned false unconditionally, forcing every Q4_K
+    // projection through the host dequantizer even when GPU MLA was enabled.
+    // Keep the public legacy signature, but bind it to the explicit Q4_K
+    // backend dispatch so the type is no longer guessed.
+    auto fail = [&](const char* stage) {
+        std::fprintf(stderr,
+                     "[MLA_Q_DISPATCH_FAIL] stage=%s rows=%u cols=%u bytes=%zu backend=%d\n",
+                     stage, rows, cols, bytes, backend_ ? 1 : 0);
+        std::fflush(stderr);
+        return false;
+    };
+    if (backend_ == nullptr || packed == nullptr || input == nullptr ||
+        output == nullptr || bytes == 0 || rows == 0 || cols == 0)
+        return fail("invalid_args");
+
+    Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
+    Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
+    if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
+        out.size < static_cast<size_t>(rows) * sizeof(float)) {
+        // The backend reserves the stable GEMV residual capacity during model
+        // initialization. Do not resize the shared forward arena here: this
+        // adapter is called while fused command buffers are in flight, and a
+        // per-call resize can destroy buffers referenced by queued work.
+        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1))
+            return fail("arena");
+    }
+    if (!backend_->UploadVector(in, input, cols)) return fail("upload");
+    if (!backend_->DispatchGemvQuant(GGML_TYPE_Q4_K, packed, bytes, in, out,
+                                      rows, cols, cacheKey))
+        return fail("dispatch");
+    if (!backend_->DownloadVector(out, output, rows)) return fail("download");
+
+    gemv_success_ = static_cast<uint64_t>(backend_->GemvSuccessCount());
+    gemv_weight_uploads_ = static_cast<uint64_t>(backend_->WeightUploadCount());
+    gemv_weight_hits_ = static_cast<uint64_t>(backend_->WeightHitCount());
+    return true;
 }
 
 bool VulkanCompute::DispatchGEMVFusedQ8Kva(const void* packed, size_t bytes,
@@ -773,6 +805,30 @@ bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBu
     return true;
 }
 
+// CSPD experimental path: forwards to the backend's split-KV dispatch.
+// Off by default; enabled with DEEP2_CSPD=1.
+bool VulkanCompute::IsCspdEnabled() const {
+    return backend_ != nullptr && backend_->IsCspdEnabled();
+}
+
+bool VulkanCompute::DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache,
+                                              DeviceBuf& vCache, DeviceBuf& out,
+                                              uint32_t headDim, uint32_t nHeads,
+                                              uint32_t kvHeads, uint32_t seqLen,
+                                              float scale, uint32_t layer) {
+    if (backend_ == nullptr) return false;
+    Deep2::VulkanCompute::DeviceBuf bq = ToBackend(q);
+    Deep2::VulkanCompute::DeviceBuf bk = ToBackend(kCache);
+    Deep2::VulkanCompute::DeviceBuf bv = ToBackend(vCache);
+    Deep2::VulkanCompute::DeviceBuf bo = ToBackend(out);
+    if (!backend_->DispatchAttnDecodeSplitKV(bq, bk, bv, bo, headDim, nHeads, kvHeads, seqLen, scale, layer)) return false;
+    q = FromBackend(bq);
+    kCache = FromBackend(bk);
+    vCache = FromBackend(bv);
+    out = FromBackend(bo);
+    return true;
+}
+
 bool VulkanCompute::AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim,
                              uint32_t pos, uint32_t nHeads) {
     if (backend_ == nullptr) return false;
@@ -808,6 +864,10 @@ bool VulkanCompute::DownloadDeviceLocal(VkBuffer, void*, size_t) { return false;
 // Pipeline creation (fail closed - not in implementation)
 // ----------------------------------------------------------------------------
 bool VulkanCompute::CreateGemvPipe(const char*, VkPipeline&) { return false; }
+// No per-type pipeline selection here: the linked backend binds a single
+// qPipeline_ (deep2_qgemv.spv) for every quant type and branches on
+// QPush.type inside the shader. Q4_0 (2) is decoded there, so this stays
+// fail-closed and no adapter-side q40 pipeline exists or is needed.
 bool VulkanCompute::SelectPackedPipe(int, VkPipeline&, uint64_t*&) { return false; }
 bool VulkanCompute::EnsureQ2kPipeline() { return false; }
 bool VulkanCompute::EnsureQ3kPipeline() { return false; }
@@ -881,8 +941,6 @@ bool VulkanCompute::DispatchGemvQ6kPacked(const void* packed, size_t bytes,
 // ----------------------------------------------------------------------------
 // MLA Q / KV buffers
 // ----------------------------------------------------------------------------
-bool VulkanCompute::EnsureMlaAttn(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
-                                  uint32_t, uint32_t) { return false; }
 bool VulkanCompute::EnsureMlaQBytes(size_t) { return false; }
 
 VulkanCompute::DeviceBuf& VulkanCompute::MlaQ() {

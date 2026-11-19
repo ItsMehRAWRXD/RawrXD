@@ -1,0 +1,18 @@
+﻿# MiniMax runtime proof excerpts (logs gitignored as *.log)
+# Full logs remain on disk under F:\rawrxd\evidence\REAP_MULTI_MODEL_20261113\
+
+## STDERR key lines
+[MULTISHARD_RESIDENCY] minimax pin floor from=604898502 to=3280523462 non_expert=2608516096 expert_budget=604898502
+[MULTISHARD_BIND] standard tensors bound layers=62 experts=256 topk=8 shared=0 expertDim=1536 mappings=560
+LIVE_K2_MOE_PLACE layer=0 n=8 hits=0 misses=8 miss_bytes=37748736
+LIVE_K2_MOE_PLACE layer=61 n=8 hits=0 misses=8 miss_bytes=37748736
+[AGENT] GENERATION_RECEIPT prompt=1 generated=1 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[LIFE] unloadModel END
+[LIFE] ~Deep2Engine END
+
+## STDOUT key lines
+[AGENT] PREFILL_BEGIN prompt_tokens=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=13606.710
+[AGENT] TOKEN id=56 piece=8
+[Deep2Engine] Generation complete: 1 tokens in 15000.28 ms (E2E 0.07 TPS)
+{"schema":"rawrxd.reap.runtime_receipt.v1","status":"PASS","model":"F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf","plan":{"schema":"rawrxd.reap.runtime_injection.v1","model":"F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf","architecture":"minimax-m2","injection_mode":"STREAMER_HOTPATCH","streamer_path":"MoEWeightProxy+VulkanPrefetch","requested_parameters":1000000000,"requested_experts":8,"actual_parameters":228689764864,"actual_tensor_bytes":138334096384,"actual_experts":256,"actual_experts_per_token":8,"target_working_set_bytes":604898502,"direction":"DOWNSIZE","status":"PLAN_READY","reason":"NON_DESTRUCTIVE_RUNTIME_TARGET","source_immutable":true,"writer_invoked":false,"shards":3,"tensors":809},"runtime":{"active":true,"route_configured":true,"streamer_configured":true,"working_set_configured":true,"effective_experts":8,"status":"ACTIVE_RUNTIME_ROUTER_RESIDENCY","reason":"MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED"},"generation_requested":true,"generation_completed":true,"generated_tokens":1,"prompt_tokens":1,"load_ms":2571,"output":"8","writer_invoked":false,"source_immutable":true}

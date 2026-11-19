@@ -1,0 +1,8 @@
+LOAD_OK=1
+ACTIVATE_OK=1
+MAIN_PRESENT=1
+PROCESS_ALIVE=1
+EXTENSION_ID=rawrxd.ext-hello
+EXTENSION_PATH=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\ext_hello
+DETAIL=native_activate main_ok
+PROMOTE=0

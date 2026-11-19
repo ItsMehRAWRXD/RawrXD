@@ -1,0 +1,73 @@
+// ============================================================================
+// deep2_b34_splitkv_reduce.comp
+// Context-Scaled Parallel Decode — Stable Reduction Kernel
+// Merges per-chunk (m, l, o) partials into final attention output.
+// ============================================================================
+#version 460
+
+// Descriptor set 0 bindings
+layout(set = 0, binding = 0, std430) readonly buffer buf0 { float s[]; };  // Partial inputs
+layout(set = 0, binding = 1, std430) buffer buf1 { float result[]; };         // Final output
+
+// Push constants
+layout(push_constant) uniform PushConstants {
+    uint headDim;       // per-head dimension
+    uint heads;         // number of query heads
+    uint numChunks;     // number of chunks
+} pc;
+
+layout(local_size_x = 64) in;
+
+void main() {
+    uint headDim = pc.headDim;
+    uint heads = pc.heads;
+    uint numChunks = pc.numChunks;
+
+    uint gid = gl_GlobalInvocationID.x;
+    uint totalWork = heads * headDim;
+    if (gid >= totalWork) return;
+
+    uint head = gid / headDim;
+    uint dim = gid % headDim;
+
+    // Scratch layout: [chunk][head][headDim+2] = {m, l, o[headDim]}
+    uint slotStride = heads * (headDim + 2);
+
+    // First pass: find global max m
+    float m = -3.402823466e+38f;
+    for (uint chunk = 0; chunk < numChunks; ++chunk) {
+        uint base = chunk * heads * (headDim + 2) + head * (headDim + 2);
+        float m_i = s[base + 0];
+        float l_i = s[base + 1];
+        if (l_i > 0.0 && m_i > m) {
+            m = m_i;
+        }
+    }
+
+    // All chunks empty -> output 0
+    if (m == -3.402823466e+38f) {
+        result[gid] = 0.0;
+        return;
+    }
+
+    // Second pass: accumulate
+    float l = 0.0f;
+    float o = 0.0f;
+
+    for (uint chunk = 0; chunk < numChunks; ++chunk) {
+        uint base = chunk * heads * (headDim + 2) + head * (headDim + 2);
+        float m_i = s[base + 0];
+        float l_i = s[base + 1];
+        if (l_i <= 0.0) continue;
+
+        float w = exp(m_i - m);
+        l += w * l_i;
+        o += w * s[base + 2 + dim];
+    }
+
+    if (l > 0.0) {
+        result[gid] = float(o / l);
+    } else {
+        result[gid] = 0.0;
+    }
+}

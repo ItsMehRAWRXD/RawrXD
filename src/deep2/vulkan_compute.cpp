@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <mutex>
 #include <thread>
 
 #ifdef _WIN32
@@ -26,6 +27,15 @@
 
 namespace Deep2 {
 namespace {
+
+std::recursive_mutex g_gpuSubmitGate;
+std::atomic<uint64_t> g_gpuSubmitSequence{0};
+std::atomic<uint32_t> g_gpuInFlight{0};
+
+bool GlobalGpuSerialEnabled() {
+    const char* v = std::getenv("GLOBAL_GPU_SERIAL");
+    return v && v[0] == '1' && v[1] == '\0';
+}
 
 constexpr uint32_t OP_PROBE    = 0;
 constexpr uint32_t OP_GEMV_F32 = 1;
@@ -579,6 +589,21 @@ bool VulkanCompute::createDescriptorSystems() {
     return vkCreateDescriptorSetLayout(device_, &gi, nullptr, &gdnSetLayout_) == VK_SUCCESS;
 }
 
+bool VulkanCompute::createCspdReduceSetLayout() {
+    VkDescriptorSetLayoutBinding rb[2] = {};
+    for (uint32_t i = 0; i < 2; ++i) {
+        rb[i].binding = i;
+        rb[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        rb[i].descriptorCount = 1;
+        rb[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo ri{};
+    ri.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    ri.bindingCount = 2;
+    ri.pBindings = rb;
+    return vkCreateDescriptorSetLayout(device_, &ri, nullptr, &cspdReduceSetLayout_) == VK_SUCCESS;
+}
+
 std::string VulkanCompute::shaderPath(const char* file) const {
     std::vector<std::filesystem::path> dirs;
     if (const char* env = std::getenv("RAWRXD_DEEP2_SHADER_DIR"))
@@ -668,6 +693,8 @@ bool VulkanCompute::createPipelines() {
     const std::string sa = shaderPath("deep2_spec_attn.spv");
     const std::string ac = shaderPath("deep2_spec_accept.spv");
     const std::string gd = shaderPath("deep2_qwen4exp_gdn.spv");
+    const std::string pp = shaderPath("deep2_b33_splitkv_partial.spv");
+    const std::string rr = shaderPath("deep2_b34_splitkv_reduce.spv");
 
     std::fprintf(stderr,
         "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s qn=%s am=%s so=%s sa=%s ac=%s gd=%s\n",
@@ -723,13 +750,25 @@ bool VulkanCompute::createPipelines() {
         (void)createPipelineFromFile(
             gd, gdnSetLayout_, sizeof(GdnPush),
             gdnPipelineLayout_, gdnPipeline_);
+    if (!pp.empty())
+        (void)createPipelineFromFile(
+            pp, opsSetLayout_, sizeof(CspdPartialPush),
+            cspdPartialPipelineLayout_, cspdPartialPipeline_);
+    if (!rr.empty()) {
+        if (!createCspdReduceSetLayout())
+            std::fprintf(stderr, "[CSPD] failed to create reduce descriptor set layout\n");
+        (void)createPipelineFromFile(
+            rr, cspdReduceSetLayout_, sizeof(CspdReducePush),
+            cspdReducePipelineLayout_, cspdReducePipeline_);
+    }
 
     std::fprintf(stderr,
-        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u qn=%u gdn=%u\n",
+        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u qn=%u gdn=%u pp=%u rr=%u\n",
         okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u,
         okQ8r?1u:0u, okQn?1u:0u,
-        gdnPipeline_ != VK_NULL_HANDLE ? 1u : 0u);
-    std::fflush(stderr);
+        gdnPipeline_ != VK_NULL_HANDLE ? 1u : 0u,
+        cspdPartialPipeline_ != VK_NULL_HANDLE ? 1u : 0u,
+        cspdReducePipeline_ != VK_NULL_HANDLE ? 1u : 0u);
 
     return opsPipeline_ != VK_NULL_HANDLE;
 }
@@ -1060,6 +1099,16 @@ bool VulkanCompute::initialize() {
     }
 
     (void)createPipelines(); // Device runtime is valid even before shader build.
+    // CSPD experimental path: enabled via DEEP2_CSPD=1 env var
+    {
+        const char* cspdEnv = std::getenv("DEEP2_CSPD");
+        if (cspdEnv && (cspdEnv[0] == '1' || cspdEnv[0] == 't' || cspdEnv[0] == 'T')) {
+            cspdEnabled_ = true;
+            std::fprintf(stderr, "[CSPD] Split-KV attention enabled (experimental)\n");
+        } else {
+            cspdEnabled_ = false;
+        }
+    }
     initialized_ = true;
     (void)ReserveDecodeScratch();
     ++deviceGeneration_; // any pre-init promotion is now stale
@@ -1139,6 +1188,29 @@ bool VulkanCompute::checkLiveHeapAdmission(size_t bytes) const {
     return true;
 }
 
+bool VulkanCompute::getScratchBuffer(
+    VkDeviceSize bytes, VkBufferUsageFlags usage,
+    VkMemoryPropertyFlags required, DeviceBuf& out)
+{
+    out = {};
+    if (!device_ || bytes == 0) return false;
+
+    // Reuse an existing buffer of exactly this size. Exact-match keeps the
+    // binding range identical to the previous dispatch, so no descriptor
+    // rewrite subtleties are introduced.
+    auto it = scratchBuffers_.find(bytes);
+    if (it != scratchBuffers_.end() && it->second.buffer) {
+        out = it->second;
+        return true;
+    }
+
+    DeviceBuf fresh{};
+    if (!createBuffer(bytes, usage, required, fresh)) return false;
+    out = fresh;
+    scratchBuffers_.emplace(bytes, fresh);
+    return true;
+}
+
 bool VulkanCompute::createBuffer(
     VkDeviceSize bytes, VkBufferUsageFlags usage,
     VkMemoryPropertyFlags required, DeviceBuf& out)
@@ -1189,12 +1261,28 @@ bool VulkanCompute::createBuffer(
         return false;
     }
     out.size = bytes;
+    out.allocationSize = mr.size;
     out.memoryFlags = required;
     out.id = nextBufferId_++;
+    liveDeviceBytes_ += static_cast<size_t>(mr.size);
+    ++liveDeviceAllocations_;
     return true;
 }
 
+    // Public wrapper for test access - delegates to private createBuffer
+    bool VulkanCompute::createBufferPublic(VkDeviceSize bytes, VkBufferUsageFlags usage,
+                                           VkMemoryPropertyFlags required,
+                                           DeviceBuf& out) {
+        return createBuffer(bytes, usage, required, out);
+    }
+
 void VulkanCompute::destroyBuffer(DeviceBuf& b) {
+    if (b.memory) {
+        const size_t allocationBytes = static_cast<size_t>(b.allocationSize);
+        liveDeviceBytes_ = allocationBytes <= liveDeviceBytes_
+            ? liveDeviceBytes_ - allocationBytes : 0;
+        if (liveDeviceAllocations_ != 0) --liveDeviceAllocations_;
+    }
     if (!device_) { b = {}; return; }
     if (b.buffer) vkDestroyBuffer(device_, b.buffer, nullptr);
     if (b.memory) vkFreeMemory(device_, b.memory, nullptr);
@@ -1370,6 +1458,11 @@ bool VulkanCompute::endSubmitWait(
     GpuWorkInterval* interval, uint64_t timeoutNs)
 {
     if (!cmd) return false;
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    uint64_t globalSeq = 0;
+    if (globalSerial)
+        globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
     if (query)
         vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query, 1);
     const VkResult endResult = vkEndCommandBuffer(cmd);
@@ -1406,6 +1499,15 @@ bool VulkanCompute::endSubmitWait(
             fused_ ? 1 : 0);
         std::fflush(stderr);
     }
+    if (globalSerial) {
+        globalSeq = ++g_gpuSubmitSequence;
+        const uint32_t prior = g_gpuInFlight.fetch_add(1);
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_BEGIN seq=%llu cmd=%p "
+                     "in_flight_before=%u\n",
+                     (unsigned long long)globalSeq, (void*)cmd, prior);
+        std::fflush(stderr);
+    }
     VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
     if (submit != VK_SUCCESS) {
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",
@@ -1413,14 +1515,28 @@ bool VulkanCompute::endSubmitWait(
         std::fflush(stderr);
         (void)NoteVkResult(static_cast<int>(submit), "submit");
         vkDestroyFence(device_, fence, nullptr);
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     const uint64_t submitReturnedNs = nowNs();
     ++queueSubmitCount_;
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_END seq=%llu result=%d fence=%p\n",
+                     (unsigned long long)globalSeq, (int)submit,
+                     (void*)fence);
+        std::fflush(stderr);
+    }
 
     const uint64_t waitStartedNs = nowNs();
     VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, timeoutNs);
     const uint64_t completeNs = nowNs();
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL WAIT_END seq=%llu result=%d\n",
+                     (unsigned long long)globalSeq, (int)wait);
+        std::fflush(stderr);
+    }
 
     GpuWorkInterval wi{};
     if (wait == VK_SUCCESS) {
@@ -1446,7 +1562,52 @@ bool VulkanCompute::endSubmitWait(
     vkDestroyFence(device_, fence, nullptr);
     if (query) vkDestroyQueryPool(device_, query, nullptr);
     vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+    if (globalSerial) {
+        g_gpuInFlight.fetch_sub(1);
+        std::fprintf(stderr, "GLOBAL_GPU_SERIAL RELEASE seq=%llu\n",
+                     (unsigned long long)globalSeq);
+        std::fflush(stderr);
+    }
     return wait == VK_SUCCESS;
+}
+
+// Gate-protected submit helper. The caller MUST hold g_gpuSubmitGate when
+// GlobalGpuSerialEnabled() is true. It increments g_gpuInFlight before
+// vkQueueSubmit and decrements it on submit failure. On success the caller
+// owns the in_flight reference and must decrement it via the ticket's
+// inFlight_ flag in the corresponding wait/cancel path (or at function end
+// for synchronous submit+wait sites).
+VkResult VulkanCompute::gatedSubmit(
+    VkQueue queue, const VkSubmitInfo* si, VkFence fence)
+{
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    uint64_t globalSeq = 0;
+    if (globalSerial) {
+        globalSeq = ++g_gpuSubmitSequence;
+        const uint32_t prior = g_gpuInFlight.fetch_add(1);
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_BEGIN seq=%llu in_flight_before=%u\n",
+                     (unsigned long long)globalSeq, prior);
+        std::fflush(stderr);
+    }
+    VkResult result = vkQueueSubmit(queue, 1, si, fence);
+    if (result != VK_SUCCESS) {
+        std::fprintf(stderr, "[GPU] gatedSubmit stage=queue_submit vk=%d\n",
+                     static_cast<int>(result));
+        std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(result), "submit");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
+        return result;
+    }
+    ++queueSubmitCount_;
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_END seq=%llu result=%d fence=%p\n",
+                     (unsigned long long)globalSeq, (int)result,
+                     (void*)fence);
+        std::fflush(stderr);
+    }
+    return VK_SUCCESS;
 }
 
 void VulkanCompute::recordComputeBarrier(VkCommandBuffer cmd) {
@@ -1473,6 +1634,21 @@ bool VulkanCompute::recordCopy(
     c.srcOffset = srcOffset;
     c.dstOffset = dstOffset;
     c.size = bytes;
+    // Copies commonly consume results produced by a prior compute submission
+    // (notably the MoE FFN arena).  Queue ordering alone is not a memory
+    // dependency; make shader/transfer writes visible to the transfer read
+    // before recording the copy.  Keep the existing post-copy barrier below
+    // for consumers of the destination buffer.
+    VkMemoryBarrier before{};
+    before.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+    before.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT |
+                           VK_ACCESS_TRANSFER_WRITE_BIT;
+    before.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    vkCmdPipelineBarrier(
+        cmd,
+        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0, 1, &before, 0, nullptr, 0, nullptr);
     vkCmdCopyBuffer(cmd, src.buffer, dst.buffer, 1, &c);
     recordComputeBarrier(cmd);
     return true;
@@ -1753,8 +1929,34 @@ bool VulkanCompute::downloadFromBuffer(
     VkCommandBuffer cmd{};
     VkQueryPool query{};
     const char* failedStage = nullptr;
+    const bool traceD2h = [] {
+        const char* v = std::getenv("DEEP2_D2H_TRACE");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    if (traceD2h) {
+        std::fprintf(stderr,
+                     "D2H_BEGIN src=%p src_id=%llu src_bytes=%llu bytes=%zu staging=%p staging_id=%llu staging_bytes=%llu epoch=%llu\n",
+                     reinterpret_cast<void*>(src.buffer),
+                     static_cast<unsigned long long>(src.id),
+                     static_cast<unsigned long long>(src.size), bytes,
+                     staging ? reinterpret_cast<void*>(staging->buffer) : nullptr,
+                     staging ? static_cast<unsigned long long>(staging->id) : 0ULL,
+                     staging ? static_cast<unsigned long long>(staging->size) : 0ULL,
+                     static_cast<unsigned long long>(workEpoch_));
+        std::fflush(stderr);
+    }
     bool ok = beginCommand(cmd, query, true);
-    if (!ok) {
+    if (ok && traceD2h && std::getenv("DEEP2_D2H_QUEUE_IDLE") &&
+        std::getenv("DEEP2_D2H_QUEUE_IDLE")[0] == '1') {
+        const VkResult idle = vkQueueWaitIdle(queue_);
+        std::fprintf(stderr, "D2H_QUEUE_IDLE vk=%d\n", static_cast<int>(idle));
+        std::fflush(stderr);
+        if (idle != VK_SUCCESS) {
+            ok = false;
+            failedStage = "queue_idle";
+        }
+    }
+    if (!ok && !failedStage) {
         failedStage = "begin_command";
     } else if (!recordCopy(cmd, src, *staging, bytes)) {
         ok = false;
@@ -1765,6 +1967,12 @@ bool VulkanCompute::downloadFromBuffer(
         ok = endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
                            bytes, workEpoch_, nullptr, 30000000000ULL);
         if (!ok) failedStage = "transfer_wait";
+    }
+    if (traceD2h) {
+        std::fprintf(stderr, "D2H_END ok=%d stage=%s last_vk=%d phase=%s\n",
+                     ok ? 1 : 0, failedStage ? failedStage : "ok",
+                     lastLostVk_, lastLostPhase_ ? lastLostPhase_ : "none");
+        std::fflush(stderr);
     }
     if (!ok && failedStage) {
         std::fprintf(stderr,
@@ -1845,7 +2053,23 @@ bool VulkanCompute::dispatchQuant(
     DeviceBuf& weights, DeviceBuf& input, DeviceBuf& output,
     const QPush& push)
 {
-    if (!qPipeline_ || !weights || !input || !output) return false;
+    const bool traceLargeQ = push.type == 12 && push.rows >= 24576u;
+    const auto fail = [&](const char* stage) {
+        if (traceLargeQ) {
+            std::fprintf(stderr,
+                         "[MLA_Q_BACKEND_FAIL] stage=%s rows=%u cols=%u "
+                         "weightBytes=%u qPipeline=%d w=%d in=%d out=%d fused=%d\n",
+                         stage, push.rows, push.cols, push.weightBytes,
+                         qPipeline_ ? 1 : 0, weights ? 1 : 0,
+                         input ? 1 : 0, output ? 1 : 0, fused_ ? 1 : 0);
+            std::fflush(stderr);
+        }
+        return false;
+    };
+    if (!qPipeline_) return fail("Q_PIPELINE");
+    if (!weights) return fail("WEIGHT_BUFFER");
+    if (!input) return fail("INPUT_BUFFER");
+    if (!output) return fail("OUTPUT_BUFFER");
 
     QPush dispatchPush = push;
     const char* strictEnv = std::getenv("RAWRXD_DEEP2_GEMV_STRICT_ORDER");
@@ -1889,7 +2113,14 @@ bool VulkanCompute::dispatchQuant(
     ++q4kParitySeq_;
 
     VkDescriptorSet set=getQuantDescriptor(weights,input,output);
-    if(set==VK_NULL_HANDLE) return false;
+    if(set==VK_NULL_HANDLE) return fail("QUANT_DESCRIPTOR");
+    if (traceLargeQ) {
+        std::fprintf(stderr,
+                     "[MLA_Q_BACKEND] stage=READY rows=%u cols=%u "
+                     "weightBytes=%u descriptor=1 fused=%d\n",
+                     push.rows, push.cols, push.weightBytes, fused_ ? 1 : 0);
+        std::fflush(stderr);
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
@@ -2051,9 +2282,15 @@ bool VulkanCompute::SubmitMaterialUploadAsync(
     si.pCommandBuffers = &t.cmd;
 
     t.hostSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, t.fence) != VK_SUCCESS)
-        return false;
-
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS)
+            return false;
+    }
+    t.inFlight_ = true;
     t.epoch = epoch;
     t.bytes = bytes;
     t.submitted = true;
@@ -2080,6 +2317,10 @@ bool VulkanCompute::WaitMaterialUpload(
     if (t.cmd) vkFreeCommandBuffers(device_, commandPool_, 1, &t.cmd);
     destroyBuffer(t.staging);
     destroyBuffer(t.target);
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_ = false;
+    }
     t = {};
     return wait == VK_SUCCESS;
 }
@@ -2179,7 +2420,9 @@ bool VulkanCompute::EnsureForwardArena(
     if (hidden_ == hidden && intermediate_ == intermediate &&
         heads_ == heads && kvHeads_ == kvHeads && headDim_ == headDim &&
         maxSeq_ == seqCap && layers_ == layers && arenaHidden_ &&
-        kvArenaLayers_ == kvLayerCount)
+        kvArenaLayers_ == kvLayerCount &&
+        arenaQ_.size >= static_cast<VkDeviceSize>(std::max({hidden_, heads * headDim, 2u * heads * headDim, 3072u})) * sizeof(float) &&
+        arenaAttn_.size >= static_cast<VkDeviceSize>(std::max(hidden_, heads * headDim)) * sizeof(float))
         return true;
 
     auto kill = [&](DeviceBuf& b){ destroyBuffer(b); };
@@ -2208,15 +2451,33 @@ bool VulkanCompute::EnsureForwardArena(
     uint64_t cacheFloats =
         static_cast<uint64_t>(kvLayerCount) * maxSeq_ * kvDim_;
 
+    // Q projection rows are not necessarily the model hidden width.  MLA
+    // direct-Q projections can require 3,072 float elements even when the
+    // legacy arena was sized to 2,048.  Keep the arena large enough for the
+    // supported topology before descriptors/commands are recorded.
+    // Qwen3.5 gated attention packs Q and gate side-by-side, so its input is
+    // 2 * heads * headDim elements and its gated attention output is
+    // heads * headDim.  The previous arena only reserved one head-width and
+    // rejected the first real Vulkan gated dispatch during UploadVector.
+    const uint64_t gatedQElements64 = static_cast<uint64_t>(heads) * headDim * 2u;
+    if (gatedQElements64 > std::numeric_limits<uint32_t>::max()) return false;
+    const uint32_t qElements = std::max({hidden_, heads * headDim,
+                                         static_cast<uint32_t>(gatedQElements64), 3072u});
+    const uint32_t attnElements = std::max(hidden_, heads * headDim);
+
     return allocF(arenaHidden_, hidden_) &&
            allocF(arenaAttnW_, hidden_) &&
            allocF(arenaFfnW_, hidden_) &&
            allocF(arenaNormed_, hidden_) &&
-           allocF(arenaQ_, hidden_) &&
+           allocF(arenaQ_, qElements) &&
            allocF(arenaK_, kvDim_) &&
            allocF(arenaV_, kvDim_) &&
-           allocF(arenaAttn_, hidden_) &&
-           allocF(arenaResidual_, hidden_) &&
+           allocF(arenaAttn_, attnElements) &&
+           // Generic quant GEMV output is not always hidden-sized. MLA
+           // attn_q_b uses rows=24576 with hidden/input cols=1536. Reserve
+           // that stable capacity at initialization so later GEMV calls do
+           // not resize shared buffers while fused work is in flight.
+           allocF(arenaResidual_, std::max({hidden_, intermediate_, 24576u})) &&
            allocF(arenaGate_, intermediate_) &&
            allocF(arenaUp_, intermediate_) &&
            allocF(arenaFFNAct_, intermediate_) &&
@@ -2443,6 +2704,11 @@ bool VulkanCompute::BeginFusedLayer() {
 }
 
 bool VulkanCompute::EndFusedLayer() {
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    uint64_t globalSeq = 0;
+    if (globalSerial)
+        globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
     const bool moeTrace = [] {
         const char* v = std::getenv("DEEP2_MOE_PLACE_TRACE");
         return v && v[0] == '1' && v[1] == '\0';
@@ -2487,20 +2753,44 @@ bool VulkanCompute::EndFusedLayer() {
 
     const uint64_t submitNs=nowNs();
     if (moeTrace) {
-        std::fprintf(stderr, "LIVE_K2_GPU_END queue_submit_begin\n");
+        std::fprintf(stderr,
+                     "LIVE_K2_GPU_END queue_submit_begin cmd=%p fence=%p "
+                     "submit_seq=%llu\n",
+                     (void*)cmd, (void*)reusableFusedFence_,
+                     (unsigned long long)(queueSubmitCount_ + 1));
+        std::fflush(stderr);
+    }
+    if (globalSerial) {
+        globalSeq = ++g_gpuSubmitSequence;
+        const uint32_t prior = g_gpuInFlight.fetch_add(1);
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_BEGIN seq=%llu cmd=%p "
+                     "in_flight_before=%u fused=1\n",
+                     (unsigned long long)globalSeq, (void*)cmd, prior);
         std::fflush(stderr);
     }
     const VkResult submitRes = vkQueueSubmit(queue_,1,&si,reusableFusedFence_);
     if (moeTrace) {
-        std::fprintf(stderr, "LIVE_K2_GPU_END queue_submit_done vk=%d\n",
-                     (int)submitRes);
+        std::fprintf(stderr,
+                     "LIVE_K2_GPU_END queue_submit_done vk=%d cmd=%p "
+                     "fence=%p submit_seq=%llu\n",
+                     (int)submitRes, (void*)cmd, (void*)reusableFusedFence_,
+                     (unsigned long long)(queueSubmitCount_ + 1));
         std::fflush(stderr);
     }
     if(submitRes!=VK_SUCCESS) {
         (void)NoteVkResult(static_cast<int>(submitRes), "submit");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     ++queueSubmitCount_;
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_END seq=%llu result=%d fence=%p\n",
+                     (unsigned long long)globalSeq, (int)submitRes,
+                     (void*)reusableFusedFence_);
+        std::fflush(stderr);
+    }
     const uint64_t fusedWaitTimeoutNs = 30000000000ULL; // 30 seconds
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END fence_wait_begin timeout_s=30\n");
@@ -2509,20 +2799,25 @@ bool VulkanCompute::EndFusedLayer() {
     VkResult waitRes = vkWaitForFences(
             device_,1,&reusableFusedFence_,VK_TRUE,fusedWaitTimeoutNs);
     if (moeTrace) {
-        std::fprintf(stderr, "LIVE_K2_GPU_END fence_wait_done vk=%d\n",
-                     (int)waitRes);
+        std::fprintf(stderr,
+                     "LIVE_K2_GPU_END fence_wait_done vk=%d cmd=%p "
+                     "fence=%p submit_seq=%llu\n",
+                     (int)waitRes, (void*)cmd, (void*)reusableFusedFence_,
+                     (unsigned long long)(queueSubmitCount_ + 1));
         std::fflush(stderr);
     }
     if(waitRes==VK_TIMEOUT){
         std::fprintf(stderr,"[GPU] EndFusedLayer vkWaitForFences TIMEOUT after 30s\n");
         std::fflush(stderr);
         (void)NoteVkResult(static_cast<int>(waitRes), "fence");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     if(waitRes!=VK_SUCCESS) {
         (void)NoteVkResult(static_cast<int>(waitRes),
                            (waitRes == VK_ERROR_DEVICE_LOST) ? "device_lost"
                                                             : "fence");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     const uint64_t completeNs=nowNs();
@@ -2532,6 +2827,12 @@ bool VulkanCompute::EndFusedLayer() {
     // (recordQuantRowsResident queued them; never cached, never reused).
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END drain_descriptors_begin\n");
+        std::fflush(stderr);
+    }
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL WAIT_END seq=%llu result=%d\n",
+                     (unsigned long long)globalSeq, (int)waitRes);
         std::fflush(stderr);
     }
     drainPendingDescriptorFrees();
@@ -2566,6 +2867,12 @@ bool VulkanCompute::EndFusedLayer() {
     accumulateQ4kParitySamples();
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END q4k_collect_done\n");
+        std::fflush(stderr);
+    }
+    if (globalSerial) {
+        g_gpuInFlight.fetch_sub(1);
+        std::fprintf(stderr, "GLOBAL_GPU_SERIAL RELEASE seq=%llu\n",
+                     (unsigned long long)globalSeq);
         std::fflush(stderr);
     }
     return true;
@@ -2669,6 +2976,184 @@ bool VulkanCompute::DispatchAttnDecode(
     return dispatchOps(q,kCache,vCache,out,p,(p.n+63u)/64u);
 }
 
+bool VulkanCompute::ensureQwen35GatedPipeline() {
+    if (qwen35GatedPipeline_ != VK_NULL_HANDLE) return true;
+    VkDescriptorSetLayoutBinding b[6]{};
+    for (uint32_t i = 0; i < 6; ++i) {
+        b[i].binding = i;
+        b[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        b[i].descriptorCount = 1;
+        b[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo d{};
+    d.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    d.bindingCount = 6; d.pBindings = b;
+    if (vkCreateDescriptorSetLayout(device_, &d, nullptr, &qwen35GatedSetLayout_) != VK_SUCCESS)
+        return false;
+    VkPushConstantRange p{};
+    p.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT; p.size = 10u * sizeof(uint32_t);
+    VkPipelineLayoutCreateInfo l{};
+    l.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    l.setLayoutCount = 1; l.pSetLayouts = &qwen35GatedSetLayout_;
+    l.pushConstantRangeCount = 1; l.pPushConstantRanges = &p;
+    if (vkCreatePipelineLayout(device_, &l, nullptr, &qwen35GatedPipelineLayout_) != VK_SUCCESS)
+        return false;
+    const std::string path = shaderPath("attn_qwen35_gated.spv");
+    std::ifstream f(path, std::ios::binary | std::ios::ate);
+    if (!f) return false;
+    const std::streamsize sz = f.tellg(); f.seekg(0, std::ios::beg);
+    std::vector<uint32_t> code(static_cast<size_t>(sz) / 4u);
+    if (!f.read(reinterpret_cast<char*>(code.data()), sz)) return false;
+    VkShaderModuleCreateInfo sm{}; sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = static_cast<size_t>(sz); sm.pCode = code.data();
+    VkShaderModule mod = VK_NULL_HANDLE;
+    if (vkCreateShaderModule(device_, &sm, nullptr, &mod) != VK_SUCCESS) return false;
+    VkPipelineShaderStageCreateInfo ss{}; ss.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    ss.stage = VK_SHADER_STAGE_COMPUTE_BIT; ss.module = mod; ss.pName = "main";
+    VkComputePipelineCreateInfo cp{}; cp.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cp.stage = ss; cp.layout = qwen35GatedPipelineLayout_;
+    VkResult r = vkCreateComputePipelines(device_, VK_NULL_HANDLE, 1, &cp, nullptr, &qwen35GatedPipeline_);
+    vkDestroyShaderModule(device_, mod, nullptr);
+    if (r != VK_SUCCESS) return false;
+    VkDescriptorSetAllocateInfo a{}; a.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    a.descriptorPool = descriptorPool_; a.descriptorSetCount = 1;
+    a.pSetLayouts = &qwen35GatedSetLayout_;
+    return vkAllocateDescriptorSets(device_, &a, &qwen35GatedDescriptorSet_) == VK_SUCCESS;
+}
+
+bool VulkanCompute::DispatchQwen35GatedAttention(
+    DeviceBuf& qGate, DeviceBuf& kCache, DeviceBuf& vCache, DeviceBuf& qNorm,
+    DeviceBuf& kNorm, DeviceBuf& out, uint32_t headDim, uint32_t heads,
+    uint32_t kvHeads, uint32_t seqLen, uint32_t ropeDim, uint32_t qgStride,
+    float theta, float scale, float eps) {
+    if (!device_ || !qGate || !kCache || !vCache || !qNorm || !kNorm || !out ||
+        !headDim || !heads || !kvHeads || heads % kvHeads || !seqLen ||
+        ropeDim > headDim || qgStride < 2u * headDim || theta <= 0.0f || scale <= 0.0f)
+        return false;
+    if (qGate.size < static_cast<VkDeviceSize>(heads) * qgStride * sizeof(float) ||
+        kCache.size < static_cast<VkDeviceSize>(seqLen) * kvHeads * headDim * sizeof(float) ||
+        vCache.size < static_cast<VkDeviceSize>(seqLen) * kvHeads * headDim * sizeof(float) ||
+        out.size < static_cast<VkDeviceSize>(heads) * headDim * sizeof(float) ||
+        qNorm.size < static_cast<VkDeviceSize>(headDim) * sizeof(float) ||
+        kNorm.size < static_cast<VkDeviceSize>(headDim) * sizeof(float)) return false;
+    if (!ensureQwen35GatedPipeline()) return false;
+    DeviceBuf* bufs[6] = {&qGate, &kCache, &vCache, &qNorm, &kNorm, &out};
+    VkDescriptorBufferInfo infos[6]{}; VkWriteDescriptorSet w[6]{};
+    for (uint32_t i = 0; i < 6; ++i) {
+        infos[i] = {bufs[i]->buffer, 0, bufs[i]->size};
+        w[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; w[i].dstSet = qwen35GatedDescriptorSet_;
+        w[i].dstBinding = i; w[i].descriptorCount = 1;
+        w[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; w[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 6, w, 0, nullptr);
+    VkCommandBuffer cmd = fusedCmd_; VkQueryPool query = fusedQuery_; const bool own = !fused_;
+    if (own && !beginCommand(cmd, query, true)) return false;
+    struct Push { uint32_t hd,h,kh,seq,kvd,rd,stride; float theta,scale,eps; } p{
+        headDim,heads,kvHeads,seqLen,kvHeads*headDim,ropeDim,qgStride,theta,scale,eps};
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qwen35GatedPipeline_);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qwen35GatedPipelineLayout_, 0, 1,
+                            &qwen35GatedDescriptorSet_, 0, nullptr);
+    vkCmdPushConstants(cmd, qwen35GatedPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(p), &p);
+    vkCmdDispatch(cmd, (heads * headDim + 63u) / 64u, 1, 1);
+    recordComputeBarrier(cmd);
+    if (!own) return true;
+    return endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
+                         static_cast<size_t>(heads) * headDim * sizeof(float), workEpoch_, nullptr);
+}
+
+bool VulkanCompute::DispatchAttnDecodeSplitKV(
+    DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+    DeviceBuf& out, uint32_t headDim,
+    uint32_t heads, uint32_t kvHeads,
+    uint32_t seqLen, float scale, uint32_t layer)
+{
+    // Split-kv dispatch disabled unless explicitly enabled
+    if (!cspdEnabled_) return false;
+
+    if (!cspdPartialPipeline_ || !cspdReducePipeline_) return false;
+    if (!q || !kCache || !vCache || !out) return false;
+    if (!headDim || !heads || !kvHeads || heads % kvHeads ||
+        !seqLen || seqLen > maxSeq_) return false;
+
+    const uint32_t relLayer =
+        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
+    if (relLayer >= kvArenaLayers_) return false;
+
+    // Chunk configuration
+    const uint32_t chunkTokens = 4096;
+    uint32_t numChunks = (seqLen + chunkTokens - 1) / chunkTokens;
+    if (numChunks == 0) numChunks = 1;
+
+    // Scratch size: numChunks * heads * (headDim + 2) floats
+    const uint64_t scratchElems = static_cast<uint64_t>(numChunks) * heads * (headDim + 2);
+    if (!EnsureScratch(0, static_cast<size_t>(scratchElems))) return false;
+    DeviceBuf& scratch = Scratch(0);
+    if (!scratch) return false;
+
+    VkCommandBuffer cmd = fusedCmd_;
+    VkQueryPool query = fusedQuery_;
+    const bool own = !fused_;
+    if (own && !beginCommand(cmd, query, true)) return false;
+
+    // ---- Partial kernel dispatch ----
+    {
+        VkDescriptorSet set = getOpsDescriptor(q, kCache, vCache, scratch);
+        if (set == VK_NULL_HANDLE) return false;
+
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, cspdPartialPipeline_);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                cspdPartialPipelineLayout_, 0, 1, &set, 0, nullptr);
+
+        CspdPartialPush p{};
+        p.headDim = headDim;
+        p.heads = heads;
+        p.kvHeads = kvHeads;
+        p.seqLen = seqLen;
+        p.kvDim = kvDim_;
+        p.layerBase = static_cast<uint32_t>(static_cast<uint64_t>(relLayer) * maxSeq_ * kvDim_);
+        p.chunkTokens = chunkTokens;
+        p.numChunks = numChunks;
+        p.scale = scale;
+
+        vkCmdPushConstants(cmd, cspdPartialPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                           0, sizeof(p), &p);
+
+        // One workgroup per (head, chunk)
+        uint32_t groupsX = heads * numChunks;
+        vkCmdDispatch(cmd, groupsX, 1, 1);
+        recordComputeBarrier(cmd);
+    }
+
+    // ---- Reduce kernel dispatch ----
+    {
+        VkDescriptorSet set = getOpsDescriptor(scratch, out, scratch, scratch);
+        if (set == VK_NULL_HANDLE) return false;
+
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, cspdReducePipeline_);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                cspdReducePipelineLayout_, 0, 1, &set, 0, nullptr);
+
+        CspdReducePush p{};
+        p.headDim = headDim;
+        p.heads = heads;
+        p.numChunks = numChunks;
+
+        vkCmdPushConstants(cmd, cspdReducePipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                           0, sizeof(p), &p);
+
+        uint32_t groupsX = (heads * headDim + 63u) / 64u;
+        vkCmdDispatch(cmd, groupsX, 1, 1);
+        recordComputeBarrier(cmd);
+    }
+
+    if (!own) return true;
+    GpuWorkInterval wi{};
+    const bool ok = endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
+                                  static_cast<size_t>(scratchElems * sizeof(float)), workEpoch_, &wi);
+    if (ok) cspdDecodeNs_ += wi.calibratedDurationNs();
+    return ok;
+}
+
 void VulkanCompute::clearRecordedQ4K() {
     for(auto& kv:recordedQ4K_) {
         auto& r=kv.second;
@@ -2677,6 +3162,212 @@ void VulkanCompute::clearRecordedQ4K() {
             vkFreeCommandBuffers(device_,commandPool_,1,&r.cmd);
     }
     recordedQ4K_.clear();
+}
+
+bool VulkanCompute::EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim,
+                                 uint32_t nope, uint32_t rope, uint32_t maxSeq,
+                                 uint32_t nLayers)
+{
+    // MLA attention pipeline initialization.
+    // Creates compute pipeline with descriptor sets for Q, K, V, K_pe buffers.
+    // Preconditions: nHeads, qkDim, vDim, nope, rope, maxSeq, nLayers validated against device capabilities.
+    if (nHeads == 0 || qkDim == 0 || vDim == 0 || nLayers == 0) return false;
+
+    // Return early if pipeline already created
+    if (mlaPipeline_ != VK_NULL_HANDLE) return true;
+
+    // Create MLA descriptor set layout with bindings for Q, K, V, K_pe, output
+    VkDescriptorSetLayoutBinding bindings[5]{};
+    for (uint32_t i = 0; i < 5; ++i) {
+        bindings[i].binding = i;
+        bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bindings[i].descriptorCount = 1;
+        bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo dli{};
+    dli.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    dli.bindingCount = 5;
+    dli.pBindings = bindings;
+    VkResult r = vkCreateDescriptorSetLayout(device_, &dli, nullptr, &mlaSetLayout_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create descriptor set layout: %d\n", (int)r);
+        return false;
+    }
+
+    // Create MLA pipeline layout with descriptor set and push constants
+    VkPushConstantRange pcr{};
+    pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    pcr.offset = 0;
+    pcr.size = 7 * sizeof(uint32_t) + 3 * sizeof(float);
+
+    VkPipelineLayoutCreateInfo pli{};
+    pli.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pli.setLayoutCount = 1;
+    pli.pSetLayouts = &mlaSetLayout_;
+    pli.pushConstantRangeCount = 1;
+    pli.pPushConstantRanges = &pcr;
+    r = vkCreatePipelineLayout(device_, &pli, nullptr, &mlaPipelineLayout_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create pipeline layout: %d\n", (int)r);
+        vkDestroyDescriptorSetLayout(device_, mlaSetLayout_, nullptr);
+        mlaSetLayout_ = VK_NULL_HANDLE;
+        return false;
+    }
+
+    // Create MLA compute pipeline from shader
+    std::string shader = shaderPath("attn_decode_mla.spv");
+    if (shader.empty()) {
+        printf("[MLA] Shader attn_decode_mla.spv not found\n");
+        return false;
+    }
+
+    std::ifstream f(shader, std::ios::binary | std::ios::ate);
+    if (!f) {
+        printf("[MLA] Failed to open shader file: %s\n", shader.c_str());
+        return false;
+    }
+    std::streamsize sz = f.tellg();
+    f.seekg(0, std::ios::beg);
+    std::vector<uint32_t> code(static_cast<size_t>(sz) / 4);
+    if (!f.read(reinterpret_cast<char*>(code.data()), sz)) {
+        printf("[MLA] Failed to read shader file: %s\n", shader.c_str());
+        return false;
+    }
+
+    VkShaderModuleCreateInfo sm{};
+    sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = static_cast<size_t>(sz);
+    sm.pCode = code.data();
+    VkShaderModule module = VK_NULL_HANDLE;
+    r = vkCreateShaderModule(device_, &sm, nullptr, &module);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create shader module: %d\n", (int)r);
+        return false;
+    }
+
+    VkPipelineShaderStageCreateInfo psc{};
+    psc.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    psc.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    psc.module = module;
+    psc.pName = "main";
+
+    VkComputePipelineCreateInfo cpi{};
+    cpi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cpi.stage = psc;
+    cpi.layout = mlaPipelineLayout_;
+    r = vkCreateComputePipelines(device_, VK_NULL_HANDLE, 1, &cpi, nullptr, &mlaPipeline_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create compute pipeline: %d\n", (int)r);
+        vkDestroyShaderModule(device_, module, nullptr);
+        return false;
+    }
+
+    vkDestroyShaderModule(device_, module, nullptr);
+
+    // Create descriptor set for MLA
+    VkDescriptorSetAllocateInfo dei{};
+    dei.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    dei.descriptorPool = descriptorPool_;
+    dei.descriptorSetCount = 1;
+    dei.pSetLayouts = &mlaSetLayout_;
+    r = vkAllocateDescriptorSets(device_, &dei, &mlaDescriptorSet_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to allocate descriptor set: %d\n", (int)r);
+        vkDestroyPipelineLayout(device_, mlaPipelineLayout_, nullptr);
+        mlaPipelineLayout_ = VK_NULL_HANDLE;
+        vkDestroyPipeline(device_, mlaPipeline_, nullptr);
+        mlaPipeline_ = VK_NULL_HANDLE;
+        return false;
+    }
+
+    printf("[MLA] EnsureMlaAttn: pipeline created successfully nHeads=%u qkDim=%u vDim=%u\n",
+           nHeads, qkDim, vDim);
+    return true;
+}
+
+bool VulkanCompute::DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf& vb,
+                                         DeviceBuf& kpe, DeviceBuf& out,
+                                         uint32_t qkDim, uint32_t vDim, uint32_t nope,
+                                         uint32_t rope, uint32_t nHeads, uint32_t pos,
+                                         float theta, float scale, float ropeScale,
+                                         uint32_t layer)
+{
+    // This entry point consumes explicit sequence-major K/V buffers:
+    //   Q  [head][qkDim]
+    //   K  [position][head][nope]
+    //   V  [position][head][vDim]
+    //   K-pe [position][rope]
+    // It intentionally does not pretend to reconstruct a latent KV cache.
+    // Callers using latent MLA storage must use the latent/decompression path.
+    if (!q || !kb || !vb || !kpe || !out || pos == UINT32_MAX || theta <= 0.0f ||
+        scale <= 0.0f || ropeScale <= 0.0f)
+        return false;
+    if (qkDim != nope + rope) {
+        printf("[MLA] Invalid qkDim=%u, expected nope+%u=%u\n", qkDim, nope, nope + rope);
+        return false;
+    }
+    if (qkDim > 256 || nope == 0 || rope == 0 || vDim == 0 || nHeads == 0 ||
+        nHeads > 256 || rope > qkDim || nope > qkDim ||
+        (static_cast<uint64_t>(nHeads) * qkDim * sizeof(float)) > q.size ||
+        (static_cast<uint64_t>(pos + 1) * nHeads * nope * sizeof(float)) > kb.size ||
+        (static_cast<uint64_t>(pos + 1) * nHeads * vDim * sizeof(float)) > vb.size ||
+        (static_cast<uint64_t>(pos + 1) * rope * sizeof(float)) > kpe.size ||
+        (static_cast<uint64_t>(nHeads) * vDim * sizeof(float)) > out.size) {
+        printf("[MLA] Buffer/layout validation failed heads=%u qk=%u nope=%u rope=%u v=%u pos=%u\n",
+               nHeads, qkDim, nope, rope, vDim, pos);
+        return false;
+    }
+
+    // Ensure MLA pipeline is initialized
+    if (!EnsureMlaAttn(nHeads, qkDim, vDim, nope, rope, 0, 1)) return false;
+
+    VkDescriptorBufferInfo infos[5]{};
+    infos[0] = {q.buffer, 0, q.size};
+    infos[1] = {kb.buffer, 0, kb.size};
+    infos[2] = {vb.buffer, 0, vb.size};
+    infos[3] = {kpe.buffer, 0, kpe.size};
+    infos[4] = {out.buffer, 0, out.size};
+    VkWriteDescriptorSet writes[5]{};
+    for (uint32_t i = 0; i < 5; ++i) {
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = mlaDescriptorSet_;
+        writes[i].dstBinding = i;
+        writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 5, writes, 0, nullptr);
+
+    VkCommandBuffer cmd = fusedCmd_;
+    VkQueryPool query = fusedQuery_;
+    const bool own = !fused_;
+    if (own && !beginCommand(cmd, query, true)) return false;
+
+    // Bind the MLA attention pipeline
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, mlaPipeline_);
+
+    // Bind descriptor sets with Q, K, V, K_pe buffers
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                            mlaPipelineLayout_, 0, 1, &mlaDescriptorSet_, 0, nullptr);
+
+    struct MlaPush {
+        uint32_t nHeads, nope, rope, vHeadDim, qkDim, vDim, position;
+        float theta, ropeScale, scale;
+    } push{nHeads, nope, rope, vDim, qkDim, vDim, pos, theta, ropeScale, scale};
+    vkCmdPushConstants(cmd, mlaPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                       0, sizeof(push), &push);
+
+    // Dispatch: one workgroup per head, 256 lanes per workgroup
+    vkCmdDispatch(cmd, nHeads, 1, 1);
+    recordComputeBarrier(cmd);
+
+    if (own) {
+        if (!endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
+                           static_cast<size_t>(nHeads) * vDim * sizeof(float),
+                           workEpoch_, nullptr))
+            return false;
+    }
+    return true;
 }
 
 bool VulkanCompute::SubmitRecordedResidentQ4K(
@@ -2748,11 +3439,18 @@ bool VulkanCompute::SubmitRecordedResidentQ4K(
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;
     si.pCommandBuffers=&r.cmd;
-    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, r.fence) != VK_SUCCESS)
+            return false;
+    }
     if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     ++recordedQ4KSubmits_;
-    ++queueSubmitCount_;
     SetWorkEpoch(epoch);
     return true;
 }
@@ -2876,11 +3574,18 @@ bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
     VkSubmitInfo si{};
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;si.pCommandBuffers=&r.cmd;
-    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, r.fence) != VK_SUCCESS)
+            return false;
+    }
     if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     ++recordedGroupSubmits_;
-    ++queueSubmitCount_;
     SetWorkEpoch(epoch);
     return true;
 }
@@ -3082,6 +3787,39 @@ void VulkanCompute::UnpinAllWeights() {
     for (auto& kv : weightCache_) kv.second.pinned = false;
     pinnedWeightBytes_ = 0;
     pinnedWeightEntries_ = 0;
+}
+
+bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
+    if (!device_) return false;
+    // All Deep2 quant-dot submissions are fence-waited before their outputs
+    // are consumed.  Waiting here makes destruction safe even when a caller
+    // used the recorded-group path immediately before the block boundary.
+    if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return false;
+    UnpinAllWeights();
+    const size_t beforeBytes = weightCacheBytes_;
+    const size_t beforeEntries = weightCache_.size();
+    const size_t beforeResidentBytes = residentObjectBytes_;
+    clearWeightCache();
+    // The direct-resident/RCU path is a second owner of streamed weights and
+    // is not represented by weightCache_.  In a block-serial graph no command
+    // from the completed block remains in flight after the wait above, so its
+    // published views can be invalidated and reclaimed here as well.
+    ReclaimAllResidents();
+    const size_t evictedBytes = beforeBytes - weightCacheBytes_;
+    std::fprintf(stderr,
+                 "[GPU_RESIDENCY] block=%u pinned_weight_bytes=%zu "
+                 "cached_weight_bytes=%zu live_allocation_count=%zu "
+                 "live_device_bytes=%zu live_device_allocations=%llu "
+                 "evicted_weight_bytes=%zu resident_reclaimed_bytes=%zu "
+                 "heap_headroom_bytes=%zu\n",
+                 completedBlock, pinnedWeightBytes_, weightCacheBytes_,
+                 static_cast<size_t>(liveDeviceAllocations_),
+                 liveDeviceBytes_,
+                 static_cast<unsigned long long>(liveDeviceAllocations_),
+                 evictedBytes, beforeResidentBytes,
+                 deviceLocalHeapHeadroom());
+    (void)beforeEntries;
+    return true;
 }
 
 bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
@@ -3303,27 +4041,126 @@ bool VulkanCompute::DispatchGemvQuant(
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
     uint64_t cacheKey)
 {
-    if(type!=8 && type!=10 && type!=12 && type!=14 && type!=40) return false;
-    if(!weights||!weightBytes||!rows||!cols||
-       rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
+    // The original gate only covered very large Q4_K projections, which hid the
+    // failure stage for every other shape. Honour the forward-trace switch too
+    // so a failed GEMV reports the exact stage that rejected it.
+    const bool traceLargeQ = (type == 12 && rows >= 24576u) ||
+                             (std::getenv("DEEP2_GPU_FORWARD_TRACE") != nullptr);
+    const auto fail = [&](const char* stage) {
+        if (traceLargeQ) {
+            std::fprintf(stderr,
+                         "[MLA_Q_DISPATCH_BACKEND_FAIL] stage=%s type=%d "
+                         "rows=%u cols=%u bytes=%zu input=%d output=%d "
+                         "inCap=%llu outCap=%llu inReq=%llu outReq=%llu\n",
+                         stage, type, rows, cols, weightBytes,
+                         input ? 1 : 0, output ? 1 : 0,
+                         static_cast<unsigned long long>(input.size),
+                         static_cast<unsigned long long>(output.size),
+                         static_cast<unsigned long long>(cols) * 4ull,
+                         static_cast<unsigned long long>(rows) * 4ull);
+            std::fflush(stderr);
+        }
         return false;
+    };
+    if(type!=2 && type!=8 && type!=10 && type!=11 && type!=12 &&
+       type!=13 && type!=14 && type!=20 && type!=40) return fail("TYPE");
+    const auto checkedBytes = [](uint32_t count, size_t elem, size_t& out) {
+        if (!count || elem > std::numeric_limits<size_t>::max() / count) return false;
+        out = static_cast<size_t>(count) * elem;
+        return true;
+    };
+    size_t inputBytes = 0, outputBytes = 0;
+    if (!checkedBytes(cols, sizeof(float), inputBytes) ||
+        !checkedBytes(rows, sizeof(float), outputBytes) ||
+        !weights || !weightBytes || !rows || !cols ||
+        inputBytes > input.size || outputBytes > output.size)
+        return fail("ARGS_OR_ARENA");
+
+    if (std::getenv("DEEP2_MOE_PLACE_TRACE")) {
+        std::fprintf(stderr,
+                     "[MOE_GEMV_GEOMETRY] type=%d rows=%u cols=%u "
+                     "weight_bytes=%zu input_required=%zu input_alloc=%llu "
+                     "output_required=%zu output_alloc=%llu fused=%d\n",
+                     type, rows, cols, weightBytes, inputBytes,
+                     static_cast<unsigned long long>(input.size), outputBytes,
+                     static_cast<unsigned long long>(output.size), fused_ ? 1 : 0);
+        std::fflush(stderr);
+    }
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) return false;
+    if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey))
+        return fail("WEIGHT_RESIDENCY");
+    if (!w || w->size < weightBytes)
+        return fail("WEIGHT_BUFFER_RANGE");
+    if (traceLargeQ) {
+        std::fprintf(stderr,
+                     "[MLA_Q_DISPATCH_BACKEND] stage=WEIGHT_READY type=%d "
+                     "rows=%u cols=%u bytes=%zu weight_buffer=%d\n",
+                     type, rows, cols, weightBytes, (w && *w) ? 1 : 0);
+        std::fflush(stderr);
+    }
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
-    if(weightBytes>std::numeric_limits<uint32_t>::max()) return false;
+    if(weightBytes>std::numeric_limits<uint32_t>::max()) return fail("WEIGHT_SIZE_U32");
     p.weightBytes=static_cast<uint32_t>(weightBytes);
     bool ok;
-    if(type==40) {
-        ok=dispatchQuantNvfp4(*w,input,output,p);
+        if(type==2) {
+            // Q4_0 (type 2): block-oriented, split-half nibble dequantization
+            // dispatched via deep2_qgemv.comp with pc.type=2
+            ok=dispatchQuant(*w,input,output,p);
+        } else if(type==40) {
+            ok=dispatchQuantNvfp4(*w,input,output,p);
     } else {
         ok=dispatchQuant(*w,input,output,p);
     }
     if(ok) ++gemvSuccess_;
     return ok;
 }
+
+    bool VulkanCompute::DispatchRouter(
+        const GpuWeightView& routerWeights,
+        const float* hiddenState,
+        std::vector<int>& expertIds,
+        std::vector<float>& weights,
+        int topK)
+    {
+        // GPU MoE Router: computes logits = W * x, returns top-k expert indices and weights
+        // routerWeights: [numExperts, hiddenDim] in row-major (GGUF ffn_gate_inp layout)
+        // hiddenState: [hiddenDim]
+        // Returns true on success, fills expertIds and weights with top-k results
+        if(!routerWeights.valid()) return false;
+        if(hiddenState == nullptr) return false;
+        if(expertIds.empty()) return false;
+        if(weights.empty()) return false;
+        if(topK <= 0) return false;
+        if(routerWeights.type < 0 || routerWeights.type > 40) return false;
+
+        // Route based on weight type and distribution
+        switch(routerWeights.type) {
+            case 2: // Q4_0
+                // Dispatch Q4_0 GEMV through deep2_qgemv.comp
+                // Each expert gets a separate dispatch with type=2
+                break;
+            case 8: // F8_0
+            case 10: // F16_0
+            case 12: // F16_1
+            case 14: // BF16
+                // Dispatch standard quantized GEMV
+                break;
+            case 40: // NVFP4
+                // Dispatch NVFP4 GEMV through dispatchQuantNvfp4
+                break;
+            default:
+                return false;
+        }
+
+        // TODO: Implement full router logic with expert weighting and selection.
+        // For now, return false to retain CPU fallback behavior.
+        printf("[Router] DispatchRouter called: type=%d, topK=%d [PENDING]\n",
+               routerWeights.type, topK);
+        return false;
+    }
 
 bool VulkanCompute::DispatchGemvQ4KBatch(
     const void* weights,size_t weightBytes,
@@ -3548,17 +4385,15 @@ bool VulkanCompute::SubmitGemvPrefetch(
     if(slot>=prefetch_.size()||!prefetch_[slot].valid) return false;
     auto& e=prefetch_[slot];
     if(packedBytes && quantType) {
-        if(quantType!=8&&quantType!=10&&quantType!=12&&quantType!=14&&quantType!=40) return false;
-        QPush p{};
-        p.type=static_cast<uint32_t>(quantType);
-        p.rows=rows;p.cols=cols;
-        if(e.bytes>std::numeric_limits<uint32_t>::max()) return false;
-        p.weightBytes=static_cast<uint32_t>(e.bytes);
+            if(quantType!=2 && quantType!=8 && quantType!=10 && quantType!=12 && quantType!=14 && quantType!=40) return false;
+            QPush p{}; p.type = static_cast<uint32_t>(quantType); p.rows = rows; p.cols = cols;
+            if(e.bytes > std::numeric_limits<uint32_t>::max()) return false;
+            p.weightBytes = static_cast<uint32_t>(e.bytes);
         bool ok;
-        if(quantType==40) {
-            ok=dispatchQuantNvfp4(e.buffer,input,output,p);
+            if(quantType == 40) {
+                ok = dispatchQuantNvfp4(e.buffer, input, output, p);
         } else {
-            ok=dispatchQuant(e.buffer,input,output,p);
+                ok = dispatchQuant(e.buffer, input, output, p);
         }
         if(ok) ++gemvSuccess_;
         return ok;
@@ -3777,6 +4612,11 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     const VkMemoryPropertyFlags memory = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
+    // GDN operands must have distinct buffers even when their byte sizes
+    // match. The generic scratch cache is keyed by size, so using it for
+    // beta/alpha/a_log/dt_bias aliases same-sized inputs and later uploads
+    // overwrite earlier operands before dispatch. Keep these bindings owned
+    // by this dispatch and release them after the GPU has completed.
     auto upload = [&](const void* src, size_t count, DeviceBuf& dst) -> bool {
         if (!src || count == 0 || count > std::numeric_limits<size_t>::max() / floatBytes)
             return false;
@@ -3785,6 +4625,7 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
             return false;
         if (!uploadToBuffer(dst, src, count * floatBytes)) {
             destroyBuffer(dst);
+            dst = {};
             return false;
         }
         return true;
@@ -3793,14 +4634,11 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
     DeviceBuf qkvBuf{}, betaBuf{}, alphaBuf{}, aLogBuf{}, dtBiasBuf{},
               normBuf{}, gateBuf{}, outputBuf{};
     auto releaseInputs = [&]() {
-        destroyBuffer(qkvBuf);
-        destroyBuffer(betaBuf);
-        destroyBuffer(alphaBuf);
-        destroyBuffer(aLogBuf);
-        destroyBuffer(dtBiasBuf);
-        destroyBuffer(normBuf);
-        destroyBuffer(gateBuf);
-        destroyBuffer(outputBuf);
+        destroyBuffer(qkvBuf); destroyBuffer(betaBuf); destroyBuffer(alphaBuf);
+        destroyBuffer(aLogBuf); destroyBuffer(dtBiasBuf); destroyBuffer(normBuf);
+        destroyBuffer(gateBuf); destroyBuffer(outputBuf);
+        qkvBuf = {}; betaBuf = {}; alphaBuf = {}; aLogBuf = {};
+        dtBiasBuf = {}; normBuf = {}; gateBuf = {}; outputBuf = {};
     };
 
     if (!upload(mixed, mixedSize, qkvBuf) ||
@@ -4743,13 +5581,18 @@ bool VulkanCompute::SubmitMaterialRangeAsync(
     si.pCommandBuffers = &t.cmd;
 
     t.hostSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, t.fence) != VK_SUCCESS) {
-        vkDestroyFence(device_, t.fence, nullptr);
-        t.fence = VK_NULL_HANDLE;
-        return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
+            vkDestroyFence(device_, t.fence, nullptr);
+            t.fence = VK_NULL_HANDLE;
+            return false;
+        }
     }
-    ++queueSubmitCount_;
-
+    t.inFlight_ = true;
     t.epoch = epoch;
     t.bytes = bytes;
     t.generation = deviceGeneration_;
@@ -4778,6 +5621,10 @@ bool VulkanCompute::PublishCompletedPrime(
             vkWaitForFences(device_, 1, &t.fence, VK_TRUE, UINT64_MAX);
         if (wait != VK_SUCCESS)
             return false;
+    }
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_ = false;
     }
     const uint64_t done = nowNs();
 
@@ -5697,12 +6544,19 @@ bool VulkanCompute::RunWeightResidentHotDirect(
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
     const uint64_t submitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
-        return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, lane.fence) != VK_SUCCESS)
+            return false;
+    }
     ++lane.submits;
     if (vkWaitForFences(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     const uint64_t completeNs = nowNs();
 
     // Endurance fix: the fence is signaled — the GPU is done with every
@@ -5911,12 +6765,19 @@ bool VulkanCompute::RunWeightGroupResidentHotDirect(
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
     const uint64_t groupSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
-        return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, lane.fence) != VK_SUCCESS)
+            return false;
+    }
     ++lane.submits;
     if (vkWaitForFences(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     const uint64_t groupCompleteNs = nowNs();
 
     // Free every ranged set this submit bound.
@@ -6307,12 +7168,17 @@ bool VulkanCompute::SubmitDownloadRing(
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;si.pCommandBuffers=&s.cmd;
     VkQueue tq=transferQueue_?transferQueue_:queue_;
-    if(vkQueueSubmit(tq,1,&si,s.fence)!=VK_SUCCESS) return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(tq, &si, s.fence) != VK_SUCCESS) return false;
+    }
     s.bytes=bytes;s.inFlight=true;
     slotOut=idx;
     ++downloadRingSubmits_;
     ++transferQueueSubmits_;
-    ++queueSubmitCount_;
     return true;
 }
 
@@ -6329,7 +7195,10 @@ bool VulkanCompute::WaitDownloadRing(
     downloadRingWaitNs_+=(uint64_t)std::chrono::duration_cast<
         std::chrono::nanoseconds>(b-a).count();
     std::memcpy(dst,s.mapped,bytes);
-    s.inFlight=false;
+    if (s.inFlight) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        s.inFlight=false;
+    }
     return true;
 }
 bool VulkanCompute::CaptureVerifiedHidden(
@@ -6642,9 +7511,13 @@ bool VulkanCompute::SubmitDownloadAsync(
     VkSubmitInfo si{};
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;si.pCommandBuffers=&t.cmd;
-    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
         CancelDownloadTicket(t);return false;
     }
+    t.inFlight_ = true;
     t.bytes=bytes;t.active=true;
     return true;
 }
@@ -6656,11 +7529,20 @@ bool VulkanCompute::WaitDownloadAsync(
     if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
     std::memcpy(dst,t.mapped,bytes);
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_=false;
+    }
     CancelDownloadTicket(t);
     return true;
 }
 
 void VulkanCompute::CancelDownloadTicket(DownloadTicket& t) {
+    // Do NOT decrement g_gpuInFlight here: the submission succeeded and the
+    // GPU work is still executing. The in_flight reference is released only
+    // in the corresponding wait path after a successful fence/timeline wait.
+    // Cancel merely abandons the ticket; the counter remains conservatively
+    // incremented (safe overcount) until the GPU completes the submission.
     if(t.mapped&&t.staging.memory) vkUnmapMemory(device_,t.staging.memory);
     if(t.fence) vkDestroyFence(device_,t.fence,nullptr);
     if(t.cmd&&commandPool_) vkFreeCommandBuffers(device_,commandPool_,1,&t.cmd);
@@ -6925,9 +7807,13 @@ bool VulkanCompute::BeginQ4KResidentAsync(
     si.commandBufferCount=1;
     si.pCommandBuffers=&t.cmd;
     const auto now=std::chrono::steady_clock::now();
-    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
         CancelQ4KAsync(t); return false;
     }
+    t.inFlight_ = true;
     t.submitNs=(uint64_t)std::chrono::duration_cast<
         std::chrono::nanoseconds>(now.time_since_epoch()).count();
     t.weightBytes=weight.bytes;
@@ -6952,11 +7838,20 @@ bool VulkanCompute::WaitQ4KResidentAsync(
         std::chrono::nanoseconds>(w1.time_since_epoch()).count();
     if(gpuNs) *gpuNs=t.completeNs>t.submitNs
         ? t.completeNs-t.submitNs:0;
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_=false;
+    }
     CancelQ4KAsync(t);
     return true;
 }
 
 void VulkanCompute::CancelQ4KAsync(Q4KAsyncTicket& t) {
+    // Do NOT decrement g_gpuInFlight here: the submission succeeded and the
+    // GPU work is still executing. The in_flight reference is released only
+    // in the corresponding wait path after a successful fence/timeline wait.
+    // Cancel merely abandons the ticket; the counter remains conservatively
+    // incremented (safe overcount) until the GPU completes the submission.
     // Ring owns cmd/fence. Locate and release logical in-flight state only.
     for(auto& s:asyncCmdRing_) {
         if(s.cmd==t.cmd&&s.fence==t.fence) {
@@ -7038,7 +7933,11 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     csi.pNext=&ctsi;
     csi.commandBufferCount=1;csi.pCommandBuffers=&ccmd;
     csi.signalSemaphoreCount=1;csi.pSignalSemaphores=&timelineSemaphore_;
-    if(vkQueueSubmit(queue_,1,&csi,VK_NULL_HANDLE)!=VK_SUCCESS) return false;
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(queue_, &csi, VK_NULL_HANDLE) != VK_SUCCESS) return false;
+    ticket.inFlight_++;
     ++timelineSignals_;++queueSubmitCount_;
 
     VkPipelineStageFlags waitStage=VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -7056,7 +7955,11 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     tsi.commandBufferCount=1;tsi.pCommandBuffers=&rs.cmd;
     tsi.signalSemaphoreCount=1;tsi.pSignalSemaphores=&timelineSemaphore_;
     VkQueue tq=transferQueue_?transferQueue_:queue_;
-    if(vkQueueSubmit(tq,1,&tsi,rs.fence)!=VK_SUCCESS) return false;
+    std::unique_lock<std::recursive_mutex> globalLock2;
+    const bool globalSerial2 = GlobalGpuSerialEnabled();
+    if (globalSerial2) globalLock2 = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(tq, &tsi, rs.fence) != VK_SUCCESS) return false;
+    ticket.inFlight_++;
     ++timelineSignals_;++transferQueueSubmits_;++queueSubmitCount_;
 
     rs.bytes=bytes;rs.inFlight=true;
@@ -7077,6 +7980,10 @@ bool VulkanCompute::WaitTimelineDownload(
     if(!WaitTimelineValue(t.transferDone)) return false;
     auto& rs=downloadRing_[t.ringSlot];
     std::memcpy(dst,rs.mapped,bytes);
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(t.inFlight_);
+        t.inFlight_=0;
+    }
     rs.inFlight=false;
     t={};
     return true;
@@ -7216,7 +8123,10 @@ bool VulkanCompute::SubmitTimelineCommand(
     si.pCommandBuffers=&cmd;
     si.signalSemaphoreCount=1;
     si.pSignalSemaphores=&timelineSemaphore_;
-    if(vkQueueSubmit(q,1,&si,VK_NULL_HANDLE)!=VK_SUCCESS)
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(q, &si, VK_NULL_HANDLE) != VK_SUCCESS)
         return false;
     ++timelineSignals_;
     ++queueSubmitCount_;
@@ -7268,6 +8178,7 @@ bool VulkanCompute::CaptureVerifiedHiddenTimeline(
             ticket.cmd,queue_,waitValue,ticket.signalValue,
             VK_PIPELINE_STAGE_TRANSFER_BIT))
         return false;
+    ticket.inFlight_ = true;
     ticket.active=true;
     ++hiddenTimelineSubmits_;
     ++verifiedHiddenHandoffs_;
@@ -7293,6 +8204,7 @@ bool VulkanCompute::RestoreVerifiedHiddenTimeline(
             ticket.cmd,queue_,waitValue,ticket.signalValue,
             VK_PIPELINE_STAGE_TRANSFER_BIT))
         return false;
+    ticket.inFlight_ = true;
     ticket.active=true;
     ++hiddenTimelineSubmits_;
     return true;
@@ -7301,6 +8213,10 @@ bool VulkanCompute::RestoreVerifiedHiddenTimeline(
 bool VulkanCompute::WaitHiddenCopy(HiddenCopyTicket& ticket) {
     if(!ticket.active) return true;
     const bool ok=WaitTimelineValue(ticket.signalValue);
+    if (ok && ticket.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        ticket.inFlight_=false;
+    }
     if(ticket.cmd&&commandPool_)
         vkFreeCommandBuffers(device_,commandPool_,1,&ticket.cmd);
     ticket={};

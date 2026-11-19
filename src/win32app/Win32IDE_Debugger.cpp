@@ -156,19 +156,19 @@ void Win32IDE::createDebuggerUI()
     tie.mask = TCIF_TEXT;
     
     tie.pszText = const_cast<char*>("Breakpoints");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 0, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Watch");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 1, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 1, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Variables");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 2, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 2, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Stack Trace");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 3, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 3, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Memory");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 4, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 4, reinterpret_cast<LPARAM>(&tie));
 
     // Create tab content windows
     m_hwndDebuggerBreakpoints = CreateWindowExA(
@@ -213,10 +213,11 @@ void Win32IDE::createDebuggerUI()
         col.mask = LVCF_TEXT | LVCF_WIDTH;
         col.pszText = const_cast<char*>("Name");
         col.cx = 140;
-        ListView_InsertColumn(m_hwndDebuggerVariables, 0, &col);
+        // ANSI column insert: control is WC_LISTVIEWA and col is LVCOLUMNA.
+        SendMessageA(m_hwndDebuggerVariables, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&col));
         col.pszText = const_cast<char*>("Value");
         col.cx = 220;
-        ListView_InsertColumn(m_hwndDebuggerVariables, 1, &col);
+        SendMessageA(m_hwndDebuggerVariables, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&col));
     }
 
     m_hwndDebuggerStackTrace = CreateWindowExA(
@@ -252,49 +253,50 @@ void Win32IDE::createDebuggerUI()
     lvc.pszText = const_cast<char*>("File");
     lvc.cx = 150;
     lvc.fmt = LVCFMT_LEFT;
-    ListView_InsertColumn(m_hwndDebuggerBreakpoints, 0, &lvc);
+    // ANSI column insert: control is WC_LISTVIEWA and lvc is LVCOLUMNA.
+    SendMessageA(m_hwndDebuggerBreakpoints, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.iSubItem = 1;
     lvc.pszText = const_cast<char*>("Line");
     lvc.cx = 60;
-    ListView_InsertColumn(m_hwndDebuggerBreakpoints, 1, &lvc);
+    SendMessageA(m_hwndDebuggerBreakpoints, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.iSubItem = 2;
     lvc.pszText = const_cast<char*>("Hits");
     lvc.cx = 50;
-    ListView_InsertColumn(m_hwndDebuggerBreakpoints, 2, &lvc);
+    SendMessageA(m_hwndDebuggerBreakpoints, LVM_INSERTCOLUMNA, 2, reinterpret_cast<LPARAM>(&lvc));
 
     // Watch columns
     lvc.iSubItem = 0;
     lvc.pszText = const_cast<char*>("Expression");
     lvc.cx = 150;
-    ListView_InsertColumn(m_hwndDebuggerWatch, 0, &lvc);
+    SendMessageA(m_hwndDebuggerWatch, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.iSubItem = 1;
     lvc.pszText = const_cast<char*>("Value");
     lvc.cx = 150;
-    ListView_InsertColumn(m_hwndDebuggerWatch, 1, &lvc);
+    SendMessageA(m_hwndDebuggerWatch, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.iSubItem = 2;
     lvc.pszText = const_cast<char*>("Type");
     lvc.cx = 80;
-    ListView_InsertColumn(m_hwndDebuggerWatch, 2, &lvc);
+    SendMessageA(m_hwndDebuggerWatch, LVM_INSERTCOLUMNA, 2, reinterpret_cast<LPARAM>(&lvc));
 
     // Stack trace columns
     lvc.iSubItem = 0;
     lvc.pszText = const_cast<char*>("Function");
     lvc.cx = 150;
-    ListView_InsertColumn(m_hwndDebuggerStackTrace, 0, &lvc);
+    SendMessageA(m_hwndDebuggerStackTrace, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.iSubItem = 1;
     lvc.pszText = const_cast<char*>("File");
     lvc.cx = 150;
-    ListView_InsertColumn(m_hwndDebuggerStackTrace, 1, &lvc);
+    SendMessageA(m_hwndDebuggerStackTrace, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.iSubItem = 2;
     lvc.pszText = const_cast<char*>("Line");
     lvc.cx = 60;
-    ListView_InsertColumn(m_hwndDebuggerStackTrace, 2, &lvc);
+    SendMessageA(m_hwndDebuggerStackTrace, LVM_INSERTCOLUMNA, 2, reinterpret_cast<LPARAM>(&lvc));
 
     m_debuggerEnabled = true;
     updateDebuggerUI();
@@ -661,7 +663,7 @@ void Win32IDE::updateBreakpointList()
     int count = ListView_GetItemCount(m_hwndDebuggerBreakpoints);
     for (int i = count - 1; i >= 0; --i) {
         lvi.iItem = i;
-        if (ListView_GetItem(m_hwndDebuggerBreakpoints, &lvi)) {
+        if (SendMessageA(m_hwndDebuggerBreakpoints, LVM_GETITEMA, 0, reinterpret_cast<LPARAM>(&lvi))) {
             delete[] reinterpret_cast<char*>(lvi.lParam);
         }
     }
@@ -680,7 +682,7 @@ void Win32IDE::updateBreakpointList()
         item.pszText = const_cast<char*>(bp.file.c_str());
         item.lParam = reinterpret_cast<LPARAM>(new char[bp.file.length() + 1]);
         strcpy_s(reinterpret_cast<char*>(item.lParam), bp.file.length() + 1, bp.file.c_str());
-        ListView_InsertItem(m_hwndDebuggerBreakpoints, &item);
+        SendMessageA(m_hwndDebuggerBreakpoints, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&item));
 
         item.iSubItem = 1;
         char lineBuf[32];
@@ -690,7 +692,7 @@ void Win32IDE::updateBreakpointList()
         g_debuggerStringHeap.push_back(lineHeap);
         item.pszText = lineHeap;
         item.lParam = reinterpret_cast<LPARAM>(lineHeap);
-        ListView_SetItem(m_hwndDebuggerBreakpoints, &item);
+        SendMessageA(m_hwndDebuggerBreakpoints, LVM_SETITEMA, 0, reinterpret_cast<LPARAM>(&item));
 
         item.iSubItem = 2;
         char hitsBuf[32];
@@ -700,7 +702,7 @@ void Win32IDE::updateBreakpointList()
         g_debuggerStringHeap.push_back(hitsHeap);
         item.pszText = hitsHeap;
         item.lParam = reinterpret_cast<LPARAM>(hitsHeap);
-        ListView_SetItem(m_hwndDebuggerBreakpoints, &item);
+        SendMessageA(m_hwndDebuggerBreakpoints, LVM_SETITEMA, 0, reinterpret_cast<LPARAM>(&item));
     }
 }
 
@@ -759,7 +761,7 @@ void Win32IDE::updateWatchList()
         lvi.pszText = exprHeap;
         lvi.lParam = reinterpret_cast<LPARAM>(exprHeap);
         g_watchStringHeap.push_back(exprHeap);
-        ListView_InsertItem(m_hwndDebuggerWatch, &lvi);
+        SendMessageA(m_hwndDebuggerWatch, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
 
         lvi.iSubItem = 1;
         char* valHeap = new char[item.value.length() + 1];
@@ -767,7 +769,7 @@ void Win32IDE::updateWatchList()
         lvi.pszText = valHeap;
         lvi.lParam = reinterpret_cast<LPARAM>(valHeap);
         g_watchStringHeap.push_back(valHeap);
-        ListView_SetItem(m_hwndDebuggerWatch, &lvi);
+        SendMessageA(m_hwndDebuggerWatch, LVM_SETITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
 
         lvi.iSubItem = 2;
         char* typeHeap = new char[item.type.length() + 1];
@@ -775,7 +777,7 @@ void Win32IDE::updateWatchList()
         lvi.pszText = typeHeap;
         lvi.lParam = reinterpret_cast<LPARAM>(typeHeap);
         g_watchStringHeap.push_back(typeHeap);
-        ListView_SetItem(m_hwndDebuggerWatch, &lvi);
+        SendMessageA(m_hwndDebuggerWatch, LVM_SETITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
     }
 }
 
@@ -831,10 +833,10 @@ void Win32IDE::updateVariables()
             lvi.iItem = static_cast<int>(i);
             lvi.iSubItem = 0;
             lvi.pszText = nameHeap;
-            ListView_InsertItem(m_hwndDebuggerVariables, &lvi);
+            SendMessageA(m_hwndDebuggerVariables, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
             lvi.iSubItem = 1;
             lvi.pszText = valHeap;
-            ListView_SetItem(m_hwndDebuggerVariables, &lvi);
+            SendMessageA(m_hwndDebuggerVariables, LVM_SETITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
         }
     }
     updateDebugVariables();
@@ -862,7 +864,7 @@ void Win32IDE::updateCallStack()
         lvi.pszText = funcHeap;
         lvi.lParam = reinterpret_cast<LPARAM>(funcHeap);
         g_stackStringHeap.push_back(funcHeap);
-        ListView_InsertItem(m_hwndDebuggerStackTrace, &lvi);
+        SendMessageA(m_hwndDebuggerStackTrace, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
 
         lvi.iSubItem = 1;
         char* fileHeap = new char[frame.file.length() + 1];
@@ -870,7 +872,7 @@ void Win32IDE::updateCallStack()
         lvi.pszText = fileHeap;
         lvi.lParam = reinterpret_cast<LPARAM>(fileHeap);
         g_stackStringHeap.push_back(fileHeap);
-        ListView_SetItem(m_hwndDebuggerStackTrace, &lvi);
+        SendMessageA(m_hwndDebuggerStackTrace, LVM_SETITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
 
         lvi.iSubItem = 2;
         char lineBuf[32];
@@ -880,7 +882,7 @@ void Win32IDE::updateCallStack()
         lvi.pszText = lineHeap;
         lvi.lParam = reinterpret_cast<LPARAM>(lineHeap);
         g_stackStringHeap.push_back(lineHeap);
-        ListView_SetItem(m_hwndDebuggerStackTrace, &lvi);
+        SendMessageA(m_hwndDebuggerStackTrace, LVM_SETITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
     }
 }
 

@@ -1,0 +1,30 @@
+BATCH17 HOST_ATTN KV F16 RT align closes GPU tip17 (fail-closed)
+ASOF=2026-11-12T23:09:36.1557077-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+CROSS_SHA_CREDIT=0 SPV_TOUCHED=0 ADA48968 DEVICE_WO_OPEN=1
+
+PRIOR_EXE=1F517681CA324BE75E0E30892B9AE409DCD8FED6D45B774F60F105E4127DDB1F
+NEW_EXE=DCF607E4821A890513B36257DF8D9E8D6750D0843846104BD7E39D9116B096DA (new remasure only)
+
+FIRST_OP@17=L0_ATTN_OUT / HOST_ATTN_KV_F16_RT
+  Dump-driven: Q/K/V/NORMED/KV_WRITE(pre-RT) MATCH (~1e-5..3e-5); ATTN_OUT first
+  clear jump (6.44e-4 @P17; 1.93e-4 @P9). O/FFN amplify only.
+  Root: BatchedPrefill::fp16RoundTripLocal flushed e<=0 (no subnormals) and
+  zeroed FP16-subnormal decode, while CPU decode storeKvRoundTrip used RNE+
+  subnormals. Pre-RT dumps matched; post-RT KV history diverged under HOST_ATTN.
+
+FIX=src/deep2/BatchedPrefill.hpp fp16RoundTripLocal bit-match Deep2Engine
+  floatToFp16+fp16ToFloat (RNE + subnormals). SPV untouched. Q4K act untouched.
+
+REMEASURE (2nd POST_GENERATE):
+  CONT16 tip0..15 CPU=GPU=seal tip9=821 HOLD THREE_WAY_CONT16=1
+  tip17 GPU: 47116 -> 3922 (CLOSED vs prior CPU/llama)
+  GPU_32 EXACT vs LLAMA_FAOFF_32 (FIRST_MIS_GPU_LLAMA=@-1)
+  FIRST_MIS_GPU_CPU=@26 (897 vs 18266) ? CPU batched residual; secondary
+  FIRST_MIS_CPU_LLAMA=@26
+  EXACT32=0 THREE_WAY_CONT32=0 RC2_05_PASS=0 (do not invent PASS)
+
+CPU_32 tip26 basin shift vs prior seal expected: batched prefill seal now uses
+  aligned RT (was flush). GPU tokenwise+aligned RT matches llama FA-off-32.
+
+NEXT=CPU@26 residual under batched prefill (optional); no tip9/FA/Q4K reopen; no promote

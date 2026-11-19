@@ -1,0 +1,54 @@
+{
+  "schema": "rawrxd.chat_bos_token_compare.v1",
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "CROSS_SHA": 0,
+  "gguf": "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+  "bos_token_id": 3,
+  "eos_token_id": 3,
+  "add_bos_token_kv": "ABSENT",
+  "add_eos_token_kv": "ABSENT",
+  "expert_gating_func": 3,
+  "tokenizer.ggml.pre": "\u0000\u0000\u0000\u0000",
+  "chat_template_len": 4,
+  "raw_prompt": "Hello",
+  "builtin_formatted_prompt": "]~!b[]~b]system\nYou are a helpful assistant. Your name is MiniMax-M2.7 and is built by MiniMax.[e~[\n]~b]user\nHello[e~[\n]~b]ai\n<think>\n",
+  "jinja_formatted_prompt_len": 4,
+  "marker_ids_exact_vocab_lookup": {
+    "]~!b[": null,
+    "]~b]system": null,
+    "[e~[": null,
+    "]~b]user": null,
+    "]~b]ai": null,
+    "<think>": null,
+    "Hello": null,
+    "\n": null
+  },
+  "bpe_without_minimax_pre_tokenizer": {
+    "note": "Offline BPE encode lacks tokenizer.ggml.pre=minimax-m2 rules; IDs are approximate vs Deep2 Spm::encode. Counts still bound chat vs raw divergence.",
+    "error": null,
+    "raw_token_ids": [],
+    "raw_token_count": 0,
+    "raw_prefill_positions": [],
+    "builtin_formatted_token_ids": [],
+    "builtin_formatted_token_count": 0,
+    "builtin_formatted_prefill_positions": [],
+    "jinja_formatted_token_ids": [],
+    "jinja_formatted_token_count": 0,
+    "jinja_formatted_prefill_positions": []
+  },
+  "runtime_measured": {
+    "NEOX_F50B94E6_Hello_prompt_tokens": 1,
+    "NEOX_F50B94E6_R256_Hello_prompt_tokens": 1,
+    "NEOX_F50B94E6_CHAT_prompt_tokens": 9,
+    "historical_ChatTemplate_Forced_minimax_prompt_tokens": 50,
+    "interpretation": "Sealed NEOX Hello/R256 prefill=1 matches raw 'Hello' path, NOT full chat template (builtin/jinja >> 1). NEOX_CHAT=9 is partial/alternate control, still << historical 50."
+  },
+  "parity": {
+    "RAW_VS_FORMATTED_TOKEN_IDS": "DIVERGENT_BY_CONSTRUCTION",
+    "RUNTIME_APPLIED_CHAT_TEMPLATE_ON_NEOX_HELLO": 0,
+    "BOS_PREFIX_OBSERVED_ON_NEOX_HELLO": 0,
+    "EXACT_SPM_IDS_ON_SEALED_EXE": "NOT_RUN",
+    "PASS": 0
+  }
+}

@@ -1,6 +1,7 @@
 // Win32IDE_ExtensionMarketplace.cpp — Extension Marketplace (Batch 5 X01)
 // Discover, install, update, disable extensions
 #include "marketplace/extension_package_local.hpp"
+#include "ProductExtensionRuntime.hpp"
 
 namespace RawrXD::IDE {
 
@@ -27,9 +28,15 @@ bool RawrXD_IDE_InstallExtensionPackage(const char* packagePath) {
     return RawrXD::IDE::InstallExtensionPackage(packagePath);
 }
 
-bool RawrXD_IDE_SetExtensionEnabled(const char*, bool) { return false; }
+bool RawrXD_IDE_SetExtensionEnabled(const char* id, bool enabled) {
+    if (!id || !*id) return false;
+    const std::string result = ProductExtensionRuntime::Enable(id, enabled);
+    return result.find("\"success\":true") != std::string::npos;
+}
 
-int RawrXD_IDE_ExtensionCount() { return 0; }
+int RawrXD_IDE_ExtensionCount() {
+    return static_cast<int>(ProductExtensionRuntime::ListRecords().size());
+}
 
 int RawrXD_IDE_TopIdeExtensionCatalogCount() {
     return RawrXD::IDE::ExtensionIdeCatalogCount();

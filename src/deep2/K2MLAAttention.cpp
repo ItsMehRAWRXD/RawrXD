@@ -65,6 +65,23 @@ bool softmaxInplaceFinite(float* x, size_t n) {
     return true;
 }
 
+bool reportNonFinite(const char* stage, const float* values, size_t count,
+                    uint32_t layer, uint32_t position, size_t head = SIZE_MAX) {
+    if (!values) return true;
+    for (size_t i = 0; i < count; ++i) {
+        if (!std::isfinite(values[i])) {
+            std::fprintf(stderr,
+                         "[MLA_NONFINITE] stage=%s layer=%u position=%u head=%s index=%zu value=%g count=%zu\n",
+                         stage, layer, position,
+                         head == SIZE_MAX ? "all" : std::to_string(head).c_str(),
+                         i, static_cast<double>(values[i]), count);
+            std::fflush(stderr);
+            return false;
+        }
+    }
+    return true;
+}
+
 } // namespace
 
 bool MlaAttentionComplete(
@@ -101,6 +118,13 @@ bool MlaAttentionComplete(
         error = "MlaAttentionComplete: KV cache geometry mismatch";
         return false;
     }
+    if (!reportNonFinite("q_b", q_b, numHeads * qHeadDim, layerIdx, position) ||
+        !reportNonFinite("k_b", k_b, numHeads * qkNopeHeadDim, layerIdx, position) ||
+        !reportNonFinite("v_b", v_b, numHeads * vHeadDim, layerIdx, position) ||
+        !reportNonFinite("k_pe", k_pe, qkRopeHeadDim, layerIdx, position)) {
+        error = "MlaAttentionComplete: non-finite input";
+        return false;
+    }
     if (!kvCache->CanAppend()) {
         error = "MlaAttentionComplete: KV cache full";
         return false;
@@ -110,6 +134,10 @@ bool MlaAttentionComplete(
             layerIdx, position, numHeads, qkDim, kvDim, kvCache->currentLength() + 1);
 
     ropeNeoXInplace(k_pe, qkRopeHeadDim, position, ropeTheta, ropeScale);
+    if (!reportNonFinite("k_pe_rope", k_pe, qkRopeHeadDim, layerIdx, position)) {
+        error = "MlaAttentionComplete: non-finite rotary key";
+        return false;
+    }
     MlaDiag("[MLA_ATTENTION] layer=%u rope done\n", layerIdx);
 
     std::vector<float> qFull(numHeads * qkDim);
@@ -124,6 +152,11 @@ bool MlaAttentionComplete(
         memcpy(qd + qkNopeHeadDim, qh + qkNopeHeadDim, qkRopeHeadDim * sizeof(float));
         ropeNeoXInplace(qd + qkNopeHeadDim, qkRopeHeadDim, position, ropeTheta, ropeScale);
 
+        if (!reportNonFinite("q_full", qd, qkDim, layerIdx, position, h)) {
+            error = "MlaAttentionComplete: non-finite query";
+            return false;
+        }
+
         float* kh = kCur.data() + h * qkDim;
         memcpy(kh, k_b + h * qkNopeHeadDim, qkNopeHeadDim * sizeof(float));
         memcpy(kh + qkNopeHeadDim, k_pe, qkRopeHeadDim * sizeof(float));
@@ -134,6 +167,11 @@ bool MlaAttentionComplete(
         kvCache->Write(layerIdx, kCur.data(), vCur.data());
     } catch (const std::exception& ex) {
         error = std::string("MlaAttentionComplete: KV write: ") + ex.what();
+        return false;
+    }
+    if (!reportNonFinite("k_cache_write", kCur.data(), kPack, layerIdx, position) ||
+        !reportNonFinite("v_cache_write", vCur.data(), vPack, layerIdx, position)) {
+        error = "MlaAttentionComplete: non-finite KV write";
         return false;
     }
     MlaDiag("[MLA_ATTENTION] layer=%u KV write done\n", layerIdx);
@@ -151,6 +189,10 @@ bool MlaAttentionComplete(
             for (size_t d = 0; d < qkDim; ++d)
                 dot += static_cast<double>(qh[d]) * static_cast<double>(kh[d]);
             scores[t] = static_cast<float>(dot) * scale;
+        }
+        if (!reportNonFinite("scores", scores.data(), seqLen, layerIdx, position, h)) {
+            error = "MlaAttentionComplete: non-finite attention score";
+            return false;
         }
         if (h % 16 == 0) {
             MlaDiag("[MLA_ATTENTION] layer=%u head %zu done, seqLen=%zu\n",

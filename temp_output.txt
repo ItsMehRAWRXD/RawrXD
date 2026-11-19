@@ -1,0 +1,39 @@
+F:\rawrxd\src\agent\ide_agent_bridge_hot_patching_integration.cpp:        m_hotPatcher->initialize("./gguf_loader", 0);
+F:\rawrxd\src\ai\streaming_gguf_loader.cpp:#include "streaming_gguf_loader_qt.h"
+F:\rawrxd\src\ai\test_minimal_streaming.cpp: * Compiles with: cl /EHsc /std:c++20 /I. test_minimal_streaming.cpp memory_mapped_file.cpp streaming_gguf_loader_qt.cpp /Fe:test_streaming.exe
+F:\rawrxd\src\ai\test_minimal_streaming.cpp:#include "streaming_gguf_loader_qt.h"
+F:\rawrxd\src\ai\test_streaming_gguf_loader.cpp:#include "streaming_gguf_loader_qt.h"
+F:\rawrxd\src\bench_main.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\cli\hotpatch_memory_safety_test.cpp:#include "../gguf_loader.h"
+F:\rawrxd\src\cpu_inference_engine.cpp:#include "streaming_gguf_loader.h"
+F:\rawrxd\src\deep2\Deep2Engine.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\gguf_loader.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\gguf_loader.cpp://       GetAllTensorInfo, GetCurrentMemoryUsage are implemented inline in gguf_loader.h
+F:\rawrxd\src\inference\inference_pipeline_test.cpp:#include "../gguf_loader.h"
+F:\rawrxd\src\inference_engine_stub.cpp:#include "../include/gguf_loader.h"
+F:\rawrxd\src\main.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\main.cpp:    GGUFLoader gguf_loader;
+F:\rawrxd\src\model_loader\enhanced_model_loader.cpp:#include "streaming_gguf_loader.h"
+F:\rawrxd\src\model_loader\ModelLoader.cpp:#include "streaming_gguf_loader.h"
+F:\rawrxd\src\model_trainer.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\nevm\nevm_extended_stress_test.cpp:#include "nevm_gguf_loader.hpp"
+F:\rawrxd\src\nevm\nevm_stress_test.cpp:#include "nevm_gguf_loader.hpp"
+F:\rawrxd\src\qtapp\gguf_loader.cpp:#include "gguf_loader.hpp"
+F:\rawrxd\src\qtapp\gguf_loader.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\qtapp\gguf_loader_stub.cpp:#include "gguf_loader.hpp"
+F:\rawrxd\src\qtapp\gguf_loader_stub.cpp:    // The real loader in src/gguf_loader.cpp handles the full parsing
+F:\rawrxd\src\qtapp\MainWindow.cpp:#include "../ai/streaming_gguf_loader_qt.h"
+F:\rawrxd\src\qtapp\MainWindowSimple.cpp:#include "gguf_loader.hpp"
+F:\rawrxd\src\qtapp\MainWindow_v5.cpp:#include "gguf_loader.hpp"
+F:\rawrxd\src\qtapp\vocabulary_loader.cpp:#include "gguf_loader.hpp"
+F:\rawrxd\src\speculative\e2e_integration_test.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\streaming_gguf_loader.cpp:#include "streaming_gguf_loader.h"
+F:\rawrxd\src\test\slash_command_smoke_test.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\test\slash_command_smoke_test.cpp:#include "streaming_gguf_loader.h"
+F:\rawrxd\src\tests\phase7d_gguf_load_test.cpp:#include "../gguf/gguf_loader_minimal.cpp"
+F:\rawrxd\src\win32app\Win32IDE.cpp:#include "streaming_gguf_loader.h"
+F:\rawrxd\src\win32app\Win32IDE_AgentExecutor.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\win32app\Win32IDE_Core.cpp:#include "../streaming_gguf_loader.h"
+F:\rawrxd\src\win32app\Win32IDE_Core.cpp:#include "gguf_loader.h"
+F:\rawrxd\src\win32app\Win32IDE_Core.cpp:        P1PRA_DHI_SCOPE("streaming_gguf_loader", P1PRA_DHI_STREAMING_GGUF_LOADER);
+F:\rawrxd\src\win32app\Win32IDE_Core.cpp:        bgInitMark("streaming_gguf_loader");

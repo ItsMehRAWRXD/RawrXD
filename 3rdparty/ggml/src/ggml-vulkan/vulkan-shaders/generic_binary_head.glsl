@@ -1,7 +1,9 @@
 #extension GL_EXT_shader_16bit_storage : require
 #extension GL_EXT_control_flow_attributes : require
 
+#ifdef RTE16
 #include "rte.glsl"
+#endif
 #include "utils.glsl"
 #if RMS_NORM_ROPE_FUSION
 #include "rope_params.glsl"

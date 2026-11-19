@@ -1,0 +1,20 @@
+# Production Win32 ActionExecutor gate
+
+TESTED_EXE_SHA256=D89F209D18CD850D60135F251BFAC98DDE9CB633CD8F9A383DED7259E6A3D079
+TARGET=RawrXD-Win32IDE-Native
+GUI_LAUNCH=PASS
+MAIN_WINDOW=PASS
+MODEL_LIST=PASS
+MODEL_SELECTED=qwen2.5-coder:1.5b-base
+REQUEST_SUBMISSION=PASS
+REQUEST_COMPLETION=FAIL
+CRASH_EXIT_CODE=-1073740771
+STDOUT_CAPTURE=NOT_REACHED
+STDERR_CAPTURE=NOT_REACHED
+CANCELLATION=NOT_REACHED
+TIMEOUT=NOT_REACHED
+CLEAN_SHUTDOWN=FAIL_AFTER_REQUEST_CRASH
+
+The executable crashed during the first live request after the backend request
+was armed. No success or fallback result is claimed. This is a real production
+path failure requiring diagnosis before the gate can pass.

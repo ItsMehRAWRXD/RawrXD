@@ -2,13 +2,14 @@
 
 #include <QWidget>
 #include <QTextEdit>
-#include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QScrollArea>
 #include <QFrame>
 #include <QList>
+#include <QKeyEvent>
+#include <QEvent>
 
 /**
  * @brief GitHub Copilot-style AI chat panel
@@ -56,6 +57,9 @@ private slots:
     void onSendClicked();
     void onQuickActionClicked(const QString& action);
     
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+    
 private:
     void setupUI();
     void applyDarkTheme();
@@ -66,7 +70,7 @@ private:
     QVBoxLayout* m_messagesLayout;
     QScrollArea* m_scrollArea;
     QWidget* m_messagesContainer;
-    QLineEdit* m_inputField;
+    QTextEdit* m_inputField;
     QPushButton* m_sendButton;
     QWidget* m_quickActionsWidget;
     

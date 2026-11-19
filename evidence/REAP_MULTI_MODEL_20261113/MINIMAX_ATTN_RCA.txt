@@ -1,0 +1,53 @@
+MINIMAX_ATTN_RCA — 2026-11-13
+PROMOTE=0 · CROSS_SHA_CREDIT=0 · NOT_RUN≠PASS · ORIGINAL_GGUF_INTACT=1
+
+EXE: F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe
+EXE_SHA256=94EE99CAD1AB2EAE1FF73C2CBEADCF0EF5152A65F66829089A97F7938CDCBEFC
+
+SYMPTOM (pre-fix)
+  rawr-reap runtime MiniMax --target 1B/8 failed before tokens.
+  fail_phase=DURING_RETAINED_ACQUIRE
+  GENERATION_REJECTED_STANDARD_MULTISHARD_BIND:
+    residency acquire failed for standard multi-shard tensor: blk.3.attn_v.weight
+  Model loaded; 62 routers created; generation never entered MoE place.
+  User framing "reached RMSNorm, no router events" maps to: bind starved
+  before full forward; no LIVE_K2_MOE_PLACE / router events.
+
+ROOT CAUSE
+  REAP runtime injection set TensorResidencyCache max_resident_bytes to
+  target_working_set_bytes (~604898502 ≈ 577 MiB).
+  MiniMax standard multi-shard bind pins ALL non-expert attn/norm/router
+  tensors for the generation (~2.44 GiB non_expert).
+  Pinned mappings are not LRU-evictable → acquire fails at layer-3 attn_v.
+
+FIX (Deep2Engine.cpp)
+  After REAP working-set budget apply, if architecture contains "minimax":
+    pinFloor = sum(non-expert tensor bytes) + granule*max_active
+    need = pinFloor + expertBudget (when expertBudget>0)
+    raise max_resident_bytes to need (only when REAP budget already set).
+  workingSetConfigured attestation uses >= requested budget.
+
+POST-FIX PROOF (this turn)
+  [MULTISHARD_RESIDENCY] minimax pin floor from=604898502 to=3280523462
+    non_expert=2608516096 expert_budget=604898502
+  [MULTISHARD_BIND] standard tensors bound layers=62 experts=256 topk=8 mappings=560
+  [MINIMAX_Q_DIAG] layer=0 ATTENTION_BEGIN/END … FORWARD_ATTN_OUTPUT_VALIDATION_OK
+  LIVE_K2_MOE_PLACE layer=0..61 n=8  (62/62 router place events)
+  GENERATION_RECEIPT prompt=1 generated=1 completed=1 output="8"
+  Receipt: status=PASS generation_completed=true generated_tokens=1
+  Logs: MINIMAX_RUNTIME_STDOUT.log / STDERR.log / RECEIPT.json
+
+PERFORMANCE (MEASURED vs NOT_RUN)
+  TPS E2E: 0.07 MEASURED (1 token / 15000.28 ms)
+  TTFT/prefill_ms: 13606.710 MEASURED
+  peak RAM/VRAM: NOT_RUN (detail)
+  NVMe read: NOT_RUN
+  expert % retained: N/A (runtime top-k inject only; physical REAP NOT_RUN)
+  coding pass / coherence: NOT_RUN
+
+GATES
+  RUNTIME_FULL_TOPOLOGY_TOKENS = PASS (this receipt)
+  ROUTER_EVENTS = PASS (62 LIVE_K2_MOE_PLACE)
+  PHYSICAL_REAP_PASS = NOT_RUN (Batch 03 not started)
+  PROMOTE = 0
+  writer_invoked = false → ORIGINAL_GGUF_INTACT=1

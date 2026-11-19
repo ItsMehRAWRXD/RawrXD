@@ -1,0 +1,125 @@
+OLD:
+        if ((lw.wq.rows % numHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu Q rows=%zu not divisible by heads=%zu\n",
+                    layer, lw.wq.rows, numHeads);
+            fflush(stderr);
+            throw std::runtime_error("Q projection geometry mismatch");
+        }
+        const size_t weightHeadDim = lw.wq.rows / numHeads;
+        if (weightHeadDim == 0 || (lw.wk.rows % weightHeadDim) != 0 || (lw.wv.rows % weightHeadDim) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu incompatible Q/K/V rows q=%zu k=%zu v=%zu "
+                    "heads=%zu headDim=%zu\n",
+                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads, weightHeadDim);
+            fflush(stderr);
+            throw std::runtime_error("Q/K/V projection geometry mismatch");
+        }
+        const size_t weightKVHeads = lw.wk.rows / weightHeadDim;
+        const size_t valueKVHeads = lw.wv.rows / weightHeadDim;
+        if (weightKVHeads == 0 || weightKVHeads != valueKVHeads || (numHeads % weightKVHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu invalid GQA geometry qHeads=%zu kHeads=%zu vHeads=%zu\n",
+                    layer, numHeads, weightKVHeads, valueKVHeads);
+            fflush(stderr);
+            throw std::runtime_error("invalid GQA projection geometry");
+        }
+
+        if ((headDim != weightHeadDim || numKVHeads != weightKVHeads) && Deep2DebugEnabled())
+        {
+            fprintf(stderr,
+                    "[ATTN_TOPOLOGY] layer=%zu metadata heads=%zu kvHeads=%zu headDim=%zu; "
+                    "weights heads=%zu kvHeads=%zu headDim=%zu; using weight geometry\n",
+                    layer, numHeads, numKVHeads, headDim, numHeads, weightKVHeads, weightHeadDim);
+            fflush(stderr);
+        }
+        headDim = weightHeadDim;
+        numKVHeads = weightKVHeads;
+        groupSize = numHeads / numKVHeads;
+        projectedQDim = numHeads * headDim;
+
+        const size_t kvDim = lw.wk.rows;
+        const size_t vDim = lw.wv.rows;
+        if (kvDim > hiddenDim || vDim > hiddenDim)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu attention buffer overflow: "
+                    "kvDim=%zu or vDim=%zu exceeds kProj/vProj buffer size=%zu\n",
+                    layer, kvDim, vDim, hiddenDim);
+            fflush(stderr);
+            throw std::runtime_error("attention buffer overflow");
+        }
+
+NEW:
+        // Qwen3.5/3.6 full-attn: attn_q is 2*H*key_length with per-head
+        // [query|gate] interleaved. Head dim comes from key_length metadata.
+        const size_t keyLen =
+            modelWeights.keyLength > 0 ? modelWeights.keyLength : headDim;
+        const bool qwenGatedAttn =
+            keyLen > 0 && lw.wq.rows == 2 * numHeads * keyLen &&
+            lw.attnQNorm.data != nullptr;
+        if (!qwenGatedAttn && (lw.wq.rows % numHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu Q rows=%zu not divisible by heads=%zu\n",
+                    layer, lw.wq.rows, numHeads);
+            fflush(stderr);
+            throw std::runtime_error("Q projection geometry mismatch");
+        }
+        const size_t weightHeadDim =
+            qwenGatedAttn ? keyLen : (lw.wq.rows / numHeads);
+        if (weightHeadDim == 0 || (lw.wk.rows % weightHeadDim) != 0 || (lw.wv.rows % weightHeadDim) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu incompatible Q/K/V rows q=%zu k=%zu v=%zu "
+                    "heads=%zu headDim=%zu gated=%d\n",
+                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads, weightHeadDim,
+                    qwenGatedAttn ? 1 : 0);
+            fflush(stderr);
+            throw std::runtime_error("Q/K/V projection geometry mismatch");
+        }
+        const size_t weightKVHeads = lw.wk.rows / weightHeadDim;
+        const size_t valueKVHeads = lw.wv.rows / weightHeadDim;
+        if (weightKVHeads == 0 || weightKVHeads != valueKVHeads || (numHeads % weightKVHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu invalid GQA geometry qHeads=%zu kHeads=%zu vHeads=%zu\n",
+                    layer, numHeads, weightKVHeads, valueKVHeads);
+            fflush(stderr);
+            throw std::runtime_error("invalid GQA projection geometry");
+        }
+
+        if ((headDim != weightHeadDim || numKVHeads != weightKVHeads) && Deep2DebugEnabled())
+        {
+            fprintf(stderr,
+                    "[ATTN_TOPOLOGY] layer=%zu metadata heads=%zu kvHeads=%zu headDim=%zu; "
+                    "weights heads=%zu kvHeads=%zu headDim=%zu; using weight geometry\n",
+                    layer, numHeads, numKVHeads, headDim, numHeads, weightKVHeads, weightHeadDim);
+            fflush(stderr);
+        }
+        headDim = weightHeadDim;
+        numKVHeads = weightKVHeads;
+        groupSize = numHeads / numKVHeads;
+        projectedQDim = numHeads * headDim;
+
+        const size_t kvDim = lw.wk.rows;
+        const size_t vDim = lw.wv.rows;
+        // kProj/vProj are sized to at least hiddenDim; gated models may use
+        // key_length-sized KV that is still <= hiddenDim (2048).
+        if (kvDim > hiddenDim || vDim > hiddenDim)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu attention buffer overflow: "
+                    "kvDim=%zu or vDim=%zu exceeds kProj/vProj buffer size=%zu\n",
+                    layer, kvDim, vDim, hiddenDim);
+            fflush(stderr);
+            throw std::runtime_error("attention buffer overflow");
+        }
+
+        // Scratch for gated query half (query only) after LinearW into qProj.
+        std::vector<float> qwenGate;
+        if (qwenGatedAttn)
+            qwenGate.assign(numHeads * headDim, 0.0f);

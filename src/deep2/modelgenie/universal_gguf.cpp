@@ -1075,7 +1075,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             // attention ops with empty weight names there fails at bind time
             // with "linear: no weight".
             const bool qwen35GatedAttention =
-                s.architecture == "qwen35moe" &&
+                (s.architecture == "qwen35moe" || s.architecture == "qwen35") &&
                 !name(Role::AttnQNorm).empty() && !name(Role::AttnKNorm).empty();
             for (Role r : {Role::AttnQ, Role::AttnK, Role::AttnV}) {
                 GraphOp o;

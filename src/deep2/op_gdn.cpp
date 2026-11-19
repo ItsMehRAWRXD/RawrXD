@@ -155,7 +155,10 @@ bool GDNQwenReferenceStep(const GDNDescriptor& descriptor,
     const float kNormEpsilon = descriptor.epsilon;
     const size_t HkPerHv = Hv / Hk;
     for (size_t hv = 0; hv < Hv; ++hv) {
-        const size_t hk = hv / HkPerHv;
+        // Match ggml_gated_delta_net head mapping: ik1 = iq1 = iv1 % nek1
+        // (interleaved), the SAME key head for Q and K. The previous
+        // hv / (Hv/Hk) block mapping was wrong and diverged from the reference.
+        const size_t hk = hv % Hk;
         const size_t q_base = hk * D;
         const size_t k_base = (Hk + hk) * D;
         const size_t v_base = (2 * Hk + hv) * D;
@@ -169,7 +172,12 @@ bool GDNQwenReferenceStep(const GDNDescriptor& descriptor,
         }
         const float q_inv = 1.0f / std::sqrt(q_sq + kNormEpsilon);
         const float k_inv = 1.0f / std::sqrt(k_sq + kNormEpsilon);
-        const float decay = -std::exp(a_log[hv]) * GdnSoftplus(alpha_logits[hv] + dt_bias[hv]);
+        // The GGUF ssm_a tensor already stores -exp(A_log) (folded at
+        // conversion time), matching llama.cpp, which uses it directly as the
+        // log-decay: g = ssm_a * softplus(alpha + dt_bias). Applying another
+        // -exp() here double-applies the transform and diverges from the
+        // reference recurrence.
+        const float decay = a_log[hv] * GdnSoftplus(alpha_logits[hv] + dt_bias[hv]);
         const float decay_factor = std::exp(decay);
         const float beta = GdnSigmoid(beta_logits[hv]);
         if (!std::isfinite(decay_factor) || !std::isfinite(beta)) {

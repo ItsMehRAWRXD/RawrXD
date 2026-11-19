@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <limits.h>
 
 #define PE_FILE_ALIGNMENT    0x200
 #define PE_SECTION_ALIGNMENT 0x1000
@@ -32,6 +33,7 @@
 #define PE_OPTIONAL_HDR_SIZE 0xF0   /* PE32+ optional header = 240 bytes */
 #define PE_NUM_DATA_DIRS     16
 #define PE_MAX_IMPORTS       32
+#define PE_MAX_BASE_RELOCS   4096
 
 /* Data directory indices (PE32+ optional header) */
 #define PE_DATA_DIR_EXPORT       0
@@ -88,6 +90,8 @@ struct pe_builder {
 
   pe_import_t imports[PE_MAX_IMPORTS];
   int num_imports;
+  uint32_t base_reloc_rvas[PE_MAX_BASE_RELOCS];
+  int num_base_relocs;
 
   /* Entry stub injection */
   uint8_t entry_stub_code[256];
@@ -102,9 +106,34 @@ struct pe_builder {
   uint32_t timestamp;
 };
 
+/* Test-only deterministic fault injection. Production behavior is unchanged
+ * unless RAWRXD_PEWRITER_FAIL_ALLOC_AFTER is explicitly set. */
+static int pw_alloc_count;
+static int pw_alloc_should_fail(void) {
+  const char *e = getenv("RAWRXD_PEWRITER_FAIL_ALLOC_AFTER");
+  if (!e || !*e) return 0;
+  char *end = NULL;
+  long limit = strtol(e, &end, 10);
+  if (end == e || limit < 0 || limit > INT_MAX) return 0;
+  return pw_alloc_count++ >= (int)limit;
+}
+static void * pw_malloc(size_t n) {
+  if (pw_alloc_should_fail()) return NULL;
+  return malloc(n);
+}
+static void * pw_calloc(size_t n, size_t s) {
+  if (pw_alloc_should_fail()) return NULL;
+  return calloc(n, s);
+}
+
 /* ---- Alignment helpers ---- */
-static uint32_t falign(uint32_t v) { return (v + PE_FILE_ALIGNMENT - 1) & ~(PE_FILE_ALIGNMENT - 1); }
-static uint32_t salign(uint32_t v) { return (v + PE_SECTION_ALIGNMENT - 1) & ~(PE_SECTION_ALIGNMENT - 1); }
+static int align_checked(uint32_t v, uint32_t a, uint32_t *out) {
+  if (!out || a == 0 || v > UINT32_MAX - (a - 1)) return -1;
+  *out = (v + a - 1) & ~(a - 1);
+  return 0;
+}
+static uint32_t falign(uint32_t v) { uint32_t out = 0; return align_checked(v, PE_FILE_ALIGNMENT, &out) ? 0 : out; }
+static uint32_t salign(uint32_t v) { uint32_t out = 0; return align_checked(v, PE_SECTION_ALIGNMENT, &out) ? 0 : out; }
 
 /* ---- Little-endian write helpers ---- */
 static void w16(uint8_t *p, uint16_t v) { p[0]=(uint8_t)v; p[1]=(uint8_t)(v>>8); }
@@ -115,7 +144,8 @@ static void w64(uint8_t *p, uint64_t v) { w32(p,(uint32_t)v); w32(p+4,(uint32_t)
  * Create a new PE builder.
  *------------------------------------------------------------------------*/
 pe_builder_t *pe_builder_new(uint16_t machine) {
-  pe_builder_t *pb = (pe_builder_t *)calloc(1, sizeof(pe_builder_t));
+  pw_alloc_count = 0;
+  pe_builder_t *pb = (pe_builder_t *)pw_calloc(1, sizeof(pe_builder_t));
   if (!pb) return NULL;
   pb->machine       = machine;
   pb->subsystem     = PE_SUBSYS_CONSOLE;
@@ -140,13 +170,63 @@ void pe_builder_free(pe_builder_t *pb) {
 
 void pe_builder_add_import(pe_builder_t *pb, const char *dllName,
                            const char *funcName) {
-  if (!pb || pb->num_imports >= PE_MAX_IMPORTS) return;
+  if (!pb || !dllName || !funcName || !*dllName || !*funcName ||
+      pb->num_imports >= PE_MAX_IMPORTS) return;
   pe_import_t *imp = &pb->imports[pb->num_imports++];
   memset(imp, 0, sizeof(*imp));
   strncpy(imp->dllName, dllName, sizeof(imp->dllName) - 1);
   strncpy(imp->funcName, funcName, sizeof(imp->funcName) - 1);
   imp->iatRva = 0;
   imp->hintNameRva = 0;
+}
+
+int pe_builder_add_base_relocation(pe_builder_t *pb, uint32_t image_rva) {
+  if (!pb || pb->num_base_relocs >= PE_MAX_BASE_RELOCS) return -1;
+  for (int i = 0; i < pb->num_base_relocs; ++i)
+    if (pb->base_reloc_rvas[i] == image_rva) return 0;
+  pb->base_reloc_rvas[pb->num_base_relocs++] = image_rva;
+  return 0;
+}
+
+static int reloc_compare(const void *a, const void *b) {
+  uint32_t x = *(const uint32_t *)a, y = *(const uint32_t *)b;
+  return x < y ? -1 : x > y ? 1 : 0;
+}
+
+static uint8_t *build_base_reloc_data(pe_builder_t *pb, uint32_t *out_size) {
+  if (!pb || !out_size || pb->num_base_relocs == 0) return NULL;
+  uint32_t sorted[PE_MAX_BASE_RELOCS];
+  memcpy(sorted, pb->base_reloc_rvas, (size_t)pb->num_base_relocs * sizeof(uint32_t));
+  qsort(sorted, (size_t)pb->num_base_relocs, sizeof(uint32_t), reloc_compare);
+  size_t total = 0;
+  for (int i = 0; i < pb->num_base_relocs;) {
+    uint32_t page = sorted[i] & ~0xFFFu;
+    int n = 0;
+    while (i + n < pb->num_base_relocs && (sorted[i + n] & ~0xFFFu) == page) ++n;
+    size_t block = 8u + (size_t)n * 2u;
+    block = (block + 3u) & ~3u;
+    if (total > UINT32_MAX - block) return NULL;
+    total += block;
+    i += n;
+  }
+  if (total == 0 || total > UINT32_MAX) return NULL;
+  uint8_t *buf = (uint8_t *)pw_calloc(1, total);
+  if (!buf) return NULL;
+  size_t off = 0;
+  for (int i = 0; i < pb->num_base_relocs;) {
+    uint32_t page = sorted[i] & ~0xFFFu;
+    int n = 0;
+    while (i + n < pb->num_base_relocs && (sorted[i + n] & ~0xFFFu) == page) ++n;
+    uint32_t block = (uint32_t)((8u + (size_t)n * 2u + 3u) & ~3u);
+    w32(buf + off, page); w32(buf + off + 4, block);
+    for (int j = 0; j < n; ++j)
+      w16(buf + off + 8u + (size_t)j * 2u,
+          (uint16_t)((10u << 12) | (sorted[i + j] & 0xFFFu)));
+    off += block;
+    i += n;
+  }
+  *out_size = (uint32_t)total;
+  return buf;
 }
 
 void pe_builder_set_entry_stub(pe_builder_t *pb, const uint8_t *code,
@@ -178,10 +258,10 @@ void pe_builder_add_section(pe_builder_t *pb, const char *name,
   if (nlen > 8) nlen = 8;
   memcpy(s->name, name, nlen);
   s->name[nlen] = '\0';
+  s->data_len = len;
   if (data && len > 0) {
-    s->data = (uint8_t *)malloc(len);
+    s->data = (uint8_t *)pw_malloc(len);
     if (s->data) memcpy(s->data, data, len);
-    s->data_len = len;
     s->owns_data = 1;
   }
   s->virtual_size = (uint32_t)len;
@@ -245,11 +325,18 @@ static uint8_t *build_import_data(pe_builder_t *pb,
       if (strcmp(dllNames[g], imp->dllName) == 0) { found = g; break; }
     }
     if (found < 0) {
+      if (numDlls >= PE_MAX_IMPORTS) return NULL;
       found = numDlls++;
       strcpy(dllNames[found], imp->dllName);
       dllFuncCounts[found] = 0;
     }
-    strcpy(dllFuncNames[found][dllFuncCounts[found]++], imp->funcName);
+    int duplicate = 0;
+    for (int f = 0; f < dllFuncCounts[found]; ++f)
+      if (strcmp(dllFuncNames[found][f], imp->funcName) == 0) duplicate = 1;
+    if (!duplicate) {
+      if (dllFuncCounts[found] >= PE_MAX_IMPORTS) return NULL;
+      strcpy(dllFuncNames[found][dllFuncCounts[found]++], imp->funcName);
+    }
   }
 
   /* Precompute per-DLL ILT and IAT start offsets */
@@ -285,8 +372,13 @@ static uint8_t *build_import_data(pe_builder_t *pb,
   iatSize = runningIAT;
   hintNameSize = runningHint;
 
+  if (dirTableSize > UINT32_MAX - dllNamesSize ||
+      dirTableSize + dllNamesSize > UINT32_MAX - iltSize ||
+      dirTableSize + dllNamesSize + iltSize > UINT32_MAX - iatSize ||
+      dirTableSize + dllNamesSize + iltSize + iatSize > UINT32_MAX - hintNameSize)
+    return NULL;
   uint32_t totalSize = dirTableSize + dllNamesSize + iltSize + iatSize + hintNameSize;
-  uint8_t *buf = (uint8_t *)calloc(1, totalSize);
+  uint8_t *buf = (uint8_t *)pw_calloc(1, totalSize);
   if (!buf) return NULL;
 
   /* Offsets within buffer */
@@ -376,6 +468,7 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
   uint32_t importDataSize = 0;
   uint32_t importDirRvaInSection = 0;
   uint32_t firstIatEntryRva = 0;
+  uint32_t relocDataSize = 0;
   if (pb->num_imports > 0) {
     importData = build_import_data(pb, &importDataSize, &importDirRvaInSection,
                                    &firstIatEntryRva);
@@ -386,6 +479,14 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
     free(importData);
     importData = NULL;
   } /* close num_imports — required before stub section */
+
+  if (pb->num_base_relocs > 0) {
+    uint8_t *relocData = build_base_reloc_data(pb, &relocDataSize);
+    if (!relocData) return -1;
+    pe_builder_add_section(pb, ".reloc", relocData, relocDataSize,
+                           0x42000040); /* initialized, discardable, read */
+    free(relocData);
+  }
 
   /*==== Step 1b: Add entry stub section if needed ====*/
   if (pb->has_entry_stub) {
@@ -412,7 +513,9 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
     pe_section_t *s = &pb->sections[i];
 
     /* Virtual layout */
-    if (s->rva == 0) s->rva = virt_offset;
+    if (s->rva < virt_offset) s->rva = virt_offset;
+    if ((s->rva & (PE_SECTION_ALIGNMENT - 1)) != 0)
+      s->rva = salign(s->rva);
     if (s->virtual_size < (uint32_t)s->data_len)
       s->virtual_size = (uint32_t)s->data_len;
 
@@ -420,11 +523,33 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
     s->raw_offset = file_offset;
     s->raw_size = (s->data_len > 0) ? falign((uint32_t)s->data_len) : 0;
 
+    if (s->raw_size > UINT32_MAX - file_offset) return -1;
     file_offset += s->raw_size;
+    if (s->virtual_size > UINT32_MAX - s->rva) return -1;
     virt_offset = salign(s->rva + s->virtual_size);
+    if (virt_offset == 0) return -1;
   }
 
   pb->size_of_image = virt_offset;
+
+  /* Resolve zero unwind pointers after section RVAs are assigned. */
+  int pdataSectionIdx = -1, xdataSectionIdx = -1;
+  for (int i = 0; i < pb->num_sections; ++i) {
+    if (strcmp(pb->sections[i].name, ".pdata") == 0) pdataSectionIdx = i;
+    if (strcmp(pb->sections[i].name, ".xdata") == 0) xdataSectionIdx = i;
+  }
+  if (pdataSectionIdx >= 0 && xdataSectionIdx >= 0) {
+    pe_section_t *pdata = &pb->sections[pdataSectionIdx];
+    pe_section_t *xdata = &pb->sections[xdataSectionIdx];
+    for (size_t off = 0; off + 12 <= pdata->data_len; off += 12) {
+      uint32_t unwind = 0;
+      memcpy(&unwind, pdata->data + off + 8, 4);
+      if (unwind == 0) {
+        unwind = xdata->rva;
+        memcpy(pdata->data + off + 8, &unwind, 4);
+      }
+    }
+  }
 
   /*==== Step 2a: Fixup .idata RVAs to absolute, patch entry stub ====*/
   int idataSectionIdx = -1;
@@ -460,7 +585,7 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
             memcpy(&ent, id + off, 8);
             if (ent == 0) break;
             if ((ent >> 63) == 0) { /* not ordinal */
-              uint64_t abs = (ent & 0x7FFFFFFFu) + base;
+              uint64_t abs = (ent & UINT64_C(0x7FFFFFFFFFFFFFFF)) + base;
               memcpy(id + off, &abs, 8);
             }
             off += 8;
@@ -513,7 +638,7 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
 
   /*==== Step 3: Build the file in memory ====*/
   uint32_t total_file_size = file_offset;
-  uint8_t *image = (uint8_t *)calloc(1, total_file_size);
+  uint8_t *image = (uint8_t *)pw_calloc(1, total_file_size);
   if (!image) return -1;
 
   /*---- DOS Header (64 bytes) ----
@@ -649,7 +774,11 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
   w32(opt + 60, pb->size_of_headers);
   w32(opt + 64, 0);   /* CheckSum */
   w16(opt + 68, pb->subsystem);
-  w16(opt + 70, PE_DLL_DYNAMIC_BASE | PE_DLL_NX_COMPAT | PE_DLL_HIGH_ENTROPY_VA | PE_DLL_TERMINAL_SERVER);
+  /* Advertise ASLR only when a base-relocation directory is present. */
+  uint16_t dll_chars = PE_DLL_NX_COMPAT | PE_DLL_TERMINAL_SERVER;
+  if (pb->num_base_relocs > 0)
+    dll_chars |= PE_DLL_DYNAMIC_BASE | PE_DLL_HIGH_ENTROPY_VA;
+  w16(opt + 70, dll_chars);
   w64(opt + 72, pb->stack_reserve);
   w64(opt + 80, pb->stack_commit);
   w64(opt + 88, pb->heap_reserve);
@@ -688,7 +817,21 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
         }
         w32(opt + 120 + 0, importDirRva);
         w32(opt + 120 + 4, importDirSize);
+        if (firstIatEntryRva != 0)
+          w32(opt + 112 + PE_DATA_DIR_IAT * 8 + 0, firstIatEntryRva);
+        w32(opt + 112 + PE_DATA_DIR_IAT * 8 + 4,
+            (uint32_t)(idataSec->data_len >= 8 ? idataSec->data_len : 0));
         (void)importDataSize;
+        break;
+      }
+    }
+  }
+
+  if (pb->num_base_relocs > 0) {
+    for (int i = 0; i < pb->num_sections; ++i) {
+      if (strcmp(pb->sections[i].name, ".reloc") == 0) {
+        w32(opt + 112 + PE_DATA_DIR_BASERELOC * 8, pb->sections[i].rva);
+        w32(opt + 112 + PE_DATA_DIR_BASERELOC * 8 + 4, relocDataSize);
         break;
       }
     }
@@ -728,6 +871,7 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
   /*---- Section Raw Data ----*/
   for (int i = 0; i < pb->num_sections; i++) {
     pe_section_t *s = &pb->sections[i];
+    if (s->data_len > 0 && !s->data) { free(image); return -1; }
     if (s->data && s->data_len > 0 && s->raw_offset + s->data_len <= total_file_size) {
       memcpy(image + s->raw_offset, s->data, s->data_len);
     }
@@ -742,10 +886,11 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
   }
 
   size_t written = fwrite(image, 1, total_file_size, f);
+  int write_failed = ferror(f) != 0;
   fclose(f);
   free(image);
 
-  if (written != total_file_size) {
+  if (write_failed || written != total_file_size) {
     fprintf(stderr, "[pe_writer] write error: %zu/%u bytes\n", written, total_file_size);
     return -1;
   }

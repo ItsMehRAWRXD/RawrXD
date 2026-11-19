@@ -21,7 +21,7 @@ bool Deep2MultiGpu_BuildContiguousPlan(
         const int idx = snap.plan.openIndexes[i];
         if (idx < 0 || idx >= (int)snap.deviceCount) continue;
         const DeviceIdentity& d = snap.devices[idx];
-        if (d.integrated || d.score < 10) continue;
+        if (!d.healthy || d.problemCode != 0 || d.score < 10) continue;
         out.openIndexes[n] = idx;
         std::snprintf(out.stableId[n], sizeof(out.stableId[n]), "%s", d.stableId);
         std::snprintf(out.name[n], sizeof(out.name[n]), "%s", d.name);

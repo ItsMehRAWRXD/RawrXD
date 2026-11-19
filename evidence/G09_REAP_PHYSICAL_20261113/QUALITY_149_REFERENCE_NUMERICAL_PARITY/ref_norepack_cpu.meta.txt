@@ -1,0 +1,2 @@
+START=2026-11-13T07:56:35.9595240-05:00 CLI=F:\OllamaModels\llama.cpp\llama-cli.exe ARGS=-nr -ngl 0
+TIMEOUT

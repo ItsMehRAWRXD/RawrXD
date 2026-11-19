@@ -604,6 +604,16 @@ bool VulkanCompute::AllocateBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory
     alloc_info.allocationSize = mem_requirements.size;
     alloc_info.memoryTypeIndex = FindMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
+    if (std::getenv("RR_VULKAN_ALLOC_TRACE")) {
+        std::fprintf(stderr,
+            "[VK_ALLOC_TRACE] kind=device-local requested=%zu actual=%llu "
+            "alignment=%llu type=%u\n",
+            size,
+            static_cast<unsigned long long>(mem_requirements.size),
+            static_cast<unsigned long long>(mem_requirements.alignment),
+            alloc_info.memoryTypeIndex);
+    }
+
     if (vkAllocateMemory(device_, &alloc_info, nullptr, &memory) != VK_SUCCESS) {
         std::cerr << "Failed to allocate memory" << std::endl;
         vkDestroyBuffer(device_, buffer, nullptr);
@@ -3086,6 +3096,26 @@ void VulkanCompute::RetireQuantWeight(const QuantWeight& w) {
         gpu_counters_.device_bytes_live -= w.bytes;
     else
         gpu_counters_.device_bytes_live = 0;
+}
+
+size_t VulkanCompute::TrimUnpinnedQuantWeights() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!device_ || !quant_fence_) return 0;
+    if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return 0;
+    std::vector<const void*> victims;
+    victims.reserve(quant_weight_cache_.size());
+    for (const auto& kv : quant_weight_cache_) {
+        if (kv.second.pin_count == 0) victims.push_back(kv.first);
+    }
+    for (const void* key : victims) {
+        auto it = quant_weight_cache_.find(key);
+        if (it == quant_weight_cache_.end() || it->second.pin_count != 0) continue;
+        RetireQuantWeight(it->second);
+        quant_weight_cache_.erase(it);
+        ++gpu_counters_.weight_cache_evictions;
+    }
+    ReapRetiredWeights();
+    return victims.size();
 }
 
 // Fence-safe eviction, step 2: destroy every retired entry whose dispatch

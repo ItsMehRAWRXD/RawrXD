@@ -3329,7 +3329,7 @@ static int cmdDap(const std::vector<std::string>& args) {
         return EXIT_FAIL;
     }
     std::string exe = g_workspace_root +
-        "\\build_win32ide\\bin\\Release\\debuggee_fixture.exe";
+        "\\build\\bin\\Release\\debuggee_fixture.exe";
     for (size_t i = 0; i + 1 < args.size(); ++i) {
         if (args[i] == "--exe") exe = args[i + 1];
     }
@@ -3639,6 +3639,14 @@ int main(int argc, char** argv) {
 
     const std::string cmd = args[0];
     std::vector<std::string> rest(args.begin() + 1, args.end());
+
+    // Help is a local CLI contract and must not probe Ollama, construct an
+    // inference client, or initialize any model/GPU runtime.  Keep this path
+    // deterministic even when no backend is installed or reachable.
+    if ((cmd == "help" || cmd == "--help" || cmd == "-h") && rest.empty()) {
+        usage();
+        return EXIT_OK;
+    }
 
     Workspace ws;
     ws.setRoot(g_workspace_root);

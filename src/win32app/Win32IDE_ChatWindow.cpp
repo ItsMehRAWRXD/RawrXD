@@ -191,6 +191,7 @@ bool ChatWindow::Create(HWND hParent, HINSTANCE hInstance) {
 void ChatWindow::Destroy() {
     if (m_generationThread.joinable()) {
         m_isGenerating = false;
+        if (m_ollamaClient) m_ollamaClient->cancelActiveRequest();
         m_generationThread.join();
     }
 
@@ -489,6 +490,7 @@ void ChatWindow::GenerateResponse(const std::string& userMessage) {
         model = "llama3.2:3b";
     }
 
+    if (m_generationThread.joinable()) m_generationThread.join();
     m_generationThread = std::thread([this, model, userMessage]() {
         AddMessage("assistant", "");
 
@@ -538,27 +540,36 @@ void ChatWindow::GenerateResponse(const std::string& userMessage) {
         m_ollamaClient->chat(req, onChunk, onError, onComplete);
     });
 
-    m_generationThread.detach();
 }
 
 void ChatWindow::AddMessage(const std::string& role, const std::string& content) {
-    std::lock_guard<std::mutex> lock(m_messagesMutex);
-
     ChatMessage msg;
     msg.role = role;
     msg.content = content;
     msg.timestamp = GetTimestamp();
 
-    m_messages.push_back(msg);
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_messages.push_back(msg);
+    }
 
+    // Display update happens outside the lock to avoid deadlock with
+    // FormatAndDisplayMessages() which also reads m_messages.
     AppendMessageToDisplay(msg);
 }
 
 void ChatWindow::AppendToLastMessage(const std::string& content) {
-    std::lock_guard<std::mutex> lock(m_messagesMutex);
-
-    if (!m_messages.empty()) {
-        m_messages.back().content += content;
+    bool changed = false;
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        if (!m_messages.empty()) {
+            m_messages.back().content += content;
+            changed = true;
+        }
+    }
+    if (changed) {
+        // FormatAndDisplayMessages() reads m_messages; caller has already
+        // released the lock, so we do not lock again here to avoid deadlock.
         FormatAndDisplayMessages();
     }
 }
@@ -579,9 +590,14 @@ void ChatWindow::FormatAndDisplayMessages() {
     wss << L"{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Segoe UI;}}\r\n";
     wss << L"{\\colortbl ;\\red200\\green200\\blue200;\\red100\\green180\\blue255;\\red180\\green255\\blue180;}\r\n";
 
-    std::lock_guard<std::mutex> lock(m_messagesMutex);
+    // Read messages under lock, then display without lock to avoid deadlock
+    std::vector<ChatMessage> snapshot;
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        snapshot = m_messages;  // copy under lock
+    }
 
-    for (const auto& msg : m_messages) {
+    for (const auto& msg : snapshot) {
         int wlen = MultiByteToWideChar(CP_UTF8, 0, msg.content.c_str(), -1, nullptr, 0);
         std::wstring wcontent(wlen - 1, L'\0');
         MultiByteToWideChar(CP_UTF8, 0, msg.content.c_str(), -1, &wcontent[0], wlen);

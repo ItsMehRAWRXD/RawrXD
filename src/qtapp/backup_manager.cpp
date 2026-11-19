@@ -17,7 +17,7 @@
 #endif
 #else
 // zlib not available - compression disabled, backups stored uncompressed
-#warning "zlib not found - BackupManager will store uncompressed backups"
+#pragma message("zlib not found - BackupManager will store uncompressed backups")
 #endif
 
 BackupManager& BackupManager::instance() {

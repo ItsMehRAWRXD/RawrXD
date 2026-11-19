@@ -1,0 +1,62 @@
+GATING_FUNC2_DISPOSITION.txt
+UTC=2026-11-13T07:50:00-05:00
+MOTD_ACK=1
+ISSUE=#83
+GATE=MINIMAX_EXPERT_GATING_FUNC2
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA=0
+SEALED_EXE_SHA=F50B94E64B77FCE4E7E20E72F2A688A19844616B36112D829466F98A5F064F89
+SEALED_EXE_OVERWRITE=0
+
+## GGUF (measured)
+KEY=minimax-m2.expert_gating_func
+VALUE=2
+MEANING=sigmoid (llama/GGUF enum: 1=softmax, 2=sigmoid)
+EVIDENCE=CHAT_BOS_GGUF_KV.txt + runtime [MOE_KEYS_DIAG] on NEOX stderr
+EXPERTS=256 TOPK=8
+
+## Source contract (tip tree; SOURCE_WIRED != RUNTIME_REACHED)
+FILE=src/deep2/MoERouter.hpp
+  expertGatingFunc: 1=softmax, 2=sigmoid (MiniMax/DeepSeek)
+FILE=src/deep2/MoERouter.cpp
+  if expertGatingFunc==2:
+    scores = sigmoid(logits)
+    choice = scores + exp_probs_b (top-k selection only)
+    weights = normalize(unbiased scores) * routedScalingFactor
+  else:
+    Softmax(logits) path
+FILE=src/deep2/Deep2Engine.cpp
+  meta.expertGatingFunc -> moeConfig_.expertGatingFunc
+  MiniMax arch force-to-2 if mismatched (B03_MOE_GATE_FORCE)
+  B03_MOE_CFG fprintf(stderr) gating_func/scale/experts/topk
+  Created N routers printf includes gating_func=%u
+FILE=src/deep2/GGUFLoader.cpp
+  parses expert_gating_func into metadata.expertGatingFunc
+
+## Sealed EXE runtime witness (F50B94E6)
+MOE_KEYS_DIAG expert_gating_func=2 : OBSERVED (stderr R8 + R256)
+B03_MOE_CFG gating_func=... : NOT_OBSERVED in MINIMAX_NEOX_*_STDERR.log
+B03_MOE_GATE func=sigmoid : NOT_OBSERVED in MINIMAX_NEOX_*_STDERR.log
+stdout "Created 62 per-layer routers (multi-shard)" : OBSERVED WITHOUT "gating_func=" suffix
+PE string scan ASCII/UTF16 for B03_MOE_CFG / gating_func= / func=sigmoid : NOT_FOUND
+PE string scan PARTIAL_ROPE / ROPE_TYPE=NEOX / sigmoid / softmax : FOUND
+
+## Fail-closed law
+SOURCE_WIRED (tip MoERouter sigmoid) != RUNTIME_REACHED (sealed EXE sigmoid path witnessed)
+NOT_RUN != PASS
+
+RUNTIME_SIGMOID_TRANSFORM_WITNESSED_ON_SEALED_EXE=0
+WRONG_TRANSFORM_RISK=OPEN
+  if sealed build silently took Softmax while GGUF requires sigmoid -> routing wrong
+  cannot invent PASS; cannot claim CERTIFIED sigmoid wire on F50B94E6 from MOE_KEYS alone
+
+## Disposition
+GATING_FUNC2_GGUF=2_CONFIRMED
+GATING_FUNC2_SOURCE_PATH=DOCUMENTED_SIGMOID_VS_SOFTMAX
+GATING_FUNC2_SEALED_RUNTIME_WITNESS=OPEN_FAIL_CLOSED
+PROMOTE=0
+CERTIFIED=0
+NEXT=rebuild/remeasure sealed EXE with B03_MOE_CFG + B03_MOE_GATE stderr present
+  OR DEEP2 chat/gate trace proving expertGatingFunc==2 at Route()
+  Do not overwrite F50B94E6; seal a new SHA if rebuilt.

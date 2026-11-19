@@ -157,9 +157,13 @@ bool BeginBatchImpl()
 // every queued dot through the supplied CPU fallback - the identical path a
 // single DotBlocked call takes when the GPU is unavailable - and set the
 // receipt so the caller accounts a CPU run. Nothing is silently substituted.
-void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
+void ReplayRangeOnCpu(std::vector<QueuedDot>& qs, size_t from)
 {
-    for (const QueuedDot& e : qs) {
+    // from == qs.size() means nothing is replayed (every chunk already ran on the
+    // device). Replaying a completed chunk would execute its dots twice and
+    // corrupt the outputs, so error recovery must be range-bounded.
+    for (size_t i = from; i < qs.size(); ++i) {
+        const QueuedDot& e = qs[i];
         const size_t rb = RowBytesForKind(e.kind, e.n_in);
         float* out = static_cast<float*>(e.out);
         for (size_t j = 0; j < e.n_out; ++j) {
@@ -169,9 +173,14 @@ void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
         }
         g_receipt.cpu_rows += e.n_out;
     }
-    g_receipt.used_gpu = false;
     if (!g_receipt.fallback_reason)
         g_receipt.fallback_reason = "quant-dot batch failed; CPU replay";
+}
+
+void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
+{
+    ReplayRangeOnCpu(qs, 0);
+    g_receipt.used_gpu = false;
 }
 
 // Implementation of the public EndBatch: submits every queued dot in one
@@ -186,24 +195,92 @@ bool EndBatchImpl()
     if (qs.empty()) return true;
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
+    // RAWRXD_DEEP2_MOE_BATCH_CHUNK_001. One device batch holds BatchCapacity()
+    // descriptor sets. A MoE block queues one dot per selected expert, so a
+    // 199-expert model asks for 199 entries and entry 32 was rejected before any
+    // submission, collapsing the whole block to CPU replay. Split the list into
+    // capacity-sized chunks and submit each one behind its own fence. Chunk 0
+    // reuses the batch BeginBatchImpl already opened; later chunks reopen it.
+    const size_t cap = BatchCapacity();
+    const size_t chunk = cap ? cap : qs.size();
     bool ok = true;
     size_t total_rows = 0;
-    for (const QueuedDot& e : qs) {
-        ok = ok && Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
-                                       e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
-        QDTRACE_DISPATCH("  EndBatch queue entry ok=" << (int)ok);
-        total_rows += e.n_out;
+    size_t fail_index = 0;
+    const char* fail_stage = nullptr;
+    size_t replay_from = qs.size();   // nothing to replay until a chunk fails
+    size_t chunks_ok = 0;
+    for (size_t base = 0; base < qs.size() && ok; base += chunk) {
+        const size_t end = (qs.size() - base) < chunk ? qs.size() : base + chunk;
+        if (base > 0 && !Gpu().BeginQuantDotBatch()) {
+            ok = false;
+            fail_stage = "begin";
+            fail_index = qs.size();
+            replay_from = base;
+            break;
+        }
+        for (size_t i = base; i < end; ++i) {
+            const QueuedDot& e = qs[i];
+            const bool queued_ok =
+                Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
+                                    e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
+            if (!queued_ok) {
+                ok = false;
+                fail_index = i;
+                fail_stage = "queue";
+                replay_from = base;
+                break;
+            }
+            total_rows += e.n_out;
+        }
+        if (!ok) break;
+        QDTRACE_DISPATCH("EndBatch chunk base=" << base << " count=" << (end - base));
+        if (!Gpu().EndQuantDotBatch()) {
+            ok = false;
+            fail_stage = "end";
+            fail_index = qs.size();
+            replay_from = base;
+            break;
+        }
+        ++chunks_ok;
     }
-    QDTRACE_DISPATCH("EndBatch calling EndQuantDotBatch");
-    ok = ok && Gpu().EndQuantDotBatch();
-    QDTRACE_DISPATCH("EndBatch done ok=" << (int)ok);
+    QDTRACE_DISPATCH("EndBatch done ok=" << (int)ok << " chunks_ok=" << chunks_ok);
     g_receipt = Receipt{};
-    if (ok) {
-        g_receipt.used_gpu = true;
-        g_receipt.gpu_rows = total_rows;
-        return true;
+    // used_gpu stays true when earlier chunks already ran on the device, even if a
+    // later chunk failed: those rows were really computed there and must not be
+    // double-executed by the replay below.
+    g_receipt.used_gpu = (chunks_ok > 0);
+    g_receipt.gpu_rows = total_rows;
+    if (ok) return true;
+    // Record which stage and which entry failed BEFORE the replay overwrites the
+    // receipt, and name the failing geometry. A rejected queue configuration and a
+    // failed submission need different repairs, and this is the only place that
+    // can tell them apart.
+    {
+        const QueuedDot* bad = nullptr;
+        if (fail_stage && fail_index < qs.size()) bad = &qs[fail_index];
+        g_receipt.fail_stage = fail_stage;
+        g_receipt.fail_index = fail_index;
+        g_receipt.batch_entries = qs.size();
+        if (bad) {
+            g_receipt.fail_kind = bad->kind;
+            g_receipt.fail_n_in = bad->n_in;
+            g_receipt.fail_n_out = bad->n_out;
+            g_receipt.fail_packed_bytes = bad->packed_bytes;
+            g_receipt.fail_q8_bytes = bad->q8_bytes;
+            g_receipt.fail_out_bytes = bad->out_bytes;
+        }
+        std::printf("MOE_UP_BATCH_FAIL stage=%s index=%zu/%zu kind=%d n_in=%zu n_out=%zu "
+                    "packed_bytes=%zu q8_bytes=%zu out_bytes=%zu chunk=%zu chunks_ok=%zu "
+                    "replay_from=%zu\n",
+                    fail_stage ? fail_stage : "unknown", fail_index, qs.size(),
+                    bad ? bad->kind : -1, bad ? bad->n_in : 0, bad ? bad->n_out : 0,
+                    bad ? bad->packed_bytes : 0, bad ? bad->q8_bytes : 0,
+                    bad ? bad->out_bytes : 0, chunk, chunks_ok, replay_from);
+        std::fflush(stdout);
     }
-    ReplayQueuedOnCpu(qs);
+    // Only the failing chunk is replayed. Entries belonging to chunks that already
+    // submitted are left with their GPU results.
+    ReplayRangeOnCpu(qs, replay_from);
     return false;
 }
 
@@ -318,6 +395,11 @@ void ReleaseWeightLease(uint64_t lease_id) {
 
 void SetCachePolicy(int policy) {
     Gpu().SetWeightCachePolicy(policy == 1 ? 1 : 0);
+}
+
+size_t TrimUnpinnedQuantWeights() {
+    return (g_active_device >= 0 ? GpuFor(g_active_device) : Gpu())
+        .TrimUnpinnedQuantWeights();
 }
 
 // RAWRXD_G04: the budget is a device-lifetime setting resolved on first use, so
@@ -551,7 +633,13 @@ bool DotBlocked(int kind,
             n_out);
         std::fflush(stderr);
     }
-    if (g_batch_active && !differential_check && g_active_device < 0 &&
+    // Q4_K batch descriptors currently share a packed activation arena with
+    // per-entry offsets. Keep Q4_K on the synchronous path until that arena
+    // contract is proven against real model projections; the synchronous path
+    // has independent upload/barrier/readback ownership and is numerically
+    // verified. Do not return a queued result for Q4_K while its output is not
+    // yet trustworthy.
+    if (g_batch_active && kind != 0 && !differential_check && g_active_device < 0 &&
         !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
             g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";

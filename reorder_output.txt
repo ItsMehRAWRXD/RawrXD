@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "F:\rawrxd\reorder.py", line 16, in <module>
+    content = raw.decode('utf-16-le')
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\encodings\utf_16_le.py", line 16, in decode
+    return codecs.utf_16_le_decode(input, errors, True)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'utf-16-le' codec can't decode byte 0xbd in position 11624: truncated data
+decoding with 'utf-16-le' codec failed

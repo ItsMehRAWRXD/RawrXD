@@ -85,20 +85,23 @@ void Win32IDE::addProblem(const std::string& file, int line, int col,
     strcpy_s(heap->msg, msg.length() + 1, msg.c_str());
     g_problemHeapObjects.push_back(heap);
     lvi.lParam = reinterpret_cast<LPARAM>(heap);
-    ListView_InsertItem(m_hwndProblemsListView, &lvi);
+    // ANSI insert: m_hwndProblemsListView is WC_LISTVIEWA and lvi is LVITEMA.
+    // ListView_InsertItem maps to the W variant under UNICODE and would read the
+    // narrow pszText as UTF-16, producing CJK mojibake in the Problems list.
+    SendMessageA(m_hwndProblemsListView, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
 
     LVITEMA set = {};
     set.iSubItem = 1; set.pszText = heap->msg;
-    SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&set);
+    SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&set);
     set.iSubItem = 2; set.pszText = heap->file;
-    SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&set);
+    SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&set);
     char lineBuf[32];
     _snprintf_s(lineBuf, sizeof(lineBuf), _TRUNCATE, "%d", line);
     char* lineHeap = new char[strlen(lineBuf) + 1];
     strcpy_s(lineHeap, strlen(lineBuf) + 1, lineBuf);
     g_problemStringHeap.push_back(lineHeap);
     set.iSubItem = 3; set.pszText = lineHeap;
-    SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&set);
+    SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&set);
 
     switchPanelTab(PanelTab::Problems);
     updatePanelContent();

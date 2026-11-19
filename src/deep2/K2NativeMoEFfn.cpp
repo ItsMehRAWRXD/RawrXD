@@ -12,6 +12,23 @@
 
 namespace Deep2 {
 
+namespace {
+bool ValidateMoEFinite(const float* data, size_t count, uint32_t layer,
+                       const char* stage) {
+    if (!data || !count) return false;
+    for (size_t i = 0; i < count; ++i) {
+        if (!std::isfinite(data[i])) {
+            std::fprintf(stderr,
+                         "[MOE_NONFINITE] layer=%u stage=%s index=%zu value=%g\n",
+                         layer, stage, i, data[i]);
+            std::fflush(stderr);
+            return false;
+        }
+    }
+    return true;
+}
+}
+
 bool K2MoEExecDense(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                     uint32_t layer, const float* hidden, float* output,
                     std::string& error);
@@ -36,6 +53,10 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
                      (unsigned long long)MoEPlaceLive().moe_ffn_enter);
 
     const size_t H = cfg.hiddenDim;
+    if (!ValidateMoEFinite(hiddenIO, H, layer, "input")) {
+        error = "K2MoE: non-finite layer input";
+        return false;
+    }
     char denseGate[64];
     std::snprintf(denseGate, sizeof(denseGate), "blk.%u.ffn_gate.weight", layer);
     if (cfg.numExperts == 0 || index.Find(denseGate)) {
@@ -74,6 +95,11 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
     for (size_t i = 0; i < H; ++i) ss += hiddenIO[i] * hiddenIO[i];
     float inv = 1.f / std::sqrt(ss / (float)H + cfg.normRmsEps);
     for (size_t i = 0; i < H; ++i) scratch[i] = hiddenIO[i] * inv * nw[i];
+    if (!std::isfinite(ss) || !std::isfinite(inv) ||
+        !ValidateMoEFinite(scratch, H, layer, "normed")) {
+        error = "K2MoE: non-finite normalized input";
+        return false;
+    }
     moe_ltrace::BC(layer, "NORM_DONE");
 
     std::vector<float> accum(H, 0.f);
@@ -82,7 +108,15 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
         moe_ltrace::BC(layer, "PLACE_EXEC_FAIL");
         return false;
     }
+    if (!ValidateMoEFinite(accum.data(), H, layer, "routed_shared_accum")) {
+        error = "K2MoE: non-finite routed/shared accumulation";
+        return false;
+    }
     for (size_t i = 0; i < H; ++i) hiddenIO[i] += accum[i];
+    if (!ValidateMoEFinite(hiddenIO, H, layer, "final_residual")) {
+        error = "K2MoE: non-finite final residual";
+        return false;
+    }
     moe_ltrace::BC(layer, "RESIDUAL_DONE");
     moe_ltrace::BC(layer, "EXIT");
     return true;

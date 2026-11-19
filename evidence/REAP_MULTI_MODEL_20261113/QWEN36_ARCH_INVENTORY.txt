@@ -1,0 +1,71 @@
+# Qwen3.6-35B-A3B Architecture Inventory
+UTC=2026-11-13
+MOTD_ACK=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+ORIGINAL_GGUF_INTACT=1
+
+## Path / SHA
+GGUF=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf
+GGUF_SHA256=4AC6A06BCE551257267F49AD2226F8671A22519CCC1A4DDE9D5B433D1F2A410D
+BYTES=21166757728
+GiB=19.71
+SHARDS=1
+PRESENT=1
+
+## Architecture
+ARCH=qwen35moe
+L=40
+EXPERTS=256
+TOP_K=8
+EMBEDDING=2048
+HEADS=16
+KV_HEADS=2
+KEY_LENGTH=256
+VALUE_LENGTH=256
+HEAD_DIM=128
+FULL_ATTENTION_INTERVAL=4
+EXPERT_FFN_LENGTH=512
+SHARED_EXPERT_FFN_LENGTH=512
+CONTEXT_LENGTH=262144
+VOCAB=248320
+LAYOUT=deepseek_triplet MoE + hybrid GDN/SSM (not Nemotron ssm_in)
+TENSORS=733
+EXPERT_TENSORS=120
+EXPERT_BYTES=19503513600
+NON_EXPERT_BYTES~=1663244128
+LOGICAL_EXPERTS_PACKED=10240
+MOE_LAYER_COUNT_TOPOLOGY=40
+BPE_ALL_LAYERS=76185600
+
+## Tensor naming (attn + MoE + GDN)
+ATTN_FULL_OR_GDN_SHARED:
+  blk.N.attn_qkv.weight
+  blk.N.attn_gate.weight
+  blk.N.attn_norm.weight
+  blk.N.post_attention_norm.weight
+MOE:
+  blk.N.ffn_gate_inp.weight
+  blk.N.ffn_gate_exps.weight
+  blk.N.ffn_up_exps.weight
+  blk.N.ffn_down_exps.weight
+  blk.N.ffn_gate_inp_shexp.weight
+  blk.N.ffn_gate_shexp.weight
+  blk.N.ffn_up_shexp.weight
+  blk.N.ffn_down_shexp.weight
+GDN_RECURRENT (present; Nemotron ssm_in/ssm_d ABSENT):
+  blk.N.ssm_a
+  blk.N.ssm_alpha.weight
+  blk.N.ssm_beta.weight
+  blk.N.ssm_conv1d.weight
+  blk.N.ssm_dt.bias
+  blk.N.ssm_norm.weight
+  blk.N.ssm_out.weight
+NOTE=full_attention_interval=4 => majority blocks are GDN mixers + MoE FFN
+
+## Authority sources
+caps=caps_Qwen3.6-35B-A3B-Q4_K_M.txt
+inspect=inspect_Qwen3.6-35B-A3B-Q4_K_M.txt
+topology=topology_Qwen3.6-35B-A3B-Q4_K_M.json
+manifest=MANIFEST_SHA256.json

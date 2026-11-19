@@ -8,12 +8,12 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QTextEdit>
-#include <QLineEdit>
 #include <QPushButton>
 #include <QComboBox>
 #include <QCheckBox>
 #include <QProgressBar>
 #include <QTimer>
+#include <QKeyEvent>
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
@@ -130,11 +130,12 @@ void ChatInterface::initialize() {
     
     // Input area
     QHBoxLayout* inputLayout = new QHBoxLayout();
-    message_input_ = new QLineEdit(this);
+    message_input_ = new QTextEdit(this);
     message_input_->setPlaceholderText("Type your message here...");
     message_input_->setStyleSheet(
-        "QLineEdit { background-color: #252526; color: #d4d4d4; border: 1px solid #3c3c3c; padding: 5px; }");
-    connect(message_input_, &QLineEdit::returnPressed, this, &ChatInterface::sendMessage);
+            "QTextEdit { background-color: #252526; color: #d4d4d4; border: 1px solid #3c3c3c; padding: 5px; }");
+        message_input_->setMinimumHeight(32);
+        message_input_->setMaximumHeight(96);
     
     QPushButton* sendButton = new QPushButton("Send", this);
     sendButton->setStyleSheet(
@@ -401,6 +402,18 @@ void ChatInterface::sendMessage() {
         telemetry.recordEvent(QStringLiteral("chat"), QStringLiteral("sendMessage.ignored"), QStringLiteral("empty"));
     }
 }
+
+        void ChatInterface::keyPressEvent(QKeyEvent* event)
+        {
+            if (event->key() == Qt::Key_Return && (event->modifiers() & Qt::ControlModifier)) {
+                // Ctrl+Enter: send the message
+                sendMessage();
+                event->accept();
+                return;
+            }
+            // Default: Enter inserts newline (QTextEdit behavior)
+            QTextEdit::keyPressEvent(event);
+        }
 
 void ChatInterface::sendMessageProgrammatically(const QString& message) {
     if (message_input_) {

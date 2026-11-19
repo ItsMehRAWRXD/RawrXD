@@ -1,0 +1,8 @@
+0.14.035.682 E ggml_backend_cpu_buffer_type_alloc_buffer: failed to allocate buffer of size 481993850880
+0.14.035.689 E ggml_backend_buft_alloc_buffer_n_default: failed to allocate CPU_REPACK buffer of size 481993850880
+0.14.160.029 E llama_model_load: error loading model: unable to allocate CPU_REPACK buffer
+0.14.160.040 E llama_model_load_from_file_impl: failed to load model
+0.14.160.061 E cmn  common_init_: failed to load model 'F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf'
+0.14.160.064 E srv    load_model: failed to load model, 'F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf'
+0.14.162.744 E srv  llama_server: exiting due to model loading error
+llama_server exited with code 1
