@@ -1617,8 +1617,12 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 initOk = 1;
                 loadOk = m_deep2Bridge->LoadModel(modelPath) ? 1 : 0;
                 if (loadOk) {
-                    modelInfo = m_deep2Bridge->GetModelInfo();
+                    // Snapshot before generation (static model facts) ...
+                    const std::string infoBefore = m_deep2Bridge->GetModelInfo();
                     const std::string out = m_deep2Bridge->GenerateSync("ping", 8);
+                    // ... and after, so dispatch/fallback counters reflect the run.
+                    modelInfo = m_deep2Bridge->GetModelInfo();
+                    if (modelInfo == infoBefore) modelInfo += "(counters unchanged)\n";
                     genLen = out.size();
                     genOk = genLen > 0 ? 1 : 0;
                     if (genOk) {
