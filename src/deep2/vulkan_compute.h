@@ -93,6 +93,7 @@ public:
         VkBuffer buffer = VK_NULL_HANDLE;
         VkDeviceMemory memory = VK_NULL_HANDLE;
         VkDeviceSize size = 0;
+        VkDeviceSize allocationSize = 0;
         VkMemoryPropertyFlags memoryFlags = 0;
         uint64_t id = 0;
         explicit operator bool() const noexcept {

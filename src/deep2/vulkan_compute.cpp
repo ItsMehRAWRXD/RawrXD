@@ -1261,8 +1261,11 @@ bool VulkanCompute::createBuffer(
         return false;
     }
     out.size = bytes;
+    out.allocationSize = mr.size;
     out.memoryFlags = required;
     out.id = nextBufferId_++;
+    liveDeviceBytes_ += static_cast<size_t>(mr.size);
+    ++liveDeviceAllocations_;
     return true;
 }
 
@@ -1274,6 +1277,12 @@ bool VulkanCompute::createBuffer(
     }
 
 void VulkanCompute::destroyBuffer(DeviceBuf& b) {
+    if (b.memory) {
+        const size_t allocationBytes = static_cast<size_t>(b.allocationSize);
+        liveDeviceBytes_ = allocationBytes <= liveDeviceBytes_
+            ? liveDeviceBytes_ - allocationBytes : 0;
+        if (liveDeviceAllocations_ != 0) --liveDeviceAllocations_;
+    }
     if (!device_) { b = {}; return; }
     if (b.buffer) vkDestroyBuffer(device_, b.buffer, nullptr);
     if (b.memory) vkFreeMemory(device_, b.memory, nullptr);
