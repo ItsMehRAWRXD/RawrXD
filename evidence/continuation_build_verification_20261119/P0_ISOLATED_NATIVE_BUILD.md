@@ -1,6 +1,6 @@
 # P0 isolated native build
 
-- Source revision before evidence commit: `475b86fc188a19bec56e2e62f22d4faa5f69828d`
+- Source revision before evidence commit: `9f14b4fcab7300598cbc77a998b72312aab007be`
 - Configure: `cmake -S . -B build_sprint_20261119 -G "Visual Studio 17 2022" -DRAWRXD_BUILD_NATIVE_IDE=ON -DCMAKE_CONFIGURATION_TYPES=Release`
 - Build: `cmake --build build_sprint_20261119 --target RawrXD-Win32IDE-Native --config Release --parallel 1`
 - Result: fresh executable produced in the isolated build directory.
