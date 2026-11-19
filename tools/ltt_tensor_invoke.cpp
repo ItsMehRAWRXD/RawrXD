@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
             return cancel_before ? 6 : 5;
         }
         const auto& logits = executor.Logits();
-        if (logits_file && !logits.empty()) {
+        if (logits.empty()) {\n            std::cerr << "LTT_LOGITS_EMPTY position=" << logical_position << '\\n';\n            return 5;\n        }\n        bool finite = true;\n        for (float v : logits) finite = finite && std::isfinite(v);\n        if (!finite) {\n            std::cerr << "LTT_LOGITS_NONFINITE position=" << logical_position << '\\n';\n            return 5;\n        }\n        if (logits_file) {
             const uint64_t count = static_cast<uint64_t>(logits.size());
             logits_file.write(reinterpret_cast<const char*>(&count), sizeof(count));
             logits_file.write(reinterpret_cast<const char*>(logits.data()),
