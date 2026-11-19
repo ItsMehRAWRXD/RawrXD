@@ -502,6 +502,12 @@ std::string Deep2Bridge::GetModelInfo() const
         oss << "GPU Dispatches: " << m_engine->vulkanGemvSuccessCount() << "\n";
         oss << "CPU Fallbacks: " << m_engine->vulkanGemvFallbackCount() << "\n";
         oss << "GPU Weight Bytes: " << m_engine->vulkanGpuWeightBytes() << "\n";
+        const auto& fwd = m_engine->gpuForwardCounters();
+        oss << "GPU Forward Real: " << (m_engine->isRealGpuForward() ? 1 : 0) << "\n";
+        oss << "GPU Forward Q4K Ops: " << fwd.q4kPackedOps << "\n";
+        oss << "GPU Forward Q6K Ops: " << fwd.q6kPackedOps << "\n";
+        oss << "GPU Forward Fallbacks: " << fwd.forwardFallbacks << "\n";
+        oss << "GPU Devices: " << m_engine->vulkanDeviceCount() << "\n";
     }
     return oss.str();
 #else
