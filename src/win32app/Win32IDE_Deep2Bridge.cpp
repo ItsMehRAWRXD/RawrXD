@@ -10,6 +10,7 @@
 
 #ifdef HAVE_DEEP2_ENGINE
 #include "Deep2Engine.h"
+#include "QuantKernelRegistry.hpp"
 #include <cstdlib>
 #include "deep2_snap.hpp"
 #include "snap_process_guard.hpp"
@@ -538,6 +539,14 @@ std::string Deep2Bridge::GetModelInfo() const
         oss << "GPU Plan Layer0 Slot: " << (int)plan.layerDevice[0]
             << " Cpu=" << (int)plan.isCpuSlot[0] << "\n";
         oss << "GPU Plan Layers Executed: " << plan.layersExecuted << "\n";
+        // Deep2Engine's GEMV counters only cover tryVulkanGEMV. The batched
+        // prefill / quant-kernel path records process-wide Vulkan submissions,
+        // which is the counter that actually moves when the GPU is used.
+        const auto& b21 = Deep2::QuantKernelRegistry::Instance().GetBatch21Counters();
+        oss << "GPU Vulkan Submissions: " << b21.vulkanComputeSubmissions.load() << "\n";
+        oss << "GPU Vulkan Failures: " << b21.vulkanComputeFailures.load() << "\n";
+        oss << "Quant Kernel Invocations: " << b21.kernelInvocations.load() << "\n";
+        oss << "Quant Scalar Fallbacks: " << b21.scalarFallbacks.load() << "\n";
     }
     return oss.str();
 #else
