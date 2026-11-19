@@ -326,6 +326,14 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
         
         LOG_INFO("Deep2Bridge generation: engine stream returned");
         {
+            std::fprintf(stderr,
+                         "[BRIDGE_STREAM_RESULT] completed=%d tokens=%u prompt_tokens=%u chars=%zu "
+                         "stop_reason=%d\n",
+                         result.completed ? 1 : 0, result.generatedTokens, result.promptTokens,
+                         fullResponse.size(), (int)m_engine->generationStopReason());
+            std::fflush(stderr);
+        }
+        {
             // Request-scoped witness for the GUI chat path (streaming, not
             // GenerateSync), so a chat run can be tied to real GPU work.
             const auto& b21 = Deep2::QuantKernelRegistry::Instance().GetBatch21Counters();

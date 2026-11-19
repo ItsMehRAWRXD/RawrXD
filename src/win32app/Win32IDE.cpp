@@ -8015,6 +8015,17 @@ void Win32IDE::generateResponseAsync(
                     // hung request. Forwarding each token also keeps the stop
                     // button meaningful.
                     std::string response;
+                    // Diagnostic: the GUI run reported an empty generation while
+                    // the same engine produced text from the probe, so record the
+                    // exact inputs the chat branch used.
+                    std::fprintf(stderr,
+                                 "[CHAT_DEEP2] prompt_len=%zu max_tokens=%d model=%s loaded=%d "
+                                 "bridge=%p prompt_head=%.80s\n",
+                                 routedPrompt.size(), requestMaxTokens,
+                                 m_deep2Bridge->GetCurrentModel().c_str(),
+                                 m_deep2Bridge->IsModelLoaded() ? 1 : 0,
+                                 (void*)m_deep2Bridge, routedPrompt.c_str());
+                    std::fflush(stderr);
                     m_deep2Bridge->GenerateStream(
                         routedPrompt,
                         [this, &response, callback](const std::string& token, bool) {
