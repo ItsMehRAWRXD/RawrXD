@@ -97,6 +97,7 @@ int main(int argc, char **argv)
     cfg.maxSeqLen = 512;
 
     Deep2Engine engine;
+    engine.enableVulkan(false);
     std::printf("S02_STAGE initialize\n");
     std::fflush(stdout);
     if (!engine.initialize(cfg))
