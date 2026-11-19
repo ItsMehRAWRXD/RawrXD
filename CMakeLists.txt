@@ -1253,6 +1253,21 @@ if(GLSLC_EXECUTABLE)
     add_custom_target(deep2_resident_qgemv_shader
         DEPENDS "${_deep2_resident_qgemv_output}")
 
+    set(_deep2_tiled4x_qgemv_source
+        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv_tiled4x.comp")
+    set(_deep2_tiled4x_qgemv_output
+        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv_tiled4x.spv")
+    add_custom_command(
+        OUTPUT "${_deep2_tiled4x_qgemv_output}"
+        COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.2
+            "${_deep2_tiled4x_qgemv_source}"
+            -o "${_deep2_tiled4x_qgemv_output}"
+        DEPENDS "${_deep2_tiled4x_qgemv_source}"
+        VERBATIM
+        COMMENT "Compiling tiled Deep2 Q4_K GEMV shader")
+    add_custom_target(deep2_tiled4x_qgemv_shader
+        DEPENDS "${_deep2_tiled4x_qgemv_output}")
+
     # The fused MoE accumulator uses the checked-in spec-ops shader for its
     # scaled-add operation.  Keep this binary tied to the GLSL source just as
     # the resident GEMV shader is, otherwise a host-side fix can run against a
@@ -2416,6 +2431,9 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     if(TARGET deep2_resident_qgemv_shader)
         add_dependencies(rawrxd_gpu_compute deep2_resident_qgemv_shader)
     endif()
+    if(TARGET deep2_tiled4x_qgemv_shader)
+        add_dependencies(rawrxd_gpu_compute deep2_tiled4x_qgemv_shader)
+    endif()
     target_include_directories(rawrxd_gpu_compute PUBLIC
         ${CMAKE_SOURCE_DIR}/src
         # Must precede include/ so "vulkan_compute.h" resolves to the
@@ -2794,6 +2812,9 @@ endforeach()
             DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
         )
         add_dependencies(deep2_engine_lib deep2_resident_qgemv_shader)
+        if(TARGET deep2_tiled4x_qgemv_shader)
+            add_dependencies(deep2_engine_lib deep2_tiled4x_qgemv_shader)
+        endif()
         add_dependencies(deep2_engine_lib deep2_spec_ops_shader)
         set_target_properties(deep2_engine_lib PROPERTIES
             # MSVC emits static libraries as archives (.lib).  Setting only

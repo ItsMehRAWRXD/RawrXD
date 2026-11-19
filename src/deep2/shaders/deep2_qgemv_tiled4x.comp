@@ -15,7 +15,7 @@ layout(local_size_x = 256) in;
 
 layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
 layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
-layout(set=0,binding=2,writeonly buffer Y0 { float y[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
 
 layout(push_constant) uniform Push {
     uint type;
@@ -187,7 +187,7 @@ void main() {
 
             int q8 = 0;
             if (q8InvScale != 0.0f)
-                q8 = int(floatBitsToInt(q8InvScale * q8Raw[lane] + 12582912.0f) & 0x007fffff) - 0x00400000u;
+                q8 = (floatBitsToInt(q8InvScale * q8Raw[lane] + 12582912.0f) & 0x007fffff) - int(0x00400000u);
             q8 = clamp(q8, -127, 127);
             q8Quant[lane] = q8;
             barrier();
@@ -199,19 +199,9 @@ void main() {
             barrier();
         }
     } else {
-        // Fallback: raw weight fetches, no quantization
-        for (uint j = lane; j < pc.cols; j += 256u) {
-            float ww;
-            if (pc.type == 2u) ww = q4_0_weight(rb, j);
-            else if (pc.type == 6u) ww = q5_0_weight(rb, j);
-            else if (pc.type == 8u) ww = q8_0_weight(rb, j);
-            else if (pc.type == 10u) ww = q2k_weight(rb, j);
-            else if (pc.type == 11u) ww = q3k_weight(rb, j);
-            else if (pc.type == 13u) ww = q5k_weight(rb, j);
-            else if (pc.type == 20u) ww = iq4nl_weight(rb, j);
-            else ww = 0.0f;
-            acc += ww * x[j];
-        }
+        // This pipeline is intentionally Q4_K-only. The host must select the
+        // resident pipeline for every other quantization type.
+        acc = 0.0f;
     }
 
     // First reduction: subgroup-level (entire 256-lane workgroup)
