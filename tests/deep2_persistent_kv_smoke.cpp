@@ -15,6 +15,7 @@
 #include "KVCache.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,18 @@ int main(int argc, char **argv)
     const char *modelPath = argc > 1
                                 ? argv[1]
                                 : "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+    if (argc <= 1) {
+        if (const char *configured = std::getenv("RAWRXD_PERSISTENT_KV_MODEL");
+            configured && *configured) {
+            modelPath = configured;
+        }
+    }
+    if (FILE *probe = std::fopen(modelPath, "rb")) {
+        std::fclose(probe);
+    } else {
+        std::printf("SKIP: persistent KV model unavailable: %s\n", modelPath);
+        return 77;
+    }
 
     // --- KV capacity enforcement (API boundary) ---
     {
