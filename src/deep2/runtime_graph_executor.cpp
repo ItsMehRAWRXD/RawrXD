@@ -4321,6 +4321,31 @@ case OpKind::LmHead: {
 bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (!bound_) { last_error_ = "not bound"; return false; }
     last_error_.clear();
+    const auto cancelled = [this]() -> bool {
+        if (!execution_context_) return false;
+        if (execution_context_->cancel &&
+            execution_context_->cancel->load(std::memory_order_acquire)) {
+            last_error_ = "request cancelled";
+            if (!execution_context_->request_id.empty())
+                last_error_ += " (" + execution_context_->request_id + ")";
+            return true;
+        }
+        if (execution_context_->synchronization_ready &&
+            !execution_context_->synchronization_ready()) {
+            last_error_ = "request synchronization state is not ready";
+            return true;
+        }
+        return false;
+    };
+    if (cancelled()) return false;
+    // Weight pins are a per-token residency lease.  The graph pins every
+    // quantized tensor it touches so command recording cannot evict it, but
+    // retaining the previous token's pins prevents the LRU window from
+    // reclaiming the final layer before the LM head is uploaded.  Release the
+    // completed token's lease before admitting the next token's weights.
+    if (!force_cpu_) {
+        ::Deep2::GetDeep2VulkanCompute().UnpinAllWeights();
+    }
     last_token_ = token;
     if (std::getenv("RR_TRACE_TOKEN")) std::fprintf(stderr, "  [token] pos=%zu token=%u cache_sizes=%zu,%zu,...\n", position, token, kv_k_.empty()?0:kv_k_[0].size(), kv_v_.empty()?0:kv_v_[0].size());
     position_ = position;
@@ -5405,6 +5430,7 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
         std::fflush(stderr);
     }
     dumpGdnVector("mixed", mixed);
+    dumpGdnVector("qkv_preconv", qkv);
     dumpGdnVector("beta_logits", beta);
     dumpGdnVector("alpha_logits", alpha);
     dumpGdnVector("a_log", aLog);

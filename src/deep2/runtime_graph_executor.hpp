@@ -29,6 +29,9 @@
 #include <cstdint>
 #include <cstddef>
 #include <chrono>
+#include <atomic>
+#include <functional>
+#include <memory>
 #include <map>
 #include <optional>
 #include <string>
@@ -112,6 +115,18 @@ struct BindStats {
     double cold_start_ms = 0, steady_kernel_ms = 0, dispatch_ms = 0, total_ms = 0;
 };
 
+// Request-owned execution state.  This is deliberately independent of Qt and
+// of the process-wide Vulkan device: callers can cancel or bound one request
+// without tearing down shared model/device state.
+struct ExecutionContext {
+    std::string request_id;
+    std::string model_id;
+    uint32_t device_index = 0;
+    size_t memory_budget_bytes = 0;
+    std::shared_ptr<std::atomic_bool> cancel;
+    std::function<bool()> synchronization_ready;
+};
+
 class Executor {
 public:
     Executor() = default;
@@ -131,6 +146,14 @@ public:
 
     // Run one token at `position`. Returns false on any kernel failure.
     bool ExecuteToken(uint32_t token, size_t position);
+
+    void SetExecutionContext(std::shared_ptr<const ExecutionContext> context) {
+        execution_context_ = std::move(context);
+    }
+    void ClearExecutionContext() { execution_context_.reset(); }
+    std::shared_ptr<const ExecutionContext> ExecutionContextState() const {
+        return execution_context_;
+    }
 
     // RAWRXD_DEEP2_D1_BATCHED_PREFILL: multi-token prefill. Ops run
     // op-major / token-minor: every Linear op queues one dot PER TOKEN into a
@@ -504,6 +527,7 @@ private:
     std::vector<OpTrace> op_traces_;
     bool trace_ops_ = false;
     bool trace_capture_values_ = false;
+    std::shared_ptr<const ExecutionContext> execution_context_;
 
     // RAWRXD_DEEP2_STRATA_S01..S08: expert residency ledger + policy switches.
     Strata::ExpertResidencyLedger strata_ledger_;
