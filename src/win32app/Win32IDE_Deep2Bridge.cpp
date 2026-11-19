@@ -525,18 +525,22 @@ std::string Deep2Bridge::GetModelInfo() const
     oss << "Heads: " << m_engine->getConfig().numHeads << "\n";
     oss << "Hidden Dim: " << m_engine->getConfig().hiddenDim << "\n";
     if (m_engine->isVulkanInitialized()) {
-        oss << "GPU Dispatches: " << m_engine->vulkanGemvSuccessCount() << "\n";
-        oss << "CPU Fallbacks: " << m_engine->vulkanGemvFallbackCount() << "\n";
+        // One logical event: a successful tryVulkanGEMV dispatch. The engine's
+        // vulkanGemvOk_ and QuantKernelRegistry::vulkanComputeSubmissions are both
+        // incremented at that same site (Deep2Engine.cpp:14330 / :14345), so they
+        // are reported as a single fact rather than two corroborating counters.
+        const auto gemv = m_engine->vulkanGemvSuccessCount();
+        oss << "GPU GEMV Dispatches: " << gemv << "\n";
+        oss << "CPU GEMV Fallbacks: " << m_engine->vulkanGemvFallbackCount() << "\n";
         oss << "GPU Weight Bytes: " << m_engine->vulkanGpuWeightBytes() << "\n";
-        // GEMV counters only cover the tryVulkanGEMV path. Generation driven by
-        // the runtime graph executor records its dispatches in the H11 dispatch
-        // account instead, so report both; otherwise the IDE shows a false
-        // "GPU Dispatches: 0" for a GPU-active model.
+        // The H11 dispatch account is NOT wired on this path: noteCmdDispatch /
+        // noteQueueSubmit / noteGpuSyncNs have no call sites, so these are always
+        // zero and must not be read as submission counts. Kept visible (explicitly
+        // marked) so a zero here is not mistaken for an idle GPU.
         const auto& da = m_engine->dispatchAccount();
-        oss << "GPU Cmd Dispatches: " << da.cmdDispatchCount << "\n";
-        oss << "GPU Queue Submits: " << da.queueSubmitCount << "\n";
-        oss << "GPU Fence Waits: " << da.fenceWaitCount << "\n";
-        oss << "GPU Matrix Rows: " << da.matrixRowsDelta << "\n";
+        oss << "H11 Dispatch Account: UNWIRED (cmd=" << da.cmdDispatchCount
+            << " submit=" << da.queueSubmitCount << " fence=" << da.fenceWaitCount
+            << " rows=" << da.matrixRowsDelta << ")\n";
         const auto& fwd = m_engine->gpuForwardCounters();
         oss << "GPU Forward Real: " << (m_engine->isRealGpuForward() ? 1 : 0) << "\n";
         oss << "GPU Forward Q4K Ops: " << fwd.q4kPackedOps << "\n";
