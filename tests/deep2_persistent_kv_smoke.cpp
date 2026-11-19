@@ -34,14 +34,14 @@ static void check(bool condition, const char *message)
 
 int main(int argc, char **argv)
 {
-    const char *modelPath = argc > 1
-                                ? argv[1]
-                                : "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
-    if (argc <= 1) {
+    const char *modelPath = argc > 1 ? argv[1] : nullptr;
+    if (!modelPath) {
         if (const char *configured = std::getenv("RAWRXD_PERSISTENT_KV_MODEL");
-            configured && *configured) {
-            modelPath = configured;
-        }
+            configured && *configured) modelPath = configured;
+    }
+    if (!modelPath) {
+        std::printf("SKIP: explicit persistent KV model required\n");
+        return 77;
     }
     if (FILE *probe = std::fopen(modelPath, "rb")) {
         std::fclose(probe);
