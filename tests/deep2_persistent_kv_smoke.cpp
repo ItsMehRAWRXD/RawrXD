@@ -34,6 +34,14 @@ static void check(bool condition, const char *message)
 
 int main(int argc, char **argv)
 {
+    // This lifecycle test validates KV semantics, not Vulkan device bring-up.
+    // Keep it deterministic and independent of whatever GPU workloads are
+    // resident on the developer machine; GPU acceptance has separate tests.
+#ifdef _WIN32
+    _putenv_s("RAWR_REAP_CPU_ONLY", "1");
+#else
+    setenv("RAWR_REAP_CPU_ONLY", "1", 1);
+#endif
     const char *modelPath = argc > 1 ? argv[1] : nullptr;
     if (!modelPath) {
         if (const char *configured = std::getenv("RAWRXD_PERSISTENT_KV_MODEL");
