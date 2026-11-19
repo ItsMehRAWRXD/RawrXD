@@ -1589,17 +1589,23 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
     if (id == 9614 || id == IDM_DEEP2_GGUF_PROBE) {
         // C08/C09: local GGUF load + short generate (no cloud, no file dialog).
-        // Model path is configurable via RAWRXD_DEEP2_PROBE_MODEL so the probe
-        // can run against any local GGUF; the legacy fixed path remains the
-        // fallback. This is the embedded Deep2 path: Deep2Engine in-process,
+        // Model path is configurable via RAWRXD_DEEP2_PROBE_MODEL (or the
+        // general RAWRXD_MODEL_PATH). Do not silently probe a repository path
+        // that may not exist: an unset path is a deterministic failure.
+        // This is the embedded Deep2 path: Deep2Engine in-process,
         // no HTTP server, no Ollama.
         char modelBuf[1024];
         modelBuf[0] = '\0';
         const DWORD modelEnvLen = GetEnvironmentVariableA(
             "RAWRXD_DEEP2_PROBE_MODEL", modelBuf, sizeof(modelBuf));
-        const bool modelConfigured = modelEnvLen > 0 && modelEnvLen < sizeof(modelBuf);
-        const char* modelPath =
-            modelConfigured ? modelBuf : "F:\\rawrxd\\bench_min.gguf";
+        bool modelConfigured = modelEnvLen > 0 && modelEnvLen < sizeof(modelBuf);
+        if (!modelConfigured) {
+            modelBuf[0] = '\0';
+            const DWORD fallbackLen = GetEnvironmentVariableA(
+                "RAWRXD_MODEL_PATH", modelBuf, sizeof(modelBuf));
+            modelConfigured = fallbackLen > 0 && fallbackLen < sizeof(modelBuf);
+        }
+        const char* modelPath = modelBuf;
         int initOk = 0, loadOk = 0, genOk = 0;
         size_t genLen = 0;
         std::string modelInfo;
@@ -1612,6 +1618,15 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             }
         }
         try {
+            if (!modelConfigured) {
+                LOG_ERROR("Deep2 probe requires RAWRXD_DEEP2_PROBE_MODEL or RAWRXD_MODEL_PATH");
+                FILE* ef = nullptr;
+                if (fopen_s(&ef, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "a") == 0 && ef) {
+                    fprintf(ef, "status=FAIL reason=MODEL_PATH_UNSET\\n");
+                    fclose(ef);
+                }
+                return;
+            }
             if (!m_deep2Bridge) initializeDeep2Bridge();
             if (m_deep2Bridge) {
                 initOk = 1;
