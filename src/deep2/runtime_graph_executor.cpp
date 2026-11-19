@@ -4610,6 +4610,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         if (cancelled()) return false;
+        if (execution_context_ && execution_context_->cancel &&
+            execution_context_->cancel->load(std::memory_order_acquire)) {
+            last_error_ = "request cancelled during execution";
+            if (!execution_context_->request_id.empty())
+                last_error_ += " (" + execution_context_->request_id + ")";
+            return false;
+        }
         const auto& in = program_[pc];
         // Quantized weight pins are scoped to one transformer block.  Keeping
         // every previously visited block pinned turns the streaming cache into
