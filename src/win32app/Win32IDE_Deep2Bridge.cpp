@@ -492,7 +492,15 @@ std::string Deep2Bridge::GetModelInfo() const
 
     std::ostringstream oss;
     oss << "Model: " << m_modelPath << "\n";
-    oss << "Backend: Deep2Engine (GPU" << (m_engine->isVulkanInitialized() ? " active" : " inactive") << ")\n";
+    // Vulkan initialization is not proof that generation used the resident
+    // GPU forward path.  Report the execution capability conservatively so
+    // the IDE cannot present a CPU compatibility forward as GPU inference.
+    const bool gpuForward = m_engine->isRealGpuForward();
+    const bool vulkanReady = m_engine->isVulkanInitialized();
+    oss << "Backend: Deep2Engine ("
+        << (gpuForward ? "GPU forward active" :
+            (vulkanReady ? "Vulkan initialized; CPU forward" : "CPU forward"))
+        << ")\n";
     oss << "Context: " << m_engine->getConfig().maxSeqLen << "\n";
     oss << "Vocab Size: " << m_engine->getConfig().vocabSize << "\n";
     oss << "Layers: " << m_engine->getConfig().numLayers << "\n";
@@ -517,6 +525,10 @@ std::string Deep2Bridge::GetModelInfo() const
         oss << "GPU Forward Q6K Ops: " << fwd.q6kPackedOps << "\n";
         oss << "GPU Forward Fallbacks: " << fwd.forwardFallbacks << "\n";
         oss << "GPU Devices: " << m_engine->vulkanDeviceCount() << "\n";
+        // Vulkan can be initialised (devices open) yet disabled, which makes
+        // LinearW skip the GPU branch entirely; report it next to the counters
+        // so a zero-dispatch generation is diagnosable.
+        oss << "GPU Enabled: " << (m_engine->isVulkanEnabled() ? 1 : 0) << "\n";
     }
     return oss.str();
 #else

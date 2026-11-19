@@ -32,7 +32,10 @@ Remove-Item -LiteralPath $resp -ErrorAction SilentlyContinue
 $env:RAWRXD_DEEP2_PROBE_MODEL = $Model
 $env:RAWRXD_CHAT_SESSION_ID = "deep2probe-" + (Get-Date -Format "yyyyMMddHHmmss")
 
-$proc = Start-Process -FilePath $Exe -PassThru -Environment @{ RAWRXD_DEEP2_PROBE_MODEL = $Model }
+$proc = Start-Process -FilePath $Exe -PassThru -Environment @{
+    RAWRXD_DEEP2_PROBE_MODEL = $Model
+    DEEP2_GPU_FORWARD_TRACE = '1'
+}
 Write-Output "PID=$($proc.Id) MODEL=$Model"
 
 $hwnd = [IntPtr]::Zero

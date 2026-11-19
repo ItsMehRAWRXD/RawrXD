@@ -81,6 +81,12 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (!hidden) return false;
     if (modelWeights.numLayers == 0) return false;
     if (!attentionOutput) return false;
+    if (const char* trace = std::getenv("DEEP2_GPU_FORWARD_TRACE"); trace && trace[0] == '1') {
+        std::fprintf(stderr, "[GPU_FORWARD_TRACE] forwardTokenAllLayers seq=%zu vulkan=%d initialized=%d layers=%zu\n",
+                     seqLen, vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0,
+                     modelWeights.numLayers);
+        std::fflush(stderr);
+    }
 
     // VAL-051.7 instrumentation: count one forward pass per token forwarded.
     // BeginForward/EndForward were previously never invoked on this path, so
