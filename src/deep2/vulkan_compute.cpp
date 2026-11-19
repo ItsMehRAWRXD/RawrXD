@@ -2411,7 +2411,9 @@ bool VulkanCompute::EnsureForwardArena(
     if (hidden_ == hidden && intermediate_ == intermediate &&
         heads_ == heads && kvHeads_ == kvHeads && headDim_ == headDim &&
         maxSeq_ == seqCap && layers_ == layers && arenaHidden_ &&
-        kvArenaLayers_ == kvLayerCount)
+        kvArenaLayers_ == kvLayerCount &&
+        arenaQ_.size >= static_cast<VkDeviceSize>(std::max({hidden_, heads * headDim, 2u * heads * headDim, 3072u})) * sizeof(float) &&
+        arenaAttn_.size >= static_cast<VkDeviceSize>(std::max(hidden_, heads * headDim)) * sizeof(float))
         return true;
 
     auto kill = [&](DeviceBuf& b){ destroyBuffer(b); };
@@ -2444,7 +2446,15 @@ bool VulkanCompute::EnsureForwardArena(
     // direct-Q projections can require 3,072 float elements even when the
     // legacy arena was sized to 2,048.  Keep the arena large enough for the
     // supported topology before descriptors/commands are recorded.
-    const uint32_t qElements = std::max({hidden_, heads * headDim, 3072u});
+    // Qwen3.5 gated attention packs Q and gate side-by-side, so its input is
+    // 2 * heads * headDim elements and its gated attention output is
+    // heads * headDim.  The previous arena only reserved one head-width and
+    // rejected the first real Vulkan gated dispatch during UploadVector.
+    const uint64_t gatedQElements64 = static_cast<uint64_t>(heads) * headDim * 2u;
+    if (gatedQElements64 > std::numeric_limits<uint32_t>::max()) return false;
+    const uint32_t qElements = std::max({hidden_, heads * headDim,
+                                         static_cast<uint32_t>(gatedQElements64), 3072u});
+    const uint32_t attnElements = std::max(hidden_, heads * headDim);
 
     return allocF(arenaHidden_, hidden_) &&
            allocF(arenaAttnW_, hidden_) &&
@@ -2453,7 +2463,7 @@ bool VulkanCompute::EnsureForwardArena(
            allocF(arenaQ_, qElements) &&
            allocF(arenaK_, kvDim_) &&
            allocF(arenaV_, kvDim_) &&
-           allocF(arenaAttn_, hidden_) &&
+           allocF(arenaAttn_, attnElements) &&
            // Generic quant GEMV output is not always hidden-sized. MLA
            // attn_q_b uses rows=24576 with hidden/input cols=1536. Reserve
            // that stable capacity at initialization so later GEMV calls do
@@ -2955,6 +2965,91 @@ bool VulkanCompute::DispatchAttnDecode(
     p.p0=headDim; p.p1=heads; p.p2=kvHeads; p.p3=seqLen;
     p.p4=kvDim_; p.p5=static_cast<uint32_t>(base); p.f0=scale;
     return dispatchOps(q,kCache,vCache,out,p,(p.n+63u)/64u);
+}
+
+bool VulkanCompute::ensureQwen35GatedPipeline() {
+    if (qwen35GatedPipeline_ != VK_NULL_HANDLE) return true;
+    VkDescriptorSetLayoutBinding b[6]{};
+    for (uint32_t i = 0; i < 6; ++i) {
+        b[i].binding = i;
+        b[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        b[i].descriptorCount = 1;
+        b[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo d{};
+    d.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    d.bindingCount = 6; d.pBindings = b;
+    if (vkCreateDescriptorSetLayout(device_, &d, nullptr, &qwen35GatedSetLayout_) != VK_SUCCESS)
+        return false;
+    VkPushConstantRange p{};
+    p.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT; p.size = 10u * sizeof(uint32_t);
+    VkPipelineLayoutCreateInfo l{};
+    l.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    l.setLayoutCount = 1; l.pSetLayouts = &qwen35GatedSetLayout_;
+    l.pushConstantRangeCount = 1; l.pPushConstantRanges = &p;
+    if (vkCreatePipelineLayout(device_, &l, nullptr, &qwen35GatedPipelineLayout_) != VK_SUCCESS)
+        return false;
+    const std::string path = shaderPath("attn_qwen35_gated.spv");
+    std::ifstream f(path, std::ios::binary | std::ios::ate);
+    if (!f) return false;
+    const std::streamsize sz = f.tellg(); f.seekg(0, std::ios::beg);
+    std::vector<uint32_t> code(static_cast<size_t>(sz) / 4u);
+    if (!f.read(reinterpret_cast<char*>(code.data()), sz)) return false;
+    VkShaderModuleCreateInfo sm{}; sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = static_cast<size_t>(sz); sm.pCode = code.data();
+    VkShaderModule mod = VK_NULL_HANDLE;
+    if (vkCreateShaderModule(device_, &sm, nullptr, &mod) != VK_SUCCESS) return false;
+    VkPipelineShaderStageCreateInfo ss{}; ss.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    ss.stage = VK_SHADER_STAGE_COMPUTE_BIT; ss.module = mod; ss.pName = "main";
+    VkComputePipelineCreateInfo cp{}; cp.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cp.stage = ss; cp.layout = qwen35GatedPipelineLayout_;
+    VkResult r = vkCreateComputePipelines(device_, VK_NULL_HANDLE, 1, &cp, nullptr, &qwen35GatedPipeline_);
+    vkDestroyShaderModule(device_, mod, nullptr);
+    if (r != VK_SUCCESS) return false;
+    VkDescriptorSetAllocateInfo a{}; a.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    a.descriptorPool = descriptorPool_; a.descriptorSetCount = 1;
+    a.pSetLayouts = &qwen35GatedSetLayout_;
+    return vkAllocateDescriptorSets(device_, &a, &qwen35GatedDescriptorSet_) == VK_SUCCESS;
+}
+
+bool VulkanCompute::DispatchQwen35GatedAttention(
+    DeviceBuf& qGate, DeviceBuf& kCache, DeviceBuf& vCache, DeviceBuf& qNorm,
+    DeviceBuf& kNorm, DeviceBuf& out, uint32_t headDim, uint32_t heads,
+    uint32_t kvHeads, uint32_t seqLen, uint32_t ropeDim, uint32_t qgStride,
+    float theta, float scale, float eps) {
+    if (!device_ || !qGate || !kCache || !vCache || !qNorm || !kNorm || !out ||
+        !headDim || !heads || !kvHeads || heads % kvHeads || !seqLen ||
+        ropeDim > headDim || qgStride < 2u * headDim || theta <= 0.0f || scale <= 0.0f)
+        return false;
+    if (qGate.size < static_cast<VkDeviceSize>(heads) * qgStride * sizeof(float) ||
+        kCache.size < static_cast<VkDeviceSize>(seqLen) * kvHeads * headDim * sizeof(float) ||
+        vCache.size < static_cast<VkDeviceSize>(seqLen) * kvHeads * headDim * sizeof(float) ||
+        out.size < static_cast<VkDeviceSize>(heads) * headDim * sizeof(float) ||
+        qNorm.size < static_cast<VkDeviceSize>(headDim) * sizeof(float) ||
+        kNorm.size < static_cast<VkDeviceSize>(headDim) * sizeof(float)) return false;
+    if (!ensureQwen35GatedPipeline()) return false;
+    DeviceBuf* bufs[6] = {&qGate, &kCache, &vCache, &qNorm, &kNorm, &out};
+    VkDescriptorBufferInfo infos[6]{}; VkWriteDescriptorSet w[6]{};
+    for (uint32_t i = 0; i < 6; ++i) {
+        infos[i] = {bufs[i]->buffer, 0, bufs[i]->size};
+        w[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; w[i].dstSet = qwen35GatedDescriptorSet_;
+        w[i].dstBinding = i; w[i].descriptorCount = 1;
+        w[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; w[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 6, w, 0, nullptr);
+    VkCommandBuffer cmd = fusedCmd_; VkQueryPool query = fusedQuery_; const bool own = !fused_;
+    if (own && !beginCommand(cmd, query, true)) return false;
+    struct Push { uint32_t hd,h,kh,seq,kvd,rd,stride; float theta,scale,eps; } p{
+        headDim,heads,kvHeads,seqLen,kvHeads*headDim,ropeDim,qgStride,theta,scale,eps};
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qwen35GatedPipeline_);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qwen35GatedPipelineLayout_, 0, 1,
+                            &qwen35GatedDescriptorSet_, 0, nullptr);
+    vkCmdPushConstants(cmd, qwen35GatedPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(p), &p);
+    vkCmdDispatch(cmd, (heads * headDim + 63u) / 64u, 1, 1);
+    recordComputeBarrier(cmd);
+    if (!own) return true;
+    return endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
+                         static_cast<size_t>(heads) * headDim * sizeof(float), workEpoch_, nullptr);
 }
 
 bool VulkanCompute::DispatchAttnDecodeSplitKV(

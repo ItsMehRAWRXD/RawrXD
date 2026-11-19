@@ -1219,6 +1219,21 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp" AND GL
         DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.spv")
 endif()
 
+# Qwen3.5 gated-attention shader.  Host dispatch integration is intentionally
+# kept separate from the generic ops pipeline because this shader has six
+# storage-buffer bindings and a distinct push-constant contract.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/attn_qwen35_gated.comp" AND GLSLC_EXECUTABLE)
+    add_custom_command(
+        OUTPUT "${CMAKE_SOURCE_DIR}/src/deep2/shaders/attn_qwen35_gated.spv"
+        COMMAND ${GLSLC_EXECUTABLE}
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/attn_qwen35_gated.comp"
+            -o "${CMAKE_SOURCE_DIR}/src/deep2/shaders/attn_qwen35_gated.spv"
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/attn_qwen35_gated.comp"
+        COMMENT "Compiling Qwen3.5 gated-attention shader")
+    add_custom_target(deep2_qwen35_gated_shader ALL
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/attn_qwen35_gated.spv")
+endif()
+
 if(GLSLC_EXECUTABLE)
     # The resident Deep2 GEMV pipeline loads this checked-in SPIR-V at runtime.
     # Keep the artifact tied to its source so a correctness fix cannot silently

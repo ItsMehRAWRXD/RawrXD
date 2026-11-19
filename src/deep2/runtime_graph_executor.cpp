@@ -2127,8 +2127,80 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     //   gpu fail: linear: x=3072 n_in=2048 weight=blk.0.attn_output.weight
     const size_t outW = vPerHead;
     y.assign(H * outW, 0.0f);
-    // DEEP2_VULKAN_SUBMIT_OPT_001: opt-in GPU AttnDecode (GQA/MHA only).
+    // Qwen3.5 gated attention has already produced normalized/rotated Q and K
+    // above and the cache stores the same representation.  Pack Q and the
+    // per-lane gate into the dedicated Vulkan input and keep the attention
+    // reduction on the device.  Identity norm weights and ropeDim=0 prevent
+    // applying either transform twice.
     bool gpu_attn_done = false;
+    if (qwen35Gated && !force_cpu_ &&
+        std::getenv("DEEP2_RUNTIME_GPU_QWEN35_GATED")) {
+        auto& gpu = ::Deep2::GetDeep2VulkanCompute();
+        // The graph executor can be used without Deep2Engine's forward-arena
+        // bootstrap.  Ensure the singleton owning these buffers is configured
+        // before uploading the first gated-attention token; otherwise the
+        // accessors legally return empty DeviceBuf objects.
+        if (!gpu.EnsureForwardArena(
+                static_cast<uint32_t>(H * qPerHead),
+                static_cast<uint32_t>(H * qPerHead),
+                static_cast<uint32_t>(H),
+                static_cast<uint32_t>(hk),
+                static_cast<uint32_t>(qPerHead),
+                static_cast<uint32_t>(std::max<size_t>(T, 1)), 1u)) {
+            err = "attention: Qwen3.5 gated arena initialization failed";
+            return false;
+        }
+        std::vector<float> packed(H * qPerHead * 2u, 0.0f);
+        for (size_t h = 0; h < H; ++h) {
+            std::copy_n(qr.data() + h * qPerHead, qPerHead,
+                        packed.data() + h * qPerHead * 2u);
+            std::copy_n(gate.data() + h * qPerHead, qPerHead,
+                        packed.data() + h * qPerHead * 2u + qPerHead);
+        }
+        std::vector<float> ones(qPerHead, 1.0f);
+        if (std::getenv("DEEP2_RUNTIME_GPU_QWEN35_GATED_TRACE")) {
+            std::fprintf(stderr,
+                "[QWEN35_GPU] q_elements=%zu q_bytes=%zu arena_q=%llu "
+                "k_elements=%zu arena_k=%llu v_elements=%zu arena_v=%llu\n",
+                packed.size(), packed.size() * sizeof(float),
+                static_cast<unsigned long long>(gpu.ArenaQ().size),
+                K.size(), static_cast<unsigned long long>(gpu.ArenaKCache().size),
+                V.size(), static_cast<unsigned long long>(gpu.ArenaVCache().size));
+            std::fflush(stderr);
+        }
+        if (!gpu.UploadVector(gpu.ArenaQ(), packed.data(), packed.size())) {
+            err = "attention: Qwen3.5 gated Q upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaKCache(), K.data(), K.size())) {
+            err = "attention: Qwen3.5 gated K upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaVCache(), V.data(), V.size())) {
+            err = "attention: Qwen3.5 gated V upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaGate(), ones.data(), ones.size())) {
+            err = "attention: Qwen3.5 gated Q-norm upload failed"; return false;
+        }
+        if (!gpu.UploadVector(gpu.ArenaUp(), ones.data(), ones.size())) {
+            err = "attention: Qwen3.5 gated K-norm upload failed"; return false;
+        }
+        if (!gpu.DispatchQwen35GatedAttention(
+                gpu.ArenaQ(), gpu.ArenaKCache(), gpu.ArenaVCache(),
+                gpu.ArenaGate(), gpu.ArenaUp(), gpu.ArenaAttn(),
+                static_cast<uint32_t>(qPerHead), static_cast<uint32_t>(H),
+                static_cast<uint32_t>(hk), static_cast<uint32_t>(T), 0u,
+                static_cast<uint32_t>(2u * qPerHead), 1.0f,
+                static_cast<float>(scoreScale), static_cast<float>(spec_.rms_eps))) {
+            err = "attention: Qwen3.5 Vulkan gated dispatch failed";
+            return false;
+        }
+        if (!gpu.DownloadVector(gpu.ArenaAttn(), y.data(), y.size())) {
+            err = "attention: Qwen3.5 Vulkan gated output readback failed";
+            return false;
+        }
+        ++gpu_calls_;
+        gpu_attn_done = true;
+    }
+    // DEEP2_VULKAN_SUBMIT_OPT_001: opt-in GPU AttnDecode (GQA/MHA only).
     if (!isMla && !qwen35Gated && !force_cpu_ &&
         qPerHead == outW && kPerHead == qPerHead && kvW == vW &&
         std::getenv("DEEP2_RUNTIME_GPU_ATTN") != nullptr) {

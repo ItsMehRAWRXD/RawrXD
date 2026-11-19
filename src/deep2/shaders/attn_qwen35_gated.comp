@@ -1,0 +1,121 @@
+#version 450
+
+// Qwen3.5 gated decode attention.
+//
+// Bindings:
+//   0 packed_q_gate: [head][q_head_dim] Q followed by [head][q_head_dim] gate
+//   1 k_cache:       [token][kv_head][head_dim]
+//   2 v_cache:       [token][kv_head][head_dim]
+//   3 q_norm:        [head_dim]
+//   4 k_norm:        [head_dim]
+//   5 output:        [head][head_dim]
+//
+// The host must provide projections in the model's declared head layout. This
+// shader owns normalization, partial RoPE, full-head QK, GQA, softmax, AV, and
+// the sigmoid gate; no host round-trip is permitted between these stages.
+layout(local_size_x = 64) in;
+layout(set=0,binding=0,std430) readonly buffer QGate { float qg[]; };
+layout(set=0,binding=1,std430) readonly buffer KCache { float k[]; };
+layout(set=0,binding=2,std430) readonly buffer VCache { float v[]; };
+layout(set=0,binding=3,std430) readonly buffer QNorm { float qn[]; };
+layout(set=0,binding=4,std430) readonly buffer KNorm { float kn[]; };
+layout(set=0,binding=5,std430) writeonly buffer Output { float outv[]; };
+
+layout(push_constant) uniform Push {
+    uint head_dim;
+    uint heads;
+    uint kv_heads;
+    uint seq_len;
+    uint kv_dim;
+    uint rope_dim;
+    uint qg_stride;
+    float rope_theta;
+    float scale;
+    float rms_eps;
+} pc;
+
+float norm_scale(uint base, bool query) {
+    float ss = 0.0;
+    for (uint i = 0u; i < pc.head_dim; ++i) {
+        float x = qg[base + i];
+        ss += x * x;
+    }
+    return inversesqrt(ss / float(pc.head_dim) + pc.rms_eps);
+}
+
+float q_value(uint base, uint i, float s) {
+    float x = qg[base + i] * s * qn[i];
+    if (i < pc.rope_dim) {
+        uint pair = i & ~1u;
+        float a = qg[base + pair] * s * qn[pair];
+        float b = qg[base + pair + 1u] * s * qn[pair + 1u];
+        float theta = pow(pc.rope_theta, -float(pair) / float(pc.head_dim));
+        float c = cos(theta), sn = sin(theta);
+        x = ((i & 1u) == 0u) ? a*c - b*sn : a*sn + b*c;
+    }
+    return x;
+}
+
+void main() {
+    uint gid = gl_GlobalInvocationID.x;
+    uint total = pc.heads * pc.head_dim;
+    if (gid >= total || pc.heads == 0u || pc.kv_heads == 0u ||
+        pc.heads % pc.kv_heads != 0u || pc.seq_len == 0u ||
+        pc.kv_dim != pc.kv_heads * pc.head_dim ||
+        pc.rope_dim > pc.head_dim) return;
+
+    uint h = gid / pc.head_dim;
+    uint d = gid % pc.head_dim;
+    uint group = pc.heads / pc.kv_heads;
+    uint kh = h / group;
+    uint qbase = h * pc.qg_stride;
+    float qs = norm_scale(qbase, true);
+
+    float max_score = -3.402823466e+38;
+    for (uint t = 0u; t < pc.seq_len; ++t) {
+        uint kb = t * pc.kv_dim + kh * pc.head_dim;
+        float kss = 0.0;
+        for (uint j = 0u; j < pc.head_dim; ++j) {
+            float kv = k[kb + j];
+            kss += kv * kv;
+        }
+        float ks = inversesqrt(kss / float(pc.head_dim) + pc.rms_eps);
+        float score = 0.0;
+        for (uint j = 0u; j < pc.head_dim; ++j) {
+            float kv = k[kb + j] * ks * kn[j];
+            if (j < pc.rope_dim) {
+                uint pair = j & ~1u;
+                float a = k[kb + pair] * ks * kn[pair];
+                float b = k[kb + pair + 1u] * ks * kn[pair + 1u];
+                float theta = pow(pc.rope_theta, -float(pair) / float(pc.head_dim));
+                float c = cos(theta), sn = sin(theta);
+                kv = ((j & 1u) == 0u) ? a*c - b*sn : a*sn + b*c;
+            }
+            score += q_value(qbase, j, qs) * kv;
+        }
+        max_score = max(max_score, score * pc.scale);
+    }
+
+    float denom = 0.0;
+    float numer = 0.0;
+    for (uint t = 0u; t < pc.seq_len; ++t) {
+        uint kb = t * pc.kv_dim + kh * pc.head_dim;
+        float kss = 0.0;
+        for (uint j = 0u; j < pc.head_dim; ++j) {
+            float kv = k[kb + j];
+            kss += kv * kv;
+        }
+        float ks = inversesqrt(kss / float(pc.head_dim) + pc.rms_eps);
+        float score = 0.0;
+        for (uint j = 0u; j < pc.head_dim; ++j) {
+            float kv = k[kb + j] * ks * kn[j];
+            score += q_value(qbase, j, qs) * kv;
+        }
+        float e = exp(score * pc.scale - max_score);
+        denom += e;
+        numer += e * v[kb + d];
+    }
+    float av = denom > 0.0 ? numer / denom : 0.0;
+    float gate = qg[qbase + pc.head_dim + d];
+    outv[gid] = av / (1.0 + exp(-gate));
+}

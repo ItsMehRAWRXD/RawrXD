@@ -223,6 +223,13 @@ public:
                             DeviceBuf& out, uint32_t headDim,
                             uint32_t heads, uint32_t kvHeads,
                             uint32_t seqLen, float scale, uint32_t layer);
+    bool DispatchQwen35GatedAttention(DeviceBuf& qGate, DeviceBuf& kCache,
+                                      DeviceBuf& vCache, DeviceBuf& qNorm,
+                                      DeviceBuf& kNorm, DeviceBuf& out,
+                                      uint32_t headDim, uint32_t heads,
+                                      uint32_t kvHeads, uint32_t seqLen,
+                                      uint32_t ropeDim, uint32_t qgStride,
+                                      float theta, float scale, float eps);
 
     bool DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
                                    DeviceBuf& out, uint32_t headDim,
@@ -526,6 +533,10 @@ public:
     // ========== Weight pinning ==========
     bool PinWeightView(const GpuWeightView& view);
     void UnpinAllWeights();
+    // Complete all synchronous work, then reclaim every unpinned streamed
+    // weight allocation.  This is the block-boundary residency operation used
+    // by the graph executor for models larger than device-local VRAM.
+    bool TrimUnpinnedWeightCache(uint32_t completedBlock = UINT32_MAX);
     // MoE graph ownership barrier. While held, resident-object eviction is
     // refused so a fused expert graph cannot lose a published weight view.
     void BeginMoePinHold() noexcept { moePinHolds_.fetch_add(1, std::memory_order_acq_rel); }
@@ -1531,6 +1542,7 @@ private:
                                 uint32_t pushBytes,
                                 VkPipelineLayout& pipelineLayout,
                                 VkPipeline& pipeline);
+    bool ensureQwen35GatedPipeline();
 
     bool createBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
                       VkMemoryPropertyFlags required,
@@ -1638,6 +1650,10 @@ private:
         VkPipelineLayout mlaPipelineLayout_ = VK_NULL_HANDLE;
         VkDescriptorSetLayout mlaSetLayout_ = VK_NULL_HANDLE;
         VkDescriptorSet mlaDescriptorSet_ = VK_NULL_HANDLE;
+        VkPipeline qwen35GatedPipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout qwen35GatedPipelineLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout qwen35GatedSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSet qwen35GatedDescriptorSet_ = VK_NULL_HANDLE;
 
     bool calibratedAvailable_ = false;
     VkTimeDomainEXT hostTimeDomain_ = VK_TIME_DOMAIN_DEVICE_EXT;
