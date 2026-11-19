@@ -4330,6 +4330,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 last_error_ += " (" + execution_context_->request_id + ")";
             return true;
         }
+        if (execution_context_->memory_admission &&
+            !execution_context_->memory_admission(execution_context_->memory_budget_bytes)) {
+            last_error_ = "request memory budget denied";
+            if (!execution_context_->request_id.empty())
+                last_error_ += " (" + execution_context_->request_id + ")";
+            return true;
+        }
         if (execution_context_->synchronization_ready &&
             !execution_context_->synchronization_ready()) {
             last_error_ = "request synchronization state is not ready";
