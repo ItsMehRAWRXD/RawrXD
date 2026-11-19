@@ -1,0 +1,52 @@
+{
+  "schema": "FULL_LOGIT_PARITY_001/v1",
+  "positions_compared": 3,
+  "deep2_rows": 3,
+  "reference_rows": 3,
+  "min_cosine": 0.9964957435475023,
+  "mean_cosine": 0.9978822858229962,
+  "max_abs_worst": 1.4383420944213867,
+  "argmax_exact_positions": 2,
+  "all_finite": true,
+  "positions": [
+    {
+      "elements": 32000,
+      "cosine": 0.9997565478199918,
+      "max_abs": 0.2330169677734375,
+      "rmse": 0.05540829429717577,
+      "argmax_deep2": 2760,
+      "argmax_reference": 2760,
+      "argmax_match": true,
+      "top10_overlap": 9,
+      "coeff_abs_gt_1e-3": 31530,
+      "nonfinite_deep2": 0,
+      "nonfinite_reference": 0
+    },
+    {
+      "elements": 32000,
+      "cosine": 0.9973945661014946,
+      "max_abs": 0.9424457550048828,
+      "rmse": 0.19100654194038733,
+      "argmax_deep2": 13,
+      "argmax_reference": 13,
+      "argmax_match": true,
+      "top10_overlap": 8,
+      "coeff_abs_gt_1e-3": 31861,
+      "nonfinite_deep2": 0,
+      "nonfinite_reference": 0
+    },
+    {
+      "elements": 32000,
+      "cosine": 0.9964957435475023,
+      "max_abs": 1.4383420944213867,
+      "rmse": 0.293376237511348,
+      "argmax_deep2": 29892,
+      "argmax_reference": 29871,
+      "argmax_match": false,
+      "top10_overlap": 9,
+      "coeff_abs_gt_1e-3": 31817,
+      "nonfinite_deep2": 0,
+      "nonfinite_reference": 0
+    }
+  ]
+}
