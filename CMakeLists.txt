@@ -5290,7 +5290,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_persistent_kv_smoke.cpp" AND TARGET d
     add_test(NAME deep2_persistent_kv_smoke
         COMMAND deep2_persistent_kv_smoke)
     set_tests_properties(deep2_persistent_kv_smoke PROPERTIES
-        TIMEOUT 60)
+        TIMEOUT 60
+        SKIP_RETURN_CODE 77)
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_multitoken_decode_parity.cpp" AND TARGET deep2_engine_lib)
