@@ -1682,6 +1682,10 @@ private:
 
     size_t weightBudgetBytes_ = 0;
     size_t weightCacheBytes_ = 0;
+    // Total Vulkan allocations owned by this compute instance, including
+    // arenas and scratch buffers outside the quantized-weight cache.
+    size_t liveDeviceBytes_ = 0;
+    uint64_t liveDeviceAllocations_ = 0;
     size_t scratchReservedBytes_ = 0;
     bool memoryBudgetAvailable_ = false;
     size_t deviceLocalHeapHeadroom() const;
