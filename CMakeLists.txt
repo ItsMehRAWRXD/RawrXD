@@ -4517,6 +4517,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Q8KParity.cpp")
     add_test(NAME q8k_byte_parity COMMAND q8k_parity_tool --blocks 8 --seed 12345)
     add_test(NAME quant_parity_cert COMMAND quant_parity_cert --blocks 8 --seed 12345)
     add_test(NAME kquant_dot_parity COMMAND kquant_dot_parity)
+    # LTT proof gate: reuse the production Q4_K/Q8_K reference and kernel
+    # path rather than maintaining a second platform-specific Vulkan harness.
+    add_test(NAME ltt_q4k_gemv_proof COMMAND kquant_dot_parity)
+    set_tests_properties(ltt_q4k_gemv_proof PROPERTIES TIMEOUT 30)
     # Gate 2 (MODEL_GENIE_NATIVE_FORWARD_001): manifest consistency. Cross-checks
     # the authoritative registry emitter (quant_parity_cert --json) against the
     # CLI manifest (rawr capabilities --json), rejecting stale or contradictory
