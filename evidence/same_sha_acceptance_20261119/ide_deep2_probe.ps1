@@ -3,7 +3,8 @@ param(
     [string]$Model = "F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
     [int]$ProbeCmd = 9614,
     [int]$TimeoutSec = 300,
-    [string]$ReceiptDir = "F:\rawrxd\evidence\SAME_SHA_ACCEPTANCE_20261119"
+    [string]$ReceiptDir = "F:\rawrxd\evidence\SAME_SHA_ACCEPTANCE_20261119",
+    [string]$StderrPath = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -32,10 +33,17 @@ Remove-Item -LiteralPath $resp -ErrorAction SilentlyContinue
 $env:RAWRXD_DEEP2_PROBE_MODEL = $Model
 $env:RAWRXD_CHAT_SESSION_ID = "deep2probe-" + (Get-Date -Format "yyyyMMddHHmmss")
 
-$proc = Start-Process -FilePath $Exe -PassThru -Environment @{
-    RAWRXD_DEEP2_PROBE_MODEL = $Model
-    DEEP2_GPU_FORWARD_TRACE = '1'
+$startArgs = @{
+    FilePath = $Exe
+    PassThru = $true
+    Environment = @{
+        RAWRXD_DEEP2_PROBE_MODEL = $Model
+        DEEP2_GPU_FORWARD_TRACE = '1'
+    RAWRXD_GPU_POLICY = 'SOLO'
+    }
 }
+if ($StderrPath -ne "") { $startArgs.RedirectStandardError = $StderrPath }
+$proc = Start-Process @startArgs
 Write-Output "PID=$($proc.Id) MODEL=$Model"
 
 $hwnd = [IntPtr]::Zero
