@@ -36,6 +36,23 @@ public class ChatRtHarnessRec001 {
   [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
   [DllImport("user32.dll")] public static extern bool PostMessageW(IntPtr h, uint m, IntPtr w, IntPtr l);
   [DllImport("user32.dll")] public static extern IntPtr SendMessageW(IntPtr h, uint m, IntPtr w, IntPtr l);
+  [StructLayout(LayoutKind.Sequential)] public struct CopyData { public UIntPtr dwData; public int cbData; public IntPtr lpData; }
+  public const uint WM_COPYDATA = 0x004A;
+  public static bool StageChatInput(IntPtr target, string text) {
+    byte[] bytes = Encoding.UTF8.GetBytes(text + "\0");
+    IntPtr data = Marshal.AllocHGlobal(bytes.Length);
+    IntPtr cdsPtr = IntPtr.Zero;
+    try {
+      Marshal.Copy(bytes, 0, data, bytes.Length);
+      CopyData cds = new CopyData { dwData = (UIntPtr)0x4348494E, cbData = bytes.Length, lpData = data };
+      cdsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(CopyData)));
+      Marshal.StructureToPtr(cds, cdsPtr, false);
+      return SendMessageW(target, WM_COPYDATA, IntPtr.Zero, cdsPtr) != IntPtr.Zero;
+    } finally {
+      if (cdsPtr != IntPtr.Zero) Marshal.FreeHGlobal(cdsPtr);
+      Marshal.FreeHGlobal(data);
+    }
+  }
   [DllImport("user32.dll")] public static extern int GetWindowLongW(IntPtr h, int n);
   [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int n);
   public const uint WM_COMMAND = 0x0111;
@@ -259,8 +276,10 @@ if ($combo -ne [IntPtr]::Zero) {
 
 $outBefore = [ChatRtHarnessRec001]::Text($outputEdit)
 $prompt1 = 'Reply with exactly one word: PONG'
-$len1 = [ChatRtHarnessRec001]::SetEdit($inputEdit, $prompt1)
-WLog "INPUT_LEN_AFTER_SET=$len1 text='$([ChatRtHarnessRec001]::Text($inputEdit))' sendEnabled=$([ChatRtHarnessRec001]::IsWindowEnabled($btnSend))"
+$stageOk = [ChatRtHarnessRec001]::StageChatInput($main, $prompt1)
+$len1 = if ($stageOk) { $prompt1.Length } else { 0 }
+WLog "INPUT_STAGE_RESULT=$([int]$stageOk) INPUT_LEN_AFTER_SET=$len1 control_text='$([ChatRtHarnessRec001]::Text($inputEdit))' sendEnabled=$([ChatRtHarnessRec001]::IsWindowEnabled($btnSend))"
+if (-not $stageOk) { WLog 'INPUT_ROUNDTRIP_FAIL_CLOSED'; exit 6 }
 Start-Sleep -Milliseconds 200
 $sidebar = [ChatRtHarnessRec001]::FindChildById($main, 1200)
 if ($sidebar -eq [IntPtr]::Zero) { $sidebar = $main }
