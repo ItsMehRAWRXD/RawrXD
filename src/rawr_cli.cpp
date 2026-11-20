@@ -2534,7 +2534,7 @@ static int cmdModes() {
     return EXIT_OK;
 }
 
-static int cmdModels(InferenceClient& client) {
+static int cmdModels() {
     // The registry of models is the set of GGUF files the runtime can load.
     std::vector<std::string> models;
     std::error_code ec;
@@ -2549,26 +2549,24 @@ static int cmdModels(InferenceClient& client) {
                              std::to_string(sz / (1024 * 1024)) + " MB)");
         }
     }
-    bool live = client.ping();
-    const InferenceEndpoint liveEp = probeInferenceEndpoint();
-    const int shownPort = liveEp.live ? liveEp.port : 8080;
+    // Model inventory is a local filesystem operation.  Do not probe or
+    // initialize an inference backend just to list GGUF files.
     if (g_json) {
         json arr = json::array();
         for (const auto& m : models) arr.push_back(m);
-        outJson({{"inference_reachable", live},
-                 {"port", shownPort},
-                 {"engine", liveEp.live ? liveEp.label : "none"},
+        outJson({{"inference_reachable", false},
+                 {"port", 0},
+                 {"engine", "not_probed"},
                  {"models", arr},
                  {"count", arr.size()}});
-        return live ? EXIT_OK : EXIT_NO_INFERENCE;
+        return EXIT_OK;
     }
-    out("Inference backend: 127.0.0.1:" + std::to_string(shownPort) + " (" +
-        std::string(live ? "reachable" : "NOT reachable") + ")");
+    out("Inference backend: not probed (model inventory is local-only)");
     out("Loadable GGUF models (" + std::to_string(models.size()) + "):");
     for (const auto& m : models) out("  " + m);
     out("");
     out("Load one with: rawr run <file.gguf> [mode]");
-    return live ? EXIT_OK : EXIT_NO_INFERENCE;
+    return EXIT_OK;
 }
 
 static int cmdGit(const std::vector<std::string>& args) {
@@ -2983,7 +2981,7 @@ static int cmdCheckpoints() {
     return EXIT_OK;
 }
 
-static int cmdBackend(const std::vector<std::string>& args, InferenceClient& /*client*/) {
+static int cmdBackend(const std::vector<std::string>& args) {
     std::string sub = args.empty() ? "status" : args[0];
     for (char& c : sub) c = (char)tolower((unsigned char)c);
     auto emitSelected = [](const std::string& pref) {
@@ -3050,7 +3048,9 @@ static int cmdBackend(const std::vector<std::string>& args, InferenceClient& /*c
         InferenceClient probe;
         probe.setEndpoint(11434);
         probe.setModel(ollamaModelFor(probe.model()));
-        live = probe.ping(60000);
+        // Status is diagnostic only; never allow a dead local service to hang
+        // the CLI for a minute.
+        live = probe.ping(1000);
         activeLabel = live ? "ollama" : "none";
         active = live ? "ollama on 127.0.0.1:11434" : "ollama unreachable";
         endpoint = "http://127.0.0.1:11434/v1/chat/completions";
@@ -3080,8 +3080,8 @@ static int cmdBackend(const std::vector<std::string>& args, InferenceClient& /*c
     out("  persisted   : " + backendPrefPath());
     return live ? EXIT_OK : EXIT_NO_INFERENCE;
 }
-static int cmdBackendStatus(InferenceClient& client) {
-    return cmdBackend({}, client);
+static int cmdBackendStatus() {
+    return cmdBackend({});
 }
 static int cmdSwarm(const std::vector<std::string>& args) {
     // Swarm coordination is built on the same core: N logical agents share ONE
@@ -3640,6 +3640,12 @@ int main(int argc, char** argv) {
     const std::string cmd = args[0];
     std::vector<std::string> rest(args.begin() + 1, args.end());
 
+    // Backend-independent commands must remain fast and side-effect free.
+    // Dispatch them before constructing the shared inference client or
+    // probing local endpoints.
+    if (cmd == "models") return cmdModels();
+    if (cmd == "backend") return cmdBackend(rest);
+
     // Help is a local CLI contract and must not probe Ollama, construct an
     // inference client, or initialize any model/GPU runtime.  Keep this path
     // deterministic even when no backend is installed or reachable.
@@ -3666,7 +3672,7 @@ int main(int argc, char** argv) {
         if (cmd == "capabilities") return cmdCapabilities(rest);
         if (cmd == "reason")      return cmdReason(rest);
         if (cmd == "modes")      return cmdModes();
-        if (cmd == "models")     return cmdModels(client);
+        if (cmd == "models")     return cmdModels();
         if (cmd == "tools") {
             if (rest.empty() || rest[0] == "list") {
                 cmdToolsList(reg, findMode("code"));
@@ -3736,7 +3742,7 @@ int main(int argc, char** argv) {
         if (cmd == "doctor")                return cmdDoctor(reg, client);
         if (cmd == "self-audit")            return cmdSelfAudit(reg, client);
         if (cmd == "checkpoint")            return cmdCheckpoints();
-        if (cmd == "backend")               return cmdBackend(rest, client);
+        if (cmd == "backend")               return cmdBackend(rest);
         if (cmd == "swarm")                 return cmdSwarm(rest);
         if (cmd == "open")                   return cmdOpen(rest);
         if (cmd == "session")                return cmdSession(rest);
