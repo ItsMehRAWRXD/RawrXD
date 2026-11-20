@@ -32,7 +32,8 @@ enum class Status {
     CorruptData,         // stream is not a valid zlib stream / truncated
     OutputLimitExceeded, // decompressed size would exceed maxOutputBytes
     AllocationFailure,   // buffer allocation failed
-    BackendError         // zlib reported an unexpected failure
+    BackendError,        // zlib reported an unexpected failure
+    Unsupported          // built without zlib: compression is not available
 };
 
 struct Result {

@@ -10,10 +10,21 @@
 // ============================================================================
 #include "codec/compression_core.h"
 
-#include <zlib.h>
-
 #include <algorithm>
 #include <limits>
+
+// Build-time capability. CMake defines RAWRXD_HAVE_ZLIB=1 when a zlib provider
+// is linked. A no-zlib build still compiles this translation unit and reports
+// Status::Unsupported at call time, instead of failing to link.
+#ifndef RAWRXD_HAVE_ZLIB
+#define RAWRXD_HAVE_ZLIB 0
+#endif
+
+#if RAWRXD_HAVE_ZLIB
+#include <zlib.h>
+#endif
+
+#if RAWRXD_HAVE_ZLIB
 
 namespace rawrxd::compression {
 namespace {
@@ -169,3 +180,26 @@ Result decompress(const std::uint8_t* data,
 }
 
 } // namespace rawrxd::compression
+
+#else  // !RAWRXD_HAVE_ZLIB
+
+// Explicit no-zlib implementation. This is deliberately NOT a silent no-op:
+// every call reports Unsupported, so a caller can never mistake missing
+// compression for data that passed through unchanged.
+namespace rawrxd::compression {
+
+Result compress(const std::uint8_t*, std::size_t, int) {
+    Result r;
+    r.status = Status::Unsupported;
+    return r;
+}
+
+Result decompress(const std::uint8_t*, std::size_t, std::size_t) {
+    Result r;
+    r.status = Status::Unsupported;
+    return r;
+}
+
+} // namespace rawrxd::compression
+
+#endif  // RAWRXD_HAVE_ZLIB
