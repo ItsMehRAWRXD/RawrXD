@@ -209,6 +209,9 @@ struct CacheStats {
     uint64_t hits = 0;            // dispatches served from VRAM
     uint64_t misses = 0;          // first uploads
     uint64_t evictions = 0;       // budget evictions
+    // Attribution split of the total above (vulkan_compute.cpp:3034 / :3115).
+    uint64_t evictions_budget = 0; // capacity/LRU loop
+    uint64_t evictions_trim = 0;   // explicit unpinned flush
     uint64_t prefetches = 0;      // explicit prefetch uploads
     uint64_t prefetch_hits = 0;   // prefetches that found it resident
     uint64_t upload_bytes = 0;    // host -> device

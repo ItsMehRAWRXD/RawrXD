@@ -67,6 +67,11 @@ struct GpuCounters {
     uint64_t weight_cache_hits = 0;     // re-dispatched an already-resident weight
     uint64_t weight_cache_misses = 0;  // first upload of a weight tensor
     uint64_t weight_cache_evictions = 0; // LRU/hotness budget evictions (RAWRXD_STRATA_S01)
+    // Attribution split for the SAME total above: a block-boundary trim and a
+    // capacity/LRU eviction have identical symptoms in the aggregate counter,
+    // which made it impossible to tell why Strata residency never hit.
+    uint64_t weight_cache_evictions_budget = 0; // capacity/LRU loop (vulkan_compute.cpp:3034)
+    uint64_t weight_cache_evictions_trim = 0;   // explicit unpinned flush (vulkan_compute.cpp:3115)
     uint64_t weight_prefetches = 0;    // explicit prefetch submissions (STRATA_S03)
     uint64_t weight_prefetch_hits = 0; // prefetch found the weight already resident
     uint64_t device_bytes_live = 0;    // device-local bytes currently allocated

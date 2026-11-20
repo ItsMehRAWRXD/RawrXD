@@ -3032,6 +3032,7 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
         RetireQuantWeight(victim->second);
         quant_weight_cache_.erase(victim);
         ++gpu_counters_.weight_cache_evictions;
+        ++gpu_counters_.weight_cache_evictions_budget;
     }
 
 
@@ -3113,6 +3114,7 @@ size_t VulkanCompute::TrimUnpinnedQuantWeights() {
         RetireQuantWeight(it->second);
         quant_weight_cache_.erase(it);
         ++gpu_counters_.weight_cache_evictions;
+        ++gpu_counters_.weight_cache_evictions_trim;
     }
     ReapRetiredWeights();
     return victims.size();
