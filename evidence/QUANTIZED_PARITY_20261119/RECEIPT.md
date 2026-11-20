@@ -82,3 +82,31 @@ with depth.
 Quant-dot accumulation order (GPU) vs f32 reference accumulation is the dominant error
 source; closing strict parity needs fp64/fp32-ordered accumulation in the quant-dot path
 or a reference that reproduces Deep2's accumulation order.
+## Update: single-R9700 deterministic run (later sprint)
+
+```
+exe   F:\rawrxd\build\bin-msvc\Release\ltt_tensor_invoke.exe
+SHA256 53F4052CFF425962CAC8E1A9C1FE4FBFFA039ED7575BC1B41CE62067EDA67B87
+cmd   ltt_tensor_invoke.exe tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf 1 450 4996 --device=0
+```
+
+Adapter selection (explicit, no planner split):
+
+```
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424
+Selected device: AMD Radeon AI PRO R9700
+```
+
+Per-position result vs the llama.cpp reference logits captured earlier:
+
+| position | Deep2 top1 | llama.cpp argmax | match |
+|---|---|---|---|
+| 0 | 2760 | 2760 | yes |
+| 1 | 399  | 399  | yes |
+| 2 | 17354 | 17354 | yes |
+
+`LTT_EXECUTE_PASS ... gpu_calls=465 cpu_calls=0`, all logits finite, no device-loss event.
+
+Interpretation: on a single R9700, the Deep2 forward is greedy-identical to llama.cpp at these
+positions. The incoherent text reported from the CLI run therefore points at sampling/model
+capacity or the dual-GPU planner path, not at the forward pass.
