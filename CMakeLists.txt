@@ -489,6 +489,22 @@ else()
         "-DFETCHCONTENT_ZLIB=ON to enable compressed GGUF support.")
 endif()
 
+# Public-API codec contract test. Linked against the SAME core the product uses,
+# so it proves the provider actually round-trips (or reports Unsupported when no
+# provider was linked). Registered with CTest so both configurations gate on it.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/compression_roundtrip_test.cpp")
+    add_executable(compression_roundtrip_test
+        tests/compression_roundtrip_test.cpp)
+    target_link_libraries(compression_roundtrip_test PRIVATE rawrxd_compression_core)
+    target_include_directories(compression_roundtrip_test PRIVATE
+        "${CMAKE_SOURCE_DIR}/include")
+    target_compile_features(compression_roundtrip_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(compression_roundtrip_test PRIVATE /EHsc)
+    endif()
+    add_test(NAME compression_roundtrip_test COMMAND compression_roundtrip_test)
+endif()
+
 find_package(CURL QUIET)
 if(CURL_FOUND)
     message(STATUS "CURL found: ${CURL_VERSION_STRING}")
