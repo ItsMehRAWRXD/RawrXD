@@ -1628,8 +1628,18 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 return;
             }
             if (!m_deep2Bridge) initializeDeep2Bridge();
+            initOk = m_deep2Bridge ? 1 : 0;
+            {
+                FILE* df = nullptr;
+                if (fopen_s(&df, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "a") == 0 && df) {
+                    fprintf(df, "bridge_ptr=%p bridge_initialized=%d bridge_loaded=%d\\n",
+                            static_cast<void*>(m_deep2Bridge),
+                            (m_deep2Bridge && m_deep2Bridge->IsInitialized()) ? 1 : 0,
+                            (m_deep2Bridge && m_deep2Bridge->IsModelLoaded()) ? 1 : 0);
+                    fclose(df);
+                }
+            }
             if (m_deep2Bridge) {
-                initOk = 1;
                 loadOk = m_deep2Bridge->LoadModel(modelPath) ? 1 : 0;
                 if (loadOk) {
                     // Snapshot before generation (static model facts) ...
@@ -1658,9 +1668,15 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                     }
                 }
             }
+        } catch (const std::exception& ex) {
+            modelInfo = std::string("exception=") + ex.what();
+            genOk = 0;
         } catch (...) {
+            modelInfo = "exception=unknown";
             genOk = 0;
         }
+        initOk = (m_deep2Bridge && m_deep2Bridge->IsInitialized()) ? 1 : initOk;
+        loadOk = (m_deep2Bridge && m_deep2Bridge->IsModelLoaded()) ? 1 : loadOk;
         {
             FILE* f = nullptr;
             if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "w") == 0 && f) {
