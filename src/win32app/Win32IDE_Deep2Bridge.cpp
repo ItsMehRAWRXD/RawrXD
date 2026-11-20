@@ -208,6 +208,14 @@ bool Deep2Bridge::ensureEngineOnCurrentThread()
     if (m_engine) {
         // Belongs to another thread: its Vulkan device, command pools and
         // queue were created there and cannot be driven from here.
+        if (m_modelPath.empty() && m_engine->isModelLoaded()) {
+            // Never rebuild into an empty engine: a model-less forward returns a
+            // zeroed hidden state and surfaces as FORWARD_FAULT.
+            std::fprintf(stderr,
+                         "[BRIDGE_ENGINE_REBUILD] refused=1 reason=no_model_path\n");
+            std::fflush(stderr);
+            return false;
+        }
         delete m_engine;
         m_engine = nullptr;
     }

@@ -8057,6 +8057,21 @@ void Win32IDE::generateResponseAsync(
                             : syncResponse, syncOk);
                         return;
                     }
+                    // Fail closed: never issue a forward against an engine that
+                    // reports no model. A model-less forward returns a zeroed
+                    // hidden state and surfaces as FORWARD_FAULT.
+                    if (!m_deep2Bridge->IsModelLoaded()) {
+                        std::fprintf(stderr,
+                                     "[CHAT_DEEP2] refused=1 reason=model_not_loaded "
+                                     "model=%s\n",
+                                     selectedModel.identifier.c_str());
+                        std::fflush(stderr);
+                        finishIfCurrent(
+                            "Deep2 model is not loaded; refusing to generate (see "
+                            "[CHAT_DEEP2] in stderr).",
+                            false);
+                        return;
+                    }
                     m_deep2Bridge->GenerateStream(
                         routedPrompt,
                         [this, &response, callback](const std::string& token, bool) {
