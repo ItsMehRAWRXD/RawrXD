@@ -338,6 +338,7 @@ int main(int argc, char* argv[])
     bool calibrate = true;
     bool strata = false;         // enable expert residency ledger + prefetch
     bool strata_prefetch = false;
+    int64_t weight_cache_budget = -1;   // -1 = leave runtime default
     int cache_policy = 0;        // 0 = LRU baseline, 1 = hotness (STRATA_S08)
     int device_pin = -1;         // STRATA_S05: Vulkan device index (-1 = auto)
     bool prefill_batch = false;  // STRATA_D1: multi-token batched prefill
@@ -373,6 +374,8 @@ int main(int argc, char* argv[])
             calibrate = false;
         else if (a == "--strata")
             strata = true;                       // expert ledger ON, prefetch OFF
+        else if (a == "--weight-cache-budget" && i + 1 < argc)
+            weight_cache_budget = std::atoll(argv[++i]); // RAWRXD_G04
         else if (a == "--strata-prefetch")
             strata = true, strata_prefetch = true; // ledger + down-bank prefetch ON
         else if (a == "--strata-hotness")
@@ -524,7 +527,7 @@ int main(int argc, char* argv[])
         }
         std::printf("usage: deep2_strata_bench.exe --model <gguf> [--prefill N] [--generate N] "
                     "[--gpu] [--outdir D] [--tag T] [--no-calibrate] [--strata] "
-                    "[--strata-prefetch] [--strata-hotness] [--int8kv] [--kv-selftest N] "
+                    "[--strata-prefetch] [--strata-hotness] [--weight-cache-budget BYTES] [--int8kv] [--kv-selftest N] "
                     "[--kv-context-test N] [--spec N] [--draft-k K] [--repeat-prompt]\n");
         return 2;
     }
@@ -562,6 +565,14 @@ int main(int argc, char* argv[])
                 (unsigned long long)rep.spec.embd, (unsigned long long)rep.spec.heads,
                 (unsigned long long)rep.spec.heads_kv, (unsigned long long)rep.spec.expert_count,
                 (unsigned long long)rep.spec.expert_used, (unsigned long long)rep.spec.expert_shared);
+
+    if (weight_cache_budget >= 0) {
+        QuantDot::SetWeightCacheBudget(weight_cache_budget);
+        std::printf("WEIGHT_CACHE_BUDGET %lld bytes (%.2f GiB)\n",
+                    (long long)weight_cache_budget,
+                    (double)weight_cache_budget / (1024.0 * 1024.0 * 1024.0));
+        std::fflush(stdout);
+    }
 
     RuntimeGraph::Executor ex;
     ex.SetForceCpu(!gpu);
