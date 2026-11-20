@@ -199,6 +199,50 @@ void Deep2Bridge::UnloadModel()
 #endif
 }
 
+bool Deep2Bridge::ensureEngineOnCurrentThread()
+{
+#ifdef HAVE_DEEP2_ENGINE
+    const std::thread::id self = std::this_thread::get_id();
+    std::lock_guard<std::mutex> lock(m_engineMutex);
+    if (m_engine && m_engineThreadId == self) return true;
+    if (m_engine) {
+        // Belongs to another thread: its Vulkan device, command pools and
+        // queue were created there and cannot be driven from here.
+        delete m_engine;
+        m_engine = nullptr;
+    }
+    m_engine = new Deep2::Deep2Engine();
+    Deep2::EngineConfig config;
+    config.maxSeqLen = 8192;
+    config.useThreadPool = true;
+    config.pinThreads = true;
+    config.useKVCache = true;
+    config.weightQuant = Deep2::EngineConfig::QuantType::Q4_K_M;
+    config.kvCacheQuant = Deep2::EngineConfig::QuantType::FP16;
+    if (!m_engine->initialize(config)) {
+        LOG_ERROR("Deep2Bridge: engine re-init failed on generation thread");
+        delete m_engine;
+        m_engine = nullptr;
+        return false;
+    }
+    const char* disableVulkan = std::getenv("RAWRXD_BRIDGE_DISABLE_VULKAN");
+    const bool useVulkan = !(disableVulkan && disableVulkan[0] == '1');
+    m_engine->enableVulkan(useVulkan);
+    m_engine->enableBatchedPrefill(true);
+    if (!m_modelPath.empty() && !m_engine->loadModel(m_modelPath)) {
+        LOG_ERROR("Deep2Bridge: model reload failed on generation thread: " + m_modelPath);
+        delete m_engine;
+        m_engine = nullptr;
+        return false;
+    }
+    m_engineThreadId = self;
+    LOG_INFO("Deep2Bridge: engine rebuilt on generation thread");
+    return true;
+#else
+    return m_cpuEngine != nullptr;
+#endif
+}
+
 bool Deep2Bridge::GenerateStream(const std::string& prompt,
                                  std::function<bool(const std::string& token, bool isComplete)> callback,
                                  int maxTokens,
@@ -262,6 +306,13 @@ bool Deep2Bridge::GenerateStream(const std::string& prompt,
 
     // Use engine for generation
     m_generationThread = std::thread([this, prompt, maxTokens]() {
+        // Vulkan resources are thread-affine: rebuild the engine here when the
+        // request arrives on a different thread than the one that created it.
+        if (!ensureEngineOnCurrentThread()) {
+            m_generating.store(false);
+            OnGenerationComplete(true);
+            return;
+        }
         GenerationWorker(prompt, maxTokens);
     });
 

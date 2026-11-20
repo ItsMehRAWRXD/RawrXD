@@ -106,6 +106,12 @@ private:
     std::string m_modelPath;
     std::thread m_generationThread;
     std::mutex m_callbackMutex;
+    // Vulkan device/context ownership follows the thread that created it. The
+    // engine is created on the UI thread during Initialize, so a worker-thread
+    // generation must rebuild it there or the forward produces zeroed state.
+    std::mutex m_engineMutex;
+    std::thread::id m_engineThreadId{};
+    bool ensureEngineOnCurrentThread();
     
     std::function<bool(const std::string&, bool)> m_tokenCallback;
     OutputCallback m_outputCallback;
