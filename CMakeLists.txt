@@ -1114,6 +1114,55 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
    EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND
    Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    # Strata expert-residency benchmark. Same graph-executor sources as
+    # deep2_dualgpu_forward; produces the machine-readable strata_bench_<tag>.json
+    # receipts used as the residency certification baseline.
+    add_executable(deep2_strata_bench
+        tools/deep2_strata_bench.cpp
+        src/deep2/op_gdn.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+        src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp)
+    target_include_directories(deep2_strata_bench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc})
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_strata_bench PRIVATE ggml_interface)
+    endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_strata_bench PRIVATE rawrxd_compression_core)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_strata_bench PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_strata_bench PRIVATE ggml-vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_strata_bench PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_strata_bench PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+
     add_executable(deep2_dualgpu_forward
         tools/deep2_dualgpu_forward.cpp
         src/deep2/op_gdn.cpp
@@ -1144,6 +1193,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         ${_rawrxd_vk_sdk_inc})
     if(TARGET ggml_interface)
         target_link_libraries(deep2_dualgpu_forward PRIVATE ggml_interface)
+    endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_dualgpu_forward PRIVATE rawrxd_compression_core)
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_dualgpu_forward PRIVATE Vulkan::Vulkan)
