@@ -2,14 +2,25 @@
 #include <chrono>
 #include <condition_variable>
 #include <iostream>
+#include <string>
 
 int main(int argc, char** argv) {
-    if (argc != 2) return 2;
+    if (argc < 2 || argc > 3) return 2;
+    const bool sync = argc == 3 && std::string(argv[2]) == "--sync";
     std::cerr << "LIFECYCLE_PHASE=construct\n" << std::flush;
     Deep2Bridge bridge(nullptr);
     std::cerr << "LIFECYCLE_PHASE=initialize_begin\n" << std::flush;
     if (!bridge.Initialize(argv[1]) || !bridge.IsModelLoaded()) return 3;
     std::cerr << "LIFECYCLE_PHASE=initialize_complete\n" << std::flush;
+    if (sync) {
+        std::cerr << "LIFECYCLE_PHASE=sync_begin prompt=ping max_tokens=8\n" << std::flush;
+        const std::string response = bridge.GenerateSync("ping", 8);
+        std::cerr << "LIFECYCLE_PHASE=sync_complete chars=" << response.size() << "\n" << std::flush;
+        if (response.empty()) return 6;
+        std::cout << "BRIDGE_SYNC_TEST PASS chars=" << response.size() << "\n";
+        bridge.Stop();
+        return 0;
+    }
     std::mutex mutex;
     std::condition_variable ready;
     for (int request = 0; request < 3; ++request) {
