@@ -35,6 +35,7 @@ $env:RAWRXD_CHAT_SESSION_ID = "deep2probe-" + (Get-Date -Format "yyyyMMddHHmmss"
 $env:DEEP2_GPU_FORWARD_TRACE = '1'
 $env:RAWRXD_GPU_POLICY = 'SOLO'
 $env:RAWRXD_DEEP2_LAZY_LOAD = '1'
+$env:RAWRXD_ENHANCE_SKIP = 'elastic,cyclone,nvme,warmup,medusa,nu,ckv,slide,chamber,plasma,sov,mars,torus,prefetch,telemetry'
 
 $startArgs = @{
     FilePath = $Exe
