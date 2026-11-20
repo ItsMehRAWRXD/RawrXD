@@ -156,11 +156,16 @@ void main() {
         const uint blocks = (pc.cols + 255u) / 256u;
         for (uint block = 0u; block < blocks; ++block) {
             // Load activation tile into shared memory (broadcast to all 4 rows)
-            uint col = block * 256u + lane;
+            // Each cohort owns a disjoint quarter of the 256-value tile.
+            // The previous mapping made all four cohorts overwrite q8Raw[0..63],
+            // leaving the remaining activation values undefined during the
+            // global scale calculation.
+            uint tileIndex = cohort * 64u + lane;
+            uint col = block * 256u + tileIndex;
             if (col < pc.cols) {
-                q8Raw[lane] = x[col];
+                q8Raw[tileIndex] = x[col];
             } else {
-                q8Raw[lane] = 0.0f;
+                q8Raw[tileIndex] = 0.0f;
             }
 
             // All cohorts compute their row's quant scale from the same activation max
@@ -187,9 +192,9 @@ void main() {
 
             int q8 = 0;
             if (q8InvScale != 0.0f)
-                q8 = (floatBitsToInt(q8InvScale * q8Raw[lane] + 12582912.0f) & 0x007fffff) - int(0x00400000u);
+                q8 = (floatBitsToInt(q8InvScale * q8Raw[tileIndex] + 12582912.0f) & 0x007fffff) - int(0x00400000u);
             q8 = clamp(q8, -127, 127);
-            q8Quant[lane] = q8;
+            q8Quant[tileIndex] = q8;
             barrier();
 
             // Each cohort accumulates for its respective row

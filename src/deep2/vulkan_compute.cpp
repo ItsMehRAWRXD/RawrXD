@@ -2072,7 +2072,12 @@ bool VulkanCompute::dispatchQuant(
         }
         return false;
     };
-    const bool useTiled4x = push.type == 12u && push.rows >= 4u &&
+    // The tiled shader is experimental until its same-input parity test
+    // passes. Keep the production path on the reference Q4_K shader unless
+    // explicitly opted in for a controlled benchmark.
+    const char* tiledEnv = std::getenv("RAWRXD_DEEP2_ENABLE_TILED4X");
+    const bool tiledOptIn = tiledEnv && tiledEnv[0] == '1' && tiledEnv[1] == '\0';
+    const bool useTiled4x = tiledOptIn && push.type == 12u && push.rows >= 4u &&
         qTiled4xPipeline_ != VK_NULL_HANDLE;
     if (!qPipeline_ && !useTiled4x) return fail("Q_PIPELINE");
     if (!weights) return fail("WEIGHT_BUFFER");
