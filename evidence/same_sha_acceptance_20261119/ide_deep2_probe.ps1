@@ -32,15 +32,12 @@ Remove-Item -LiteralPath $resp -ErrorAction SilentlyContinue
 
 $env:RAWRXD_DEEP2_PROBE_MODEL = $Model
 $env:RAWRXD_CHAT_SESSION_ID = "deep2probe-" + (Get-Date -Format "yyyyMMddHHmmss")
+$env:DEEP2_GPU_FORWARD_TRACE = '1'
+$env:RAWRXD_GPU_POLICY = 'SOLO'
 
 $startArgs = @{
     FilePath = $Exe
     PassThru = $true
-    Environment = @{
-        RAWRXD_DEEP2_PROBE_MODEL = $Model
-        DEEP2_GPU_FORWARD_TRACE = '1'
-    RAWRXD_GPU_POLICY = 'SOLO'
-    }
 }
 if ($StderrPath -ne "") { $startArgs.RedirectStandardError = $StderrPath }
 $proc = Start-Process @startArgs
