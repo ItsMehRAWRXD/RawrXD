@@ -461,14 +461,21 @@ elseif(TARGET zlib)
         "${CMAKE_BINARY_DIR}/_deps/zlib-src"
         "${CMAKE_BINARY_DIR}/_deps/zlib-build")
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
-    elseif(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src" OR EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src")
-        # Local zlib-src fallback: use source files from the local directory.
-        target_include_directories(rawrxd_compression_core PUBLIC
-            "${CMAKE_BINARY_DIR}/_deps/zlib-src")
-        # Collect and add zlib source files.
-        file(GLOB ZLIB_SOURCES "${CMAKE_BINARY_DIR}/_deps/zlib-src/*.c")
+    elseif(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h" OR
+           EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zconf.h")
+        # Local zlib-src fallback. zconf.h is generated beside zlib.h, so a tree
+        # holding zlib.h without zconf.h cannot compile; requiring BOTH stops the
+        # branch from claiming a zlib provider it cannot build. One resolved
+        # directory then feeds the include path, the sources and the headers.
+        if(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h")
+            set(_rawrxd_zlib_src "${CMAKE_BINARY_DIR}/_deps/zlib-src")
+        else()
+            set(_rawrxd_zlib_src "${CMAKE_SOURCE_DIR}/_deps/zlib-src")
+        endif()
+        target_include_directories(rawrxd_compression_core PUBLIC "${_rawrxd_zlib_src}")
+        file(GLOB ZLIB_SOURCES "${_rawrxd_zlib_src}/*.c")
         target_sources(rawrxd_compression_core PUBLIC ${ZLIB_SOURCES})
-        file(GLOB ZLIB_HDRS "${CMAKE_BINARY_DIR}/_deps/zlib-src/*.h")
+        file(GLOB ZLIB_HDRS "${_rawrxd_zlib_src}/*.h")
         target_sources(rawrxd_compression_core PUBLIC ${ZLIB_HDRS})
         target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
 else()
