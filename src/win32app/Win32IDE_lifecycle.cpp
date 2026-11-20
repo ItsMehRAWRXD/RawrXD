@@ -1628,7 +1628,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 return;
             }
             if (!m_deep2Bridge) initializeDeep2Bridge();
-            initOk = m_deep2Bridge ? 1 : 0;
+            if (m_deep2Bridge && !m_deep2Bridge->IsInitialized()) {
+                initOk = m_deep2Bridge->Initialize(modelPath) ? 1 : 0;
+            }
+            if (!m_deep2Bridge) initOk = 0;
             {
                 FILE* df = nullptr;
                 if (fopen_s(&df, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "a") == 0 && df) {
@@ -1640,7 +1643,20 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 }
             }
             if (m_deep2Bridge) {
-                loadOk = m_deep2Bridge->LoadModel(modelPath) ? 1 : 0;
+                // initializeDeep2Bridge may already have admitted the exact
+                // configured GGUF. Avoid reloading it here: the streaming
+                // loader's zone churn can starve the first generation before
+                // the probe reaches GenerateSync.
+                bool alreadyLoaded = m_deep2Bridge->IsModelLoaded();
+                if (alreadyLoaded) {
+                    std::error_code ec;
+                    const auto requested = std::filesystem::weakly_canonical(modelPath, ec);
+                    const auto current = std::filesystem::weakly_canonical(
+                        m_deep2Bridge->GetCurrentModel(), ec);
+                    alreadyLoaded = !requested.empty() && requested == current;
+                }
+                loadOk = alreadyLoaded ? 1 :
+                    (m_deep2Bridge->LoadModel(modelPath) ? 1 : 0);
                 if (loadOk) {
                     // Snapshot before generation (static model facts) ...
                     const std::string infoBefore = m_deep2Bridge->GetModelInfo();

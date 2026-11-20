@@ -871,11 +871,15 @@ void Win32IDE::initializeDeep2Bridge() {
             defaultModel = m_loadedModelPath;
         }
 
-        if (!defaultModel.empty() &&
+        const char* lazyProbeEnv = std::getenv("RAWRXD_DEEP2_LAZY_LOAD");
+        const bool lazyProbe = lazyProbeEnv && lazyProbeEnv[0] == '1' && lazyProbeEnv[1] == '\0';
+        if (!lazyProbe && !defaultModel.empty() &&
             GetFileAttributesA(defaultModel.c_str()) != INVALID_FILE_ATTRIBUTES &&
             m_deep2Bridge->Initialize(defaultModel)) {
             LOG_INFO("Deep2 Bridge initialized successfully with model: " + defaultModel);
             appendToOutput(" Deep2 Engine initialized: " + defaultModel + "\n", "Output", OutputSeverity::Info);
+        } else if (lazyProbe) {
+            LOG_INFO("Deep2 bridge initialized without model (probe lazy-load)");
         } else {
             LOG_WARNING("Deep2 Bridge initialized without model (model can be loaded later)");
             appendToOutput(" Deep2 Engine initialized (no model loaded)\n", "Output", OutputSeverity::Warning);
