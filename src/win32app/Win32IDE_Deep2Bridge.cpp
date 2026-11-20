@@ -151,10 +151,19 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
 
 bool Deep2Bridge::LoadModel(const std::string& modelPath)
 {
+    const auto loadStart = std::chrono::steady_clock::now();
+    auto loadMs = [&]() -> long long {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - loadStart).count();
+    };
+    std::fprintf(stderr, "[GUI_LOAD] stage=entry path=%s\n", modelPath.c_str());
     if (!m_initialized.load()) {
+        std::fprintf(stderr, "[GUI_LOAD] stage=initialize_required elapsed_ms=%lld\n", loadMs());
         return Initialize(modelPath);
     }
 
+    std::fprintf(stderr, "[GUI_LOAD] stage=initialized engine=%d elapsed_ms=%lld\n",
+                 m_engine ? 1 : 0, loadMs());
     LOG_INFO("Loading model: " + modelPath);
 
     if (m_espBus) {
@@ -162,19 +171,30 @@ bool Deep2Bridge::LoadModel(const std::string& modelPath)
     }
 
 #ifdef HAVE_DEEP2_ENGINE
-    if (m_engine && m_engine->loadModel(modelPath)) {
+    std::fprintf(stderr, "[GUI_LOAD] stage=engine_load_begin elapsed_ms=%lld\n", loadMs());
+    const bool loaded = m_engine && m_engine->loadModel(modelPath);
+    std::fprintf(stderr, "[GUI_LOAD] stage=engine_load_end result=%d elapsed_ms=%lld\n",
+                 loaded ? 1 : 0, loadMs());
+    if (loaded) {
         m_modelPath = modelPath;
         LOG_INFO("Model loaded successfully: " + modelPath);
+        std::fprintf(stderr, "[GUI_LOAD] stage=complete result=1 elapsed_ms=%lld\n", loadMs());
         return true;
     }
 #else
-    if (m_cpuEngine && m_cpuEngine->LoadModel(modelPath)) {
+    std::fprintf(stderr, "[GUI_LOAD] stage=cpu_load_begin elapsed_ms=%lld\n", loadMs());
+    const bool loaded = m_cpuEngine && m_cpuEngine->LoadModel(modelPath);
+    std::fprintf(stderr, "[GUI_LOAD] stage=cpu_load_end result=%d elapsed_ms=%lld\n",
+                 loaded ? 1 : 0, loadMs());
+    if (loaded) {
         m_modelPath = modelPath;
         LOG_INFO("Model loaded successfully: " + modelPath);
+        std::fprintf(stderr, "[GUI_LOAD] stage=complete result=1 elapsed_ms=%lld\n", loadMs());
         return true;
     }
 #endif
 
+    std::fprintf(stderr, "[GUI_LOAD] stage=complete result=0 elapsed_ms=%lld\n", loadMs());
     LOG_ERROR("Failed to load model: " + modelPath);
     if (m_espBus) {
         m_espBus->publish(rawrxd::esp::Kind::Error, "Model load failed: " + modelPath, m_espRequestId);
@@ -322,6 +342,18 @@ bool Deep2Bridge::GenerateStream(const std::string& prompt,
             m_generating.store(false);
             OnGenerationComplete(true);
             return;
+        }
+        {
+            // Post-rebuild state: the probe path logs GPU Devices: 2 and works,
+            // so a zero here would explain a zeroed prefill hidden state.
+            std::fprintf(stderr,
+                         "[ENGINE_CONFIG_DIFF] vk_init=%d devices=%u model_loaded=%d "
+                         "prompt_len=%zu\n",
+                         m_engine->isVulkanInitialized() ? 1 : 0,
+                         m_engine->vulkanDeviceCount(),
+                         m_engine->isModelLoaded() ? 1 : 0,
+                         prompt.size());
+            std::fflush(stderr);
         }
         GenerationWorker(prompt, maxTokens);
     });
