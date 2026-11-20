@@ -1629,7 +1629,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             }
             if (!m_deep2Bridge) initializeDeep2Bridge();
             if (m_deep2Bridge && !m_deep2Bridge->IsInitialized()) {
-                initOk = m_deep2Bridge->Initialize(modelPath) ? 1 : 0;
+                // Match the passing standalone lifecycle: initialize the
+                // engine without a model, then admit the GGUF exactly once
+                // through LoadModel below.
+                initOk = m_deep2Bridge->Initialize("") ? 1 : 0;
             }
             if (!m_deep2Bridge) initOk = 0;
             {
