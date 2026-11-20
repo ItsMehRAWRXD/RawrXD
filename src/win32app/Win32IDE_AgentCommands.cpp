@@ -842,8 +842,12 @@ void Win32IDE::initializeDeep2Bridge() {
     if (!m_deep2Bridge) {
         m_deep2Bridge = new Deep2Bridge(this);
         
-        // Connect ESP bus
-        m_deep2Bridge->SetESPBus(&m_espBus, m_espRequestId++);
+        // The standalone bridge path has no ESP bus. Keep the probe lifecycle
+        // equivalent so model admission cannot re-enter IDE event handling.
+        const char* probeEnv = std::getenv("RAWRXD_DEEP2_LAZY_LOAD");
+        const bool probeNoEsp = probeEnv && probeEnv[0] == '1' && probeEnv[1] == '\0';
+        if (!probeNoEsp)
+            m_deep2Bridge->SetESPBus(&m_espBus, m_espRequestId++);
         
         // Set output callback to send responses to output panel and Copilot Chat
         m_deep2Bridge->SetOutputCallback([this](const std::string& title, const std::string& content) {
