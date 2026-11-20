@@ -23,6 +23,7 @@
 #include "rawr_reasoning.hpp"
 #include "Deep2Engine.h"
 #include "ChatTemplate.hpp"
+#include "agentic/BackendRegistry.hpp"
 #include "agentic/tool_call_parser.h"
 #include "core/project_rag_lite.hpp"
 #include "core/vram_kv_controls.hpp"
@@ -1092,8 +1093,13 @@ static int cmdRun(const std::vector<std::string>& args) {
 
     std::string backend = resolveRunBackend(backendFlag);
     if (backend != "deep2" && backend != "ollama") {
-        out("ERROR: unsupported backend '" + backend +
-            "' (expected deep2, native, ollama, or auto)");
+        if (backend == "strata") {
+            out("ERROR: STRATA_NOT_ROUTABLE: expert residency is not activated on this "
+                "path; use --backend=deep2 or --backend=ollama");
+        } else {
+            out("ERROR: unsupported backend '" + backend +
+                "' (expected deep2, native, ollama, or auto)");
+        }
         return EXIT_FAIL;
     }
 
@@ -1627,6 +1633,7 @@ static std::string normalizeBackendPref(std::string s) {
     while (!s.empty() && (unsigned char)s.back() <= ' ') s.pop_back();
     if (s == "native" || s == "deep2-native" || s == "gguf") return "native";
     if (s == "deep2" || s == "local") return "deep2";
+    if (s == "strata") return "strata";
     if (s == "ollama" || s == "http") return "ollama";
     if (s == "auto" || s == "default" || s.empty()) return "auto";
     return {};
@@ -1658,6 +1665,10 @@ static std::string resolveRunBackend(const std::string& flagOrEmpty) {
     std::string sel = flagOrEmpty.empty() ? loadBackendPref() : normalizeBackendPref(flagOrEmpty);
     if (sel.empty()) sel = "auto";
     if (sel == "native" || sel == "deep2") return "deep2";
+    // Strata is Deep2 + expert residency. Residency is not activated on this
+    // path yet, so return the explicit route and let callers fail with
+    // STRATA_NOT_ROUTABLE instead of running standard Deep2.
+    if (sel == "strata") return "strata";
     if (sel == "ollama") return "ollama";
     // auto → Deep2 when default GGUF exists, else ollama
     Workspace ws;
@@ -1674,6 +1685,10 @@ static InferenceEndpoint resolvePreferredEndpoint() {
         if (c.ping(60000)) return InferenceEndpoint{11434, "ollama", true};
         return InferenceEndpoint{11434, "ollama", false};
     }
+    if (pref == "strata") {
+        // Explicit failure marker: never HTTP-probe and never fall back to Deep2.
+        return InferenceEndpoint{0, "strata", false};
+    }
     if (pref == "deep2" || pref == "native") {
         // Marker endpoint for status/json; callers must not HTTP-complete on it.
         Workspace ws; ws.setRoot(g_workspace_root);
@@ -1684,6 +1699,27 @@ static InferenceEndpoint resolvePreferredEndpoint() {
 }
 
 static int cmdAsk(const std::vector<std::string>& args) {
+    // Backend selection is honoured here too: --backend=strata must fail
+    // explicitly rather than falling through to the HTTP probe. The persisted
+    // preference is checked as well, so a stored Strata selection cannot be
+    // silently redirected to Ollama or Deep2.
+    {
+        std::string askBackend;
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            const std::string& a = args[i];
+            if (a == "--backend" && i + 1 < args.size()) {
+                askBackend = normalizeBackendPref(args[i + 1]);
+            } else if (a.rfind("--backend=", 0) == 0) {
+                askBackend = normalizeBackendPref(a.substr(10));
+            }
+        }
+        if (askBackend.empty()) askBackend = loadBackendPref();
+        if (askBackend == "strata") {
+            out("ERROR: STRATA_NOT_ROUTABLE: expert residency is not activated on this "
+                "path; use --backend=deep2 or --backend=ollama");
+            return EXIT_FAIL;
+        }
+    }
     // The universal entry point. The same policy handles physics, code, maths,
     // creative writing and engineering -- the subject changes, the process
     // does not.
@@ -2981,6 +3017,51 @@ static int cmdCheckpoints() {
     return EXIT_OK;
 }
 
+static std::array<rawrxd::BackendInfo, 3> buildBackendRegistry() {
+    Workspace ws;
+    ws.setRoot(g_workspace_root);
+    const bool deep2Ready = !ws.resolve(defaultDeep2ModelRel(), true).empty();
+
+    std::array<rawrxd::BackendInfo, 3> r{};
+    r[0] = rawrxd::BackendInfo{rawrxd::BackendId::Deep2, "deep2", rawrxd::EngineKind::Deep2,
+                               deep2Ready ? rawrxd::Health::Available : rawrxd::Health::Unavailable,
+                               rawrxd::Capabilities{rawrxd::Support::Verified, rawrxd::Support::Verified,
+                                                    rawrxd::Support::Unverified,
+                                                    rawrxd::Support::Unverified},
+                               deep2Ready ? "" : "default GGUF missing"};
+    r[1] = rawrxd::BackendInfo{rawrxd::BackendId::Strata, "strata", rawrxd::EngineKind::Deep2,
+                               rawrxd::Health::Unavailable,
+                               rawrxd::Capabilities{rawrxd::Support::Unverified,
+                                                    rawrxd::Support::Unverified,
+                                                    rawrxd::Support::Unsupported,
+                                                    rawrxd::Support::Unsupported},
+                               "STRATA_NOT_ROUTABLE: expert residency not activated"};
+    r[2] = rawrxd::BackendInfo{rawrxd::BackendId::Ollama, "ollama", rawrxd::EngineKind::Ollama,
+                               rawrxd::Health::Unavailable,
+                               rawrxd::Capabilities{rawrxd::Support::Verified,
+                                                    rawrxd::Support::Verified,
+                                                    rawrxd::Support::Verified,
+                                                    rawrxd::Support::Verified},
+                               "HTTP 127.0.0.1:11434 not probed here"};
+    return r;
+}
+
+static void printBackendRegistryTable(const std::string& selected) {
+    out("backend  engine  health       chat       stream     tools      repair     selected");
+    for (const auto& b : buildBackendRegistry()) {
+        const bool sel = (selected == std::string(rawrxd::ToString(b.id)));
+        out(std::string(rawrxd::ToString(b.id)) + "  " +
+            std::string(rawrxd::ToString(b.engine)) + "  " +
+            std::string(rawrxd::ToString(b.health)) + "  " +
+            std::string(rawrxd::ToString(b.capabilities.chat)) + "  " +
+            std::string(rawrxd::ToString(b.capabilities.streaming)) + "  " +
+            std::string(rawrxd::ToString(b.capabilities.toolCalls)) + "  " +
+            std::string(rawrxd::ToString(b.capabilities.autonomousRepair)) + "  " +
+            (sel ? "yes" : "no"));
+        if (!b.detail.empty()) out("         note: " + b.detail);
+    }
+}
+
 static int cmdBackend(const std::vector<std::string>& args) {
     std::string sub = args.empty() ? "status" : args[0];
     for (char& c : sub) c = (char)tolower((unsigned char)c);
@@ -2996,18 +3077,24 @@ static int cmdBackend(const std::vector<std::string>& args) {
             out("Backend selected: " + pref);
             out("  route       : " + route);
             out("  persisted   : " + backendPrefPath());
+            if (pref == "strata") {
+                out("WARNING: STRATA_NOT_ROUTABLE - expert residency is not activated on "
+                    "this path. Preference stored; inference fails explicitly and Deep2 is "
+                    "not substituted.");
+            }
+            printBackendRegistryTable(pref);
         }
         return EXIT_OK;
     };
     if (sub == "select" || sub == "use" || sub == "set") {
         if (args.size() < 2) {
-            out("usage: rawr backend select <auto|ollama|deep2|native>");
+            out("usage: rawr backend select <auto|ollama|deep2|native|strata>");
             return EXIT_FAIL;
         }
         const std::string pref = normalizeBackendPref(args[1]);
         if (pref.empty()) {
             out("ERROR: unsupported backend '" + args[1] +
-                "' (expected auto|ollama|deep2|native)");
+                "' (expected auto|ollama|deep2|native|strata)");
             return EXIT_FAIL;
         }
         if (!saveBackendPref(pref)) {
@@ -3025,11 +3112,12 @@ static int cmdBackend(const std::vector<std::string>& args) {
         return emitSelected(asSelect);
     }
     if (sub != "status" && sub != "show") {
-        out("usage: rawr backend status | select <auto|ollama|deep2|native>");
+        out("usage: rawr backend status | select <auto|ollama|deep2|native|strata>");
         return EXIT_FAIL;
     }
     const std::string pref = loadBackendPref();
     const std::string route = resolveRunBackend("");
+    printBackendRegistryTable(pref);
     bool live = false;
     std::string active;
     std::string endpoint;
