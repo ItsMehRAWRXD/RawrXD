@@ -2516,7 +2516,7 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     # ------------------------------------------------------------------------
     option(RAWRXD_BUILD_DEEP2_ENGINE
         "Build the experimental Deep2 engine and link it into dependent targets"
-        OFF)
+        ON)
     if(RAWRXD_BUILD_DEEP2_ENGINE AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp)
         # ------------------------------------------------------------------------
         # ENGINE_RECOVERY: the subsystems above were only ever compiled as a link
