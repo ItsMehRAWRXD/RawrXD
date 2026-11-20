@@ -4637,7 +4637,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             ::Deep2::GetDeep2VulkanCompute().TrimUnpinnedWeightCache(
                 residency_block < 0 ? UINT32_MAX :
                     static_cast<uint32_t>(residency_block));
-            (void)QuantDot::TrimUnpinnedQuantWeights();
+            // RAWRXD_STRATA_P1A: the global unpinned flush below is a coarse
+            // VRAM bound, not a residency decision. Measured attribution on
+            // deepseek-coder-v2_16b (prefill 32 / generate 8): 24159 of 24159
+            // weight-cache evictions came from it, budget evictions were 0, so
+            // no expert slice ever survived a block transition and the ledger
+            // reported 33765 observations / 0 hits. Under Strata tracking the
+            // block-scoped trim above still releases the completed block, and
+            // the budgeted LRU path (vulkan_compute.cpp:3000) still reclaims
+            // under pressure, so retain the quantised expert slices instead of
+            // flushing the whole cache. Non-Strata execution is unchanged.
+            if (!StrataExpertTracking())
+                (void)QuantDot::TrimUnpinnedQuantWeights();
             residency_block = in.block;
         }
         // FLIGHT RECORDER: publish progress for this op BEFORE executing it, so

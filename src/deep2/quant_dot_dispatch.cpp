@@ -421,6 +421,8 @@ CacheStats GetCacheStats() {
     s.hits = c.weight_cache_hits;
     s.misses = c.weight_cache_misses;
     s.evictions = c.weight_cache_evictions;
+    s.evictions_budget = c.weight_cache_evictions_budget;
+    s.evictions_trim = c.weight_cache_evictions_trim;
     s.prefetches = c.weight_prefetches;
     s.prefetch_hits = c.weight_prefetch_hits;
     s.upload_bytes = c.upload_bytes;
@@ -455,6 +457,8 @@ CacheStats GetCacheStatsOn(int32_t device) {
     s.hits = c.weight_cache_hits;
     s.misses = c.weight_cache_misses;
     s.evictions = c.weight_cache_evictions;
+    s.evictions_budget = c.weight_cache_evictions_budget;
+    s.evictions_trim = c.weight_cache_evictions_trim;
     s.prefetches = c.weight_prefetches;
     s.prefetch_hits = c.weight_prefetch_hits;
     s.upload_bytes = c.upload_bytes;
