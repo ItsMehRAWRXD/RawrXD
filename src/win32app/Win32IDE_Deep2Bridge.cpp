@@ -236,6 +236,8 @@ bool Deep2Bridge::ensureEngineOnCurrentThread()
         return false;
     }
     m_engineThreadId = self;
+    std::fprintf(stderr, "[BRIDGE_ENGINE_REBUILD] thread_rebuilt=1 model=%s\n", m_modelPath.c_str());
+    std::fflush(stderr);
     LOG_INFO("Deep2Bridge: engine rebuilt on generation thread");
     return true;
 #else
