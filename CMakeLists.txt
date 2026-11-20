@@ -3078,6 +3078,41 @@ if(TARGET rawrxd_gpu_compute AND TARGET deep2_engine_lib AND Vulkan_FOUND AND EX
     message(STATUS "deep2_uneven_tp_gemv enabled: Vulkan uneven shard diagnostics")
 endif()
 
+# S018: standalone native Deep2 bridge lifecycle harness.  This deliberately
+# links the production bridge and engine without the GUI executable or HTTP
+# server, so lifecycle failures are isolated from Win32IDE startup.
+if(MSVC AND TARGET deep2_engine_lib AND EXISTS "${CMAKE_SOURCE_DIR}/tools/release/bridge_lifecycle_test.cpp")
+    add_executable(deep2_bridge_lifecycle_test
+        tools/release/bridge_lifecycle_test.cpp
+        src/win32app/Win32IDE_Deep2Bridge.cpp
+    )
+    target_include_directories(deep2_bridge_lifecycle_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/watchdog
+        ${CMAKE_SOURCE_DIR}/src/win32app
+        ${CMAKE_SOURCE_DIR}/src/utils
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/snap
+        ${CMAKE_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp
+        ${CMAKE_SOURCE_DIR}/tools/deep2_snap/deep2_snap
+        ${CMAKE_SOURCE_DIR}/tools/snap_process_guard
+        ${Vulkan_INCLUDE_DIRS}
+    )
+    target_compile_definitions(deep2_bridge_lifecycle_test PRIVATE
+        NOMINMAX WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS HAVE_DEEP2_ENGINE=1
+    )
+    target_compile_options(deep2_bridge_lifecycle_test PRIVATE /EHsc)
+    target_link_libraries(deep2_bridge_lifecycle_test PRIVATE
+        deep2_engine_lib rawrxd_gpu_compute comctl32 user32 shell32 advapi32
+        ${Vulkan_LIBRARIES}
+    )
+    set_target_properties(deep2_bridge_lifecycle_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "S018 deep2_bridge_lifecycle_test enabled")
+endif()
+
 # ============================================================================
 # Native (dependency-free, Qt-free) Win32 IDE
 # ============================================================================
