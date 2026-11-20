@@ -39,6 +39,19 @@ CORRECTED_QUEUE_SUBMITS=7
 CORRECTED_S08_LAST_Q_FINITE=1
 ```
 
+Streaming on the same executable also completed three lifecycle requests:
+
+```ini
+STREAM_EXIT=0
+STREAM_REQUESTS=3
+STREAM_TOKENS_PER_REQUEST=1
+STREAM_COMPLETED=3
+STREAM_GEMV_OK=3
+STREAM_GPU_FALLBACKS=0
+STREAM_QUEUE_SUBMITS=616
+STREAM_CLEAN_SHUTDOWN=1
+```
+
 The captured runtime log is
 `S019_sync_reference_q4k.log`. It records finite Q samples, completion, eight
 generated tokens, and a nonempty 29-byte response.
@@ -75,7 +88,8 @@ prefill signature, so the GUI/stream callback is not the sole cause.
 ## Disposition
 
 ```ini
-S019_SAME_INPUT_COMPARISON=PASS_FOR_SYNC_PATH
+S019_SAME_INPUT_COMPARISON=PASS_SYNC_AND_STREAM
+STREAMING_LIFECYCLE=PASS_FOR_THREE_REQUESTS
 SHARED_PREFILL_FAILURE=FIXED_BY_REFERENCE_Q4K_SELECTION
 TILED4X_CORRECTNESS=OPEN
 FIRST_INVALID_OPERATION=TILED4X_Q4K_OUTPUT
