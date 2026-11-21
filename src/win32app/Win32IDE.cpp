@@ -9236,10 +9236,15 @@ const bool forcedLocalFile = !forcedLocalPath.empty() &&
         }
     }
 
-    for (size_t i = 0; i < m_availableModels.size(); ++i) {
-        const LRESULT item = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
-            reinterpret_cast<LPARAM>(m_availableModels[i].breadcrumb.c_str()));
-        if (item != CB_ERR && item != CB_ERRSPACE) {
+    for (size_t i = 0; i < m_availableModels.size(); ++i) {
+        const LRESULT item = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>(m_availableModels[i].breadcrumb.c_str()));
+        std::fprintf(stderr,
+            "[MODEL_ADD] stage=sync index=%zu result=%lld label='%s'\n",
+            i, static_cast<long long>(item),
+            m_availableModels[i].breadcrumb.c_str());
+        std::fflush(stderr);
+        if (item != CB_ERR && item != CB_ERRSPACE) {
             SendMessage(m_hwndModelSelector, CB_SETITEMDATA,
                 static_cast<WPARAM>(item), static_cast<LPARAM>(i));
             if (m_availableModels[i].source == ChatModelEntry::Source::Ollama &&
@@ -9267,13 +9272,30 @@ const bool forcedLocalFile = !forcedLocalPath.empty() &&
         std::fprintf(stderr, "[MODEL_DISCOVERY] count=%lld\n", (long long)cCount);
         std::fflush(stderr);
     }
-    SendMessage(m_hwndModelSelector, CB_SETCURSEL,
+    const LRESULT syncSelResult = SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(initialRow), 0);
-        onModelSelectionChanged();
-    } else {
-        SendMessage(m_hwndModelSelector, CB_SETCURSEL, static_cast<WPARAM>(-1), 0);
-        m_selectedChatModel = {};
-    }
+    const LRESULT syncCurSel = SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+    const LRESULT syncCount = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+    std::fprintf(stderr,
+        "[MODEL_SETCURSEL] stage=sync row=%d setResult=%lld curSel=%lld count=%lld\n",
+        initialRow, static_cast<long long>(syncSelResult),
+        static_cast<long long>(syncCurSel),
+        static_cast<long long>(syncCount));
+        std::fflush(stderr);
+        onModelSelectionChanged();
+    } else {
+        const LRESULT syncSelResult = SendMessage(m_hwndModelSelector, CB_SETCURSEL,
+            static_cast<WPARAM>(-1), 0);
+        const LRESULT syncCurSel = SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+        const LRESULT syncCount = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+        std::fprintf(stderr,
+            "[MODEL_SETCURSEL] stage=sync row=-1 setResult=%lld curSel=%lld count=%lld\n",
+            static_cast<long long>(syncSelResult),
+            static_cast<long long>(syncCurSel),
+            static_cast<long long>(syncCount));
+        std::fflush(stderr);
+        m_selectedChatModel = {};
+    }
 
     m_modelDiscoveryCancel = std::make_shared<std::atomic_bool>(false);
     m_modelDiscoveryRunning.store(true);
@@ -9475,6 +9497,10 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
         const auto& entry = m_availableModels[i];
         const LRESULT row = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
             reinterpret_cast<LPARAM>(entry.breadcrumb.c_str()));
+        std::fprintf(stderr,
+            "[MODEL_ADD] stage=async index=%zu result=%lld label='%s'\n",
+            i, static_cast<long long>(row), entry.breadcrumb.c_str());
+        std::fflush(stderr);
         if (row == CB_ERR || row == CB_ERRSPACE) continue;
         SendMessage(m_hwndModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(row),
             static_cast<LPARAM>(i));
@@ -9512,11 +9538,29 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
                 : (localFileRow >= 0 ? localFileRow
                     : (preferredRow >= 0 ? preferredRow : kiloRow)))));
     if (selectedRow >= 0) {
-        SendMessage(m_hwndModelSelector, CB_SETCURSEL,
+        const LRESULT selResult = SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(selectedRow), 0);
-        onModelSelectionChanged();
-    }
-    const size_t localModelCount = static_cast<size_t>(std::count_if(
+        const LRESULT curSelAfter = SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+        const LRESULT countAfter = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+        std::fprintf(stderr,
+            "[MODEL_SETCURSEL] stage=async row=%d setResult=%lld curSel=%lld count=%lld\n",
+            selectedRow, static_cast<long long>(selResult),
+            static_cast<long long>(curSelAfter),
+            static_cast<long long>(countAfter));
+        std::fflush(stderr);
+        onModelSelectionChanged();
+    } else {
+        // No preferred route was resolved; leave the combo's current selection
+        // untouched and record the state so a blank final selection is visible.
+        const LRESULT curSelAfter = SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+        const LRESULT countAfter = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+        std::fprintf(stderr,
+            "[MODEL_SETCURSEL] stage=async row=-1 setResult=skipped curSel=%lld count=%lld\n",
+            static_cast<long long>(curSelAfter),
+            static_cast<long long>(countAfter));
+        std::fflush(stderr);
+    }
+    const size_t localModelCount = static_cast<size_t>(std::count_if(
         m_availableModels.begin(), m_availableModels.end(),
         [](const ChatModelEntry& entry) {
             return entry.source != ChatModelEntry::Source::KiloFree;
