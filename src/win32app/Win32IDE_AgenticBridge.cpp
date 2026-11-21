@@ -193,6 +193,8 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     } else if (const char* rb = std::getenv("RAWRXD_CHAT_BACKEND");
                rb && std::strcmp(rb, "deep2") == 0) {
         // NATIVE_DEEP2_BRANCH: explicit Deep2 must use the in-process engine.
+        std::fprintf(stderr, "[CHAT_DEEP2_NATIVE] entered\n");
+        std::fflush(stderr);
         // Deep2Backend is an HTTP client (POST /v1/chat/completions); with no
         // Deep2 server it returns "Deep2 server returned empty response" and no
         // inference happens. Never fall through to it for explicit Deep2.
