@@ -1,6 +1,6 @@
-﻿PID=11972
-HWND=657686
-COMBO=53086662 ID=1206
+﻿PID=19252
+HWND=12650054
+COMBO=985222 ID=1206
 EARLY COUNT=19 CURSEL=0
 EARLY BLANK_ITEMS=0 enumerated=19 of 19
   EARLY ITEM[0]='Local models / Ollama / bigdaddyg-productivity-local:latest'

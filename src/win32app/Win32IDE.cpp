@@ -9221,18 +9221,69 @@ const bool forcedLocalFile = !forcedLocalPath.empty() &&
     // no cloud route), offer the GGUF files in the bundled models directory so the
     // selector is usable without environment setup.
     if (m_availableModels.empty()) {
-        std::error_code scanEc;
-        for (const auto& de : std::filesystem::directory_iterator(R"(F:\rawrxd\models)", scanEc)) {
-            if (scanEc || !de.is_regular_file()) continue;
-            const std::string full = de.path().string();
-            if (full.size() < 5) continue;
-            std::string low = full;
-            for (char& c : low) c = (char)tolower((unsigned char)c);
-            if (low.compare(low.size() - 5, 5, ".gguf") != 0) continue;
-            m_availableModels.push_back({ChatModelEntry::Source::LocalFile,
-                                         de.path().filename().string(), full});
-            std::fprintf(stderr, "[MODEL_DISCOVERY_ADD] %s\n", full.c_str());
+        // Sprint 3: portable model-directory resolution.
+        // Priority: (1) explicit RAWRXD_MODELS_DIR, (2) exe-relative models
+        // dir (walking a few ancestors), (3) cwd-relative models dir. An
+        // explicitly configured but invalid directory is diagnosed rather
+        // than silently scanning an unrelated path. No local models is a
+        // truthful empty state.
+        std::string modelsDir;
+        bool explicitModelsDirInvalid = false;
+        const std::string configuredDir = environmentValue("RAWRXD_MODELS_DIR");
+        std::error_code dirEc;
+        if (!configuredDir.empty()) {
+            if (std::filesystem::is_directory(std::filesystem::path(configuredDir), dirEc)) {
+                modelsDir = configuredDir;
+            } else {
+                explicitModelsDirInvalid = true;
+                std::fprintf(stderr,
+                    "[MODEL_DISCOVERY_PATH] RAWRXD_MODELS_DIR is not a directory: %s\n",
+                    configuredDir.c_str());
+                std::fflush(stderr);
+            }
+        }
+        if (modelsDir.empty() && !explicitModelsDirInvalid) {
+            std::array<char, MAX_PATH> exePathBuf{};
+            const DWORD exeLen = GetModuleFileNameA(
+                nullptr, exePathBuf.data(), static_cast<DWORD>(exePathBuf.size()));
+            if (exeLen && exeLen < exePathBuf.size()) {
+                std::filesystem::path probeDir = std::filesystem::path(
+                    std::string(exePathBuf.data(), exeLen)).parent_path();
+                for (int depth = 0; depth < 4 && modelsDir.empty(); ++depth) {
+                    const std::filesystem::path candidate = probeDir / "models";
+                    if (std::filesystem::is_directory(candidate, dirEc)) {
+                        modelsDir = candidate.string();
+                        break;
+                    }
+                    if (!probeDir.has_parent_path() || !probeDir.has_filename()) break;
+                    probeDir = probeDir.parent_path();
+                }
+            }
+        }
+        if (modelsDir.empty() && !explicitModelsDirInvalid) {
+            std::error_code cwdEc;
+            const std::filesystem::path candidate =
+                std::filesystem::current_path(cwdEc) / "models";
+            if (!cwdEc && std::filesystem::is_directory(candidate, cwdEc)) {
+                modelsDir = candidate.string();
+            }
+        }
+        if (!modelsDir.empty()) {
+            std::fprintf(stderr, "[MODEL_DISCOVERY_PATH] modelsDir=%s\n", modelsDir.c_str());
             std::fflush(stderr);
+            std::error_code scanEc;
+            for (const auto& de : std::filesystem::directory_iterator(modelsDir, scanEc)) {
+                if (scanEc || !de.is_regular_file()) continue;
+                const std::string full = de.path().string();
+                if (full.size() < 5) continue;
+                std::string low = full;
+                for (char& c : low) c = (char)tolower((unsigned char)c);
+                if (low.compare(low.size() - 5, 5, ".gguf") != 0) continue;
+                m_availableModels.push_back({ChatModelEntry::Source::LocalFile,
+                                             de.path().filename().string(), full});
+                std::fprintf(stderr, "[MODEL_DISCOVERY_ADD] %s\n", full.c_str());
+                std::fflush(stderr);
+            }
         }
     }
 
