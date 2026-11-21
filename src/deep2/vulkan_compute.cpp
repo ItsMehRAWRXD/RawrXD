@@ -3,6 +3,7 @@
 // ============================================================================
 #include "vulkan_compute.h"
 #include "QuantKernelRegistry.hpp"
+#include "quant_dot_dispatch.hpp"
 
 #include <algorithm>
 #include <atomic>

@@ -250,6 +250,9 @@ void ReleaseWeightLease(uint64_t lease_id);
 // set it before the first dispatch, otherwise the budget has already been
 // resolved from the device heap / RR_WEIGHT_CACHE_MAX_BYTES.
 void SetWeightCacheBudget(int64_t bytes);
+// RAWRXD_STRATA_P1B: process-scoped retention policy (transitional).
+void SetWeightCacheRetention(bool enabled);
+bool WeightCacheRetention();
 
 // RAWRXD_MULTI_GPU: per-device counters for a secondary device (via GpuFor).
 // Lets a split-model run prove the content GPU dispatched. device<0 or == the

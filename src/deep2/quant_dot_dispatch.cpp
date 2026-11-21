@@ -42,7 +42,8 @@ Receipt g_receipt;
 BackendStats g_backend;
 int32_t g_preferred_device = -1;   // STRATA_S05: device pin, applied at first init
 int32_t g_active_device = -1;      // RAWRXD_MULTI_GPU: per-op device override (-1 = default Gpu(); set via SetActiveDevice for split-model dual-GPU). Default keeps single-GPU behaviour byte-identical.
-int64_t g_weight_cache_budget = 0; // RAWRXD_G04: residency budget pin, applied at first init
+int64_t g_weight_cache_budget = 0;
+static bool g_weight_cache_retention = false; // RAWRXD_G04: residency budget pin, applied at first init
 
 VulkanCompute& Gpu()
 {
@@ -406,6 +407,8 @@ size_t TrimUnpinnedQuantWeights() {
 // it is recorded here and applied by Gpu()/GpuFor() at initialisation, exactly
 // like SetPreferredDevice's device pin.
 void SetWeightCacheBudget(int64_t bytes) { g_weight_cache_budget = bytes; }
+void SetWeightCacheRetention(bool enabled) { g_weight_cache_retention = enabled; }
+bool WeightCacheRetention() { return g_weight_cache_retention; }
 
 // RAWRXD_G04: expose the device the dispatcher actually uses, so gates can
 // drive device-level residency primitives on that same context.

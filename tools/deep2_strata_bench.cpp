@@ -338,6 +338,7 @@ int main(int argc, char* argv[])
     bool calibrate = true;
     bool strata = false;         // enable expert residency ledger + prefetch
     bool strata_prefetch = false;
+    bool strata_retain_weights = false;
     int64_t weight_cache_budget = -1;   // -1 = leave runtime default
     int cache_policy = 0;        // 0 = LRU baseline, 1 = hotness (STRATA_S08)
     int device_pin = -1;         // STRATA_S05: Vulkan device index (-1 = auto)
@@ -378,6 +379,7 @@ int main(int argc, char* argv[])
             weight_cache_budget = std::atoll(argv[++i]); // RAWRXD_G04
         else if (a == "--strata-prefetch")
             strata = true, strata_prefetch = true; // ledger + down-bank prefetch ON
+        else if (a == "--strata-retain-weights") strata_retain_weights = true;
         else if (a == "--strata-hotness")
             strata = true, cache_policy = 1;     // hotness eviction (STRATA_S08)
         else if (a == "--int8kv")
@@ -573,6 +575,8 @@ int main(int argc, char* argv[])
                     (double)weight_cache_budget / (1024.0 * 1024.0 * 1024.0));
         std::fflush(stdout);
     }
+
+    if (strata_retain_weights) QuantDot::SetWeightCacheRetention(true);
 
     RuntimeGraph::Executor ex;
     ex.SetForceCpu(!gpu);
