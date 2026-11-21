@@ -3822,28 +3822,10 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
     const size_t beforeBytes = weightCacheBytes_;
     const size_t beforeEntries = weightCache_.size();
     const size_t beforeResidentBytes = residentObjectBytes_;
-    {
-        static bool s_once = false;
-        if (!s_once) {
-            s_once = true;
-            std::fprintf(stderr,
-                "[TRIM_STATE] budget=%zu bytes=%zu entries=%zu resident=%zu policy=%d)\n",
-                weightBudgetBytes_, weightCacheBytes_, weightCache_.size(),
-                residentObjectBytes_,
-                (int)::RawrXD::Deep2::QuantDot::WeightCacheRetention());
-            std::fflush(stderr);
-        }
-    }
     // RAWRXD_STRATA_RETAIN_WEIGHTS=1 keeps resident quant slices across block
     // boundaries (Strata expert-residency mode). Non-Strata execution is
     // unchanged: the unpinned flush still happens. The device-idle wait and
     // UnpinAllWeights above are preserved either way, so destruction stays safe.
-    static const bool s_lwRetention = []
-    {
-        const char* e = std::getenv("RAWRXD_STRATA_RETAIN_WEIGHTS");
-        return e && e[0] == '1';
-    }();
-    if (!s_lwRetention)
         // RAWRXD_STRATA_P1B: the device-idle wait and UnpinAllWeights above are
     // mandatory cleanup; only the discretionary content drop is policy-controlled.
     if (!(::RawrXD::Deep2::QuantDot::WeightCacheRetention()))
@@ -3883,17 +3865,6 @@ bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
             }
         }
         if (victim == weightCache_.end()) return false;
-        {
-            static int s_ev = 0;
-            if (s_ev < 5) {
-                ++s_ev;
-                std::fprintf(stderr,
-                    "[LRU_EVICT] n=%d budget=%zu bytes=%zu incoming=%zu entries=%zu\n",
-                    s_ev, weightBudgetBytes_, weightCacheBytes_, incomingBytes,
-                    weightCache_.size());
-                std::fflush(stderr);
-            }
-        }
 
         const size_t bytes = victim->second.bytes;
         destroyBuffer(victim->second.buffer);
