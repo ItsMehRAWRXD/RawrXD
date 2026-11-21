@@ -20,6 +20,7 @@
  *  42  driver crashed (unhandled exception captured)
  */
 #include "rawr_core.hpp"
+#include "backend_preferences.h"
 #include "rawr_reasoning.hpp"
 #include "Deep2Engine.h"
 #include "ChatTemplate.hpp"
@@ -1740,36 +1741,10 @@ static std::string ollamaModelFor(const std::string& model) {
     return model;
 }
 
-static std::string backendPrefPath() {
-    return std::string(R"(F:\rawrxd)") + "\\.rawrxd\\cli_backend_pref.txt";
-}
-static std::string normalizeBackendPref(std::string s) {
-    for (char& c : s) c = (char)tolower((unsigned char)c);
-    while (!s.empty() && (unsigned char)s.back() <= ' ') s.pop_back();
-    if (s == "native" || s == "deep2-native" || s == "gguf") return "native";
-    if (s == "deep2" || s == "local") return "deep2";
-    if (s == "strata") return "strata";
-    if (s == "ollama" || s == "http") return "ollama";
-    if (s == "auto" || s == "default" || s.empty()) return "auto";
-    return {};
-}
-static std::string loadBackendPref() {
-    std::ifstream in(backendPrefPath());
-    if (!in) return "auto";
-    std::string s; std::getline(in, s);
-    const std::string n = normalizeBackendPref(s);
-    return n.empty() ? std::string("auto") : n;
-}
-static bool saveBackendPref(const std::string& pref) {
-    const std::string store = normalizeBackendPref(pref);
-    if (store.empty()) return false;
-    std::error_code ec;
-    fs::create_directories(fs::path(R"(F:\rawrxd)") / ".rawrxd", ec);
-    std::ofstream outf(backendPrefPath(), std::ios::trunc);
-    if (!outf) return false;
-    outf << store << "\n";
-    return (bool)outf;
-}
+static std::string backendPrefPath() { return rawrxd::prefs::prefPath().string(); }
+static std::string normalizeBackendPref(std::string s) { return rawrxd::prefs::normalize(std::move(s)); }
+static std::string loadBackendPref() { return rawrxd::prefs::loadPersisted(); }
+static bool saveBackendPref(const std::string& pref) { return rawrxd::prefs::savePersisted(pref); }
 static std::string defaultDeep2ModelRel() {
     if (const char* e = std::getenv("RAWRXD_DEEP2_MODEL")) {
         if (e[0] != '\0') return std::string(e);
@@ -1777,7 +1752,20 @@ static std::string defaultDeep2ModelRel() {
     return "models/tinyllama.gguf";
 }
 static std::string resolveRunBackend(const std::string& flagOrEmpty) {
-    std::string sel = flagOrEmpty.empty() ? loadBackendPref() : normalizeBackendPref(flagOrEmpty);
+    std::string sel;
+    if (!flagOrEmpty.empty()) {
+        sel = normalizeBackendPref(flagOrEmpty);
+    } else if (const char* env = std::getenv("RAWRXD_BACKEND")) {
+        sel = normalizeBackendPref(env);
+        if (sel.empty()) {
+            std::fprintf(stderr,
+                "warning: RAWRXD_BACKEND='%s' is not one of deep2|strata|ollama|auto; "
+                "using persisted preference instead\n", env);
+            sel = loadBackendPref();
+        }
+    } else {
+        sel = loadBackendPref();
+    }
     if (sel.empty()) sel = "auto";
     if (sel == "native" || sel == "deep2") return "deep2";
     // Strata is Deep2 + expert residency. Residency is not activated on this

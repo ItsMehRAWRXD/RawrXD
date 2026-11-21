@@ -2,6 +2,7 @@
 // Implements all agentic framework menu commands and integrations
 
 #include "Win32IDE.h"
+#include "backend_preferences.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Deep2Bridge.h"
 #include "Win32IDE_AgenticLoopBridge.h"
@@ -2225,13 +2226,9 @@ void Win32IDE::onBackendSelectionChanged()
     if (sel < 0 || sel > 2) return;
     const std::string pref = names[sel];
 
-    // Persist exactly like `rawr backend select` so both frontends agree.
-    if (std::FILE* f = nullptr) {
-        if (fopen_s(&f, "F:\\rawrxd\\.rawrxd\\cli_backend_pref.txt", "w") == 0 && f) {
-            std::fprintf(f, "%s\n", pref.c_str());
-            fclose(f);
-        }
-    }
+    // Persist through the shared resolver so both frontends agree and the
+    // preference lands in the portable application-state directory.
+    rawrxd::prefs::savePersisted(pref);
 
     // Selection is retained even when the runtime is unavailable; only routing
     // changes, so the GUI matches the CLI contract.

@@ -5,7 +5,8 @@
 // at that point and every consumer of this translation unit failed to compile.
 // It now lives with the other Win32IDE member definitions, below the includes.
 
-#include "Win32IDE.h"
+#include "Win32IDE.h"
+#include "backend_preferences.h"
 #include "lsp/RawrXD_LSPServer.h"
 #include "Win32NativeDebugBackend.h"
 #include "Win32IDE_CommandIDs.h"
@@ -8764,18 +8765,10 @@ void Win32IDE::createChatPanel() {
                             "the persisted preference instead.",
                             "RawrXD backend", MB_ICONWARNING | MB_OK);
             }
-        } else if (std::FILE* pf = nullptr) {
-            if (fopen_s(&pf, "F:\\rawrxd\\.rawrxd\\cli_backend_pref.txt", "r") == 0 && pf) {
-                char buf[64] = {0};
-                if (std::fgets(buf, sizeof(buf), pf)) {
-                    std::string line(buf);
-                    for (char& ch : line) ch = (char)tolower((unsigned char)ch);
-                    while (!line.empty() && (line.back() == '\n' || line.back() == '\r' ||
-                                             line.back() == ' ')) line.pop_back();
-                    if (line == "deep2" || line == "strata" || line == "ollama") pref = line;
-                }
-                fclose(pf);
-            }
+        } else {
+            std::string persisted = rawrxd::prefs::loadPersisted();
+            if (persisted == "native") persisted = "deep2";
+            if (persisted == "deep2" || persisted == "strata" || persisted == "ollama") pref = persisted;
         }
         SendMessageA(m_hwndBackendSelector, CB_SETCURSEL,
                      (WPARAM)(pref == "deep2" ? 0 : (pref == "strata" ? 1 : 2)), 0);
