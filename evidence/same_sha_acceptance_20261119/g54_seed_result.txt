@@ -1,0 +1,4 @@
+﻿SEEDED={"version":2,"schemaVersion":"2.2","window":{"x":123,"y":77,"width":900,"height":640,"maximized":false},"panel":{"sidebarWidth":250,"sidebarVisible":true},"theme":"dark"}
+RESTORED_RECT=(123,77,1023,717)
+G54_SEED_RESTORE=PASS
+DONE
