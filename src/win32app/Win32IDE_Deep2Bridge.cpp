@@ -336,6 +336,21 @@ bool Deep2Bridge::GenerateStream(const std::string& prompt,
 
     // Use engine for generation
     m_generationThread = std::thread([this, prompt, maxTokens]() {
+        // RAWRXD_GUARD_5 self-test: simulate VK_ERROR_DEVICE_LOST so containment
+        // can be verified deterministically (no hardware reset required).
+        if (const char* sl = std::getenv("RAWRXD_DEEP2_SELFTEST_LOSS");
+            sl && sl[0] == '1' && m_engine) {
+            if (auto* vc = m_engine->getVulkanCompute()) {
+                vc->InjectDeviceLostForTest(-4);
+                std::fprintf(stderr,
+                             "[SELFTEST_LOSS] injected VK_ERROR_DEVICE_LOST lost=%d\n",
+                             vc->DeviceIsLost() ? 1 : 0);
+                std::fflush(stderr);
+            } else {
+                std::fprintf(stderr, "[SELFTEST_LOSS] no vulkan device available\n");
+                std::fflush(stderr);
+            }
+        }
         // Vulkan resources are thread-affine: rebuild the engine here when the
         // request arrives on a different thread than the one that created it.
         if (!ensureEngineOnCurrentThread()) {
@@ -567,6 +582,18 @@ std::string Deep2Bridge::GenerateSync(const std::string& prompt, int maxTokens)
         options.seed = 0;
         
         m_engine->configureGeneration(options);
+        // RAWRXD_GUARD_5 self-test: inject VK_ERROR_DEVICE_LOST before generation
+        // so containment is exercised on the same path the GUI uses.
+        if (const char* sl = std::getenv("RAWRXD_DEEP2_SELFTEST_LOSS"); sl && sl[0] == '1') {
+            if (auto* vc = m_engine->getVulkanCompute()) {
+                vc->InjectDeviceLostForTest(-4);
+                std::fprintf(stderr, "[SELFTEST_LOSS] injected lost=%d\n",
+                             vc->DeviceIsLost() ? 1 : 0);
+            } else {
+                std::fprintf(stderr, "[SELFTEST_LOSS] no vulkan device\n");
+            }
+            std::fflush(stderr);
+        }
         const std::string generated = m_engine->generateText(prompt, maxTokens);
         // Attribute counters at the call site that generated, so a zero read in
         // GetModelInfo() can be told apart from a reset or a second instance.
