@@ -1194,6 +1194,20 @@ void Win32IDE::saveIdeSession() {
     // strict and throws type_error.316 from dump_escaped; uncaught -> terminate
     // -> abort -> 0xC0000409 (G021: saveIdeSession on WM_CLOSE / session persist).
     // AgentSession::Flush already uses replace; keep IDE session persist aligned.
+    // G54: persist the normal window rectangle + maximized state. rcNormalPosition
+    // uses workspace coordinates for top-level windows; restore via SetWindowPlacement.
+    if (m_hwndMain && IsWindow(m_hwndMain)) {
+        WINDOWPLACEMENT wp{};
+        wp.length = sizeof(WINDOWPLACEMENT);
+        if (GetWindowPlacement(m_hwndMain, &wp)) {
+            const RECT& rc = wp.rcNormalPosition;
+            root["window"] = {
+                {"x", rc.left}, {"y", rc.top},
+                {"width", rc.right - rc.left}, {"height", rc.bottom - rc.top},
+                {"maximized", wp.showCmd == SW_SHOWMAXIMIZED}
+            };
+        }
+    }
     std::string serialized;
     try {
         serialized = root.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
@@ -1277,6 +1291,25 @@ void Win32IDE::loadIdeSession() {
             }
         }
 
+        // G54: restore window geometry via SetWindowPlacement (workspace coords,
+        // DPI-aware, handles maximized state). Backward compatible: absent key = no-op.
+        if (root.contains("window") && root["window"].is_object()) {
+            const auto& w = root["window"];
+            if (w.contains("width") && w.contains("height") &&
+                m_hwndMain && IsWindow(m_hwndMain)) {
+                WINDOWPLACEMENT wp{};
+                wp.length = sizeof(WINDOWPLACEMENT);
+                if (GetWindowPlacement(m_hwndMain, &wp)) {
+                    const int x = w.value("x", wp.rcNormalPosition.left);
+                    const int y = w.value("y", wp.rcNormalPosition.top);
+                    const int width = w.value("width", wp.rcNormalPosition.right - wp.rcNormalPosition.left);
+                    const int height = w.value("height", wp.rcNormalPosition.bottom - wp.rcNormalPosition.top);
+                    wp.rcNormalPosition = {x, y, x + width, y + height};
+                    wp.showCmd = w.value("maximized", false) ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL;
+                    SetWindowPlacement(m_hwndMain, &wp);
+                }
+            }
+        }
         const auto modelFromJson = [](const nlohmann::json& value) {
             ChatModelEntry model;
             if (!value.is_object()) return model;
