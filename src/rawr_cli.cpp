@@ -3238,6 +3238,8 @@ static int cmdBackend(const std::vector<std::string>& args) {
     std::string endpoint;
     int port = 0;
     std::string activeLabel;
+    bool routable = true;
+    std::string routeError;
     if (route == "deep2") {
         Workspace ws; ws.setRoot(g_workspace_root);
         const std::string mp = ws.resolve(defaultDeep2ModelRel(), true);
@@ -3247,6 +3249,16 @@ static int cmdBackend(const std::vector<std::string>& args) {
                       : "deep2-native (default GGUF missing)";
         endpoint = "in-process://Deep2Engine";
         port = 0;
+    } else if (route == "strata") {
+        // Strata is not routable on this path: report none as active and
+        // never probe/substitute Ollama for inference.
+        activeLabel = "none";
+        active = "none";
+        endpoint = "none";
+        port = 0;
+        live = false;
+        routable = false;
+        routeError = "STRATA_NOT_ROUTABLE";
     } else {
         InferenceClient probe;
         probe.setEndpoint(11434);
@@ -3266,6 +3278,8 @@ static int cmdBackend(const std::vector<std::string>& args) {
                  {"route", route},
                  {"active", activeLabel},
                  {"active_detail", active},
+                 {"routable", routable},
+                 {"route_error", routeError},
                  {"endpoint", endpoint},
                  {"port", port},
                  {"reachable", live},
@@ -3277,9 +3291,11 @@ static int cmdBackend(const std::vector<std::string>& args) {
     out("  backup      : ollama");
     out("  selected    : " + pref);
     out("  route       : " + route);
+    out("  routable    : " + std::string(routable ? "yes" : "no"));
     out("  active      : " + active);
     out("  endpoint    : " + endpoint);
     out("  reachable   : " + std::string(live ? "yes" : "NO"));
+    if (!routeError.empty()) out("  route_error : " + routeError);
     out("  persisted   : " + backendPrefPath());
     return live ? EXIT_OK : EXIT_NO_INFERENCE;
 }

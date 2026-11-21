@@ -1,0 +1,5 @@
+﻿backend=deep2 persisted=deep2 COUNT=3 CURSEL=0 expect=0 => PASS
+backend=strata persisted=strata COUNT=3 CURSEL=1 expect=1 => PASS
+backend=ollama persisted=ollama COUNT=3 CURSEL=2 expect=2 => PASS
+GUI_RESTORE_ALL=PASS
+DONE
