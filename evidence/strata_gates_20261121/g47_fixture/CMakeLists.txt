@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.15)
+project(g47_fixture CXX)
+enable_testing()
+add_executable(g47app main.cpp)
+add_test(NAME g47test COMMAND g47app)
