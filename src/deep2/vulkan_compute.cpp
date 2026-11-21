@@ -3821,7 +3821,17 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
     const size_t beforeBytes = weightCacheBytes_;
     const size_t beforeEntries = weightCache_.size();
     const size_t beforeResidentBytes = residentObjectBytes_;
-    clearWeightCache();
+    // RAWRXD_STRATA_RETAIN_WEIGHTS=1 keeps resident quant slices across block
+    // boundaries (Strata expert-residency mode). Non-Strata execution is
+    // unchanged: the unpinned flush still happens. The device-idle wait and
+    // UnpinAllWeights above are preserved either way, so destruction stays safe.
+    static const bool s_lwRetention = []
+    {
+        const char* e = std::getenv("RAWRXD_STRATA_RETAIN_WEIGHTS");
+        return e && e[0] == '1';
+    }();
+    if (!s_lwRetention)
+        clearWeightCache();
     // The direct-resident/RCU path is a second owner of streamed weights and
     // is not represented by weightCache_.  In a block-serial graph no command
     // from the completed block remains in flight after the wait above, so its
