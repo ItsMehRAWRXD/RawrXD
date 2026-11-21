@@ -9139,17 +9139,43 @@ void Win32IDE::populateModelSelector() {
     m_modelDiscoveryUpdateDeferred = false;
 
     SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
-    m_availableModels.clear();
+    m_availableModels.clear();
+    std::fprintf(stderr,
+                 "[MODEL_DISCOVERY_ENTRY] combo=%p ctrlId=%d thread=%lu\n",
+                 (void*)m_hwndModelSelector,
+                 m_hwndModelSelector ? GetDlgCtrlID(m_hwndModelSelector) : -1,
+                 (unsigned long)GetCurrentThreadId());
+    std::fflush(stderr);
+
 
     // Local-first: do not seed cloud Kilo unless explicitly allowed.
     // Silent cloud default breaks daily-driver parity with CLI (local Ollama/Deep2).
     const bool allowCloud =
         environmentValue("RAWRXD_ALLOW_CLOUD") == "1";
     const std::string forcedLocalPath = environmentValue("RAWRXD_MODEL_PATH");
-    const bool forcedLocalFile = !forcedLocalPath.empty() &&
-        std::filesystem::is_regular_file(std::filesystem::u8path(forcedLocalPath)) &&
-        forcedLocalPath.size() >= 5 &&
-        _stricmp(forcedLocalPath.c_str() + forcedLocalPath.size() - 5, ".gguf") == 0;
+const bool forcedLocalFile = !forcedLocalPath.empty() &&
+        std::filesystem::is_regular_file(std::filesystem::u8path(forcedLocalPath)) &&
+        forcedLocalPath.size() >= 5 &&
+        _stricmp(forcedLocalPath.c_str() + forcedLocalPath.size() - 5, ".gguf") == 0;
+
+    const DWORD threadId = GetCurrentThreadId();
+    const int countBefore = static_cast<int>(
+        SendMessageW(m_hwndModelSelector, CB_GETCOUNT, 0, 0));
+    std::fprintf(stderr,
+        "[MODEL_DISCOVERY] tid=%lu hwnd=%p id=%d "
+        "forcedLocalFile=%d available=%zu countBefore=%d\n",
+        static_cast<unsigned long>(threadId),
+        static_cast<void*>(m_hwndModelSelector),
+        GetDlgCtrlID(m_hwndModelSelector),
+        static_cast<int>(forcedLocalFile),
+        m_availableModels.size(),
+        countBefore);
+    std::fflush(stderr);
+
+    std::fprintf(stderr, "[MODEL_DISCOVERY_PATH] path='%s' forced=%d\n",
+                 forcedLocalPath.c_str(), forcedLocalFile ? 1 : 0);
+    std::fflush(stderr);
+
     std::fprintf(stderr, "[MODEL_DISCOVERY] path='%s' forcedLocalFile=%d\n",
                  forcedLocalPath.c_str(), forcedLocalFile ? 1 : 0);
     std::fflush(stderr);
@@ -9191,6 +9217,25 @@ void Win32IDE::populateModelSelector() {
             static_cast<WPARAM>(scanningRow), static_cast<LPARAM>(-1));
     }
     int defaultRouteRow = -1;
+    // Default model source: when nothing was configured (no RAWRXD_MODEL_PATH and
+    // no cloud route), offer the GGUF files in the bundled models directory so the
+    // selector is usable without environment setup.
+    if (m_availableModels.empty()) {
+        std::error_code scanEc;
+        for (const auto& de : std::filesystem::directory_iterator(R"(F:\rawrxd\models)", scanEc)) {
+            if (scanEc || !de.is_regular_file()) continue;
+            const std::string full = de.path().string();
+            if (full.size() < 5) continue;
+            std::string low = full;
+            for (char& c : low) c = (char)tolower((unsigned char)c);
+            if (low.compare(low.size() - 5, 5, ".gguf") != 0) continue;
+            m_availableModels.push_back({ChatModelEntry::Source::LocalFile,
+                                         de.path().filename().string(), full});
+            std::fprintf(stderr, "[MODEL_DISCOVERY_ADD] %s\n", full.c_str());
+            std::fflush(stderr);
+        }
+    }
+
     for (size_t i = 0; i < m_availableModels.size(); ++i) {
         const LRESULT item = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
             reinterpret_cast<LPARAM>(m_availableModels[i].breadcrumb.c_str()));
