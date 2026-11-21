@@ -18,6 +18,8 @@
 #pragma once
 
 #include <cctype>
+#include <atomic>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -67,15 +69,20 @@ inline std::string readFirst(const std::filesystem::path& p) {
     return normalize(s);
 }
 
-// Persist atomically (temp file + rename).
+// Persist atomically (unique temp file + rename) so concurrent writers cannot
+// collide on the temporary name and a reader never observes a truncated file.
 inline bool savePersisted(const std::string& pref) {
     const std::string store = normalize(pref);
     if (store.empty()) return false;
     std::error_code ec;
     std::filesystem::create_directories(stateDir(), ec);
     const std::filesystem::path target = prefPath();
-    const std::filesystem::path tmp =
-        std::filesystem::path(std::string(target.string()) + ".tmp");
+    static std::atomic<unsigned long long> seq{0};
+    const auto ns = std::chrono::steady_clock::now().time_since_epoch().count();
+    const std::filesystem::path tmp = std::filesystem::path(
+        std::string(target.string()) + ".tmp." +
+        std::to_string(static_cast<unsigned long long>(ns)) + "." +
+        std::to_string(++seq));
     {
         std::ofstream out(tmp, std::ios::trunc);
         if (!out) return false;
@@ -87,6 +94,7 @@ inline bool savePersisted(const std::string& pref) {
         std::filesystem::remove(target, ec);
         std::filesystem::rename(tmp, target, ec);
     }
+    std::filesystem::remove(tmp, ec); // best-effort cleanup of any leftover temp
     return !ec;
 }
 

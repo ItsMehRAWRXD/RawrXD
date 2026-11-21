@@ -24,6 +24,11 @@
   themselves configure, compile and link.
 - The build emitted only warnings (unused parameters, C4996 u8path deprecation,
   C4335 Mac line endings in Win32IDE.h); no errors.
+- Follow-up: a header-only refinement to `src/backend_preferences.h` (unique
+  temporary filename for `savePersisted`) was committed after `5b018255d2`. It
+  was compiled in the active tree (`RawrXD-CLI-V2` and `RawrXD-Win32IDE-Native`
+  both PASS) and passed the 4-writer concurrency test (4/4 valid, 0 leftover
+  temp files). It does not change any other translation unit.
 
 ## Command
 ```
