@@ -9265,7 +9265,15 @@ const bool forcedLocalFile = !forcedLocalPath.empty() &&
         }
     }
     SendMessage(m_hwndModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
-    const int initialRow = forceRouteRow >= 0 ? forceRouteRow : defaultRouteRow;
+    int initialRow = forceRouteRow >= 0 ? forceRouteRow : defaultRouteRow;
+    // Sprint 2: when no concrete route resolves synchronously, select the
+    // sentinel row (itemData -1) so the combo shows a visible placeholder
+    // instead of a blank selection. The sentinel never authorizes inference:
+    // onModelSelectionChanged() clears the active model for itemData < 0.
+    const LRESULT preSelectCount = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+    if (initialRow < 0 && preSelectCount > 0) {
+        initialRow = 0;
+    }
     if (initialRow >= 0) {
         {
         const LRESULT cCount = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
