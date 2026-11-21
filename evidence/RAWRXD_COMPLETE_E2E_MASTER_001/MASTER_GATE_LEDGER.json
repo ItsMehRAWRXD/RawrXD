@@ -18,5 +18,26 @@
     "verify device_lost_ with InjectDeviceLostForTest",
     "find the 80s shutdown initiator",
     "same-SHA retention matrix"
-  ]
+  ],
+  "agentic_ide": {
+    "closed": [
+      "G46",
+      "G47",
+      "G48",
+      "G49",
+      "G55",
+      "G56",
+      "G57"
+    ],
+    "partial": [
+      "G54 (position restores; size overridden by layout)",
+      "G52 (11/12; Output C2065 + stale clearing verified)"
+    ],
+    "runtime_pending": [
+      "G50 debugger",
+      "G51 GhostText",
+      "G53 Debug Console"
+    ],
+    "note": "Ollama-driven edit/build/test/repair demonstrated end-to-end; see evidence/strata_gates_20261121/GATE_*.md"
+  }
 }
