@@ -610,6 +610,17 @@ std::string Deep2Bridge::GenerateSync(const std::string& prompt, int maxTokens)
                          .kernelInvocations.load(),
                      generated.size());
         std::fflush(stderr);
+        // Fail closed: a lost device must surface as an error, never as a silent
+        // CPU result. The CPU engine may still answer, but that is a different
+        // execution path than the one the caller selected.
+        if (auto* vc = m_engine->getVulkanCompute(); vc && vc->DeviceIsLost()) {
+            std::fprintf(stderr,
+                         "[BRIDGE_DEVICE_LOST] refusing to return a CPU fallback result\n");
+            std::fflush(stderr);
+            return std::string(
+                "Error: Deep2 GPU device lost (VK_ERROR_DEVICE_LOST). "
+                "The request failed; no CPU fallback was used.");
+        }
         return generated;
 #else
         if (!m_cpuEngine) {
