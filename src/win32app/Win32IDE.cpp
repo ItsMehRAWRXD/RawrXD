@@ -9150,6 +9150,9 @@ void Win32IDE::populateModelSelector() {
         std::filesystem::is_regular_file(std::filesystem::u8path(forcedLocalPath)) &&
         forcedLocalPath.size() >= 5 &&
         _stricmp(forcedLocalPath.c_str() + forcedLocalPath.size() - 5, ".gguf") == 0;
+    std::fprintf(stderr, "[MODEL_DISCOVERY] path='%s' forcedLocalFile=%d\n",
+                 forcedLocalPath.c_str(), forcedLocalFile ? 1 : 0);
+    std::fflush(stderr);
     const auto* kiloRoute = allowCloud
         ? RawrXD::ChatRouteMenu::find(RawrXD::ChatRouteMenu::RouteKind::KiloFree)
         : nullptr;
@@ -9214,7 +9217,12 @@ void Win32IDE::populateModelSelector() {
     SendMessage(m_hwndModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
     const int initialRow = forceRouteRow >= 0 ? forceRouteRow : defaultRouteRow;
     if (initialRow >= 0) {
-        SendMessage(m_hwndModelSelector, CB_SETCURSEL,
+        {
+        const LRESULT cCount = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+        std::fprintf(stderr, "[MODEL_DISCOVERY] count=%lld\n", (long long)cCount);
+        std::fflush(stderr);
+    }
+    SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(initialRow), 0);
         onModelSelectionChanged();
     } else {
