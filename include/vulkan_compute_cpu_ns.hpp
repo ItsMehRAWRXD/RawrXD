@@ -316,6 +316,9 @@ public:
 
     // ---- Diagnostics telemetry ---------------------------------------------
     uint64_t GemvSuccess() const;
+    // RAWRXD_GUARD_5: device-loss health + deterministic injection.
+    bool DeviceIsLost() const;
+    void InjectDeviceLostForTest(int code);
     // Actual vkQueueSubmit count from the backend. Distinct from GemvSuccess()
     // (successful GEMV dispatches) and from the H11 dispatch account.
     uint64_t QueueSubmitCount() const;

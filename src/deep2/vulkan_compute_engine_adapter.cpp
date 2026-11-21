@@ -270,6 +270,15 @@ uint64_t VulkanCompute::QueueSubmitCount() const {
     return backend_ != nullptr ? static_cast<uint64_t>(backend_->QueueSubmitCount()) : 0;
 }
 
+// RAWRXD_GUARD_5: device-loss health + deterministic injection forwarding.
+bool VulkanCompute::DeviceIsLost() const {
+    return backend_ != nullptr && backend_->DeviceIsLost();
+}
+
+void VulkanCompute::InjectDeviceLostForTest(int code) {
+    if (backend_ != nullptr) backend_->InjectDeviceLostForTest(code);
+}
+
 uint64_t VulkanCompute::GemvWeightHits() const {
     if (gemv_weight_hits_ != 0) return gemv_weight_hits_;
     return backend_ != nullptr ? static_cast<uint64_t>(backend_->WeightHitCount()) : 0;
