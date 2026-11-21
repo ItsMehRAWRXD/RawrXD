@@ -32,7 +32,7 @@ while((Get-Date) -lt $dl -and $root -eq [IntPtr]::Zero -and -not $proc.HasExited
 if($root -eq [IntPtr]::Zero){ W "NO_ROOT"; if(-not $proc.HasExited){Stop-Process -Id $proc.Id -Force}; exit 3 }
 Start-Sleep -Seconds 8
 [void][G52I.Api]::PostMessage($root, 0x0111, [IntPtr]5001, [IntPtr]::Zero)
-Start-Sleep -Seconds 25
+Start-Sleep -Seconds 40
 
 # find list view 1312
 $lv=[IntPtr]::Zero
