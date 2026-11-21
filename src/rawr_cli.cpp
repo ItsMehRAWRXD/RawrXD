@@ -308,7 +308,30 @@ struct RunToolCall {
 
 static bool resolveRunToolCall(const json& obj, RunToolCall& t) {
     t.args = json::object();
-    if (obj.contains("args") && obj["args"].is_object()) t.args = obj["args"];
+    if (obj.contains("args") && obj["args"].is_object()) {
+        t.args = obj["args"];
+    } else {
+        // FLAT CALL PROMOTION. Models routinely emit the arguments beside the
+        // verb instead of inside an "args" object, e.g.
+        //   {"action":"read_file","path":"calc.cpp"}
+        //   {"action":"run_shell","command":"g++ calc.cpp -o calc.exe"}
+        // Dropping those keys dispatched read_file{} / run_shell{} and recorded
+        // FAIL for a call the model had actually made correctly.
+        // GENERIC promotion: every non-structural top-level key is an argument.
+        // A hand-maintained key list silently lost run_shell's "command" (its
+        // only argument) and re-created the same defect for each new tool.
+        // Nested objects are not arguments; the strict registry schema rejects
+        // anything unexpected, so promoting too much fails closed, not open.
+        static const std::set<std::string> kStructural = {
+            "action", "tool", "args", "summary", "findings", "next_actions",
+            "type",   "role", "id"};
+        for (const auto& kv : obj.items()) {
+            const std::string key = kv.key();
+            if (kStructural.count(key)) continue;
+            if (kv.value().is_object()) continue;
+            t.args[key] = kv.value();
+        }
+    }
 
     std::string fromTool, fromAction;
     if (obj.contains("tool") && obj["tool"].is_string())
@@ -345,9 +368,18 @@ static const char* RUN_SYSTEM_PROMPT =
     "Tools (strict schema; unknown args rejected):\n"
     "list_repo{path}, read_file{path}, search_text{query,path},"
     "git_status{}, write_file{path,action,content}, edit_files{path,old,new},"
-    "run_build{config,dir}, run_tests{filter,dir,config}, git_diff{}.\n\n"
+    "run_build{config,dir}, run_tests{filter,dir,config}, run_shell{command},"
+    "git_diff{}.\n\n"
+    "run_shell takes ONE command string in \"command\" (not cmd, not argv).\n"
+    "It runs via cmd.exe /c and rejects &&, ||, |, ;, ` and $( — so do not\n"
+    "chain. Compile and run in separate calls: first\n"
+    "run_shell{\"command\":\"g++ -std=c++17 calc.cpp -o calc.exe\"}, then\n"
+    "run_shell{\"command\":\"calc.exe\"}.\n\n"
     "Rules:\n"
     "- Reply with ONLY the JSON object. No prose, no markdown fences.\n"
+    "- edit_files replaces an EXACT substring. \"old\" must be copied verbatim\n"
+    "  from the text you just read and must NOT be empty (empty old is rejected).\n"
+    "  Keep \"old\" short but unique, e.g. \"return a - b;\".\n"
     "- Relative paths only; never escape the workspace (no .. segments).\n"
     "- You will receive the real tool result, then continue or finish.\n"
     "- To finish, reply with {\"action\":\"final\",\"summary\":\"...\","
@@ -886,34 +918,117 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
                 proposed = (*finalObj)["summary"].get<std::string>();
 
             const bool vacuous = proposed.empty();
-            const bool ungrounded =
-                !vacuous && ro.results.empty() && assertsRepoFacts(proposed);
+
+            // OPERATION-SPECIFIC RECEIPTS. "A tool ran" is not "the task was
+            // done". A single successful read_file used to launder any claim:
+            // a run whose edit/build/test all failed could still report
+            // "compiled and ran successfully" and exit 0. Each claim now needs
+            // its own receipt, and run_shell/run_build/run_tests only count
+            // when the registry reported success (a process exit code of 1 is
+            // not a successful build).
+            const std::string low = toLower(proposed);
+            const bool negated = low.find("missing") != std::string::npos ||
+                                 low.find("not run") != std::string::npos ||
+                                 low.find("failed") != std::string::npos ||
+                                 low.find("incomplete") != std::string::npos;
+            auto hasOkReceipt = [&ro](const char* tool) {
+                for (const auto& res : ro.results)
+                    if (res.ok && res.tool == tool) return true;
+                return false;
+            };
+            const bool claimsRepair =
+                !negated && (low.find("fix") != std::string::npos ||
+                             low.find("repair") != std::string::npos ||
+                             low.find("patch") != std::string::npos);
+            const bool claimsExecution =
+                !negated && (low.find("compil") != std::string::npos ||
+                             low.find("build") != std::string::npos ||
+                             low.find("ran ") != std::string::npos ||
+                             low.find("execut") != std::string::npos ||
+                             low.find("prints ok") != std::string::npos);
+            const bool repairReceipt =
+                hasOkReceipt("edit_files") || hasOkReceipt("write_file");
+            const bool execReceipt = hasOkReceipt("run_build") ||
+                                     hasOkReceipt("run_tests") ||
+                                     hasOkReceipt("run_shell");
+            const bool ungroundedRepair = claimsRepair && !repairReceipt;
+            const bool ungroundedExec = claimsExecution && !execReceipt;
+            const bool noReceipts = ro.results.empty() && assertsRepoFacts(proposed);
+
+            // TOKEN BINDING. "it prints OK" is a claim about tool OUTPUT, not
+            // about tool execution: a run_shell that ran and failed still
+            // produced a receipt. Require the claimed marker to appear in the
+            // real output of some successful receipt.
+            auto receiptOutputHas = [&ro](const std::string& needle) {
+                for (const auto& res : ro.results)
+                    if (res.ok && res.output.find(needle) != std::string::npos)
+                        return true;
+                return false;
+            };
+            std::string claimedToken;
+            for (const char* tok : {"OK", "PASS", "SUCCESS"})
+                if (proposed.find(tok) != std::string::npos) {
+                    claimedToken = tok;
+                    break;
+                }
+            const bool ungroundedToken =
+                !claimedToken.empty() && !receiptOutputHas(claimedToken);
+
+            const bool ungrounded = !vacuous && (noReceipts || ungroundedRepair ||
+                                                 ungroundedExec || ungroundedToken);
 
             if (groundingStrikes < 3 && (vacuous || ungrounded)) {
                 ++groundingStrikes;
-                logLine(std::string("run: final answer rejected (") +
-                        (vacuous ? "empty_summary" : "no_tool_receipt") + ") strike " +
-                        std::to_string(groundingStrikes));
+                const char* reason = vacuous            ? "empty_summary"
+                                     : ungroundedRepair ? "repair_without_edit_receipt"
+                                     : ungroundedExec   ? "execution_without_build_receipt"
+                                     : ungroundedToken  ? "claimed_output_without_receipt"
+                                                        : "no_tool_receipt";
+                logLine(std::string("run: final answer rejected (") + reason +
+                        ") strike " + std::to_string(groundingStrikes));
                 commit(vacuous
                            ? std::string("Your last reply had an empty \"summary\" field, so "
                                          "it answers nothing. Reply with a tool_call JSON for "
                                          "the tool that gathers the evidence (git_status, "
                                          "list_repo, read_file or search_text), or with a "
                                          "final_answer whose \"summary\" states the result.")
-                           : std::string("You answered with repository or file facts but no "
-                                         "tool was executed, so those facts are unverified and "
-                                         "cannot be presented as findings. Reply with a "
-                                         "tool_call JSON for the tool that would produce the "
-                                         "evidence (git_status, list_repo, read_file or "
-                                         "search_text). Do not answer from memory."));
+                           : (ungroundedRepair
+                                  ? std::string("You claimed a repair but no edit_files or "
+                                                "write_file call succeeded, so the source is "
+                                                "unchanged. Emit the real edit_files JSON with "
+                                                "the exact old and new text, then re-run it.")
+                                  : (ungroundedExec
+                                         ? std::string("You claimed the code was compiled, built "
+                                                       "or executed, but no run_build, run_tests "
+                                                       "or run_shell call succeeded. Emit that "
+                                                       "tool call and wait for its real output.")
+                                         : std::string("You answered with repository or file facts "
+                                                       "but no tool was executed, so those facts "
+                                                       "are unverified and cannot be presented as "
+                                                       "findings. Reply with a tool_call JSON for "
+                                                       "the tool that would produce the evidence "
+                                                       "(git_status, list_repo, read_file or "
+                                                       "search_text). Do not answer from memory."))));
                 continue;
             }
 
-            if (vacuous) {
-                // Strikes exhausted and still no substance: fail closed rather
-                // than report an empty answer as a completed run.
-                logLine("run: final answer still empty after grounding strikes; "
-                        "failing closed");
+            if (vacuous || ungrounded) {
+                // Strikes exhausted and still no substance or no receipts: fail
+                // closed rather than report an unverified claim as a completed
+                // run. EXIT_FAIL is the only honest exit code here.
+                logLine("run: final answer still unsupported after grounding strikes; "
+                        "failing closed (completed=false)");
+                break;
+            }
+
+            if (negated) {
+                // An honest failure report is not a completion. Reporting the
+                // failure is correct behaviour; exiting 0 for it is not, because
+                // EXIT_OK is what callers gate on. Keep the summary for the
+                // operator and fail the process.
+                ro.summary = proposed;
+                logLine("run: final answer reports an incomplete/failed run; "
+                        "completed=false");
                 break;
             }
 
@@ -1703,8 +1818,9 @@ static int cmdAsk(const std::vector<std::string>& args) {
     // explicitly rather than falling through to the HTTP probe. The persisted
     // preference is checked as well, so a stored Strata selection cannot be
     // silently redirected to Ollama or Deep2.
+    // Declared at function scope so the resolved backend can drive routing too.
+    std::string askBackend;
     {
-        std::string askBackend;
         for (std::size_t i = 0; i < args.size(); ++i) {
             const std::string& a = args[i];
             if (a == "--backend" && i + 1 < args.size()) {
@@ -1743,7 +1859,10 @@ static int cmdAsk(const std::vector<std::string>& args) {
     ToolRegistry reg;
     registerDefaultTools(reg, ws);
 
-    const std::string pref = loadBackendPref();
+    // D5: ONE effective-backend resolution. Re-reading the persisted preference
+    // here silently discarded an explicit --backend=ollama whenever deep2 was
+    // stored, so the flag validated but never routed.
+    const std::string pref = askBackend;
     // C06/C08/C09: deep2|native → in-process Deep2Engine (not HTTP :8080).
     if (pref == "deep2" || pref == "native") {
         const std::string modelRel = defaultDeep2ModelRel();
@@ -1793,7 +1912,12 @@ static int cmdAsk(const std::vector<std::string>& args) {
     }
 
     InferenceClient client;
-    const InferenceEndpoint ep = resolvePreferredEndpoint();
+    // Route from the SAME resolved backend instead of a second preference read.
+    // An explicit --backend=ollama must reach :11434 with the Ollama tag even
+    // when the persisted preference is deep2 or auto.
+    const InferenceEndpoint ep =
+        (pref == "ollama") ? InferenceEndpoint{11434, "ollama", true}
+                           : resolvePreferredEndpoint();
     client.setEndpoint(ep.port > 0 ? ep.port : 11434);
     if (std::string(ep.label) == "ollama") client.setModel(ollamaModelFor(client.model()));
 
@@ -3038,10 +3162,13 @@ static std::array<rawrxd::BackendInfo, 3> buildBackendRegistry() {
                                "STRATA_NOT_ROUTABLE: expert residency not activated"};
     r[2] = rawrxd::BackendInfo{rawrxd::BackendId::Ollama, "ollama", rawrxd::EngineKind::Ollama,
                                rawrxd::Health::Unavailable,
-                               rawrxd::Capabilities{rawrxd::Support::Verified,
-                                                    rawrxd::Support::Verified,
-                                                    rawrxd::Support::Verified,
-                                                    rawrxd::Support::Verified},
+                               // Health is not probed and no adapter-level test exists,
+                     // so no capability may be claimed. A reachable server is not
+                     // evidence that chat, streaming, tools or repair were exercised.
+                               rawrxd::Capabilities{rawrxd::Support::Unverified,
+                                                    rawrxd::Support::Unverified,
+                                                    rawrxd::Support::Unverified,
+                                                    rawrxd::Support::Unverified},
                                "HTTP 127.0.0.1:11434 not probed here"};
     return r;
 }
