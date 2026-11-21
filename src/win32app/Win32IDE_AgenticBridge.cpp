@@ -119,6 +119,13 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
     m_router = std::make_unique<RawrXD::Agent::BackendRouter>();
     RawrXD::Agent::RouterConfig cfg;
     cfg.mode = RawrXD::Agent::BackendMode::Auto;
+    // Explicit backend selection is authoritative: Deep2/Ollama must not silently
+    // fall through to auto + failover. Strata keeps Auto and is rejected upstream.
+    const char* rb = std::getenv("RAWRXD_CHAT_BACKEND");
+    if (rb && std::strcmp(rb, "deep2") == 0)
+        cfg.mode = RawrXD::Agent::BackendMode::Deep2;
+    else if (rb && std::strcmp(rb, "ollama") == 0)
+        cfg.mode = RawrXD::Agent::BackendMode::Ollama;
     cfg.fallback_endpoint = m_ollamaServer.empty() ? "http://127.0.0.1:11434" : m_ollamaServer;
     cfg.fallback_model = m_modelName;
     cfg.primary_model = "deep2-native";
