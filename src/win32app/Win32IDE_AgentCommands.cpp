@@ -2216,3 +2216,37 @@ LRESULT Win32IDE::handleLegacyAgentComplete(WPARAM wParam, LPARAM lParam) {
     }
     return 0;
 }
+
+void Win32IDE::onBackendSelectionChanged()
+{
+    if (!m_hwndBackendSelector) return;
+    const int sel = (int)SendMessageA(m_hwndBackendSelector, CB_GETCURSEL, 0, 0);
+    const char* names[3] = {"deep2", "strata", "ollama"};
+    if (sel < 0 || sel > 2) return;
+    const std::string pref = names[sel];
+
+    // Persist exactly like `rawr backend select` so both frontends agree.
+    if (std::FILE* f = nullptr) {
+        if (fopen_s(&f, "F:\\rawrxd\\.rawrxd\\cli_backend_pref.txt", "w") == 0 && f) {
+            std::fprintf(f, "%s\n", pref.c_str());
+            fclose(f);
+        }
+    }
+
+    // Selection is retained even when the runtime is unavailable; only routing
+    // changes, so the GUI matches the CLI contract.
+    if (pref == "deep2") {
+        SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", "deep2");
+    } else if (pref == "strata") {
+        SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", "strata");
+        MessageBoxA(m_hwndSecondarySidebar,
+                    "STRATA_NOT_ROUTABLE: expert residency is not activated on this "
+                    "path. The selection is stored, but chat inference is blocked "
+                    "until residency is available. Deep2 is not substituted.",
+                    "RawrXD backend", MB_ICONWARNING | MB_OK);
+    } else {
+        SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", nullptr);
+    }
+    appendCopilotChatUtf8(std::string("\n[backend] ") + pref +
+                          (pref == "strata" ? " (unavailable)" : "") + "\n");
+}
