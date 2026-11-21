@@ -25,6 +25,7 @@
 #pragma once
 
 #include "tool_core.hpp"
+#include "agent/acceptance_gate.hpp"
 #include "AgentSession.h"
 #include "AgentMode.h"
 
@@ -103,6 +104,11 @@ public:
 private:
     std::string m_root;
     ApprovalFn  m_approval;
+    // Request-scoped acceptance verdict for the most recent RunProcess call.
+    mutable rawrxd::AcceptanceResult m_lastAcceptance;
+
+public:
+    const rawrxd::AcceptanceResult& lastAcceptance() const { return m_lastAcceptance; }
 
     bool IsRegularTextFile(const std::filesystem::path& p, std::error_code& ec) const;
     std::string SuggestAlternatives(const std::string& bad_path) const;

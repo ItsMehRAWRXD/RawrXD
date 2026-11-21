@@ -2,6 +2,7 @@
 // WorkspaceToolHost.cpp
 // =============================================================================
 #include "WorkspaceToolHost.h"
+#include "agent/acceptance_gate.hpp"
 #include <sstream>
 #include <algorithm>
 #include <cctype>
@@ -324,6 +325,26 @@ std::string WorkspaceToolHost::RunProcess(const std::string& cmd,
         if (out.size() > cap) { out.append("\n...[output truncated]\n"); break; }
     }
     exit_code = x_pclose(pipe);
+
+    // RAWRXD_ACCEPTANCE: evaluate the captured outcome. A route that guarantees a
+    // success marker declares it via RAWRXD_ACCEPTANCE_MARKER; ordinary shell
+    // commands leave it unset and are judged on exit code and timeout only.
+    {
+        rawrxd::ProcessOutcome outcome;
+        outcome.launched   = (exit_code != -1);
+        outcome.exitCode   = exit_code;
+        outcome.stdoutText = out;
+        rawrxd::AcceptanceCriteria criteria;
+        criteria.expectedExit = 0;
+        if (const char* m = std::getenv("RAWRXD_ACCEPTANCE_MARKER"); m && *m)
+            criteria.stderrMustContain = m;
+        const rawrxd::AcceptanceResult verdict =
+            rawrxd::EvaluateAcceptance(outcome, criteria);
+        m_lastAcceptance = verdict;
+        std::fprintf(stderr, "[TOOL_ACCEPTANCE] accepted=%d firstFailure=%s\n",
+                     verdict.passed ? 1 : 0, verdict.firstFailure.c_str());
+        std::fflush(stderr);
+    }
     return out;
 }
 
