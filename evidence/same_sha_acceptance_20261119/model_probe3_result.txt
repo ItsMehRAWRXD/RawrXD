@@ -1,0 +1,16 @@
+﻿PID=11972
+HWND=657686
+COMBO=53086662 ID=1206
+EARLY COUNT=19 CURSEL=0
+EARLY BLANK_ITEMS=0 enumerated=19 of 19
+  EARLY ITEM[0]='Local models / Ollama / bigdaddyg-productivity-local:latest'
+  EARLY ITEM[1]='Local models / Ollama / bigdaddyg-productivity-native:latest'
+  EARLY ITEM[2]='Local models / Ollama / bigdaddyglocal:latest'
+SETTLING=18s
+FINAL COUNT=234 CURSEL=0
+FINAL BLANK_ITEMS=0 enumerated=234 of 234
+  FINAL ITEM[0]='Local models / Ollama / bigdaddyg-productivity-local:latest'
+  FINAL ITEM[1]='Local models / Ollama / bigdaddyg-productivity-native:latest'
+  FINAL ITEM[2]='Local models / Ollama / bigdaddyglocal:latest'
+NATURAL_EXIT=False
+DONE
