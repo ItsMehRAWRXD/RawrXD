@@ -43,6 +43,13 @@ bool OllamaBackend::Initialize(const BackendConfig& config) {
     if (m_initialized.load()) return true;
 
     m_config = config;
+    // Remember whether the caller pinned these. Silently replacing them on a
+    // health failure would route an explicit request to a different endpoint and
+    // a different model, which is indistinguishable from success at the call
+    // site and would make an explicit-endpoint test pass against the wrong
+    // configuration.
+    const bool explicitEndpoint = !config.endpoint.empty();
+    const bool explicitModel = !config.model.empty();
     if (m_config.endpoint.empty()) {
         m_config.endpoint = "http://127.0.0.1:11434";
     }
@@ -57,6 +64,15 @@ bool OllamaBackend::Initialize(const BackendConfig& config) {
     // Test connection
     if (!m_client->testConnection()) {
         CliTrace("Initialize:first-health-failed");
+        if (explicitEndpoint || explicitModel) {
+            // Fail closed: never silently substitute a different endpoint or
+            // model for an explicitly configured one.
+            RecordFailure("Ollama backend: health check failed for explicitly "
+                          "configured endpoint " + m_config.endpoint + " (model " +
+                          m_config.model + "); refusing to fall back");
+            m_client.reset();
+            return false;
+        }
         m_config = DefaultConfig();
         m_client = std::make_unique<Backend::OllamaClient>(m_config.endpoint);
         m_client->setTimeoutSeconds(m_config.timeout_ms / 1000);
