@@ -9950,9 +9950,15 @@ void Win32IDE::disarmAgentThoughtTimer()
     if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
 }
 
-void Win32IDE::appendCopilotChatUtf8(const std::string& text)
-{
-    if (!m_hwndCopilotChatOutput || text.empty()) return;
+void Win32IDE::appendCopilotChatUtf8(const std::string& text)
+{
+    if (!m_hwndCopilotChatOutput || text.empty()) return;
+    // Identify the real transcript HWND for harnesses: child ids are scoped to
+    // their parent, so reading a guessed id from another window is meaningless.
+    std::fprintf(stderr, "[CHAT_OUTPUT_APPEND] hwnd=%p len=%zu tid=%lu\n",
+                 (void*)m_hwndCopilotChatOutput, text.size(),
+                 (unsigned long)GetCurrentThreadId());
+    std::fflush(stderr);
     const std::wstring wide = Utf8ToWideText(text);
     if (wide.empty()) {
         LOG_ERROR("Rejected invalid UTF-8 chat output");
