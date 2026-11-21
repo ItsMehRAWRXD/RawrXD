@@ -354,7 +354,12 @@ bool ActionExecutor::handleRunBuild(Action& action)
         return result.value("accepted").toBool(false);
     if (result.contains("accepted"))
             return result.value("accepted").toBool(false);
-        return result.value("exitCode").toInt() == 0;
+        // Ungated handlers: require an explicit exitCode. Qt converts a missing
+    // key to 0, which would otherwise read as success for a result that never
+    // ran a process.
+    if (!result.contains("exitCode") || !result.value("exitCode").isDouble())
+        return false;
+    return result.value("exitCode").toInt() == 0;
 }
 
 /**
@@ -374,7 +379,12 @@ bool ActionExecutor::handleExecuteTests(Action& action)
     action.result = QString::fromStdString(NativeJson::toJson(result));
     if (result.contains("accepted"))
             return result.value("accepted").toBool(false);
-        return result.value("exitCode").toInt() == 0;
+        // Ungated handlers: require an explicit exitCode. Qt converts a missing
+    // key to 0, which would otherwise read as success for a result that never
+    // ran a process.
+    if (!result.contains("exitCode") || !result.value("exitCode").isDouble())
+        return false;
+    return result.value("exitCode").toInt() == 0;
 }
 
 /**
@@ -404,7 +414,12 @@ bool ActionExecutor::handleCommitGit(Action& action)
     action.result = QString::fromStdString(NativeJson::toJson(result));
     if (result.contains("accepted"))
             return result.value("accepted").toBool(false);
-        return result.value("exitCode").toInt() == 0;
+        // Ungated handlers: require an explicit exitCode. Qt converts a missing
+    // key to 0, which would otherwise read as success for a result that never
+    // ran a process.
+    if (!result.contains("exitCode") || !result.value("exitCode").isDouble())
+        return false;
+    return result.value("exitCode").toInt() == 0;
 }
 
 /**
@@ -430,7 +445,12 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
     action.result = QString::fromStdString(NativeJson::toJson(result));
     if (result.contains("accepted"))
             return result.value("accepted").toBool(false);
-        return result.value("exitCode").toInt() == 0;
+        // Ungated handlers: require an explicit exitCode. Qt converts a missing
+    // key to 0, which would otherwise read as success for a result that never
+    // ran a process.
+    if (!result.contains("exitCode") || !result.value("exitCode").isDouble())
+        return false;
+    return result.value("exitCode").toInt() == 0;
 }
 
 /**
