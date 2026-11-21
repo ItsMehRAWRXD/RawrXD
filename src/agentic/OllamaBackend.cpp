@@ -262,6 +262,14 @@ InferenceResult OllamaBackend::ChatSync(
     req.stream = false;
     ConvertMessages(messages, req.messages);
 
+    // Residency policy. Leaving this empty keeps Ollama's default, which unloads
+    // the model after every request (~30 s reload per call on a 24 GB model).
+    // Override with RAWRXD_OLLAMA_KEEP_ALIVE, e.g. "10m".
+    if (const char* keepAlive = std::getenv("RAWRXD_OLLAMA_KEEP_ALIVE");
+        keepAlive && *keepAlive) {
+        req.keep_alive = keepAlive;
+    }
+
     // Build options
     req.options["temperature"] = std::to_string(m_config.temperature);
     req.options["top_p"] = std::to_string(m_config.top_p);
@@ -302,9 +310,20 @@ InferenceResult OllamaBackend::ChatSync(
                                 resp.tool_calls.is_array() &&
                                 !resp.tool_calls.empty();
     if (!resp.done || (text.empty() && !has_tool_calls)) {
-        std::string err = resp.done_reason == "error"
-            ? (!resp.response.empty() ? resp.response : resp.message)
-            : "Ollama returned no chat content";
+        // A reasoning model can consume the entire budget before emitting any
+        // visible text. That is truncation, not an empty answer, and callers must
+        // be able to tell the two apart instead of reporting a generic failure.
+        std::string err;
+        if (resp.done_reason == "error") {
+            err = !resp.response.empty() ? resp.response : resp.message;
+        } else if (resp.done && text.empty() && !has_tool_calls &&
+                   !resp.thinking.empty() && resp.done_reason == "length") {
+            err = "GENERATION_TRUNCATED_BEFORE_VISIBLE_OUTPUT";
+        } else if (!resp.done) {
+            err = "Ollama stream ended without a completion marker";
+        } else {
+            err = "Ollama returned no chat content";
+        }
         RecordFailure("Ollama chatSync failed: " + err);
         return InferenceResult::Error(err);
     }

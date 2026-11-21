@@ -226,6 +226,7 @@ std::string OllamaClient::createChatRequestJson(const OllamaChatRequest& req) {
         {"stream", req.stream},
         {"think", false}
     };
+    if (!req.keep_alive.empty()) payload["keep_alive"] = req.keep_alive;
     for (const auto& message : req.messages) {
         json item = {
             {"role", message.role},
@@ -259,6 +260,8 @@ OllamaResponse OllamaClient::parseResponse(const std::string& json_str) {
         // Extract response fields with safe access
         resp.model = j.value("model", std::string());
         resp.response = j.value("response", std::string());
+        // generate mode exposes reasoning at the top level
+        resp.thinking = j.value("thinking", std::string());
         resp.done = j.value("done", false);
         resp.done_reason = j.value("done_reason", std::string());
 
@@ -275,6 +278,8 @@ OllamaResponse OllamaClient::parseResponse(const std::string& json_str) {
         if (j.contains("message")) {
             const auto& msg = j["message"];
             resp.message = msg.value("content", std::string());
+            // chat mode nests reasoning inside the message object
+            resp.thinking = msg.value("thinking", std::string());
             if (msg.contains("tool_calls")) {
                 resp.tool_calls = msg["tool_calls"];
             }

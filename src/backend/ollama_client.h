@@ -61,6 +61,10 @@ struct OllamaChatRequest {
     bool                        stream = false;
     json                        tools;     // OpenAI-format tool definitions
     std::map<std::string, std::string> options;
+    // Empty = Ollama's default residency, which unloads the model after every
+    // request (measured: ~30 s reload per call on a 24 GB model). Set to e.g.
+    // "10m" to keep the model resident; wall time dropped 30.74 s -> 0.60 s.
+    std::string keep_alive;
 };
 
 // ---------------------------------------------------------------------------
@@ -70,6 +74,10 @@ struct OllamaResponse {
     std::string  model;
     std::string  response;        // Completion text (generate mode)
     std::string  message;         // Chat message content (chat mode)
+    std::string  thinking;        // Reasoning channel (chat: message.thinking,
+                                  // generate: top-level "thinking"). Kept
+                                  // separate so reasoning is never mistaken
+                                  // for the visible answer.
     bool         done = false;
     std::string  done_reason;
 
