@@ -222,6 +222,7 @@ bool Win32IDE::routeCommand(int commandId) {
     case IDM_TOOLS_PROFILE_START: case IDM_TOOLS_PROFILE_STOP:
     case IDM_TOOLS_PROFILE_RESULTS: case IDM_TOOLS_ANALYZE_SCRIPT:
     case IDM_TOOLS_BUILD_PROJECT: case IDM_TOOLS_TEST_PROJECT:
+    case IDM_BUILD_COMPILE: case IDM_BUILD_RUN: case IDM_BUILD_CLEAN: case IDM_BUILD_REBUILD:
     case IDM_TOOLS_DEBUG_START: case IDM_TOOLS_DEBUG_STOP:
         handleToolsCommand(commandId); return true;
     case IDM_DEBUG_START: case IDC_DEBUG_START:
@@ -711,7 +712,8 @@ void Win32IDE::handleToolsCommand(int commandId) {
     case IDM_TOOLS_DEBUG_STOP:
         stopDebugging();
         break;
-    case IDM_TOOLS_BUILD_PROJECT: {
+    case IDM_TOOLS_BUILD_PROJECT: case IDM_BUILD_COMPILE: case IDM_BUILD_RUN:
+    case IDM_BUILD_CLEAN: case IDM_BUILD_REBUILD: {
         buildTrace("BUILD_COMMAND_ENTRY id=3014");
         // Rebuild must drop stale Problems before new compiler output arrives.
         clearProblems();
