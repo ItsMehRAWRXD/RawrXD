@@ -1,0 +1,22 @@
+{
+  "session": "RAWRXD_COMPLETE_E2E_MASTER_001",
+  "branch": "fix/ide-default-model-scan",
+  "totals": {
+    "gates": 83,
+    "closed": 15,
+    "open": 68
+  },
+  "note": "Compilation alone is never PASS.",
+  "p0": [
+    "device_lost_ flag added, not exercised",
+    "80s orderly shutdown cause unknown",
+    "strict full-logit parity open",
+    "semantic quality poor",
+    "150 TPS not met"
+  ],
+  "next": [
+    "verify device_lost_ with InjectDeviceLostForTest",
+    "find the 80s shutdown initiator",
+    "same-SHA retention matrix"
+  ]
+}
