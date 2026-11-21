@@ -102,6 +102,10 @@ using ErrorCallback    = std::function<void(const std::string& error)>;
 struct InferenceResult {
     bool        success = false;
     std::string response;           // Full response text
+    // Reasoning channel, kept separate from response. Reasoning-capable models
+    // emit thinking on a distinct field; without this the reasoning is parsed by
+    // the transport and then dropped before callers see it.
+    std::string reasoning;
     std::string error_message;
 
     // Tool call fields

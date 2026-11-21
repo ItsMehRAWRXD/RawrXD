@@ -346,6 +346,8 @@ InferenceResult OllamaBackend::ChatSync(
 
     // Extract response text (chat mode uses .message, generate mode uses .response)
     InferenceResult result = InferenceResult::Ok(text);
+    // Propagate the reasoning channel; callers only see InferenceResult.
+    result.reasoning = resp.thinking;
     result.tool_calls.clear();
 
     // Parse tool calls if present
