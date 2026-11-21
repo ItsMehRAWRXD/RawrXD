@@ -347,7 +347,14 @@ bool ActionExecutor::handleRunBuild(Action& action)
     QJsonObject result = executeCommand("cmake", args, m_context.timeoutMs);
 
     action.result = QString::fromStdString(NativeJson::toJson(result));
-    return result.value("exitCode").toInt() == 0;
+    // Acceptance-aware return: the gate sets accepted/success in the result.
+    // Fall back to the legacy exit-code rule for handlers that do not run the
+    // gate, so ungated actions keep their existing behaviour.
+    if (result.contains("accepted"))
+        return result.value("accepted").toBool(false);
+    if (result.contains("accepted"))
+            return result.value("accepted").toBool(false);
+        return result.value("exitCode").toInt() == 0;
 }
 
 /**
@@ -365,7 +372,9 @@ bool ActionExecutor::handleExecuteTests(Action& action)
     QJsonObject result = executeCommand("ctest", args, m_context.timeoutMs);
 
     action.result = QString::fromStdString(NativeJson::toJson(result));
-    return result.value("exitCode").toInt() == 0;
+    if (result.contains("accepted"))
+            return result.value("accepted").toBool(false);
+        return result.value("exitCode").toInt() == 0;
 }
 
 /**
@@ -393,7 +402,9 @@ bool ActionExecutor::handleCommitGit(Action& action)
     QJsonObject result = executeCommand("git", args, m_context.timeoutMs);
 
     action.result = QString::fromStdString(NativeJson::toJson(result));
-    return result.value("exitCode").toInt() == 0;
+    if (result.contains("accepted"))
+            return result.value("accepted").toBool(false);
+        return result.value("exitCode").toInt() == 0;
 }
 
 /**
@@ -417,7 +428,9 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
     QJsonObject result = executeCommand(command, args, m_context.timeoutMs);
 
     action.result = QString::fromStdString(NativeJson::toJson(result));
-    return result.value("exitCode").toInt() == 0;
+    if (result.contains("accepted"))
+            return result.value("accepted").toBool(false);
+        return result.value("exitCode").toInt() == 0;
 }
 
 /**
