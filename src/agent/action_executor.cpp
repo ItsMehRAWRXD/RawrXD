@@ -7,6 +7,7 @@
  */
 
 #include "action_executor.hpp"
+#include "acceptance_gate.hpp"
 #include "model_invoker.hpp"
 #include "qt_block.h"
 #include "core/qt_elimination.h"
@@ -604,8 +605,40 @@ QJsonObject ActionExecutor::executeCommand(const QString& command,
     result["success"] = procResult.success;
     result["stdout"] = QString::fromStdString(procResult.stdoutOutput);
     result["stderr"] = QString::fromStdString(procResult.stderrOutput);
+
+    // Acceptance gate: a process that ran is not a task that succeeded. Evaluate
+    // the captured outcome against explicit criteria and expose the first failing
+    // condition so callers cannot promote a non-result into success.
+    {
+        rawrxd::ProcessOutcome outcome;
+        // A launched process always has a real exit code; -1 with an error means
+        // the process never started.
+        outcome.launched   = (procResult.exitCode != -1);
+        outcome.exitCode   = procResult.exitCode;
+        outcome.timedOut   = procResult.timedOut;
+        outcome.error      = procResult.error;
+        outcome.stdoutText = procResult.stdoutOutput;
+        outcome.stderrText = procResult.stderrOutput;
+
+        rawrxd::AcceptanceCriteria criteria;
+        criteria.expectedExit = 0;
+        criteria.failOnTimeout = true;
+
+        const rawrxd::AcceptanceResult accepted =
+            rawrxd::EvaluateAcceptance(outcome, criteria);
+        result["accepted"] = accepted.passed;
+        result["firstFailure"] = QString::fromStdString(accepted.firstFailure);
+        if (!accepted.passed) {
+            result["success"] = false;
+            result["error"] = QStringLiteral("ACCEPTANCE_FAIL: ") +
+                              QString::fromStdString(accepted.firstFailure);
+        }
+    }
+
     if (!procResult.success) {
-        result["error"] = "Command failed with exit code " + QString::number(procResult.exitCode);
+        if (!result.contains("error") || result["error"].toString().isEmpty()) {
+            result["error"] = "Command failed with exit code " + QString::number(procResult.exitCode);
+        }
     }
 
     return result;
