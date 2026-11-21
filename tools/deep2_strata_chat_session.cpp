@@ -15,6 +15,7 @@ int main(int argc, char** argv)
     std::vector<uint32_t> tokens;
     int maxNew = 8;
     bool gpu = true;
+    int64_t budget = -1;
 
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -24,6 +25,8 @@ int main(int argc, char** argv)
             while (i + 1 < argc && argv[i + 1][0] != '-')
                 tokens.push_back((uint32_t)std::strtoul(argv[++i], nullptr, 10));
         }
+        else if (a == "--weight-cache-budget" && i + 1 < argc)
+            budget = std::atoll(argv[++i]);
         else if (a == "--cpu") gpu = false;
         else if (a == "--gpu") gpu = true;
     }
@@ -36,6 +39,7 @@ int main(int argc, char** argv)
     rawrxd::deep2::StrataChatOptions opts;
     opts.gpu = gpu;
     opts.expertTracking = true;
+    opts.weightCacheBudget = budget;
 
     rawrxd::deep2::StrataChatSession session;
     if (!session.Open(model, opts)) {

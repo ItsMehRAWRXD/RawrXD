@@ -27,6 +27,7 @@ struct StrataChatOptions {
     int device = 0;
     bool expertTracking = true;   // SetStrataExpertTracking
     int cachePolicy = 0;          // 0 = LRU
+    int64_t weightCacheBudget = -1;  // bytes; <0 = runtime default
 };
 
 struct StrataChatStats {
@@ -59,6 +60,8 @@ public:
             executor_->SetStrataExpertTracking(true);
             executor_->SetStrataCachePolicy(opts_.cachePolicy);
         }
+        if (opts_.weightCacheBudget >= 0)
+            ::RawrXD::Deep2::QuantDot::SetWeightCacheBudget(opts_.weightCacheBudget);
         if (!executor_->Bind(rep)) { stats_.error = "bind failed"; return false; }
         return true;
     }
