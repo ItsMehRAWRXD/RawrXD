@@ -1,2 +1,5 @@
-﻿RICHEDIT_MATCHES=3
+﻿MATCH id=1604 :: F:\rawrxd\evidence\g52_fixture\invalid\main.cpp(2,12): error C2065: 'undefined_symbol': undeclared identifier [F:\rawrx
+MATCH id=1606 :: F:\rawrxd\evidence\g52_fixture\invalid\main.cpp(2,12): error C2065: 'undefined_symbol': undeclared identifier [F:\rawrx
+MATCH id=0 :: F:\rawrxd\evidence\g52_fixture\invalid\main.cpp(2,12): error C2065: 'undefined_symbol': undeclared identifier [F:\rawrx
+RICHEDIT_MATCHES=3
 DONE
