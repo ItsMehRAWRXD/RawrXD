@@ -80,6 +80,33 @@ int main()
         Expect("exit checked before length", r.firstFailure == "exit=3 expected=0");
     }
 
+    // 6. Executor-shaped negative case: exit 0, marker required by the route,
+    //    marker absent -> the tool result must be rejected.
+    {
+        ProcessOutcome o;
+        o.launched = true; o.exitCode = 0;
+        o.stdoutText = "done";
+        o.stderrText = "[BACKEND_SELECTOR_ITEM] 0='Deep2 (Vulkan)'";
+        AcceptanceCriteria c;
+        c.expectedExit = 0;
+        c.stderrMustContain = "[BRIDGE_GEN]";   // as RAWRXD_ACCEPTANCE_MARKER would set
+        auto r = EvaluateAcceptance(o, c);
+        Expect("exit 0 without marker is rejected", !r.passed);
+        Expect("executor failure names the marker",
+               r.firstFailure == "missing_stderr_marker=[BRIDGE_GEN]");
+    }
+
+    // 7. Same shape with the marker present passes.
+    {
+        ProcessOutcome o;
+        o.launched = true; o.exitCode = 0;
+        o.stderrText = "[BRIDGE_GEN] gpu_dispatches=12 chars=759\n";
+        AcceptanceCriteria c;
+        c.expectedExit = 0;
+        c.stderrMustContain = "[BRIDGE_GEN]";
+        Expect("exit 0 with marker passes", EvaluateAcceptance(o, c).passed);
+    }
+
     if (g_fail == 0) {
         std::printf("ACCEPTANCE_GATE_TESTS=PASS\n");
         return 0;

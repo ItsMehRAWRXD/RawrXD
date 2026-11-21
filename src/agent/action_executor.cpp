@@ -624,6 +624,15 @@ QJsonObject ActionExecutor::executeCommand(const QString& command,
         criteria.expectedExit = 0;
         criteria.failOnTimeout = true;
 
+        // Optional evidence marker declared by the caller/route. Diagnostics that
+        // have a guaranteed success marker (e.g. Deep2's [BRIDGE_GEN]) can require
+        // it; ordinary shell commands leave this empty and are judged on exit only.
+        // Never infer a marker from the command text.
+        if (const char* marker = std::getenv("RAWRXD_ACCEPTANCE_MARKER");
+            marker && *marker) {
+            criteria.stderrMustContain = marker;
+        }
+
         const rawrxd::AcceptanceResult accepted =
             rawrxd::EvaluateAcceptance(outcome, criteria);
         result["accepted"] = accepted.passed;
