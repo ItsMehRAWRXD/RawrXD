@@ -48,15 +48,17 @@ The `cmdAsk`/`cmdRun` handlers return `EXIT_FAIL` for `strata` **before** any
 model resolution or `resolvePreferredEndpoint` (the only place Ollama is
 probed), so no Ollama request is issued and Deep2 is not substituted.
 
-## 7E — Clean-source build  => PENDING
-Active-tree builds of `RawrXD-Win32IDE-Native` and `RawrXD-CLI-V2` PASS. An
-isolated worktree build at the recorded commit is required to fully close this
-gate without disturbing the concurrent Deep2/REAP working tree.
+## 7E — Clean-source build  => PASS
+Isolated worktree at commit `5b018255d2` configured, compiled and linked
+`RawrXD-Win32IDE-Native` from scratch (BUILD_EXIT=0). See
+`CLEANBUILD_7E_RECEIPT.md`; exe SHA-256
+`7A3D4EADB46AE4525DC938B2D0A1A1C434DD622D96502ACD57D56831EF7912DD`. Built
+without touching the concurrent Deep2/REAP working tree.
 
 ## Updated release ledger
 ```
 SPRINTS_1_TO_6=IMPLEMENTATION_CLOSED
-SPRINT_7=PARTIAL (7A/7B/7C/7D PASS; 7E/7F pending)
+SPRINT_7=PASS (7A/7B/7C/7D/7E/7F)
 
 BACKEND_PREFERENCE_COMMIT=5b2656a532
 BACKEND_PREFERENCE_CONSOLIDATION=PASS
@@ -69,11 +71,11 @@ BACKEND_STATUS_SEMANTICS=PASS
 BACKEND_REFRESH_STABILITY=PASS
 STRATA_FAIL_CLOSED=PASS
 
-GUI_ACCEPTANCE=16/17 (clean-tree IDE link remaining)
+GUI_ACCEPTANCE=17/17 (100%)
 GLOBAL_PROBE_HARDENING=PASS
 MODEL_SELECTOR_1206=PASS
 BACKEND_SELECTOR_1226=PASS
-CLEAN_TREE_IDE_LINK=PENDING
+CLEAN_TREE_IDE_LINK=PASS
 
 STRATA_DENSE_SESSION=PASS
 STRATA_MOE_SESSION=PASS
