@@ -1,0 +1,6 @@
+Sprint 7D - request-level Strata fail-closed
+command: rawr ask "2+2"   (persisted backend = strata)
+exit: 1
+stdout: ERROR: STRATA_NOT_ROUTABLE: expert residency is not activated on this path; use --backend=deep2 or --backend=ollama
+inference output: none (no AI response produced)
+fallback: none (cmdAsk returns EXIT_FAIL before resolvePreferredEndpoint / any Ollama probe)
