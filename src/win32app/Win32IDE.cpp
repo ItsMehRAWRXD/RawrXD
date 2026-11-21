@@ -7794,6 +7794,46 @@ void Win32IDE::generateResponseAsync(
             callback("STRATA_NOT_ROUTABLE: expert residency is not activated on this path.", false, false);
         }
         return;
+    }
+
+    // Explicit Deep2 selection is authoritative. Without this, an Ollama-shaped
+    // sidebar entry (e.g. a model the local Ollama does not have) routes the
+    // request to Ollama even when the harness asked for native Deep2, and the
+    // user sees a model-resolution error instead of inference. Fail closed:
+    // never substitute another backend for an explicit Deep2 request.
+    if (environmentValue("RAWRXD_CHAT_BACKEND") == "deep2") {
+        if (!m_deep2Bridge) {
+            if (callback) callback("Deep2 backend unavailable: bridge not initialised.", false, false);
+            return;
+        }
+        std::string path = environmentValue("RAWRXD_MODEL_PATH");
+        if (path.empty()) path = environmentValue("RAWRXD_DEEP2_PROBE_MODEL");
+        if (path.empty()) {
+            if (callback) callback(
+                "Deep2 backend unavailable: set RAWRXD_MODEL_PATH to a local GGUF.", false, false);
+            return;
+        }
+        // Reuse an already-loaded identical model; only load when it differs.
+        if (m_deep2Bridge->GetCurrentModel() != path && !m_deep2Bridge->LoadModel(path)) {
+            if (callback) callback(
+                std::string("Deep2 backend unavailable: failed to load ") + path, false, false);
+            return;
+        }
+        if (!m_deep2Bridge->IsModelLoaded()) {
+            if (callback) callback("Deep2 backend unavailable: model not loaded.", false, false);
+            return;
+        }
+        std::string response;
+        m_deep2Bridge->GenerateStream(
+            prompt,
+            [this, &response, callback](const std::string& token, bool) {
+                if (!m_inferenceStopRequested && callback) callback(token, false, true);
+                response += token;
+                return !m_inferenceStopRequested;
+            },
+            256);
+        if (callback) callback("", true, false);
+        return;
     }
     if (assignedGeneration) *assignedGeneration = 0;
 
