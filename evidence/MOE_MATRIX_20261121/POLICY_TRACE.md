@@ -55,3 +55,33 @@ That makes all four cells correct:
 ## Non-claims
 
 The four-way matrix is not yet green; T0_R1 still flushes. No code change committed this sprint beyond the earlier decoupling (`b7a79ddb83`).
+## Addendum: the global trim is a pure forwarder
+
+`quant_dot_dispatch.cpp`:
+
+```cpp
+size_t TrimUnpinnedQuantWeights() {
+    return (g_active_device >= 0 ? GpuFor(g_active_device) : Gpu())
+        .TrimUnpinnedQuantWeights();
+}
+```
+
+No synchronization, reclamation or budget logic of its own — it calls the device function, which
+already gates `clearWeightCache()` on `QuantDot::WeightCacheRetention()`.
+
+Therefore gating the global trim would change nothing: in T0_R1 the policy getter returns **1** at
+the trim, so `clearWeightCache()` is already skipped, yet 28,991 evictions still occur.
+
+## Remaining suspect: the RCU / direct-resident reclamation
+
+Inside `TrimUnpinnedWeightCache`, after the policy-gated clear, the function continues:
+
+```cpp
+// The direct-resident/RCU path is a second owner of streamed weights and
+// is not represented by weightCache_. ... its published views can be
+// invalidated and reclaimed here as well.
+```
+
+That second reclamation path runs unconditionally and is the most likely source of the residual
+evictions with retention enabled. Next step: make that reclamation policy-aware too, or confirm
+it is mandatory for pointer-lifetime safety and exclude it from the eviction counters.
