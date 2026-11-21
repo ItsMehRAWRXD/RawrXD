@@ -1201,11 +1201,26 @@ void Win32IDE::saveIdeSession() {
         wp.length = sizeof(WINDOWPLACEMENT);
         if (GetWindowPlacement(m_hwndMain, &wp)) {
             const RECT& rc = wp.rcNormalPosition;
+            std::fprintf(stderr, "[G54] save hwndMain=%p isZoomed=%d showCmd=%d normal=(%d,%d,%d,%d)\n",
+                (void*)m_hwndMain, IsZoomed(m_hwndMain) ? 1 : 0, (int)wp.showCmd,
+                rc.left, rc.top, rc.right, rc.bottom);
+            std::fflush(stderr);
             root["window"] = {
                 {"x", rc.left}, {"y", rc.top},
                 {"width", rc.right - rc.left}, {"height", rc.bottom - rc.top},
                 {"maximized", (wp.showCmd == SW_SHOWMAXIMIZED) || IsZoomed(m_hwndMain)}
             };
+        }
+    }
+    // G54: if the window is gone (teardown save), preserve the last valid
+    // geometry already on disk so a late save cannot drop the "window" object.
+    if (!root.contains("window")) {
+        std::string existing; std::string readErr;
+        if (readBinaryFile(ideSessionPath(), existing, readErr)) {
+            try {
+                auto prev = nlohmann::json::parse(existing);
+                if (prev.contains("window")) root["window"] = prev["window"];
+            } catch (...) {}
         }
     }
     std::string serialized;
