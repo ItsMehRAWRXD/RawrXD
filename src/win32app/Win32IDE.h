@@ -407,6 +407,8 @@ namespace vscode { class VSCodeExtensionAPI; }
 class Win32IDE
 {
 public:
+    // Read-only access to the embedded Deep2 bridge (agentic routing).
+    Deep2Bridge* deep2Bridge() const noexcept { return m_deep2Bridge; }
     enum class OutputSeverity {
         Debug = 0,
         Info = 1,

@@ -2,6 +2,7 @@
 // Connects Win32IDE to Native C++ Agent (Parity with rawrxd_cli)
 
 #include "Win32IDE_AgenticBridge.h"
+#include "Win32IDE_Deep2Bridge.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include "Win32IDE_AgentExecutionFSM.h"
@@ -189,6 +190,40 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
             response.content = "Failed to load model from: " + path;
             response.type = AgentResponseType::AGENT_ERROR;
         }
+    } else if (const char* rb = std::getenv("RAWRXD_CHAT_BACKEND");
+               rb && std::strcmp(rb, "deep2") == 0) {
+        // NATIVE_DEEP2_BRANCH: explicit Deep2 must use the in-process engine.
+        // Deep2Backend is an HTTP client (POST /v1/chat/completions); with no
+        // Deep2 server it returns "Deep2 server returned empty response" and no
+        // inference happens. Never fall through to it for explicit Deep2.
+        const char* mp = std::getenv("RAWRXD_MODEL_PATH");
+        if (!mp || !*mp) mp = std::getenv("RAWRXD_DEEP2_PROBE_MODEL");
+        Deep2Bridge* db = m_ide ? m_ide->deep2Bridge() : nullptr;
+        if (!db || !mp || !*mp) {
+            response.type = AgentResponseType::AGENT_ERROR;
+            response.content =
+                "Deep2 backend unavailable: no local GGUF configured (set RAWRXD_MODEL_PATH).";
+            return response;
+        }
+        if (db->GetCurrentModel() != std::string(mp) && !db->LoadModel(mp)) {
+            response.type = AgentResponseType::AGENT_ERROR;
+            response.content = std::string("Deep2 backend unavailable: failed to load ") + mp;
+            return response;
+        }
+        std::string out;
+        db->GenerateStream(prompt, [&](const std::string& t, bool) {
+            out += t;
+            return true;
+        }, 256);
+        if (out.empty()) {
+            response.type = AgentResponseType::AGENT_ERROR;
+            response.content = "Deep2 backend unavailable: generation produced no tokens.";
+            return response;
+        }
+        response.type = AgentResponseType::ANSWER;
+        response.content = out;
+        if (m_outputCallback) m_outputCallback("deep2", out);
+        return response;
     } else {
         // Gap 9: model-backed turns go through BackendRouter (not CPUInferenceEngine Ask).
         response = ChatViaBackendRouter(prompt);
