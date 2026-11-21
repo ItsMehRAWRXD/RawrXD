@@ -873,6 +873,10 @@ void Win32IDE::handleToolsCommand(int commandId) {
         const std::string buildLiteral = powerShellLiteral(buildDir);
         const std::string buildTarget = configuredBuildTarget();
         const std::string buildCommand = configuredBuildCommand();
+        std::fprintf(stderr, "[G52] COMMAND_RECEIVED workspace=%s buildDir=%s target=%s override=%s\n",
+            (workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot).c_str(),
+            buildDir.c_str(), buildTarget.c_str(), buildCommand.c_str());
+        std::fflush(stderr);
         const std::string cmd =
             "$ErrorActionPreference='Continue'; "
             "Set-Location -LiteralPath " + rootLiteral + "; "
@@ -906,6 +910,9 @@ void Win32IDE::handleToolsCommand(int commandId) {
             break;
         }
         buildTrace("BUILD_LAUNCH_STARTED pid=" + std::to_string(pane->manager->pid()));
+        std::fprintf(stderr, "[G52] PROCESS_STARTED pid=%lu buildDir=%s\n",
+            (unsigned long)pane->manager->pid(), buildDir.c_str());
+        std::fflush(stderr);
         appendToOutput("Native IDE build started (workspace=" +
                            (workspaceRoot.empty() ? currentDirectoryPath() : workspaceRoot) +
                            ", dir=" + buildDir + ").\n",
