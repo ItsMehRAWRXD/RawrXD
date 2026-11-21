@@ -5880,3 +5880,15 @@ target_link_libraries(test_sovereign_compose_lab PRIVATE sovereign_emit_formats)
 
 # ============================================================================
 
+# ============================================================================
+# Qt-free native agent acceptance smoke (Sprint 5/7)
+# ============================================================================
+add_executable(agent_acceptance_smoke tools/agent_acceptance_smoke.cpp)
+target_include_directories(agent_acceptance_smoke PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include)
+set_target_properties(agent_acceptance_smoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_test(NAME agent_acceptance_smoke_negative COMMAND agent_acceptance_smoke)
+add_test(NAME agent_acceptance_smoke_positive COMMAND agent_acceptance_smoke --positive)
+message(STATUS "agent_acceptance_smoke enabled (Qt-free native acceptance)")
