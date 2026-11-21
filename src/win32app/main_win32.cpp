@@ -259,8 +259,35 @@ void applyUserDataDirFromCmdLine(const char* lpCmdLine)
 }
 } // namespace
 
+
+// RAWRXD_GUARD_5: minimal unhandled-exception witness (no stack walk).
+static LONG WINAPI RawrxdCrashFilter(EXCEPTION_POINTERS* ep)
+{
+    if (!ep || !ep->ExceptionRecord) return EXCEPTION_CONTINUE_SEARCH;
+    const DWORD code = ep->ExceptionRecord->ExceptionCode;
+    if (code == EXCEPTION_BREAKPOINT) return EXCEPTION_CONTINUE_SEARCH;
+
+    const void* addr = (const void*)ep->ExceptionRecord->ExceptionInformation[1];
+    char module[MAX_PATH] = "<unknown>";
+    HMODULE mod = nullptr;
+    if (addr && GetModuleHandleExA(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            (LPCSTR)addr, &mod)) {
+        GetModuleFileNameA(mod, module, MAX_PATH);
+    }
+    if (std::FILE* f = nullptr) {
+        if (fopen_s(&f, "F:\\rawrxd\\evidence\\IDE_CRASH.log", "a") == 0 && f) {
+            fprintf(f, "[CRASH] code=0x%08lX addr=%p module=%s tid=%lu\n",
+                    (unsigned long)code, addr, module, (unsigned long)GetCurrentThreadId());
+            fclose(f);
+        }
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    SetUnhandledExceptionFilter(RawrxdCrashFilter);
     SetUnhandledExceptionFilter(rawrxdUnhandledException);
     startupTrace("WinMain entered");
     startupTrace(lpCmdLine && *lpCmdLine ? lpCmdLine : "WinMain command line empty");
