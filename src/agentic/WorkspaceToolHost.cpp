@@ -12,6 +12,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <cstdio>
+#include "agent/native_process.hpp"
 using popen_t  = FILE*;
 static inline popen_t x_popen(const char* c, const char*) { return _popen(c, "r"); }
 static inline int      x_pclose(FILE* f) { return _pclose(f); }
@@ -306,34 +307,29 @@ std::string WorkspaceToolHost::RunProcess(const std::string& cmd,
                                           int& exit_code,
                                           int timeout_minutes) const {
     exit_code = -1;
-    std::string full = cmd;
-    // Capture stdout+stderr on both shells.
-#ifdef _WIN32
-    full += " 2>&1";
-#else
-    full += " 2>&1";
-#endif
-
-    FILE* pipe = x_popen(full.c_str(), "r");
-    if (!pipe) return "failed to start process";
-
-    std::string out;
-    char buf[4096];
-    size_t cap = 8 * 1024 * 1024;   // bounded output
-    while (fgets(buf, sizeof(buf), pipe)) {
-        out += buf;
-        if (out.size() > cap) { out.append("\n...[output truncated]\n"); break; }
+    // G: use the native runner for INDEPENDENT stdout/stderr capture and
+    // accurate launch/timeout status (x_popen merges stderr into stdout).
+    const int timeoutMs = (timeout_minutes > 0 ? timeout_minutes : 1) * 60 * 1000;
+    const NativeProcessResult pr =
+        NativeProcess::execute("cmd.exe", {"/c", cmd}, "", timeoutMs);
+    exit_code = pr.exitCode;
+    std::string out = pr.stdoutOutput + pr.stderrOutput;
+    if (out.size() > 8 * 1024 * 1024) {
+        out.resize(8 * 1024 * 1024);
+        out.append("\n...[output truncated]\n");
     }
-    exit_code = x_pclose(pipe);
 
     // RAWRXD_ACCEPTANCE: evaluate the captured outcome. A route that guarantees a
     // success marker declares it via RAWRXD_ACCEPTANCE_MARKER; ordinary shell
     // commands leave it unset and are judged on exit code and timeout only.
     {
         rawrxd::ProcessOutcome outcome;
-        outcome.launched   = (exit_code != -1);
-        outcome.exitCode   = exit_code;
-        outcome.stdoutText = out;
+        outcome.launched   = (pr.exitCode != -1) && pr.error.empty();
+        outcome.exitCode   = pr.exitCode;
+        outcome.timedOut   = pr.timedOut;
+        outcome.error      = pr.error;
+        outcome.stdoutText = pr.stdoutOutput;
+        outcome.stderrText = pr.stderrOutput;
         rawrxd::AcceptanceCriteria criteria;
         criteria.expectedExit = 0;
         if (const char* m = std::getenv("RAWRXD_ACCEPTANCE_MARKER"); m && *m)
