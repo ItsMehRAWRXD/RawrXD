@@ -3367,9 +3367,11 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         }
 
         // SwiGLU: silu(gate) * up, into this expert's own h slot.
+        // silu(x) = x * sigmoid(x); omitting the leading g[j] factor computes
+        // sigmoid(gate) * up, which is not SwiGLU and changes every MoE expert.
         for (size_t j = 0; j < ffn; ++j)
         {
-            const float s = 1.0f / (1.0f + std::exp(-g[j]));
+            const float s = g[j] / (1.0f + std::exp(-g[j]));
                     hAll[e * ffn + j] = s * u[j];
         }
     }
