@@ -100,6 +100,13 @@ inline TokenizerBundle LoadTokenizerFromGGUF(const char* path) {
     // Special tokens. Only trusted when present; defaults otherwise.
     if (loader.hasMeta("tokenizer.ggml.bos_token_id"))
         b.special.bosId = static_cast<int>(loader.getMetaInt("tokenizer.ggml.bos_token_id", b.special.bosId));
+    // BOS insertion policy. Presence of a bos id is not consent to prepend it;
+    // only an explicit tokenizer.ggml.add_bos_token=true authorises insertion.
+    // The Specified flag keeps "absent" distinguishable from "explicitly false".
+    if (loader.hasMeta("tokenizer.ggml.add_bos_token")) {
+        b.special.addBosToken = loader.getMetaInt("tokenizer.ggml.add_bos_token", 0) != 0;
+        b.special.addBosTokenSpecified = true;
+    }
     if (loader.hasMeta("tokenizer.ggml.eos_token_id"))
         b.special.eosId = static_cast<int>(loader.getMetaInt("tokenizer.ggml.eos_token_id", b.special.eosId));
     if (loader.hasMeta("tokenizer.ggml.unknown_token_id"))
