@@ -1465,6 +1465,15 @@ bool VulkanCompute::endSubmitWait(
     GpuWorkInterval* interval, uint64_t timeoutNs)
 {
     if (!cmd) return false;
+    // RAWRXD_GUARD_5: once the device has been lost, refuse every further
+    // submission so callers fail fast instead of executing on a dead queue.
+    // Reuses the existing deviceLostCount_ marker (no second flag).
+    if (deviceLostCount_ != 0) {
+        std::fprintf(stderr, "[GPU] endSubmitWait refused: device_lost=%llu\n",
+                     (unsigned long long)deviceLostCount_);
+        std::fflush(stderr);
+        return false;
+    }
     std::unique_lock<std::recursive_mutex> globalLock;
     const bool globalSerial = GlobalGpuSerialEnabled();
     uint64_t globalSeq = 0;
