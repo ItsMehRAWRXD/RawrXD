@@ -1,14 +1,45 @@
-PID=28864
-HWND=91949506 ALIVE=True
+================================================================
+SUPERSEDED - INVALID MEASUREMENT (do not cite as product evidence)
+================================================================
+The combo readings below are INVALID. The probe read the
+SendMessageTimeoutW return value (a success flag) as if it were the
+combo item count / selection index. CB_COUNT=1 and CB_CURSEL=1 are
+transport artifacts, not real combo state.
+
+Corrected evidence:
+  - In-process discovery trace: commit c34903c5a7
+    (src/win32app/Win32IDE.cpp [MODEL_*] instrumentation).
+  - External enumeration (control 1206): commit 49feb27d28
+    (evidence/same_sha_acceptance_20261119/gui_model_selector_probe3.ps1,
+     model_probe3_result.txt): FINAL COUNT=234 CURSEL=0 BLANK_ITEMS=0.
+
+Original content preserved verbatim below for auditability.
+================================================================
+
+PID=32244
+HWND=25101640 ALIVE=True
 IDS=
 CB_COUNT=1 CB_CURSEL=1
 AFTER_SELCHANGE alive=True
-CTRL input1202=8259748 send1204=73270496 output1203=76089716
-CHIN_STAGE=True PROMPT=[What is 2+2?] ALIVE=True
-OUT_LEN=10 at=38s TEXT=[<no-reply>]
-PROMPT_DONE delta=-65 alive=True
-CHIN_STAGE=False PROMPT=[Name one color.] ALIVE=True
-EXITED code=0 after=16.9s
-PROMPT_DONE delta=0 alive=False
+CTRL input1202=394028 send1204=133372 output1203=393828
+CHIN_STAGE=True PROMPT=[ping] ALIVE=True
+OUT_LEN=92 at=29s TEXT=[Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+AI:   Hello! I']
+OUT_LEN=168 at=30s TEXT=[Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+AI:   Hello! I'm BigDaddyG Productivity Mode, and I'm here to help you with your questions.]
+OUT_LEN=200 at=31s TEXT=[Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+AI:   Hello! I'm BigDaddyG Productivity Mode, and I'm here to help you with your questions. How can I assist you today?
+
+]
+PROMPT_DONE delta=125 alive=True
 ---- STDERR ----
 NO_GPU_WITNESS
