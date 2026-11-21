@@ -1,6 +1,7 @@
-﻿// ============================================================================
+// ============================================================================
 // runtime_graph_executor.cpp  --  RAWRXD_DEEP2_RUNTIME_DISPATCH
 // ============================================================================
+#include <fstream>
 #include "runtime_graph_executor.hpp"
 #include <limits>
 
@@ -2796,6 +2797,9 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const bool moeDump = moeDumpDir && *moeDumpDir &&
                          (moeDumpBlock < 0 || moeDumpBlock == moe.block);
     const char* moeSide = force_cpu_ ? "cpu" : "gpu";
+    std::vector<float> gUsed;
+    std::vector<float> uUsed;
+    if (std::getenv("RAWRXD_MOE_TRACE")) { std::fprintf(stderr, "[MOE_PATH] block=%d side=%s`n", (int)moe.block, moeSide); std::fflush(stderr); }
     auto dumpMoe = [&](const char* tag, const float* data, size_t count) {
         if (!moeDump || !data || count == 0) return;
         char path[1024];
@@ -3288,6 +3292,20 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                                                      gIn, out, glen, cpu, q8up.data(),
                                                      q8upBytes, force_cpu_);
                 if (ok) gateDone[e] = 1;
+                    // Bank capture (diagnostic only). Queued work is skipped:
+                    // gateDone[e] there means "submitted", not "host-visible".
+                    if (moe.block == 1 && e < 6) {
+                        if (const char* cd = std::getenv("RAWRXD_GEMV_CAPTURE")) {
+                            if (*cd) {
+                                const std::string sd = force_cpu_ ? "cpu" : "gpu";
+                                const std::string bp = std::string(cd) + "/" + sd + "_bank_e" +
+                                                       std::to_string(e) + "_gate.f32";
+                                std::ofstream fbo(bp, std::ios::binary);
+                                if (fbo) fbo.write(reinterpret_cast<const char*>(&gAll[e * ffn]),
+                                                   static_cast<std::streamsize>(ffn * sizeof(float)));
+                            }
+                        }
+                    }
                 account(ok, gateT->name.c_str(), ex);
             }
         }
@@ -3323,8 +3341,8 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             std::fclose(f);
         }
     }
-    dumpMoe("up", uAll.data(), uAll.size());
-    dumpMoe("gate", gAll.data(), gAll.size());
+    // gate/up are dumped after the activation loop: gAll/uAll are batched banks
+    // and can be stale; the operands actually consumed are the per-expert g[j]/u[j].
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
@@ -3358,7 +3376,43 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             }
         }
         if (have_gate && !gateDone[e]) {
-            std::string row_failure;
+            // GEMV-SAME-BYTES capture: dump the exact input vector, the raw
+            // quantized gate row for this expert, and the projection result
+            // BEFORE it is copied into the expert bank. Env-gated and limited to
+            // block 1 so a normal run is untouched.
+            if (const char* capDir = std::getenv("RAWRXD_GEMV_CAPTURE")) {
+                if (*capDir && moe.block == 1 && gateT && gateT->data && ex < 6) {
+                    const std::string side = force_cpu_ ? "cpu" : "gpu";
+                    const std::string pfx = std::string(capDir) + "/" + side + "_e" + std::to_string(ex);
+                    {
+                        std::ofstream fi(pfx + "_in.f32", std::ios::binary);
+                        if (fi) fi.write(reinterpret_cast<const char*>(x.data()),
+                                        static_cast<std::streamsize>(x.size() * sizeof(float)));
+                    }
+                    {
+                        std::ofstream fw(pfx + "_gate.raw", std::ios::binary);
+                        if (fw) fw.write(reinterpret_cast<const char*>(gateT->data + ex * elemStrideG),
+                                        static_cast<std::streamsize>(elemStrideG));
+                    }
+                    {
+                        std::ofstream fm(pfx + "_meta.txt");
+                        if (fm) {
+                            fm << "side=" << side << "\nexpert_slot=" << ex
+                               << "\nblock=" << moe.block << "\ngguf_type=" << gateT->gguf_type
+                               << "\nelem_stride=" << elemStrideG << "\nglen=" << glen
+                               << "\ngate_bytes=" << gateT->bytes << "\ndata_offset="
+                               << (gateT->data ? (reinterpret_cast<const char*>(gateT->data + ex * elemStrideG) -
+                                                  reinterpret_cast<const char*>(gateT->data)) : 0)
+                               << "\n";
+                        }
+                    }
+                    {
+                        std::ofstream fr(pfx + "_gate_raw_result.f32", std::ios::binary);
+                        if (fr) fr.write(reinterpret_cast<const char*>(g.data()),
+                                        static_cast<std::streamsize>(glen * sizeof(float)));
+                    }
+                }
+            }            std::string row_failure;
             if (!QuantizedRowsDot(*gateT, ex * elemStrideG, gIn, glen, x, g, row_failure)) {
                 err = "moe: gate expert slice dequant failed (block=" + std::to_string(moe.block) +
                       " expert=" + std::to_string(ex) + "): " + row_failure;
@@ -3373,10 +3427,27 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         {
             const float s = g[j] / (1.0f + std::exp(-g[j]));
                     hAll[e * ffn + j] = s * u[j];
+                    if (moeDump) {
+                        if (gUsed.size() < (e + 1) * ffn) {
+                            gUsed.resize((e + 1) * ffn);
+                            uUsed.resize((e + 1) * ffn);
+                        }
+                        gUsed[e * ffn + j] = g[j];
+                        uUsed[e * ffn + j] = u[j];
+                    }
+                    if (e == 4 && j == 745 && std::getenv("RAWRXD_MOE_TRACE")) {
+                        std::fprintf(stderr, "[MOE_OPERAND] block=%d gate=%.9g up=%.9g hidden=%.9g`n",
+                            (int)moe.block, (double)g[j], (double)u[j], (double)hAll[e * ffn + j]);
+                        std::fflush(stderr);
+                    }
         }
     }
     // Diagnostic snapshot: capture hidden immediately after SwiGLU,
     // owning its memory so the snapshot survives any later buffer reuse.
+    if (moeDump && gUsed.size() == hAll.size()) {
+        dumpMoe("gate", gUsed.data(), gUsed.size());
+        dumpMoe("up", uUsed.data(), uUsed.size());
+    }
     std::vector<float> hidden_snapshot(hAll.begin(), hAll.end());
     dumpMoe("hidden_snapshot", hidden_snapshot.data(), hidden_snapshot.size());
     dumpMoe("hidden", hAll.data(), hAll.size());
@@ -4649,8 +4720,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             // the budgeted LRU path (vulkan_compute.cpp:3000) still reclaims
             // under pressure, so retain the quantised expert slices instead of
             // flushing the whole cache. Non-Strata execution is unchanged.
-            if (!StrataExpertTracking())
-                (void)QuantDot::TrimUnpinnedQuantWeights();
+            // Always run the block-boundary trim: it performs the mandatory
+            // device-idle wait, unpin and lifetime cleanup. Whether the *contents*
+            // are dropped is decided inside VulkanCompute by the explicit
+            // retention policy (RAWRXD_STRATA_P1B), not by expert tracking.
+            (void)QuantDot::TrimUnpinnedQuantWeights();
             residency_block = in.block;
         }
         // FLIGHT RECORDER: publish progress for this op BEFORE executing it, so

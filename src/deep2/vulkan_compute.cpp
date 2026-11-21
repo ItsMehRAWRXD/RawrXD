@@ -3832,6 +3832,9 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
         return e && e[0] == '1';
     }();
     if (!s_lwRetention)
+        // RAWRXD_STRATA_P1B: the device-idle wait and UnpinAllWeights above are
+    // mandatory cleanup; only the discretionary content drop is policy-controlled.
+    if (!(::RawrXD::Deep2::QuantDot::WeightCacheRetention()))
         clearWeightCache();
     // The direct-resident/RCU path is a second owner of streamed weights and
     // is not represented by weightCache_.  In a block-serial graph no command
