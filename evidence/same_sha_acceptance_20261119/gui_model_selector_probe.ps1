@@ -70,7 +70,7 @@ while ((Get-Date) -lt $ctrlDeadline -and $combo -eq [IntPtr]::Zero) {
 
 function Get-ComboText([IntPtr]$h, [int]$index) {
     $r0 = [IntPtr]::Zero
-    $n = [MP.Api]::SendTO($h, 0x0150, [IntPtr]$index, [IntPtr]::Zero, 0x12, 4000, [ref]$r0)  # CB_GETLBTEXTLEN
+    [void][MP.Api]::SendTO($h, 0x0150, [IntPtr]$index, [IntPtr]::Zero, 0x12, 4000, [ref]$r0); $n = $r0  # CB_GETLBTEXTLEN result via out-param
     if ($n.ToInt64() -le 0) { return "" }
     $sb = New-Object System.Text.StringBuilder ([int]$n.ToInt64() + 2)
     $o = [MP.Api]::SendTOGetText($h, 0x0148, [IntPtr]$index, $sb, 0x12, 4000, [ref]$r0)   # CB_GETLBTEXT

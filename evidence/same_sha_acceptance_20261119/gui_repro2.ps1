@@ -19,6 +19,8 @@ Add-Type -Namespace R2 -Name Api -MemberDefinition @'
 public static extern IntPtr SendTO(IntPtr h, uint m, IntPtr w, IntPtr l, uint f, uint ms, out IntPtr r);
 [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageTimeoutW")]
 public static extern IntPtr SendTOGetText(IntPtr h, uint m, IntPtr w, System.Text.StringBuilder l, uint f, uint ms, out IntPtr r);
+[DllImport("user32.dll", CharSet=CharSet.Auto, EntryPoint="SendMessageTimeoutW")]
+public static extern IntPtr SendTOA(IntPtr h, uint m, IntPtr w, IntPtr l, uint f, uint ms, out IntPtr r);
 public delegate bool EnumProc(IntPtr h, IntPtr p);
 '@
 
@@ -101,14 +103,59 @@ while ((Get-Date) -lt $ctrlDeadline) {
     Start-Sleep -Milliseconds 700
 }
 $combo = $script:ctrl[1206]; $input = $script:ctrl[1202]; $send = $script:ctrl[1204]; $out = $script:ctrl[1203]
-$r = [IntPtr]::Zero
-$count = [R2.Api]::SendTO($combo, 0x0146, [IntPtr]::Zero, [IntPtr]::Zero, $flags, 5000, [ref]$r)
-$sel = [R2.Api]::SendTO($combo, 0x0147, [IntPtr]::Zero, [IntPtr]::Zero, $flags, 5000, [ref]$r)
-L "MODEL_ITEMS=$count MODEL_CURSEL=$sel"
-if ($count -gt 0) {
-    [void][R2.Api]::SendTO($combo, 0x014E, [IntPtr]0, [IntPtr]::Zero, $flags, 5000, [ref]$r)
-    [void][R2.Api]::SendTO($root, 0x0111, [IntPtr](((1 -shl 16) -bor 1206)), $combo, 0x12, 5000, [ref]$r)
-    Start-Sleep -Seconds 6
+
+# --- model combo: one HWND for every operation, with text enumeration ---
+function Get-ComboText([IntPtr]$h, [int]$index) {
+    $len = [ IntPtr ]::Zero
+    $r0 = [IntPtr]::Zero
+    [void][R2.Api]::SendTO($h, 0x0150, [IntPtr]$index, [IntPtr]::Zero, 0x12, 4000, [ref]$r0); $n = $r0.ToInt64()  # CB_GETLBTEXTLEN
+    if ($n -le 0) { return "" }
+    $sb = New-Object System.Text.StringBuilder ($n + 2)
+    $o = [R2.Api]::SendTOGetText($h, 0x0148, [IntPtr]$index, $sb, 0x12, 4000, [ref]$r0)  # CB_GETLBTEXT 0x0148
+    if ($o -eq [IntPtr]::Zero) { return "" }
+    return $sb.ToString()
+}
+
+$comboText = ""
+$count = 0
+$sel = -1
+if ($combo -ne $null -and $combo -ne [IntPtr]::Zero) {
+    $r0 = [IntPtr]::Zero
+    $count = 0; $sel = -1
+    [void][R2.Api]::SendTO($combo, 0x0146, [IntPtr]::Zero, [IntPtr]::Zero, 0x12, 5000, [ref]$r0)
+    $count = [int]$r0.ToInt64()
+    [void][R2.Api]::SendTO($combo, 0x0147, [IntPtr]::Zero, [IntPtr]::Zero, 0x12, 5000, [ref]$r0)
+    $sel = [int]$r0.ToInt64()
+    L ("COMBO_HWND={0} ID={1} COUNT={2} CURSEL={3}" -f $combo, [R2.Api]::GetDlgCtrlID($combo), $count, $sel)
+    for ($k = 0; $k -lt [Math]::Min($count, 8); $k++) {
+        $t = Get-ComboText $combo $k
+        L ("  ITEM[{0}]='{1}'" -f $k, $t)
+    }
+    $want = Split-Path $Model -Leaf
+    $match = -1
+    for ($k = 0; $k -lt $count; $k++) {
+        $t = Get-ComboText $combo $k
+        if ($t -like "*$want*") { $match = $k; break }
+    }
+    if ($match -lt 0 -and $count -gt 0) { $match = 0 }
+    if ($match -ge 0) {
+        $r1 = [IntPtr]::Zero
+        [void][R2.Api]::SendTO($combo, 0x014E, [IntPtr]$match, [IntPtr]::Zero, 0x12, 5000, [ref]$r1)
+        [void][R2.Api]::SendTO($root, 0x0111, [IntPtr](((1 -shl 16) -bor 1206)), $combo, 0x12, 5000, [ref]$r1)
+        Start-Sleep -Seconds 6
+        $sel = $match
+        $comboText = $want
+        L ("MODEL_SELECTED index={0} text='{1}' alive={2}" -f $sel, $comboText, (-not $p.HasExited))
+    }
+}
+
+$selectionValid = ($count -gt 0 -and $sel -ge 0 -and $sel -lt $count)
+L ("MODEL_SELECTION_READY={0}" -f $selectionValid)
+if (-not $selectionValid) {
+    L "RESULT=MODEL_SELECTION_NOT_READY"
+    $entries | Out-File -FilePath $Out -Encoding utf8
+    if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+    exit 4
 }
 L "ALIVE_BEFORE_SEND=$(-not $p.HasExited)"
 L "CHIN=$([Chin4]::Stage($root, $Prompt))"

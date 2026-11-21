@@ -1,0 +1,13 @@
+﻿PID=27484
+CTRL 1226 COUNT=3 CURSEL=2
+  1226 ITEM[0]='Deep2 (Vulkan)'
+  1226 ITEM[1]='Strata (Deep2 + residency)'
+  1226 ITEM[2]='Ollama (HTTP)'
+CTRL 1226 BLANK_ITEMS=0
+CTRL 1206 COUNT=234 CURSEL=0
+  1206 ITEM[0]='Local models / Ollama / bigdaddyg-productivity-local:latest'
+  1206 ITEM[1]='Local models / Ollama / bigdaddyg-productivity-native:latest'
+  1206 ITEM[2]='Local models / Ollama / bigdaddyglocal:latest'
+CTRL 1206 BLANK_ITEMS=0
+NATURAL_EXIT=False
+DONE

@@ -102,7 +102,7 @@ if ($input -eq $null -or $input -eq [IntPtr]::Zero -or $send -eq $null -or $send
 
 # ---- model selection (production combo) ----
 $res = [IntPtr]::Zero
-$count = [W.Api]::SendTO($modelCombo, 0x0146, [IntPtr]::Zero, [IntPtr]::Zero, $flags, $MsgTimeoutMs, [ref]$res)
+[void][W.Api]::SendTO($modelCombo, 0x0146, [IntPtr]::Zero, [IntPtr]::Zero, $flags, $MsgTimeoutMs, [ref]$res); $count = $res.ToInt64()
 L "MODEL_ITEMS=$count"
 if ($count -gt 0) {
     [void][W.Api]::SendTO($modelCombo, 0x014E, [IntPtr]0, [IntPtr]::Zero, $flags, $MsgTimeoutMs, [ref]$res)

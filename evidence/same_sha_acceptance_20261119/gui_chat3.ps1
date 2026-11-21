@@ -51,7 +51,7 @@ public static class Chin {
 $flags = 0x12
 $log = New-Object System.Collections.ArrayList
 function L([string]$m) { [void]$log.Add($m); Write-Output $m }
-function TO([IntPtr]$h,[uint32]$m) { $r=[IntPtr]::Zero; return [G.Api]::SendTO($h,$m,[IntPtr]::Zero,[IntPtr]::Zero,$flags,4000,[ref]$r) }
+function TO([IntPtr]$h,[uint32]$m) { $r=[IntPtr]::Zero; [void][G.Api]::SendTO($h,$m,[IntPtr]::Zero,[IntPtr]::Zero,$flags,4000,[ref]$r); return $r }
 function ReadT([IntPtr]$h,[int]$cap=200000) {
     $sb=New-Object System.Text.StringBuilder $cap
     $r=[IntPtr]::Zero
@@ -65,7 +65,7 @@ Start-Sleep -Seconds 3
 if (Test-Path $StderrPath) { Remove-Item $StderrPath -Force -ErrorAction SilentlyContinue }
 
 $proc = Start-Process -FilePath $Exe -PassThru -RedirectStandardError $StderrPath `
-    -Environment @{ RAWRXD_DEEP2_PROBE_MODEL = $Model }
+    -Environment @{ RAWRXD_DEEP2_PROBE_MODEL = $Model; RAWRXD_CHAT_BACKEND = "deep2"; RAWRXD_MODEL_PATH = $Model; RAWRXD_CHAT_DEEP2_SYNC = $env:RAWRXD_CHAT_SYNC }
 L "PID=$($proc.Id)"
 $root=[IntPtr]::Zero
 $deadline=(Get-Date).AddSeconds($StartupSec)
@@ -93,7 +93,14 @@ $ccb=[G.Api+EnumProc]{
     if (-not $script:ctrl.ContainsKey($id)) { $script:ctrl[$id]=$h }
     return $true
 }
-[void][G.Api]::EnumChildWindows($root,$ccb,[IntPtr]::Zero)
+# The chat sidebar is created during startup; poll until the controls exist.
+$ctrlDeadline = (Get-Date).AddSeconds(25)
+while ((Get-Date) -lt $ctrlDeadline) {
+    $script:ctrl=@{}
+    [void][G.Api]::EnumChildWindows($root,$ccb,[IntPtr]::Zero)
+    if ($script:ctrl.ContainsKey(1202) -and $script:ctrl.ContainsKey(1204) -and $script:ctrl.ContainsKey(1203)) { break }
+    Start-Sleep -Milliseconds 800
+}
 L "IDS=" + (($script:ctrl.Keys | Sort-Object) -join ",")
 $combo=$script:ctrl[1206]
 L "CB_COUNT=$(TO $combo 0x0146) CB_CURSEL=$(TO $combo 0x0147)"
@@ -103,6 +110,12 @@ $r0=[IntPtr]::Zero
 Start-Sleep -Seconds 10
 L "AFTER_SELCHANGE alive=$(-not $proc.HasExited)"
 $input=$script:ctrl[1202]; $send=$script:ctrl[1204]; $out=$script:ctrl[1203]
+if ($null -eq $input -or $null -eq $send -or $null -eq $out) {
+    L "CONTROL_RESOLVE_FAILED ids=" + (($script:ctrl.Keys | Sort-Object) -join ",")
+    $log | Out-File $OutFile -Encoding utf8
+    if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+    exit 4
+}
 L "CTRL input1202=$input send1204=$send output1203=$out"
 
 foreach ($prompt in $Prompts) {
@@ -122,7 +135,7 @@ foreach ($prompt in $Prompts) {
             $tail=$txt; if ($tail.Length -gt 400) { $tail=$tail.Substring($tail.Length-400) }
             L ("OUT_LEN=$len at=$([int]((Get-Date)-$t0).TotalSeconds)s TEXT=[" + $tail + "]")
             $last=$len; $stable=0
-        } else { $stable++; if ($stable -ge 3 -and $len -gt $base) { break } }
+        } else { $stable++; if ($stable -ge 15 -and $len -gt $base) { break } }
     }
     L ("PROMPT_DONE delta={0} alive={1}" -f ($last-$base), (-not $proc.HasExited))
 }
@@ -136,3 +149,6 @@ if (Test-Path $StderrPath) {
 $log | Out-File -FilePath $OutFile -Encoding utf8
 if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
 Write-Output "OUT=$OutFile"
+
+
+
