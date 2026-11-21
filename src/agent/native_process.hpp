@@ -27,8 +27,22 @@ public:
                                        int timeoutMs) {
         NativeProcessResult result;
         if (command.empty() || timeoutMs <= 0) { result.error = "INVALID_ARGUMENT"; return result; }
-        std::string line = "\"" + command + "\"";
-        for (const auto& arg : args) line += " \"" + arg + "\"";
+        // G: shell-mediated (cmd.exe /c ...) must pass the command UNQUOTED;
+        // direct executables use standard argv quoting.
+        std::string line;
+        const bool isShell = (command == "cmd.exe" || command == "cmd" ||
+                              command == "C:\\Windows\\System32\\cmd.exe");
+        if (isShell && !args.empty() &&
+            (args[0] == "/c" || args[0] == "/C" || args[0] == "/k" || args[0] == "/K")) {
+            line = "\"" + command + "\" " + args[0];
+            for (size_t i = 1; i < args.size(); ++i) {
+                if (i > 1) line += " ";
+                line += args[i];
+            }
+        } else {
+            line = "\"" + command + "\"";
+            for (const auto& arg : args) line += " \"" + arg + "\"";
+        }
         auto wide = [](const std::string& s) {
             const int n = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
             std::wstring w(static_cast<size_t>(n), L'\0');
