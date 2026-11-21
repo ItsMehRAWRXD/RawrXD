@@ -2653,6 +2653,10 @@ endif()
 if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
     add_library(rawrxd_gpu_compute STATIC
         src/deep2/vulkan_compute.cpp
+        # G44 link fix: vulkan_compute.cpp calls QuantDot::WeightCacheRetention();
+        # keep the policy definition in the same library so consumers do not need
+        # executable-specific symbol injection.
+        src/deep2/quant_dot_dispatch.cpp
         src/deep2/QuantKernelRegistry.cpp
         # QuantKernelRegistry's real fallback/registration owners live in the
         # shared Deep2 asm_stubs translation unit.  Keep this dependency on
@@ -2677,6 +2681,7 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
         add_dependencies(rawrxd_gpu_compute deep2_tiled4x_qgemv_shader)
     endif()
     target_include_directories(rawrxd_gpu_compute PUBLIC
+        ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src
         # Must precede include/ so "vulkan_compute.h" resolves to the
         # Deep2::VulkanCompute definition this library implements.
