@@ -124,7 +124,7 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
 int main(int argc, char** argv)
 {
     std::string model, promptText = "The capital of France is";
-    std::string outdir = "strata_chat_out", tag = "run";
+    std::string outdir = "strata_chat_out", tag = "run", logitsOut;
     int maxNew = 32;
     int cancelAfter = -1;
     int policy = 0;  // 0 = lru
@@ -141,6 +141,7 @@ int main(int argc, char** argv)
         else if (a == "--policy" && i + 1 < argc) policy = std::atoi(argv[++i]);
         else if (a == "--device" && i + 1 < argc) devicePin = std::atoi(argv[++i]);
         else if (a == "--outdir" && i + 1 < argc) outdir = argv[++i];
+        else if (a == "--logits-out" && i + 1 < argc) logitsOut = argv[++i];
         else if (a == "--tag" && i + 1 < argc) tag = argv[++i];
         else if (a == "--cpu") gpu = false;
         else if (a == "--gpu") gpu = true;
@@ -150,7 +151,7 @@ int main(int argc, char** argv)
     if (model.empty() || maxNew < 1) {
         std::printf("usage: deep2_strata_chat.exe --model <gguf> [--prompt TEXT] "
                     "[--max-new N] [--gpu|--cpu] [--device N] [--strata|--no-strata] "
-                    "[--policy N] [--cancel-after N] [--outdir D] [--tag T]\n");
+                    "[--policy N] [--cancel-after N] [--logits-out PATH] [--outdir D] [--tag T]\n");
         return 2;
     }
 
@@ -165,7 +166,19 @@ int main(int argc, char** argv)
         std::printf("TOKENIZE_EMPTY: no tokens for prompt\n");
         return 1;
     }
-    std::vector<uint32_t> prompt(ids.begin(), ids.end());
+    // Prepend the model's own BOS when the GGUF declares one and requests it.
+    // llama.cpp adds BOS for this arch (add_bos_token=true, bos_token_id=100000),
+    // so omitting it conditions the model without a sequence start and the
+    // continuation degenerates. The id comes from metadata, never hardcoded.
+    const auto& special = tok.GetSpecialTokens();
+    std::vector<uint32_t> prompt;
+    // Duplicate-safe: never prepend when the encoded prompt already starts with
+    // the model's own BOS, and only when the GGUF declares one.
+    if (special.bosId >= 0 && (ids.empty() || ids.front() != special.bosId))
+        prompt.push_back(static_cast<uint32_t>(special.bosId));
+    prompt.insert(prompt.end(), ids.begin(), ids.end());
+    std::printf("BOS %s (id=%d)\n",
+                prompt.size() > ids.size() ? "prepended" : "absent", special.bosId);
     std::printf("PROMPT_TOKENS %zu\n", prompt.size());
     for (size_t i = 0; i < prompt.size(); ++i)
         std::printf("  in[%zu]=%u '%s'\n", i, prompt[i],
@@ -213,8 +226,41 @@ int main(int argc, char** argv)
     std::printf("prefill_done %.1f ms\n", prefillMs);
     std::fflush(stdout);
 
+    // ---- logit instrumentation -------------------------------------------
+    // Prints the top-k candidates, a full-vector checksum and the non-finite
+    // count for the CURRENT Logits() buffer. Comparing these across positions
+    // separates "prefill is wrong" from "decode does not advance state", which
+    // no single scalar (TPS, hit rate) can distinguish.
+    auto dumpLogits = [&](const char* tag, size_t pos) {
+        const std::vector<float>& lg = ex.Logits();
+        std::vector<int> idx(lg.size());
+        for (size_t i = 0; i < lg.size(); ++i) idx[i] = static_cast<int>(i);
+        const size_t k = std::min<size_t>(5, idx.size());
+        std::partial_sort(idx.begin(), idx.begin() + k, idx.end(),
+                          [&](int a, int b) { return lg[a] > lg[b]; });
+        double sum = 0.0, sumsq = 0.0;
+        uint64_t nonfinite = 0;
+        for (float v : lg) {
+            sum += v;
+            sumsq += static_cast<double>(v) * v;
+            if (!std::isfinite(v)) ++nonfinite;
+        }
+        std::printf("LOGITS %s pos=%zu n=%zu sum=%.6f sumsq=%.6f nonfinite=%llu top=",
+                    tag, pos, lg.size(), sum, sumsq,
+                    static_cast<unsigned long long>(nonfinite));
+        for (size_t i = 0; i < k; ++i)
+            std::printf("%s%d:%.6f", i ? "," : "", idx[i], lg[idx[i]]);
+        std::printf("\n");
+        std::fflush(stdout);
+    };
+    dumpLogits("prefill_last", prompt.size() - 1);
+
     // ---- decode: stream every token as it is produced ---------------------
     std::vector<uint32_t> generated;
+    std::FILE* logitsFile = nullptr;
+    if (!logitsOut.empty()) {
+        if (fopen_s(&logitsFile, logitsOut.c_str(), "wb") != 0) logitsFile = nullptr;
+    }
     const auto decT0 = std::chrono::steady_clock::now();
     uint32_t next = prompt.back();
     bool cancelled = false;
@@ -225,6 +271,14 @@ int main(int argc, char** argv)
             break;
         }
         const uint64_t pick = ArgMax(ex.Logits());
+        dumpLogits("decode", prompt.size() + static_cast<size_t>(step));
+        if (logitsFile) {
+            const std::vector<float>& lg = ex.Logits();
+            const uint64_t n = (uint64_t)lg.size();
+            std::fwrite(&n, sizeof(n), 1, logitsFile);
+            if (n) std::fwrite(lg.data(), sizeof(float), (size_t)n, logitsFile);
+            std::fflush(logitsFile);
+        }
         if (pick == 0 && step > 0) {
             std::printf("EOS at step=%d\n", step);
             break;
@@ -259,6 +313,7 @@ int main(int argc, char** argv)
                 (unsigned long long)ledger.evictions,
                 ledger.hit_rate,
                 (unsigned long long)ledger.distinct_experts);
+    if (logitsFile) std::fclose(logitsFile);
     std::printf("CHAT_STATUS %s\n", cancelled ? "CANCELLED"
                                                : (generated.empty() ? "EMPTY" : "OK"));
     WriteReceipt(outdir, tag, model, promptText, prompt, generated, cancelled,
