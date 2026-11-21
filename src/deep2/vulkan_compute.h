@@ -537,6 +537,10 @@ public:
     // Complete all synchronous work, then reclaim every unpinned streamed
     // weight allocation.  This is the block-boundary residency operation used
     // by the graph executor for models larger than device-local VRAM.
+    // RAWRXD_STRATA_P1A: independent retention policy. When enabled, the
+    // block-boundary trim keeps resident quant slices instead of flushing.
+    void SetWeightCacheRetention(bool enabled) { weight_cache_retention_ = enabled; }
+    bool WeightCacheRetention() const { return weight_cache_retention_; }
     bool TrimUnpinnedWeightCache(uint32_t completedBlock = UINT32_MAX);
     // MoE graph ownership barrier. While held, resident-object eviction is
     // refused so a fused expert graph cannot lose a published weight view.
@@ -1612,6 +1616,9 @@ private:
     int lastLostVk_ = 0;
     const char* lastLostPhase_ = "none";
     uint64_t deviceLostCount_ = 0;
+    // Current logical-device health (RAWRXD_GUARD_5). Set on any
+    // VK_ERROR_DEVICE_LOST result and cleared only by explicit recreation.
+    std::atomic<bool> device_lost_{false};
     GpuLost::Seq lostSeq_{};
     uint64_t nextBufferId_ = 1;
     uint64_t workEpoch_ = 0;
@@ -1682,6 +1689,7 @@ private:
 
     size_t weightBudgetBytes_ = 0;
     size_t weightCacheBytes_ = 0;
+    bool weight_cache_retention_ = false;
     // Total Vulkan allocations owned by this compute instance, including
     // arenas and scratch buffers outside the quantized-weight cache.
     size_t liveDeviceBytes_ = 0;

@@ -1468,9 +1468,9 @@ bool VulkanCompute::endSubmitWait(
     // RAWRXD_GUARD_5: once the device has been lost, refuse every further
     // submission so callers fail fast instead of executing on a dead queue.
     // Reuses the existing deviceLostCount_ marker (no second flag).
-    if (deviceLostCount_ != 0) {
+    if (lostSeq_.lost) {
         std::fprintf(stderr, "[GPU] endSubmitWait refused: device_lost=%llu\n",
-                     (unsigned long long)deviceLostCount_);
+                     (unsigned long long)device_lost_.load());
         std::fflush(stderr);
         return false;
     }
@@ -1526,6 +1526,9 @@ bool VulkanCompute::endSubmitWait(
     }
     VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
     if (submit != VK_SUCCESS) {
+        // RAWRXD_GUARD_5: latch current-device health so dispatch, submission
+        // and readback fail closed instead of using a dead queue.
+        device_lost_.store(true);
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",
                      static_cast<int>(submit));
         std::fflush(stderr);
@@ -1939,7 +1942,7 @@ bool VulkanCompute::downloadFromBuffer(
     // RAWRXD_GUARD_5: after VK_ERROR_DEVICE_LOST the queue and buffers are
     // invalid; refuse new work so callers abort the request instead of consuming
     // zeroed or stale results.
-    if (deviceLostCount_ != 0) return false;
+    if (lostSeq_.lost) return false;
 
     if (!src || !dst || !bytes || bytes > src.size) return false;
 
@@ -4069,7 +4072,7 @@ bool VulkanCompute::DispatchGemvDevice(
     // RAWRXD_GUARD_5: after VK_ERROR_DEVICE_LOST the queue and buffers are
     // invalid; refuse new work so callers abort the request instead of consuming
     // zeroed or stale results.
-    if (deviceLostCount_ != 0) return false;
+    if (lostSeq_.lost) return false;
 
     if(!weights||!rows||!cols||rows*sizeof(float)>output.size ||
        cols*sizeof(float)>input.size) return false;
@@ -4093,7 +4096,7 @@ bool VulkanCompute::DispatchGemvQuant(
     // RAWRXD_GUARD_5: after VK_ERROR_DEVICE_LOST the queue and buffers are
     // invalid; refuse new work so callers abort the request instead of consuming
     // zeroed or stale results.
-    if (deviceLostCount_ != 0) return false;
+    if (lostSeq_.lost) return false;
 
     // The original gate only covered very large Q4_K projections, which hid the
     // failure stage for every other shape. Honour the forward-trace switch too
