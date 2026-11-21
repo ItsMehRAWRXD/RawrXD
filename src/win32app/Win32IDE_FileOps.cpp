@@ -1204,7 +1204,7 @@ void Win32IDE::saveIdeSession() {
             root["window"] = {
                 {"x", rc.left}, {"y", rc.top},
                 {"width", rc.right - rc.left}, {"height", rc.bottom - rc.top},
-                {"maximized", wp.showCmd == SW_SHOWMAXIMIZED}
+                {"maximized", (wp.showCmd == SW_SHOWMAXIMIZED) || IsZoomed(m_hwndMain)}
             };
         }
     }
