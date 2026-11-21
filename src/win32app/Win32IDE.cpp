@@ -9437,7 +9437,9 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
     }
 }
 
-void Win32IDE::HandleCopilotSend() {
+void Win32IDE::HandleCopilotSend() {
+    std::fprintf(stderr, "[SEND_ROUTE_ENTRY]\n");
+    std::fflush(stderr);
     if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput) return;
 
     // Get input text (UTF-8; preserve multiline / Unicode). Empty or
@@ -10006,7 +10008,9 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length) {
     appendCopilotChatUtf8(chunk);
 }
 
-void Win32IDE::onModelSelectionChanged() {
+void Win32IDE::onModelSelectionChanged() {
+    std::fprintf(stderr, "[MODEL_SELECT_ENTRY]\n");
+    std::fflush(stderr);
     invalidateNativeGhostText();
     int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
     if (idx < 0) {
