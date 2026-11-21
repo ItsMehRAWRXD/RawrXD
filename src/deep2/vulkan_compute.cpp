@@ -1936,6 +1936,11 @@ bool VulkanCompute::RunSpecAttentionResident(
 bool VulkanCompute::downloadFromBuffer(
     const DeviceBuf& src, void* dst, size_t bytes)
 {
+    // RAWRXD_GUARD_5: after VK_ERROR_DEVICE_LOST the queue and buffers are
+    // invalid; refuse new work so callers abort the request instead of consuming
+    // zeroed or stale results.
+    if (deviceLostCount_ != 0) return false;
+
     if (!src || !dst || !bytes || bytes > src.size) return false;
 
     DeviceBuf* staging = nullptr;
@@ -4061,6 +4066,11 @@ bool VulkanCompute::DispatchGemvDevice(
     DeviceBuf& input, DeviceBuf& output,
     uint32_t rows, uint32_t cols)
 {
+    // RAWRXD_GUARD_5: after VK_ERROR_DEVICE_LOST the queue and buffers are
+    // invalid; refuse new work so callers abort the request instead of consuming
+    // zeroed or stale results.
+    if (deviceLostCount_ != 0) return false;
+
     if(!weights||!rows||!cols||rows*sizeof(float)>output.size ||
        cols*sizeof(float)>input.size) return false;
     size_t count=0;
@@ -4080,6 +4090,11 @@ bool VulkanCompute::DispatchGemvQuant(
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
     uint64_t cacheKey)
 {
+    // RAWRXD_GUARD_5: after VK_ERROR_DEVICE_LOST the queue and buffers are
+    // invalid; refuse new work so callers abort the request instead of consuming
+    // zeroed or stale results.
+    if (deviceLostCount_ != 0) return false;
+
     // The original gate only covered very large Q4_K projections, which hid the
     // failure stage for every other shape. Honour the forward-trace switch too
     // so a failed GEMV reports the exact stage that rejected it.
