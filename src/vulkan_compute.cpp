@@ -3099,10 +3099,21 @@ void VulkanCompute::RetireQuantWeight(const QuantWeight& w) {
         gpu_counters_.device_bytes_live = 0;
 }
 
+namespace RawrXD { namespace Deep2 { namespace QuantDot {
+bool WeightCacheRetention();  // RAWRXD_STRATA (quant_dot_dispatch.cpp)
+} } }
+
 size_t VulkanCompute::TrimUnpinnedQuantWeights() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!device_ || !quant_fence_) return 0;
     if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return 0;
+    // RAWRXD_STRATA_RETENTION: the device-idle wait and the reaper below are
+    // mandatory cleanup; only the discretionary eviction of unpinned entries is
+    // policy-controlled. Retention keeps resident expert slices alive.
+    if (::RawrXD::Deep2::QuantDot::WeightCacheRetention()) {
+        ReapRetiredWeights();
+        return 0;
+    }
     std::vector<const void*> victims;
     victims.reserve(quant_weight_cache_.size());
     for (const auto& kv : quant_weight_cache_) {
