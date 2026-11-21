@@ -360,7 +360,7 @@ class Registry;
 // threads.  Own their payload and marshal it through the main window before
 // touching the terminal or Problems controls.
 struct TerminalUiUpdate {
-    enum class Kind { Output, Error, Finished };
+    enum class Kind { Output, Error, Finished, OutputToPane };
     Kind kind = Kind::Output;
     int paneId = -1;
     std::string text;
