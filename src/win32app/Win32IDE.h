@@ -408,7 +408,12 @@ class Win32IDE
 {
 public:
     // Read-only access to the embedded Deep2 bridge (agentic routing).
-    Deep2Bridge* deep2Bridge() const noexcept { return m_deep2Bridge; }
+    // Lazily create the bridge so callers that never opened a model through the
+    // IDE menus (e.g. the agentic chat route) can still use native Deep2.
+    Deep2Bridge* deep2Bridge() {
+        if (!m_deep2Bridge) initializeDeep2Bridge();
+        return m_deep2Bridge;
+    }
     enum class OutputSeverity {
         Debug = 0,
         Info = 1,

@@ -201,22 +201,42 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
         const char* mp = std::getenv("RAWRXD_MODEL_PATH");
         if (!mp || !*mp) mp = std::getenv("RAWRXD_DEEP2_PROBE_MODEL");
         Deep2Bridge* db = m_ide ? m_ide->deep2Bridge() : nullptr;
-        if (!db || !mp || !*mp) {
+        if (!db) {
+            std::fprintf(stderr, "[CHAT_DEEP2_NATIVE] reason=NO_BRIDGE\n");
+            std::fflush(stderr);
+            response.type = AgentResponseType::AGENT_ERROR;
+            response.content = "Deep2 backend unavailable: IDE Deep2 bridge not initialised.";
+            return response;
+        }
+        if (!mp || !*mp) {
+            std::fprintf(stderr, "[CHAT_DEEP2_NATIVE] reason=NO_MODEL_PATH\n");
+            std::fflush(stderr);
             response.type = AgentResponseType::AGENT_ERROR;
             response.content =
                 "Deep2 backend unavailable: no local GGUF configured (set RAWRXD_MODEL_PATH).";
             return response;
         }
-        if (db->GetCurrentModel() != std::string(mp) && !db->LoadModel(mp)) {
-            response.type = AgentResponseType::AGENT_ERROR;
-            response.content = std::string("Deep2 backend unavailable: failed to load ") + mp;
-            return response;
+        if (db->GetCurrentModel() != std::string(mp)) {
+            std::fprintf(stderr, "[CHAT_DEEP2_NATIVE] load_begin path=%s\n", mp);
+            std::fflush(stderr);
+            if (!db->LoadModel(mp)) {
+                std::fprintf(stderr, "[CHAT_DEEP2_NATIVE] reason=LOAD_FAILED\n");
+                std::fflush(stderr);
+                response.type = AgentResponseType::AGENT_ERROR;
+                response.content = std::string("Deep2 backend unavailable: failed to load ") + mp;
+                return response;
+            }
         }
-        std::string out;
-        db->GenerateStream(prompt, [&](const std::string& t, bool) {
-            out += t;
-            return true;
-        }, 256);
+        std::fprintf(stderr, "[CHAT_DEEP2_NATIVE] generate_begin loaded=%d\n",
+                     db->IsModelLoaded() ? 1 : 0);
+        std::fflush(stderr);
+        // GenerateStream is asynchronous: it returns as soon as the worker is
+                    // spawned, so reading the accumulation immediately yields an empty
+        // response. This route needs the completed text, so use the synchronous
+        // API and keep the streaming callback for the chat panel path.
+        const std::string out = db->GenerateSync(prompt, 256);
+        std::fprintf(stderr, "[CHAT_DEEP2_NATIVE] generate_return chars=%zu\n", out.size());
+        std::fflush(stderr);
         if (out.empty()) {
             response.type = AgentResponseType::AGENT_ERROR;
             response.content = "Deep2 backend unavailable: generation produced no tokens.";
