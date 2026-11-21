@@ -9466,13 +9466,17 @@ void Win32IDE::HandleCopilotSend() {
             std::to_string(rejectSeq));
         return;
     }
-    m_copilotChatInputCache.clear();
+    m_copilotChatInputCache.clear();
+    std::fprintf(stderr, "[SEND_ROUTE_STATE] prompt_len=%zu\n", userMessage.size());
+    std::fflush(stderr);
 
     // Busy gate BEFORE send_seq/ATTEMPT. Explicit Ctrl+Enter / Send button
     // supersedes an in-flight generation (cancel+join) then claims the slot.
     // Nested BN_CLICKED still cannot race past the post-stop claim below.
     {
-        bool busy = false;
+        bool busy = false;
+        std::fprintf(stderr, "[SEND_ROUTE_BUSY_GATE] reached\n");
+        std::fflush(stderr);
         {
             std::lock_guard<std::mutex> lock(m_inferenceMutex);
             busy = m_inferenceRunning.load(std::memory_order_acquire);
