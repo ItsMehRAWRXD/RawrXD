@@ -2722,7 +2722,7 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
                             const std::vector<float>& x,
                             std::vector<uint32_t>& ids, std::vector<float>& w) {
     (void)topk;
-    if (router.b < 0) { last_error_ = "router: no weight"; return false; }
+    if (router.b < 0 || (size_t)router.b >= tensors_.size()) { last_error_ = "router: no weight"; return false; }
     const TensorRec& rt = tensors_[(size_t)router.b];
 
     // The router maps hidden -> experts, so in GGUF's ne[] layout
@@ -2739,7 +2739,11 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     // Use the tensor's own input width rather than spec_.embd so a hidden
     // size that differs from the embedding still routes correctly.
     const size_t hdim = std::min(n_hidden, spec_.embd ? spec_.embd : n_hidden);
-    (void)hdim;
+    if (x.size() < hdim || n_exp > UINT32_MAX ||
+        n_hidden > std::numeric_limits<size_t>::max() / n_exp ||
+        n_hidden * n_exp > std::numeric_limits<size_t>::max() / sizeof(float)) {
+        last_error_ = "router: invalid input or weight extent"; return false;
+    }
 
     std::vector<float> logits;
     if (std::getenv("ROUTER_TRACE")) {
@@ -2780,6 +2784,9 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     }
     if (spec_.expert_used == 0) { last_error_ = "router: expert_used 0"; return false; }
     const size_t kused = (size_t)spec_.expert_used;
+    if (kused > n_exp || !std::all_of(logits.begin(), logits.end(), [](float v) { return std::isfinite(v); })) {
+        last_error_ = "router: invalid top-k or non-finite logits"; return false;
+    }
     // The routing formula is architecture-specific and is the difference between
     // a coherent model and plausible noise:
     //   softmax  (deepseek2 default): scores = softmax(logits), top-k greedy,
@@ -2872,24 +2879,15 @@ static bool DequantRange(const TensorRec& t, size_t base, size_t count, std::vec
     const size_t ts   = static_cast<size_t>(tr->type_size);
     if (ts == 0) return false;
 
-    out.assign(count, 0.0f);
-
-    // Number of complete blocks available in the encoded data.
+    if (!t.data || base > std::numeric_limits<size_t>::max() - count) return false;
+    const size_t basePlusCount = base + count;
+    const size_t blockWidth = static_cast<size_t>(blk);
     const size_t totalBlocks = t.bytes / ts;
-    const size_t firstBlock  = base / static_cast<size_t>(blk);
-
-    // Overflow-safe base + count calculation
-    size_t basePlusCount;
-    if (base > std::numeric_limits<size_t>::max() - count) {
-        basePlusCount = std::numeric_limits<size_t>::max();
-    } else {
-        basePlusCount = base + count;
-    }
-
-    const size_t lastBlock   = (basePlusCount + static_cast<size_t>(blk) - 1) / static_cast<size_t>(blk);
-    if (firstBlock >= totalBlocks) return false;
-    const size_t upto = std::min(lastBlock, totalBlocks);
-    if (upto <= firstBlock) return false;
+    const size_t firstBlock = base / blockWidth;
+    const size_t upto = basePlusCount / blockWidth + (basePlusCount % blockWidth != 0);
+    if (firstBlock >= totalBlocks || upto > totalBlocks || upto <= firstBlock ||
+        upto > std::numeric_limits<size_t>::max() / blockWidth) return false;
+    out.assign(count, 0.0f);
 
     // Read only the needed blocks into a compact buffer.
     const size_t blockCount = upto - firstBlock;
@@ -3074,12 +3072,19 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     // Number of experts actually present in each tensor.
     // Element stride is (in * out). The tensor holds elemCountOf elements,
     // so expert count = elements / elementStride.
+    const auto validStride = [](size_t a, size_t b) {
+        return a && b && a <= std::numeric_limits<size_t>::max() / b;
+    };
+    if (!validStride(gIn,gOut) || !validStride(uIn,uOut) ||
+        !validStride(dIn,dOut) || ids.empty() || ids.size() != w.size()) {
+        err = "moe: invalid expert extent or routing count"; return false;
+    }
     const size_t elemStrideG = gIn * gOut;
     const size_t elemStrideU = uIn * uOut;
     const size_t elemStrideD = dIn * dOut;
-    const size_t gExperts = std::max<size_t>(elemCountOf(*gateT) / std::max<size_t>(elemStrideG, 1), 1);
-    const size_t uExperts = std::max<size_t>(elemCountOf(*upT)   / std::max<size_t>(elemStrideU, 1), 1);
-    const size_t dExperts = std::max<size_t>(elemCountOf(*downT) / std::max<size_t>(elemStrideD, 1), 1);
+    const size_t gExperts = elemCountOf(*gateT) / elemStrideG;
+    const size_t uExperts = elemCountOf(*upT) / elemStrideU;
+    const size_t dExperts = elemCountOf(*downT) / elemStrideD;
     const size_t usableE = std::min(gExperts, std::min(uExperts, dExperts));
     if (usableE == 0) { err = "moe: no expert blocks available"; return false; }
 
