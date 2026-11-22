@@ -1,0 +1,38 @@
+#include "deep2/ReapQ4KToQ2K.hpp"
+#include <cstdio>
+using namespace Deep2::ReapQuant;
+int main(){
+    int pass=0,fail=0;auto check=[&](bool ok,const char* n){std::printf("%s %s\n",ok?"PASS":"FAIL",n);ok?++pass:++fail;};
+    uint16_t h=0;
+    check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
+    check(PositiveHalf(std::ldexp(1.0,-24),h)&&h==1,"binary16 subnormal");
+    check(PositiveHalf(std::ldexp(1.0,-14),h)&&h==0x400,"binary16 min normal");
+    check(PositiveHalf(65504,h)&&h==0x7bff,"binary16 max finite");
+    check(PositiveHalf(1+std::ldexp(1.0,-11),h)&&h==0x3c00,"ties to even");
+    check(!PositiveHalf(65505,h)&&!PositiveHalf(-1,h),"invalid scale rejected");
+    Q4Block q4{};Q2Block q2{};Values x{},y{};Error e;
+    check(Convert(q4,q2,e)&&e.squared==0&&e.signal==0,"zero block conversion");
+    StoreHalf(q4.data(),0x3c00);StoreHalf(q4.data()+2,0x3c00);
+    for(unsigned g=0;g<4;++g){q4[4+g]=1;q4[8+g]=2;q4[12+g]=0x21;}
+    for(unsigned i=16;i<144;++i)q4[i]=0x53;
+    check(DecodeQ4(q4,x)&&x[0]==1&&x[32]==3&&x[128]==1&&x[224]==3,"known Q4_K packed layout");
+    q4[4]|=0x40;q4[8]|=0x80;
+    check(DecodeQ4(q4,x)&&x[128]==3*17-34,"upper scale bits");
+    q2={};StoreHalf(q2.data()+80,0x3c00);StoreHalf(q2.data()+82,0x3c00);
+    for(unsigned i=0;i<16;++i)q2[i]=0x21;
+    for(unsigned i=16;i<80;++i)q2[i]=0xe4;
+    check(DecodeQ2(q2,y)&&y[0]==-2&&y[16]==-2&&y[32]==-1&&y[64]==0&&y[96]==1&&y[128]==-2,"known Q2_K bitplanes");
+    for(unsigned i=0;i<256;++i)x[i]=float(int(i%4)-2);
+    check(EncodeQ2(x,q2)&&DecodeQ2(q2,y),"encode signed four-level grid");
+    double max=0;for(unsigned i=0;i<256;++i)max=std::max(max,std::abs(double(x[i])-y[i]));
+    check(max<.003,"four-level reconstruction");
+    x.fill(-2);check(EncodeQ2(x,q2)&&DecodeQ2(q2,y)&&std::abs(y[255]+2)<.003,"negative constant");
+    x.fill(3);check(EncodeQ2(x,q2)&&DecodeQ2(q2,y)&&std::abs(y[255]-3)<.003,"positive constant");
+    x[17]=std::numeric_limits<float>::quiet_NaN();auto prior=q2;
+    check(!EncodeQ2(x,q2)&&q2==prior,"NaN rejected without publishing");
+    check(Convert(q4,q2,e)&&e.signal>0&&e.squared>=0&&std::isfinite(e.maxAbs),"Q4_K to Q2_K actual conversion and error");
+    StoreHalf(q4.data(),0x7c00);prior=q2;check(!Convert(q4,q2,e)&&q2==prior,"nonfinite source rejected");
+    uint64_t bytes=0;check(ConvertedBytes(7168,144*28*3,bytes)&&bytes==84*28*3,"exact Kimi row byte conversion");
+    check(!ConvertedBytes(255,144,bytes)&&!ConvertedBytes(256,145,bytes)&&!ConvertedBytes(512,144,bytes),"partial blocks and rows rejected");
+    std::printf("PASS_COUNT=%d FAIL_COUNT=%d\n",pass,fail);return fail?1:0;
+}
