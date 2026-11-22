@@ -81,9 +81,14 @@ public:
         lock.lock();
         auto it=entries_.find(key);
         if(!ok){
+            // Publish failure and release the reservation before notifying
+            // waiters. Keep destruction outside the cache mutex.
+            reserved_-=bytes;
+            entries_.erase(it);
+            lock.unlock();
             pending.reset();
-            reserved_-=bytes;entries_.erase(it);
-            lock.unlock();changed_.notify_all();return false;
+            changed_.notify_all();
+            return false;
         }
         it->second.data=Lease(std::move(pending));it->second.loading=false;
         it->second.age=++clock_;
