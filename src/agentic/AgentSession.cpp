@@ -111,9 +111,14 @@ void AgentSession::RecordToolCall(const ToolCallRecord& record) {
 void AgentSession::RecordBuild(const BuildEvidence& build) {
     m_builds.push_back(build);
     if (!build.Succeeded()) {
-        m_failure_reasons.push_back("build failed: exit code " +
+        std::string reason = "build failed: exit code " +
             std::to_string(build.process_exit_code) +
-            ", errors=" + std::to_string(build.compiler_errors));
+            ", errors=" + std::to_string(build.compiler_errors);
+        if (!build.acceptance_evaluated)
+            reason += ", acceptance: not evaluated";
+        else if (!build.acceptance_passed)
+            reason += ", acceptance: " + build.acceptance_failure;
+        m_failure_reasons.push_back(reason);
     }
     Flush();
 }
@@ -121,9 +126,14 @@ void AgentSession::RecordBuild(const BuildEvidence& build) {
 void AgentSession::RecordTest(const TestEvidence& test) {
     m_tests.push_back(test);
     if (!test.Succeeded()) {
-        m_failure_reasons.push_back("tests failed: " +
+        std::string reason = "tests failed: " +
             std::to_string(test.tests_failed) + "/" +
-            std::to_string(test.tests_total));
+            std::to_string(test.tests_total);
+        if (!test.acceptance_evaluated)
+            reason += ", acceptance: not evaluated";
+        else if (!test.acceptance_passed)
+            reason += ", acceptance: " + test.acceptance_failure;
+        m_failure_reasons.push_back(reason);
     }
     Flush();
 }
@@ -327,6 +337,9 @@ bool AgentSession::LoadFromDisk() {
         e.compiler_errors   = b.value("compiler_errors", 0);
         e.compiler_warnings = b.value("compiler_warnings", 0);
         e.log_path          = b.value("log_path", std::string());
+        e.acceptance_evaluated = b.value("acceptance_evaluated", false);
+        e.acceptance_passed = b.value("acceptance_passed", false);
+        e.acceptance_failure = b.value("acceptance_failure", std::string());
         m_builds.push_back(e);
     }
 
@@ -338,6 +351,9 @@ bool AgentSession::LoadFromDisk() {
         e.tests_failed      = t.value("tests_failed", 0);
         e.tests_total       = t.value("tests_total", 0);
         e.log_path          = t.value("log_path", std::string());
+        e.acceptance_evaluated = t.value("acceptance_evaluated", false);
+        e.acceptance_passed = t.value("acceptance_passed", false);
+        e.acceptance_failure = t.value("acceptance_failure", std::string());
         m_tests.push_back(e);
     }
 

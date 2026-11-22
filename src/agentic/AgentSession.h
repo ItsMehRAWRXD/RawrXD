@@ -79,8 +79,19 @@ struct BuildEvidence {
     std::string command;
     double      elapsed_seconds = 0.0;
     std::vector<std::string> artifact_paths;
+    // Request-associated acceptance verdict for THIS build. Fail-closed:
+    // acceptance_evaluated stays false for records that never ran the gate
+    // (default-constructed or legacy JSON without the field), and such records
+    // can never report Succeeded(). A real verdict sets evaluated=true and
+    // passed to the EvaluateAcceptance result.
+    bool        acceptance_evaluated = false;
+    bool        acceptance_passed = false;
+    std::string acceptance_failure;
 
-    bool Succeeded() const { return tool_ok && process_exit_code == 0 && artifacts_verified; }
+    bool Succeeded() const {
+        return tool_ok && process_exit_code == 0 && artifacts_verified &&
+               acceptance_evaluated && acceptance_passed;
+    }
 
     json ToJson() const {
         return {
@@ -95,6 +106,9 @@ struct BuildEvidence {
             {"command", command},
             {"elapsed_seconds", elapsed_seconds},
             {"artifact_paths", artifact_paths},
+            {"acceptance_evaluated", acceptance_evaluated},
+            {"acceptance_passed", acceptance_passed},
+            {"acceptance_failure", acceptance_failure},
             {"success", Succeeded()},
         };
     }
@@ -113,8 +127,16 @@ struct TestEvidence {
     std::string command;
     double      elapsed_seconds = 0.0;
     std::vector<std::string> failures;
+    // Request-associated acceptance verdict for THIS test run. Fail-closed:
+    // see BuildEvidence::acceptance_evaluated.
+    bool        acceptance_evaluated = false;
+    bool        acceptance_passed = false;
+    std::string acceptance_failure;
 
-    bool Succeeded() const { return tool_ok && process_exit_code == 0 && tests_failed == 0; }
+    bool Succeeded() const {
+        return tool_ok && process_exit_code == 0 && tests_failed == 0 &&
+               acceptance_evaluated && acceptance_passed;
+    }
 
     json ToJson() const {
         return {
@@ -126,6 +148,9 @@ struct TestEvidence {
             {"log_path", log_path},
             {"command", command},
             {"elapsed_seconds", elapsed_seconds},
+            {"acceptance_evaluated", acceptance_evaluated},
+            {"acceptance_passed", acceptance_passed},
+            {"acceptance_failure", acceptance_failure},
             {"success", Succeeded()},
         };
     }

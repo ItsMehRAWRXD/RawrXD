@@ -104,12 +104,8 @@ public:
 private:
     std::string m_root;
     ApprovalFn  m_approval;
-    // Request-scoped acceptance verdict for the most recent RunProcess call.
-    mutable rawrxd::AcceptanceResult m_lastAcceptance;
 
 public:
-    const rawrxd::AcceptanceResult& lastAcceptance() const { return m_lastAcceptance; }
-
     bool IsRegularTextFile(const std::filesystem::path& p, std::error_code& ec) const;
     std::string SuggestAlternatives(const std::string& bad_path) const;
     int CountCompilerErrors(const std::string& log) const;
@@ -117,7 +113,13 @@ public:
     bool VerifyArtifact(const std::filesystem::path& build_dir,
                         const std::string& target,
                         std::vector<std::string>& found) const;
-    std::string RunProcess(const std::string& cmd, int& exit_code, int timeout_minutes) const;
+    // Runs one shell command and returns its captured output. `exit_code` is the
+    // real process exit code; `acceptance_out` receives the request-associated
+    // acceptance verdict for THIS invocation. The verdict is returned by value
+    // through the caller's own reference (never a shared/cached member), so two
+    // concurrent requests cannot observe or overwrite each other's verdict.
+    std::string RunProcess(const std::string& cmd, int& exit_code, int timeout_minutes,
+                           rawrxd::AcceptanceResult& acceptance_out) const;
 };
 
 } // namespace Agent

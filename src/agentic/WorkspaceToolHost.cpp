@@ -305,8 +305,10 @@ void WorkspaceToolHost::RegisterWorkspaceTools(rawrxd::tools::Registry& registry
 // ---------------------------------------------------------------------------
 std::string WorkspaceToolHost::RunProcess(const std::string& cmd,
                                           int& exit_code,
-                                          int timeout_minutes) const {
+                                          int timeout_minutes,
+                                          rawrxd::AcceptanceResult& acceptance_out) const {
     exit_code = -1;
+    acceptance_out = rawrxd::AcceptanceResult{};
     // G: use the native runner for INDEPENDENT stdout/stderr capture and
     // accurate launch/timeout status (x_popen merges stderr into stdout).
     const int timeoutMs = (timeout_minutes > 0 ? timeout_minutes : 1) * 60 * 1000;
@@ -336,7 +338,7 @@ std::string WorkspaceToolHost::RunProcess(const std::string& cmd,
             criteria.stderrMustContain = m;
         const rawrxd::AcceptanceResult verdict =
             rawrxd::EvaluateAcceptance(outcome, criteria);
-        m_lastAcceptance = verdict;
+        acceptance_out = verdict;
         std::fprintf(stderr, "[TOOL_ACCEPTANCE] accepted=%d firstFailure=%s\n",
                      verdict.passed ? 1 : 0, verdict.firstFailure.c_str());
         std::fflush(stderr);
@@ -364,8 +366,15 @@ BuildEvidence WorkspaceToolHost::RunBuild(const std::string& target,
 
     ev.command = cmd;
     int exit_code = -1;
-    std::string log = RunProcess(cmd, exit_code, timeout_minutes);
+    rawrxd::AcceptanceResult acceptance;
+    std::string log = RunProcess(cmd, exit_code, timeout_minutes, acceptance);
     ev.process_exit_code = exit_code;
+    // Request-associated acceptance verdict for THIS build invocation. A build
+    // that exits 0 but omits its required evidence marker is NOT accepted.
+    // EvaluateAcceptance always returns a verdict, so acceptance is evaluated.
+    ev.acceptance_evaluated = true;
+    ev.acceptance_passed = acceptance.passed;
+    ev.acceptance_failure = acceptance.firstFailure;
     // A captured log is not evidence that the build succeeded.  The process
     // exit code is authoritative; a missing log on a zero-exit build remains
     // a diagnostic issue, not a reason to turn a failed process into PASS.
@@ -490,8 +499,13 @@ TestEvidence WorkspaceToolHost::RunTests(const std::string& filter,
     ev.command = cmd;
 
     int exit_code = -1;
-    std::string log = RunProcess(cmd, exit_code, timeout_minutes);
+    rawrxd::AcceptanceResult acceptance;
+    std::string log = RunProcess(cmd, exit_code, timeout_minutes, acceptance);
     ev.process_exit_code = exit_code;
+    // Request-associated acceptance verdict for THIS test invocation.
+    ev.acceptance_evaluated = true;
+    ev.acceptance_passed = acceptance.passed;
+    ev.acceptance_failure = acceptance.firstFailure;
     // Parse the result before deciding whether the test wrapper succeeded.
     // Non-empty output alone can be a compiler/shell error transcript.
     ev.tool_ok = false;
