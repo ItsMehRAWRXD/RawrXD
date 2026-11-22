@@ -41,10 +41,17 @@ inline NativeAcceptanceResult RunWithAcceptance(
 
     ProcessOutcome outcome;
     // A launched process always has a real exit code; -1 means it never started.
+    // NativeProcess stores a "NONZERO_EXIT_CODE:N" annotation in error for a
+    // nonzero exit; that is a real exit, not a launch failure, so surface the
+    // exit code itself and only keep genuine launch/timeout errors.
     outcome.launched   = (proc.exitCode != -1);
     outcome.exitCode   = proc.exitCode;
     outcome.timedOut   = proc.timedOut;
-    outcome.error      = proc.error;
+    outcome.error.clear();
+    if (proc.exitCode == -1)
+        outcome.error = proc.error;              // genuine launch/pipe failure
+    else if (proc.timedOut)
+        outcome.error = "COMMAND_TIMEOUT";       // timeout stays distinguishable
     outcome.stdoutText = proc.stdoutOutput;
     outcome.stderrText = proc.stderrOutput;
 

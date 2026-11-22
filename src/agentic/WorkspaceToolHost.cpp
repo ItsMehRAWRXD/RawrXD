@@ -326,10 +326,19 @@ std::string WorkspaceToolHost::RunProcess(const std::string& cmd,
     // commands leave it unset and are judged on exit code and timeout only.
     {
         rawrxd::ProcessOutcome outcome;
-        outcome.launched   = (pr.exitCode != -1) && pr.error.empty();
+        // A process that started always has a real exit code; -1 means it never
+        // launched (PROCESS_START_FAILED / PIPE_CREATE_FAILED). NativeProcess
+        // also stores a "NONZERO_EXIT_CODE:N" annotation in error, which must
+        // NOT be treated as a launch failure: a launched process that exited
+        // nonzero is a real exit, not "not_launched".
+        outcome.launched   = (pr.exitCode != -1);
         outcome.exitCode   = pr.exitCode;
         outcome.timedOut   = pr.timedOut;
-        outcome.error      = pr.error;
+        outcome.error.clear();
+        if (pr.exitCode == -1)
+            outcome.error = pr.error;              // genuine launch/pipe failure
+        else if (pr.timedOut)
+            outcome.error = "COMMAND_TIMEOUT";     // timeout stays distinguishable
         outcome.stdoutText = pr.stdoutOutput;
         outcome.stderrText = pr.stderrOutput;
         rawrxd::AcceptanceCriteria criteria;

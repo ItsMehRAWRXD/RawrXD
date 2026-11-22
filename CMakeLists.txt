@@ -4688,6 +4688,30 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/workspace_path_policy_smoke.cpp")
     add_test(NAME workspace_path_policy_smoke COMMAND workspace_path_policy_smoke)
 endif()
 
+# Sprint 8: production acceptance propagation (build/test path). Links the real
+# rawrxd_agentic_backend so a rejected acceptance cannot become a successful
+# BuildEvidence/TestEvidence record or a successful plan.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_acceptance_propagation_smoke.cpp")
+    add_executable(agent_acceptance_propagation_smoke
+        tests/agentic/agent_acceptance_propagation_smoke.cpp)
+    target_link_libraries(agent_acceptance_propagation_smoke PRIVATE rawrxd_agentic_backend)
+    target_include_directories(agent_acceptance_propagation_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(agent_acceptance_propagation_smoke PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(agent_acceptance_propagation_smoke PRIVATE /EHsc /W4)
+        target_compile_definitions(agent_acceptance_propagation_smoke PRIVATE
+            NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    else()
+        target_compile_options(agent_acceptance_propagation_smoke PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(agent_acceptance_propagation_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME agent_acceptance_propagation_smoke COMMAND agent_acceptance_propagation_smoke)
+endif()
+
 # Gap 7+10: AgentEditHistory undo byte restore + AgentSession/TaskLedger disk RT.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_ledger_undo_smoke.cpp")
     add_executable(agent_ledger_undo_smoke
