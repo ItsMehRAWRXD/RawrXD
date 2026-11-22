@@ -19,11 +19,23 @@ function Invoke-RawrReap([string[]]$argv) {
     }) -join ' ')
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $psi
-    if (-not $process.Start()) { throw "failed to start $exe" }
-    $stdout = $process.StandardOutput.ReadToEnd()
-    $stderr = $process.StandardError.ReadToEnd()
-    $process.WaitForExit()
-    [PSCustomObject]@{ Output = $stdout; Error = $stderr; ExitCode = $process.ExitCode }
+    try {
+        if (-not $process.Start()) { throw "failed to start $exe" }
+        # Drain both redirected pipes concurrently to avoid blocking on a full stderr pipe.
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        $process.WaitForExit()
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        foreach ($line in ($stderr -split '\r?\n')) {
+            if ($line.Trim() -and $line.Trim() -ne '[StreamEngine] Shutdown') {
+                Write-Host "[rawr-reap stderr] $line"
+            }
+        }
+        [PSCustomObject]@{ Output = $stdout; Error = $stderr; ExitCode = $process.ExitCode }
+    } finally {
+        $process.Dispose()
+    }
 }
 
 $models = @(
