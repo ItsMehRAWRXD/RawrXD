@@ -4776,6 +4776,25 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_submission_completion_test.cpp"
     add_test(NAME deep2_submission_completion_test COMMAND deep2_submission_completion_test)
 endif()
 
+# Owned submission-quarantine registry (QuarantineRegistry.hpp) — CPU-only
+# certification of transitive resource ownership across all resource kinds.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/quarantine_registry_test.cpp")
+    add_executable(quarantine_registry_test
+        tests/deep2/quarantine_registry_test.cpp)
+    target_include_directories(quarantine_registry_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(quarantine_registry_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(quarantine_registry_test PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(quarantine_registry_test PRIVATE -Wall -Wextra)
+    endif()
+    set_target_properties(quarantine_registry_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME quarantine_registry_test COMMAND quarantine_registry_test)
+endif()
+
 # Independent capture comparison; standard C++ only, no Vulkan or ggml linkage.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_logit_quality.cpp")
     add_executable(reap_logit_quality tools/reap_logit_quality.cpp)
