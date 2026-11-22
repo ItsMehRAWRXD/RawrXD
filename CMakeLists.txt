@@ -4784,6 +4784,29 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/win32/g51_inline_completion_accep
     add_test(NAME g51_inline_completion_acceptance COMMAND g51_inline_completion_acceptance)
 endif()
 
+# REAP tools: full tensor inventory + canonical IR / dtype / storage verifier.
+# Standalone (header-only GGUFLoader); take a checkpoint path as argv[1].
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_tensor_enum.cpp")
+    add_executable(reap_tensor_enum src/reap/reap_tensor_enum.cpp)
+    target_include_directories(reap_tensor_enum PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(reap_tensor_enum PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(reap_tensor_enum PRIVATE /EHsc)
+    endif()
+    set_target_properties(reap_tensor_enum PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_verify_canonical.cpp")
+    add_executable(reap_verify_canonical src/reap/reap_verify_canonical.cpp)
+    target_include_directories(reap_verify_canonical PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(reap_verify_canonical PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(reap_verify_canonical PRIVATE /EHsc)
+    endif()
+    set_target_properties(reap_verify_canonical PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+
 # Gap 7+10: AgentEditHistory undo byte restore + AgentSession/TaskLedger disk RT.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_ledger_undo_smoke.cpp")
     add_executable(agent_ledger_undo_smoke

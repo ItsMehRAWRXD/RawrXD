@@ -190,6 +190,21 @@ int main(int argc, char** argv) {
     expect(totalStoredBytes > 0, "storage_bytes_positive");
     expect(bitsPerWeight > 0.0 && bitsPerWeight < 16.0, "bits_per_weight_plausible");
 
+    // R02 reconciliation: expert vs nonexpert split (matches reap_tensor_enum
+    // isExpertTensor: ffn_gate_exps / ffn_up_exps / ffn_down_exps).
+    uint64_t packedExpertBytes = 0;
+    for (const auto& t : tensors) {
+        if (t.family == "expert_gate" || t.family == "expert_up" ||
+            t.family == "expert_down")
+            packedExpertBytes += t.sizeBytes;
+    }
+    const uint64_t nonexpertBytes = totalStoredBytes - packedExpertBytes;
+    std::printf("expert_split: packedExpertBytes=%llu nonexpertBytes=%llu\n",
+                static_cast<unsigned long long>(packedExpertBytes),
+                static_cast<unsigned long long>(nonexpertBytes));
+    expect(packedExpertBytes + nonexpertBytes == totalStoredBytes,
+           "expert_split_sums_to_total");
+
     // S09: reconcile tensor bytes against the actual shard file sizes.
     {
         namespace fs = std::filesystem;
