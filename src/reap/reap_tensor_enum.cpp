@@ -6,6 +6,7 @@
 // shardId, fileOffset (absolute), tensorOffset (relative), family classification.
 #include "deep2/GGUFLoader.hpp"
 #include "reap/ReapAutoFitIR.hpp"
+#include "reap/ReapCanonicalIR.hpp"
 #include "deep2/deep2_sha256.hpp"
 #include <cstdio>
 #include <cstdint>
@@ -73,20 +74,9 @@ static bool isExpertTensor(const std::string& name) {
            name.find(".experts.") != std::string::npos;
 }
 
-static uint64_t visitMultiplier(const std::string& architecture,
-                                const std::string& name,
-                                uint64_t loopStart, uint64_t loopEnd,
-                                uint64_t loopCount) {
-    if (architecture != "inkling2_loop" || loopCount <= 1 || loopEnd < loopStart)
-        return 1;
-    const std::string marker = "blk.";
-    const size_t begin = name.find(marker);
-    if (begin == std::string::npos) return 1;
-    size_t pos = begin + marker.size();
-    uint64_t layer = 0;
-    while (pos < name.size() && name[pos] >= '0' && name[pos] <= '9')
-        layer = layer * 10 + static_cast<uint64_t>(name[pos++] - '0');
-    return layer >= loopStart && layer <= loopEnd ? loopCount : 1;
+static uint64_t visitMultiplier(const reap::LoopSchedule& loop, const std::string& name) {
+    const uint32_t layer = reap::ParseLayerIndex(name);
+    return layer == UINT32_MAX ? 1 : reap::VisitMultiplicity(loop, layer);
 }
 
 static std::vector<std::filesystem::path> shardPaths(const std::filesystem::path& first) {
@@ -134,6 +124,7 @@ int main(int argc, char** argv) {
     const uint64_t loopStart = static_cast<uint64_t>(archMeta("loop.start"));
     const uint64_t loopEnd = static_cast<uint64_t>(archMeta("loop.end"));
     const uint64_t loopCount = static_cast<uint64_t>(archMeta("loop.count"));
+    const auto loop = reap::NormalizeLoop(architecture, static_cast<uint64_t>(archMeta("block_count")), loopCount, loopStart, loopEnd);
     std::cout << "{\n";
     std::cout << "  \"schema\": \"reap.full_inventory.v1\",\n";
     std::cout << "  \"model\": \"" << esc(path) << "\",\n";
@@ -194,7 +185,7 @@ int main(int argc, char** argv) {
         first = false;
 
         const bool prunable = isExpertTensor(name);
-        const uint64_t visits = visitMultiplier(architecture, name, loopStart, loopEnd, loopCount);
+        const uint64_t visits = visitMultiplier(loop, name);
         totalBytes += t->sizeBytes;
         familyBytes[family] += t->sizeBytes;
         familyCount[family] += 1;
