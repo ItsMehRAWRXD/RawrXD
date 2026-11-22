@@ -34,6 +34,17 @@ using namespace RawrXD::Deep2;
 namespace
 {
 
+const auto g_trace_start = std::chrono::steady_clock::now();
+
+void Progress(const char* marker, size_t position = static_cast<size_t>(-1))
+{
+    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - g_trace_start).count();
+    if (position == static_cast<size_t>(-1))
+        std::printf("PROGRESS %s elapsed_ms=%.1f\n", marker, ms);
+    else
+        std::printf("PROGRESS %s pos=%zu elapsed_ms=%.1f\n", marker, position, ms);
+}
+
 std::string Sanitize(const std::string& s)
 {
     std::string out;
@@ -144,6 +155,7 @@ int main(int argc, char* argv[])
         std::printf(" %u", t);
     std::printf("\n");
 
+    Progress("MODEL_LOAD_BEGIN");
     std::printf("ingesting %s ...\n", model.c_str());
     const Universal::IngestReport& rep = Universal::Ingest(model, false);
     if (!rep.ok)
@@ -151,6 +163,7 @@ int main(int argc, char* argv[])
         std::printf("INGEST_FAIL: %s\n", rep.error.c_str());
         return 1;
     }
+    Progress("MODEL_LOAD_COMPLETE");
     std::printf("arch=%s blocks=%llu embd=%llu heads=%llu kv=%llu lora=%llu kl=%llu vl=%llu "
                 "experts=%llu used=%llu shared=%llu dense_lead=%llu rope_dim=%llu eps=%g\n",
                 rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count,
@@ -169,9 +182,11 @@ int main(int argc, char* argv[])
         return 1;
     }
     std::printf("bound ops=%zu\n", ex.Stats().ops_total);
+    Progress("BIND_COMPLETE");
 
     for (size_t pos = 0; pos < tokens.size(); ++pos)
     {
+        Progress("TOKEN_BEGIN", pos);
         ex.SetOpTrace(true, true);
         const auto t0 = std::chrono::steady_clock::now();
         const bool ok = ex.ExecuteToken(tokens[pos], pos);
@@ -181,6 +196,7 @@ int main(int argc, char* argv[])
             std::printf("EXEC_FAIL pos=%zu err=%s\n", pos, ex.LastError().c_str());
             return 1;
         }
+        Progress("TOKEN_COMPLETE", pos);
         const double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
         const std::vector<float>& logits = ex.Logits();
@@ -192,6 +208,7 @@ int main(int argc, char* argv[])
             std::printf("DUMP_FAIL: logits pos=%zu path=%s\n", pos, outdir.c_str());
             return 1;
         }
+        Progress("LOGITS_CAPTURE_COMPLETE", pos);
         uint32_t argmax = 0;
         for (size_t i = 1; i < logits.size(); ++i)
             if (logits[i] > logits[argmax])
@@ -227,6 +244,8 @@ int main(int argc, char* argv[])
         if (gate4.empty())
             ex.SetOpTrace(false);
     }
+
+    Progress("TOKEN_SEQUENCE_COMPLETE");
 
     // ---- greedy generation (multi-token agreement with KV reuse) -----------
     // Mirrors llama_gen_ref: the argmax of the LAST seed position is gen[0],
@@ -348,6 +367,7 @@ int main(int argc, char* argv[])
         return g4_failures == 0 ? 0 : 4;
     }
 
+    Progress("SHUTDOWN_COMPLETE");
     std::printf("gpu_calls=%llu cpu_calls=%llu fallback=%s\n", (unsigned long long)b.gpu_calls,
                 (unsigned long long)b.cpu_calls, b.fallback_reason.empty() ? "<none>" : b.fallback_reason.c_str());
     return 0;
