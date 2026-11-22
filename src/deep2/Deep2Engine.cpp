@@ -4553,13 +4553,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                         isSigmoid = (gatingFunc == 2u);
                     }
                     moeConfig_.scoringFunc = isSigmoid ? 1 : 0;
-                    moeConfig_.nGroup = static_cast<int32_t>(rawU32Suffix({".n_group", "n_group"}, 1));
-                    moeConfig_.topkGroup = static_cast<int32_t>(rawU32Suffix({".topk_group", "topk_group"}, 0));
-                    moeConfig_.normTopkProb = rawBoolSuffix({".norm_topk_prob", "norm_topk_prob"}, true);
-                    // routed_scaling_factor: default per family if absent.
-                    const std::string scalingStr = rawLookupSuffix({".routed_scaling_factor", "routed_scaling_factor"});
+                    // Group-limited routing. Key names differ by architecture:
+                    //   llama.cpp/DeepSeek: n_group / topk_group
+                    //   GLM deepseek2:      expert_group_count / expert_group_used_count
+                    moeConfig_.nGroup = static_cast<int32_t>(rawU32Suffix(
+                        {".n_group", "n_group", ".expert_group_count", "expert_group_count"}, 1));
+                    moeConfig_.topkGroup = static_cast<int32_t>(rawU32Suffix(
+                        {".topk_group", "topk_group", ".expert_group_used_count", "expert_group_used_count"}, 0));
+                    // Conditional top-k normalization:
+                    //   norm_topk_prob (llama)  |  expert_weights_norm (deepseek2)
+                    moeConfig_.normTopkProb = rawBoolSuffix(
+                        {".norm_topk_prob", "norm_topk_prob", ".expert_weights_norm", "expert_weights_norm"}, true);
+                    // Routed scaling factor:
+                    //   routed_scaling_factor (llama) | expert_weights_scale (deepseek2)
+                    const std::string scalingStr = rawLookupSuffix(
+                        {".routed_scaling_factor", "routed_scaling_factor", ".expert_weights_scale", "expert_weights_scale"});
                     if (!scalingStr.empty())
-                        moeConfig_.routedScalingFactor = rawF32Suffix({".routed_scaling_factor", "routed_scaling_factor"}, 1.0f);
+                        moeConfig_.routedScalingFactor = rawF32Suffix(
+                            {".routed_scaling_factor", "routed_scaling_factor", ".expert_weights_scale", "expert_weights_scale"}, 1.0f);
                     else
                         moeConfig_.routedScalingFactor = isSigmoid ? 2.827f : 1.0f;
                     printf("[Deep2Engine] MOE_ROUTING scoring=%s gating_func=%u n_group=%d topk_group=%d "
