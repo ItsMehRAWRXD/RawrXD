@@ -73,6 +73,8 @@ enum class Role : uint8_t {
     IndexerQProj,      // QSA query projection
     IndexerQNorm,      // QSA query norm
     AttnKvANorm, AttnKvAMqa, AttnKvB, AttnO,   // deepseek MLA
+    AttnQA, AttnQANorm, AttnQB,                // deepseek MLA QLoRA (q_lora_rank)
+    AttnKB, AttnVB,                            // MLA separate k_b / v_b up-projections
     FfnNorm,
     FfnGate, FfnUp, FfnDown,
     ExpFfnGate, ExpFfnUp, ExpFfnDown,   // MoE experts (3-D: [ffn, experts, blocks])

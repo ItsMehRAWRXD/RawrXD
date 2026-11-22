@@ -963,6 +963,21 @@ bool Executor::Bind(const Universal::IngestReport& report) {
                 break;
             }
         }
+        // Diagnostic: list every blk.0 attention tensor actually present, so an
+        // MLA QLoRA / alternate-KV-projection name mismatch is visible without
+        // guessing. Gated by DEEP2_GEOM_DUMP_ALL=1 to avoid log spam.
+        if (std::getenv("DEEP2_GEOM_DUMP_ALL")) {
+            for (const auto& t : tensors_) {
+                if (t.name.rfind("blk.0.attn", 0) == 0) {
+                    std::string full;
+                    for (size_t d = 0; d < t.dims.size(); ++d) {
+                        full += (d ? "," : "") + std::to_string((unsigned long long)t.dims[d]);
+                    }
+                    std::fprintf(stderr, "[geom-all] %-36s dims=[%s] type=%d bytes=%zu\n",
+                                 t.name.c_str(), full.c_str(), (int)t.ggml_type, t.bytes);
+                }
+            }
+        }
         // The invariant the attention path must preserve, stated with the
         // model's own numbers: value_width must divide the projection input,
         // and per-head value width must be strictly narrower than the per-head
@@ -1049,6 +1064,48 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             continue;
         }
         ++stats_.ops_bound;
+    }
+
+    // SLOT-H02/H12: fail closed at BIND time when a Linear op references a
+    // weight tensor name that did not resolve to a loaded tensor slot. Without
+    // this, the op passes binding and fails deep in execution with a bare
+    // "linear: no weight (wslot=-1)" that names nothing. Report the op index,
+    // block and the exact requested tensor name so the missing projection
+    // (e.g. an MLA attn_q_a / attn_kv_a_mqa weight) is identified immediately.
+    for (size_t i = 0; i < program_.size(); ++i) {
+        const auto& in = program_[i];
+        if (in.op != OpKind::Linear && in.op != OpKind::LmHead) continue;
+        if (in.b >= 0) continue;
+        // Some Linear ops legitimately have no weight (bias-only); only flag
+        // ops that carry a real weight name.
+        if (in.bName.empty() || in.bName[0] == '<') continue;
+        char buf[512];
+        std::snprintf(buf, sizeof(buf),
+                      "unresolved Linear weight: op=%zu block=%d requested='%s' out='%s'",
+                      i, (int)in.block, in.bName.c_str(), in.outName.c_str());
+        stats_.unbound_ops.emplace_back(buf);
+        if (stats_.first_blocking_operator.empty())
+            stats_.first_blocking_operator = "LinearWeightResolve";
+        ++stats_.ops_unbound;
+    }
+    if (stats_.ops_unbound > 0 && stats_.ops_bound > 0) {
+        // Report unresolved operator weights. These are real defects, but we do
+        // not hard-fail here if the earlier unsupported-op check already handled
+        // the case; the dedicated message below is emitted for weight resolution.
+        bool anyWeightResolve = (stats_.first_blocking_operator == "LinearWeightResolve");
+        if (anyWeightResolve && stats_.error.empty()) {
+            std::string e = "graph has unresolved operator weights: ";
+            for (size_t i = 0; i < stats_.unbound_ops.size() && i < 6; ++i)
+                e += stats_.unbound_ops[i] + "; ";
+            // Fail closed: a Linear op whose named weight did not resolve cannot
+            // execute correctly. Name the exact tensor(s) so the missing
+            // projection is identified.
+            stats_.error = e;
+            SetBindFailureReceipt(stats_, spec_.architecture, "WEIGHT_RESOLVE",
+                                  stats_.first_blocking_operator.c_str(), stats_.error);
+            std::fprintf(stderr, "[bind] %s\n", stats_.error.c_str());
+            return false;
+        }
     }
 
     if (stats_.ops_unbound > 0) {
@@ -1219,6 +1276,12 @@ struct DevScope {
     explicit DevScope(int32_t d) : prev(QuantDot::ActiveDevice()) { QuantDot::SetActiveDevice(d); }
     ~DevScope() { QuantDot::SetActiveDevice(prev); }
 };
+
+// Thread-local execution context for localizing OpLinear slot-resolution
+// failures (SLOT-H14). Callers set this immediately before invoking OpLinear so
+// a wslot<0 failure names the op/block/tensor instead of an anonymous -1.
+// Kept per-thread because ExecuteToken may run on a worker thread.
+static thread_local const char* g_lin_ctx = "";
 }  // namespace
 
 // Assign every op whose weight lives in `block` to Vulkan device `vk_index`
@@ -1229,10 +1292,20 @@ void SetBlockVulkanDevice(uint32_t block, uint32_t vk_index) { g_block_vk[block]
 bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                         std::vector<float>& y, std::string& err, bool join_batch) {
     if (wslot < 0) {
+        // SLOT-H14: never propagate a bare slot=-1. Callers set g_lin_ctx with
+        // op/block/tensor context before the call so the failure is localizable
+        // to a specific op and requested tensor name.
         err = "linear: no weight";
+        {
+            const char* ctx = g_lin_ctx;
+            if (ctx && *ctx) {
+                err += " ctx=";
+                err += ctx;
+            }
+        }
         if (std::getenv("LINEAR_TRACE")) {
-            std::fprintf(stderr, "[linear] missing weight: slot=%d x=%zu\n",
-                         (int)wslot, x.size());
+            std::fprintf(stderr, "[linear] missing weight: slot=%d x=%zu ctx=%s\n",
+                         (int)wslot, x.size(), g_lin_ctx ? g_lin_ctx : "");
         }
         return false;
     }
@@ -3606,10 +3679,36 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     //   5. ropePart   = latentFull[lora : lora+qk_rope]   (shared by all heads)
     //   6. k[h]       = [k_nope | ropePart]  -> key_length
     //      v[h]       = v                     -> value_length
-    if (mla.a < 0 || mla.b < 0 || mla.c < 0) { err = "mla: missing weights"; return false; }
+    if (mla.a < 0 || mla.b < 0 || mla.c < 0) {
+        char b2[320];
+        std::snprintf(b2, sizeof(b2),
+                      "mla: missing weights (a=%d '%s' b=%d '%s' c=%d)",
+                      (int)mla.a, mla.aName.c_str(), (int)mla.b, mla.bName.c_str(), (int)mla.c);
+        err = b2;
+        return false;
+    }
     const TensorRec& kvA = tensors_[(size_t)mla.a];
     const TensorRec& norm = tensors_[(size_t)mla.b];
     const TensorRec& kvB = tensors_[(size_t)mla.c];
+
+    // Separate KV up-projection variant (GLM-4.7-Flash MLA): k and v are
+    // produced by two independent tensors attn_k_b and attn_v_b rather than a
+    // single combined attn_kv_b that is split per head. The v_b tensor name is
+    // carried in detail="kvsep:<name>;act=..." so no Instr layout change is
+    // needed.
+    bool kvsep = false;
+    std::string vBName;
+    if (mla.detail.rfind("kvsep:", 0) == 0) {
+        kvsep = true;
+        const size_t semi = mla.detail.find(';', 6);
+        vBName = mla.detail.substr(6, semi == std::string::npos ? std::string::npos : semi - 6);
+    }
+    const TensorRec* vBT = nullptr;
+    if (kvsep && !vBName.empty()) {
+        auto it = slot_by_name_.find(vBName);
+        if (it != slot_by_name_.end()) vBT = &tensors_[(size_t)it->second];
+        if (!vBT) { err = "mla: kvsep attn_v_b not found: " + vBName; return false; }
+    }
 
     const size_t lora = (size_t)std::max<uint64_t>(spec_.kv_lora_rank, 1);
     const size_t kl = (size_t)spec_.key_length;    // 192 = 128 nope + 64 rope
@@ -3621,25 +3720,79 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     // Shcarved straight from the recorded tensor dims, never guessed.
     const size_t kvA_in = kvA.dims.empty() ? 0 : (size_t)kvA.dims[0];
     const size_t kvA_out = kvA.dims.size() > 1 ? (size_t)kvA.dims[1] : 0;
-    const size_t kvB_in = kvB.dims.empty() ? 0 : (size_t)kvB.dims[0];
-    const size_t kvB_out = kvB.dims.size() > 1 ? (size_t)kvB.dims[1] : 0;
-    const size_t nope = (kl > vl) ? (kl - vl) : kl;      // archive exact split
-    (void)nope;
     const size_t qk_rope = (kvA_out > lora) ? (kvA_out - lora) : 0;
-    const size_t per_head = kvB_out / std::max<size_t>(H, 1);   // nope + v
-    const size_t qk_nope = (per_head > vl) ? (per_head - vl) : 0;
-    if (kvA_in == 0 || kvB_in == 0 || qk_rope == 0 || qk_nope == 0) {
+
+    // MLA up-projection orientation is NOT uniform across architectures:
+    //   DeepSeek-V3 combined: attn_kv_b [in=lora, out=heads*(nope+v)]  (input-first)
+    //   GLM separate K:       attn_k_b  [out=heads*nope, in=lora, heads] (output-first)
+    //   GLM separate V:       attn_v_b  [in=lora, out=heads*v,   heads] (input-first)
+    // Resolve each tensor's input axis by matching the known kv_lora_rank, and
+    // its output axis as the remaining non-head axis. This is metadata-driven
+    // and never assumes a fixed transpose (MLA04).
+    size_t kvB_in = 0, kvB_out = 0;      // k_b (or combined kv_b)
+    size_t vB_in = 0, vB_out = 0;        // v_b (separate only)
+    bool k_out_first = false;            // k_b stored [out, in, ...]
+    bool v_out_first = false;            // v_b stored [out, in, ...]
+
+    auto resolveProj = [&](const TensorRec& t, size_t& inAxis, size_t& outAxis,
+                           bool& outFirst) -> bool {
+        // Returns false if the lora rank cannot be identified in the dims.
+        const size_t d0 = t.dims.size() > 0 ? (size_t)t.dims[0] : 0;
+        const size_t d1 = t.dims.size() > 1 ? (size_t)t.dims[1] : 0;
+        if (d0 == lora && d1 != lora) { inAxis = d0; outAxis = d1; outFirst = false; return true; }
+        if (d1 == lora && d0 != lora) { inAxis = d1; outAxis = d0; outFirst = true;  return true; }
+        // Ambiguous (both or neither equal lora): fail closed.
+        return false;
+    };
+
+    if (kvsep) {
+        if (!resolveProj(kvB, kvB_in, kvB_out, k_out_first)) {
+            err = "mla: attn_k_b dims do not contain kv_lora_rank (ambiguous orientation)";
+            return false;
+        }
+        if (vBT && !resolveProj(*vBT, vB_in, vB_out, v_out_first)) {
+            err = "mla: attn_v_b dims do not contain kv_lora_rank (ambiguous orientation)";
+            return false;
+        }
+    } else {
+        kvB_in  = kvB.dims.empty() ? 0 : (size_t)kvB.dims[0];   // [in, out]
+        kvB_out = kvB.dims.size() > 1 ? (size_t)kvB.dims[1] : 0;
+    }
+
+    // Combined variant: kv_b output = heads*(qk_nope + v). Separate variant:
+    // k_b output = heads*qk_nope, v_b output = heads*v.
+    size_t qk_nope = 0;      // per-head k_nope width
+    size_t per_head = 0;     // per-head stride into the combined kvb (combined only)
+    if (kvsep) {
+        qk_nope = kvB_out / std::max<size_t>(H, 1);
+        if (qk_nope == 0 || vB_out == 0) {
+            err = "mla: kvsep k_b/v_b shapes incompatible with spec";
+            return false;
+        }
+    } else {
+        per_head = kvB_out / std::max<size_t>(H, 1);   // nope + v
+        qk_nope = (per_head > vl) ? (per_head - vl) : 0;
+        if (qk_nope == 0) {
+            err = "mla: tensor shapes incompatible with spec";
+            return false;
+        }
+    }
+    if (kvA_in == 0 || kvB_in == 0 || qk_rope == 0) {
         err = "mla: tensor shapes incompatible with spec";
         return false;
     }
 
-    std::vector<float> A, B, nw;
+    std::vector<float> A, B, nw, VB;
     DequantPrefix(kvA, A, kvA_in * kvA_out);
     DequantPrefix(kvB, B, kvB_in * kvB_out);
     DequantPrefix(norm, nw, lora);
     if (A.size() < kvA_in * kvA_out || B.size() < kvB_in * kvB_out) {
         err = "mla: weight dequant short";
         return false;
+    }
+    if (kvsep && vBT) {
+        DequantPrefix(*vBT, VB, vB_in * vB_out);
+        if (VB.size() < vB_in * vB_out) { err = "mla: v_b dequant short"; return false; }
     }
 
     // 1. latentFull = x @ kv_a_mqa
@@ -3663,29 +3816,63 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
             latent[i] = latentFull[i] * (i < nw.size() ? nw[i] : 1.0f) * scale;
     }
 
-    // 3. kvb = latent @ kv_b   (kv_b_in must be the lora rank)
+    // 3. kvb = latent @ kv_b   (kv_b input axis must be the lora rank)
     if (kvB_in != lora) { err = "mla: kv_b input != kv_lora_rank"; return false; }
+    // NOTE (MLA03/MLA04): the separate attn_k_b / attn_v_b up-projections on
+    // GLM-4.7-Flash are rank-3 ([192,512,20] / [512,256,20]) and their GGML
+    // reduction-axis orientation relative to the 512-dim kv_lora latent has NOT
+    // been validated against the llama.cpp reference contraction. Rather than
+    // silently compute with an assumed transpose (which would corrupt every
+    // attention block while leaving the dense block correct), fail closed with
+    // an actionable diagnostic until the per-tensor contraction is certified.
+    if (kvsep) {
+        err = "mla: separate attn_k_b/attn_v_b contraction not yet reference-validated "
+              "(rank-3 per-head layout; needs llama.cpp parity before enabling)";
+        return false;
+    }
     std::vector<float> kvb(kvB_out, 0.0f);
     for (size_t j = 0; j < kvB_out; ++j) {
         double acc = 0.0;
-        const float* col = B.data() + j * kvB_in;
-        for (size_t i = 0; i < lora; ++i) acc += double(col[i]) * double(latent[i]);
+        // k_out_first: B is [out, in] row-major -> row j contiguous.
+        // input-first: B is [in, out] -> element (i,j) at i*out + j.
+        const float* col = k_out_first ? (B.data() + j * kvB_in) : nullptr;
+        for (size_t i = 0; i < lora; ++i) {
+            const float b = k_out_first ? col[i] : B[i * kvB_out + j];
+            acc += double(b) * double(latent[i]);
+        }
         kvb[j] = (float)acc;
+    }
+    // Separate variant: also compute v = latent @ v_b (orientation-resolved).
+    std::vector<float> vb;
+    if (kvsep && vBT) {
+        vb.assign(vB_out, 0.0f);
+        for (size_t j = 0; j < vB_out; ++j) {
+            double acc = 0.0;
+            const float* col = v_out_first ? (VB.data() + j * vB_in) : nullptr;
+            const size_t inLim = std::min<size_t>(vB_in, lora);
+            for (size_t i = 0; i < inLim; ++i) {
+                const float b = v_out_first ? col[i] : VB[i * vB_out + j];
+                acc += double(b) * double(latent[i]);
+            }
+            vb[j] = (float)acc;
+        }
     }
 
     // 4-6. assemble per-head k and v
     k_out.assign(H * kl, 0.0f);
     v_out.assign(H * vl, 0.0f);
     for (size_t h = 0; h < H; ++h) {
-        const float* src = kvb.data() + h * per_head;
         float* kd = k_out.data() + h * kl;
         float* vd = v_out.data() + h * vl;
-        // k = [qk_nope from kv_b | qk_rope from the latent tail]
-        for (size_t i = 0; i < qk_nope && i < kl; ++i) kd[i] = src[i];
+        // k = [qk_nope | qk_rope from the latent tail]
+        const float* ksrc = kvb.data() + h * (kvsep ? qk_nope : per_head);
+        for (size_t i = 0; i < qk_nope && i < kl; ++i) kd[i] = ksrc[i];
         for (size_t i = 0; i < qk_rope && (qk_nope + i) < kl; ++i)
             kd[qk_nope + i] = latentFull[lora + i];
-        for (size_t i = 0; i < vl && i < qk_nope + 0; ++i) (void)i;
-        for (size_t i = 0; i < vl; ++i) vd[i] = src[qk_nope + i];
+        // v
+        const float* vsrc = kvsep ? (vb.data() + h * vl)
+                                  : (kvb.data() + h * per_head + qk_nope);
+        for (size_t i = 0; i < vl; ++i) vd[i] = vsrc[i];
     }
     (void)position;
     return true;
@@ -3911,7 +4098,7 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                 std::vector<float>& y = ts[t].act[linSlot];
                 std::string e;
                 if (!OpLinear(in.b, xi, y, e, /*join_batch=*/true)) {
-                    last_error_ = e;
+                    last_error_ = e + " (weight=" + in.bName + ")";
                     return false;
                 }
                 ++batch_dots;
@@ -4852,7 +5039,22 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::string e;
                 // join_batch_ is the loop-scope group decision above: the batch
                 // is already open when it is true.
-                if (!OpLinear(in.b, xi, y, e, join_batch_)) { last_error_ = e; return false; }
+                // SLOT-H14: set per-op context so a wslot<0 failure names the op.
+                {
+                    static thread_local std::string ctxBuf;
+                    ctxBuf.clear();
+                    ctxBuf.reserve(in.bName.size() + 48);
+                    ctxBuf = "Linear blk=";
+                    ctxBuf += std::to_string((long long)in.block);
+                    ctxBuf += " b='";
+                    ctxBuf += in.bName;
+                    ctxBuf += "' out='";
+                    ctxBuf += in.outName;
+                    ctxBuf += "'";
+                    g_lin_ctx = ctxBuf.c_str();
+                }
+                if (!OpLinear(in.b, xi, y, e, join_batch_)) { last_error_ = e + " (weight=" + in.bName + ")"; return false; }
+                g_lin_ctx = "";
                 if (std::getenv("DEEP2_Q4K_EXACT_CHECK") &&
                     in.b >= 0 && static_cast<size_t>(in.b) < tensors_.size() &&
                     in.bName.find(".attn_output.weight") != std::string::npos &&

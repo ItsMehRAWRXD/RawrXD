@@ -504,6 +504,12 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".indexer.k_norm.weight") != std::string::npos) return Role::IndexerKNorm;
     if (n.find(".indexer.q_proj.weight") != std::string::npos) return Role::IndexerQProj;
     if (n.find(".indexer.q_norm.weight") != std::string::npos) return Role::IndexerQNorm;
+    if (n.find(".attn_q_a_norm.weight") != std::string::npos) return Role::AttnQANorm;
+    if (n.find(".attn_q_a.weight") != std::string::npos) return Role::AttnQA;
+    if (n.find(".attn_q_b.weight") != std::string::npos) return Role::AttnQB;
+    if (n.find(".attn_k_b.weight") != std::string::npos) return Role::AttnKB;
+    if (n.find(".attn_v_b.weight") != std::string::npos) return Role::AttnVB;
+    if (n.find(".attn_kv_b.weight") != std::string::npos) return Role::AttnKvB;
     if (n.find(".attn_kv_a_norm.weight") != std::string::npos) return Role::AttnKNorm;
     if (n.find(".attn_kv_a_mqa.weight") != std::string::npos) return Role::AttnKvAMqa;
     if (n.find(".attn_kv_b.weight") != std::string::npos) return Role::AttnKvB;
@@ -1002,8 +1008,39 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         }
 
         if (s.kind == ArchKind::DeepSeekMLA) {
-            // q projection
-            {
+            // Q projection. Two MLA Q layouts exist:
+            //   (a) single attn_q.weight                       (q_lora_rank == 0)
+            //   (b) QLoRA: attn_q_a -> RMSNorm -> attn_q_b      (q_lora_rank > 0)
+            // GLM-4.7-Flash (deepseek2) uses (b). Emitting a single Linear with
+            // an empty weight (because attn_q.weight is absent) produced a
+            // wslot=-1 failure at the first token. Detect QLoRA by the presence
+            // of attn_q_a and emit the correct two-stage path; otherwise fall
+            // back to the single projection.
+            const bool qLoRA = !name(Role::AttnQA).empty() &&
+                               !name(Role::AttnQB).empty();
+            if (qLoRA) {
+                // q_a = attn_norm @ attn_q_a^T
+                {
+                    GraphOp o;
+                    o.op = Op::Linear; o.block = (int32_t)b;
+                    o.a = "attn_norm"; o.b = name(Role::AttnQA); o.out = "q_a";
+                    g.ops.push_back(o);
+                }
+                // q_a_norm = RMSNorm(q_a) * attn_q_a_norm
+                {
+                    GraphOp o;
+                    o.op = Op::RmsNorm; o.block = (int32_t)b;
+                    o.a = "q_a"; o.b = name(Role::AttnQANorm); o.out = "q_a_norm";
+                    g.ops.push_back(o);
+                }
+                // q = q_a_norm @ attn_q_b^T
+                {
+                    GraphOp o;
+                    o.op = Op::Linear; o.block = (int32_t)b;
+                    o.a = "q_a_norm"; o.b = name(Role::AttnQB); o.out = "q";
+                    g.ops.push_back(o);
+                }
+            } else {
                 GraphOp o;
                 o.op = Op::Linear; o.block = (int32_t)b;
                 o.a = "attn_norm"; o.b = name(Role::AttnQ); o.out = "q";
@@ -1027,8 +1064,26 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o.op = Op::MlaDecompress; o.block = (int32_t)b;
                 o.a = name(Role::AttnKvAMqa);
                 o.b = name(Role::AttnKNorm);
-                o.c = name(Role::AttnKvB);
-                o.detail = "attn_norm";   // activation operand, resolved by executor
+                // Two MLA KV up-projection layouts:
+                //   (a) combined attn_kv_b  (DeepSeek-V3)  -> c = attn_kv_b
+                //   (b) separate attn_k_b + attn_v_b (GLM)  -> c = attn_k_b,
+                //       v_b carried in detail="kvsep:<attn_v_b name>"
+                const bool haveKvB = !name(Role::AttnKvB).empty();
+                const bool haveKB  = !name(Role::AttnKB).empty();
+                const bool haveVB  = !name(Role::AttnVB).empty();
+                if (haveKvB) {
+                    o.c = name(Role::AttnKvB);
+                    o.detail = "attn_norm";   // activation operand
+                } else if (haveKB && haveVB) {
+                    o.c = name(Role::AttnKB);
+                    o.detail = std::string("kvsep:") + name(Role::AttnVB) +
+                               ";act=attn_norm";
+                } else {
+                    // Neither layout present: leave c empty so OpMlaDecompress
+                    // fails closed with an actionable "missing weights" error.
+                    o.c = name(Role::AttnKvB);
+                    o.detail = "attn_norm";
+                }
                 o.out = "kv";
                 g.ops.push_back(o);
             }
