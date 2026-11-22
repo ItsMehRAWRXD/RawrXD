@@ -1,6 +1,7 @@
 #include "deep2/ReapQ4KToQ2K.hpp"
 #include "deep2/ReapMixedPrecision.hpp"
 #include "deep2/ReapShardIndex.hpp"
+#include "deep2/ReapRetainedRouting.hpp"
 #include "deep2/ReapNativeShardReader.hpp"
 #include <cstdio>
 #if defined(_WIN32) && defined(_MSC_VER)
@@ -71,6 +72,15 @@ int main(){
         }
     }
 #endif
+    std::vector<RouteChoice> routes;
+    check(RouteRetained({0,100,0},{2,0},{},RouterScore::Softmax,2,true,1.8,routes)&&routes.size()==2&&routes[0].original==0&&routes[0].retained==1&&std::abs(routes[0].weight-0.9)<1e-12,"retained softmax mapping and stable tie");
+    check(RouteRetained({0,100,0},{2,0},{},RouterScore::Softmax,1,false,1,routes)&&routes[0].weight==0.5,"retained softmax excludes pruned logits");
+    check(RouteRetained({0,2},{0,1},{2,0},RouterScore::Sigmoid,1,false,1,routes)&&routes[0].original==0&&routes[0].weight==0.5,"sigmoid bias only affects rank");
+    check(RouteRetained({-1000,1000},{0,1},{},RouterScore::Sigmoid,1,true,2,routes)&&routes[0].original==1&&routes[0].weight==2,"stable sigmoid extremes");
+    check(!RouteRetained({0,1},{0,0},{},RouterScore::Softmax,1,true,1,routes)&&routes[0].weight==2,"duplicate mapping preserves output");
+    check(!RouteRetained({0,1},{0,2},{},RouterScore::Softmax,1,true,1,routes),"invalid original expert rejected");
+    check(!RouteRetained({0,1},{0},{},RouterScore::Softmax,2,true,1,routes),"invalid top k rejected");
+    check(!RouteRetained({-1000},{0},{},RouterScore::Sigmoid,1,true,1,routes),"zero selected mass rejected");
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
     check(PositiveHalf(std::ldexp(1.0,-24),h)&&h==1,"binary16 subnormal");
