@@ -8,6 +8,7 @@
 // Continuation mode removed for production certification.
 // #define B3_CONTINUE_FOR_RESIDENCY_BASELINE
 
+#include "deep2/ReapCapturePolicy.hpp"
 #include "Deep2Engine.h"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
@@ -12151,8 +12152,8 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // into the layer output. Captured here so an independent implementation can
     // be compared against the engine rather than against a re-run of itself.
     const bool expertOutCapture = moeExpertOutObserver_ &&
-        moeExpertOutLayer_ == static_cast<uint32_t>(layer) &&
-        (moeExpertOutStep_ == 0xFFFFFFFFFFFFFFFFull || moeExpertOutStep_ == referenceStep_);
+        ReapCapture::Matches(moeExpertOutLayer_, moeExpertOutStep_,
+            static_cast<uint32_t>(layer), referenceStep_, moeExpertOutAllLayers_);
     if (expertOutCapture)
     {
         MoEExpertOutputObservation eo{};
@@ -12366,10 +12367,11 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     std::vector<float> expertBuf(hiddenDim);
     // P2-C reference: publish the routing decision actually applied (ids in
     // execution order + the weights used to scale expert outputs) together with
-    // the activation entering the experts. Read-only, fires once.
-    if (moeRoutingObserver_ && !moeRoutingDone_ &&
-        moeRoutingLayer_ == static_cast<uint32_t>(layer) &&
-        (moeRoutingStep_ == 0xFFFFFFFFFFFFFFFFull || moeRoutingStep_ == referenceStep_))
+    // the activation entering the experts. Legacy diagnostics fire once;
+    // opt-in saliency streams observe every matching execution.
+    if (moeRoutingObserver_ &&
+        ReapCapture::CaptureRouting(moeRoutingDone_, moeRoutingStreaming_,
+            moeRoutingLayer_, moeRoutingStep_, static_cast<uint32_t>(layer), referenceStep_))
     {
         std::vector<uint32_t> selIds;
         std::vector<float> selWeights;
