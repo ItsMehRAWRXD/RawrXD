@@ -1918,6 +1918,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     if (kPerHead == 0) kPerHead = (hk == 0) ? (kWidth / H) : (kWidth / hk);
     if (vPerHead == 0) vPerHead = (hk == 0) ? (vWidth / H) : (vWidth / hk);
     if (qPerHead == 0 || kPerHead == 0 || vPerHead == 0) {
+        // MLA-H01 diagnostic: report the actual widths and the derivation so the
+        // geometry mismatch (compressed latent vs decompressed per-head) is
+        // visible instead of an anonymous "empty per-head width".
+        std::fprintf(stderr,
+            "[mla-geom-fail] blk=%d H=%zu hk=%zu qWidth=%zu kWidth=%zu vWidth=%zu "
+            "qPerHead=%zu kPerHead=%zu vPerHead=%zu spec.heads_kv=%llu "
+            "key_len_mla=%llu val_len_mla=%llu kv_lora=%llu\n",
+            (int)in.block, H, hk, qWidth, kWidth, vWidth, qPerHead, kPerHead, vPerHead,
+            (unsigned long long)spec_.heads_kv, (unsigned long long)spec_.key_length_mla,
+            (unsigned long long)spec_.value_length_mla, (unsigned long long)spec_.kv_lora_rank);
         err = "attention: empty per-head width";
         return false;
     }
