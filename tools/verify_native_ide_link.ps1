@@ -84,7 +84,7 @@ try {
         )
         foreach ($testName in $expectedTests) {
             $matched = @($ctestOutput | Where-Object {
-                ([string]$_) -match ("Test\s+#\d+:\s+" + [regex]::Escape($testName) + "\s+\.\.\.\s+Passed")
+                ([string]$_) -match ("Test\s+#\d+:\s+" + [regex]::Escape($testName) + "\s+\.+\s+Passed")
             })
             if ($matched.Count -ne 1) {
                 throw "Required native REAP acceptance test missing or not passed: $testName"
