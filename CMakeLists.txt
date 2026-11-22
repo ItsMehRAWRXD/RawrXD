@@ -4733,6 +4733,15 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_lostseq_failure_injec
     add_test(NAME deep2_lostseq_failure_injection COMMAND deep2_lostseq_failure_injection)
 endif()
 
+# Offline native REAP saliency from paired real observer captures.
+add_executable(reap_activation_score tools/reap_activation_score.cpp)
+target_compile_features(reap_activation_score PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_activation_score PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_activation_score PRIVATE -Wall -Wextra)
+endif()
+
 # Native checkpoint-wide MoE bank contract.
 add_executable(reap_bank_contract_test tests/reap_bank_contract_test.cpp)
 target_include_directories(reap_bank_contract_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
