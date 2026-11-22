@@ -28,6 +28,7 @@
 #include <io.h>
 #include <sstream>
 #include <array>
+#include <tuple>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -40,6 +41,7 @@
 #include "deep2/MoERouter.hpp"
 #include "deep2/ReapRouteTracker.hpp"
 #include "deep2/ReapCapturePolicy.hpp"
+#include "deep2/ReapCalibrationState.hpp"
 #include "Deep2Engine.h"
 #include "ChatTemplate.hpp"
 
@@ -120,7 +122,7 @@ static string computeFileSha256(const string& path) {
         }
     }
     vector<unsigned char> digest(hashLen);
-    const bool ok = BCryptFinishHash(hash, digest.data(), hashLen, 0) == 0;
+    const bool ok = in.eof() && !in.bad() && BCryptFinishHash(hash, digest.data(), hashLen, 0) == 0;
     BCryptDestroyHash(hash);
     BCryptCloseAlgorithmProvider(alg, 0);
     if (!ok) return "";
@@ -724,13 +726,21 @@ public:
         // Compute model SHA-256 for checkpoint validation
         phase("SOURCE_SHA256", "BEGIN");
         modelSha256_ = computeFileSha256(config_.modelPath);
+        if (modelSha256_.size() != 64) {
+            cerr << "Source checkpoint hash failed" << endl;
+            return false;
+        }
+        if (!config_.saliencyCapture && !buildCheckpointIdentity()) {
+            cerr << "Cannot establish complete checkpoint identity" << endl;
+            return false;
+        }
         phase("SOURCE_SHA256", "END");
         if (config_.verbose) {
             cout << "  Model SHA-256: " << modelSha256_ << endl;
         }
         
         // Prepare checkpoint manifest
-        checkpointPath_ = fs::path(config_.outputDir) / "calibration_checkpoint.json";
+        checkpointPath_ = fs::path(config_.outputDir) / "calibration_checkpoint.state";
         phase("CALIBRATION_TRACKER_INIT", "END");
         
         return true;
@@ -757,8 +767,15 @@ public:
         
         // Handle resume: load checkpoint and validate
         size_t startPrompt = 0;
+        vector<uint64_t> completedTokensPerPrompt(calibrationPrompts.size(), 0);
+        const ReapState::Identity stateIdentity{checkpointIdentity_, configHash_,
+            modelInfo_.numLayers, modelInfo_.numExperts, modelInfo_.numActiveExperts,
+            calibrationPrompts};
         if (config_.resume) {
-            startPrompt = loadCheckpoint(promptHashes);
+            if (!loadCheckpoint(stateIdentity, completedTokensPerPrompt, startPrompt)) {
+                cerr << "Invalid or missing native checkpoint; use a new output directory to restart" << endl;
+                return false;
+            }
             if (startPrompt >= calibrationPrompts.size()) {
                 cout << "Calibration already complete (all prompts processed)" << endl;
                 return writeFinalOutput();
@@ -783,8 +800,8 @@ public:
         genOptions.minP = 0.0f;
         genOptions.seed = 0xDEADBEEF;
         
-        // Run inference on each prompt and collect routing statistics
-        vector<uint64_t> completedTokensPerPrompt(calibrationPrompts.size(), 0);
+        // Run inference on each prompt and collect routing statistics.
+        // The progress vector above retains the restored prefix.
         
         if (!config_.dumpLogitsPath.empty()) {
             g_refLogits.path = config_.dumpLogitsPath;
@@ -848,7 +865,8 @@ public:
             }
             // Paired captures are evidence, not routing-only ranking files.
             if (!config_.saliencyCapture &&
-                !writeCheckpoint(calibrationPrompts, promptHashes, completedTokensPerPrompt, i)) {
+                !writeCheckpoint(stateIdentity, calibrationPrompts, promptHashes,
+                                 completedTokensPerPrompt, i)) {
                 cerr << "Failed to write checkpoint after prompt " << i << endl;
                 return false;
             }
@@ -1050,6 +1068,7 @@ private:
     
     // Checkpoint state
     string modelSha256_;
+    string checkpointIdentity_;
     string configHash_;
     fs::path checkpointPath_;
     fs::path outputDir_;
@@ -1108,99 +1127,101 @@ private:
         return prompts;
     }
     
+    // Bind the routing-state checkpoint to every canonical GGUF shard.
+    // The CLI requires the first shard, matching the existing source hash convention.
+    bool buildCheckpointIdentity() {
+        const string name = fs::path(config_.modelPath).filename().string();
+        const size_t marker = name.rfind("-00001-of-");
+        checkpointIdentity_ = modelSha256_;
+        if (marker == string::npos) {
+            // Non-first canonical split paths are not accepted for resume.
+            if (name.size() >= 20 && name.substr(name.size()-15,4) == "-of-")
+                return false;
+            return true;
+        }
+        if (name.size() != marker + 20 || name.substr(marker+15) != ".gguf") return false;
+        const string countText = name.substr(marker+10,5);
+        if (countText.find_first_not_of("0123456789") != string::npos) return false;
+        const unsigned count = static_cast<unsigned>(std::stoul(countText));
+        if (!count || count > 4096) return false;
+        for (unsigned shard = 2; shard <= count; ++shard) {
+            stringstream file;
+            file << name.substr(0,marker) << '-' << setw(5) << setfill('0') << shard
+                 << "-of-" << countText << ".gguf";
+            const string digest = computeFileSha256(
+                (fs::path(config_.modelPath).parent_path() / file.str()).string());
+            if (digest.size() != 64) return false;
+            checkpointIdentity_ += ":" + digest;
+        }
+        return true;
+    }
+
     string computeConfigHash(const vector<string>& prompts) {
+        // Exact configuration identity, not a lossy substring/FNV check.
         stringstream ss;
-        ss << config_.temperature << "|" << config_.topK << "|" << config_.topP 
-           << "|" << config_.maxNewTokens << "|" << prompts.size();
-        return CheckpointManifest::hashString(ss.str());
+        ss.imbue(std::locale::classic());
+        ss << setprecision(std::numeric_limits<float>::max_digits10)
+           << config_.temperature << "|" << config_.topK << "|" << config_.topP
+           << "|" << config_.maxNewTokens << "|" << prompts.size()
+           << "|seed=3735928559|repeatPenalty=1|minP=0|tokenizer="
+           << config_.tokenizerPath;
+        return ss.str();
     }
-    
-    size_t loadCheckpoint(const vector<string>& promptHashes) {
-        if (!fs::exists(checkpointPath_)) {
-            if (config_.verbose) cout << "No checkpoint found, starting fresh" << endl;
-            return 0;
-        }
-        
-        ifstream in(checkpointPath_);
-        if (!in) {
-            if (config_.verbose) cout << "Failed to read checkpoint, starting fresh" << endl;
-            return 0;
-        }
-        
-        // Read entire file
-        string content((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-        
-        // Validate model SHA-256
-        if (content.find(modelSha256_) == string::npos) {
-            cerr << "Checkpoint model SHA mismatch, starting fresh" << endl;
-            return 0;
-        }
-        
-        // Validate config hash
-        if (content.find(configHash_) == string::npos) {
-            cerr << "Checkpoint config hash mismatch, starting fresh" << endl;
-            return 0;
-        }
-        
-        // Validate prompt hashes match
-        bool allMatch = true;
-        for (const auto& ph : promptHashes) {
-            if (content.find(ph) == string::npos) {
-                allMatch = false;
-                break;
-            }
-        }
-        if (!allMatch) {
-            cerr << "Checkpoint prompt hashes mismatch, starting fresh" << endl;
-            return 0;
-        }
-        
-        // Parse completed tokens per prompt (simplified)
-        // In production, use proper JSON parsing
-        size_t completed = 0;
-        // Count prompts that have completed_tokens > 0 in the JSON
-        // Simplified: find "completed_tokens" occurrences with non-zero values
-        size_t pos = 0;
-        while ((pos = content.find("completed_tokens", pos)) != string::npos) {
-            pos += 16;
-            while (pos < content.size() && isspace(content[pos])) pos++;
-            if (pos < content.size() && content[pos] > '0') {
-                completed++;
-            }
-        }
-        
-        if (config_.verbose) {
-            cout << "Checkpoint valid: resuming from prompt " << (completed + 1) << endl;
-        }
-        
-        return completed;
+
+    bool loadCheckpoint(const ReapState::Identity& identity,
+                        vector<uint64_t>& completed, size_t& start) {
+        ReapState::State state;
+        if (!ReapState::Load(checkpointPath_, identity, state)) return false;
+        decltype(accumulator_.Snapshot()) metrics;
+        for (const auto& m : state.metrics)
+            metrics.emplace(std::make_pair(size_t(m.layer),size_t(m.expert)),
+                            ReapExpertMetric{m.count,m.activation,m.weight});
+        accumulator_.Restore(std::move(metrics), state.observations);
+        completed = std::move(state.completed);
+        start = 0;
+        while (start < completed.size() && completed[start]) ++start;
+        return true;
     }
-    
-    bool writeCheckpoint(const vector<string>& prompts,
+
+    bool writeCheckpoint(const ReapState::Identity& identity,
+                         const vector<string>& prompts,
                          const vector<string>& promptHashes,
                          const vector<uint64_t>& completedTokensPerPrompt,
                          size_t lastCompleted) {
+        ReapState::State state;
+        state.completed = completedTokensPerPrompt;
+        if (lastCompleted >= state.completed.size() || !state.completed[lastCompleted]) return false;
+        state.observations = accumulator_.tokenCount();
+        for (const auto& entry : accumulator_.Snapshot()) {
+            if (entry.first.first >= identity.layers || entry.first.second >= identity.experts)
+                return false;
+            state.metrics.push_back({static_cast<uint32_t>(entry.first.first),
+                static_cast<uint32_t>(entry.first.second),entry.second.routeCount,
+                entry.second.activationSum,entry.second.weightSum});
+        }
+        std::sort(state.metrics.begin(),state.metrics.end(),[](const auto& a,const auto& b) {
+            return std::tie(a.layer,a.expert) < std::tie(b.layer,b.expert);
+        });
+        if (!ReapState::Save(checkpointPath_,identity,state)) return false;
+
+        // Legacy JSON is informational only. Resume uses the complete native state.
         CheckpointManifest manifest;
         manifest.modelPath = config_.modelPath;
         manifest.modelSha256 = modelSha256_;
-        manifest.configHash = configHash_;
+        manifest.configHash = CheckpointManifest::hashString(configHash_);
         manifest.numLayers = modelInfo_.numLayers;
         manifest.numExperts = modelInfo_.numExperts;
         manifest.topK = modelInfo_.numActiveExperts;
         manifest.prompts = prompts;
         manifest.promptHashes = promptHashes;
         manifest.completedTokensPerPrompt = completedTokensPerPrompt;
-        manifest.totalTokens = accumulator_.tokenCount();
+        manifest.totalTokens = state.observations;
         manifest.timestamp = chrono::system_clock::now();
-        
-        if (!manifest.write(checkpointPath_)) {
+        if (!manifest.write(fs::path(config_.outputDir) / "calibration_checkpoint.json"))
             return false;
-        }
-        
-        // Also write incremental layer files
         return writeLayerFiles();
     }
-    
+
     bool writeLayerFiles() {
         // Get accumulated metrics
         auto metrics = accumulator_.Snapshot();
@@ -1488,7 +1509,7 @@ static void printUsage(const char* progName) {
         "  Creates layer_N_calib.txt files in output directory, one per MoE layer.\n"
         "  Each file contains expert IDs ranked by importance (one per line).\n"
         "  Format consumed by RawrXD::Reap::TryLoadCalibrationRanks.\n"
-        "  Checkpoint file: calibration_checkpoint.json enables --resume.\n"
+        "  Checkpoint file: calibration_checkpoint.state contains full metrics for --resume.\n"
         "\n"
         "Example:\n"
         "  %s --model qwen3-next-80b-00001-of-00004.gguf --output calib_out \\\n"
@@ -1576,6 +1597,11 @@ int main(int argc, char** argv) {
         return 1;
     }
     
+    if (config.resume && (!config.dumpTokensPath.empty() || !config.dumpLogitsPath.empty() ||
+        !config.dumpMoePath.empty() || !config.dumpRoutingPath.empty() || !config.dumpExpertOutPath.empty())) {
+        fprintf(stderr, "Resume cannot append or overwrite diagnostic capture streams\n");
+        return 1;
+    }
     if (config.saliencyCapture) {
         error_code ec;
         const bool exists = fs::exists(config.outputDir, ec);
