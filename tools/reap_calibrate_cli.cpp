@@ -39,6 +39,7 @@
 #include "deep2/GGUFLoader.hpp"
 #include "deep2/MoERouter.hpp"
 #include "deep2/ReapRouteTracker.hpp"
+#include "deep2/ReapCapturePolicy.hpp"
 #include "Deep2Engine.h"
 #include "ChatTemplate.hpp"
 
@@ -299,6 +300,7 @@ struct CalibrationConfig {
     float topP = 1.0f;
     int maxNewTokens = 128;
     bool resume = false;
+    bool saliencyCapture = false;
     // Reference-observability outputs (optional; P1 CPU reference).
     // Empty paths disable the corresponding capture and leave calibration
     // behaviour byte-identical to the uninstrumented run.
@@ -393,6 +395,7 @@ struct RefRoutingSink {
     uint32_t hidden = 0;
     uint32_t count = 0;
     uint64_t captures = 0;
+    bool failed = false;
 };
 
 static RefRoutingSink g_refRouting;
@@ -400,26 +403,28 @@ static RefRoutingSink g_refRouting;
 static bool RefRoutingObserver(const Deep2Engine::MoERoutingObservation& obs, void* user) {
     auto* sink = static_cast<RefRoutingSink*>(user);
     if (!sink || sink->path.empty()) return true;
+    if (sink->failed) return false;
+    const auto fail = [&]() { sink->failed = true; return false; };
     if (!sink->fp) {
         sink->fp = std::fopen(sink->path.c_str(), "wb");
-        if (!sink->fp) return false;
+        if (!sink->fp) return fail();
         sink->layer = obs.layer;
         sink->step = obs.generation_step;
         sink->hidden = obs.hidden_size;
         sink->count = obs.selected_count;
     }
-    if (fwrite(&obs.layer, sizeof(uint32_t), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.generation_step, sizeof(uint64_t), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.hidden_size, sizeof(uint32_t), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.selected_count, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.layer, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.generation_step, sizeof(uint64_t), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.hidden_size, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.selected_count, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
     if (obs.selected_count) {
         if (fwrite(obs.expert_ids, sizeof(uint32_t), obs.selected_count, sink->fp)
-            != obs.selected_count) return false;
+            != obs.selected_count) return fail();
         if (fwrite(obs.applied_weights, sizeof(float), obs.selected_count, sink->fp)
-            != obs.selected_count) return false;
+            != obs.selected_count) return fail();
     }
     if (fwrite(obs.expert_input, sizeof(float), obs.hidden_size, sink->fp)
-        != obs.hidden_size) return false;
+        != obs.hidden_size) return fail();
     ++sink->captures;
     return true;
 }
@@ -438,6 +443,7 @@ struct RefExpertOutSink {
     uint64_t records = 0;
     uint64_t shared = 0;
     uint64_t routed = 0;
+    bool failed = false;
 };
 
 static RefExpertOutSink g_refExpertOut;
@@ -445,20 +451,22 @@ static RefExpertOutSink g_refExpertOut;
 static bool RefExpertOutObserver(const Deep2Engine::MoEExpertOutputObservation& obs, void* user) {
     auto* sink = static_cast<RefExpertOutSink*>(user);
     if (!sink || sink->path.empty()) return true;
+    if (sink->failed) return false;
+    const auto fail = [&]() { sink->failed = true; return false; };
     if (!sink->fp) {
         sink->fp = std::fopen(sink->path.c_str(), "wb");
-        if (!sink->fp) return false;
+        if (!sink->fp) return fail();
         sink->layer = obs.layer;
         sink->step = obs.generation_step;
     }
-    if (fwrite(&obs.layer, sizeof(uint32_t), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.generation_step, sizeof(uint64_t), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.kind, sizeof(uint32_t), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.expert_id, sizeof(uint32_t), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.applied_weight, sizeof(float), 1, sink->fp) != 1) return false;
-    if (fwrite(&obs.element_count, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.layer, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.generation_step, sizeof(uint64_t), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.kind, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.expert_id, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.applied_weight, sizeof(float), 1, sink->fp) != 1) return fail();
+    if (fwrite(&obs.element_count, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
     if (fwrite(obs.output, sizeof(float), obs.element_count, sink->fp)
-        != obs.element_count) return false;
+        != obs.element_count) return fail();
     ++sink->records;
     if (obs.kind == 0) ++sink->shared; else ++sink->routed;
     return true;
@@ -757,17 +765,20 @@ public:
                                              static_cast<uint32_t>(config_.dumpMoeLayer),
                                              0xFFFFFFFFFFFFFFFFull);
         }
-        if (!config_.dumpRoutingPath.empty() && config_.dumpRoutingLayer >= 0) {
+        if (!config_.dumpRoutingPath.empty() &&
+            (config_.dumpRoutingLayer >= 0 || config_.saliencyCapture)) {
             g_refRouting.path = config_.dumpRoutingPath;
             engine_->SetMoERoutingObserver(&RefRoutingObserver, &g_refRouting,
                                            static_cast<uint32_t>(config_.dumpRoutingLayer),
-                                           0xFFFFFFFFFFFFFFFFull);
+                                           ReapCapture::AllSteps, config_.saliencyCapture);
         }
-        if (!config_.dumpExpertOutPath.empty() && config_.dumpExpertOutLayer >= 0) {
+        if (!config_.dumpExpertOutPath.empty() &&
+            (config_.dumpExpertOutLayer >= 0 || config_.saliencyCapture)) {
             g_refExpertOut.path = config_.dumpExpertOutPath;
             engine_->SetMoEExpertOutputObserver(&RefExpertOutObserver, &g_refExpertOut,
                                                 static_cast<uint32_t>(config_.dumpExpertOutLayer),
-                                                0ull);   // strict step 0 (wildcard would capture every forward)
+                                                config_.saliencyCapture ? ReapCapture::AllSteps : 0ull,
+                                                config_.saliencyCapture);
         }
 
         for (size_t i = startPrompt; i < calibrationPrompts.size(); ++i) {
@@ -788,8 +799,16 @@ public:
             uint64_t tokensAfter = accumulator_.tokenCount();
             completedTokensPerPrompt[i] = tokensAfter - tokensBefore;
             
-            // Write checkpoint after each prompt
-            if (!writeCheckpoint(calibrationPrompts, promptHashes, completedTokensPerPrompt, i)) {
+            if (config_.saliencyCapture &&
+                (g_refRouting.failed || g_refExpertOut.failed ||
+                 (g_refRouting.fp && std::fflush(g_refRouting.fp) != 0) ||
+                 (g_refExpertOut.fp && std::fflush(g_refExpertOut.fp) != 0))) {
+                cerr << "Saliency capture I/O failed" << endl;
+                return false;
+            }
+            // Paired captures are evidence, not routing-only ranking files.
+            if (!config_.saliencyCapture &&
+                !writeCheckpoint(calibrationPrompts, promptHashes, completedTokensPerPrompt, i)) {
                 cerr << "Failed to write checkpoint after prompt " << i << endl;
                 return false;
             }
@@ -848,7 +867,7 @@ public:
         }
 
         if (g_refRouting.fp) {
-            std::fclose(g_refRouting.fp);
+            if (std::fclose(g_refRouting.fp) != 0) g_refRouting.failed = true;
             g_refRouting.fp = nullptr;
             std::string rpath = config_.dumpRoutingPath + ".meta.json";
             FILE* rp = std::fopen(rpath.c_str(), "wb");
@@ -874,13 +893,14 @@ public:
         }
 
         if (g_refExpertOut.fp) {
-            std::fclose(g_refExpertOut.fp);
+            if (std::fclose(g_refExpertOut.fp) != 0) g_refExpertOut.failed = true;
             g_refExpertOut.fp = nullptr;
 
             // Keep only the first forward's records so this aligns with the
             // one-shot routing and boundary captures. Records are emitted in
             // order: one shared contribution followed by the routed experts.
-            {
+            // Preserve all records in the separate saliency capture mode.
+            if (!config_.saliencyCapture) {
                 FILE* rf = std::fopen(config_.dumpExpertOutPath.c_str(), "rb+");
                 if (rf) {
                     uint32_t keptShared = 0, keptRouted = 0;
@@ -934,6 +954,36 @@ public:
             }
         }
 
+        if (config_.saliencyCapture) {
+            if (g_refRouting.failed || g_refExpertOut.failed || modelSha256_.empty() ||
+                !ReapCapture::CompleteCounts(g_refRouting.captures, g_refExpertOut.shared,
+                    g_refExpertOut.routed, g_refExpertOut.records, modelInfo_.numActiveExperts)) {
+                cerr << "Incomplete paired saliency capture; no completion receipt emitted" << endl;
+                return false;
+            }
+            // First-shard hash is explicitly scoped; full checkpoint provenance
+            // and independent scoring must be established before any rewrite.
+            const auto receiptPath = fs::path(config_.outputDir) / "saliency_capture_receipt.tsv";
+            auto tmpPath = receiptPath;
+            tmpPath += ".tmp";
+            ofstream receipt(tmpPath, ios::binary | ios::trunc);
+            receipt << "route_records\t" << g_refRouting.captures
+                    << "\nshared_records\t" << g_refExpertOut.shared
+                    << "\nrouted_records\t" << g_refExpertOut.routed
+                    << "\nexpert_count\t" << modelInfo_.numExperts
+                    << "\ntop_k\t" << modelInfo_.numActiveExperts
+                    << "\nfirst_shard_sha256\t" << modelSha256_
+                    << "\nlayer_filter\t" << config_.dumpRoutingLayer
+                    << "\nrewrite_authorized\t0\n";
+            receipt.close();
+            if (!receipt) return false;
+            error_code ec;
+            fs::rename(tmpPath, receiptPath, ec);
+            if (ec) return false;
+            cout << "PAIRED_CAPTURE_COUNTS=PASS ROUTE_RECORDS=" << g_refRouting.captures
+                 << " REWRITE_AUTHORIZED=0" << endl;
+            return true;
+        }
         // Final output
         return writeFinalOutput();
     }
@@ -1387,6 +1437,7 @@ static void printUsage(const char* progName) {
         "  --top-p <f>              Top-p sampling (default: 1.0)\n"
         "  --max-tokens <N>         Max new tokens per prompt (default: 128)\n"
         "  --verbose                Verbose output\n"
+        "  --saliency-capture       Record paired routes and expert outputs in a new output directory\n"
         "  --resume                 Resume from checkpoint\n"
         "  --help                   Show this help\n"
         "\n"
@@ -1450,6 +1501,8 @@ int main(int argc, char** argv) {
             config.dumpExpertOutPath = argv[++i];
         } else if (arg == "--dump-expert-layer" && i + 1 < argc) {
             config.dumpExpertOutLayer = stoi(argv[++i]);
+        } else if (arg == "--saliency-capture") {
+            config.saliencyCapture = true;
         } else if (arg == "--resume") {
             config.resume = true;
         } else if (arg == "--help" || arg == "-h") {
@@ -1480,6 +1533,20 @@ int main(int argc, char** argv) {
         return 1;
     }
     
+    if (config.saliencyCapture) {
+        error_code ec;
+        const bool exists = fs::exists(config.outputDir, ec);
+        if (config.resume || !config.dumpRoutingPath.empty() ||
+            !config.dumpExpertOutPath.empty() || exists || ec ||
+            config.dumpRoutingLayer != config.dumpExpertOutLayer ||
+            config.dumpRoutingLayer < -1) {
+            fprintf(stderr, "Saliency capture requires a fresh output directory, no resume or explicit capture paths, and matching optional layer filters\n");
+            return 1;
+        }
+        config.dumpRoutingPath = (fs::path(config.outputDir) / "routes.bin").string();
+        config.dumpExpertOutPath = (fs::path(config.outputDir) / "expert_outputs.bin").string();
+    }
+
     // Run calibration
     CalibrationEngine engine(config);
     
