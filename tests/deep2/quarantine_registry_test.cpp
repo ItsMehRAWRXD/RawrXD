@@ -149,6 +149,41 @@ int main() {
                   "registry_must_be_noncopy_assignable");
     expect(true, "noncopyable_contract");
 
+    // H01: stale ConfirmIdle evidence. A generation confirmed idle must NOT
+    // authorize reclaim if a newer submission (higher epoch) occurred after.
+    {
+        QuarantineRegistry reg;
+        int id1 = 1, id2 = 2;
+        resetCounters();
+        reg.Retain(1, /*epoch=*/10, ResourceKind::Fence, mockDeleter, &id1);
+        reg.ConfirmIdle(1);                       // confirmed at epoch 10
+        // New submission for the same generation at a HIGHER epoch.
+        reg.Retain(1, /*epoch=*/20, ResourceKind::Arena, mockDeleter, &id2);
+        // Evidence is now stale -> reclaim must refuse.
+        expect(reg.ReclaimGeneration(1) == 0, "stale_confirm_refuses_reclaim");
+        expect(reg.Size() == 2, "stale_confirm_keeps_entries");
+        expect(g_destroyCount == 0, "stale_confirm_no_destroy");
+        // Re-confirm after the newer submission -> reclaim succeeds.
+        reg.ConfirmIdle(1);
+        expect(reg.ReclaimGeneration(1) == 2, "reconfirm_reclaims");
+        expect(g_destroyCount == 2, "reconfirm_destroys");
+    }
+
+    // H01 for ReclaimTicket: ticket epoch must not exceed confirmed epoch.
+    {
+        QuarantineRegistry reg;
+        int id1 = 1;
+        resetCounters();
+        const uint64_t t1 = reg.Retain(1, /*epoch=*/10, ResourceKind::Fence, mockDeleter, &id1);
+        reg.ConfirmIdle(1);
+        reg.Retain(1, /*epoch=*/20, ResourceKind::Arena, mockDeleter, &id1);
+        // t1 has epoch 10 <= confirmed 10, but a newer epoch-20 entry exists.
+        // ReclaimTicket(t1) is still allowed (t1's epoch is not stale relative
+        // to its own confirm); the generation-level staleness is enforced by
+        // ReclaimGeneration. Verify t1 reclaims with its own epoch check.
+        expect(reg.ReclaimTicket(t1), "reclaim_ticket_own_epoch_ok");
+    }
+
     std::printf("FAIL_COUNT=%d\n", failures);
     std::printf("PROMOTE=0\n");
     return failures == 0 ? 0 : 1;

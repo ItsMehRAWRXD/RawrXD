@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <map>
 #include <mutex>
 #include <vector>
 
@@ -69,24 +70,36 @@ public:
     }
 
     // Record completion evidence: a device generation has been confirmed idle
-    // (successful device-idle) or terminally torn down. Without this,
-    // ReclaimGeneration() refuses to reclaim.
+    // (successful device-idle) or terminally torn down. The confirmed epoch is
+    // the maximum submission epoch currently retained for that generation;
+    // ReclaimGeneration()/ReclaimTicket() refuse if a newer submission (higher
+    // epoch) has since occurred (H01: stale evidence must not authorize
+    // destruction of resources associated with later submissions).
     void ConfirmIdle(uint64_t deviceGeneration) {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (std::find(confirmed_.begin(), confirmed_.end(), deviceGeneration)
-            == confirmed_.end())
-            confirmed_.push_back(deviceGeneration);
+        uint64_t maxEpoch = 0;
+        for (const auto& e : entries_)
+            if (e.deviceGeneration == deviceGeneration && e.epoch > maxEpoch)
+                maxEpoch = e.epoch;
+        confirmedEpoch_[deviceGeneration] = maxEpoch;
     }
 
     // Reclaim every retained resource for a generation that has been confirmed
     // idle. Executes each resource's native deleter (destruction) then erases.
-    // Returns the number reclaimed; 0 if the generation was not confirmed.
+    // Returns the number reclaimed; 0 if the generation was not confirmed OR
+    // the evidence is stale (a submission with a higher epoch occurred after
+    // the confirm).
     size_t ReclaimGeneration(uint64_t deviceGeneration) noexcept {
         std::lock_guard<std::mutex> lock(mutex_);
-        const auto cit = std::find(confirmed_.begin(), confirmed_.end(),
-                                   deviceGeneration);
-        if (cit == confirmed_.end()) return 0;   // no completion evidence
-        confirmed_.erase(cit);
+        const auto cit = confirmedEpoch_.find(deviceGeneration);
+        if (cit == confirmedEpoch_.end()) return 0;   // no completion evidence
+        // H01: stale evidence check — any entry with a higher epoch than the
+        // confirmed epoch means the generation became busy again.
+        for (const auto& e : entries_) {
+            if (e.deviceGeneration == deviceGeneration && e.epoch > cit->second)
+                return 0;   // stale -> refuse
+        }
+        confirmedEpoch_.erase(cit);
         size_t n = 0;
         for (const auto& e : entries_) {
             if (e.deviceGeneration == deviceGeneration) {
@@ -105,17 +118,17 @@ public:
 
     // Reclaim a single ticket (late completion notification). Enforces the same
     // completion-evidence invariant as ReclaimGeneration: the ticket's device
-    // generation must have been confirmed idle via ConfirmIdle(). Executes its
-    // deleter. Returns true if the ticket was still quarantined AND confirmed.
+    // generation must have been confirmed idle via ConfirmIdle(), and the
+    // ticket's epoch must not exceed the confirmed epoch (H01 stale check).
     bool ReclaimTicket(uint64_t ticket) noexcept {
         std::lock_guard<std::mutex> lock(mutex_);
         const auto it = std::find_if(entries_.begin(), entries_.end(),
             [&](const Entry& e) { return e.ticket == ticket; });
         if (it == entries_.end()) return false;
         // Completion evidence required on EVERY reclamation path.
-        if (std::find(confirmed_.begin(), confirmed_.end(), it->deviceGeneration)
-            == confirmed_.end())
-            return false;   // no completion evidence -> refuse
+        const auto cit = confirmedEpoch_.find(it->deviceGeneration);
+        if (cit == confirmedEpoch_.end()) return false;   // no evidence
+        if (it->epoch > cit->second) return false;        // stale (H01)
         if (it->deleter) it->deleter(it->ctx);   // native destruction
         entries_.erase(it);
         return true;
@@ -165,7 +178,7 @@ private:
     static constexpr size_t kCapacity = 4096;
     mutable std::mutex      mutex_;
     std::vector<Entry>      entries_;
-    std::vector<uint64_t>   confirmed_;   // generations with completion evidence
+    std::map<uint64_t, uint64_t> confirmedEpoch_;  // generation -> confirmed max epoch
     uint64_t                nextTicket_ = 1;
 };
 
