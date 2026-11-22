@@ -7281,13 +7281,12 @@ bool VulkanCompute::EnsureDownloadRing(size_t bytes) {
 bool VulkanCompute::SubmitDownloadRing(
     DeviceBuf& src,size_t bytes,uint32_t& slotOut)
 {
-    if(!src||!bytes||bytes>src.size||!EnsureDownloadRing(bytes))
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked() || !src||!bytes||bytes>src.size||!EnsureDownloadRing(bytes))
         return false;
-    const uint32_t idx=downloadRingHead_++%3u;
+    unsigned idx=0;
+    if(!Submit::FindFreeRingSlot(downloadRing_,downloadRingHead_,idx)) return false;
     auto& s=downloadRing_[idx];
-    if(vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
-        return false;
-    if(vkResetFences(device_,1,&s.fence)!=VK_SUCCESS) return false;
 
     if(vkResetCommandBuffer(s.cmd,0)!=VK_SUCCESS) return false;
     VkCommandBufferBeginInfo bi{};
@@ -7300,14 +7299,20 @@ bool VulkanCompute::SubmitDownloadRing(
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;si.pCommandBuffers=&s.cmd;
     VkQueue tq=transferQueue_?transferQueue_:queue_;
+    if(vkResetFences(device_,1,&s.fence)!=VK_SUCCESS) return false;
+    s.inFlight=true;
+    s.bytes=0;
     {
         std::unique_lock<std::recursive_mutex> globalLock;
         const bool globalSerial = GlobalGpuSerialEnabled();
         if (globalSerial)
             globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
-        if (gatedSubmit(tq, &si, s.fence) != VK_SUCCESS) return false;
+        if (gatedSubmit(tq, &si, s.fence) != VK_SUCCESS) {
+            cleanupBlocked_.store(true, std::memory_order_release);
+            return false;
+        }
     }
-    s.bytes=bytes;s.inFlight=true;
+    s.bytes=bytes;
     slotOut=idx;
     ++downloadRingSubmits_;
     ++transferQueueSubmits_;
@@ -7317,7 +7322,8 @@ bool VulkanCompute::SubmitDownloadRing(
 bool VulkanCompute::WaitDownloadRing(
     uint32_t idx,void* dst,size_t bytes)
 {
-    if(idx>=3||!dst) return false;
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked() || idx>=3||!dst||!bytes) return false;
     auto& s=downloadRing_[idx];
     if(!s.inFlight||bytes>s.bytes) return false;
     const auto a=std::chrono::steady_clock::now();
@@ -7920,7 +7926,8 @@ bool VulkanCompute::BeginQ4KResidentAsync(
     const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
     uint32_t batch,uint64_t epoch,Q4KAsyncTicket& t)
 {
-    if(t.active||!weight.valid()||weight.type!=12||!input||!output||
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked() || t.active||!weight.valid()||weight.type!=12||!input||!output||
        !batch||batch>4||fused_)
         return false;
     DeviceBuf* wb=nullptr;
@@ -7937,14 +7944,12 @@ bool VulkanCompute::BeginQ4KResidentAsync(
     if(!pipe||!layout) return false;
 
     if(!EnsureAsyncCmdRing()) return false;
-    auto& slot=asyncCmdRing_[asyncCmdRingHead_++%4u];
-    if(vkWaitForFences(device_,1,&slot.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
-        return false;
-    if(vkResetFences(device_,1,&slot.fence)!=VK_SUCCESS) return false;
+    unsigned idx=0;
+    if(!Submit::FindFreeRingSlot(asyncCmdRing_,asyncCmdRingHead_,idx)) return false;
+    auto& slot=asyncCmdRing_[idx];
     if(vkResetCommandBuffer(slot.cmd,0)!=VK_SUCCESS) return false;
     t.cmd=slot.cmd;
     t.fence=slot.fence;
-    slot.inFlight=true;
     ++asyncCmdRingReuses_;
 
     VkCommandBufferBeginInfo bi{};
@@ -7981,8 +7986,16 @@ bool VulkanCompute::BeginQ4KResidentAsync(
     std::unique_lock<std::recursive_mutex> globalLock;
     const bool globalSerial = GlobalGpuSerialEnabled();
     if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if(vkResetFences(device_,1,&slot.fence)!=VK_SUCCESS) {
+        CancelQ4KAsync(t);
+        return false;
+    }
+    slot.inFlight=true;
     if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
-        CancelQ4KAsync(t); return false;
+        cleanupBlocked_.store(true, std::memory_order_release);
+        // Ring retains cmd/fence after an unresolved submit attempt.
+        t={};
+        return false;
     }
     t.inFlight_ = true;
     t.submitNs=(uint64_t)std::chrono::duration_cast<
@@ -7998,7 +8011,8 @@ bool VulkanCompute::BeginQ4KResidentAsync(
 bool VulkanCompute::WaitQ4KResidentAsync(
     Q4KAsyncTicket& t,uint64_t* gpuNs)
 {
-    if(!t.active) return false;
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked() || !t.active) return false;
     const auto w0=std::chrono::steady_clock::now();
     if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
@@ -8018,11 +8032,20 @@ bool VulkanCompute::WaitQ4KResidentAsync(
 }
 
 void VulkanCompute::CancelQ4KAsync(Q4KAsyncTicket& t) {
-    // Do NOT decrement g_gpuInFlight here: the submission succeeded and the
-    // GPU work is still executing. The in_flight reference is released only
-    // in the corresponding wait path after a successful fence/timeline wait.
-    // Cancel merely abandons the ticket; the counter remains conservatively
-    // incremented (safe overcount) until the GPU completes the submission.
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    // Cancellation cannot release the slot before a confirmed completion.
+    // Failed waits leave the ticket and ring ownership intact.
+    if (t.inFlight_) {
+        if (!t.fence || !device_) return;
+        const VkResult result = vkWaitForFences(device_,1,&t.fence,VK_TRUE,30000000000ULL);
+        if (result != VK_SUCCESS) {
+            (void)NoteVkResult(static_cast<int>(result), "cancel_q4k");
+            cleanupBlocked_.store(true, std::memory_order_release);
+            return;
+        }
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_=false;
+    }
     // Ring owns cmd/fence. Locate and release logical in-flight state only.
     for(auto& s:asyncCmdRing_) {
         if(s.cmd==t.cmd&&s.fence==t.fence) {
@@ -8037,6 +8060,8 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
     uint32_t batch,uint64_t epoch,TimelineTicket& ticket)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked() || ticket.active || ticket.inFlight_) return false;
     ticket={};
     if(!TimelineSemaphoreEnabled()||!weight.valid()||weight.type!=12||
        !input||!output||!batch||batch>4)
@@ -8083,10 +8108,12 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
 
     const size_t bytes=(size_t)batch*weight.rows*sizeof(float);
     if(!EnsureDownloadRing(bytes)) return false;
-    const uint32_t slot=downloadRingHead_++%3u;
-    auto& rs=downloadRing_[slot];
-    if(vkWaitForFences(device_,1,&rs.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+    unsigned slot=0;
+    if(!Submit::FindFreeRingSlot(downloadRing_,downloadRingHead_,slot)) {
+        vkFreeCommandBuffers(device_,commandPool_,1,&ccmd);
         return false;
+    }
+    auto& rs=downloadRing_[slot];
     if(vkResetFences(device_,1,&rs.fence)!=VK_SUCCESS) return false;
     if(vkResetCommandBuffer(rs.cmd,0)!=VK_SUCCESS) return false;
     if(vkBeginCommandBuffer(rs.cmd,&bi)!=VK_SUCCESS) return false;
@@ -8107,7 +8134,12 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     std::unique_lock<std::recursive_mutex> globalLock;
     const bool globalSerial = GlobalGpuSerialEnabled();
     if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
-    if (gatedSubmit(queue_, &csi, VK_NULL_HANDLE) != VK_SUCCESS) return false;
+    rs.inFlight=true;
+    rs.bytes=0;
+    if (gatedSubmit(queue_, &csi, VK_NULL_HANDLE) != VK_SUCCESS) {
+        cleanupBlocked_.store(true, std::memory_order_release);
+        return false;
+    }
     ticket.inFlight_++;
     ++timelineSignals_;++queueSubmitCount_;
 
@@ -8129,7 +8161,10 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     std::unique_lock<std::recursive_mutex> globalLock2;
     const bool globalSerial2 = GlobalGpuSerialEnabled();
     if (globalSerial2) globalLock2 = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
-    if (gatedSubmit(tq, &tsi, rs.fence) != VK_SUCCESS) return false;
+    if (gatedSubmit(tq, &tsi, rs.fence) != VK_SUCCESS) {
+        cleanupBlocked_.store(true, std::memory_order_release);
+        return false;
+    }
     ticket.inFlight_++;
     ++timelineSignals_;++transferQueueSubmits_;++queueSubmitCount_;
 
@@ -8147,9 +8182,12 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
 bool VulkanCompute::WaitTimelineDownload(
     TimelineTicket& t,void* dst,size_t bytes)
 {
-    if(!t.active||!dst||bytes>t.bytes||t.ringSlot>=3) return false;
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked() || !t.active||!dst||!bytes||bytes>t.bytes||t.ringSlot>=3) return false;
     if(!WaitTimelineValue(t.transferDone)) return false;
     auto& rs=downloadRing_[t.ringSlot];
+    if (!rs.inFlight || !rs.fence ||
+        vkWaitForFences(device_,1,&rs.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS) return false;
     std::memcpy(dst,rs.mapped,bytes);
     if (t.inFlight_) {
         if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(t.inFlight_);
