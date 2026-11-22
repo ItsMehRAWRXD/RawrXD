@@ -10,10 +10,6 @@ param(
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $buildPath = if ([IO.Path]::IsPathRooted($BuildDir)) { $BuildDir } else { Join-Path $root $BuildDir }
-if ($CleanBuild -and (Test-Path -LiteralPath $buildPath)) {
-    Remove-Item -LiteralPath $buildPath -Recurse -Force
-}
-New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
 $logPath = Join-Path $buildPath "native-ide-link-certification.log"
 $log = New-Object 'System.Collections.Generic.List[string]'
 function Invoke-CertCommand([string[]]$Arguments) {
@@ -32,8 +28,57 @@ function Invoke-CertCommand([string[]]$Arguments) {
 }
 $certified = $false
 try {
+    New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
+    # Bind evidence to an immutable source revision. Refuse a dirty tree:
+    # a commit hash alone does not identify uncommitted source changes.
+    $revision = (& git -C $root rev-parse --verify HEAD 2>&1)
+    if ($LASTEXITCODE -ne 0 -or -not $revision) {
+        throw "Cannot resolve source commit for native linker certification"
+    }
+    $script:log.Add("SOURCE_COMMIT=$([string]$revision)")
+    $dirty = @(& git -C $root status --porcelain --untracked-files=no 2>&1)
+    if ($LASTEXITCODE -ne 0) { throw "Cannot inspect source worktree status" }
+    $script:log.Add("SOURCE_TRACKED_DIRTY=$([int]($dirty.Count -gt 0))")
+    if ($dirty.Count -gt 0) {
+        throw "Tracked source changes are uncommitted; certification requires an immutable source revision"
+    }
+
+    # Only delete the dedicated build directory after source preflight passes.
+    # Never erase the repository root or a path outside the repository.
+    if ($CleanBuild) {
+        $repoCanonical = [IO.Path]::GetFullPath($root).TrimEnd('\','/')
+        $buildCanonical = [IO.Path]::GetFullPath($buildPath).TrimEnd('\','/')
+        $prefix = $repoCanonical + [IO.Path]::DirectorySeparatorChar
+        if (-not $buildCanonical.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) {
+            throw "CleanBuild requires a dedicated directory inside the repository"
+        }
+        if ($buildCanonical -eq $repoCanonical) {
+            throw "Refusing to clean the repository root"
+        }
+        # Do not recursively delete an arbitrary populated source directory.
+        # Existing nonempty directories must already be CMake build trees.
+        $existingChildren = @(Get-ChildItem -LiteralPath $buildPath -Force)
+        if ($existingChildren.Count -gt 0 -and
+            -not (Test-Path -LiteralPath (Join-Path $buildPath "CMakeCache.txt"))) {
+            throw "Refusing to clean a nonempty directory without CMakeCache.txt"
+        }
+        Remove-Item -LiteralPath $buildPath -Recurse -Force
+        New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
+    }
+
     Invoke-CertCommand -Arguments @("-S", $root, "-B", $buildPath, "-G", $Generator,
         "-A", "x64", "-DRAWRXD_REQUIRE_NATIVE_IDE_LINK=ON")
+    # Hash the generated build configuration as part of the evidence chain.
+    # This identifies the actual CMake configuration used by the linker.
+    $cachePath = Join-Path $buildPath "CMakeCache.txt"
+    if (-not (Test-Path -LiteralPath $cachePath)) {
+        throw "CMakeCache.txt missing after configure; configuration cannot be identified"
+    }
+    $script:log.Add("CMAKE_GENERATOR=$Generator")
+    $script:log.Add("CMAKE_CONFIGURATION=$Configuration")
+    $script:log.Add("CMAKE_CACHE_SHA256=$((Get-FileHash -LiteralPath $cachePath -Algorithm SHA256).Hash)")
+    $script:log.Add("CLEAN_BUILD=$([int][bool]$CleanBuild)")
+    $script:log.Add("REAP_ACCEPTANCE_REQUIRED=$([int][bool]$RunReapTests)")
     # Reject stale executables left over from an earlier successful build.
     # This marker is captured immediately before invoking the native link.
     $linkStartUtc = [DateTime]::UtcNow
@@ -110,6 +155,10 @@ finally {
     }
     if ($unresolved.Count -gt 0) { $certified = $false }
     $log.Add("NATIVE_IDE_LINK_CERTIFIED=$([int]$certified)")
+    # Even an early preflight or clean-directory failure must leave evidence.
+    if (-not (Test-Path -LiteralPath $buildPath)) {
+        New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
+    }
     [IO.File]::WriteAllLines($logPath, [string[]]$log)
     Write-Host "Evidence: $logPath"
 }
