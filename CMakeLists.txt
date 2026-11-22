@@ -5766,6 +5766,22 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
     set_target_properties(rawr-reap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 endif()
 
+# Optional native calibration runner. It dynamically loads the pinned,
+# independently built llama.cpp reference backend and is only exposed when
+# that reference checkout is present; no runtime dependency is bundled.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_reference_calibration.cpp" AND
+   EXISTS "D:/llama-ref-telemetry/include/llama.h" AND
+   EXISTS "D:/llama-ref-telemetry/ggml/include/ggml.h")
+    add_executable(reap-reference-calibration tools/reap_reference_calibration.cpp)
+    target_include_directories(reap-reference-calibration PRIVATE
+        "D:/llama-ref-telemetry/include" "D:/llama-ref-telemetry/ggml/include")
+    target_compile_features(reap-reference-calibration PRIVATE cxx_std_20)
+    target_compile_definitions(reap-reference-calibration PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+    if(MSVC)
+        target_compile_options(reap-reference-calibration PRIVATE /W4 /EHsc /std:c++20)
+    endif()
+endif()
+
 # REAP calibration is a source-backed prerequisite for any physical export.
 # Keep it separate from the writer so calibration can be resumed and audited
 # without granting the calibration process write access to source shards.
