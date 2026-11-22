@@ -68,7 +68,7 @@ bool writeFixture(const fs::path& path) {
     put(out, uint32_t{0x46554747}); // GGUF
     put(out, uint32_t{3});
     put(out, static_cast<uint64_t>(tensors.size()));
-    put(out, uint64_t{2});
+    put(out, uint64_t{4});
 
     stringValue(out, "general.alignment");
     put(out, uint32_t{4}); // UINT32
@@ -76,6 +76,10 @@ bool writeFixture(const fs::path& path) {
     stringValue(out, "general.architecture");
     put(out, uint32_t{8}); // STRING
     stringValue(out, "deepseek2");
+    stringValue(out, "deepseek2.expert_count");
+    put(out,uint32_t{4}); put(out,uint32_t{2});
+    stringValue(out, "deepseek2.expert_used_count");
+    put(out,uint32_t{4}); put(out,uint32_t{1});
 
     uint64_t cursor = 0;
     for (auto& tensor : tensors) {
@@ -182,17 +186,28 @@ int main() {
     }
     if (sourceLoader.tensorCount() != outputLoader.tensorCount() ||
         outputLoader.shardCount() != 1 ||
-        outputLoader.getMetaInt("rawrxd.reap.active_experts", 0) != 1) {
+        outputLoader.getMetaInt("deepseek2.expert_count", 0) != 1 ||
+        outputLoader.getMetaInt("deepseek2.expert_used_count", 0) != 1) {
         std::cerr << "OUTPUT_INVENTORY_MISMATCH\n";
         return 6;
+    }
+    // The complete physical writer must agree with preflight at the exact
+    // serialized boundary, not just under an arbitrary generous budget.
+    Deep2::ReapMoETransformRequest exact = request;
+    exact.outputDirectory = (root / "candidate_exact").string();
+    exact.targetSizeBytes = result.outputBytes;
+    const auto exactResult = Deep2::transformMoEGGUF(exact);
+    if (!exactResult.success || exactResult.outputBytes != result.outputBytes) {
+        std::cerr << "EXACT_BUDGET_FAIL " << exactResult.error << "\n";
+        return 9;
     }
     const fs::path tooSmall = root / "candidate_too_small";
     Deep2::ReapMoETransformRequest rejected = request;
     rejected.outputDirectory = tooSmall.string();
-    rejected.targetSizeBytes = 100;
+    rejected.targetSizeBytes = result.outputBytes - 1;
     const auto rejectedResult = Deep2::transformMoEGGUF(rejected);
     if (rejectedResult.success ||
-        rejectedResult.error.find("exceeds target size") == std::string::npos ||
+        rejectedResult.error.find("max_uniform_retained_at_current_dtype=0") == std::string::npos ||
         fs::exists(tooSmall)) {
         std::cerr << "TARGET_ENFORCEMENT_FAIL " << rejectedResult.error << "\n";
         return 7;
@@ -202,7 +217,7 @@ int main() {
     rejected.outputDirectory = existing.string();
     const auto existingResult = Deep2::transformMoEGGUF(rejected);
     if (existingResult.success ||
-        existingResult.error.find("exceeds target size") == std::string::npos ||
+        existingResult.error.find("max_uniform_retained_at_current_dtype=0") == std::string::npos ||
         !fs::exists(existing) ||
         fs::directory_iterator(existing, ec) != fs::directory_iterator()) {
         std::cerr << "EXISTING_TARGET_ENFORCEMENT_FAIL " << existingResult.error << "\n";
