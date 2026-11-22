@@ -849,8 +849,11 @@ namespace Deep2
         };
         using MoERoutingObserver = bool (*)(const MoERoutingObservation&, void*);
         void SetMoERoutingObserver(MoERoutingObserver observer, void* userData,
-                                   uint32_t layerIndex, uint64_t generationStep) {
+                                   uint32_t layerIndex, uint64_t generationStep,
+                                   bool streaming = false) {
             moeRoutingObserver_ = observer;
+            moeRoutingDone_ = false;
+            moeRoutingStreaming_ = streaming;
             moeRoutingObserverUser_ = userData;
             moeRoutingLayer_ = layerIndex;
             moeRoutingStep_ = generationStep;
@@ -872,8 +875,10 @@ namespace Deep2
         };
         using MoEExpertOutputObserver = bool (*)(const MoEExpertOutputObservation&, void*);
         void SetMoEExpertOutputObserver(MoEExpertOutputObserver observer, void* userData,
-                                        uint32_t layerIndex, uint64_t generationStep) {
+                                        uint32_t layerIndex, uint64_t generationStep,
+                                        bool allLayers = false) {
             moeExpertOutObserver_ = observer;
+            moeExpertOutAllLayers_ = allLayers;
             moeExpertOutObserverUser_ = userData;
             moeExpertOutLayer_ = layerIndex;
             moeExpertOutStep_ = generationStep;
@@ -1185,6 +1190,7 @@ uint64_t vulkanGemvOk_ = 0;
         uint32_t moeRoutingLayer_ = 0xFFFFFFFFu;
         uint64_t moeRoutingStep_ = 0xFFFFFFFFFFFFFFFFull;
         bool moeRoutingDone_ = false;
+        bool moeRoutingStreaming_ = false;
 
         // Engine expert-output observer (see SetMoEExpertOutputObserver).
         MoEExpertOutputObserver moeExpertOutObserver_ = nullptr;
@@ -1192,6 +1198,7 @@ uint64_t vulkanGemvOk_ = 0;
         uint32_t moeExpertOutLayer_ = 0xFFFFFFFFu;
         uint64_t moeExpertOutStep_ = 0xFFFFFFFFFFFFFFFFull;
         bool moeExpertOutActive_ = false;
+        bool moeExpertOutAllLayers_ = false;
         float *qProj = nullptr;
         float *kProj = nullptr;
         float *vProj = nullptr;
