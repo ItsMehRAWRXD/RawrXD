@@ -3336,6 +3336,11 @@ void VulkanCompute::ReleaseQuantScratch(QuantScratch* s) {
 }
 
 bool VulkanCompute::EnsureQuantFastPath() {
+    // All quantized paths share quant_fence_ and quant_cmd_. A failed wait in
+    // any producer leaves those objects potentially in use by the device;
+    // prevent another path from resetting or overwriting them.
+    if (quant_submission_in_flight_ || quant_submission_failed_)
+        return false;
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (quant_fast_ready_) return true;
     if (!device_ || quant_descriptor_set_layout_ == nullptr) return false;
@@ -4431,6 +4436,7 @@ void VulkanCompute::Cleanup() {
             }
             attn_quarantined_descriptors_.clear();
             attn_submission_in_flight_ = false;
+            quant_submission_in_flight_ = false;
             vkDestroyDescriptorPool(device_, attn_desc_pool_, nullptr);
             attn_desc_pool_ = nullptr;
         }

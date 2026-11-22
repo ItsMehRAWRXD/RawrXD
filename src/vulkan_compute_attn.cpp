@@ -315,6 +315,7 @@ bool VulkanCompute::ExecuteAttnDecodeGqa(
         return false;
     }
     attn_submission_in_flight_ = true;
+    quant_submission_in_flight_ = true;
     ++gpu_counters_.submits;
     if (quant_fuse_active_) ++quant_fuse_submits_;
     if (std::getenv("DEEP2_SUBMIT_TRACE")) {
@@ -331,6 +332,7 @@ bool VulkanCompute::ExecuteAttnDecodeGqa(
         return false;
     }
     attn_submission_in_flight_ = false;
+    quant_submission_in_flight_ = false;
     ++gpu_counters_.waits;
     ++quant_epoch_;
     NoteSubmissionComplete();
