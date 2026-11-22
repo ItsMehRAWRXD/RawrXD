@@ -11,6 +11,7 @@
 #include "deep2/ReapGlmMoe.hpp"
 #include "deep2/ReapMlaReference.hpp"
 #include "deep2/ReapLocalRequest.hpp"
+#include "deep2/ReapAgentGroup.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -314,6 +315,36 @@ int main(){
         check(RunLocalRequest(budget,amount,8,cancel,factory,[](uint32_t){return false;})==LocalResult::ConsumerStopped,"LTT consumer stop");
         check(RunLocalRequest(budget,amount,8,cancel,[](){return std::unique_ptr<Backend>{};},consume)==LocalResult::BackendFailed,"LTT missing backend");
         check(budget.Used()==StrataBudget::Amount{},"LTT failure releases reservation");
+    }
+    {
+        struct AgentBackend {
+            std::shared_ptr<const uint32_t> model;
+            uint32_t pos=0;
+            TokenStep Step(uint32_t& t,const std::atomic<bool>&){t=*model+pos++;return TokenStep::Token;}
+        };
+        auto model=std::make_shared<const uint32_t>(42);
+        StrataBudget budget({6,0,0,0,6});
+        std::vector<StrataBudget::Amount> amounts(6,{1,0,0,0,1});
+        std::vector<std::shared_ptr<std::atomic<bool>>> cancels;
+        for(int i=0;i<6;++i)cancels.push_back(std::make_shared<std::atomic<bool>>(false));
+        std::vector<std::vector<uint32_t>> streams(6);
+        std::vector<AgentReport> reports;
+        std::atomic<unsigned> sameModel{0};
+        auto factory=[&](std::shared_ptr<const uint32_t> m,size_t){
+            if(m==model)++sameModel;
+            return std::make_unique<AgentBackend>(AgentBackend{m,0});
+        };
+        auto consumer=[&](size_t i,uint32_t t){streams[i].push_back(t);if(i==2)cancels[i]->store(true);return true;};
+        check(RunAgentGroup(model,budget,amounts,3,6,cancels,factory,consumer,reports)&&reports.size()==6,"agent six request execution");
+        check(sameModel==6,"agent shared immutable model identity");
+        bool isolated=reports.size()==6;
+        for(size_t i=0;i<6&&isolated;++i)
+            isolated=streams[i]==(i==2?std::vector<uint32_t>{42}:std::vector<uint32_t>{42,43,44})&&reports[i].result==(i==2?LocalResult::Cancelled:LocalResult::Completed);
+        check(isolated,"agent independent streams and cancellation");
+        check(budget.Used()==StrataBudget::Amount{},"agent group reservations released");
+        check(!RunAgentGroup(model,budget,amounts,3,5,cancels,factory,consumer,reports),"agent concurrency limit");
+        cancels[1]=cancels[0];
+        check(!RunAgentGroup(model,budget,amounts,3,6,cancels,factory,consumer,reports),"agent duplicate cancellation rejected");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
