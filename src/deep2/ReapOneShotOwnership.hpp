@@ -70,9 +70,12 @@ public:
     // handles are about to be used) from a submitted one. Drain refuses to
     // reclaim an unsubmitted acquisition so resources are never freed between
     // Acquire() and vkQueueSubmit().
-    void MarkSubmitted() noexcept {
+    bool MarkSubmitted(uint64_t ticket) noexcept {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (!active_.load(std::memory_order_relaxed) || ticket != epoch_)
+            return false;
         submitted_ = true;
+        return true;
     }
 
     // Teardown of the owning device. Takes the ticket captured BEFORE the idle
@@ -91,11 +94,12 @@ public:
         return true;
     }
 
-    // The current acquisition's ticket (0 if none). Capture BEFORE a device-idle
+    // The current submitted acquisition's ticket (0 if none or unsubmitted).
+    // Capture BEFORE a device-idle
     // wait so a subsequent Drain() can detect a new acquisition (H39).
     uint64_t CurrentTicket() const noexcept {
         std::lock_guard<std::mutex> lock(mutex_);
-        return epoch_;
+        return active_.load(std::memory_order_relaxed) && submitted_ ? epoch_ : 0;
     }
 
 private:
