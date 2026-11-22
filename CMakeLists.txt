@@ -4813,6 +4813,18 @@ foreach(_reap_quant_test IN ITEMS reap_q4k_to_q2k_test reap_quant_range_test)
     enable_testing()
     add_test(NAME ${_reap_quant_test} COMMAND ${_reap_quant_test})
 endforeach()
+# Portable native K-quant regression must not require AVX2.
+add_executable(reap_scalar_acceptance_test tests/reap_q4k_to_q2k_test.cpp)
+target_include_directories(reap_scalar_acceptance_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_scalar_acceptance_test PRIVATE cxx_std_17)
+target_compile_definitions(reap_scalar_acceptance_test PRIVATE RAWRXD_REAP_SCALAR_ACCEPTANCE=1)
+if(MSVC)
+    target_compile_options(reap_scalar_acceptance_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_scalar_acceptance_test PRIVATE -Wall -Wextra -mno-avx -mno-avx2)
+endif()
+add_test(NAME reap_scalar_acceptance_test COMMAND reap_scalar_acceptance_test)
+
 # Isolated native adaptive codec acceptance: baseline source remains non-AVX2.
 if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     add_library(reap_msvc_avx2 OBJECT src/deep2/ReapAvx2Msvc.cpp)
