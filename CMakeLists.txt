@@ -4753,6 +4753,21 @@ add_test(NAME reap_activation_score_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_activation_score_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_activation_score_regression.cmake")
 
+# Native receipt-validated candidate selection.
+add_executable(reap_selection_plan tools/reap_selection_plan.cpp)
+target_compile_features(reap_selection_plan PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_selection_plan PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_selection_plan PRIVATE -Wall -Wextra)
+endif()
+enable_testing()
+add_test(NAME reap_selection_plan_regression
+    COMMAND "${CMAKE_COMMAND}"
+        "-DPLANNER=$<TARGET_FILE:reap_selection_plan>"
+        "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_selection_plan_fixtures"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_selection_plan_regression.cmake")
+
 # Native paired capture filter, record count and overflow regression.
 add_executable(reap_capture_policy_test tests/reap_capture_policy_test.cpp)
 target_include_directories(reap_capture_policy_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
