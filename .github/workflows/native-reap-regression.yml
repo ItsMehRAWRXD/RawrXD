@@ -1,0 +1,33 @@
+name: Native REAP regression
+on:
+  push:
+    branches: [native/glm-reap-ownership-fixes-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile native regression
+        run: g++ -std=c++17 -O2 -mavx2 -pthread -Wall -Wextra -I src tests/reap_q4k_to_q2k_test.cpp -o reap-regression
+      - name: Execute native regression
+        run: |
+          grep -qw avx2 /proc/cpuinfo
+          ./reap-regression
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute native regression
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 /arch:AVX2 /D__AVX2__ /I src tests\reap_q4k_to_q2k_test.cpp /Fe:reap-regression.exe
+          if errorlevel 1 exit /b 1
+          reap-regression.exe
+          if errorlevel 1 exit /b 1
