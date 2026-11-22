@@ -13,7 +13,21 @@ namespace Deep2 { namespace ReapQuant {
 class BoundedExpertCache {
 public:
     using Payload=std::vector<uint8_t>;
-    using Lease=std::shared_ptr<const Payload>;
+    class Lease {
+        friend class BoundedExpertCache;
+        std::shared_ptr<const Payload> data_;
+        explicit Lease(std::shared_ptr<const Payload> p):data_(std::move(p)){}
+    public:
+        Lease()=default;
+        Lease(std::nullptr_t){}
+        explicit operator bool() const noexcept {return bool(data_);}
+        const Payload* operator->() const noexcept {return data_.get();}
+        const Payload& operator*() const noexcept {return *data_;}
+        const Payload* get() const noexcept {return data_.get();}
+        void reset() noexcept {data_.reset();}
+        friend bool operator==(const Lease& a,const Lease& b) noexcept {return a.data_==b.data_;}
+        friend bool operator!=(const Lease& a,const Lease& b) noexcept {return !(a==b);}
+    };
 private:
     struct Entry {
         Lease data;
@@ -49,12 +63,13 @@ public:
         while(bytes>budget_-reserved_){
             auto victim=entries_.end();
             for(auto it=entries_.begin();it!=entries_.end();++it)
-                if(!it->second.loading&&it->second.data.use_count()==1&&
+                if(!it->second.loading&&it->second.data.data_.use_count()==1&&
                    (victim==entries_.end()||it->second.age<victim->second.age))victim=it;
             if(victim==entries_.end())return false;
             reserved_-=victim->second.bytes;entries_.erase(victim);
         }
-        entries_.emplace(key,Entry{nullptr,bytes,++clock_,true});
+        try { entries_.emplace(key,Entry{nullptr,bytes,++clock_,true}); }
+        catch (...) { return false; }
         reserved_+=bytes;
         lock.unlock();
         std::shared_ptr<Payload> pending;
@@ -70,7 +85,7 @@ public:
             reserved_-=bytes;entries_.erase(it);
             lock.unlock();changed_.notify_all();return false;
         }
-        it->second.data=std::move(pending);it->second.loading=false;
+        it->second.data=Lease(std::move(pending));it->second.loading=false;
         it->second.age=++clock_;
         Lease value=it->second.data;
         lock.unlock();changed_.notify_all();out=std::move(value);return true;
