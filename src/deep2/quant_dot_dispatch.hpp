@@ -114,6 +114,9 @@ bool DotF16On(int32_t device,
 //     keeps the compared path deterministic.
 bool BeginBatch();
 bool EndBatch();
+#if defined(RAWRXD_QUANT_DOT_TEST_HOOKS)
+bool InjectEndBatchFailureForTest();
+#endif
 // DEEP2_VULKAN_SUBMIT_OPT_001: RuntimeGraph <-> QuantDot fused CB lifecycle
 bool BeginFusedLayer();
 bool EndFusedLayer();

@@ -8,6 +8,7 @@
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <atomic>
 #include <vulkan/vulkan.h>
 
 // GPU compute optional - CPU inference always works
@@ -153,6 +154,11 @@ public:
                        size_t q8_bytes, void* out, size_t out_bytes,
                        size_t n_out, size_t n_in, int kind);
     bool EndQuantDotBatch();
+#if defined(RAWRXD_QUANT_DOT_TEST_HOOKS)
+    // Regression-only fault injection. This declaration is compiled only into
+    // the ownership test target; production targets have no injection surface.
+    void InjectQuantDotEndFailureForTest() noexcept;
+#endif
 
     // DEEP2_VULKAN_SUBMIT_OPT_001: RuntimeGraph command-buffer lifecycle
     // (names match deep2 BeginFusedLayer/EndFusedLayer). Marks a fuse window
@@ -475,6 +481,9 @@ private:
     };
     static constexpr uint32_t kQuantBatchMaxSets = 32;
     bool quant_batch_active_ = false;
+#if defined(RAWRXD_QUANT_DOT_TEST_HOOKS)
+    std::atomic<bool> quant_test_fail_end_{false};
+#endif
     // A successful queue submit whose fence has not yet completed.  Failed
     // waits quarantine the batch until Cleanup() after device-idle teardown;
     // normal batch reuse must not unpin or recycle these resources.

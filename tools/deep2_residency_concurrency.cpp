@@ -676,6 +676,73 @@ int main(int argc, char** argv) {
         Check(retry_opened && retry_closed, "E: ownership is reusable after close");
     }
 
+    std::printf("\n--- F. injected device-close failure recovery ---\n");
+    Checkpoint("SECTION_F_BEGIN");
+    {
+        std::vector<float> failed_out(n_out, 0.0f);
+        // Q4_K is intentionally kept on the synchronous path by the
+        // production dispatcher. Use a valid Q6_K-shaped payload here so the
+        // regression reaches the real deferred batch and EndQuantDotBatch
+        // failure path rather than accidentally testing a synchronous dot.
+        const size_t q6_row_bytes = (n_in / 256u) * 210u;
+        std::vector<uint8_t> q6_payload(n_out * q6_row_bytes);
+        for (size_t i = 0; i < q6_payload.size(); ++i)
+            q6_payload[i] = static_cast<uint8_t>((i * 29u + 17u) & 0xffu);
+        const size_t q8_count = q8.size();
+        const CpuDot failed_cpu = [q6_row_bytes, q8_count](
+            const uint8_t* row, const void* q8_ptr, size_t) -> float {
+            const float* q8_values = static_cast<const float*>(q8_ptr);
+            float acc = 0.0f;
+            for (size_t i = 0; i < q6_row_bytes; ++i)
+                acc += static_cast<float>(row[i]) *
+                       q8_values[i % q8_count] * 0.0001f;
+            return acc;
+        };
+        std::vector<float> failed_ref(n_out, 0.0f);
+        for (size_t row = 0; row < n_out; ++row)
+            failed_ref[row] = failed_cpu(
+                q6_payload.data() + row * q6_row_bytes,
+                q8.data(), row);
+        const bool opened = BeginBatch();
+        const bool queued = opened && DotBlocked(
+            1, q6_payload.data(), q6_payload.size(),
+            act.data(), n_in, failed_out.data(), n_out, failed_cpu,
+            q8.data(), q8.size() * sizeof(float), false);
+        const bool queued_receipt = queued && LastReceipt().queued;
+        const bool injected = queued && InjectEndBatchFailureForTest();
+        const bool closed = injected && EndBatch();
+        Check(opened, "F: failure-injection batch opened");
+        Check(queued_receipt, "F: dot accepted into failure-injection batch");
+        Check(injected, "F: EndBatch failure was armed");
+        Check(!closed, "F: injected device close failure is reported");
+        Check(LastReceipt().fail_stage &&
+                  std::strcmp(LastReceipt().fail_stage, "end") == 0,
+              "F: receipt identifies device close failure");
+        Check(LastReceipt().cpu_rows == n_out && SameBits(failed_out, failed_ref),
+              "F: failed batch replays the queued dot exactly once on CPU");
+        const BatchAccounting accounting = BatchAccountingSnapshot();
+        Check(!accounting.batch_active && accounting.queued == 0,
+              "F: failed close leaves no active or queued logical batch state");
+        Check(accounting.accepted == accounting.completed + accounting.failed,
+              "F: failed close preserves terminal accounting");
+        Check(GetCacheStats().pinned == 0,
+              "F: failed close releases all residency pins");
+        const bool recovered_open = BeginBatch();
+        const bool recovered_close = recovered_open && EndBatch();
+        Check(recovered_open && recovered_close,
+              "F: a later batch can open and close after failure recovery");
+        std::vector<float> drain_out(n_out, 0.0f);
+        const bool drained = DotBlocked(
+            0, banks[0].bytes.data(), banks[0].packedBytes(),
+            act.data(), n_in, drain_out.data(), n_out, MakeCpuRef(banks[0]),
+            q8.data(), q8.size() * sizeof(float), false);
+        Check(drained && LastReceipt().used_gpu,
+              "F: a real post-failure dispatch drains deferred residency safely");
+        Check(GetCacheStats().retired_pending == 0 &&
+                  GetCacheStats().evictions == GetCacheStats().retired_reaped,
+              "F: post-failure residency is fully reaped");
+    }
+
     // ---- final invariants ---------------------------------------------------
     const Snap f = Take();
     std::printf("\n--- final invariants ---\n");

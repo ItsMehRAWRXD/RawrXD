@@ -1444,6 +1444,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
     else()
         target_compile_options(deep2_residency_concurrency PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
     endif()
+    target_compile_definitions(deep2_residency_concurrency PRIVATE RAWRXD_QUANT_DOT_TEST_HOOKS=1)
     add_test(NAME deep2_residency_concurrency COMMAND deep2_residency_concurrency)
     set_tests_properties(deep2_residency_concurrency PROPERTIES TIMEOUT 300)
     message(STATUS "deep2_residency_concurrency enabled (Sprint9 Commit E)")

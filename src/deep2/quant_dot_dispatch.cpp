@@ -411,6 +411,14 @@ bool EndBatch()
     return EndBatchImpl();
 }
 
+#if defined(RAWRXD_QUANT_DOT_TEST_HOOKS)
+bool InjectEndBatchFailureForTest()
+{
+    Gpu().InjectQuantDotEndFailureForTest();
+    return true;
+}
+#endif
+
 bool BeginFusedLayer()
 {
     return Gpu().BeginFusedLayer();

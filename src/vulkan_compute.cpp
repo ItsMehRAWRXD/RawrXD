@@ -2113,6 +2113,12 @@ bool VulkanCompute::EndQuantDotBatch() {
             pins.clear();
         }
     } pin_guard{*this, batch_pinned_, quant_submission_in_flight_, quant_submission_failed_};
+#if defined(RAWRXD_QUANT_DOT_TEST_HOOKS)
+    if (quant_test_fail_end_.exchange(false, std::memory_order_acq_rel)) {
+        std::cerr << "[QUANT_DOT] injected EndQuantDotBatch failure for regression\n";
+        return false;
+    }
+#endif
     const size_t n = quant_batch_entries_.size();
     if (n == 0) return true;
 
@@ -2368,6 +2374,12 @@ bool VulkanCompute::EndQuantDotBatch() {
     NoteSubmissionComplete();
     return true;
 }
+
+#if defined(RAWRXD_QUANT_DOT_TEST_HOOKS)
+void VulkanCompute::InjectQuantDotEndFailureForTest() noexcept {
+    quant_test_fail_end_.store(true, std::memory_order_release);
+}
+#endif
 
 namespace {
 const char* kF16DotShaderPath = "tools/shaders/fp16_gemv.spv";
