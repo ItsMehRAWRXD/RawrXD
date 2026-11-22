@@ -4813,6 +4813,17 @@ foreach(_reap_quant_test IN ITEMS reap_q4k_to_q2k_test reap_quant_range_test)
     enable_testing()
     add_test(NAME ${_reap_quant_test} COMMAND ${_reap_quant_test})
 endforeach()
+# Virtual expert payload: adaptive Q2 parity, cache reuse and failure ownership.
+add_executable(reap_virtual_payload_adaptive_test tests/reap_virtual_payload_adaptive_test.cpp)
+target_include_directories(reap_virtual_payload_adaptive_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_virtual_payload_adaptive_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_virtual_payload_adaptive_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_virtual_payload_adaptive_test PRIVATE -Wall -Wextra)
+endif()
+add_test(NAME reap_virtual_payload_adaptive_test COMMAND reap_virtual_payload_adaptive_test)
+
 # Exhaustive binary16 conversion and rounding acceptance, independent of GPU.
 add_executable(reap_half_roundtrip_test tests/reap_half_roundtrip_test.cpp)
 target_include_directories(reap_half_roundtrip_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
@@ -4856,6 +4867,13 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     target_compile_features(reap_adaptive_range_test PRIVATE cxx_std_17)
     target_compile_definitions(reap_adaptive_range_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
     add_test(NAME reap_adaptive_range_test COMMAND reap_adaptive_range_test)
+    add_executable(reap_virtual_payload_msvc_adaptive_test
+        tests/reap_virtual_payload_adaptive_test.cpp
+        $<TARGET_OBJECTS:reap_msvc_avx2>)
+    target_include_directories(reap_virtual_payload_msvc_adaptive_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(reap_virtual_payload_msvc_adaptive_test PRIVATE cxx_std_17)
+    target_compile_definitions(reap_virtual_payload_msvc_adaptive_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
+    add_test(NAME reap_virtual_payload_msvc_adaptive_test COMMAND reap_virtual_payload_msvc_adaptive_test)
 
     # Production IDE and its REAP streaming conversion share the isolated
     # object. Do not add AVX2 compile flags to the IDE's source files.
