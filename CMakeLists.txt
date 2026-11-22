@@ -4712,6 +4712,24 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_acceptance_propagation_smoke.
     add_test(NAME agent_acceptance_propagation_smoke COMMAND agent_acceptance_propagation_smoke)
 endif()
 
+# REAP-AutoFit R02: canonical IR (physical tensors vs logical execution visits).
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_canonical_ir_test.cpp")
+    add_executable(reap_canonical_ir_test
+        tests/reap/reap_canonical_ir_test.cpp)
+    target_include_directories(reap_canonical_ir_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(reap_canonical_ir_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(reap_canonical_ir_test PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(reap_canonical_ir_test PRIVATE -Wall -Wextra)
+    endif()
+    set_target_properties(reap_canonical_ir_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME reap_canonical_ir_test COMMAND reap_canonical_ir_test)
+endif()
+
 # Gap 7+10: AgentEditHistory undo byte restore + AgentSession/TaskLedger disk RT.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_ledger_undo_smoke.cpp")
     add_executable(agent_ledger_undo_smoke
