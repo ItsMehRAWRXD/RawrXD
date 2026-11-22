@@ -7,6 +7,7 @@
 #include "ReapSubmissionCompletion.hpp"
 #include "ReapTransferPreflight.hpp"
 #include "ReapRingOwnership.hpp"
+#include "ReapMlaGeometry.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -4885,7 +4886,7 @@ bool VulkanCompute::RunMLAAttentionHost(
     float scale, uint64_t epoch)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
-    if (OneShotBlocked() || !initialized_ || !opsPipeline_ ||
+    if (OneShotBlocked() || !initialized_ || !opsPipeline_ || fused_ ||
         !q || !k || !v || !output ||
         !heads || !keyLen || !valueLen ||
         !layers || !maxSeq || layer>=layers || pos>=maxSeq ||
@@ -4900,11 +4901,6 @@ bool VulkanCompute::RunMLAAttentionHost(
         mlaCacheMaxSeq_!=maxSeq;
     if (shapeChanged) ResetMLACache();
 
-    auto checkedMul=[](uint64_t a,uint64_t b,uint64_t& out)->bool{
-        if(a && b>std::numeric_limits<uint64_t>::max()/a) return false;
-        out=a*b; return true;
-    };
-
     if (mlaCacheCapacity_ <= pos) {
         uint32_t newCap = mlaCacheCapacity_ ? mlaCacheCapacity_ : 16u;
         while (newCap <= pos) {
@@ -4914,17 +4910,11 @@ bool VulkanCompute::RunMLAAttentionHost(
         newCap=std::min(newCap,maxSeq);
         if(newCap<=pos) return false;
 
-        uint64_t kElems=0,vElems=0,tmp=0;
-        if(!checkedMul(layers,newCap,tmp) ||
-           !checkedMul(tmp,heads,tmp) ||
-           !checkedMul(tmp,keyLen,kElems) ||
-           !checkedMul(layers,newCap,tmp) ||
-           !checkedMul(tmp,heads,tmp) ||
-           !checkedMul(tmp,valueLen,vElems))
+        Mla::Geometry nextGeometry;
+        if (!Mla::Build(heads,keyLen,valueLen,layers,newCap,layer,pos,nextGeometry))
             return false;
-        if(kElems>std::numeric_limits<VkDeviceSize>::max()/sizeof(float) ||
-           vElems>std::numeric_limits<VkDeviceSize>::max()/sizeof(float))
-            return false;
+        const uint64_t kElems = nextGeometry.keyCacheElements;
+        const uint64_t vElems = nextGeometry.valueCacheElements;
 
         DeviceBuf& newK = mlaPendingK_;
         DeviceBuf& newV = mlaPendingV_;
@@ -4994,32 +4984,35 @@ bool VulkanCompute::RunMLAAttentionHost(
     }
 
     // Upload the single query/key/value vectors for this position.
-    const size_t qElems=(size_t)heads*keyLen;
-    const size_t vElems=(size_t)heads*valueLen;
+    Mla::Geometry geometry;
+    if (!Mla::Build(heads,keyLen,valueLen,layers,mlaCacheCapacity_,layer,pos,geometry))
+        return false;
+    const size_t qElems = geometry.keyElements;
+    const size_t vElems = geometry.valueElements;
     if(!EnsureScratch(40,qElems)||
-       !EnsureScratch(41,(size_t)layers*heads*keyLen)||
-       !EnsureScratch(42,(size_t)layers*heads*valueLen)||
-       !EnsureScratch(43,qElems))
+       !EnsureScratch(41,qElems)||
+       !EnsureScratch(42,vElems)||
+       !EnsureScratch(43,vElems))
         return false;
     DeviceBuf& qBuf=Scratch(40);
     DeviceBuf& kSlice=Scratch(41);
     DeviceBuf& vSlice=Scratch(42);
     DeviceBuf& outBuf=Scratch(43);
-    if(!UploadVector(qBuf,q,qElems*sizeof(float))||
-       !UploadVector(kSlice,k,qElems*sizeof(float))||
-       !UploadVector(vSlice,v,vElems*sizeof(float)))
+    if(!UploadVector(qBuf,q,qElems)||
+       !UploadVector(kSlice,k,qElems)||
+       !UploadVector(vSlice,v,vElems))
         return false;
 
     // Copy the K/V slice into the device cache at (layer, pos).
     {
-        const uint64_t kBase=(uint64_t)layer*mlaCacheCapacity_*heads*keyLen+pos*heads*keyLen;
-        const uint64_t vBase=(uint64_t)layer*mlaCacheCapacity_*heads*valueLen+pos*heads*valueLen;
+        const uint64_t kBase = geometry.keyOffset;
+        const uint64_t vBase = geometry.valueOffset;
         VkCommandBuffer cmd{};
         VkQueryPool query{};
         if(!beginCommand(cmd,query,true)) return false;
-        if(!recordCopy(cmd,kSlice,mlaKCache_,(VkDeviceSize)(heads*keyLen*sizeof(float)),
+        if(!recordCopy(cmd,kSlice,mlaKCache_,static_cast<VkDeviceSize>(qElems*sizeof(float)),
                        0,(VkDeviceSize)(kBase*sizeof(float)))||
-           !recordCopy(cmd,vSlice,mlaVCache_,(VkDeviceSize)(heads*valueLen*sizeof(float)),
+           !recordCopy(cmd,vSlice,mlaVCache_,static_cast<VkDeviceSize>(vElems*sizeof(float)),
                        0,(VkDeviceSize)(vBase*sizeof(float)))) {
             vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
             if (query) vkDestroyQueryPool(device_, query, nullptr);
@@ -5027,7 +5020,7 @@ bool VulkanCompute::RunMLAAttentionHost(
         }
         recordComputeBarrier(cmd);
         if(!endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
-                          (heads*(keyLen+valueLen))*sizeof(float),
+                          (uint64_t(qElems)+vElems)*sizeof(float),
                           epoch,nullptr))
             return false;
     }
@@ -5035,17 +5028,19 @@ bool VulkanCompute::RunMLAAttentionHost(
     // Dispatch attention: q . cached_K^T -> softmax -> . cached_V -> output.
     OpsPush push{};
     push.op=OP_MLA_ATTN;
-    push.n=pos+1;
-    push.p0=heads;
-    push.p1=keyLen;
-    push.p2=valueLen;
-    push.p3=layer;
+    push.n=static_cast<uint32_t>(vElems);
+    push.p0=geometry.p0;
+    push.p1=geometry.p1;
+    push.p2=geometry.p2;
+    push.p3=geometry.p3;
+    push.p4=geometry.p4;
+    push.p5=geometry.p5;
     push.f0=scale;
     if(!dispatchOps(qBuf,mlaKCache_,mlaVCache_,outBuf,push,
-                    (pos+1)*heads,GpuWorkKind::ModelCompute))
+                    geometry.groups,GpuWorkKind::ModelCompute))
         return false;
 
-    return DownloadVector(outBuf,output,qElems*sizeof(float));
+    return DownloadVector(outBuf,output,vElems);
 }
 
 bool VulkanCompute::RunWeightHostRoundTrip(
