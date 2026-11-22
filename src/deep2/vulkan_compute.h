@@ -1572,6 +1572,11 @@ private:
     void destroyBuffer(DeviceBuf& b);
     bool uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes);
     bool downloadFromBuffer(const DeviceBuf& src, void* dst, size_t bytes);
+    // P0-06B: completion-backed readback with a DEDICATED host-visible staging
+    // (never the shared downloadStaging_). On confirmed completion the staging
+    // is unmapped+destroyed; on timeout/device-lost it is RETAINED (leak-safe)
+    // for terminal teardown. Returns false on failure (dst not written).
+    bool DownloadBufIsolated(const DeviceBuf& src, void* dst, size_t bytes);
 
     bool beginCommand(VkCommandBuffer& cmd, VkQueryPool& query, bool timestamped);
     bool endSubmitWait(VkCommandBuffer cmd, VkQueryPool query,

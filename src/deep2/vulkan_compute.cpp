@@ -2068,6 +2068,62 @@ bool VulkanCompute::downloadFromBuffer(
     return ok;
 }
 
+// P0-06B: completion-backed readback with a DEDICATED host-visible staging.
+// Unlike downloadFromBuffer (which reuses the shared downloadStaging_), this
+// allocates a fresh staging per call, so a failed/timed-out transfer can never
+// race a subsequent download. On confirmed completion the staging is
+// unmapped+destroyed; on failure it is RETAINED (leak-safe) for terminal
+// teardown — never freed while the GPU may still reference it.
+bool VulkanCompute::DownloadBufIsolated(const DeviceBuf& src, void* dst, size_t bytes) {
+    if (lostSeq_.lost) return false;
+    if (!src || !dst || !bytes || bytes > src.size) return false;
+
+    DeviceBuf staging{};
+    if (!createBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                      staging))
+        return false;
+
+    void* mapped = nullptr;
+    if (vkMapMemory(device_, staging.memory, 0, bytes, 0, &mapped) != VK_SUCCESS) {
+        destroyBuffer(staging);
+        return false;
+    }
+
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    const auto stage = Transfer::Execute(
+        [&] { return true; },
+        [&] { return beginCommand(cmd, query, true); },
+        [&] { return recordCopy(cmd, src, staging, bytes); },
+        [&] { return endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                                   bytes, workEpoch_, nullptr, 30000000000ULL); },
+        [&] {
+            vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+            if (query) vkDestroyQueryPool(device_, query, nullptr);
+        });
+    const bool ok = stage == Transfer::Stage::Complete;
+
+    if (ok) {
+        // Confirmed completion: safe to read and reclaim the dedicated staging.
+        std::memcpy(dst, mapped, bytes);
+        vkUnmapMemory(device_, staging.memory);
+        destroyBuffer(staging);
+    } else {
+        // Ambiguous completion: RETAIN the staging (leak-safe). The GPU may
+        // still reference it; freeing it here would reproduce the premature-
+        // reclamation defect. Terminal teardown reclaims it after idle/lost.
+        std::fprintf(stderr,
+                     "[GPU] DownloadBufIsolated failed stage=%s bytes=%zu (staging retained)\n",
+                     Transfer::StageName(stage), bytes);
+        std::fflush(stderr);
+        vkUnmapMemory(device_, staging.memory);
+        // Intentionally do NOT destroy staging — it may be in-flight.
+    }
+    return ok;
+}
+
 
 bool VulkanCompute::dispatchOps(
     DeviceBuf& aa, DeviceBuf& bb, DeviceBuf& cc, DeviceBuf& dd,
