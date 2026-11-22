@@ -9,6 +9,7 @@
 #include "deep2/ReapStrataBudget.hpp"
 #include "deep2/ReapExpertCompute.hpp"
 #include "deep2/ReapGlmMoe.hpp"
+#include "deep2/ReapMlaReference.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -270,6 +271,24 @@ int main(){
             check(!ExecuteGlmMoe(x,{0,1,2,3},{3,1,0,2},4,1.8,0,rr,sr,y)&&y==previous,"GLM missing shared configuration rejected");
             check(!ExecuteGlmMoe(x,{0,1,2,3},{3,1,0,2},4,1.8,1,rr,[](size_t,SwiGluExpert&){return false;},y)&&y==previous,"GLM missing shared weights transactional");
         }else check(false,"GLM fixture encoding");
+    }
+    {
+        const std::vector<float> q{2,1,1,-1},latent{1,2,3,4,99,99},rotary{0,1,99};
+        const std::vector<float> wk{1,0,0,1},wv{1,2,3,4,2,1,4,3};
+        std::vector<float> y;
+        check(MlaReference(2,2,1,1,2,3,0,1,q,latent,rotary,wk,wv,y)&&y==std::vector<float>({5,11,4,10}),"MLA position zero equals reconstructed V");
+        const double p=1/(1+std::exp(-5.0)),s=1/(1+std::exp(-1.0));
+        const std::vector<double> expected{5+6*p,11+14*p,4+6*s,10+14*s};
+        bool ok=MlaReference(2,2,1,1,2,3,1,1,q,latent,rotary,wk,wv,y)&&y.size()==4;
+        for(size_t i=0;i<y.size()&&i<expected.size();++i)ok=ok&&std::abs(y[i]-expected[i])<1e-5;
+        check(ok,"MLA two position explicit expanded attention oracle");
+        const auto old=y;
+        check(!MlaReference(2,2,1,1,2,3,3,1,q,latent,rotary,wk,wv,y)&&y==old,"MLA invalid position transactional");
+        check(!MlaReference(2,2,1,1,2,3,1,1,q,latent,rotary,wk,{},y)&&y==old,"MLA invalid projection geometry");
+        auto bad=q;bad[0]=std::numeric_limits<float>::infinity();
+        check(!MlaReference(2,2,1,1,2,3,1,1,bad,latent,rotary,wk,wv,y)&&y==old,"MLA nonfinite score rejected");
+        auto future=latent;future[4]=-1000;future[5]=-1000;
+        check(MlaReference(2,2,1,1,2,3,1,1,q,future,rotary,wk,wv,y)&&y==old,"MLA future latent causally excluded");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
