@@ -240,6 +240,63 @@ int main(int argc, char** argv) {
         for (const auto& d : dlls) std::printf("  %s\n", d.c_str());
         return dlls.empty() ? 1 : 0;
     }
+    // C01: auto-discover and run every *_test.exe in a directory.
+    // Usage: rawr_certify --scan <dir> <shipping.exe> [--manifest out.json]
+    if (argc >= 4 && std::string(argv[1]) == "--scan") {
+        const std::string scanDir = argv[2];
+        const std::string shipping = argv[3];
+        std::string manifest = "certify_manifest.json";
+        for (int i = 4; i < argc; ++i) {
+            if (std::string(argv[i]) == "--manifest" && i + 1 < argc) manifest = argv[++i];
+        }
+        std::vector<std::string> tests;
+        std::string pattern = scanDir + "\\*_test.exe";
+        WIN32_FIND_DATAA fd;
+        HANDLE h = FindFirstFileA(pattern.c_str(), &fd);
+        if (h != INVALID_HANDLE_VALUE) {
+            do {
+                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                    tests.push_back(scanDir + "\\" + fd.cFileName);
+            } while (FindNextFileA(h, &fd));
+            FindClose(h);
+        }
+        std::printf("DISCOVERED %zu test executables in %s\n", tests.size(), scanDir.c_str());
+        std::string sha;
+        const bool haveSha = Sha256File(shipping, sha);
+        std::vector<GateResult> gates;
+        for (const auto& t : tests) {
+            GateResult g;
+            g.name = t;
+            g.passed = RunTest(t, g);
+            gates.push_back(g);
+            std::printf("%s %s (exit=%d %.2fs)\n", g.passed ? "PASS" : "FAIL",
+                        t.c_str(), g.exitCode, g.seconds);
+        }
+        bool allPass = haveSha && !gates.empty();
+        for (const auto& g : gates) if (!g.passed) allPass = false;
+        const std::string gitSha = GitHeadSha();
+        FILE* f = std::fopen(manifest.c_str(), "w");
+        if (f) {
+            std::fprintf(f, "{\n  \"schema\": \"rawr.certify.v2\",\n");
+            std::fprintf(f, "  \"shipping\": \"%s\",\n  \"shipping_sha256\": \"%s\",\n",
+                         shipping.c_str(), haveSha ? sha.c_str() : "");
+            std::fprintf(f, "  \"git_sha\": \"%s\",\n  \"overall_pass\": %s,\n  \"gates\": [\n",
+                         gitSha.c_str(), allPass ? "true" : "false");
+            for (size_t i = 0; i < gates.size(); ++i) {
+                const auto& g = gates[i];
+                std::fprintf(f, "    {\"name\": \"%s\", \"passed\": %s, \"exit\": %d, "
+                                "\"seconds\": %.2f, \"sha256\": \"%s\"}%s\n",
+                             g.name.c_str(), g.passed ? "true" : "false",
+                             g.exitCode, g.seconds, g.sha256.c_str(),
+                             i + 1 < gates.size() ? "," : "");
+            }
+            std::fprintf(f, "  ]\n}\n");
+            std::fclose(f);
+        }
+        std::printf("MANIFEST=%s\nGATES=%zu\n", manifest.c_str(), gates.size());
+        std::printf("CERTIFY_OVERALL=%s\nPROMOTE=0\n", allPass ? "PASS" : "FAIL");
+        return allPass ? 0 : 1;
+    }
     std::string manifestPath = "certify_manifest.json";
     std::vector<std::string> args;
     for (int i = 1; i < argc; ++i) {
