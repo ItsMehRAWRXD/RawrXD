@@ -1,5 +1,6 @@
 #include "deep2/ReapMoETransformer.hpp"
 #include "deep2/ReapBankContract.hpp"
+#include "deep2/ReapExportBudget.hpp"
 
 #include "deep2/GGUFLoader.hpp"
 #include <nlohmann/json.hpp>
@@ -417,15 +418,19 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
 // Rewrite only the physical routed bank size. Top-k is validated globally
 // before output creation; it must never be silently clamped or rewritten.
 void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t originalExperts,
-                   uint32_t activeExperts, uint32_t shardNo, uint32_t shardCount) {
+                   uint32_t activeExperts, uint32_t shardNo, uint32_t shardCount,
+                   uint32_t groups) {
     bool foundExpertCount = false;
     for (auto& entry : metadata) {
-        if (!ReapBank::HasField(entry.key, "expert_count")) continue;
-        foundExpertCount = true;
-        // Preflight validated the original integral field and retained <= original.
-        // Rewrite in its original little-endian width without altering other metadata.
+        const bool count = ReapBank::HasField(entry.key, "expert_count");
+        const bool width = ReapBank::HasField(entry.key, "experts_per_group");
+        if (!count && !width) continue;
+        foundExpertCount = foundExpertCount || count;
+        const uint64_t value = count ? activeExperts : activeExperts / groups;
+        // Keep explicit group width consistent with the compact bank. Preserve
+        // original group count and groups-used; preserve the integral field type.
         for (size_t i = 0; i < entry.value.size(); ++i)
-            entry.value[i] = static_cast<uint8_t>(uint64_t(activeExperts) >> (i * 8u));
+            entry.value[i] = static_cast<uint8_t>(value >> (i * 8u));
     }
 
     if (!foundExpertCount) {
@@ -570,6 +575,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
     // Resolve the physical bank and original top-k across the full checkpoint
     // before writing a single output byte. A dense-only shard is legitimate.
     ReapBank::Contract bank;
+    ReapExport::GroupFields groupFields;
     for (const auto& shard : shards) {
         for (const auto& tensor : shard.tensors) {
             const bool expertTensor = isProjection(tensor.name, "gate") ||
@@ -590,19 +596,35 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         for (const auto& entry : shard.metadata) {
             const bool count = ReapBank::HasField(entry.key, "expert_count");
             const bool topK = ReapBank::HasField(entry.key, "expert_used_count");
-            if (!count && !topK) continue;
+            const bool groups = ReapBank::HasField(entry.key, "expert_group_count");
+            const bool groupsUsed = ReapBank::HasField(entry.key, "expert_group_used_count");
+            const bool width = ReapBank::HasField(entry.key, "experts_per_group");
+            if (!count && !topK && !groups && !groupsUsed && !width) continue;
             uint64_t value = 0;
             if (!metadataCountValue(entry, value) ||
                 (count && value != bank.original) ||
-                (topK && !bank.ObserveTopK(value))) {
+                (topK && !bank.ObserveTopK(value)) ||
+                (groups && !groupFields.Observe(groupFields.groups,value)) ||
+                (groupsUsed && !groupFields.Observe(groupFields.used,value)) ||
+                (width && !groupFields.Observe(groupFields.width,value))) {
                 result.error = "inconsistent or invalid routed expert metadata: " + entry.key;
                 return result;
             }
         }
     }
-    if (!bank.Allows(request.activeExperts)) {
-        result.error = "retained expert count violates checkpoint bank/top-k contract";
+    ReapExport::Router routerGeometry;
+    if (!bank.Allows(request.activeExperts) ||
+        !groupFields.Resolve(bank.original,bank.topK,routerGeometry) ||
+        !routerGeometry.Allows(request.activeExperts)) {
+        result.error = "retained expert count violates checkpoint bank/top-k/group contract";
         return result;
+    }
+    for (const auto& entry : selection) {
+        if (!routerGeometry.Preserves(entry.second)) {
+            result.error = "selection does not preserve original expert group membership and order at layer " +
+                           std::to_string(entry.first);
+            return result;
+        }
     }
 
     // The selection manifest is a topology contract, not merely a list of
@@ -642,6 +664,72 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             result.error = "selection contains non-MoE layer " + std::to_string(entry.first);
             return result;
         }
+    }
+
+    // Exact prune-only serialization preflight, using the same metadata patch
+    // and tensor ordering as the writer. No output paths are created yet.
+    std::vector<ReapExport::Shard> layouts;
+    std::vector<uint64_t> predictedShardBytes;
+    for (size_t i=0;i<shards.size();++i) {
+        const auto& shard=shards[i];
+        auto metadata=shard.metadata;
+        patchMetadata(metadata,bank.original,request.activeExperts,
+                      static_cast<uint32_t>(i),shardCount,
+                      static_cast<uint32_t>(routerGeometry.groups));
+        ReapExport::Shard layout;
+        layout.header=24; // magic, version, tensor count, metadata count
+        layout.alignment=shard.alignment ? shard.alignment : 32;
+        for (const auto& entry : metadata) {
+            if (!ReapExport::Add(layout.header,12,layout.header) ||
+                !ReapExport::Add(layout.header,entry.key.size(),layout.header) ||
+                !ReapExport::Add(layout.header,entry.value.size(),layout.header)) {
+                result.error="metadata size overflow";return result;
+            }
+        }
+        for (const auto& tensor : shard.tensors) {
+            const bool projection=isProjection(tensor.name,"gate") ||
+                isProjection(tensor.name,"up") || isProjection(tensor.name,"down");
+            const bool router=tensor.name.find(".ffn_gate_inp.weight")!=std::string::npos ||
+                tensor.name.find(".exp_probs_b.bias")!=std::string::npos;
+            const bool unsupported=tensor.name.find(".ffn_")!=std::string::npos &&
+                tensor.name.find("_exps.")!=std::string::npos && !projection && !router;
+            uint32_t layer=0;
+            if (unsupported) {
+                result.error="unsupported expert tensor layout: "+tensor.name;return result;
+            }
+            if ((projection||router) && (!layerFromName(tensor.name,layer) ||
+                !validateExpertTensorGeometry(tensor,layer,selection,result.error))) {
+                if(result.error.empty())result.error="invalid expert tensor layer";
+                return result;
+            }
+            if (!ReapExport::Add(layout.header,24,layout.header) ||
+                !ReapExport::Add(layout.header,tensor.name.size(),layout.header) ||
+                tensor.dims.size()>UINT64_MAX/8 ||
+                !ReapExport::Add(layout.header,8ull*tensor.dims.size(),layout.header)) {
+                result.error="descriptor size overflow";return result;
+            }
+            layout.tensors.push_back({tensor.bytes,projection||router});
+        }
+        uint64_t bytes=0;
+        if (!ReapExport::Measure(layout,routerGeometry,request.activeExperts,bytes)) {
+            result.error="invalid serialized shard geometry";return result;
+        }
+        predictedShardBytes.push_back(bytes);
+        layouts.push_back(std::move(layout));
+    }
+    uint64_t predictedBytes=0;
+    if (!ReapExport::MeasureAll(layouts,routerGeometry,request.activeExperts,predictedBytes)) {
+        result.error="serialized checkpoint size overflow";return result;
+    }
+    if (request.targetSizeBytes && predictedBytes>request.targetSizeBytes) {
+        uint64_t maxRetained=0;
+        if (!ReapExport::MaxRetained(layouts,routerGeometry,request.targetSizeBytes,maxRetained)) {
+            result.error="invalid compression budget";return result;
+        }
+        result.error="prune-only export exceeds budget: predicted="+std::to_string(predictedBytes)+
+            " target="+std::to_string(request.targetSizeBytes)+
+            " max_uniform_retained_at_current_dtype="+std::to_string(maxRetained);
+        return result;
     }
 
     std::error_code ec;
@@ -688,7 +776,8 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
 
         auto metadata = shard.metadata;
         patchMetadata(metadata, bank.original, request.activeExperts,
-                      static_cast<uint32_t>(shardIndex), shardCount);
+                      static_cast<uint32_t>(shardIndex), shardCount,
+                      static_cast<uint32_t>(routerGeometry.groups));
         const fs::path outputPath = outputDir / shard.path.filename();
         cleanup.files.push_back(outputPath);
         std::ofstream out(outputPath, std::ios::binary | std::ios::trunc);
@@ -761,12 +850,19 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             if (written < expected && !writeZeros(out, expected - written)) { result.error = "tensor padding write failed"; return result; }
             if (written > expected) { result.error = "tensor output offset mismatch"; return result; }
         }
-        out.flush();
-        if (!out.good()) { result.error = "output shard flush failed"; return result; }
-        result.outputBytes += static_cast<uint64_t>(fs::file_size(outputPath, ec));
+        out.close();
+        if (!out.good()) { result.error = "output shard close failed"; return result; }
+        const auto measured = fs::file_size(outputPath, ec);
+        if (ec || measured!=predictedShardBytes[shardIndex] ||
+            !ReapExport::Add(result.outputBytes,static_cast<uint64_t>(measured),result.outputBytes)) {
+            result.error="serialized shard size differs from preflight";return result;
+        }
         result.outputTensors += outputTensors.size();
     }
 
+    if (result.outputBytes!=predictedBytes) {
+        result.error="serialized checkpoint size differs from preflight";return result;
+    }
     if (request.targetSizeBytes != 0 && result.outputBytes > request.targetSizeBytes) {
         result.error = "rewritten GGUF exceeds target size: output=" +
                        std::to_string(result.outputBytes) +
