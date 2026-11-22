@@ -42,6 +42,7 @@
 #include "deep2/ReapRouteTracker.hpp"
 #include "deep2/ReapCapturePolicy.hpp"
 #include "deep2/ReapCalibrationState.hpp"
+#include "deep2/ReapShardIdentity.hpp"
 #include "Deep2Engine.h"
 #include "ChatTemplate.hpp"
 
@@ -555,23 +556,6 @@ out.close();
          fs::rename(tmpPath, path, ec);
          return !ec;
      }
-    
-    static bool read(const fs::path& path, CheckpointManifest& out) {
-        ifstream in(path);
-        if (!in) return false;
-        // Simple JSON parsing for our fixed schema
-        string line;
-        string content;
-        while (getline(in, line)) content += line;
-        
-        // Parse key fields (simplified - in production use nlohmann/json)
-        // For now, just validate schema and model path
-        if (content.find("\"schema\":\"RAWRXD_REAP_CALIBRATION_CHECKPOINT_001\"") == string::npos &&
-            content.find("\"schema\": \"RAWRXD_REAP_CALIBRATION_CHECKPOINT_001\"") == string::npos) {
-            return false;
-        }
-        return true;
-    }
     
     static string escapeJson(const string& s) {
         string out;
@@ -1130,26 +1114,11 @@ private:
     // Bind the routing-state checkpoint to every canonical GGUF shard.
     // The CLI requires the first shard, matching the existing source hash convention.
     bool buildCheckpointIdentity() {
-        const string name = fs::path(config_.modelPath).filename().string();
-        const size_t marker = name.rfind("-00001-of-");
+        vector<fs::path> paths;
+        if (!ReapState::ShardPaths(config_.modelPath, paths)) return false;
         checkpointIdentity_ = modelSha256_;
-        if (marker == string::npos) {
-            // Non-first canonical split paths are not accepted for resume.
-            if (name.size() >= 20 && name.substr(name.size()-15,4) == "-of-")
-                return false;
-            return true;
-        }
-        if (name.size() != marker + 20 || name.substr(marker+15) != ".gguf") return false;
-        const string countText = name.substr(marker+10,5);
-        if (countText.find_first_not_of("0123456789") != string::npos) return false;
-        const unsigned count = static_cast<unsigned>(std::stoul(countText));
-        if (!count || count > 4096) return false;
-        for (unsigned shard = 2; shard <= count; ++shard) {
-            stringstream file;
-            file << name.substr(0,marker) << '-' << setw(5) << setfill('0') << shard
-                 << "-of-" << countText << ".gguf";
-            const string digest = computeFileSha256(
-                (fs::path(config_.modelPath).parent_path() / file.str()).string());
+        for (size_t i = 1; i < paths.size(); ++i) {
+            const string digest = computeFileSha256(paths[i].string());
             if (digest.size() != 64) return false;
             checkpointIdentity_ += ":" + digest;
         }
