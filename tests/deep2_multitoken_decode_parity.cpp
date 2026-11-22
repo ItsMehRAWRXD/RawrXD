@@ -124,18 +124,26 @@ int main(int argc, char **argv)
     check(engine.getKVCache() && engine.getKVCache()->currentLength() == prompt.size(),
           "prefillSerial KV length mismatch");
     check(serialDone > 0, "prefillSerial produced no hidden state");
-    if (serialDone > 0)
-        engine.computeLogits(serialHidden.data() + (serialDone - 1) * hiddenDim,
-                             serialLogits.data());
+    if (g_failures != 0) {
+        std::printf("S03_ABORT stage=serial_prefill processed=%zu expected=%zu decode=NOT_RUN\n",
+                    serialDone, prompt.size());
+        return 1;
+    }
+    engine.computeLogits(serialHidden.data() + (serialDone - 1) * hiddenDim,
+                         serialLogits.data());
 
     engine.resetInferenceState();
     const size_t batchedDone = engine.prefillBatched(
         prompt.data(), prompt.size(), batchedHidden.data());
     check(batchedDone == prompt.size(), "prefillBatched did not process full prompt");
     check(batchedDone > 0, "prefillBatched produced no hidden state");
-    if (batchedDone > 0)
-        engine.computeLogits(batchedHidden.data() + (batchedDone - 1) * hiddenDim,
-                             batchedLogits.data());
+    if (g_failures != 0) {
+        std::printf("S03_ABORT stage=batched_prefill processed=%zu expected=%zu decode=NOT_RUN\n",
+                    batchedDone, prompt.size());
+        return 1;
+    }
+    engine.computeLogits(batchedHidden.data() + (batchedDone - 1) * hiddenDim,
+                         batchedLogits.data());
 
     double maxAbsDiff = 0.0;
     double maxRelDiff = 0.0;
@@ -182,12 +190,19 @@ int main(int argc, char **argv)
                 break;
             }
         }
+        check(firstDivergentPos < 0, "serial vs batched hidden state exceeds 1e-3");
         if (firstDivergentPos < 0) {
             std::printf("S03_HIDDEN_PARITY all %zu positions agree (maxAbs<=1e-3)\n", nPos);
         } else {
             std::printf("S03_HIDDEN_PARITY first_divergent_pos=%d maxAbs=%.9e of %zu\n",
                         firstDivergentPos, firstDivergentAbs, nPos);
         }
+    }
+
+    // Do not launch more GPU work after a failed prefill gate.
+    if (g_failures != 0) {
+        std::printf("S03_ABORT stage=prefill_parity failures=%d decode=NOT_RUN\n", g_failures);
+        return 1;
     }
 
     // ---- Reference: full-context recomputation at every step ----
