@@ -7406,6 +7406,11 @@ void VulkanCompute::cleanup() {
             cleanupBlocked_.store(true, std::memory_order_release);
             return;
         }
+        if (!downloadOwners_.Drain(deviceGeneration_,static_cast<int>(idleRes),
+                [this](DownloadTicket& item) noexcept { releaseDownloadTicket(item); })) {
+            cleanupBlocked_.store(true,std::memory_order_release);
+            return;
+        }
     }
     // Device idle or confirmed terminal loss above authorizes these drains.
     if (!resetDownloadRing(true) || !resetAsyncCmdRing(true)) return;
@@ -7647,72 +7652,106 @@ bool VulkanCompute::RunWeightGroupResidentInputQ4K(
     }
     return true;
 }
+void VulkanCompute::releaseDownloadTicket(DownloadTicket& owner) noexcept {
+    if (owner.cmd && commandPool_) vkFreeCommandBuffers(device_,commandPool_,1,&owner.cmd);
+    if (owner.query) vkDestroyQueryPool(device_,owner.query,nullptr);
+    if (owner.fence) vkDestroyFence(device_,owner.fence,nullptr);
+    if (owner.mapped && owner.staging.memory) vkUnmapMemory(device_,owner.staging.memory);
+    destroyBuffer(owner.staging);
+    if (owner.counted_) g_gpuInFlight.fetch_sub(1);
+    owner={};
+}
+
 bool VulkanCompute::SubmitDownloadAsync(
     DeviceBuf& src,size_t bytes,DownloadTicket& t)
 {
-    if(t.active||!src||!bytes||bytes>src.size) return false;
-    if(!createBuffer(
-            bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|
-            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,t.staging))
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (OneShotBlocked() || DeviceIsLost() || t.active || t.ownershipId ||
+        !src || !bytes || bytes>src.size) return false;
+    const auto lease = downloadOwners_.Reserve(deviceGeneration_);
+    if (!lease.payload) return false;
+    auto& owner = *lease.payload;
+    owner.ownershipId=lease.id;
+    owner.deviceGeneration=deviceGeneration_;
+    auto discard = [&] {
+        (void)downloadOwners_.DiscardUnsubmitted(lease.id,deviceGeneration_,
+            [this](DownloadTicket& item) noexcept { releaseDownloadTicket(item); });
         return false;
-    if(vkMapMemory(
-            device_,t.staging.memory,0,bytes,0,&t.mapped)!=VK_SUCCESS) {
-        destroyBuffer(t.staging);return false;
-    }
-    if(!beginCommand(t.cmd,t.query,true)||
-       !recordCopy(t.cmd,src,t.staging,bytes)) {
-        CancelDownloadTicket(t);return false;
-    }
-    if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
-        CancelDownloadTicket(t);return false;
-    }
+    };
+    if (!createBuffer(bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            owner.staging)) return discard();
+    if (vkMapMemory(device_,owner.staging.memory,0,bytes,0,&owner.mapped)!=VK_SUCCESS)
+        return discard();
+    if (!beginCommand(owner.cmd,owner.query,false) ||
+        !recordCopy(owner.cmd,src,owner.staging,bytes)) return discard();
+    if (vkEndCommandBuffer(owner.cmd)!=VK_SUCCESS) return discard();
     VkFenceCreateInfo fi{};
     fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    if(vkCreateFence(device_,&fi,nullptr,&t.fence)!=VK_SUCCESS) {
-        CancelDownloadTicket(t);return false;
-    }
+    if (vkCreateFence(device_,&fi,nullptr,&owner.fence)!=VK_SUCCESS) return discard();
     VkSubmitInfo si{};
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    si.commandBufferCount=1;si.pCommandBuffers=&t.cmd;
+    si.commandBufferCount=1;
+    si.pCommandBuffers=&owner.cmd;
     std::unique_lock<std::recursive_mutex> globalLock;
-    const bool globalSerial = GlobalGpuSerialEnabled();
-    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
-    if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
-        CancelDownloadTicket(t);return false;
+    const bool globalSerial=GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock=std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (!downloadOwners_.MarkAttempt(lease.id,deviceGeneration_)) return discard();
+    owner.inFlight_=true;
+    const VkResult result=gatedSubmit(queue_,&si,owner.fence);
+    if (result!=VK_SUCCESS) {
+        // The owner remains reachable even though no caller ticket was published.
+        cleanupBlocked_.store(true,std::memory_order_release);
+        return false;
     }
-    t.inFlight_ = true;
-    t.bytes=bytes;t.active=true;
+    owner.bytes=bytes;
+    owner.active=true;
+    owner.counted_=globalSerial;
+    t=owner;
     return true;
 }
 
 bool VulkanCompute::WaitDownloadAsync(
     DownloadTicket& t,void* dst,size_t bytes)
 {
-    if(!t.active||!dst||bytes>t.bytes) return false;
-    if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (OneShotBlocked() || DeviceIsLost() || !t.active || !dst || !bytes ||
+        t.deviceGeneration!=deviceGeneration_) return false;
+    auto* owner=downloadOwners_.Find(t.ownershipId,t.deviceGeneration);
+    if (!owner || !owner->active || !owner->mapped || bytes>owner->bytes) return false;
+    const VkResult result=vkWaitForFences(device_,1,&owner->fence,VK_TRUE,UINT64_MAX);
+    if (result!=VK_SUCCESS) {
+        (void)NoteVkResult(static_cast<int>(result),"download_wait");
+        cleanupBlocked_.store(true,std::memory_order_release);
         return false;
-    std::memcpy(dst,t.mapped,bytes);
-    if (t.inFlight_) {
-        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
-        t.inFlight_=false;
     }
-    CancelDownloadTicket(t);
-    return true;
+    std::memcpy(dst,owner->mapped,bytes);
+    const bool released=downloadOwners_.Complete(t.ownershipId,t.deviceGeneration,
+        static_cast<int>(result),
+        [this](DownloadTicket& item) noexcept { releaseDownloadTicket(item); });
+    if (released) t={};
+    return released;
 }
 
 void VulkanCompute::CancelDownloadTicket(DownloadTicket& t) {
-    // Do NOT decrement g_gpuInFlight here: the submission succeeded and the
-    // GPU work is still executing. The in_flight reference is released only
-    // in the corresponding wait path after a successful fence/timeline wait.
-    // Cancel merely abandons the ticket; the counter remains conservatively
-    // incremented (safe overcount) until the GPU completes the submission.
-    if(t.mapped&&t.staging.memory) vkUnmapMemory(device_,t.staging.memory);
-    if(t.fence) vkDestroyFence(device_,t.fence,nullptr);
-    if(t.cmd&&commandPool_) vkFreeCommandBuffers(device_,commandPool_,1,&t.cmd);
-    if(t.query) vkDestroyQueryPool(device_,t.query,nullptr);
-    destroyBuffer(t.staging);
-    t={};
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!t.ownershipId || t.deviceGeneration!=deviceGeneration_) {
+        t={};
+        return;
+    }
+    auto* owner=downloadOwners_.Find(t.ownershipId,t.deviceGeneration);
+    if (!owner) { t={}; return; }
+    if (!device_ || !owner->fence || !owner->active) return;
+    const VkResult result=vkWaitForFences(device_,1,&owner->fence,VK_TRUE,30000000000ULL);
+    if (result!=VK_SUCCESS) {
+        (void)NoteVkResult(static_cast<int>(result),"download_cancel");
+        cleanupBlocked_.store(true,std::memory_order_release);
+        // Caller may discard its receipt; the backend still owns all handles.
+        return;
+    }
+    if (downloadOwners_.Complete(t.ownershipId,t.deviceGeneration,static_cast<int>(result),
+            [this](DownloadTicket& item) noexcept { releaseDownloadTicket(item); }))
+        t={};
 }
 
 void VulkanCompute::ResetResidentGroupOutputs() {
