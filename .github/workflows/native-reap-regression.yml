@@ -38,6 +38,19 @@ jobs:
         run: |
           grep -qw avx2 /proc/cpuinfo
           ./reap-regression
+  sanitizer-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile streaming conversion with address and undefined-behavior sanitizers
+        run: |
+          g++ -std=c++17 -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -mno-avx -mno-avx2 -I src tests/reap_quant_range_test.cpp -o reap-range-sanitized
+      - name: Execute streaming safety regression
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ./reap-range-sanitized
   windows:
     runs-on: windows-latest
     timeout-minutes: 15
