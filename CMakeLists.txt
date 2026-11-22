@@ -4752,6 +4752,25 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_submission_completion
     add_test(NAME deep2_submission_completion_test COMMAND deep2_submission_completion_test)
 endif()
 
+# Independent capture comparison; standard C++ only, no Vulkan or ggml linkage.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_logit_quality.cpp")
+    add_executable(reap_logit_quality tools/reap_logit_quality.cpp)
+    target_compile_features(reap_logit_quality PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(reap_logit_quality PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(reap_logit_quality PRIVATE -Wall -Wextra)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_logit_quality_regression.cmake")
+        enable_testing()
+        add_test(NAME reap_logit_quality_regression
+            COMMAND "${CMAKE_COMMAND}"
+                "-DEVALUATOR=$<TARGET_FILE:reap_logit_quality>"
+                "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_logit_quality_fixtures"
+                -P "${CMAKE_SOURCE_DIR}/tests/reap/reap_logit_quality_regression.cmake")
+    endif()
+endif()
+
 # REAP-AutoFit R02: canonical IR (physical tensors vs logical execution visits).
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_canonical_ir_test.cpp")
     add_executable(reap_canonical_ir_test
