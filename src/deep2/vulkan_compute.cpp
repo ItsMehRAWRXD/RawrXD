@@ -5,6 +5,7 @@
 #include "QuantKernelRegistry.hpp"
 #include "quant_dot_dispatch.hpp"
 #include "ReapSubmissionCompletion.hpp"
+#include "ReapTransferPreflight.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -1466,6 +1467,11 @@ bool VulkanCompute::endSubmitWait(
     GpuWorkInterval* interval, uint64_t timeoutNs)
 {
     if (!cmd) return false;
+    // Before queue submission this call owns the acquired command and query.
+    const auto discardUnsubmitted = [&] {
+        vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+        if (query) vkDestroyQueryPool(device_, query, nullptr);
+    };
     // RAWRXD_GUARD_5: once the device has been lost, refuse every further
     // submission so callers fail fast instead of executing on a dead queue.
     // Reuses the existing deviceLostCount_ marker (no second flag).
@@ -1473,6 +1479,7 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait refused: device_lost=%llu\n",
                      (unsigned long long)device_lost_.load());
         std::fflush(stderr);
+        discardUnsubmitted();
         return false;
     }
     std::unique_lock<std::recursive_mutex> globalLock;
@@ -1487,6 +1494,7 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait stage=end_command vk=%d\n",
                      static_cast<int>(endResult));
         std::fflush(stderr);
+        discardUnsubmitted();
         return false;
     }
 
@@ -1498,6 +1506,7 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait stage=create_fence vk=%d\n",
                      static_cast<int>(fenceResult));
         std::fflush(stderr);
+        discardUnsubmitted();
         return false;
     }
 
@@ -1665,8 +1674,9 @@ bool VulkanCompute::recordCopy(
     VkCommandBuffer cmd, const DeviceBuf& src, DeviceBuf& dst,
     VkDeviceSize bytes, VkDeviceSize srcOffset, VkDeviceSize dstOffset)
 {
-    if (!src || !dst || bytes == 0 ||
-        srcOffset + bytes > src.size || dstOffset + bytes > dst.size)
+    if (!cmd || !src || !dst ||
+        !Transfer::RangeFits(src.size, srcOffset, bytes) ||
+        !Transfer::RangeFits(dst.size, dstOffset, bytes))
         return false;
     VkBufferCopy c{};
     c.srcOffset = srcOffset;
@@ -1811,10 +1821,16 @@ bool VulkanCompute::uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes
 
     VkCommandBuffer cmd{};
     VkQueryPool query{};
-    return beginCommand(cmd, query, true) &&
-           recordCopy(cmd, *staging, dst, bytes) &&
-           endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
-                         bytes, workEpoch_, nullptr);
+    return Transfer::Execute(
+        [] { return true; },
+        [&] { return beginCommand(cmd, query, true); },
+        [&] { return recordCopy(cmd, *staging, dst, bytes); },
+        [&] { return endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                                   bytes, workEpoch_, nullptr); },
+        [&] {
+            vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+            if (query) vkDestroyQueryPool(device_, query, nullptr);
+        }) == Transfer::Stage::Complete;
 }
 
 bool VulkanCompute::uploadToBufferRange(
@@ -1829,10 +1845,16 @@ bool VulkanCompute::uploadToBufferRange(
     std::memcpy(mapped,src,bytes);
     VkCommandBuffer cmd{};
     VkQueryPool query{};
-    return beginCommand(cmd,query,true) &&
-           recordCopy(cmd,*staging,dst,bytes,0,dstOffset) &&
-           endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
-                         bytes,workEpoch_,nullptr);
+    return Transfer::Execute(
+        [] { return true; },
+        [&] { return beginCommand(cmd, query, true); },
+        [&] { return recordCopy(cmd, *staging, dst, bytes, 0, dstOffset); },
+        [&] { return endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                                   bytes, workEpoch_, nullptr); },
+        [&] {
+            vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+            if (query) vkDestroyQueryPool(device_, query, nullptr);
+        }) == Transfer::Stage::Complete;
 }
 
 void VulkanCompute::ResetSpecKvMirror() {
@@ -1988,29 +2010,27 @@ bool VulkanCompute::downloadFromBuffer(
                      static_cast<unsigned long long>(workEpoch_));
         std::fflush(stderr);
     }
-    bool ok = beginCommand(cmd, query, true);
-    if (ok && traceD2h && std::getenv("DEEP2_D2H_QUEUE_IDLE") &&
-        std::getenv("DEEP2_D2H_QUEUE_IDLE")[0] == '1') {
-        const VkResult idle = vkQueueWaitIdle(queue_);
-        std::fprintf(stderr, "D2H_QUEUE_IDLE vk=%d\n", static_cast<int>(idle));
-        std::fflush(stderr);
-        if (idle != VK_SUCCESS) {
-            ok = false;
-            failedStage = "queue_idle";
-        }
-    }
-    if (!ok && !failedStage) {
-        failedStage = "begin_command";
-    } else if (!recordCopy(cmd, src, *staging, bytes)) {
-        ok = false;
-        failedStage = "record_copy";
-    } else {
-        // A download is a bounded diagnostic/forward operation.  Do not let
-        // a lost transfer fence strand the inference worker indefinitely.
-        ok = endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
-                           bytes, workEpoch_, nullptr, 30000000000ULL);
-        if (!ok) failedStage = "transfer_wait";
-    }
+    const auto stage = Transfer::Execute(
+        [&] {
+            const char* idleEnv = std::getenv("DEEP2_D2H_QUEUE_IDLE");
+            if (!traceD2h || !idleEnv || idleEnv[0] != '1') return true;
+            const VkResult idle = vkQueueWaitIdle(queue_);
+            std::fprintf(stderr, "D2H_QUEUE_IDLE vk=%d\n", static_cast<int>(idle));
+            std::fflush(stderr);
+            if (idle != VK_SUCCESS)
+                (void)NoteVkResult(static_cast<int>(idle), "queue_idle");
+            return idle == VK_SUCCESS;
+        },
+        [&] { return beginCommand(cmd, query, true); },
+        [&] { return recordCopy(cmd, src, *staging, bytes); },
+        [&] { return endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                                   bytes, workEpoch_, nullptr, 30000000000ULL); },
+        [&] {
+            vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+            if (query) vkDestroyQueryPool(device_, query, nullptr);
+        });
+    const bool ok = stage == Transfer::Stage::Complete;
+    if (!ok) failedStage = Transfer::StageName(stage);
     if (traceD2h) {
         std::fprintf(stderr, "D2H_END ok=%d stage=%s last_vk=%d phase=%s\n",
                      ok ? 1 : 0, failedStage ? failedStage : "ok",
