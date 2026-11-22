@@ -75,6 +75,30 @@ int main(){
     }
     check(oracle,"R23 independent 4096-block packed oracle");
     check(bytesParity,"R23 independent fixtures exact conversion parity");
+    // Independent Q3_K decode fixture: every scale group and signed code.
+    Q3Block q3{}; Values q3Expected{},q3Actual{};
+    StoreHalf(q3.data()+108,0x3c00);
+    for(unsigned g=0;g<16;++g){
+        const unsigned s=g*4;
+        q3[96+g%8]|=uint8_t((s%16)<<(4*(g/8)));
+        q3[104+g%4]|=uint8_t((s/16)<<(2*(g/4)));
+    }
+    for(unsigned i=0;i<32;++i)q3[i]=0xf0;
+    for(unsigned i=32;i<96;++i)q3[i]=0xe4;
+    for(unsigned i=0;i<256;++i)
+        q3Expected[i]=float((int(i/16)*4-32)*(int(i/32%4)-(i<128?4:0)));
+    check(DecodeQ3(q3,q3Actual)&&q3Actual==q3Expected,"Q3_K signed scales and bitplanes");
+    Values grid{};for(unsigned i=0;i<256;++i)grid[i]=float(int(i%8)-4);
+    check(EncodeQ3(grid,q3)&&DecodeQ3(q3,q3Actual),"Q3_K signed grid encode/decode");
+    double q3Max=0;for(unsigned i=0;i<256;++i)q3Max=std::max(q3Max,std::abs(double(grid[i])-q3Actual[i]));
+    check(q3Max<0.01,"Q3_K signed grid reconstruction");
+    const auto q3Prior=q3;grid[0]=std::numeric_limits<float>::quiet_NaN();
+    check(!EncodeQ3(grid,q3)&&q3==q3Prior,"Q3_K invalid input preserves destination");
+    Error q3Error{};
+    check(ConvertQ4ToQ3(q4,q3,q3Error)&&std::isfinite(q3Error.squared),"Q4_K to Q3_K physical block conversion");
+    uint64_t q3Size=0;
+    check(ConvertedQ3Bytes(7168,144*28*3,q3Size)&&q3Size==110*28*3,"Q3_K exact row bytes");
+    check(!ConvertedQ3Bytes(512,144,q3Size),"Q3_K partial row rejected");
     Values scalarValues{},simdValues{};
     Q2Block scalarConverted{},simdConverted{};
     Error scalarError{},simdError{};
