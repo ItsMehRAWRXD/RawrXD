@@ -6482,22 +6482,28 @@ message(STATUS "agent_acceptance_smoke enabled (Qt-free native acceptance)")
 
 # Native full-vocabulary logit capture and fail-closed parity certification.
 # These targets are CPU/reference utilities and do not initialize Vulkan.
-add_executable(rawr_logit_certify tools/rawr_logit_certify.cpp)
-target_include_directories(rawr_logit_certify PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_compile_features(rawr_logit_certify PRIVATE cxx_std_17)
-set_target_properties(rawr_logit_certify PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/rawr_logit_certify.cpp")
+    add_executable(rawr_logit_certify tools/rawr_logit_certify.cpp)
+    target_include_directories(rawr_logit_certify PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawr_logit_certify PRIVATE cxx_std_17)
+    set_target_properties(rawr_logit_certify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
 
-add_executable(rawr_logit_capture tools/rawr_logit_capture.cpp)
-target_include_directories(rawr_logit_capture PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_compile_features(rawr_logit_capture PRIVATE cxx_std_17)
-set_target_properties(rawr_logit_capture PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/rawr_logit_capture.cpp")
+    add_executable(rawr_logit_capture tools/rawr_logit_capture.cpp)
+    target_include_directories(rawr_logit_capture PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawr_logit_capture PRIVATE cxx_std_17)
+    set_target_properties(rawr_logit_capture PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
 
-add_executable(native_logit_parity_test tests/deep2/native_logit_parity_test.cpp)
-target_include_directories(native_logit_parity_test PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2)
-target_compile_features(native_logit_parity_test PRIVATE cxx_std_17)
-set_target_properties(native_logit_parity_test PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
-add_test(NAME native_logit_parity_test COMMAND native_logit_parity_test)
-message(STATUS "Native logit parity/capture tools enabled")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/native_logit_parity_test.cpp")
+    add_executable(native_logit_parity_test tests/deep2/native_logit_parity_test.cpp)
+    target_include_directories(native_logit_parity_test PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_compile_features(native_logit_parity_test PRIVATE cxx_std_17)
+    set_target_properties(native_logit_parity_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    add_test(NAME native_logit_parity_test COMMAND native_logit_parity_test)
+    message(STATUS "Native logit parity/capture tools enabled")
+endif()
