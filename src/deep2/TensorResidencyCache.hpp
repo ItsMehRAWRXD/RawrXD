@@ -26,6 +26,7 @@
 #include <memory>
 #include <optional>
 #include <functional>
+#include <algorithm>
 
 #if defined(_WIN32)
   #ifndef WIN32_LEAN_AND_MEAN
@@ -117,6 +118,8 @@ struct Mapping {
     uint64_t tensor_bytes = 0;
     uint32_t shard = 0;
     uint32_t refcount = 0;
+    uint64_t allocation_id = 0;
+    uint64_t generation = 0;
     uint64_t last_use = 0;
     std::list<MappingKey>::iterator lru_it;
 };
@@ -135,6 +138,15 @@ public:
         // max_active-only behavior. Pinned mappings are never evicted to make
         // room; acquisition fails closed when the budget cannot be met.
         uint64_t max_resident_bytes = 0;
+    };
+
+    struct Diagnostics {
+        uint64_t acquisitions = 0;
+        uint64_t releases = 0;
+        uint64_t invalid_releases = 0;
+        uint64_t underflow_releases = 0;
+        uint64_t evictions = 0;
+        uint64_t unmaps = 0;
     };
 
     explicit TensorResidencyCache(Config cfg = {}) : cfg_(cfg), tick_(0) {
@@ -233,6 +245,9 @@ public:
         m.tensor_bytes = bytes;
         m.last_use = ++tick_;
         m.refcount = 1;
+        m.allocation_id = ++next_allocation_id_;
+        m.generation = generation_;
+        ++diagnostics_.acquisitions;
 
 #if defined(_WIN32)
         HANDLE fh = shards_[shard_idx].h;
@@ -274,7 +289,18 @@ public:
     void release(Mapping* m) {
         if (!m) return;
         std::lock_guard<std::mutex> lk(m_);
-        if (m->refcount > 0) m->refcount--;
+        auto it = std::find_if(map_.begin(), map_.end(),
+            [m](const auto& entry) { return &entry.second == m; });
+        if (it == map_.end() || it->second.generation != generation_) {
+            ++diagnostics_.invalid_releases;
+            return;
+        }
+        ++diagnostics_.releases;
+        if (it->second.refcount == 0) {
+            ++diagnostics_.underflow_releases;
+            return;
+        }
+        --it->second.refcount;
     }
 
     // Force unmap everything.
@@ -332,6 +358,11 @@ public:
         return cfg_.max_resident_bytes;
     }
 
+    Diagnostics diagnostics() const {
+        std::lock_guard<std::mutex> lk(m_);
+        return diagnostics_;
+    }
+
 private:
     Config cfg_;
     std::vector<ShardHandle> shards_;
@@ -340,6 +371,9 @@ private:
     uint64_t tick_;
     uint64_t resident_bytes_ = 0;
     uint64_t external_resident_bytes_ = 0;
+    uint64_t next_allocation_id_ = 0;
+    uint64_t generation_ = 1;
+    Diagnostics diagnostics_{};
 
     uint64_t total_resident_bytes_locked() const {
         if (external_resident_bytes_ >
@@ -373,6 +407,7 @@ private:
         m.base = nullptr;
         m.data = nullptr;
         m.map_len = 0;
+        ++diagnostics_.unmaps;
     }
 
     // Evict the least recently used mapping. Returns true if an entry was
@@ -388,6 +423,7 @@ private:
             return false;
         }
         unmap(it->second);
+        ++diagnostics_.evictions;
         map_.erase(it);
         lru_.pop_back();
         return true;
