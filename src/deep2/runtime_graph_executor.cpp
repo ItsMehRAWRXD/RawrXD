@@ -3066,7 +3066,8 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     // validated, budgeted device cache the dispatch path uses, so a later
     // dispatch can never read stale bytes. Disabled by default; harnesses opt
     // in with SetStrataExpertTracking/SetStrataExpertPrefetch.
-    if (strata_experts_) {
+    // Residency observation calls the GPU cache; a CPU-pinned run must not touch it.
+    if (strata_experts_ && !force_cpu_) {
         const size_t upRowB = QuantRowBytes(uKind, uIn);
         // Phase 1b derives the gate kind later; the observation needs the same
         // value here, derived identically from the same tensor.
