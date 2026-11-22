@@ -13,7 +13,22 @@ int main() {
     };
     // Every finite, nonnegative binary16 value must round-trip exactly.
     for(uint32_t bits=0;bits<0x7c00u;++bits) {
-        uint16_t encoded=0xffffu;
+        // Exhaustively verify round-to-nearest ties-to-even between all
+    // adjacent positive finite half values (including subnormal/normal).
+    for(uint32_t bits=0;bits<0x7bffu;++bits) {
+        const double midpoint=(double(Half(static_cast<uint16_t>(bits)))+
+                               double(Half(static_cast<uint16_t>(bits+1))))/2.0;
+        const uint16_t expected=static_cast<uint16_t>((bits&1u)?bits+1:bits);
+        uint16_t actual=0xffffu;
+        if(!PositiveHalf(midpoint,actual)||actual!=expected) {
+            ++fail;
+            std::printf("FAIL half midpoint bits=0x%04x encoded=0x%04x expected=0x%04x\\n",
+                        unsigned(bits),unsigned(actual),unsigned(expected));
+            break;
+        }
+        ++pass;
+    }
+    uint16_t encoded=0xffffu;
         const float value=Half(static_cast<uint16_t>(bits));
         if(!PositiveHalf(value,encoded)||encoded!=bits) {
             ++fail;
