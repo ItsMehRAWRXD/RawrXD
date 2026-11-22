@@ -1795,6 +1795,8 @@ private:
 
     DeviceBuf mlaKCache_{};
     DeviceBuf mlaVCache_{};
+    // Replacement caches remain owned even if the migration wait fails.
+    DeviceBuf mlaPendingK_{}, mlaPendingV_{};
     uint32_t mlaCacheHeads_ = 0;
     uint32_t mlaCacheKeyLen_ = 0;
     uint32_t mlaCacheValueLen_ = 0;
@@ -1806,6 +1808,11 @@ private:
     // owner/block identity supplied by RuntimeGraphExecutor. A state buffer
     // is never reused across a geometry change or an explicit reset.
     std::unordered_map<uint64_t, DeviceBuf> gdnStates_;
+    // Single dispatch (apiMu_ serialized). Persistent ownership prevents
+    // stack-local handles being lost when a submission cannot be reclaimed.
+    DeviceBuf gdnOperands_[8]{};
+    DeviceBuf gdnPendingState_{};
+    VkDescriptorSet gdnPendingSet_ = VK_NULL_HANDLE;
 
     // Reusable DEVICE_LOCAL scratch buffers keyed by exact byte size.
     //
