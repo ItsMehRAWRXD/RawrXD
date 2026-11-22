@@ -34,9 +34,14 @@ public:
                               command == "C:\\Windows\\System32\\cmd.exe");
         if (isShell && !args.empty() &&
             (args[0] == "/c" || args[0] == "/C" || args[0] == "/k" || args[0] == "/K")) {
+            // The switch (/c, /k) must be followed by whitespace before the
+            // command string. Emitting "/c" glued to the command ("/ccommand")
+            // happens to work for /c because cmd consumes the rest of the line,
+            // but it is non-standard and breaks /k and any switch that must be
+            // a standalone token. Always separate args[0] from args[1..].
             line = "\"" + command + "\" " + args[0];
             for (size_t i = 1; i < args.size(); ++i) {
-                if (i > 1) line += " ";
+                line += " ";
                 line += args[i];
             }
         } else {
