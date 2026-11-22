@@ -3973,10 +3973,16 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     const size_t inL = std::min(kvA_in, x.size());
     for (size_t j = 0; j < kvA_out; ++j) {
         double acc = 0.0;
-        // GGML stores the [input, output] projection with the input
-        // dimension contiguous: element (i,j) is i*output+j.
+        // GGML stores ne[0] (the REDUCTION/input axis) innermost. For
+        // attn_kv_a_mqa [2048, 576] that is ne[0]=2048=kvA_in, so
+        //   latentFull[j] = sum_i A[j*kvA_in + i] * x[i]
+        // The previous form A[i*kvA_out + j] treated the tensor as
+        // [input, output] row-major — i.e. the TRANSPOSE — which silently
+        // computed a different latent for every token. Every shape check still
+        // passed because the element count is identical, and the damage only
+        // shows up as wrong K/V (hence wrong logits) rather than a crash.
         for (size_t i = 0; i < inL; ++i)
-            acc += double(A[i * kvA_out + j]) * double(x[i]);
+            acc += double(A[static_cast<size_t>(j) * kvA_in + i]) * double(x[i]);
         latentFull[j] = (float)acc;
     }
 
