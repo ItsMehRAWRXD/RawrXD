@@ -1022,4 +1022,27 @@ ReapMoEBudgetResult inspectMoEGGUFBudget(const std::string& sourceFirstShard,
     return inspection;
 }
 
+ReapMoECompatibility inspectMoEGGUFCompatibility(const std::string& sourceFirstShard) {
+    ReapMoECompatibility compatibility;
+    GGUFLoader loader;
+    if (!loader.load(sourceFirstShard)) {
+        compatibility.reason = "GGUF_LOAD_FAILED:" + loader.error();
+        return compatibility;
+    }
+    compatibility.architecture = loader.getMetaString("general.architecture", "unknown");
+
+    ReapMoEBudgetResult inspection;
+    inspection.budgetBytes = std::numeric_limits<uint64_t>::max();
+    ReapMoETransformRequest request;
+    request.sourceFirstShard = sourceFirstShard;
+    const auto result = transformImpl(request, &inspection);
+    compatibility.supported = result.success;
+    compatibility.reason = result.success ? "packed_expert_axis_last" : result.error;
+    compatibility.layout = result.success ? "packed_expert_axis_last" : "unsupported";
+    compatibility.originalExperts = inspection.originalExperts;
+    compatibility.topK = inspection.topK;
+    compatibility.routedLayers = inspection.routedLayers.size();
+    return compatibility;
+}
+
 } // namespace Deep2

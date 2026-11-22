@@ -243,10 +243,29 @@ static int capabilities(const std::string& input) {
     if (!tokenizer) reason = "tokenizer_metadata_missing";
     else if (!replayArchitecture) reason = "architecture_runtime_not_supported:" + architecture;
     else reason = "transform_writer_and_parity_gate_required";
+    const auto compression = Deep2::inspectMoEGGUFCompatibility(candidate.string());
+    const bool architectureRecognized = !architecture.empty() && architecture != "unknown";
+    const bool tensorGeometryValid = l.tensorCount() != 0;
     std::cout << "{\"source\":" << json_quote(input) << ",\"format\":\"gguf\",\"inspectable\":true"
               << ",\"architecture\":" << json_quote(architecture)
+              << ",\"architecture_recognized\":" << (architectureRecognized ? "true" : "false")
+              << ",\"tensor_geometry_valid\":" << (tensorGeometryValid ? "true" : "false")
               << ",\"calibratable\":" << (calibratable ? "true" : "false")
-              << ",\"transformable\":false,\"shards\":" << l.shardCount()
+              << ",\"transformable\":" << (compression.supported ? "true" : "false")
+              << ",\"physical_transformable\":" << (compression.supported ? "true" : "false")
+              << ",\"runtime_calibratable\":" << (calibratable ? "true" : "false")
+              << ",\"virtual_transformable\":false"
+              << ",\"streaming_supported\":false"
+              << ",\"gpu_executable\":false"
+              << ",\"numerical_parity_pass\":false"
+              << ",\"quality_certified\":false"
+              << ",\"production_certified\":false"
+              << ",\"compression_layout\":" << json_quote(compression.layout)
+              << ",\"compression_reason\":" << json_quote(compression.reason)
+              << ",\"expert_count\":" << compression.originalExperts
+              << ",\"expert_used_count\":" << compression.topK
+              << ",\"routed_layers\":" << compression.routedLayers
+              << ",\"shards\":" << l.shardCount()
               << ",\"tensors\":" << l.tensorCount()
               << ",\"reason\":" << json_quote(reason) << "}\n";
     return calibratable ? 0 : 4;

@@ -186,6 +186,14 @@ int main() {
         std::cerr << "SOURCE_MUTATED\n";
         return 3;
     }
+    const auto compatibility = Deep2::inspectMoEGGUFCompatibility(source.string());
+    if (!compatibility.supported || compatibility.layout != "packed_expert_axis_last" ||
+        compatibility.originalExperts != 2 || compatibility.topK != 1 ||
+        compatibility.routedLayers != 1) {
+        std::cerr << "R32_COMPATIBILITY_FAIL " << compatibility.reason << "\n";
+        return 21;
+    }
+    std::cout << "R32_UNIVERSAL_COMPATIBILITY_PASS\n";
 
     Deep2::GGUFLoader sourceLoader;
     Deep2::GGUFLoader outputLoader;

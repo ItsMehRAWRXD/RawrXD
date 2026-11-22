@@ -60,4 +60,20 @@ ReapMoEBudgetResult inspectMoEGGUFBudget(const std::string& sourceFirstShard,
                                       uint64_t budgetBytes,
                                       bool requantizeQ4KToQ2K = false);
 
+// Read-only, architecture-neutral admission for the native packed-MoE
+// transformer. This reports whether the actual GGUF uses a layout the
+// physical writer can preserve safely; it does not authorize a rewrite or
+// claim that the inference runtime is calibrated for the architecture.
+struct ReapMoECompatibility {
+    bool supported = false;
+    std::string architecture;
+    std::string layout;
+    std::string reason;
+    uint64_t originalExperts = 0;
+    uint64_t topK = 0;
+    uint64_t routedLayers = 0;
+};
+
+ReapMoECompatibility inspectMoEGGUFCompatibility(const std::string& sourceFirstShard);
+
 } // namespace Deep2
