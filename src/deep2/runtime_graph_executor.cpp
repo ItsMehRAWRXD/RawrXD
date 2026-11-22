@@ -5613,7 +5613,36 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (!ids_valid) { last_error_ = "moe: no router result"; return false; }
                 std::vector<float> y;
                 std::string e;
+                // MOE_ROUTER_WITNESS: verify the effective routed-weight sum
+                // (should equal routed_scaling for norm_topk_prob models, e.g.
+                // 1.8 for GLM-4.7-Flash) and that the shared/routed experts
+                // actually produced finite output. R09/R25.
+                if (std::getenv("DEEP2_MOE_TRACE")) {
+                    double wsum = 0.0;
+                    for (float wv : expert_w) wsum += double(wv);
+                    size_t idsBad = 0;
+                    for (uint32_t id : expert_ids)
+                        if (id >= spec_.expert_count) ++idsBad;
+                    double pre = 0.0;
+                    if (!xi.empty())
+                        for (float v : xi) pre += double(v) * double(v);
+                    std::fprintf(stderr,
+                        "MOE_ROUTER_WITNESS block=%d pos=%zu experts=%zu "
+                        "weight_sum=%.9g bad_ids=%zu in_rms=%.9g\n",
+                        (int)in.block, position, expert_ids.size(), wsum,
+                        idsBad, std::sqrt(pre / std::max<size_t>(xi.size(), 1)));
+                }
                 if (!OpMoEExecute(in, xi, expert_ids, expert_w, y, e)) { last_error_ = e; return false; }
+                if (std::getenv("DEEP2_MOE_TRACE")) {
+                    double ss = 0.0; size_t nf = 0;
+                    for (float v : y) { if (!std::isfinite(v)) ++nf; else ss += double(v) * double(v); }
+                    std::fprintf(stderr,
+                        "MOE_CONTRIBUTION block=%d pos=%zu n=%zu nonfinite=%zu "
+                        "rms=%.9g pass=%d\n",
+                        (int)in.block, position, y.size(), nf,
+                        y.empty() ? 0.0 : std::sqrt(ss / double(y.size())),
+                        (nf == 0 && !y.empty()) ? 1 : 0);
+                }
                 arena("moe") = y;
                 if (!in.outName.empty()) arena(in.outName) = y;
                 hidden_ = y;
