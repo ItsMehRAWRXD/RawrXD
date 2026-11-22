@@ -43,6 +43,7 @@
 #include "deep2/ReapCapturePolicy.hpp"
 #include "deep2/ReapCalibrationState.hpp"
 #include "deep2/ReapShardIdentity.hpp"
+#include "deep2/ReapSaliencyAccumulator.hpp"
 #include "Deep2Engine.h"
 #include "ChatTemplate.hpp"
 
@@ -304,6 +305,7 @@ struct CalibrationConfig {
     int maxNewTokens = 128;
     bool resume = false;
     bool saliencyCapture = false;
+    bool saliencyDirect = false;
     // Reference-observability outputs (optional; P1 CPU reference).
     // Empty paths disable the corresponding capture and leave calibration
     // behaviour byte-identical to the uninstrumented run.
@@ -682,7 +684,7 @@ public:
             return false;
         }
         
-        if (config_.saliencyCapture) {
+        if (config_.saliencyCapture || config_.saliencyDirect) {
             // Same routed-layer predicate as the production transformer path.
             expectedSaliencyLayers_.resize(modelWeights.layers.size(), false);
             for (size_t layer = 0; layer < modelWeights.layers.size(); ++layer) {
@@ -698,13 +700,14 @@ public:
                 cerr << "No valid routed source layers or top-k for saliency capture" << endl;
                 return false;
             }
-            g_saliencyLayerCounts.resize(expectedSaliencyLayers_.size());
+            if (config_.saliencyCapture)
+                g_saliencyLayerCounts.resize(expectedSaliencyLayers_.size());
         }
 
         // Install REAP observer to capture routing statistics
         phase("CALIBRATION_TRACKER_INIT", "BEGIN");
         phase("REAP_OBSERVER_INSTALL", "BEGIN");
-        installReapObserver();
+        if (!config_.saliencyDirect) installReapObserver();
         phase("REAP_OBSERVER_INSTALL", "END");
         
         // Compute model SHA-256 for checkpoint validation
@@ -742,6 +745,7 @@ public:
         
         // Compute config hash for checkpoint validation
         configHash_ = computeConfigHash(calibrationPrompts);
+        if (config_.saliencyDirect) return runDirectSaliency(calibrationPrompts);
         
         // Compute prompt hashes
         vector<string> promptHashes;
@@ -1057,6 +1061,110 @@ private:
     fs::path checkpointPath_;
     fs::path outputDir_;
     
+    bool runDirectSaliency(const vector<string>& prompts) {
+        if (expectedSaliencyLayers_.size() != modelInfo_.numLayers ||
+            !modelInfo_.hiddenDim || checkpointIdentity_.empty()) return false;
+
+        // Identity includes scoring mode, hidden width, exact routed-layer mask,
+        // prompts, generation parameters and all canonical shard digests.
+        string identityConfig = configHash_ + "|direct-weighted-l2-v1|width=" +
+            std::to_string(modelInfo_.hiddenDim) + "|layers=";
+        for (bool layer : expectedSaliencyLayers_) identityConfig += layer ? '1' : '0';
+        const ReapState::Identity identity{checkpointIdentity_,identityConfig,
+            modelInfo_.numLayers,modelInfo_.numExperts,modelInfo_.numActiveExperts,
+            prompts,"RAWRXD_REAP_SALIENCY_STATE_001"};
+        ReapSaliency::Accumulator saliency(expectedSaliencyLayers_,modelInfo_.numExperts,
+            modelInfo_.numActiveExperts,modelInfo_.hiddenDim);
+        vector<uint64_t> completed(prompts.size(),0);
+        const auto statePath = fs::path(config_.outputDir) / "saliency_checkpoint.state";
+        size_t start=0;
+        if (config_.resume) {
+            ReapState::State saved;
+            if (!ReapState::Load(statePath,identity,saved) || !saliency.Restore(identity,saved)) {
+                cerr << "Invalid or missing direct saliency checkpoint" << endl;
+                return false;
+            }
+            completed=std::move(saved.completed);
+            while (start<completed.size() && completed[start]) ++start;
+        }
+        GenerationOptions options;
+        options.maxTokens=config_.maxNewTokens;
+        options.temperature=config_.temperature;
+        options.topP=config_.topP;
+        options.topK=config_.topK;
+        options.repeatPenalty=1.0f;
+        options.minP=0.0f;
+        options.seed=0xDEADBEEF;
+        struct ObserverGuard {
+            Deep2Engine* engine;
+            ~ObserverGuard() {
+                engine->SetMoERoutingObserver(nullptr,nullptr,ReapCapture::AllLayers,ReapCapture::AllSteps);
+                engine->SetMoEExpertOutputObserver(nullptr,nullptr,ReapCapture::AllLayers,ReapCapture::AllSteps);
+            }
+        } guard{engine_.get()};
+        engine_->SetMoERoutingObserver(
+            [](const Deep2Engine::MoERoutingObservation& obs,void* user)->bool {
+                return static_cast<ReapSaliency::Accumulator*>(user)->Route(
+                    obs.layer,obs.generation_step,obs.hidden_size,obs.selected_count,
+                    obs.expert_ids,obs.applied_weights,obs.expert_input);
+            },&saliency,ReapCapture::AllLayers,ReapCapture::AllSteps,true);
+        engine_->SetMoEExpertOutputObserver(
+            [](const Deep2Engine::MoEExpertOutputObservation& obs,void* user)->bool {
+                return static_cast<ReapSaliency::Accumulator*>(user)->Output(
+                    obs.layer,obs.generation_step,obs.kind,obs.expert_id,
+                    obs.applied_weight,obs.element_count,obs.output);
+            },&saliency,ReapCapture::AllLayers,ReapCapture::AllSteps,true);
+
+        for (size_t i=start;i<prompts.size();++i) {
+            if (!saliency.BeginPrompt() || !runInferenceOnPrompt(prompts[i],options) ||
+                !saliency.EndPrompt(completed[i])) {
+                cerr << "Incomplete direct saliency evidence at prompt " << i << endl;
+                return false;
+            }
+            ReapState::State state;
+            if (!saliency.Snapshot(completed,state) ||
+                !ReapState::Save(statePath,identity,state)) return false;
+            cout << "SALIENCY_PROMPT_COMPLETE=" << i+1 << "/" << prompts.size()
+                 << " ROUTE_RECORDS=" << state.observations << endl;
+        }
+        ReapState::State finalState;
+        if (!saliency.Snapshot(completed,finalState) ||
+            !ReapState::valid(identity,finalState) ||
+            std::find(completed.begin(),completed.end(),0)!=completed.end()) return false;
+        const auto dir=fs::path(config_.outputDir);
+        const auto scorePath=dir/"saliency_scores.tsv";
+        const auto receiptPath=dir/"saliency_capture_receipt.tsv";
+        // The receipt is published last. Remove any prior receipt before replacing
+        // scores so an interrupted publication cannot advertise a new complete pair.
+        error_code ec;
+        fs::remove(receiptPath,ec);
+        if (ec) return false;
+        auto tmpScore=scorePath;tmpScore+=".tmp";
+        ofstream scores(tmpScore,ios::binary|ios::trunc);
+        if (!scores || !saliency.WriteScores(scores)) return false;
+        scores.close();
+        if (!scores) return false;
+        fs::rename(tmpScore,scorePath,ec);
+        if (ec) return false;
+        auto tmpReceipt=receiptPath;tmpReceipt+=".tmp";
+        ofstream receipt(tmpReceipt,ios::binary|ios::trunc);
+        receipt << "route_records\t" << finalState.observations
+                << "\nshared_records\t" << finalState.observations
+                << "\nrouted_records\t" << finalState.observations*identity.topK
+                << "\nexpert_count\t" << identity.experts
+                << "\ntop_k\t" << identity.topK
+                << "\nfirst_shard_sha256\t" << modelSha256_
+                << "\nlayer_filter\t-1\nrewrite_authorized\t0\n";
+        for (size_t layer=0;layer<expectedSaliencyLayers_.size();++layer)
+            if (expectedSaliencyLayers_[layer]) receipt<<"expected_layer\t"<<layer<<'\n';
+        receipt.close();
+        if (!receipt) return false;
+        fs::rename(tmpReceipt,receiptPath,ec);
+        if (ec) return false;
+        cout << "DIRECT_SALIENCY=PASS REWRITE_AUTHORIZED=0" << endl;
+        return true;
+    }
+
     void installReapObserver() {
         ReapRouteTracker::Instance().Install(
             [this](size_t layer, const vector<float>& probabilities,
@@ -1471,6 +1579,7 @@ static void printUsage(const char* progName) {
         "  --max-tokens <N>         Max new tokens per prompt (default: 128)\n"
         "  --verbose                Verbose output\n"
         "  --saliency-capture       Record paired routes and expert outputs in a new output directory\n"
+        "  --saliency-direct        Aggregate actual expert outputs without binary dumps; supports --resume\n"
         "  --resume                 Resume from checkpoint\n"
         "  --help                   Show this help\n"
         "\n"
@@ -1534,6 +1643,8 @@ int main(int argc, char** argv) {
             config.dumpExpertOutPath = argv[++i];
         } else if (arg == "--dump-expert-layer" && i + 1 < argc) {
             config.dumpExpertOutLayer = stoi(argv[++i]);
+        } else if (arg == "--saliency-direct") {
+            config.saliencyDirect = true;
         } else if (arg == "--saliency-capture") {
             config.saliencyCapture = true;
         } else if (arg == "--resume") {
@@ -1566,6 +1677,18 @@ int main(int argc, char** argv) {
         return 1;
     }
     
+    if (config.saliencyDirect) {
+        error_code ec;
+        const bool exists=fs::exists(config.outputDir,ec);
+        if (ec || exists!=config.resume || config.saliencyCapture ||
+            !config.dumpTokensPath.empty() || !config.dumpLogitsPath.empty() ||
+            !config.dumpMoePath.empty() || !config.dumpRoutingPath.empty() ||
+            !config.dumpExpertOutPath.empty() || config.dumpRoutingLayer!=-1 ||
+            config.dumpExpertOutLayer!=-1 || config.dumpMoeLayer!=-1) {
+            fprintf(stderr,"Direct saliency requires all layers, no diagnostic dumps, and a fresh directory unless resuming\n");
+            return 1;
+        }
+    }
     if (config.resume && (!config.dumpTokensPath.empty() || !config.dumpLogitsPath.empty() ||
         !config.dumpMoePath.empty() || !config.dumpRoutingPath.empty() || !config.dumpExpertOutPath.empty())) {
         fprintf(stderr, "Resume cannot append or overwrite diagnostic capture streams\n");
