@@ -1,4 +1,5 @@
 #include "reap/ReapPhysicalReduceExport.hpp"
+#include "deep2/ReapMoETransformer.hpp"
 
 #include <cstdlib>
 
@@ -7,7 +8,7 @@ namespace RawrXD::Reap {
 bool TryExportReducedSidecar(const std::string& sourceFirstShard,
                              const std::string& outputDir,
                              uint32_t retainedExperts,
-                             uint64_t /*targetBytes*/,
+                             uint64_t targetBytes,
                              PhysicalExportResult& out) {
     out = {};
     out.status = "NOT_RUN";
@@ -28,12 +29,24 @@ bool TryExportReducedSidecar(const std::string& sourceFirstShard,
             "ORIGINAL_GGUF_INTACT=1;USE_rawr-reap_FOR_SIDECAR";
         return false;
     }
-    /* Full transformMoEGGUF lives on rawr-reap (ReapMoETransformer). Live
-     * --reap stream path stays source-immutable; do not silently rewrite. */
-    out.reason =
-        "EXPORT_DEFERRED_TO_rawr-reap_transformMoEGGUF;"
-        "MANIFEST_PRESENT_BUT_STREAM_PATH_DOES_NOT_REWRITE";
-    return false;
+    Deep2::ReapMoETransformRequest request;
+    request.sourceFirstShard = sourceFirstShard;
+    request.outputDirectory = outputDir;
+    request.selectionManifest = manifest;
+    request.activeExperts = retainedExperts;
+    request.targetSizeBytes = targetBytes;
+
+    // The transformer owns source immutability, manifest validation, physical
+    // GGUF writing, shard sizing and post-write reload verification. Propagate
+    // its failure rather than reporting a proxy plan as an export.
+    const Deep2::ReapMoETransformResult result =
+        Deep2::transformMoEGGUF(request);
+    out.status = result.success ? "PASS" : "FAIL";
+    out.reason = result.success ? "NATIVE_MOE_TRANSFORM_VERIFIED"
+                                : result.error;
+    out.outputFirstShard = result.outputFirstShard;
+    out.outputBytes = result.outputBytes;
+    return result.success;
 }
 
 } // namespace RawrXD::Reap
