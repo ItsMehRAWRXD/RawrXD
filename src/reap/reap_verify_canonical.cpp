@@ -15,6 +15,8 @@
 #include "reap/ReapOpSemantics.hpp"
 #include <cstdio>
 #include <cstdint>
+#include <filesystem>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -166,6 +168,65 @@ int main(int argc, char** argv) {
                     layers[0].kvHeads, layers[0].headDim,
                     (unsigned long long)layers[0].kvCachePerToken, layers[0].topK,
                     layers[0].attention.size(), layers[0].moe.size());
+
+    // R02 dtype / storage accounting (S08/S09): exact physical bytes and
+    // effective bits-per-weight from the real tensor sizes.
+    std::map<uint32_t, std::pair<uint64_t, uint64_t>> typeStats;  // type -> (count, bytes)
+    uint64_t totalStoredBytes = 0;
+    for (const auto& t : tensors) {
+        typeStats[t.type].first += 1;
+        typeStats[t.type].second += t.sizeBytes;
+        totalStoredBytes += t.sizeBytes;
+    }
+    const double bitsPerWeight = plan.physicalParamCount > 0
+        ? static_cast<double>(totalStoredBytes) * 8.0 / static_cast<double>(plan.physicalParamCount)
+        : 0.0;
+    std::printf("storage: totalBytes=%llu bitsPerWeight=%.3f distinctTypes=%zu\n",
+                (unsigned long long)totalStoredBytes, bitsPerWeight, typeStats.size());
+    for (const auto& kv : typeStats)
+        std::printf("  type=%u count=%llu bytes=%llu\n", kv.first,
+                    (unsigned long long)kv.second.first, (unsigned long long)kv.second.second);
+
+    expect(totalStoredBytes > 0, "storage_bytes_positive");
+    expect(bitsPerWeight > 0.0 && bitsPerWeight < 16.0, "bits_per_weight_plausible");
+
+    // S09: reconcile tensor bytes against the actual shard file sizes.
+    {
+        namespace fs = std::filesystem;
+        const fs::path cp(path);
+        const std::string name = cp.filename().string();
+        const auto ofPos = name.rfind("-of-");
+        uint64_t totalFileBytes = 0;
+        bool parsed = false;
+        if (ofPos != std::string::npos && name.size() >= ofPos + 9) {
+            const std::string beforeOf = name.substr(0, ofPos);            // "<base>-00001"
+            const std::string base = beforeOf.substr(0, beforeOf.size() - 6); // "<base>"
+            const std::string suffix = name.substr(ofPos);                 // "-of-00013.gguf"
+            const uint64_t shardCount = std::stoull(name.substr(ofPos + 4, 5));
+            parsed = shardCount > 0;
+            for (uint64_t i = 1; i <= shardCount && parsed; ++i) {
+                char idx[16];
+                std::snprintf(idx, sizeof(idx), "%05llu", static_cast<unsigned long long>(i));
+                const fs::path sp = cp.parent_path() / (base + "-" + idx + suffix);
+                std::error_code ec;
+                const auto sz = fs::file_size(sp, ec);
+                if (ec) { parsed = false; break; }
+                totalFileBytes += static_cast<uint64_t>(sz);
+            }
+        }
+        if (parsed && totalFileBytes > 0) {
+            const double delta = static_cast<double>(totalFileBytes) -
+                                 static_cast<double>(totalStoredBytes);
+            const double deltaPct = totalStoredBytes > 0
+                ? (delta / static_cast<double>(totalStoredBytes)) * 100.0 : 0.0;
+            std::printf("reconcile: fileBytes=%llu tensorBytes=%llu delta=%.0f (%.4f%%)\n",
+                        static_cast<unsigned long long>(totalFileBytes),
+                        static_cast<unsigned long long>(totalStoredBytes),
+                        delta, deltaPct);
+            expect(totalFileBytes >= totalStoredBytes && deltaPct < 0.5,
+                   "storage_reconciles_with_shard_files");
+        }
+    }
 
     std::printf("FAIL_COUNT=%d\n", failures);
     std::printf("PROMOTE=0\n");
