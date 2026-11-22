@@ -4990,6 +4990,21 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/quarantine_registry_test.cpp")
     add_test(NAME quarantine_registry_test COMMAND quarantine_registry_test)
 endif()
 
+# Native certification runner (PC01/PC15 core): runs CPU acceptance tests,
+# computes the shipping executable SHA-256 (bcrypt), emits a fail-closed JSON
+# manifest. Native Win32, no external runtime dependencies.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/rawr_certify.cpp")
+    add_executable(rawr_certify tools/rawr_certify.cpp)
+    target_include_directories(rawr_certify PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawr_certify PRIVATE cxx_std_17)
+    target_link_libraries(rawr_certify PRIVATE bcrypt)
+    if(MSVC)
+        target_compile_options(rawr_certify PRIVATE /EHsc /W4)
+    endif()
+    set_target_properties(rawr_certify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+
 # Independent capture comparison; standard C++ only, no Vulkan or ggml linkage.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_logit_quality.cpp")
     add_executable(reap_logit_quality tools/reap_logit_quality.cpp)
