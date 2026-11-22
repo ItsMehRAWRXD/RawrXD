@@ -4742,6 +4742,17 @@ else()
     target_compile_options(reap_activation_score PRIVATE -Wall -Wextra)
 endif()
 
+# Native executable-level scorer regression, no scripting-language runtime.
+add_executable(reap_activation_score_fixture tests/reap_activation_score_fixture.cpp)
+target_compile_features(reap_activation_score_fixture PRIVATE cxx_std_17)
+enable_testing()
+add_test(NAME reap_activation_score_regression
+    COMMAND "${CMAKE_COMMAND}"
+        "-DSCORER=$<TARGET_FILE:reap_activation_score>"
+        "-DFIXTURE=$<TARGET_FILE:reap_activation_score_fixture>"
+        "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_activation_score_fixtures"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_activation_score_regression.cmake")
+
 # Native checkpoint-wide MoE bank contract.
 add_executable(reap_bank_contract_test tests/reap_bank_contract_test.cpp)
 target_include_directories(reap_bank_contract_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
