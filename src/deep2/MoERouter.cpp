@@ -3,6 +3,7 @@
 // ============================================================================
 
 #include "MoERouter.hpp"
+#include "MoERoutingCore.hpp"
 #include "ReapPhysicalBank.hpp"
 #include <fstream>
 #include <iostream>
@@ -44,15 +45,30 @@ void MoERouter::SetRouterWeights(const float* weights, size_t rows, size_t cols)
     memcpy(routerWeights_.data(), weights, rows * cols * sizeof(float));
 }
 
+void MoERouter::SetCorrectionBias(const float* bias, size_t n) {
+    if (bias == nullptr || n == 0) {
+        eScoreCorrectionBias_.clear();
+        return;
+    }
+    if (n != config_.numExperts) {
+        std::fprintf(stderr,
+                     "[MOE_ROUTER] exp_probs_b length %zu != numExperts %zu; ignoring bias\n",
+                     n, config_.numExperts);
+        eScoreCorrectionBias_.clear();
+        return;
+    }
+    eScoreCorrectionBias_.assign(bias, bias + n);
+}
+
 TokenRoute MoERouter::Route(const float* hiddenState) {
     TokenRoute route;
-    std::vector<float> logits(config_.numExperts);
-    
+    const size_t nEmb = config_.hiddenDim;
+    const size_t nExp = config_.numExperts;
+
     // Compute router logits: score = W * x
     // GGUF/ggml ffn_gate_inp is [n_embd, n_expert] with n_embd innermost:
     //   W[e, d] at index e*n_embd + d  (NOT d*n_expert + e).
-    const size_t nEmb = config_.hiddenDim;
-    const size_t nExp = config_.numExperts;
+    std::vector<float> logits(static_cast<size_t>(nExp));
     for (size_t e = 0; e < nExp; ++e) {
         float score = 0;
         const float* row = routerWeights_.data() + e * nEmb;
@@ -61,38 +77,54 @@ TokenRoute MoERouter::Route(const float* hiddenState) {
         }
         logits[e] = score;
     }
-
-    // Physical REAP: permanently exclude pruned experts from host MoE routing
-    // (matches KimiK2Router). Without this, top-k can select expert>=retained
-    // and MoEWeightProxy::Acquire fail-closes with weights unavailable.
-    if (ReapPhysicalBankActive()) {
-        const uint32_t retained = ReapPhysicalRetainedPerLayer();
-        for (size_t e = 0; e < nExp; ++e) {
-            if (e >= retained)
-                logits[e] = -std::numeric_limits<float>::infinity();
-        }
-    }
-    
     route.routerLogits = logits;
-    
-    // Apply softmax to get gating scores
-    auto gatingScores = Softmax(logits);
-    
-    // Add noise for load balancing (during training)
-    if (config_.useLoadBalancing) {
-        std::normal_distribution<float> noise(0.0f, 0.01f);
-        for (auto& score : gatingScores) {
-            score += noise(rng_);
-        }
+
+    // ------------------------------------------------------------------
+    // Single metadata-driven routing core (see MoERoutingCore.hpp).
+    // Handles softmax vs sigmoid gating, selection-only correction bias,
+    // group-limited top-k, conditional normalization and routed scaling.
+    // This replaces the previous unconditional softmax + global top-k.
+    // ------------------------------------------------------------------
+    moe::RoutingParams params;
+    params.scoring = static_cast<moe::ScoringFunc>(config_.scoringFunc);
+    params.topK = static_cast<int>(config_.numActiveExperts);
+    params.nGroup = config_.nGroup;
+    params.topkGroup = config_.topkGroup;
+    params.hasCorrectionBias = !eScoreCorrectionBias_.empty();
+    params.correctionBias = eScoreCorrectionBias_.data();
+    params.normTopkProb = config_.normTopkProb;
+    params.routedScalingFactor = config_.routedScalingFactor;
+
+    // Physical REAP: permanently exclude pruned experts from host MoE routing.
+    // The core masks candidates rather than mutating logits, so sigmoid and
+    // softmax families behave identically.
+    if (ReapPhysicalBankActive()) {
+        params.retainedExperts = static_cast<int>(ReapPhysicalRetainedPerLayer());
     }
-    
-    // Select top-k experts
-    route.topExperts = TopK(gatingScores, config_.numActiveExperts);
+
+    moe::RoutingResult routed = moe::Route(logits.data(), static_cast<int>(nExp), params);
+
+    route.topExperts.clear();
+    route.topExperts.reserve(routed.expertIds.size());
+    for (size_t i = 0; i < routed.expertIds.size(); ++i) {
+        ExpertRoute er;
+        er.expertId = routed.expertIds[i];
+        er.weight = routed.weights[i];
+        route.topExperts.push_back(er);
+    }
+
     if (reapObservation_) {
-        std::vector<int> ids; std::vector<float> weights;
-        ids.reserve(route.topExperts.size()); weights.reserve(route.topExperts.size());
-        for (const auto& e : route.topExperts) { ids.push_back(e.expertId); weights.push_back(e.weight); }
-        ReapRouteTracker::Instance().Observe(layerIndex_, gatingScores, ids, weights);
+        std::vector<int> ids;
+        std::vector<float> weights;
+        ids.reserve(route.topExperts.size());
+        weights.reserve(route.topExperts.size());
+        for (const auto& e : route.topExperts) {
+            ids.push_back(e.expertId);
+            weights.push_back(e.weight);
+        }
+        // Observe the activated gating scores (post sigmoid/softmax) so REAP
+        // calibration sees the same distribution the router used.
+        ReapRouteTracker::Instance().Observe(layerIndex_, routed.scores, ids, weights);
     }
 
     // Store the top-K expert IDs for prefetch prediction exposure
@@ -101,14 +133,14 @@ TokenRoute MoERouter::Route(const float* hiddenState) {
     for (const auto& er : route.topExperts) {
         lastRouteExpertIds_.push_back(er.expertId);
     }
-    
+
     // Track statistics
     stats_.totalTokens++;
     for (const auto& expert : route.topExperts) {
         stats_.tokenCounts[expert.expertId]++;
         stats_.avgWeights[expert.expertId] += expert.weight;
     }
-    
+
     return route;
 }
 

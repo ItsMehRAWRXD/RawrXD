@@ -29,6 +29,19 @@ struct MoEConfig {
     size_t sharedExpertDim = 2048;  // Shared expert dimension
     bool useLoadBalancing = false;  /* inference: no RNG noise (greedy lock) */
     float capacityFactor = 1.25f;  // Expert capacity multiplier
+
+    // --- Metadata-driven routing semantics (see MoERoutingCore.hpp) ---
+    // 0 = Softmax (Qwen/Mixtral style), 1 = Sigmoid (DeepSeek-V3 / Kimi / GLM).
+    // Mirrors llama.cpp expert_gating_func: 1=softmax, 2=sigmoid.
+    int32_t scoringFunc = 0;
+    // Group-limited routing: nGroup groups of experts, keep topkGroup groups.
+    // nGroup <= 1 or topkGroup <= 0 disables group limiting.
+    int32_t nGroup = 1;
+    int32_t topkGroup = 0;
+    // Renormalize selected weights to sum 1 (conditional top-k normalization).
+    bool normTopkProb = true;
+    // Multiply final expert weights (DeepSeek-V3: ~2.827).
+    float routedScalingFactor = 1.0f;
 };
 
 // Expert routing result
@@ -82,6 +95,10 @@ public:
     // Get expert weights (router parameters)
     void SetRouterWeights(const float* weights, size_t rows, size_t cols);
 
+    // Selection-only correction bias (exp_probs_b). Applied to the selection
+    // scores only, never to the final expert weights. n must equal numExperts.
+    void SetCorrectionBias(const float* bias, size_t n);
+
     // Load balancing
     void UpdateLoadBalance();
     float GetLoadBalance() const { return stats_.loadBalance; }
@@ -115,6 +132,9 @@ private:
     
     // Router weights: [hiddenDim, numExperts]
     std::vector<float> routerWeights_;
+
+    // Selection-only correction bias (exp_probs_b), [numExperts].
+    std::vector<float> eScoreCorrectionBias_;
     
     // Expert load tracking
     mutable std::vector<uint64_t> expertLoads_;

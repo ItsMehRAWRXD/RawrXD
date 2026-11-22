@@ -2500,7 +2500,37 @@ void Deep2Engine::deallocateBuffers()
 // ============================================================================
 bool Deep2Engine::loadModel(const std::string& ggufPath)
 {
+    // Opt-in load-stage timing. Disabled by default so a normal load neither
+    // writes to stderr nor touches the filesystem; set RAWRXD_LOAD_TIMING=1 to
+    // emit [LOAD_TIME] lines, and optionally RAWRXD_LOAD_TIMING_FILE to mirror
+    // them into a caller-chosen path (GUI processes have no visible stderr).
+    // The destination is never hardcoded: the previous fixed F:\rawrxd path was
+    // neither portable nor writable outside the original dev machine.
+    auto t0 = std::chrono::high_resolution_clock::now();
+    const char* loadTimingEnv = std::getenv("RAWRXD_LOAD_TIMING");
+    const bool loadTiming = loadTimingEnv && loadTimingEnv[0] == '1' && loadTimingEnv[1] == '\0';
+    const char* loadTimingFile = std::getenv("RAWRXD_LOAD_TIMING_FILE");
+    const bool loadTimingHasFile = loadTiming && loadTimingFile && loadTimingFile[0] != '\0';
+    auto lap = [&](const char* stage) {
+        auto now = std::chrono::high_resolution_clock::now();
+        if (loadTiming) {
+            std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - t0);
+            std::fprintf(stderr, "[LOAD_TIME] stage=%s elapsed_ms=%llu model=%s\n",
+                         stage, (unsigned long long)ms.count(), ggufPath.c_str());
+            if (loadTimingHasFile) {
+                if (FILE* f = nullptr; fopen_s(&f, loadTimingFile, "a") == 0 && f) {
+                    std::fprintf(f, "[LOAD_TIME] stage=%s elapsed_ms=%llu model=%s\n",
+                                 stage, (unsigned long long)ms.count(), ggufPath.c_str());
+                    std::fclose(f);
+                }
+            }
+        }
+        t0 = now;
+    };
+
     printf("[Deep2Engine] Loading model from: %s\n", ggufPath.c_str());
+    lap("entry");
+
     // Certification witnesses belong to one model-load/generation lifecycle.
     // Reset before admission so a previous model cannot lend its MLA seal to
     // the next model in the same process.
@@ -2532,6 +2562,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                (int)store.effective().mode);
         printf("[Deep2Engine] Policy VRAM hard=%llu streaming=%d\n", (unsigned long long)PolicyVramHardCapBytes(),
                PolicyStreamingEnabled() ? 1 : 0);
+        lap("policy");
         // #region agent log
         {
             uint64_t fileBytes = 0;
@@ -2599,6 +2630,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                (unsigned long long)plan.kvBytesPerToken,
                (size_t)plan.maxContextEstimated);
     }
+    lap("model-fit");
 
     // ── Ollama model detection and resolution ──────────────────────────
     std::string resolvedPath = ggufPath;
@@ -2725,6 +2757,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     {
         printf("[Deep2Engine] UNREVERSE_HOTPATCH=1 — ReverseHotpatch skipped (raw load)\n");
     }
+    lap("reverse-hotpatch");
 
     // ── Load metadata from first shard (no tensor data for multi-shard) ─
     GGUFLoadOptions options;
@@ -2741,6 +2774,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
 
     // Store result for later tensor lookups
     ggufResult = std::move(result);
+    lap("gguf-load");
 
     // ── Build GlobalTensorIndex for multi-shard models ──────────────────
     if (isMultiShard)
@@ -3536,6 +3570,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     if (name.find("ffn_gate_inp") != std::string::npos ||
                         name.find("moe.router") != std::string::npos || name.find("gate_inp") != std::string::npos)
                         lw.moeRouter = wt;
+                    else if (name.find("exp_probs_b") != std::string::npos)
+                        lw.moeRouterBias = wt;
                     else if (name.find("ffn_gate_exps") == std::string::npos &&
                              name.find("ffn_up_exps") == std::string::npos &&
                              name.find("ffn_down_exps") == std::string::npos &&
@@ -4270,6 +4306,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
         printf("[Deep2Engine] ATTN_GEOMETRY_RECONCILED %s\n", geomDetail.c_str());
     }
+    lap("geometry-reconcile");
 
     // Re-allocate buffers with correct dimensions
     deallocateBuffers();
@@ -4278,6 +4315,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         printf("[Deep2Engine] ERROR: Failed to re-allocate buffers\n");
         return false;
     }
+    lap("allocate-buffers");
 
     // loadModel-only clients (e.g. RawrXD-Agentic) never call initialize() —
     // ensure thread pool, KV cache, and quant dispatch are ready here.
@@ -4466,6 +4504,71 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 printf("[Deep2Engine] MoE dims: expertDim=%zu sharedExpertDim=%zu sharedCount=%u\n",
                        moeConfig_.expertDim, moeConfig_.sharedExpertDim, modelWeights.numSharedExperts);
 
+                // ── Metadata-driven routing semantics (R01/R02/R06/R08/R09) ──
+                // Select softmax vs sigmoid gating, group-limited routing,
+                // conditional top-k normalization and routed scaling from the
+                // GGUF metadata instead of assuming softmax. Suffix matching
+                // handles every architecture prefix (llama./glm4./qwen3./...).
+                {
+                    auto rawLookupSuffix = [&](std::initializer_list<const char*> suffixes) -> std::string {
+                        for (const auto& kv : ggufResult.rawKv) {
+                            const std::string& k = kv.first;
+                            for (const char* suf : suffixes) {
+                                const size_t sl = std::char_traits<char>::length(suf);
+                                if (k.size() >= sl && k.compare(k.size() - sl, sl, suf) == 0)
+                                    return kv.second;
+                            }
+                        }
+                        return std::string();
+                    };
+                    auto rawU32Suffix = [&](std::initializer_list<const char*> suffixes, uint32_t def) -> uint32_t {
+                        const std::string v = rawLookupSuffix(suffixes);
+                        if (v.empty()) return def;
+                        char* end = nullptr;
+                        const unsigned long parsed = std::strtoul(v.c_str(), &end, 10);
+                        return (end && *end == '\0') ? static_cast<uint32_t>(parsed) : def;
+                    };
+                    auto rawF32Suffix = [&](std::initializer_list<const char*> suffixes, float def) -> float {
+                        const std::string v = rawLookupSuffix(suffixes);
+                        if (v.empty()) return def;
+                        char* end = nullptr;
+                        const double parsed = std::strtod(v.c_str(), &end);
+                        return (end && *end == '\0') ? static_cast<float>(parsed) : def;
+                    };
+                    auto rawBoolSuffix = [&](std::initializer_list<const char*> suffixes, bool def) -> bool {
+                        const std::string v = rawLookupSuffix(suffixes);
+                        if (v.empty()) return def;
+                        return (v == "true" || v == "1" || v == "True" || v == "TRUE");
+                    };
+
+                    const std::string scoringStr = rawLookupSuffix({".scoring_func", "scoring_func"});
+                    const uint32_t gatingFunc = rawU32Suffix({".expert_gating_func", "expert_gating_func"}, 0);
+                    bool isSigmoid;
+                    if (!scoringStr.empty()) {
+                        // case-insensitive "sigmoid"
+                        std::string s = scoringStr;
+                        for (auto& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                        isSigmoid = (s == "sigmoid");
+                    } else {
+                        isSigmoid = (gatingFunc == 2u);
+                    }
+                    moeConfig_.scoringFunc = isSigmoid ? 1 : 0;
+                    moeConfig_.nGroup = static_cast<int32_t>(rawU32Suffix({".n_group", "n_group"}, 1));
+                    moeConfig_.topkGroup = static_cast<int32_t>(rawU32Suffix({".topk_group", "topk_group"}, 0));
+                    moeConfig_.normTopkProb = rawBoolSuffix({".norm_topk_prob", "norm_topk_prob"}, true);
+                    // routed_scaling_factor: default per family if absent.
+                    const std::string scalingStr = rawLookupSuffix({".routed_scaling_factor", "routed_scaling_factor"});
+                    if (!scalingStr.empty())
+                        moeConfig_.routedScalingFactor = rawF32Suffix({".routed_scaling_factor", "routed_scaling_factor"}, 1.0f);
+                    else
+                        moeConfig_.routedScalingFactor = isSigmoid ? 2.827f : 1.0f;
+                    printf("[Deep2Engine] MOE_ROUTING scoring=%s gating_func=%u n_group=%d topk_group=%d "
+                           "norm_topk_prob=%d routed_scaling=%.4f topk=%zu\n",
+                           isSigmoid ? "sigmoid" : "softmax", gatingFunc, moeConfig_.nGroup,
+                           moeConfig_.topkGroup, moeConfig_.normTopkProb ? 1 : 0,
+                           static_cast<double>(moeConfig_.routedScalingFactor), moeConfig_.numActiveExperts);
+                }
+
                 // Create per-layer routers and inject weights
                 moeRouters_.clear();
                 moeRouters_.resize(modelWeights.numLayers);
@@ -4579,6 +4682,44 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                                        layerIdx, lw.moeRouter.type);
                             }
                         }
+                    }
+
+                    // Selection-only correction bias (exp_probs_b) — R04.
+                    // Never applied to the final expert weights; the core uses
+                    // it only to pick which experts to activate.
+                    if (lw.moeRouterBias.data && modelWeights.numExperts > 0)
+                    {
+                        const size_t nE = modelWeights.numExperts;
+                        std::vector<float> bias(nE, 0.0f);
+                        bool ok = false;
+                        if (lw.moeRouterBias.type == (int)GGMLType::GGML_TYPE_F32)
+                        {
+                            const float* src = static_cast<const float*>(lw.moeRouterBias.data);
+                            std::copy(src, src + nE, bias.begin());
+                            ok = true;
+                        }
+                        else if (lw.moeRouterBias.type == (int)GGMLType::GGML_TYPE_F16)
+                        {
+                            const uint16_t* src = static_cast<const uint16_t*>(lw.moeRouterBias.data);
+                            for (size_t i = 0; i < nE; ++i) bias[i] = fp16ToFloat(src[i]);
+                            ok = true;
+                        }
+                        else
+                        {
+                            auto& reg = QuantKernelRegistry::Instance();
+                            if (reg.GetRegisteredCount() == 0) reg.Initialize();
+                            auto deq = reg.GetDequant(lw.moeRouterBias.type);
+                            if (deq)
+                            {
+                                deq(static_cast<const uint8_t*>(lw.moeRouterBias.data), bias.data(), nE);
+                                ok = true;
+                            }
+                        }
+                        if (ok) router->SetCorrectionBias(bias.data(), nE);
+                        else
+                            std::fprintf(stderr,
+                                "[Deep2Engine] WARNING: layer %zu exp_probs_b type=%d unsupported; "
+                                "routing without correction bias\n", layerIdx, lw.moeRouterBias.type);
                     }
                     moeRouters_[layerIdx] = std::move(router);
                 }
@@ -4718,6 +4859,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         vulkanStrictNoCpuFallback_ = false;
         printf("[Deep2Engine] RAWR_REAP_CPU_ONLY=1: CPU reference mode active\n");
     }
+    lap("vulkan-init");
 
     // ── End-to-end completion: probe host Q8_0 GEMV safety for FFN/attn/ssm_in ─
     {
@@ -4734,6 +4876,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
         printf("[Deep2Engine] Host Q8_0 GEMV receipts: SAFE\n");
     }
+    lap("vulkan-q8probe");
 
     return true;
 }
@@ -12221,8 +12364,15 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // ========================================================================
     TokenRoute route;
     bool usedGpuRouter = false;
-    
-    if (vulkanCompute_ && vulkanCompute_->initialized())
+
+    // The GPU router (DispatchRouter) only computes logits = W*x and applies a
+    // softmax top-k internally. For sigmoid-gated families (DeepSeek-V3 / Kimi /
+    // GLM / Qwen3.6-MoE) that selection is WRONG — the correction bias and
+    // group-limited selection are applied on the CPU. Since the CPU route is
+    // authoritative in every case below, skip the GPU router for sigmoid models
+    // to avoid wasted dispatch and misleading parity warnings (R-H09).
+    const bool sigmoidRouting = (moeConfig_.scoringFunc == 1);
+    if (!sigmoidRouting && vulkanCompute_ && vulkanCompute_->initialized())
     {
         // Build GpuWeightView from MoERouter weights
         const Deep2::MoERouter* router = moeRouters_[layer].get();
@@ -13806,7 +13956,11 @@ void Deep2Engine::enableAllEnhancements()
         if (EnhanceWanted("torus") && !vulkanEnabled_)
             enableToroidalKV(true, torus ? torus : 4096);
     }
-    if (!marsEnabled_ && EnhanceWanted("mars"))
+    // CPU-only reference runs must not enumerate or initialize GPU/MARS
+    // resources.  Apart from wasting startup time, MARS discovery can hold
+    // Vulkan/device handles and make deterministic KV acceptance depend on
+    // unrelated desktop GPU state.
+    if (!reapCpuOnly && !marsEnabled_ && EnhanceWanted("mars"))
     {
         const uint64_t g0 = Deep2LocalHeapBytes(getVulkanComputeSlot(0), 32ull << 30);
         const uint64_t g1 = Deep2LocalHeapBytes(getVulkanComputeSlot(1), 16ull << 30);

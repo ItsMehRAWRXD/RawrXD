@@ -4819,6 +4819,34 @@ target_compile_features(reap_bank_contract_test PRIVATE cxx_std_17)
 enable_testing()
 add_test(NAME reap_bank_contract_test COMMAND reap_bank_contract_test)
 
+# Native metadata-driven MoE routing core regression (softmax/sigmoid + bias +
+# group-limited top-k + routed scaling + norm_topk_prob + REAP mask).
+add_executable(reap_moe_routing_core_test tests/reap_moe_routing_core_test.cpp)
+target_include_directories(reap_moe_routing_core_test PRIVATE "${CMAKE_SOURCE_DIR}/src/deep2")
+target_compile_features(reap_moe_routing_core_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_moe_routing_core_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_moe_routing_core_test PRIVATE -Wall -Wextra)
+endif()
+enable_testing()
+add_test(NAME reap_moe_routing_core_test COMMAND reap_moe_routing_core_test)
+
+# Native Deep2::MoERouter integration regression (real production class).
+add_executable(reap_moerouter_link_test
+    tests/reap_moerouter_link_test.cpp
+    "${CMAKE_SOURCE_DIR}/src/deep2/MoERouter.cpp"
+    "${CMAKE_SOURCE_DIR}/src/deep2/ReapPhysicalBank.cpp")
+target_include_directories(reap_moerouter_link_test PRIVATE "${CMAKE_SOURCE_DIR}/src/deep2")
+target_compile_features(reap_moerouter_link_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_moerouter_link_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_moerouter_link_test PRIVATE -Wall -Wextra)
+endif()
+enable_testing()
+add_test(NAME reap_moerouter_link_test COMMAND reap_moerouter_link_test)
+
 # Native CPU-only MLA geometry and dedicated download ownership regressions.
 foreach(_deep2_test IN ITEMS deep2_mla_geometry_test deep2_download_ownership_test)
     add_executable(${_deep2_test} "tests/deep2/${_deep2_test}.cpp")

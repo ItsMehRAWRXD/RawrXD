@@ -150,6 +150,7 @@ namespace Deep2
 
         // MoE (optional - if numExperts > 0)
         WeightTensor moeRouter;            // [numExperts, hiddenDim]
+        WeightTensor moeRouterBias;        // [numExperts] exp_probs_b (selection-only)
         std::vector<WeightTensor> moeGate; // [numExperts][intermediateDim, hiddenDim]
         std::vector<WeightTensor> moeUp;   // [numExperts][intermediateDim, hiddenDim]
         std::vector<WeightTensor> moeDown; // [numExperts][hiddenDim, intermediateDim]
