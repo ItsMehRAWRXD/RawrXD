@@ -3,9 +3,33 @@ on:
   push:
     branches: [native/glm-reap-ownership-fixes-20261122]
   workflow_dispatch:
+    inputs:
+      certify_native_ide_link:
+        description: "Run full native IDE Release linker certification (may require repository-specific build prerequisites)"
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
+  native-ide-link-certification:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.certify_native_ide_link }}
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Full native IDE Release link and REAP external-symbol certification
+        shell: pwsh
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/verify_native_ide_link.ps1 -CleanBuild -RunReapTests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Preserve linker evidence on success or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ide-link-certification-evidence
+          path: build-native-link-cert/native-ide-link-certification.log
+          if-no-files-found: warn
+          retention-days: 14
   scalar-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
