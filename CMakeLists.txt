@@ -4733,6 +4733,13 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_lostseq_failure_injec
     add_test(NAME deep2_lostseq_failure_injection COMMAND deep2_lostseq_failure_injection)
 endif()
 
+# Native checkpoint-wide MoE bank contract.
+add_executable(reap_bank_contract_test tests/reap_bank_contract_test.cpp)
+target_include_directories(reap_bank_contract_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_bank_contract_test PRIVATE cxx_std_17)
+enable_testing()
+add_test(NAME reap_bank_contract_test COMMAND reap_bank_contract_test)
+
 # Native CPU-only MLA geometry and dedicated download ownership regressions.
 foreach(_deep2_test IN ITEMS deep2_mla_geometry_test deep2_download_ownership_test)
     add_executable(${_deep2_test} "tests/deep2/${_deep2_test}.cpp")
