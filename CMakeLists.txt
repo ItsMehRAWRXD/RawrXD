@@ -4776,6 +4776,18 @@ add_test(NAME reap_selection_pipeline_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_selection_pipeline_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_selection_pipeline_regression.cmake")
 
+# Native group geometry and serialized prune-only export budget.
+add_executable(reap_export_budget_test tests/reap_export_budget_test.cpp)
+target_include_directories(reap_export_budget_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_export_budget_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_export_budget_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_export_budget_test PRIVATE -Wall -Wextra)
+endif()
+enable_testing()
+add_test(NAME reap_export_budget_test COMMAND reap_export_budget_test)
+
 # Direct activation-output saliency and checkpoint equivalence (CPU-only).
 add_executable(reap_saliency_accumulator_test tests/reap_saliency_accumulator_test.cpp)
 target_include_directories(reap_saliency_accumulator_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
