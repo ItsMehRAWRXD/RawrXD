@@ -135,6 +135,21 @@ int main(int argc, char** argv) {
     // Physical tensors are never cloned by the visit schedule.
     expect(ir.tensors.size() == tensors.size(), "physical_tensors_not_cloned");
 
+    // R03 reconciliation: the canonical IR must be a COMPLETE model
+    // representation — every tensor assigned to a valid layer (or global) and
+    // every physical layer reached by at least one logical visit.
+    bool allAssigned = true;
+    for (const auto& t : ir.tensors)
+        if (t.layerIndex != UINT32_MAX && t.layerIndex >= g.blockCount)
+            allAssigned = false;
+    expect(allAssigned, "r03_all_tensors_assigned_to_valid_layer");
+    std::vector<bool> layerVisited(g.blockCount, false);
+    for (const auto& v : ir.visits)
+        if (v.physicalLayer < g.blockCount) layerVisited[v.physicalLayer] = true;
+    bool allLayersVisited = true;
+    for (bool b : layerVisited) if (!b) allLayersVisited = false;
+    expect(allLayersVisited, "r03_all_layers_visited");
+
     // R05/R06 op semantics: attention (MLA) + MoE routing per physical layer.
     std::vector<reap::LayerSemantics> layers = reap::BuildAllLayerSemantics(ir);
     expect(layers.size() == g.blockCount, "layer_semantics_count_matches_blocks");
@@ -266,6 +281,17 @@ int main(int argc, char** argv) {
             out << "  \"logical_params\": " << plan.logicalParamCount << ",\n";
             out << "  \"packed_expert_bytes\": " << packedExpertBytes << ",\n";
             out << "  \"nonexpert_bytes\": " << nonexpertBytes << ",\n";
+            out << "  \"tensors\": [\n";
+            for (size_t i = 0; i < ir.tensors.size(); ++i) {
+                const auto& t = ir.tensors[i];
+                out << "    {\"name\": \"" << t.name << "\", \"family\": \""
+                    << t.family << "\", \"layer\": "
+                    << (t.layerIndex == UINT32_MAX ? -1 : static_cast<int>(t.layerIndex))
+                    << ", \"bytes\": " << t.sizeBytes << ", \"dtype\": " << t.type << "}";
+                if (i + 1 < ir.tensors.size()) out << ",";
+                out << "\n";
+            }
+            out << "  ],\n";
             out << "  \"visits\": [\n";
             for (size_t i = 0; i < ir.visits.size(); ++i) {
                 const auto& v = ir.visits[i];
