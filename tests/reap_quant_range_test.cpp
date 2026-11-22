@@ -54,6 +54,31 @@ int main(){
     std::ostringstream closed;closed.setstate(std::ios::badbit);check(!ConvertRange(input,closed,Q4Bytes,stats)&&stats.blocks==saved.blocks,"write failure retains prior stats");
     StoreHalf(source.data(),0x7c00);std::string invalid(reinterpret_cast<const char*>(source.data()),source.size());
     std::istringstream nonfinite(invalid);check(!ConvertRange(nonfinite,bad,Q4Bytes,stats)&&stats.blocks==saved.blocks,"invalid block rejected");
+    // Reject malformed cumulative quality evidence before any bytes are read.
+    for(unsigned field=0;field<3;++field) {
+        for(unsigned mode=0;mode<3;++mode) {
+            RangeStats malformed{};
+            double& value=field==0?malformed.squared:
+                          field==1?malformed.signal:malformed.maxAbs;
+            value=mode==0?-1.0:mode==1?
+                  std::numeric_limits<double>::infinity():
+                  std::numeric_limits<double>::quiet_NaN();
+            std::istringstream validInput(raw);
+            std::ostringstream untouched;
+            const RangeStats savedMalformed=malformed;
+            const bool accepted=ConvertRange(validInput,untouched,Q4Bytes,malformed);
+            check(!accepted&&untouched.str().empty()&&
+                  malformed.blocks==savedMalformed.blocks,
+                  "malformed quality evidence rejected");
+        }
+    }
+    std::istringstream alreadyBad(raw);
+    alreadyBad.setstate(std::ios::badbit);
+    std::ostringstream noOutput;
+    RangeStats fresh;
+    check(!ConvertRange(alreadyBad,noOutput,Q4Bytes,fresh)&&
+          noOutput.str().empty()&&fresh.blocks==0,
+          "bad input stream rejected before conversion");
     check(RangeStats{}.RelativeRmse()==0,"zero signal zero error");
     std::printf("PASS_COUNT=%d FAIL_COUNT=%d\n",pass,fail);return fail?1:0;
 }
