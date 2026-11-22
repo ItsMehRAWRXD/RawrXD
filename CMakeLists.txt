@@ -4730,6 +4730,24 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_canonical_ir_test.cpp")
     add_test(NAME reap_canonical_ir_test COMMAND reap_canonical_ir_test)
 endif()
 
+# REAP-AutoFit R04: recurrent graph compiler (ops reference physical tensors).
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_graph_compile_test.cpp")
+    add_executable(reap_graph_compile_test
+        tests/reap/reap_graph_compile_test.cpp)
+    target_include_directories(reap_graph_compile_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(reap_graph_compile_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(reap_graph_compile_test PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(reap_graph_compile_test PRIVATE -Wall -Wextra)
+    endif()
+    set_target_properties(reap_graph_compile_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME reap_graph_compile_test COMMAND reap_graph_compile_test)
+endif()
+
 # Gap 7+10: AgentEditHistory undo byte restore + AgentSession/TaskLedger disk RT.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_ledger_undo_smoke.cpp")
     add_executable(agent_ledger_undo_smoke
