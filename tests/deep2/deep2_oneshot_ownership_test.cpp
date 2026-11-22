@@ -96,6 +96,34 @@ int main() {
         check(owner.Drain(0, owner.CurrentTicket(), reclaim), "fresh submitted idle snapshot accepted");
         check(releases == 2, "exactly two resources released");
     }
+    // Admission closure must prevent all subsequent acquisitions.
+    {
+        OneShotOwner<Handles> owner;
+        owner.SetBlocked(true);
+        std::atomic<int> accepted{0};
+        std::vector<std::thread> workers;
+        for (int i=0; i<6; ++i) {
+            workers.emplace_back([&] {
+                for (int j=0; j<1000; ++j)
+                    if (owner.Acquire({1,2,3},1)) ++accepted;
+            });
+        }
+        for (auto& worker : workers) worker.join();
+        check(accepted.load()==0, "closed admission rejects 6000 attempts");
+        check(!owner.Active(), "closed admission remains inactive");
+        owner.SetBlocked(false);
+        const auto ticket=owner.Acquire({1,2,3},1);
+        check(ticket!=0, "explicit reopen admits work");
+        int released=0;
+        auto reclaim=[&](const Handles&) { ++released; };
+        owner.SetBlocked(true);
+        check(!owner.MarkSubmitted(ticket+1), "wrong acknowledgement rejected while closing");
+        check(owner.CurrentTicket()==0, "closing unsubmitted snapshot is empty");
+        check(owner.MarkSubmitted(ticket), "existing work can acknowledge during closure");
+        check(owner.Drain(0,owner.CurrentTicket(),reclaim), "submitted work drains after closure");
+        check(released==1 && !owner.Active(), "closure drains exactly once");
+        check(owner.Acquire({4,5,6},1)==0, "drain does not reopen admission");
+    }
     // H52: concurrent Complete() with the same ticket -> exactly one wins
     // (atomic claim), exactly one native release.
     {
