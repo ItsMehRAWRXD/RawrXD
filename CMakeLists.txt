@@ -4842,6 +4842,13 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     target_compile_features(reap_adaptive_dispatch_test PRIVATE cxx_std_17)
     target_compile_definitions(reap_adaptive_dispatch_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
     add_test(NAME reap_adaptive_dispatch_test COMMAND reap_adaptive_dispatch_test)
+
+    # Production IDE and its REAP streaming conversion share the isolated
+    # object. Do not add AVX2 compile flags to the IDE's source files.
+    if(TARGET RawrXD-Win32IDE-Native)
+        target_sources(RawrXD-Win32IDE-Native PRIVATE $<TARGET_OBJECTS:reap_msvc_avx2>)
+        target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
+    endif()
 endif()
 if(TARGET ggml-base)
     add_executable(reap_q3k_codec_test tests/reap_q3k_codec_test.cpp)
