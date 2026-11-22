@@ -24,15 +24,15 @@ int main() {
     // Wrong/stale ticket rejected.
     check(!owner.Complete(0,t1+1,reclaim)&&owner.Active(),"wrong ticket rejected");
     // Ambiguous idle retains handles.
-    check(!owner.Drain(-1,1,reclaim)&&owner.Active(),"ambiguous idle retains handles");
+    check(!owner.Drain(-1,t1,reclaim)&&owner.Active(),"ambiguous idle retains handles");
     // Idle timeout retains handles.
-    check(!owner.Drain(2,1,reclaim)&&owner.Active(),"idle timeout retains handles");
-    // Stale teardown (wrong generation) rejected.
-    check(!owner.Drain(0,2,reclaim)&&owner.Active(),"stale teardown rejected");
-    // Idle success drains (generation-wide teardown).
-    check(owner.Drain(0,1,reclaim)&&!owner.Active(),"idle success drains");
+    check(!owner.Drain(2,t1,reclaim)&&owner.Active(),"idle timeout retains handles");
+    // Stale teardown (wrong ticket) rejected.
+    check(!owner.Drain(0,t1+1,reclaim)&&owner.Active(),"stale teardown rejected");
+    // Idle success drains (ticket captured before idle).
+    check(owner.Drain(0,t1,reclaim)&&!owner.Active(),"idle success drains");
     check(releases==1&&last.cmd==1&&last.query==2&&last.fence==3,"original handles reclaimed exactly once");
-    check(!owner.Drain(0,1,reclaim)&&releases==1,"repeated drain idempotence");
+    check(!owner.Drain(0,t1,reclaim)&&releases==1,"repeated drain idempotence");
     // New acquisition, new generation, new ticket.
     const uint64_t t2 = owner.Acquire({7,8,9},2);
     check(t2!=0,"new generation acquisition");
@@ -46,9 +46,18 @@ int main() {
     // Stale Complete from t2 must NOT release t3's resources (S9.02).
     check(!owner.Complete(0,t2,reclaim)&&owner.Active(),"stale same-generation ticket rejected");
     check(releases==2,"stale same-generation no release");
-    // Terminal loss teardown (generation-wide) reclaims t3's handles.
-    check(owner.Drain(-4,2,reclaim)&&releases==3&&!owner.Active(),"terminal loss permits teardown");
-    check(last.cmd==10&&last.query==11&&last.fence==12,"terminal teardown owns correct handles");
+    // H39: capture t3 as the drain ticket, then a new acquisition occurs; the
+    // stale drain (t3) must NOT reclaim the new submission (t4).
+    // (Simulate by completing t3 normally first, then acquiring t4, then a
+    // stale Drain with t3 must be refused.)
+    check(owner.Complete(0,t3,reclaim)&&releases==3&&!owner.Active(),"normal completion t3 reclaims");
+    const uint64_t t4 = owner.Acquire({13,14,15},2);
+    check(t4!=0 && t4!=t3,"new acquisition after t3");
+    check(!owner.Drain(-4,t3,reclaim)&&owner.Active(),"stale drain ticket rejected (H39)");
+    check(releases==3,"stale drain no release (H39)");
+    // Terminal loss teardown (generation-wide) with the CURRENT ticket reclaims.
+    check(owner.Drain(-4,t4,reclaim)&&releases==4&&!owner.Active(),"terminal loss permits teardown");
+    check(last.cmd==13&&last.query==14&&last.fence==15,"terminal teardown owns correct handles");
     // Teardown result allowlist.
     check(MayTeardownAfterIdle(0)&&MayTeardownAfterIdle(-4),"exact teardown result allowlist");
     check(!MayTeardownAfterIdle(31)&&!MayTeardownAfterIdle(-2)&&!MayTeardownAfterIdle(1),"foreign and ambiguous codes rejected");

@@ -47,18 +47,24 @@ public:
         return true;
     }
 
-    // Teardown of the owning device, not an ordinary reuse boundary. This is a
-    // generation-wide teardown (no per-acquisition ticket), so it validates the
-    // device generation instead.
+    // Teardown of the owning device, not an ordinary reuse boundary. Takes the
+    // ticket captured BEFORE the idle wait (H38/H39): if a new acquisition
+    // occurred after idle evidence was collected, the stale ticket no longer
+    // matches epoch_ and the drain is refused — a new submission is never
+    // reclaimed with stale idle evidence.
     template<class Release>
-    bool Drain(int idle, uint64_t generation, Release&& release) {
+    bool Drain(int idle, uint64_t ticket, Release&& release) {
         if (!MayTeardownAfterIdle(idle)) return false;
-        if (!Active() || generation != generation_) return false;
+        if (!Active() || ticket != epoch_) return false;   // stale ticket -> refuse
         release(handles_);
         handles_ = {};
         active_.store(false, std::memory_order_release);
         return true;
     }
+
+    // The current acquisition's ticket (0 if none). Capture BEFORE a device-idle
+    // wait so a subsequent Drain() can detect a new acquisition (H39).
+    uint64_t CurrentTicket() const noexcept { return epoch_; }
 
 private:
     Handles  handles_{};

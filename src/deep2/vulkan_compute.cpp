@@ -7394,6 +7394,11 @@ void VulkanCompute::cleanup() {
     // Only an actual idle result can authorize teardown; synthetic host-loss
     // markers do not prove Vulkan completion or terminal device loss.
     if (device_) {
+        // Capture the active ticket BEFORE the idle wait (H39): if a new
+        // acquisition occurs after idle evidence is collected, the stale
+        // ticket will not match epoch_ and Drain() refuses.
+        const uint64_t oneShotDrainTicket =
+            oneShot_.Active() ? oneShot_.CurrentTicket() : 0;
         const VkResult idleRes = vkDeviceWaitIdle(device_);
         if (!Submit::MayTeardownAfterIdle(static_cast<int>(idleRes))) {
             cleanupBlocked_.store(true, std::memory_order_release);
@@ -7404,7 +7409,7 @@ void VulkanCompute::cleanup() {
         if (idleRes == VK_ERROR_DEVICE_LOST)
             (void)NoteVkResult(static_cast<int>(idleRes), "cleanup");
         if (oneShot_.Active() &&
-            !oneShot_.Drain(static_cast<int>(idleRes), deviceGeneration_,
+            !oneShot_.Drain(static_cast<int>(idleRes), oneShotDrainTicket,
                 [this](const OneShotHandles& h) noexcept { releaseOneShot(h); })) {
             cleanupBlocked_.store(true, std::memory_order_release);
             return;
