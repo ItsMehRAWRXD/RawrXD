@@ -73,7 +73,11 @@ $reg = Get-Content $registryJson -Raw | ConvertFrom-Json
 
 # ---- C2: CLI manifest ---------------------------------------------------------
 $cliJson = Join-Path $EvidenceDir "cli_manifest.json"
-& $CliExe capabilities --json --out $cliJson | Out-Null
+# Bind the manifest query to the same checkout under test.  Without the
+# explicit root, CTest can launch from another checkout and the CLI's
+# runtime git revision becomes unrelated to -RepoRoot, producing a false
+# stale-manifest failure.
+& $CliExe --root $RepoRoot capabilities --json --out $cliJson | Out-Null
 if ($LASTEXITCODE -ne 0) { Fail "rawr capabilities exited $LASTEXITCODE" }
 $cli = Get-Content $cliJson -Raw | ConvertFrom-Json
 Say "C2 rawr capabilities           PASS (exit 0, tools=$($cli.tool_count), revision=$($cli.source_revision))"
