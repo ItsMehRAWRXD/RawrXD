@@ -7,6 +7,7 @@
 #include "deep2/ReapVirtualPayload.hpp"
 #include "deep2/ReapSubmissionPins.hpp"
 #include "deep2/ReapStrataBudget.hpp"
+#include "deep2/ReapExpertCompute.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -219,6 +220,31 @@ int main(){
         });
         for(auto& worker:workers)worker.join();
         check(successes==6&&shared.Used()==StrataBudget::Amount({6,6,0,0,6}),"strata concurrent admission exact bound");
+    }
+    {
+        Values weights{};weights.fill(1.0f);
+        Q3Block block{};
+        const bool encoded=EncodeQ3(weights,block);
+        check(encoded,"expert compute packed fixture");
+        if(encoded){
+            auto payload=std::make_shared<std::vector<uint8_t>>(256*Q3Bytes);
+            for(size_t i=0;i<256;++i)std::memcpy(payload->data()+i*Q3Bytes,block.data(),Q3Bytes);
+            ExpertMatrix m{256,256,Precision::Q3,payload};
+            std::vector<float> x(256,1.0f/256),y;
+            Values decoded{};DecodeQ3(block,decoded);
+            double reference=0;for(float v:decoded)reference+=double(v)/256;
+            check(ExpertMatVec(m,x,y)&&y.size()==256&&std::abs(y[0]-reference)<1e-5,"expert matrix numerical oracle");
+            SwiGluExpert e{m,m,m};
+            double rowSum=reference*256;
+            double expected=rowSum*reference*reference/(1+std::exp(-reference));
+            check(ExecuteExpert(e,x,y)&&y.size()==256&&std::abs(y[0]-expected)<1e-3,"expert SwiGLU numerical oracle");
+            const std::vector<RouteChoice> routes{{0,0,0.25},{1,1,0.75}};
+            check(ExecuteRoutedExperts(routes,x,[&](uint32_t,SwiGluExpert& out){out=e;return true;},y)&&std::abs(y[0]-expected)<1e-3,"expert weighted accumulation oracle");
+            const auto previous=y;
+            auto bad=m;bad.cols=255;
+            check(!ExpertMatVec(bad,x,y)&&y==previous,"expert invalid geometry preserves output");
+            check(!ExecuteRoutedExperts(routes,x,[](uint32_t,SwiGluExpert&){return false;},y)&&y==previous,"expert missing payload preserves output");
+        }
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
