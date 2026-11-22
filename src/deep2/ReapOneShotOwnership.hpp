@@ -26,6 +26,10 @@ public:
     // Returns a per-acquisition ticket (>0) or 0 on failure (already active).
     uint64_t Acquire(const Handles& handles, uint64_t generation) noexcept {
         std::lock_guard<std::mutex> lock(mutex_);
+        // H47-B: admission check and registration share this mutex, so a
+        // concurrent SetBlocked(true) (cleanup) cannot interleave between the
+        // check and the registration (no check-to-submit TOCTOU).
+        if (blocked_.load(std::memory_order_acquire)) return 0;
         if (active_.load(std::memory_order_relaxed)) return 0;
         // H53: ticket overflow -> fail closed (never reuse ticket 0).
         if (nextEpoch_ == UINT64_MAX) return 0;
@@ -35,6 +39,12 @@ public:
         active_.store(true, std::memory_order_release);
         return epoch_;
     }
+
+    // H47: close/open submission admission atomically with registration.
+    // cleanup() calls SetBlocked(true) before destroying resources; initialize()
+    // calls SetBlocked(false) after a fresh device is ready.
+    void SetBlocked(bool b) noexcept { blocked_.store(b, std::memory_order_release); }
+    bool IsBlocked() const noexcept { return blocked_.load(std::memory_order_acquire); }
 
     // The caller supplies the exact result of the current submission's wait
     // AND the ticket returned by Acquire(). Under the mutex, the ticket check
@@ -79,6 +89,7 @@ private:
     uint64_t epoch_ = 0;        // current acquisition's ticket
     uint64_t nextEpoch_ = 0;    // monotonic ticket source
     std::atomic<bool> active_{false};
+    std::atomic<bool> blocked_{false};   // H47: admission closed during cleanup
 };
 
 } } // namespace Deep2::Submit

@@ -1104,6 +1104,12 @@ bool VulkanCompute::RunWeightBatchQ4KTop1(
 bool VulkanCompute::initialize() {
     cleanup();
     if (!CleanupComplete()) return false;
+    // H47-G/H47-H: reopen admission for the fresh device. If cleanup took a
+    // quarantine early-return (idle failure), admission was left closed; a
+    // successful initialize() on a new device must reopen it, but only here,
+    // after CleanupComplete() confirms the old device is fully torn down.
+    cleanupBlocked_.store(false, std::memory_order_release);
+    oneShot_.SetBlocked(false);
     if (!createInstance() || !selectPhysical() || !createDevice() ||
         !createCommandPool() || !createDescriptorSystems()) {
         cleanup();
@@ -7394,6 +7400,7 @@ void VulkanCompute::cleanup() {
     // submission can reference a buffer being reclaimed. Cleared at the end of
     // a successful cleanup; left set on early (quarantine) returns (terminal).
     cleanupBlocked_.store(true, std::memory_order_release);
+    oneShot_.SetBlocked(true);   // H47-B: atomic admission close under the owner mutex
     // Caller must have quiesced every submission/reader before cleanup.
     // Only an actual idle result can authorize teardown; synthetic host-loss
     // markers do not prove Vulkan completion or terminal device loss.
@@ -7565,6 +7572,7 @@ void VulkanCompute::cleanup() {
     hidden_=intermediate_=heads_=kvHeads_=headDim_=maxSeq_=layers_=kvDim_=0;
     weightBudgetBytes_=weightCacheBytes_=0;
     cleanupBlocked_.store(false, std::memory_order_release);
+    oneShot_.SetBlocked(false);   // H47-G: reopen admission after successful cleanup
 }
 
 bool VulkanCompute::SpecBatchRmsNorm(
