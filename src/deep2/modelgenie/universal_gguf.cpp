@@ -1600,6 +1600,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
     // Provenance: the file's SHA-256, size, tensor count and type histogram.
     g_prov = Provenance{};
     g_prov.path = path;
+    trace("provenance-digest-begin");
     if (std::getenv("DEEP2_INGEST_SKIP_DIGEST")) {
         g_prov.sha256 = "<deferred>";
     } else if (canonical_shards) {
@@ -1608,6 +1609,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
     } else {
         g_prov.sha256 = Sha256FileImpl(path);
     }
+    trace("provenance-digest-complete");
     g_prov.file_bytes = source_bytes;
     g_prov.tensor_count = g_last.tensors.size();
     g_prov.shard_count = g_last.shard_count;
