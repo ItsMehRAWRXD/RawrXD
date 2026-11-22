@@ -2384,28 +2384,6 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                             t, (double)sc[t], (double)pr[t]);
                 }
             }
-            // Position-0 invariant: with T==1, softmax([s]) == 1.0 exactly, so
-            // the attention output must equal V. Any deviation here isolates the
-            // defect to the AV accumulation / per-head KV indexing and rules out
-            // attention scaling (which cannot affect a single-element softmax).
-            if (checkPos0) {
-                double worst = 0.0;
-                size_t worstIdx = 0;
-                for (size_t h = 0; h < H; ++h) {
-                    const size_t g = h / grp;
-                    const float* vp = V.data() + g * vPerHead;
-                    const float* op = cref.data() + h * outW;
-                    for (size_t d = 0; d < outW && d < vPerHead; ++d) {
-                        const double diff =
-                            std::fabs(double(op[d]) - double(vp[d]));
-                        if (diff > worst) { worst = diff; worstIdx = h * outW + d; }
-                    }
-                }
-                std::fprintf(stderr,
-                    "MLA_POS0_V block=%d maxAbs=%.8g at=%zu "
-                    "(0 => AV accumulation correct, defect is upstream)\n",
-                    (int)in.block, worst, worstIdx);
-            }
             double maxAbs = 0.0, maxRel = 0.0;
             size_t maxIdx = 0;
             for (size_t i = 0; i < y.size(); ++i) {
@@ -2520,6 +2498,34 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             wr("_AV.f32", std::vector<float>(op, op + outW));
             std::fprintf(stderr, "[attn-internals] block=3 head=16 pos=%zu group=%zu T=%zu written\n",
                          position, g, T);
+        }
+    }
+
+    // Check the actual context, not the optional GPU reference buffer.
+    if (checkPos0) {
+        if (T != 1 || H != hk || outW != vPerHead ||
+            y.size() != v.size() || V.size() < y.size()) {
+            err = "MLA position-zero witness: invalid geometry";
+            return false;
+        }
+        double worst = 0.0, cacheWorst = 0.0;
+        size_t worstIdx = 0;
+        for (size_t i = 0; i < y.size(); ++i) {
+            if (!std::isfinite(y[i]) || !std::isfinite(V[i]) ||
+                !std::isfinite(v[i])) {
+                err = "MLA position-zero witness: nonfinite value";
+                return false;
+            }
+            const double diff = std::fabs(double(y[i]) - double(V[i]));
+            if (diff > worst) { worst = diff; worstIdx = i; }
+            cacheWorst = std::max(cacheWorst, std::fabs(double(V[i]) - double(v[i])));
+        }
+        std::fprintf(stderr,
+            "MLA_POS0_V block=%d maxAbs=%.8g at=%zu cacheMaxAbs=%.8g\n",
+            (int)in.block, worst, worstIdx, cacheWorst);
+        if (worst != 0.0) {
+            err = "MLA position-zero context differs from cached V";
+            return false;
         }
     }
 
