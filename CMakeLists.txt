@@ -5773,6 +5773,8 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_reference_calibration.cpp" A
    EXISTS "D:/llama-ref-telemetry/include/llama.h" AND
    EXISTS "D:/llama-ref-telemetry/ggml/include/ggml.h")
     add_executable(reap-reference-calibration tools/reap_reference_calibration.cpp)
+    add_executable(reap-logit-compare tools/reap_logit_compare.cpp)
+    target_compile_features(reap-logit-compare PRIVATE cxx_std_20)
     target_include_directories(reap-reference-calibration PRIVATE
         "D:/llama-ref-telemetry/include" "D:/llama-ref-telemetry/ggml/include")
     target_compile_features(reap-reference-calibration PRIVATE cxx_std_20)
