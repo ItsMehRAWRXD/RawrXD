@@ -146,7 +146,6 @@ int main(int argc, char** argv) {
             std::cerr << "DUPLICATE TENSOR: " << name << "\n";
         }
 
-        uint64_t expertCount = 0;
         uint64_t tensorExpertCount = 0;
         std::string family = classifyFamily(name, modelExpertCount, tensorExpertCount);
 
@@ -158,7 +157,7 @@ int main(int argc, char** argv) {
         totalBytes += t->sizeBytes;
         familyBytes[family] += t->sizeBytes;
         familyCount[family] += 1;
-        if (expertCount > 0) packedExpertBytes += t->sizeBytes;
+        if (prunable) packedExpertBytes += t->sizeBytes;
         else nonExpertBytes += t->sizeBytes;
 
         std::cout << "    {\n";
