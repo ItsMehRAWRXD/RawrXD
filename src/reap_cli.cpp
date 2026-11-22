@@ -30,7 +30,7 @@ using json = nlohmann::json;
 static void usage() {
     std::cerr << "rawr-reap inspect <first-shard.gguf>\n"
                  "rawr-reap plan <first-shard.gguf> --size <B|MB|GB|TB>\n"
-                 "rawr-reap budget <first-shard.gguf> --size <B|MB|GB|TB>\n"
+                 "rawr-reap budget <first-shard.gguf> --size <B|MB|GB|TB> [--q4k-to-q2k]\n"
                  "rawr-reap topology <first-shard.gguf> [--output <topology.json>]\n"
                  "rawr-reap capabilities <model-file-or-directory>\n"
                  "rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]\n"
@@ -1067,8 +1067,8 @@ static int runtimeInjection(int argc, char** argv) {
 
 // Read-only structural budget report; the first-shard digest is a consistency
 // check against current calibration receipts, not full evidence provenance.
-static int exactBudget(const char* source, uint64_t target) {
-    const auto result=Deep2::inspectMoEGGUFBudget(source,target);
+static int exactBudget(const char* source, uint64_t target, bool convert) {
+    const auto result=Deep2::inspectMoEGGUFBudget(source,target,convert);
     if (!result.success) {
         std::cerr<<"BUDGET_INSPECTION_FAILED: "<<result.error<<'\n';return 2;
     }
@@ -1076,7 +1076,7 @@ static int exactBudget(const char* source, uint64_t target) {
     if (!deep2::sha256_file(source,digest)) {
         std::cerr<<"BUDGET_SOURCE_HASH_FAILED\n";return 2;
     }
-    std::cout<<"schema\tRAWRXD_REAP_PRUNE_BUDGET_001\n"
+    std::cout<<"schema\t"<<(convert?"RAWRXD_REAP_PRUNE_BUDGET_002":"RAWRXD_REAP_PRUNE_BUDGET_001")<<'\n'
              <<"first_shard_sha256\t"<<deep2::hex32(digest)<<'\n'
              <<"expert_count\t"<<result.originalExperts<<'\n'
              <<"top_k\t"<<result.topK<<'\n'
@@ -1087,6 +1087,7 @@ static int exactBudget(const char* source, uint64_t target) {
              <<"max_retained\t"<<result.maxRetained<<'\n'
              <<"predicted_max_bytes\t"<<result.predictedBytes<<'\n'
              <<"rewrite_authorized\t0\n";
+    if (convert) std::cout<<"quantization_profile\tq4k_expert_to_q2k\n";
     for (auto layer : result.routedLayers) std::cout<<"expected_layer\t"<<layer<<'\n';
     return std::cout.good()?0:2;
 }
@@ -1094,9 +1095,10 @@ static int exactBudget(const char* source, uint64_t target) {
 int main(int argc, char** argv) {
     if (argc >= 2 && std::string(argv[1]) == "budget") {
         uint64_t target=0;
-        if (argc!=5 || std::string(argv[3])!="--size" ||
-            !bytes(argv[4],target) || !target) { usage();return 2; }
-        return exactBudget(argv[2],target);
+        if ((argc!=5 && argc!=6) || std::string(argv[3])!="--size" ||
+            !bytes(argv[4],target) || !target ||
+            (argc==6 && std::string(argv[5])!="--q4k-to-q2k")) { usage();return 2; }
+        return exactBudget(argv[2],target,argc==6);
     }
     if (argc >= 3 && std::string(argv[1]) == "verify") {
         std::string receiptPath;
