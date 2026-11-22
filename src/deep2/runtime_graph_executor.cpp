@@ -3133,6 +3133,13 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         }
     };
 
+    if (!gateT->data || !upT->data || !downT->data ||
+        gIn != x.size() || uIn != x.size() || gOut != ffn ||
+        uOut != ffn || dIn != ffn || dOut != embd ||
+        !embd || ids.size() > std::numeric_limits<size_t>::max() / ffn ||
+        ids.size() > std::numeric_limits<size_t>::max() / embd) {
+        err = "moe: invalid native projection geometry"; return false;
+    }
     const size_t nSel = std::min(ids.size(), w.size());
     const size_t glen = std::min(ffn, gOut);
     const size_t ulen = std::min(ffn, uOut);
@@ -3176,7 +3183,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             return false;
         }
         slice.weights = static_cast<const uint8_t*>(tensor.data) + base_bytes;
-        slice.weight_bytes = tensor.bytes - base_bytes;
+        slice.weight_bytes = expert_bytes;
         return true;
     };
     auto genericExpertMatVec = [&](const TensorRec& tensor,
@@ -3233,19 +3240,19 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             const size_t ex = (size_t)ids[e];
             if (ex >= usableE) continue;
             if (upGpuShape) {
-                const uint8_t* p = reinterpret_cast<const uint8_t*>(upT->data) + ex * ulen * upRowB;
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(upT->data) + ex * uOut * upRowB;
                 strata_ledger_.Observe((int)moe.block, (int)ex, Strata::ExpertBank::Up,
                                        QuantDot::IsWeightResident(p, upRowB * ulen, uKind),
                                        upRowB * ulen);
             }
             if (have_gate && gKindS >= 0) {
-                const uint8_t* p = reinterpret_cast<const uint8_t*>(gateT->data) + ex * glen * gateRowB;
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(gateT->data) + ex * gOut * gateRowB;
                 strata_ledger_.Observe((int)moe.block, (int)ex, Strata::ExpertBank::Gate,
                                        QuantDot::IsWeightResident(p, gateRowB * glen, gKindS),
                                        gateRowB * glen);
             }
             if (dShape) {
-                const uint8_t* p = reinterpret_cast<const uint8_t*>(downT->data) + ex * olen * downRowB;
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(downT->data) + ex * dOut * downRowB;
                 strata_ledger_.Observe((int)moe.block, (int)ex, Strata::ExpertBank::Down,
                                        QuantDot::IsWeightResident(p, downRowB * olen, dKind),
                                        downRowB * olen);
@@ -3262,7 +3269,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             for (size_t e = 0; e < nSel; ++e) {
                 const size_t ex = (size_t)ids[e];
                 if (ex >= usableE) continue;
-                const uint8_t* p = reinterpret_cast<const uint8_t*>(downT->data) + ex * olen * downRowB;
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(downT->data) + ex * dOut * downRowB;
                 const bool already = QuantDot::IsWeightResident(p, downRowB * olen, dKind);
                 if (!already)
                     QuantDot::PrefetchWeight(p, downRowB * olen, dKind);
@@ -3333,7 +3340,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
               };
             const size_t row_bytes = QuantRowBytes(uKind, uIn);
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(upT->data) +
-                                    ex * ulen * row_bytes;
+                                    ex * uOut * row_bytes;
             const bool queued = QuantDot::DotBlocked(uKind, packed, row_bytes * ulen, x.data(),
                                                      uIn, out, ulen, cpu, q8up.data(),
                                                      q8upBytes, false);
@@ -3343,7 +3350,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             // force-CPU path - both compute the same number).
             const size_t row_bytes = QuantRowBytes(uKind, uIn);
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(upT->data) +
-                                    ex * ulen * row_bytes;
+                                    ex * uOut * row_bytes;
             QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
                 return RowDotInterleavedQ8(uKind, row, static_cast<const float*>(q8_act), uIn);
             };
@@ -3430,7 +3437,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             if (!gGpuShape) continue;
             float* out = &gAll[e * ffn];
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(gateT->data) +
-                                    ex * glen * gRowBytes;
+                                    ex * gOut * gRowBytes;
               QuantDot::CpuDot cpu = [gKind, gIn](const uint8_t* row, const void* q8_act, size_t) -> float {
                   return RowDotInterleavedQ8(gKind, row, static_cast<const float*>(q8_act), gIn);
               };
@@ -3667,7 +3674,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             BuildInterleavedQ8(&hAll[e * ffn], dIn, q8h);
             float* out = &dyAll[e * embd];
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(downT->data) +
-                                    ex * olen * downRowBytes;
+                                    ex * dOut * downRowBytes;
               QuantDot::CpuDot cpu = [dKind, dIn](const uint8_t* row, const void* q8_act, size_t) -> float {
                   return RowDotInterleavedQ8(dKind, row, static_cast<const float*>(q8_act), dIn);
               };
