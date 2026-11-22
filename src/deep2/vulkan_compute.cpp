@@ -1203,7 +1203,7 @@ bool VulkanCompute::getScratchBuffer(
     VkMemoryPropertyFlags required, DeviceBuf& out)
 {
     out = {};
-    if (!device_ || bytes == 0) return false;
+    if (OneShotBlocked() || !device_ || bytes == 0) return false;
 
     // Reuse an existing buffer of exactly this size. Exact-match keeps the
     // binding range identical to the previous dispatch, so no descriptor
@@ -1225,6 +1225,7 @@ bool VulkanCompute::createBuffer(
     VkDeviceSize bytes, VkBufferUsageFlags usage,
     VkMemoryPropertyFlags required, DeviceBuf& out)
 {
+    if (OneShotBlocked()) return false;
     destroyBuffer(out);
     if (!device_ || bytes == 0) {
         fprintf(stderr, "[CB_FAIL] device=%p bytes=%zu\n", (void*)device_, (size_t)bytes);
@@ -4519,7 +4520,7 @@ bool VulkanCompute::WeightPrefetchActive() const noexcept {
 
 bool VulkanCompute::EnsureScratch(unsigned index, size_t floatCount) {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
-    if (!initialized_ || floatCount == 0 ||
+    if (OneShotBlocked() || !initialized_ || floatCount == 0 ||
         floatCount > std::numeric_limits<size_t>::max()/sizeof(float))
         return false;
     if (scratch_.size() <= index) scratch_.resize(index + 1);
@@ -4660,6 +4661,7 @@ bool VulkanCompute::RunExpertFFN(
 
 void VulkanCompute::ResetMLACache() {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (OneShotBlocked()) return;
     destroyBuffer(mlaKCache_);
     destroyBuffer(mlaVCache_);
     mlaCacheHeads_=0;
@@ -4672,6 +4674,7 @@ void VulkanCompute::ResetMLACache() {
 
 void VulkanCompute::ResetGdnState(uint64_t stateKey) {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (OneShotBlocked()) return;
     auto it = gdnStates_.find(stateKey);
     if (it == gdnStates_.end()) return;
     destroyBuffer(it->second);
@@ -4691,7 +4694,8 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
                                 uint64_t stateKey, std::vector<float>& output) {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
     output.clear();
-    if (!initialized_ || !gdnPipeline_ || !gdnSetLayout_ || !device_ || fused_ ||
+    if (OneShotBlocked() || gdnPendingSet_ || !initialized_ ||
+        !gdnPipeline_ || !gdnSetLayout_ || !device_ || fused_ ||
         !mixed || !beta || !alpha || !aLog || !dtBias || !norm || !z ||
         !keyHeads || !valueHeads || !headDim || valueHeads % keyHeads != 0 ||
         headDim > 256 || !(epsilon > 0.0f) || !std::isfinite(epsilon) ||
@@ -4728,21 +4732,23 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
                           usage, memory, dst))
             return false;
         if (!uploadToBuffer(dst, src, count * floatBytes)) {
-            destroyBuffer(dst);
-            dst = {};
+            if (!OneShotBlocked()) destroyBuffer(dst);
             return false;
         }
         return true;
     };
 
-    DeviceBuf qkvBuf{}, betaBuf{}, alphaBuf{}, aLogBuf{}, dtBiasBuf{},
-              normBuf{}, gateBuf{}, outputBuf{};
+    DeviceBuf& qkvBuf = gdnOperands_[0];
+    DeviceBuf& betaBuf = gdnOperands_[1];
+    DeviceBuf& alphaBuf = gdnOperands_[2];
+    DeviceBuf& aLogBuf = gdnOperands_[3];
+    DeviceBuf& dtBiasBuf = gdnOperands_[4];
+    DeviceBuf& normBuf = gdnOperands_[5];
+    DeviceBuf& gateBuf = gdnOperands_[6];
+    DeviceBuf& outputBuf = gdnOperands_[7];
     auto releaseInputs = [&]() {
-        destroyBuffer(qkvBuf); destroyBuffer(betaBuf); destroyBuffer(alphaBuf);
-        destroyBuffer(aLogBuf); destroyBuffer(dtBiasBuf); destroyBuffer(normBuf);
-        destroyBuffer(gateBuf); destroyBuffer(outputBuf);
-        qkvBuf = {}; betaBuf = {}; alphaBuf = {}; aLogBuf = {};
-        dtBiasBuf = {}; normBuf = {}; gateBuf = {}; outputBuf = {};
+        if (OneShotBlocked()) return;
+        for (auto& operand : gdnOperands_) destroyBuffer(operand);
     };
 
     if (!upload(mixed, mixedSize, qkvBuf) ||
@@ -4768,7 +4774,7 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
         stateIt = gdnStates_.end();
     }
     if (stateIt == gdnStates_.end()) {
-        DeviceBuf fresh{};
+        DeviceBuf& fresh = gdnPendingState_;
         if (!createBuffer(stateBytes, usage, memory, fresh)) {
             releaseInputs();
             return false;
@@ -4776,7 +4782,7 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
         std::vector<float> zeros(stateElements, 0.0f);
         if (!uploadToBuffer(fresh, zeros.data(),
                             static_cast<size_t>(stateBytes))) {
-            destroyBuffer(fresh);
+            if (!OneShotBlocked()) destroyBuffer(fresh);
             releaseInputs();
             return false;
         }
@@ -4795,6 +4801,7 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
         releaseInputs();
         return false;
     }
+    gdnPendingSet_ = set;
 
     DeviceBuf* buffers[9] = {
         &qkvBuf, &betaBuf, &alphaBuf, &aLogBuf, &dtBiasBuf,
@@ -4819,6 +4826,7 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
     VkQueryPool query = VK_NULL_HANDLE;
     if (!beginCommand(cmd, query, true)) {
         vkFreeDescriptorSets(device_, descriptorPool_, 1, &set);
+        gdnPendingSet_ = VK_NULL_HANDLE;
         releaseInputs();
         return false;
     }
@@ -4841,11 +4849,12 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
 
     const bool submitted = endSubmitWait(
         cmd, query, GpuWorkKind::ModelCompute, stateBytes, workEpoch_, nullptr);
+    // Preserve both descriptor and all operand/state owners while the
+    // one-shot result is unresolved. Teardown drains these after device idle.
+    if (OneShotBlocked()) return false;
     vkFreeDescriptorSets(device_, descriptorPool_, 1, &set);
+    gdnPendingSet_ = VK_NULL_HANDLE;
     if (!submitted) {
-        // A failed stateful submission cannot safely be followed by another
-        // token using the same recurrent state. Drop it and let the executor
-        // fail closed rather than mixing CPU and partially-written GPU state.
         auto failed = gdnStates_.find(stateKey);
         if (failed != gdnStates_.end()) {
             destroyBuffer(failed->second);
@@ -4875,7 +4884,7 @@ bool VulkanCompute::RunMLAAttentionHost(
     float scale, uint64_t epoch)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
-    if (!initialized_ || !opsPipeline_ ||
+    if (OneShotBlocked() || !initialized_ || !opsPipeline_ ||
         !q || !k || !v || !output ||
         !heads || !keyLen || !valueLen ||
         !layers || !maxSeq || layer>=layers || pos>=maxSeq ||
@@ -4916,7 +4925,8 @@ bool VulkanCompute::RunMLAAttentionHost(
            vElems>std::numeric_limits<VkDeviceSize>::max()/sizeof(float))
             return false;
 
-        DeviceBuf newK{},newV{};
+        DeviceBuf& newK = mlaPendingK_;
+        DeviceBuf& newV = mlaPendingV_;
         const VkBufferUsageFlags usage =
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
@@ -4951,12 +4961,18 @@ bool VulkanCompute::RunMLAAttentionHost(
                                oldKBase*sizeof(float),newKBase*sizeof(float)) ||
                    !recordCopy(cmd,mlaVCache_,newV,copyV*sizeof(float),
                                oldVBase*sizeof(float),newVBase*sizeof(float))) {
+                    vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+                    if (query) vkDestroyQueryPool(device_, query, nullptr);
                     destroyBuffer(newK);destroyBuffer(newV);return false;
                 }
             }
             if(!endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
                               0,epoch,nullptr)) {
-                destroyBuffer(newK);destroyBuffer(newV);return false;
+                if (!OneShotBlocked()) {
+                    destroyBuffer(newK);
+                    destroyBuffer(newV);
+                }
+                return false;
             }
         }
 
@@ -4964,6 +4980,8 @@ bool VulkanCompute::RunMLAAttentionHost(
         destroyBuffer(mlaVCache_);
         mlaKCache_=newK;
         mlaVCache_=newV;
+        newK={};
+        newV={};
         mlaCacheHeads_=heads;
         mlaCacheKeyLen_=keyLen;
         mlaCacheValueLen_=valueLen;
@@ -5001,8 +5019,11 @@ bool VulkanCompute::RunMLAAttentionHost(
         if(!recordCopy(cmd,kSlice,mlaKCache_,(VkDeviceSize)(heads*keyLen*sizeof(float)),
                        0,(VkDeviceSize)(kBase*sizeof(float)))||
            !recordCopy(cmd,vSlice,mlaVCache_,(VkDeviceSize)(heads*valueLen*sizeof(float)),
-                       0,(VkDeviceSize)(vBase*sizeof(float))))
+                       0,(VkDeviceSize)(vBase*sizeof(float)))) {
+            vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+            if (query) vkDestroyQueryPool(device_, query, nullptr);
             return false;
+        }
         recordComputeBarrier(cmd);
         if(!endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
                           (heads*(keyLen+valueLen))*sizeof(float),
@@ -7431,6 +7452,13 @@ void VulkanCompute::cleanup() {
     scratch_.clear();
     destroyBuffer(mlaKCache_);
     destroyBuffer(mlaVCache_);
+    destroyBuffer(mlaPendingK_);
+    destroyBuffer(mlaPendingV_);
+    if (device_ && descriptorPool_ && gdnPendingSet_)
+        vkFreeDescriptorSets(device_, descriptorPool_, 1, &gdnPendingSet_);
+    gdnPendingSet_ = VK_NULL_HANDLE;
+    for (auto& operand : gdnOperands_) destroyBuffer(operand);
+    destroyBuffer(gdnPendingState_);
     mlaCacheHeads_=mlaCacheKeyLen_=mlaCacheValueLen_=0;
     mlaCacheLayers_=mlaCacheCapacity_=mlaCacheMaxSeq_=0;
     for (auto& entry : gdnStates_) destroyBuffer(entry.second);
