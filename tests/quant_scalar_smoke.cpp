@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 static std::vector<uint8_t> quantize_generic_bits(const std::vector<float>& in, int bits, float& outScale) {
     int n = static_cast<int>(in.size());
@@ -38,14 +39,21 @@ static std::vector<uint8_t> quantize_generic_bits(const std::vector<float>& in, 
     return out;
 }
 
-static float unpack_at(const uint8_t* data, int /*n*/, int idx, int bits, float scale) {
-    int bitPos = idx * bits;
-    int byteIdx = bitPos / 8;
-    int off = bitPos % 8;
+static float unpack_at(const uint8_t* data, int n, int idx, int bits, float scale) {
+    if (!data || n <= 0 || idx < 0 || idx >= n || bits < 1 || bits > 8)
+        throw std::out_of_range("invalid packed scalar index or bit width");
+    const size_t bitPos = static_cast<size_t>(idx) * bits;
+    const size_t byteIdx = bitPos / 8;
+    const unsigned off = static_cast<unsigned>(bitPos % 8);
     uint32_t mask = (1u << bits) - 1u;
     uint64_t block = 0;
-    // Read up to 8 bytes to cover any alignment
-    for (int b = 0; b < 8; ++b) {
+    // Read only the bytes occupied by this value, not an eight-byte window
+    // extending beyond the final packed element.
+    const size_t need = (off + bits + 7) / 8;
+    const size_t payload = (static_cast<size_t>(n) * bits + 7) / 8;
+    if (byteIdx > payload || need > payload - byteIdx)
+        throw std::out_of_range("packed scalar exceeds payload");
+    for (size_t b = 0; b < need; ++b) {
         block |= uint64_t(data[byteIdx + b]) << (8 * b);
     }
     uint32_t u = (block >> off) & mask;
@@ -71,10 +79,10 @@ int main() {
         std::cerr << "Q5 size mismatch: got " << q5.size() << " expect " << expect5 << "\n";
         return 1;
     }
-    // Check a few positions
+    // Check every position, including the final partial byte.
     const uint8_t* d5 = q5.data() + 4;
     float maxErr5 = 0.f;
-    for (int i : {0, 1, 2, 63, 64, 65, n - 1}) {
+    for (int i = 0; i < n; ++i) {
         float rec = unpack_at(d5, n, i, 5, s5);
         maxErr5 = std::max(maxErr5, std::fabs(rec - x[i]));
     }
@@ -93,7 +101,7 @@ int main() {
     }
     const uint8_t* d6 = q6.data() + 4;
     float maxErr6 = 0.f;
-    for (int i : {0, 1, 2, 63, 64, 65, n - 1}) {
+    for (int i = 0; i < n; ++i) {
         float rec = unpack_at(d6, n, i, 6, s6);
         maxErr6 = std::max(maxErr6, std::fabs(rec - x[i]));
     }
@@ -102,6 +110,24 @@ int main() {
         return 1;
     }
 
-    std::cout << "quant_scalar_smoke: PASS (Q5/Q6)\n";
+    // Exercise all short tail lengths at both bit widths, with mixed signed
+    // values and zero input. No overallocated padding is required by contract.
+    for (int bits : {5, 6}) {
+        for (int len = 1; len <= 33; ++len) {
+            for (bool zero : {false, true}) {
+                std::vector<float> sample(static_cast<size_t>(len));
+                if (!zero) for (int i = 0; i < len; ++i)
+                    sample[i] = float((i % 7) - 3) / 3.0f;
+                float scale = 0.f;
+                const auto packed = quantize_generic_bits(sample, bits, scale);
+                for (int i = 0; i < len; ++i) {
+                    const float rec = unpack_at(packed.data()+4,len,i,bits,scale);
+                    if (!std::isfinite(rec) || std::fabs(rec-sample[i]) > 0.501f*scale+1e-6f)
+                        return 1;
+                }
+            }
+        }
+    }
+    std::cout << "quant_scalar_smoke: PASS (Q5/Q6, 132 short-tail cases)\n";
     return 0;
 }
