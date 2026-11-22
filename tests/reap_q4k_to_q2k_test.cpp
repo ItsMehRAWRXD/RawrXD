@@ -10,6 +10,7 @@
 #include "deep2/ReapExpertCompute.hpp"
 #include "deep2/ReapGlmMoe.hpp"
 #include "deep2/ReapMlaReference.hpp"
+#include "deep2/ReapLocalRequest.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -289,6 +290,30 @@ int main(){
         check(!MlaReference(2,2,1,1,2,3,1,1,bad,latent,rotary,wk,wv,y)&&y==old,"MLA nonfinite score rejected");
         auto future=latent;future[4]=-1000;future[5]=-1000;
         check(MlaReference(2,2,1,1,2,3,1,1,q,future,rotary,wk,wv,y)&&y==old,"MLA future latent causally excluded");
+    }
+    {
+        struct Backend {
+            unsigned pos=0;
+            TokenStep Step(uint32_t& t,const std::atomic<bool>&){if(pos==3)return TokenStep::End;t=++pos;return TokenStep::Token;}
+        };
+        StrataBudget budget({8,0,0,0,1});
+        std::atomic<bool> cancel{false};
+        unsigned created=0;
+        auto factory=[&](){++created;return std::make_unique<Backend>();};
+        std::vector<uint32_t> tokens;
+        auto consume=[&](uint32_t t){tokens.push_back(t);return true;};
+        const StrataBudget::Amount amount{8,0,0,0,1};
+        check(RunLocalRequest(budget,amount,8,cancel,factory,consume)==LocalResult::Completed&&tokens==std::vector<uint32_t>({1,2,3}),"LTT inline stream order");
+        check(budget.Used()==StrataBudget::Amount{},"LTT reservation released");
+        check(RunLocalRequest(budget,{9,0,0,0,1},8,cancel,factory,consume)==LocalResult::AdmissionDenied&&created==1,"LTT admission before backend creation");
+        cancel=true;
+        check(RunLocalRequest(budget,amount,8,cancel,factory,consume)==LocalResult::Cancelled&&created==1,"LTT pre-cancel");
+        cancel=false;
+        check(RunLocalRequest(budget,amount,8,cancel,factory,[&](uint32_t){cancel=true;return true;})==LocalResult::Cancelled,"LTT cooperative cancellation");
+        cancel=false;
+        check(RunLocalRequest(budget,amount,8,cancel,factory,[](uint32_t){return false;})==LocalResult::ConsumerStopped,"LTT consumer stop");
+        check(RunLocalRequest(budget,amount,8,cancel,[](){return std::unique_ptr<Backend>{};},consume)==LocalResult::BackendFailed,"LTT missing backend");
+        check(budget.Used()==StrataBudget::Amount{},"LTT failure releases reservation");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
