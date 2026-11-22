@@ -3,6 +3,7 @@
 // ============================================================================
 #include <fstream>
 #include "runtime_graph_executor.hpp"
+#include "ReapRetainedRouting.hpp"
 #include <limits>
 
 #include <algorithm>
@@ -2806,45 +2807,32 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     }
     const bool sigmoid_routing = (spec_.architecture == "deepseek3" ||
                                   spec_.architecture == "deepseek4");
-    if (sigmoid_routing) {
-        for (size_t e = 0; e < n_exp; ++e)
-            logits[e] = 1.0f / (1.0f + std::exp(-logits[e]));
-    } else {
-        SoftmaxVec(logits);
+    // Physical compact banks already use contiguous router rows. Use the
+    // shared retained-routing implementation with identity mapping here;
+    // virtual overlays require an authoritative non-identity mapping.
+    std::vector<uint32_t> retained(n_exp);
+    for (size_t i = 0; i < n_exp; ++i) retained[i] = static_cast<uint32_t>(i);
+    const double configuredScale = spec_.expert_weights_scale;
+    const double scale = configuredScale == 0.0 ? 1.0 : configuredScale;
+    std::vector<::Deep2::ReapQuant::RouteChoice> routes;
+    if (!::Deep2::ReapQuant::RouteRetained(
+            std::vector<double>(logits.begin(), logits.end()), retained, {},
+            sigmoid_routing ? ::Deep2::ReapQuant::RouterScore::Sigmoid
+                            : ::Deep2::ReapQuant::RouterScore::Softmax,
+            kused, spec_.expert_weights_norm, scale, routes)) {
+        last_error_ = "router: invalid retained routing"; return false;
     }
-    std::vector<uint32_t> idx(n_exp);
-    for (uint32_t i = 0; i < n_exp; ++i) idx[i] = i;
-    std::stable_sort(idx.begin(), idx.end(),
-                     [&](uint32_t a, uint32_t b) { return logits[a] > logits[b]; });
-    ids.assign(kused, 0);
-    w.assign(kused, 0.0f);
-    // 3. weight transformation.
-    //
-    // The reference renormalises the selected top-k scores to sum to 1 ONLY
-    // when the model declares expert_weights_norm (qwen3-moe / gpt-oss style
-    // MoE). DeepSeek-Coder-V2 emits no expert_weights_norm key, so its routing
-    // weights stay the RAW softmax probabilities, whose sum is < 1 (on this
-    // checkpoint the top-6 probs sum to ~0.18-0.45). Normalising them
-    // unconditionally inflated every routed expert contribution by 1/sum
-    // (~2.3x at block 1, ~5x at block 8) - the "same direction, wrong
-    // magnitude" MoE divergence certified against llama.cpp.
-    double renorm = 1.0;
-    if (spec_.expert_weights_norm) {
-        renorm = 0.0;
-        for (size_t i = 0; i < kused; ++i) renorm += logits[idx[i]];
-        if (!(renorm > 0.0)) { last_error_ = "router: zero weight"; return false; }
+    std::vector<uint32_t> nextIds;
+    std::vector<float> nextWeights;
+    for (const auto& route : routes) {
+        if (route.weight > std::numeric_limits<float>::max()) {
+            last_error_ = "router: weight exceeds float range"; return false;
+        }
+        nextIds.push_back(route.retained);
+        nextWeights.push_back(static_cast<float>(route.weight));
     }
-    for (size_t i = 0; i < kused; ++i) {
-        ids[i] = idx[i];
-        w[i] = (float)(logits[idx[i]] / renorm);
-    }
-    // expert_weights_scale: applied only when the model sets it to something
-    // other than 0 (absent) or 1 (identity), exactly like the reference.
-    const float wscale = (float)spec_.expert_weights_scale;
-    if (!std::isfinite(wscale) || wscale < 0.0f) { last_error_ = "router: invalid weight scale"; return false; }
-    if (wscale != 0.0f && wscale != 1.0f) {
-        for (size_t i = 0; i < kused; ++i) w[i] *= wscale;
-    }
+    ids.swap(nextIds);
+    w.swap(nextWeights);
     if (std::getenv("ROUTER_TRACE")) {
         std::fprintf(stderr, "[router-sel] blk=%d selected=", (int)router.block);
         for (size_t i = 0; i < kused; ++i)
