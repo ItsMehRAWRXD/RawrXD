@@ -152,8 +152,6 @@ if (Vulkan_FOUND)
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/$<CONFIG>
                    -DCMAKE_INSTALL_BINDIR=.
                    -DCMAKE_BUILD_TYPE=$<CONFIG>
-                   "-DCMAKE_CXX_FLAGS=/I D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include"
-                   "-DCMAKE_C_FLAGS=/I D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include"
                    ${VULKAN_SHADER_GEN_CMAKE_ARGS}
 
         BUILD_COMMAND ${CMAKE_COMMAND} --build . --config $<CONFIG>
