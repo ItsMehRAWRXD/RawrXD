@@ -1,4 +1,5 @@
 #include "deep2/ReapMoETransformer.hpp"
+#include "deep2/ReapBankContract.hpp"
 
 #include "deep2/GGUFLoader.hpp"
 #include <nlohmann/json.hpp>
@@ -374,6 +375,9 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
             if (id == std::numeric_limits<uint32_t>::max() || selected == layer.end() || !selected->is_array()) {
                 error = "invalid selection layer"; return false;
             }
+            if (selection.find(id) != selection.end()) {
+                error = "duplicate selection layer"; return false;
+            }
             auto& dst = selection[id];
             for (const auto& item : *selected) dst.push_back(item.value("expert", std::numeric_limits<uint32_t>::max()));
             std::unordered_set<uint32_t> seen;
@@ -410,78 +414,18 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
 // and its allocation grew accordingly, and llama.cpp aborted with
 // GGML_ASSERT(obj_new) on GLM and Nemotron.
 //
-// The correct behaviour is to rewrite ONLY the bank size, then clamp the top-k
-// if pruning removed so many experts that the original top-k no longer fits.
+// Rewrite only the physical routed bank size. Top-k is validated globally
+// before output creation; it must never be silently clamped or rewritten.
 void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t originalExperts,
                    uint32_t activeExperts, uint32_t shardNo, uint32_t shardCount) {
-    auto lower = [](std::string s) {
-        std::transform(s.begin(), s.end(), s.begin(),
-                       [](unsigned char c) { return (char)std::tolower(c); });
-        return s;
-    };
-    auto endsWith = [](const std::string& s, const std::string& suffix) {
-        return s.size() >= suffix.size() &&
-               s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
-    };
-
     bool foundExpertCount = false;
-    uint32_t usedCount = 0;
-    bool foundUsedCount = false;
-    MetaEntry* usedEntry = nullptr;
-
     for (auto& entry : metadata) {
-        const std::string key = lower(entry.key);
-        // Bank size only. "expert_used_count" does NOT end with "expert_count",
-        // so it is naturally excluded by the suffix test.
-        if (endsWith(key, "expert_count")) {
-            foundExpertCount = true;
-            if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
-                std::memcpy(entry.value.data(), &activeExperts, 4);
-            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
-                const int32_t value = static_cast<int32_t>(activeExperts);
-                std::memcpy(entry.value.data(), &value, 4);
-            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
-                const uint64_t value = activeExperts;
-                std::memcpy(entry.value.data(), &value, 8);
-            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT64) && entry.value.size() == 8) {
-                const int64_t value = static_cast<int64_t>(activeExperts);
-                std::memcpy(entry.value.data(), &value, 8);
-            }
-            continue;
-        }
-                // Pruning changes bank cardinality, not per-expert width.
-                // Leave feed-forward and parameter metadata untouched until
-                // it is recomputed from emitted tensor shapes.
-        // Top-k is read, never written here.
-        if (endsWith(key, "expert_used_count")) {
-            foundUsedCount = true;
-            usedEntry = &entry;
-            if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
-                std::memcpy(&usedCount, entry.value.data(), 4);
-            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
-                int32_t v = 0;
-                std::memcpy(&v, entry.value.data(), 4);
-                usedCount = static_cast<uint32_t>(v);
-            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
-                uint64_t v = 0;
-                std::memcpy(&v, entry.value.data(), 8);
-                usedCount = static_cast<uint32_t>(v);
-            }
-        }
-    }
-
-    // A top-k larger than the surviving bank is unsatisfiable; clamp it rather
-    // than shipping a model that routes to experts it does not have.
-    if (foundUsedCount && usedEntry && usedCount > activeExperts) {
-        if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::UINT32) && usedEntry->value.size() == 4) {
-            std::memcpy(usedEntry->value.data(), &activeExperts, 4);
-        } else if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::INT32) && usedEntry->value.size() == 4) {
-            const int32_t v = static_cast<int32_t>(activeExperts);
-            std::memcpy(usedEntry->value.data(), &v, 4);
-        } else if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::UINT64) && usedEntry->value.size() == 8) {
-            const uint64_t v = activeExperts;
-            std::memcpy(usedEntry->value.data(), &v, 8);
-        }
+        if (!ReapBank::HasField(entry.key, "expert_count")) continue;
+        foundExpertCount = true;
+        // Preflight validated the original integral field and retained <= original.
+        // Rewrite in its original little-endian width without altering other metadata.
+        for (size_t i = 0; i < entry.value.size(); ++i)
+            entry.value[i] = static_cast<uint8_t>(uint64_t(activeExperts) >> (i * 8u));
     }
 
     if (!foundExpertCount) {
@@ -520,21 +464,26 @@ bool writeMeta(std::ofstream& out, const MetaEntry& entry) {
            writeBytes(out, entry.value.data(), entry.value.size());
 }
 
-uint32_t metadataUInt(const std::vector<MetaEntry>& metadata, const std::string& suffix) {
-    for (const auto& entry : metadata) {
-        if (entry.key.size() < suffix.size() ||
-            entry.key.compare(entry.key.size() - suffix.size(), suffix.size(), suffix) != 0) continue;
-        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT16) && entry.value.size() == 2) {
-            uint16_t v = 0; std::memcpy(&v, entry.value.data(), 2); return v;
-        }
-        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
-            uint32_t v = 0; std::memcpy(&v, entry.value.data(), 4); return v;
-        }
-        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
-            uint64_t v = 0; std::memcpy(&v, entry.value.data(), 8); return static_cast<uint32_t>(v);
-        }
+// Read a positive, exact-width integral GGUF count. Never truncate a u64 or
+// reinterpret a negative signed count as a valid routed bank cardinality.
+bool metadataCountValue(const MetaEntry& entry, uint64_t& value) {
+    size_t width = 0;
+    bool signedType = false;
+    switch (static_cast<GGUFMetaType>(entry.type)) {
+    case GGUFMetaType::UINT8: width=1; break;
+    case GGUFMetaType::INT8: width=1; signedType=true; break;
+    case GGUFMetaType::UINT16: width=2; break;
+    case GGUFMetaType::INT16: width=2; signedType=true; break;
+    case GGUFMetaType::UINT32: width=4; break;
+    case GGUFMetaType::INT32: width=4; signedType=true; break;
+    case GGUFMetaType::UINT64: width=8; break;
+    case GGUFMetaType::INT64: width=8; signedType=true; break;
+    default: return false;
     }
-    return 0;
+    if (entry.value.size()!=width || (signedType && (entry.value.back() & 0x80))) return false;
+    value=0;
+    for (size_t i=0; i<width; ++i) value |= uint64_t(entry.value[i]) << (i*8u);
+    return value!=0 && value<=UINT32_MAX;
 }
 
 bool copyRange(std::ifstream& in, std::ofstream& out, uint64_t offset, uint64_t bytes) {
@@ -618,6 +567,44 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         shards.emplace_back(std::move(shard));
     }
 
+    // Resolve the physical bank and original top-k across the full checkpoint
+    // before writing a single output byte. A dense-only shard is legitimate.
+    ReapBank::Contract bank;
+    for (const auto& shard : shards) {
+        for (const auto& tensor : shard.tensors) {
+            const bool expertTensor = isProjection(tensor.name, "gate") ||
+                isProjection(tensor.name, "up") || isProjection(tensor.name, "down") ||
+                tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
+                tensor.name.find(".exp_probs_b.bias") != std::string::npos;
+            if (expertTensor && (tensor.dims.empty() || !bank.ObserveAxis(tensor.dims.back()))) {
+                result.error = "inconsistent expert axis across checkpoint: " + tensor.name;
+                return result;
+            }
+        }
+    }
+    if (!bank.original) {
+        result.error = "checkpoint has no supported expert tensors";
+        return result;
+    }
+    for (const auto& shard : shards) {
+        for (const auto& entry : shard.metadata) {
+            const bool count = ReapBank::HasField(entry.key, "expert_count");
+            const bool topK = ReapBank::HasField(entry.key, "expert_used_count");
+            if (!count && !topK) continue;
+            uint64_t value = 0;
+            if (!metadataCountValue(entry, value) ||
+                (count && value != bank.original) ||
+                (topK && !bank.ObserveTopK(value))) {
+                result.error = "inconsistent or invalid routed expert metadata: " + entry.key;
+                return result;
+            }
+        }
+    }
+    if (!bank.Allows(request.activeExperts)) {
+        result.error = "retained expert count violates checkpoint bank/top-k contract";
+        return result;
+    }
+
     // The selection manifest is a topology contract, not merely a list of
     // optional slices.  Reject stale selectors that contain transformer
     // blocks which are not routed MoE layers (for example, an erroneous
@@ -699,32 +686,8 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             outputTensors.emplace_back(std::move(out));
         }
 
-        uint32_t originalExperts = 0;
-        for (const auto& tensor : shard.tensors) {
-            const bool expertTensor = isProjection(tensor.name, "gate") ||
-                isProjection(tensor.name, "up") || isProjection(tensor.name, "down") ||
-                tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
-                tensor.name.find(".exp_probs_b.bias") != std::string::npos;
-            if (!expertTensor || tensor.dims.empty()) continue;
-            const uint64_t count = tensor.dims.back();
-            if (count > UINT32_MAX || (originalExperts && originalExperts != count)) {
-                result.error = "inconsistent expert axis across tensors";
-                return result;
-            }
-            originalExperts = static_cast<uint32_t>(count);
-        }
-        if (!originalExperts || request.activeExperts > originalExperts) {
-            result.error = "invalid original or retained expert count";
-            return result;
-        }
         auto metadata = shard.metadata;
-        const uint32_t originalUsedCount = metadataUInt(metadata, "expert_used_count");
-        if (originalUsedCount && request.activeExperts < originalUsedCount) {
-            result.error = "retained expert count " + std::to_string(request.activeExperts) +
-                           " is below model expert_used_count " + std::to_string(originalUsedCount);
-            return result;
-        }
-        patchMetadata(metadata, originalExperts, request.activeExperts,
+        patchMetadata(metadata, bank.original, request.activeExperts,
                       static_cast<uint32_t>(shardIndex), shardCount);
         const fs::path outputPath = outputDir / shard.path.filename();
         cleanup.files.push_back(outputPath);
