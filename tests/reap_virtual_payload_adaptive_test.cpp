@@ -77,9 +77,12 @@ int main(){
     BoundedExpertCache shared(3*blocks*Q2Bytes);
     MemoryReader secondModel=reader;
     secondModel.reads=0;
-    // Change packed quant values while preserving the same geometry.
+    // Change the binary16 multiplier itself, guaranteeing distinct
+    // reconstructed weights instead of relying on a low-bit perturbation
+    // that Q2 quantization might round away.
     for(unsigned n=0;n<blocks;++n)
-        secondModel.data[n*Q4Bytes+16]^=0x0fu;
+        StoreHalf(secondModel.data.data()+n*Q4Bytes,
+                  static_cast<uint16_t>(0x3800u+n*13u));
     BoundedExpertCache::Lease modelA,modelB,modelAAgain,emptyIdentity;
     const unsigned beforeShared=reader.reads;
     check(AcquireVirtualPayload(reader,shared,std::string("model:A"),range,
