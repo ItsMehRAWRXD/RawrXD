@@ -399,7 +399,20 @@ void Win32IDE::handleFileCommand(int commandId) {
             dialog.nMaxFile = MAX_PATH;
             dialog.lpstrFilter = "GGUF Models (*.gguf)\0*.gguf\0All Files\0*.*\0";
             dialog.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-            if (GetOpenFileNameA(&dialog) && !loadModelForInference(modelPath)) {
+            dialog.Flags |= OFN_NOCHANGEDIR;
+            if (!GetOpenFileNameA(&dialog)) {
+                if (CommDlgExtendedError() != 0)
+                    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+                        reinterpret_cast<LPARAM>("Model selection dialog failed."));
+                break;
+            }
+            const DWORD attributes = GetFileAttributesA(modelPath);
+            if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+                    reinterpret_cast<LPARAM>("Selected model is not an accessible file."));
+                break;
+            }
+            if (!loadModelForInference(modelPath)) {
                 SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
                     reinterpret_cast<LPARAM>("Model loading failed; consult inference diagnostics."));
             }
