@@ -7,9 +7,58 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include "deep2/GGUFLoader.hpp"
 #pragma comment(lib,"bcrypt.lib")
 namespace fs=std::filesystem;
 static std::string H(const std::vector<unsigned char>&v){std::ostringstream o;for(auto b:v)o<<std::hex<<std::setw(2)<<std::setfill('0')<<(int)b;return o.str();}
+static bool HashMemory(const uint8_t* data,size_t bytes,std::string&o){BCRYPT_ALG_HANDLE a=nullptr;BCRYPT_HASH_HANDLE h=nullptr;DWORD n=0,z=0;if(!data&&bytes)return false;if(BCryptOpenAlgorithmProvider(&a,BCRYPT_SHA256_ALGORITHM,nullptr,0)||BCryptGetProperty(a,BCRYPT_OBJECT_LENGTH,(PUCHAR)&z,4,&n,0))return false;std::vector<unsigned char>x(z),d(32);if(BCryptCreateHash(a,&h,x.data(),z,nullptr,0,0)){BCryptCloseAlgorithmProvider(a,0);return false;}bool ok=!bytes||!BCryptHashData(h,const_cast<PUCHAR>(reinterpret_cast<const UCHAR*>(data)),static_cast<ULONG>(bytes),0);if(ok)ok=!BCryptFinishHash(h,d.data(),32,0);BCryptDestroyHash(h);BCryptCloseAlgorithmProvider(a,0);if(ok)o=H(d);return ok;}
 static bool Hash(const fs::path&p,std::string&o){BCRYPT_ALG_HANDLE a=nullptr;BCRYPT_HASH_HANDLE h=nullptr;DWORD n=0,z=0;if(BCryptOpenAlgorithmProvider(&a,BCRYPT_SHA256_ALGORITHM,nullptr,0)||BCryptGetProperty(a,BCRYPT_OBJECT_LENGTH,(PUCHAR)&z,4,&n,0))return false;std::vector<unsigned char>x(z),d(32);if(BCryptCreateHash(a,&h,x.data(),z,nullptr,0,0))return false;std::ifstream f(p,std::ios::binary);std::vector<char>b(1<<20);while(f){f.read(b.data(),b.size());auto k=f.gcount();if(k&&BCryptHashData(h,(PUCHAR)b.data(),(ULONG)k,0))return false;}bool ok=!BCryptFinishHash(h,d.data(),32,0);BCryptDestroyHash(h);BCryptCloseAlgorithmProvider(a,0);if(ok)o=H(d);return ok;}
+static std::string Json(const std::string&v){std::ostringstream o; o<<'"'; for(const char c:v){ if(c=='\\'||c=='"')o<<'\\'; if(c=='\n')o<<"\\n"; else if(c=='\r')o<<"\\r"; else o<<c; } o<<'"'; return o.str();}
 static fs::path Root(const fs::path&requested,uintmax_t need){ULARGE_INTEGER free{},total{},avail{};if(GetDiskFreeSpaceExW(requested.root_path().c_str(),&free,&total,&avail)&&free.QuadPart>=need)return requested;DWORD mask=GetLogicalDrives();fs::path best;ULONGLONG amount=0;for(wchar_t l=L'A';l<=L'Z';++l)if(mask&(1u<<(l-L'A'))){fs::path r; r+=l;r+=L":\\";if(GetDiskFreeSpaceExW(r.c_str(),&free,&total,&avail)&&free.QuadPart>=need&&free.QuadPart>amount){best=r;amount=free.QuadPart;}}return best;}
-int main(int ac,char**av){if(ac!=5){std::cerr<<"usage: reap-zero-prune-verify source staging expected-sha receipt\n";return 2;}fs::path s=fs::absolute(av[1]),requested=fs::absolute(av[2]),receipt=fs::absolute(av[4]);std::error_code e;if(!fs::is_regular_file(s,e)){std::cerr<<"ZP01_FAIL=SOURCE_NOT_FILE\n";return 3;}auto size=fs::file_size(s,e);if(e){std::cerr<<"ZP01_FAIL=SOURCE_SIZE\n";return 3;}fs::path root=Root(requested,size+64ull*1024ull*1024ull);if(root.empty()){std::cerr<<"ZP01_FAIL=NO_ELIGIBLE_VOLUME\n";return 6;}fs::path d=root/"REAP-Validation"/"zero-prune-private";fs::create_directories(d,e);if(e){std::cerr<<"ZP01_FAIL=STAGING_CREATE\n";return 3;}std::string sh;if(!Hash(s,sh)){std::cerr<<"ZP01_FAIL=SOURCE_HASH\n";return 4;}std::string ex=av[3];for(char&c:ex)c=(char)tolower((unsigned char)c);if(sh!=ex){std::cerr<<"ZP01_FAIL=SOURCE_HASH_MISMATCH\n";return 4;}std::ifstream f(s,std::ios::binary);char m[4];unsigned v=0,t=0,meta=0;f.read(m,4);f.read((char*)&v,4);f.read((char*)&t,4);f.read((char*)&meta,4);if(!f||std::string(m,4)!="GGUF"||(v!=2&&v!=3)){std::cerr<<"ZP01_FAIL=GGUF_HEADER\n";return 5;}fs::path tmp=d/(s.filename().wstring()+L".zp01.tmp"),candidate=d/s.filename();if(!CopyFileW(s.c_str(),tmp.c_str(),TRUE)){DWORD x=GetLastError();std::cerr<<"ZP01_FAIL=COPY_WIN32="<<x<<"\n";return 7;}std::string ch;if(fs::file_size(tmp,e)!=size||!Hash(tmp,ch)||ch!=sh){DeleteFileW(tmp.c_str());std::cerr<<"ZP01_FAIL=CANDIDATE_VERIFY\n";return 8;}if(!MoveFileExW(tmp.c_str(),candidate.c_str(),MOVEFILE_WRITE_THROUGH)){DeleteFileW(tmp.c_str());std::cerr<<"ZP01_FAIL=PRIVATE_RENAME_WIN32="<<GetLastError()<<"\n";return 9;}std::ofstream q(receipt);q<<"{\"schema\":\"rawrxd.reap.zero_prune_private.002\",\"source_sha256\":\""<<sh<<"\",\"candidate_sha256\":\""<<ch<<"\",\"source_bytes\":"<<size<<",\"candidate_bytes\":"<<size<<",\"selected_staging_root\":\""<<root.string()<<"\",\"candidate_private\":true,\"byte_identical\":true,\"source_unchanged\":true,\"tensor_inventory_verified\":false,\"reference_logit_parity\":false,\"publication\":false,\"rewrite_authorization\":false}\n";std::cout<<"ZP01_A_PASS selected_root="<<root.string()<<" receipt="<<receipt.string()<<"\n";return 0;}
+static int Compare(int ac,char**av){
+    if(ac!=6){std::cerr<<"usage: reap-zero-prune-verify compare source candidate expected-sha receipt\n";return 2;}
+    const fs::path source=fs::absolute(av[2]), candidate=fs::absolute(av[3]), receipt=fs::absolute(av[5]);
+    std::error_code ec;
+    if(!fs::is_regular_file(source,ec)||!fs::is_regular_file(candidate,ec)){std::cerr<<"ZP01_FAIL=COMPARE_FILE\n";return 3;}
+    if(fs::equivalent(source,candidate,ec)||source==candidate){std::cerr<<"ZP01_FAIL=COMPARE_PATH_ALIAS\n";return 3;}
+    std::string sourceHash,candidateHash,expected=av[4];
+    for(char& c:expected)c=(char)tolower((unsigned char)c);
+    if(!Hash(source,sourceHash)||!Hash(candidate,candidateHash)||sourceHash!=expected){std::cerr<<"ZP01_FAIL=COMPARE_HASH\n";return 4;}
+    Deep2::GGUFLoader sourceLoader,candidateLoader;
+    if(!sourceLoader.load(source.string())||!candidateLoader.load(candidate.string())){std::cerr<<"ZP01_FAIL=COMPARE_GGUF_LOAD\n";return 5;}
+    const auto sourceNames=sourceLoader.listTensors(), candidateNames=candidateLoader.listTensors();
+    bool inventory=sourceNames==candidateNames && sourceLoader.tensorCount()==candidateLoader.tensorCount();
+    bool payload=inventory;
+    uint64_t sourcePayloadBytes=0,candidatePayloadBytes=0;
+    std::string firstMismatch;
+    if(inventory){
+        for(const auto& name:sourceNames){
+            const auto* a=sourceLoader.getTensor(name); const auto* b=candidateLoader.getTensor(name);
+            if(!a||!b){payload=false;if(firstMismatch.empty())firstMismatch=name;continue;}
+            sourcePayloadBytes+=a->sizeBytes; candidatePayloadBytes+=b->sizeBytes;
+            std::string ah,bh;
+            const bool sameDescriptor=a->type==b->type && a->shape==b->shape && a->sizeBytes==b->sizeBytes;
+            const bool sameHash=HashMemory(a->data,a->sizeBytes,ah)&&HashMemory(b->data,b->sizeBytes,bh)&&ah==bh;
+            if(!sameDescriptor||!sameHash){payload=false;if(firstMismatch.empty())firstMismatch=name;}
+        }
+    }
+    const bool expertMapping=inventory&&payload;
+    std::ofstream out(receipt,std::ios::binary|std::ios::trunc);
+    if(!out){std::cerr<<"ZP01_FAIL=COMPARE_RECEIPT\n";return 6;}
+    out<<"{\"schema\":\"rawrxd.reap.zero_prune_verification.003\",\"source_sha256\":"<<Json(sourceHash)
+       <<",\"candidate_sha256\":"<<Json(candidateHash)<<",\"source_bytes\":"<<fs::file_size(source,ec)
+       <<",\"candidate_bytes\":"<<fs::file_size(candidate,ec)<<",\"source_tensor_count\":"<<sourceLoader.tensorCount()
+       <<",\"candidate_tensor_count\":"<<candidateLoader.tensorCount()<<",\"source_payload_bytes\":"<<sourcePayloadBytes
+       <<",\"candidate_payload_bytes\":"<<candidatePayloadBytes<<",\"tensor_inventory_parity\":"<<(inventory?"true":"false")
+       <<",\"tensor_payload_parity\":"<<(payload?"true":"false")<<",\"expert_mapping_parity\":"<<(expertMapping?"true":"false")
+       <<",\"first_tensor_mismatch\":"<<Json(firstMismatch)<<",\"candidate_private\":true,\"source_unchanged\":true"
+       <<",\"reference_logit_parity\":false,\"publication\":false,\"rewrite_authorization\":false}\n";
+    if(!out.good()||!inventory||!payload){std::cerr<<"ZP01_FAIL=COMPARE_PAYLOAD"<<(firstMismatch.empty()?"":(" tensor="+firstMismatch))<<"\n";return 7;}
+    std::cout<<"ZP01_COMPARE_PASS tensors="<<sourceLoader.tensorCount()<<" payload_bytes="<<sourcePayloadBytes<<" receipt="<<receipt.string()<<"\n";
+    return 0;
+}
+int main(int ac,char**av){
+    if(ac>1&&std::string(av[1])=="compare")return Compare(ac,av);
+    if(ac!=5){std::cerr<<"usage: reap-zero-prune-verify source staging expected-sha receipt\n";return 2;}
+    fs::path s=fs::absolute(av[1]),requested=fs::absolute(av[2]),receipt=fs::absolute(av[4]);std::error_code e;if(!fs::is_regular_file(s,e)){std::cerr<<"ZP01_FAIL=SOURCE_NOT_FILE\n";return 3;}auto size=fs::file_size(s,e);if(e){std::cerr<<"ZP01_FAIL=SOURCE_SIZE\n";return 3;}fs::path root=Root(requested,size+64ull*1024ull*1024ull);if(root.empty()){std::cerr<<"ZP01_FAIL=NO_ELIGIBLE_VOLUME\n";return 6;}fs::path d=root/"REAP-Validation"/"zero-prune-private";fs::create_directories(d,e);if(e){std::cerr<<"ZP01_FAIL=STAGING_CREATE\n";return 3;}std::string sh;if(!Hash(s,sh)){std::cerr<<"ZP01_FAIL=SOURCE_HASH\n";return 4;}std::string ex=av[3];for(char&c:ex)c=(char)tolower((unsigned char)c);if(sh!=ex){std::cerr<<"ZP01_FAIL=SOURCE_HASH_MISMATCH\n";return 4;}std::ifstream f(s,std::ios::binary);char m[4];unsigned v=0,t=0,meta=0;f.read(m,4);f.read((char*)&v,4);f.read((char*)&t,4);f.read((char*)&meta,4);if(!f||std::string(m,4)!="GGUF"||(v!=2&&v!=3)){std::cerr<<"ZP01_FAIL=GGUF_HEADER\n";return 5;}fs::path tmp=d/(s.filename().wstring()+L".zp01.tmp"),candidate=d/s.filename();if(!CopyFileW(s.c_str(),tmp.c_str(),TRUE)){DWORD x=GetLastError();std::cerr<<"ZP01_FAIL=COPY_WIN32="<<x<<"\n";return 7;}std::string ch;if(fs::file_size(tmp,e)!=size||!Hash(tmp,ch)||ch!=sh){DeleteFileW(tmp.c_str());std::cerr<<"ZP01_FAIL=CANDIDATE_VERIFY\n";return 8;}if(!MoveFileExW(tmp.c_str(),candidate.c_str(),MOVEFILE_WRITE_THROUGH)){DeleteFileW(tmp.c_str());std::cerr<<"ZP01_FAIL=PRIVATE_RENAME_WIN32="<<GetLastError()<<"\n";return 9;}std::ofstream q(receipt);q<<"{\"schema\":\"rawrxd.reap.zero_prune_private.002\",\"source_sha256\":\""<<sh<<"\",\"candidate_sha256\":\""<<ch<<"\",\"source_bytes\":"<<size<<",\"candidate_bytes\":"<<size<<",\"selected_staging_root\":\""<<root.string()<<"\",\"candidate_private\":true,\"byte_identical\":true,\"source_unchanged\":true,\"tensor_inventory_verified\":false,\"reference_logit_parity\":false,\"publication\":false,\"rewrite_authorization\":false}\n";std::cout<<"ZP01_A_PASS selected_root="<<root.string()<<" receipt="<<receipt.string()<<"\n";return 0;
+}

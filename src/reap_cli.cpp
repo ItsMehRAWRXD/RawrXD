@@ -39,7 +39,8 @@ static void usage() {
                  "rawr-reap reap <first-shard.gguf> --target-size|--size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
-                 "[--selection-output <selection.json>] [--output-model <dir>] "
+                 "[--selection-output <selection.json>] [--selection-input <selection.json>] "
+                 "[--output-model <dir>] "
                  "[--authorize-rewrite] [--experimental-offline] [--output <plan.json>]\n";
 }
 
@@ -628,28 +629,66 @@ static bool loadCalibrationEvidence(const std::string& path,
     }
     try {
         const json doc = json::parse(text);
-        if (doc.value("schema", std::string{}) != "RAWRXD_REAP_CALIBRATION_001") {
+        const std::string schema = doc.value("schema", std::string{});
+        const bool legacy = schema == "RAWRXD_REAP_CALIBRATION_001";
+        const bool referenceCalibration =
+            schema == "rawrxd.reap.reference_calibration.001" ||
+            schema == "rawrxd.reap.reference_calibration.002" ||
+            schema == "rawrxd.reap.reference_calibration.003" ||
+            schema == "rawrxd.reap.reference_calibration.004";
+        if (!legacy && !referenceCalibration) {
             out.reason = "unsupported calibration receipt schema";
             return false;
         }
-        const std::string receiptModel = doc.value("model", std::string{});
-        const std::string requestedName = fs::path(model).filename().string();
-        if (receiptModel != model && receiptModel != requestedName) {
-            out.reason = "calibration receipt model does not match request";
-            return false;
+        if (legacy) {
+            const std::string receiptModel = doc.value("model", std::string{});
+            const std::string requestedName = fs::path(model).filename().string();
+            if (receiptModel != model && receiptModel != requestedName) {
+                out.reason = "calibration receipt model does not match request";
+                return false;
+            }
+        } else {
+            // Reference receipts bind to the exact checkpoint bytes.  A
+            // filename or Ollama tag is not sufficient identity evidence.
+            const std::string expectedHash = doc.value("model_sha256", std::string{});
+            if (expectedHash.empty()) {
+                out.reason = "reference calibration receipt has no model hash";
+                return false;
+            }
+            std::array<uint8_t, 32> digest{};
+            if (!deep2::sha256_file(model, digest)) {
+                out.reason = "reference calibration source hash failed";
+                return false;
+            }
+            std::string actualHash = deep2::hex32(digest);
+            std::string normalizedExpected = expectedHash;
+            std::transform(actualHash.begin(), actualHash.end(), actualHash.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+            std::transform(normalizedExpected.begin(), normalizedExpected.end(),
+                           normalizedExpected.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+            if (actualHash != normalizedExpected) {
+                out.reason = "reference calibration model hash mismatch";
+                return false;
+            }
         }
-        out.complete = doc.value("complete", false);
-        out.continuous = doc.value("continuous_prefill_decode", false);
-        out.continuousCompleted = doc.value("continuous_completed", false);
-        out.routeMetrics = doc.value("route_metrics_available", false);
-        out.mlaSeal = doc.value("mla_product_seal", false);
-        out.calibrationComplete = doc.value("calibration_complete", false);
-        out.internalPrefillParity = doc.value("prefill_parity_pass", false);
-        out.referenceParity = doc.value("reference_parity_pass", false);
-        out.generated = doc.value("generated", uint64_t{0});
-        out.corpusPrompts = doc.value("corpus_prompts", uint64_t{0});
-        out.promptTokens = doc.value("prompt_tokens", uint64_t{0});
-        out.decodeTokens = doc.value("decode_tokens", uint64_t{0});
+        out.complete = legacy ? doc.value("complete", false) :
+                                 doc.value("telemetry_validated", false);
+        out.continuous = legacy ? doc.value("continuous_prefill_decode", false) : false;
+        out.continuousCompleted = legacy ? doc.value("continuous_completed", false) : false;
+        out.routeMetrics = legacy ? doc.value("route_metrics_available", false) : false;
+        out.mlaSeal = legacy ? doc.value("mla_product_seal", false) : false;
+        out.calibrationComplete = legacy ? doc.value("calibration_complete", false) : out.complete;
+        out.internalPrefillParity = legacy ? doc.value("prefill_parity_pass", false) :
+                                                (doc.value("instrumented_uninstrumented_max_logit_diff", 1.0) == 0.0);
+        out.referenceParity = legacy ? doc.value("reference_parity_pass", false) :
+                                      (out.complete && out.internalPrefillParity);
+        out.generated = legacy ? doc.value("generated", uint64_t{0}) : 1;
+        out.corpusPrompts = legacy ? doc.value("corpus_prompts", uint64_t{0}) : 0;
+        out.promptTokens = legacy ? doc.value("prompt_tokens", uint64_t{0}) :
+                                     doc.value("tokens", uint64_t{0});
+        out.decodeTokens = legacy ? doc.value("decode_tokens", uint64_t{0}) :
+                                    doc.value("tokens", uint64_t{0});
         if (out.decodeTokens == 0)
             out.decodeTokens = doc.value("total_tokens", uint64_t{0});
         // reap-calibrate writes a completed manifest with layer-nested expert
@@ -692,6 +731,67 @@ static bool loadCalibrationEvidence(const std::string& path,
                     out.metrics.push_back(metric);
                 }
             }
+        }
+        if (referenceCalibration && out.metrics.empty()) {
+            const auto perLayer = doc.find("per_layer");
+            const uint64_t expectedLayers = doc.value("layers", uint64_t{0});
+            const uint64_t expectedTokens = doc.value("tokens", uint64_t{0});
+            const uint64_t expectedTopK = doc.value("top_k", uint64_t{0});
+            if (perLayer == doc.end() || !perLayer->is_array() ||
+                expectedLayers == 0 || expectedTokens == 0 || expectedTopK == 0 ||
+                expectedTokens > std::numeric_limits<uint64_t>::max() / expectedTopK ||
+                perLayer->size() != expectedLayers) {
+                out.reason = "reference calibration routing coverage is incomplete";
+                return false;
+            }
+            std::set<uint32_t> seenLayers;
+            for (const auto& layer : *perLayer) {
+                if (!layer.is_object()) {
+                    out.reason = "reference calibration layer record is malformed";
+                    return false;
+                }
+                const uint32_t layerId = layer.value("layer", 0u);
+                const uint64_t layerTokens = layer.value("tokens", uint64_t{0});
+                const auto counts = layer.find("expert_counts");
+                const auto weights = layer.find("expert_weight_sums");
+                if (layerId == 0 || layerId > expectedLayers || !seenLayers.insert(layerId).second ||
+                    layerTokens != expectedTokens || counts == layer.end() || weights == layer.end() ||
+                    !counts->is_array() || !weights->is_array() ||
+                    counts->size() != weights->size() || counts->size() == 0) {
+                    out.reason = "reference calibration expert vectors are malformed";
+                    return false;
+                }
+                uint64_t routed = 0;
+                for (size_t expert = 0; expert < counts->size(); ++expert) {
+                    if (!(*counts)[expert].is_number_unsigned() ||
+                        !(*weights)[expert].is_number()) {
+                        out.reason = "reference calibration expert metric is malformed";
+                        return false;
+                    }
+                    const uint64_t routeCount = (*counts)[expert].get<uint64_t>();
+                    const double weight = (*weights)[expert].get<double>();
+                    if (!std::isfinite(weight) || weight < 0.0 || routeCount > expectedTokens) {
+                        out.reason = "reference calibration expert metric is invalid";
+                        return false;
+                    }
+                    if (routed > std::numeric_limits<uint64_t>::max() - routeCount) {
+                        out.reason = "reference calibration route count overflow";
+                        return false;
+                    }
+                    routed += routeCount;
+                    CalibrationMetric metric;
+                    metric.layer = layerId;
+                    metric.expert = static_cast<uint32_t>(expert);
+                    metric.routeCount = routeCount;
+                    metric.score = static_cast<double>(routeCount) + weight;
+                    out.metrics.push_back(metric);
+                }
+                if (routed != expectedTokens * expectedTopK) {
+                    out.reason = "reference calibration top-k coverage is incomplete";
+                    return false;
+                }
+            }
+            out.routeMetrics = seenLayers.size() == expectedLayers;
         }
         // The completed CLI manifest stores prompt coverage in the adjacent
         // checkpoint.  Read it only as evidence metadata; routing scores still
@@ -886,6 +986,7 @@ static int reapPlan(int argc, char** argv) {
     request.workspace = fs::current_path().string();
     std::string calibrationPath;
     std::string selectionOutputPath;
+    std::string selectionInputPath;
     std::string outputModelPath;
     std::string outputPath;
     bool authorizeRewrite = false;
@@ -916,6 +1017,7 @@ static int reapPlan(int argc, char** argv) {
         else if (option == "--quality-floor") request.qualityFloorText = value;
         else if (option == "--calibration") calibrationPath = value;
         else if (option == "--selection-output") selectionOutputPath = value;
+        else if (option == "--selection-input") selectionInputPath = value;
         else if (option == "--output-model") outputModelPath = value;
         else if (option == "--output") outputPath = value;
         else { std::cerr << "REAP_UNKNOWN_OPTION: " << option << "\n"; return 2; }
@@ -974,15 +1076,34 @@ static int reapPlan(int argc, char** argv) {
     }
 
     std::string selectionError;
-    const bool selectionWritten = !selectionOutputPath.empty() &&
-        writeSelectionManifest(selectionOutputPath, request.model, calibrationPath,
-                               calibration, inventory, request.activeExperts,
-                               request.expertBudgetBytes, request.targetSizeBytes,
-                               admission.qualityFloorPass,
-                               authorizeRewrite || experimentalOffline,
-                               experimentalOffline,
-                               selectionError);
-    if (!selectionOutputPath.empty() && !selectionWritten && status == "BLOCKED" &&
+    bool selectionWritten = false;
+    std::string selectionForTransform = selectionOutputPath;
+    if (!selectionInputPath.empty()) {
+        if (!experimentalOffline) {
+            selectionError = "--selection-input requires --experimental-offline";
+        } else {
+            std::ifstream selectionInput(selectionInputPath, std::ios::binary);
+            if (!selectionInput) {
+                selectionError = "selection input could not be opened";
+            } else {
+                // The transformer performs the authoritative schema,
+                // topology, duplicate-ID and geometry validation.  This
+                // front-end only establishes that the private input exists;
+                // it never turns it into production authorization evidence.
+                selectionWritten = true;
+                selectionForTransform = selectionInputPath;
+            }
+        }
+    } else if (!selectionOutputPath.empty()) {
+        selectionWritten = writeSelectionManifest(selectionOutputPath, request.model, calibrationPath,
+                                                  calibration, inventory, request.activeExperts,
+                                                  request.expertBudgetBytes, request.targetSizeBytes,
+                                                  admission.qualityFloorPass,
+                                                  authorizeRewrite || experimentalOffline,
+                                                  experimentalOffline,
+                                                  selectionError);
+    }
+    if ((!selectionOutputPath.empty() || !selectionInputPath.empty()) && !selectionWritten && status == "BLOCKED" &&
         !selectionError.empty()) {
         reason = selectionError;
     }
@@ -999,7 +1120,7 @@ static int reapPlan(int argc, char** argv) {
             Deep2::ReapMoETransformRequest transformRequest;
             transformRequest.sourceFirstShard = request.model;
             transformRequest.outputDirectory = outputModelPath;
-            transformRequest.selectionManifest = selectionOutputPath;
+            transformRequest.selectionManifest = selectionForTransform;
             transformRequest.activeExperts = static_cast<uint32_t>(request.activeExperts);
             transformRequest.targetSizeBytes = request.targetSizeBytes;
             transform = Deep2::transformMoEGGUF(transformRequest);
@@ -1032,7 +1153,7 @@ static int reapPlan(int argc, char** argv) {
             << ",\"calibration_receipt_certified\":" << (calibrationReadable ? "true" : "false")
             << ",\"calibration_complete\":" << (calibration.calibrationComplete ? "true" : "false")
             << ",\"internal_prefill_parity\":" << (calibration.internalPrefillParity ? "true" : "false")
-            << ",\"selection_manifest\":" << json_quote(selectionOutputPath)
+            << ",\"selection_manifest\":" << json_quote(selectionForTransform)
             << ",\"selection_manifest_written\":" << (selectionWritten ? "true" : "false")
             << ",\"transformation_enabled\":"
             << ((admission.transformationEnabled && transform.success) ? "true" : "false")
