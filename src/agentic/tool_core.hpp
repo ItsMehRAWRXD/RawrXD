@@ -4,6 +4,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -224,58 +225,107 @@ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"com
     std::string full=std::string("cmd.exe /d /c cd /d \"")+path_utf8(root)+"\" && "+cmd;
     // T05 crash-recovery: use CreateProcess instead of _popen so the child
     // cmd.exe process can be terminated on cancellation instead of orphaned.
+    // G: use SEPARATE stdout/stderr pipes so a required stderr marker is truly
+    // distinguished from stdout. Feeding one merged stream to both fields lets a
+    // stdout-only marker pass a stderr requirement (false acceptance).
     SECURITY_ATTRIBUTES sa = { sizeof(sa), nullptr, TRUE };
-    HANDLE hReadPipe = nullptr, hWritePipe = nullptr;
-    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) throw std::runtime_error("failed to create pipe");
-
+    HANDLE hOutR=nullptr,hOutW=nullptr,hErrR=nullptr,hErrW=nullptr;
+    if (!CreatePipe(&hOutR,&hOutW,&sa,0) || !CreatePipe(&hErrR,&hErrW,&sa,0)) {
+        if(hOutR)CloseHandle(hOutR); if(hOutW)CloseHandle(hOutW);
+        if(hErrR)CloseHandle(hErrR); if(hErrW)CloseHandle(hErrW);
+        throw std::runtime_error("failed to create pipe");
+    }
     STARTUPINFOA si = { sizeof(si) };
     si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdOutput = hWritePipe;
-    si.hStdError = hWritePipe;
-
+    si.hStdOutput = hOutW;
+    si.hStdError  = hErrW;
     PROCESS_INFORMATION pi = {};
     if (!CreateProcessA(nullptr, const_cast<char*>(full.c_str()), nullptr, nullptr, TRUE,
                         CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
-        CloseHandle(hReadPipe);
-        CloseHandle(hWritePipe);
+        CloseHandle(hOutR); CloseHandle(hOutW); CloseHandle(hErrR); CloseHandle(hErrW);
         throw std::runtime_error("failed to start process");
     }
-    CloseHandle(hWritePipe);
+    // Parent closes its write ends so ReadFile sees EOF once the child exits.
+    CloseHandle(hOutW); CloseHandle(hErrW);
 
     TrackToolChildProcess(pi.hProcess);
     CloseHandle(pi.hThread);
 
-    std::string out; char buf[4096]; size_t cap=2*1024*1024; DWORD read = 0;
-    while (ReadFile(hReadPipe, buf, sizeof(buf) - 1, &read, nullptr) && read > 0) {
-        buf[read] = '\0';
-        out += buf;
-        if (out.size() > cap) { out += "\n...[truncated]\n"; break; }
-    }
-    CloseHandle(hReadPipe);
+    // Optional bounded timeout (backward compatible: absent -> no deadline, the
+    // historical behaviour). Enables a real timeout control without changing
+    // existing callers.
+    const std::string timeoutArg = optional_arg(r, "timeoutMs", "");
+    unsigned long long timeoutMs = 0;
+    if (!timeoutArg.empty()) { try { timeoutMs = std::stoull(timeoutArg); } catch(...) { timeoutMs = 0; } }
+    const auto start = std::chrono::steady_clock::now();
 
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    std::string out, err;
+    const size_t cap = 2*1024*1024;
+    auto drain = [&](HANDLE h, std::string& dst){
+        char buf[4096]; DWORD avail = 0;
+        // Drain whatever is available without blocking; the outer loop polls the
+        // process with a short wait so both pipes are serviced and neither can
+        // fill its buffer and deadlock the child.
+        while (PeekNamedPipe(h, nullptr, 0, nullptr, &avail, nullptr) && avail > 0) {
+            DWORD n = 0;
+            const DWORD toRead = (std::min<DWORD>)(avail, (DWORD)(sizeof(buf)-1));
+            if (!ReadFile(h, buf, toRead, &n, nullptr) || n == 0) break;
+            dst.append(buf, n);
+            if (dst.size() > cap) { dst.resize(cap); dst += "\n...[truncated]\n"; break; }
+        }
+    };
+    bool timedOut = false;
+    for (;;) {
+        drain(hOutR, out);
+        drain(hErrR, err);
+        if (WaitForSingleObject(pi.hProcess, 50) == WAIT_OBJECT_0) break;
+        if (timeoutMs > 0) {
+            const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start).count();
+            if (static_cast<unsigned long long>(elapsed) >= timeoutMs) {
+                timedOut = true;
+                TerminateProcess(pi.hProcess, 1);
+                WaitForSingleObject(pi.hProcess, 5000);
+                break;
+            }
+        }
+    }
+    drain(hOutR, out);
+    drain(hErrR, err);
+
     DWORD ec = 0;
     GetExitCodeProcess(pi.hProcess, &ec);
-    CloseHandle(pi.hProcess);
-
     UntrackToolChildProcess(pi.hProcess);
+    CloseHandle(pi.hProcess);
+    CloseHandle(hOutR); CloseHandle(hErrR);
 
-    // G: evaluate acceptance on the captured outcome (merged pipe).
-    {
-        rawrxd::AcceptanceCriteria crit;
-        crit.expectedExit = 0;
-        if (const char* m = std::getenv("RAWRXD_ACCEPTANCE_MARKER"); m && *m)
-            crit.stderrMustContain = m;
-        rawrxd::ProcessOutcome po;
-        po.launched = true;
-        po.exitCode = static_cast<int>(ec);
-        po.stdoutText = out;
-        po.stderrText = out;
-        const auto verdict = rawrxd::EvaluateAcceptance(po, crit);
-        if (ec != 0) return {false, out, "exit=" + std::to_string(ec)};
-        if (!verdict.passed) return {false, out, verdict.firstFailure};
-        return {true, out, ""};
-    }
+    // G: authoritative acceptance evaluation on the SEPARATED channels.
+    rawrxd::ProcessOutcome po;
+    po.launched = true;
+    po.exitCode = static_cast<int>(ec);
+    po.timedOut = timedOut;
+    if (timedOut) po.error = "COMMAND_TIMEOUT";
+    po.stdoutText = out;
+    po.stderrText = err;
+    rawrxd::AcceptanceCriteria crit;
+    crit.expectedExit = 0;
+    if (const char* m = std::getenv("RAWRXD_ACCEPTANCE_MARKER"); m && *m)
+        crit.stderrMustContain = m;
+    const rawrxd::AcceptanceResult verdict = rawrxd::EvaluateAcceptance(po, crit);
+
+    Result res;
+    res.output = out;
+    if (!err.empty()) { if (!res.output.empty()) res.output += "\n"; res.output += err; }
+    // Required acceptance must never default to NotApplicable: a real verdict
+    // was produced, so carry Accepted/Rejected plus the first failure reason.
+    res.acceptance = verdict.passed ? Result::Acceptance::Accepted
+                                    : Result::Acceptance::Rejected;
+    res.firstFailure = verdict.firstFailure;
+    res.ok = (ec == 0) && verdict.passed && !timedOut;
+    if (timedOut)          res.error = "timeout=" + std::to_string(timeoutMs) + "ms";
+    else if (ec != 0)      res.error = "exit=" + std::to_string(ec);
+    else if (!verdict.passed) res.error = verdict.firstFailure;
+    return res;
 #else
     std::string full=std::string("cd \"")+path_utf8(root)+"\" && "+cmd;
     FILE* pipe=popen(full.c_str(),"r");
@@ -283,8 +333,23 @@ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"com
     std::string out;char buf[4096];size_t cap=2*1024*1024;
     while(fgets(buf,sizeof(buf),pipe)){out+=buf;if(out.size()>cap){out+="\n...[truncated]\n";break;}}
     int ec=pclose(pipe);
-    if(ec!=0)return {false,out,"exit="+std::to_string(ec)};
-    return {true,out,""};
+    {
+        rawrxd::AcceptanceCriteria crit; crit.expectedExit = 0;
+        if (const char* m = std::getenv("RAWRXD_ACCEPTANCE_MARKER"); m && *m)
+            crit.stderrMustContain = m;
+        rawrxd::ProcessOutcome po; po.launched = true; po.exitCode = ec;
+        po.stdoutText = out; po.stderrText = out;
+        const rawrxd::AcceptanceResult verdict = rawrxd::EvaluateAcceptance(po, crit);
+        Result res;
+        res.output = out;
+        res.acceptance = verdict.passed ? Result::Acceptance::Accepted
+                                        : Result::Acceptance::Rejected;
+        res.firstFailure = verdict.firstFailure;
+        res.ok = (ec == 0) && verdict.passed;
+        if (ec != 0) res.error = "exit=" + std::to_string(ec);
+        else if (!verdict.passed) res.error = verdict.firstFailure;
+        return res;
+    }
 #endif
  }});
 

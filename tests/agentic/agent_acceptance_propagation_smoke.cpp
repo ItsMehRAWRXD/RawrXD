@@ -209,6 +209,67 @@ int main() {
         std::filesystem::remove(ledger, ec);
     }
 
+    // ------------------------------------------------------------------
+    // 6. Registry terminal path (runInTerminal) — real acceptance on
+    //    SEPARATED stdout/stderr. The wrong-channel control (marker on stdout
+    //    only) must be REJECTED; the old merged-pipe code falsely accepted it.
+    // ------------------------------------------------------------------
+    {
+        namespace rt = rawrxd::tools;
+        const std::string root =
+            (std::filesystem::temp_directory_path() / "rawrxd_terminal_smoke").string();
+        std::error_code ec;
+        std::filesystem::create_directories(root, ec);
+
+        rt::Registry reg;
+        rt::register_workspace_tools(reg, root);
+
+        auto approve = [](const rt::Tool&, const rt::Request&) { return true; };
+        auto deny    = [](const rt::Tool&, const rt::Request&) { return false; };
+        auto run = [&](const std::string& cmd, const rt::Approval& ap) {
+            rt::Request req; req.name = "runInTerminal"; req.args["command"] = cmd;
+            return reg.call(req, ap);
+        };
+
+        setMarker("BRIDGE_GEN_MARKER");
+        rt::Result r1 = run("echo BRIDGE_GEN_MARKER 1>&2", approve);
+        expect(r1.ok && r1.acceptance == rt::Result::Acceptance::Accepted,
+               "terminal_stderr_marker_accepted");
+
+        rt::Result r2 = run("exit 0", approve);
+        expect(!r2.ok && r2.acceptance == rt::Result::Acceptance::Rejected,
+               "terminal_missing_marker_rejected");
+
+        rt::Result r3 = run("echo BRIDGE_GEN_MARKER", approve);
+        expect(!r3.ok && r3.acceptance == rt::Result::Acceptance::Rejected,
+               "terminal_stdout_only_marker_rejected");
+
+        rt::Result r4 = run("echo BRIDGE_GEN_MARKER 1>&2 & exit 1", approve);
+        expect(!r4.ok, "terminal_nonzero_with_marker_rejected");
+
+        setMarker("");  // ordinary command, no marker criteria
+        rt::Result r5 = run("echo hello_terminal", approve);
+        expect(r5.ok && r5.acceptance == rt::Result::Acceptance::Accepted,
+               "terminal_ordinary_command_accepted");
+
+        // authorization denial: rejected before any process launch
+        setMarker("BRIDGE_GEN_MARKER");
+        rt::Result r6 = run("echo BRIDGE_GEN_MARKER 1>&2", deny);
+        expect(!r6.ok, "terminal_authorization_denied");
+
+        // real timeout: bounded via timeoutMs, no indefinite hang
+        {
+            rt::Request reqT; reqT.name = "runInTerminal";
+            reqT.args["command"] = "ping -n 5 127.0.0.1";
+            reqT.args["timeoutMs"] = "1000";
+            rt::Result r7 = reg.call(reqT, approve);
+            expect(!r7.ok && r7.acceptance == rt::Result::Acceptance::Rejected,
+                   "terminal_timeout_rejected");
+        }
+
+        std::filesystem::remove_all(root, ec);
+    }
+
     std::printf("FAIL_COUNT=%d\n", failures);
     std::printf("PROMOTE=0\n");
     return failures == 0 ? 0 : 1;
