@@ -49,6 +49,9 @@ public:
     // Budget covers payload capacity, not allocator or index overhead.
     template<class Loader>
     bool Acquire(const std::string& key,uint64_t bytes,Loader&& loader,Lease& out){
+        // Never leave an earlier successful payload in the output after a
+        // rejected acquisition. Reset before validation and admission.
+        out.reset();
         if(key.empty()||!bytes||bytes>budget_||bytes>SIZE_MAX)return false;
         std::unique_lock<std::mutex> lock(mutex_);
         for(;;){
