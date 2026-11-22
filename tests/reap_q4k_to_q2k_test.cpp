@@ -1,4 +1,5 @@
 #include "deep2/ReapQ4KToQ2K.hpp"
+#include "deep2/ReapMixedPrecision.hpp"
 #include <cstdio>
 #if defined(_WIN32) && defined(_MSC_VER)
 #include <intrin.h>
@@ -11,6 +12,18 @@ static bool hasAvx2(){
 using namespace Deep2::ReapQuant;
 int main(){
     int pass=0,fail=0;auto check=[&](bool ok,const char* n){std::printf("%s %s\n",ok?"PASS":"FAIL",n);ok?++pass:++fail;};
+    std::vector<ExpertCost> costs{{1,1,10,10,2},{2,1,1,10,2}};
+    MixedPlan plan;
+    check(PlanMixed(costs,168,plan)&&plan.bytes==168&&plan.weightedError==110,"mixed minimum budget");
+    check(PlanMixed(costs,194,plan)&&plan.choices[0].precision==Precision::Q3&&plan.choices[1].precision==Precision::Q2&&plan.weightedError==30,"mixed importance prioritizes upgrade");
+    check(PlanMixed(costs,288,plan)&&plan.bytes==288&&plan.weightedError==0,"mixed full precision budget");
+    check(!PlanMixed(costs,167,plan)&&plan.bytes==288,"mixed infeasible budget preserves output");
+    auto invalid=costs;invalid[1].id=1;
+    check(!PlanMixed(invalid,288,plan),"mixed duplicate expert rejected");
+    invalid=costs;invalid[0].importance=std::numeric_limits<double>::infinity();
+    check(!PlanMixed(invalid,288,plan),"mixed nonfinite importance rejected");
+    invalid=costs;invalid[0].blocks=UINT64_MAX;
+    check(!PlanMixed(invalid,UINT64_MAX,plan),"mixed overflow rejected");
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
     check(PositiveHalf(std::ldexp(1.0,-24),h)&&h==1,"binary16 subnormal");
