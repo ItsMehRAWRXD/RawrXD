@@ -143,7 +143,10 @@ int main(int argc, char **argv)
     engine.configureGeneration(opts);
     engine.enableBatchedPrefill(false);
 
-    std::vector<int> out(prompt.size() + 16, 0);
+    // The caller-provided output buffer must cover the configured decode
+    // budget.  The previous fixed +16 slack corrupted the heap when KV13+
+    // requested more than 16 generated tokens.
+    std::vector<int> out(prompt.size() + opts.maxTokens + 1, 0);
     std::vector<size_t> kvLens;
     std::vector<int> callbackTokens;
     auto callback = [&](int tokenId)
@@ -192,7 +195,7 @@ int main(int argc, char **argv)
                 kvLens.empty() ? 0 : kvLens.back(), kv->currentLength(), static_cast<int>(stop));
 
     // --- Repeated identical request: reset + reproducible tokens ---
-    std::vector<int> out2(prompt.size() + 16, 0);
+    std::vector<int> out2(prompt.size() + opts.maxTokens + 1, 0);
     InferenceStats stats2{};
     const size_t generated2 =
         engine.generate(prompt.data(), prompt.size(), out2.data(), opts.maxTokens, &stats2, nullptr);
@@ -205,7 +208,7 @@ int main(int argc, char **argv)
 
     // --- Serial vs batched prefill parity ---
     engine.enableBatchedPrefill(true);
-    std::vector<int> out3(prompt.size() + 16, 0);
+    std::vector<int> out3(prompt.size() + opts.maxTokens + 1, 0);
     InferenceStats stats3{};
     const size_t generated3 =
         engine.generate(prompt.data(), prompt.size(), out3.data(), opts.maxTokens, &stats3, nullptr);
@@ -217,7 +220,7 @@ int main(int argc, char **argv)
     // --- Different prompt must not inherit previous request state ---
     const std::string otherText = "One plus one equals";
     const std::vector<int> otherPrompt = engine.tokenize(otherText);
-    std::vector<int> out4(otherPrompt.size() + 16, 0);
+    std::vector<int> out4(otherPrompt.size() + opts.maxTokens + 1, 0);
     InferenceStats stats4{};
     const size_t generated4 = engine.generate(
         otherPrompt.data(), otherPrompt.size(), out4.data(), opts.maxTokens, &stats4, nullptr);
