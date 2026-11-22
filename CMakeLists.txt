@@ -4748,6 +4748,24 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_graph_compile_test.cpp")
     add_test(NAME reap_graph_compile_test COMMAND reap_graph_compile_test)
 endif()
 
+# G52: in-process Problems ListView item text/severity + goToProblem caret
+# navigation acceptance (Win32; requires an interactive window station).
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/win32/g52_problems_acceptance.cpp")
+    add_executable(g52_problems_acceptance
+        tests/win32/g52_problems_acceptance.cpp)
+    target_include_directories(g52_problems_acceptance PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(g52_problems_acceptance PRIVATE cxx_std_17)
+    target_link_libraries(g52_problems_acceptance PRIVATE comctl32 user32 gdi32)
+    if(MSVC)
+        target_compile_options(g52_problems_acceptance PRIVATE /EHsc)
+    endif()
+    set_target_properties(g52_problems_acceptance PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME g52_problems_acceptance COMMAND g52_problems_acceptance)
+endif()
+
 # Gap 7+10: AgentEditHistory undo byte restore + AgentSession/TaskLedger disk RT.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_ledger_undo_smoke.cpp")
     add_executable(agent_ledger_undo_smoke
