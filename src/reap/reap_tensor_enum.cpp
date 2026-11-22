@@ -5,6 +5,7 @@
 // Output: JSON array of tensor entries with name, type, sizeBytes, dims,
 // shardId, fileOffset (absolute), tensorOffset (relative), family classification.
 #include "deep2/GGUFLoader.hpp"
+#include "reap/ReapAutoFitIR.hpp"
 #include <cstdio>
 #include <cstdint>
 #include <string>
@@ -60,6 +61,29 @@ static std::string esc(const std::string& s) {
     return o;
 }
 
+static bool isExpertTensor(const std::string& name) {
+    return name.find("ffn_gate_exps") != std::string::npos ||
+           name.find("ffn_up_exps") != std::string::npos ||
+           name.find("ffn_down_exps") != std::string::npos ||
+           name.find(".experts.") != std::string::npos;
+}
+
+static uint64_t visitMultiplier(const std::string& architecture,
+                                const std::string& name,
+                                uint64_t loopStart, uint64_t loopEnd,
+                                uint64_t loopCount) {
+    if (architecture != "inkling2_loop" || loopCount <= 1 || loopEnd < loopStart)
+        return 1;
+    const std::string marker = "blk.";
+    const size_t begin = name.find(marker);
+    if (begin == std::string::npos) return 1;
+    size_t pos = begin + marker.size();
+    uint64_t layer = 0;
+    while (pos < name.size() && name[pos] >= '0' && name[pos] <= '9')
+        layer = layer * 10 + static_cast<uint64_t>(name[pos++] - '0');
+    return layer >= loopStart && layer <= loopEnd ? loopCount : 1;
+}
+
 int main(int argc, char** argv) {
     const char* path = argc > 1 ? argv[1] :
         "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf";
@@ -78,6 +102,9 @@ int main(int argc, char** argv) {
         return value > 0 ? value : fallback;
     };
     const uint64_t modelExpertCount = static_cast<uint64_t>(archMeta("expert_count"));
+    const uint64_t loopStart = static_cast<uint64_t>(archMeta("loop.start"));
+    const uint64_t loopEnd = static_cast<uint64_t>(archMeta("loop.end"));
+    const uint64_t loopCount = static_cast<uint64_t>(archMeta("loop.count"));
     std::cout << "{\n";
     std::cout << "  \"schema\": \"reap.full_inventory.v1\",\n";
     std::cout << "  \"model\": \"" << esc(path) << "\",\n";
@@ -97,6 +124,8 @@ int main(int argc, char** argv) {
     std::cout << "  },\n";
     std::cout << "  \"shard_count\": " << loader.shardCount() << ",\n";
     std::cout << "  \"total_logical_tensors\": " << loader.tensorCount() << ",\n";
+    std::cout << "  \"ir_contract\": \"rawrxd.reap.autofit.ir.v1\",\n";
+    std::cout << "  \"ir_semantics\": {\"physical_layer_identity\":true,\"visit_multiplier\":true,\"recurrent\":true,\"prunable\":true,\"dtype_accounting\":true},\n";
     std::cout << "  \"tensors\": [\n";
 
     bool first = true;
@@ -124,6 +153,8 @@ int main(int argc, char** argv) {
         if (!first) std::cout << ",\n";
         first = false;
 
+        const bool prunable = isExpertTensor(name);
+        const uint64_t visits = visitMultiplier(architecture, name, loopStart, loopEnd, loopCount);
         totalBytes += t->sizeBytes;
         familyBytes[family] += t->sizeBytes;
         familyCount[family] += 1;
@@ -144,7 +175,13 @@ int main(int argc, char** argv) {
         std::cout << "      \"file_offset\": " << t->fileOffset << ",\n";
         std::cout << "      \"tensor_offset\": " << t->tensorOffset << ",\n";
         std::cout << "      \"family\": \"" << family << "\",\n";
-        std::cout << "      \"expert_count\": " << tensorExpertCount << "\n";
+        std::cout << "      \"expert_count\": " << tensorExpertCount << ",\n";
+        std::cout << "      \"physical_key\": \"" << esc(name) << "\",\n";
+        std::cout << "      \"visit_multiplier\": " << visits << ",\n";
+        std::cout << "      \"prunable\": " << (prunable ? "true" : "false") << ",\n";
+        std::cout << "      \"recurrent\": " << (visits > 1 ? "true" : "false") << ",\n";
+        std::cout << "      \"storage_dtype\": " << static_cast<uint32_t>(t->type) << ",\n";
+        std::cout << "      \"scale_granularity\": \"UNKNOWN\"\n";
         std::cout << "    }";
     }
 

@@ -5108,6 +5108,18 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_autofit_policy_test.cpp")
     add_test(NAME rawr_reap_autofit_policy COMMAND rawr-reap-autofit-policy-test)
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_autofit_ir_test.cpp")
+    add_executable(rawr-reap-autofit-ir-test tests/reap_autofit_ir_test.cpp)
+    target_include_directories(rawr-reap-autofit-ir-test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawr-reap-autofit-ir-test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(rawr-reap-autofit-ir-test PRIVATE /EHsc /W4 /std:c++20)
+    else()
+        target_compile_options(rawr-reap-autofit-ir-test PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    add_test(NAME rawr_reap_autofit_ir COMMAND rawr-reap-autofit-ir-test)
+endif()
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/tensor_residency_budget_test.cpp")
     add_executable(rawr-tensor-residency-budget-test
         tests/tensor_residency_budget_test.cpp)
