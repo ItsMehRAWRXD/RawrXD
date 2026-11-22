@@ -7885,6 +7885,7 @@ void Win32IDE::generateResponseAsync(
     
     m_inferenceRunning = true;
     m_inferenceStopRequested = false;
+    m_lastCompletedInferenceGeneration.store(0, std::memory_order_release);
     m_activeInferenceGeneration = requestGeneration;
     m_currentInferencePrompt = prompt;
     m_inferenceCallback = callback;
@@ -7897,23 +7898,15 @@ void Win32IDE::generateResponseAsync(
                                      webBrowsingEnabled, requestGeneration, explicitDeep2]() {
         auto finishIfCurrent = [this, callback, requestGeneration](
             const std::string& result, bool success) {
-            const uint64_t active =
-                m_activeInferenceGeneration.load(std::memory_order_acquire);
-            // A newer Request B owns the slot â€” never clear its busy flag.
-            if (active != 0 && active != requestGeneration) {
-                return;
-            }
-            if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
-                active == 0) {
-                // stopInference already released ownership for Request B.
-                return;
-            }
-            // Clear generation with the busy flag so the next admission can
-            // join this drained worker instead of treating it as live.
-            m_activeInferenceGeneration.store(0, std::memory_order_release);
-            m_lastCompletedInferenceGeneration.store(requestGeneration,
-                                                      std::memory_order_release);
-            m_inferenceRunning = false;
+            if (m_inferenceStopRequested.load(std::memory_order_acquire)) return;
+            uint64_t expected = requestGeneration;
+            if (!m_activeInferenceGeneration.compare_exchange_strong(
+                    expected, 0, std::memory_order_acq_rel,
+                    std::memory_order_acquire)) return;
+            m_lastCompletedInferenceGeneration.store(requestGeneration,
+                                                      std::memory_order_release);
+            m_inferenceRunning = false;
+            if (m_inferenceStopRequested.load(std::memory_order_acquire)) return;
             WriteChatRuntimeEvidence(
                 "BACKEND_REQUEST_END request_id=" +
                 std::to_string(requestGeneration) + " success=" +
