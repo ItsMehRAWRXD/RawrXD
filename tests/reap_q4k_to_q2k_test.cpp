@@ -22,6 +22,11 @@
 #include <intrin.h>
 static bool hasAvx2(){
     int info[4]{};
+    __cpuid(info,0);
+    if(info[0]<7)return false;
+    __cpuid(info,1);
+    if((info[2]&((1<<27)|(1<<28)))!=((1<<27)|(1<<28)))return false;
+    if((_xgetbv(0)&6)!=6)return false;
     __cpuidex(info,7,0);
     return (info[1] & (1<<5)) != 0;
 }
@@ -471,9 +476,10 @@ int main(){
     for(unsigned i=0;i<Elements&&decodeParity;++i){
         const float diff=std::abs(scalarValues[i]-simdValues[i]);
         maxDecodeDiff=std::max(maxDecodeDiff,diff);
-        if(diff>1e-6f){firstDecodeMismatch=i;decodeParity=false;}
+        if(!std::isfinite(diff)||diff>1e-6f){firstDecodeMismatch=i;decodeParity=false;}
     }
-    if(!decodeParity) std::printf("R23_DECODE_DIFF index=%u scalar=%g simd=%g max=%g\n",
+    if(!scalarDecoded||!simdDecoded) std::printf("R23_DECODE_FAILED scalar=%d simd=%d\n",int(scalarDecoded),int(simdDecoded));
+    else if(!decodeParity && firstDecodeMismatch<Elements) std::printf("R23_DECODE_DIFF index=%u scalar=%g simd=%g max=%g\n",
                                   firstDecodeMismatch,scalarValues[firstDecodeMismatch],
                                   simdValues[firstDecodeMismatch],maxDecodeDiff);
     check(decodeParity,"R23 AVX2/scalar Q4_K decode parity");
