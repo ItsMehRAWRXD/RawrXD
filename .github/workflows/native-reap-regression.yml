@@ -15,6 +15,10 @@ jobs:
         run: g++ -std=c++17 -O2 -mno-avx -mno-avx2 -pthread -Wall -Wextra -DRAWRXD_REAP_SCALAR_ACCEPTANCE -I src tests/reap_q4k_to_q2k_test.cpp -o reap-scalar
       - name: Execute baseline scalar regression
         run: ./reap-scalar
+      - name: Compile runtime-dispatched baseline binary
+        run: g++ -std=c++17 -O2 -mno-avx -mno-avx2 -pthread -Wall -Wextra -I src tests/reap_adaptive_dispatch_test.cpp -o reap-adaptive
+      - name: Verify scalar versus runtime-dispatched numerical parity
+        run: ./reap-adaptive
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
