@@ -4885,10 +4885,17 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     target_link_options(reap_msvc_link_contract_test PRIVATE /WX /INCREMENTAL:NO)
     add_test(NAME reap_msvc_link_contract_test COMMAND reap_msvc_link_contract_test)
 
+    # Force a real external-symbol reference in each production consumer
+    # that enables isolated AVX2. CMake's object target is not enough by
+    # itself: this contract catches a mismatched declaration/definition.
+    add_library(reap_msvc_link_contract OBJECT tests/reap_msvc_link_contract.cpp)
+    target_include_directories(reap_msvc_link_contract PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(reap_msvc_link_contract PRIVATE cxx_std_17)
+    target_compile_definitions(reap_msvc_link_contract PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
     # Production IDE and its REAP streaming conversion share the isolated
     # object. Do not add AVX2 compile flags to the IDE's source files.
     if(TARGET RawrXD-Win32IDE-Native)
-        target_sources(RawrXD-Win32IDE-Native PRIVATE $<TARGET_OBJECTS:reap_msvc_avx2>)
+        target_sources(RawrXD-Win32IDE-Native PRIVATE $<TARGET_OBJECTS:reap_msvc_avx2> $<TARGET_OBJECTS:reap_msvc_link_contract>)
         target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
         # Do not mask unresolved externals with forced output or incremental
         # artifacts; treat Release linker warnings as build failures.
