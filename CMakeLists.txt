@@ -4766,6 +4766,24 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/win32/g52_problems_acceptance.cpp
     add_test(NAME g52_problems_acceptance COMMAND g52_problems_acceptance)
 endif()
 
+# G51: inline-completion state machine (appear/accept/dismiss/cancel) acceptance.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/win32/g51_inline_completion_acceptance.cpp")
+    add_executable(g51_inline_completion_acceptance
+        tests/win32/g51_inline_completion_acceptance.cpp
+        src/win32app/Win32IDE_InlineCompletion.cpp)
+    target_include_directories(g51_inline_completion_acceptance PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/win32app)
+    target_compile_features(g51_inline_completion_acceptance PRIVATE cxx_std_17)
+    target_link_libraries(g51_inline_completion_acceptance PRIVATE user32 gdi32)
+    if(MSVC)
+        target_compile_options(g51_inline_completion_acceptance PRIVATE /EHsc)
+    endif()
+    set_target_properties(g51_inline_completion_acceptance PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME g51_inline_completion_acceptance COMMAND g51_inline_completion_acceptance)
+endif()
+
 # Gap 7+10: AgentEditHistory undo byte restore + AgentSession/TaskLedger disk RT.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_ledger_undo_smoke.cpp")
     add_executable(agent_ledger_undo_smoke
