@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 
+# QuantKernelRegistry contains explicitly runtime-gated AVX2/AVX-512 kernels.
+# Keep these instruction flags scoped to this translation unit; the rest of the
+# product remains baseline-safe and the dispatcher still checks CPU support.
+set_source_files_properties(
+    ${CMAKE_SOURCE_DIR}/src/deep2/QuantKernelRegistry.cpp
+    PROPERTIES COMPILE_OPTIONS
+        "$<$<CXX_COMPILER_ID:GNU,Clang>:-mavx512f;-mavx512bw;-mavx2;-mfma>;$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX512>"
+)
+
 # DEEP2_GPU_CODE31_RESET_001 — inject VK lost / Win32 code 31; assert reset seq.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_code31_reset_smoke.cpp" AND
    EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/lavapath/GpuDeviceLostReset.cpp")
@@ -212,15 +221,25 @@ if(RAWRXD_ENABLE_HARDENING)
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wformat=2>
         )
         
-        add_link_options(
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-pie>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,relro>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,now>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,noexecstack>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,--no-copy-dt-needed-entries>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fno-plt>
-        )
+        if(UNIX AND NOT MINGW)
+            add_link_options(
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-pie>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,relro>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,now>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,noexecstack>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,--no-copy-dt-needed-entries>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fno-plt>
+            )
+        else()
+            # MinGW/LLD does not implement GNU ld's -z and
+            # --no-copy-dt-needed-entries switches. Keep PIE where supported,
+            # but do not inject incompatible linker flags into native Windows.
+            add_link_options(
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
+                $<$<CXX_COMPILER_ID:Clang>:-lc++>
+            )
+        endif()
         
         add_compile_definitions(
             RAWRXD_HARDENING=1
