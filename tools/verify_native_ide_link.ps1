@@ -50,8 +50,13 @@ try {
         Invoke-CertCommand -Arguments @("--build", $buildPath, "--config", $Configuration,
             "--target", "reap_msvc_link_contract_test", "reap_msvc_anchor_only_test",
             "reap_virtual_payload_msvc_adaptive_test", "--parallel", "2")
-        $ctestOutput = & ctest --test-dir $buildPath -C $Configuration --output-on-failure -R "^reap_(msvc_link_contract_test|msvc_anchor_only_test|virtual_payload_msvc_adaptive_test)$" 2>&1
-        $ctestExit = $LASTEXITCODE
+        $previousPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        try {
+            $ctestOutput = & ctest --test-dir $buildPath -C $Configuration --output-on-failure --no-tests=error -R "^reap_(msvc_link_contract_test|msvc_anchor_only_test|virtual_payload_msvc_adaptive_test)$" 2>&1
+            $ctestExit = $LASTEXITCODE
+        }
+        finally { $ErrorActionPreference = $previousPreference }
         foreach ($line in $ctestOutput) {
             $text = [string]$line
             $script:log.Add($text)
