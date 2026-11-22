@@ -12,6 +12,7 @@
 #include "deep2/GGUFLoader.hpp"
 #include "reap/ReapCanonicalIR.hpp"
 #include "reap/ReapGraphCompile.hpp"
+#include "reap/ReapOpSemantics.hpp"
 #include <cstdio>
 #include <cstdint>
 #include <string>
@@ -130,6 +131,41 @@ int main(int argc, char** argv) {
 
     // Physical tensors are never cloned by the visit schedule.
     expect(ir.tensors.size() == tensors.size(), "physical_tensors_not_cloned");
+
+    // R05/R06 op semantics: attention (MLA) + MoE routing per physical layer.
+    std::vector<reap::LayerSemantics> layers = reap::BuildAllLayerSemantics(ir);
+    expect(layers.size() == g.blockCount, "layer_semantics_count_matches_blocks");
+
+    bool kvOk = true, topkOk = true;
+    for (const auto& ls : layers) {
+        if (ls.kvHeads != static_cast<uint32_t>(g.attentionHeadCountKV)) kvOk = false;
+        if (ls.topK != static_cast<uint32_t>(g.expertUsedCount)) topkOk = false;
+    }
+    expect(kvOk, "kv_heads_from_metadata");
+    expect(topkOk, "topk_from_metadata");
+    expect(reap::CountRole(layers, reap::OpRole::AttnQ) > 0, "attention_present");
+    expect(reap::CountRole(layers, reap::OpRole::ExpertGate) > 0, "moe_experts_present");
+    if (!layers.empty())
+        expect(layers[0].kvCachePerToken ==
+                   static_cast<uint64_t>(layers[0].kvHeads) * layers[0].headDim,
+               "kv_cache_per_token_consistent");
+
+    std::printf("role_counts: attnQ=%llu attnK=%llu attnV=%llu attnOut=%llu "
+                "routerIn=%llu expertGate=%llu expertUp=%llu expertDown=%llu shared=%llu\n",
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::AttnQ),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::AttnK),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::AttnV),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::AttnOutput),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::RouterInput),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::ExpertGate),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::ExpertUp),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::ExpertDown),
+                (unsigned long long)reap::CountRole(layers, reap::OpRole::SharedExpert));
+    if (!layers.empty())
+        std::printf("layer0: kvHeads=%u headDim=%u kvCachePerToken=%llu topK=%u attnOps=%zu moeOps=%zu\n",
+                    layers[0].kvHeads, layers[0].headDim,
+                    (unsigned long long)layers[0].kvCachePerToken, layers[0].topK,
+                    layers[0].attention.size(), layers[0].moe.size());
 
     std::printf("FAIL_COUNT=%d\n", failures);
     std::printf("PROMOTE=0\n");
