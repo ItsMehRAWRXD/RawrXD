@@ -38,4 +38,17 @@ struct ReapMoETransformResult {
 // resulting shard set with GGUFLoader before publication.
 ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request);
 
+// Read-only inspection shares the physical writer's parser, metadata patch
+// and byte accounting. Feasibility does not authorize a rewrite.
+struct ReapMoEBudgetResult {
+    bool success = false;
+    std::string error;
+    uint64_t budgetBytes = 0, minimumBytes = 0, predictedBytes = 0;
+    uint64_t originalExperts = 0, topK = 0, groups = 0, groupsUsed = 0;
+    uint64_t maxRetained = 0;
+    std::vector<uint32_t> routedLayers;
+};
+ReapMoEBudgetResult inspectMoEGGUFBudget(const std::string& sourceFirstShard,
+                                      uint64_t budgetBytes);
+
 } // namespace Deep2
