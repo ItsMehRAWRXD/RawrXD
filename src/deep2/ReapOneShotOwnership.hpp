@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 
 namespace Deep2 { namespace Submit {
 
@@ -10,16 +11,13 @@ inline bool MayTeardownAfterIdle(int result) noexcept {
     return result == 0 || result == -4;
 }
 
-// One synchronous submission at a time. Writers are serialized by the
-// production API mutex; cleanup requires quiesced callers. The atomic flag
-// permits cheap rejection by staging/command acquisition paths. No heap
-// allocation is necessary on the post-submit failure path.
-//
-// S9.02: Acquire() returns a per-acquisition TICKET (epoch), not just a bool.
-// Complete() requires the matching ticket, so a stale completion from a
-// previous acquisition — even within the SAME reused device generation —
-// cannot release the current submission's resources. Generation equality
-// alone is insufficient; the ticket binds completion to the exact acquisition.
+// One synchronous submission at a time. H56/H57: Acquire/Complete/Drain are
+// serialized by an internal mutex so that ticket validation, the active-state
+// transition and resource transfer form ONE coherent transaction. A boolean
+// CAS alone would be vulnerable to an acquisition ABA race (a new Acquire
+// changing epoch_ between ticket validation and the claim). The mutex binds
+// acquisition identity, ownership state and resource ownership atomically.
+// Active() remains a lock-free read for cheap staging/command rejection.
 template<class Handles>
 class OneShotOwner {
 public:
@@ -27,7 +25,8 @@ public:
 
     // Returns a per-acquisition ticket (>0) or 0 on failure (already active).
     uint64_t Acquire(const Handles& handles, uint64_t generation) noexcept {
-        if (Active()) return 0;
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (active_.load(std::memory_order_relaxed)) return 0;
         handles_ = handles;
         generation_ = generation;
         epoch_ = ++nextEpoch_;   // unique per acquisition (S9.02)
@@ -36,46 +35,43 @@ public:
     }
 
     // The caller supplies the exact result of the current submission's wait
-    // AND the ticket returned by Acquire(). A stale ticket is rejected.
-    // H46/H52: the active->false transition is a compare_exchange, so exactly
-    // one caller can complete a given acquisition even under concurrent
-    // Complete() calls (exactly-once destruction).
+    // AND the ticket returned by Acquire(). Under the mutex, the ticket check
+    // and the ownership transfer are atomic with respect to Acquire (H56/H57).
     template<class Release>
     bool Complete(int result, uint64_t ticket, Release&& release) {
         if (result != 0) return false;
-        if (ticket != epoch_) return false;   // stale/wrong ticket (fast path)
-        bool expected = true;
-        if (!active_.compare_exchange_strong(expected, false,
-                std::memory_order_acq_rel))
-            return false;   // already completed by another caller
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!active_.load(std::memory_order_relaxed) || ticket != epoch_)
+            return false;   // stale/wrong ticket
         release(handles_);
         handles_ = {};
+        active_.store(false, std::memory_order_release);
         return true;
     }
 
-    // Teardown of the owning device, not an ordinary reuse boundary. Takes the
-    // ticket captured BEFORE the idle wait (H38/H39): if a new acquisition
-    // occurred after idle evidence was collected, the stale ticket no longer
-    // matches epoch_ and the drain is refused — a new submission is never
-    // reclaimed with stale idle evidence. Atomic claim (H52 exactly-once).
+    // Teardown of the owning device. Takes the ticket captured BEFORE the idle
+    // wait (H38/H39). Under the mutex, validation + transfer are atomic (H56).
     template<class Release>
     bool Drain(int idle, uint64_t ticket, Release&& release) {
         if (!MayTeardownAfterIdle(idle)) return false;
-        if (ticket != epoch_) return false;   // stale ticket -> refuse
-        bool expected = true;
-        if (!active_.compare_exchange_strong(expected, false,
-                std::memory_order_acq_rel))
-            return false;   // already drained by another caller
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!active_.load(std::memory_order_relaxed) || ticket != epoch_)
+            return false;   // stale ticket -> refuse
         release(handles_);
         handles_ = {};
+        active_.store(false, std::memory_order_release);
         return true;
     }
 
     // The current acquisition's ticket (0 if none). Capture BEFORE a device-idle
     // wait so a subsequent Drain() can detect a new acquisition (H39).
-    uint64_t CurrentTicket() const noexcept { return epoch_; }
+    uint64_t CurrentTicket() const noexcept {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return epoch_;
+    }
 
 private:
+    mutable std::mutex mutex_;   // serializes Acquire/Complete/Drain (H56/H57)
     Handles  handles_{};
     uint64_t generation_ = 0;
     uint64_t epoch_ = 0;        // current acquisition's ticket

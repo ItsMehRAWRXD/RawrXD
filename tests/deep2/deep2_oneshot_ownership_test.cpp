@@ -2,6 +2,7 @@
 #include <atomic>
 #include <cstdio>
 #include <thread>
+#include <vector>
 using namespace Deep2::Submit;
 struct Handles { int cmd=0, query=0, fence=0; };
 int main() {
@@ -90,6 +91,28 @@ int main() {
         thA.join(); thB.join();
         check(wins.load() == 1, "concurrent drain exactly one wins");
         check(releases == 1, "concurrent drain exactly one release");
+    }
+    // H60: mixed concurrent Acquire/Complete/Drain stress — exactly-once.
+    {
+        OneShotOwner<Handles> owner;
+        std::atomic<int> releases{0};
+        std::atomic<int> acquired{0};
+        auto reclaim = [&](const Handles&) { releases.fetch_add(1); };
+        std::vector<std::thread> threads;
+        for (int t = 0; t < 4; ++t) {
+            threads.emplace_back([&]{
+                for (int i = 0; i < 500; ++i) {
+                    const uint64_t ticket = owner.Acquire({i, i, i}, 1);
+                    if (!ticket) continue;
+                    acquired.fetch_add(1);
+                    if (i & 1) (void)owner.Complete(0, ticket, reclaim);
+                    else       (void)owner.Drain(0, ticket, reclaim);
+                }
+            });
+        }
+        for (auto& th : threads) th.join();
+        check(releases.load() == acquired.load(), "mixed stress exactly-once release");
+        check(!owner.Active(), "mixed stress ends inactive");
     }
     std::printf("PASS_COUNT=%d FAIL_COUNT=%d\n",pass,fail);
     return fail?1:0;
