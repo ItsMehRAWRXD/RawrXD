@@ -79,6 +79,9 @@ struct ToolResultMessage {
     std::string tool_name;
     std::string content;       // Result text (or error message)
     bool        success;
+    // G: authoritative acceptance verdict (from rawrxd::tools::Result).
+    bool        accepted = true;
+    std::string firstFailure;
 };
 
 // ---------------------------------------------------------------------------
@@ -419,7 +422,10 @@ inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
     rawrxd::tools::Result tool_result = m_registry->call(req, approve);
     m_motdAuthorization.NoteExecution(m_authorizationSession, m_authorizationTurn);
     result_msg.content = tool_result.ok ? tool_result.output : tool_result.error;
-    result_msg.success = tool_result.ok;
+    result_msg.accepted = (tool_result.acceptance == rawrxd::tools::Result::Acceptance::Accepted ||
+                           tool_result.acceptance == rawrxd::tools::Result::Acceptance::NotApplicable);
+    result_msg.firstFailure = tool_result.firstFailure;
+    result_msg.success = tool_result.ok && result_msg.accepted;
 
     if (m_journal) {
         const std::string detail = tool_result.ok
