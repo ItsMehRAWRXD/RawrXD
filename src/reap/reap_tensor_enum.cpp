@@ -6,6 +6,7 @@
 // shardId, fileOffset (absolute), tensorOffset (relative), family classification.
 #include "deep2/GGUFLoader.hpp"
 #include "reap/ReapAutoFitIR.hpp"
+#include "deep2/deep2_sha256.hpp"
 #include <cstdio>
 #include <cstdint>
 #include <string>
@@ -14,6 +15,10 @@
 #include <map>
 #include <set>
 #include <algorithm>
+#include <filesystem>
+#include <array>
+#include <sstream>
+#include <iomanip>
 
 struct TensorEntry {
     std::string name;
@@ -84,10 +89,34 @@ static uint64_t visitMultiplier(const std::string& architecture,
     return layer >= loopStart && layer <= loopEnd ? loopCount : 1;
 }
 
+static std::vector<std::filesystem::path> shardPaths(const std::filesystem::path& first) {
+    const std::string name = first.filename().string();
+    const size_t marker = name.find("-00001-of-");
+    if (marker == std::string::npos) return {first};
+    const size_t end = name.find(".gguf", marker);
+    if (end == std::string::npos) return {};
+    const std::string totalText = name.substr(marker + 10, end - marker - 10);
+    uint32_t total = 0;
+    try { total = static_cast<uint32_t>(std::stoul(totalText)); } catch (...) { return {}; }
+    if (total == 0 || total > 4096) return {};
+    std::vector<std::filesystem::path> out;
+    const std::string prefix = name.substr(0, marker);
+    for (uint32_t i = 1; i <= total; ++i) {
+        std::ostringstream s;
+        s << prefix << '-' << std::setw(5) << std::setfill('0') << i
+          << "-of-" << std::setw(5) << std::setfill('0') << total << ".gguf";
+        const auto path = first.parent_path() / s.str();
+        if (!std::filesystem::is_regular_file(path)) return {};
+        out.push_back(path);
+    }
+    return out;
+}
+
 int main(int argc, char** argv) {
     const char* path = argc > 1 ? argv[1] :
         "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf";
 
+    const bool hashShards = argc > 2 && std::string(argv[2]) == "--hash-shards";
     Deep2::GGUFLoader loader;
     if (!loader.load(path)) {
         std::cerr << "LOAD_FAILED: " << loader.error() << "\n";
@@ -123,6 +152,18 @@ int main(int argc, char** argv) {
     std::cout << "    \"loop_gate_rank\": " << archMeta("loop.gate_rank") << "\n";
     std::cout << "  },\n";
     std::cout << "  \"shard_count\": " << loader.shardCount() << ",\n";
+    std::cout << "  \"source_hash_scope\": \"" << (hashShards ? "all_shards_sha256" : "not_requested") << "\",\n";
+    std::cout << "  \"source_shards\": [";
+    const auto shards = shardPaths(std::filesystem::path(path));
+    for (size_t i = 0; i < shards.size(); ++i) {
+        if (i) std::cout << ',';
+        std::array<uint8_t, 32> digest{};
+        uint64_t bytes = 0;
+        const bool ok = !hashShards || deep2::sha256_file(shards[i].string(), digest, &bytes);
+        std::cout << "{\"path\":\"" << esc(shards[i].string()) << "\",\"bytes\":" << bytes
+                  << ",\"sha256\":\"" << (hashShards && ok ? deep2::hex32(digest) : "") << "\"}";
+    }
+    std::cout << "],\n";
     std::cout << "  \"total_logical_tensors\": " << loader.tensorCount() << ",\n";
     std::cout << "  \"ir_contract\": \"rawrxd.reap.autofit.ir.v1\",\n";
     std::cout << "  \"ir_semantics\": {\"physical_layer_identity\":true,\"visit_multiplier\":true,\"recurrent\":true,\"prunable\":true,\"dtype_accounting\":true},\n";
