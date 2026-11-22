@@ -5,6 +5,7 @@
 #include "deep2/ReapBoundedExpertCache.hpp"
 #include "deep2/ReapExpertPrefetch.hpp"
 #include "deep2/ReapVirtualPayload.hpp"
+#include "deep2/ReapSubmissionPins.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -168,6 +169,28 @@ int main(){
         check(!AcquireVirtualPayload(reader,cache,source,Precision::Q2,Q4Bytes-1,b),"virtual source budget rejected");
         const auto before=cache.Reserved();
         check(!AcquireVirtualPayload(reader,cache,{2,0,Q4Bytes},Precision::Q2,Q4Bytes,b)&&cache.Reserved()==before&&b->size()==2*Q4Bytes,"virtual read failure rollback");
+    }
+    {
+        BoundedExpertCache cache(8);
+        BoundedExpertCache::Lease lease;
+        auto fill=[](uint8_t* p,size_t n){std::fill(p,p+n,7);return true;};
+        SubmissionPins pins(2);
+        check(cache.Acquire("gpu",8,fill,lease),"submission pin fixture");
+        const auto t=pins.Retain(1,{lease});lease.reset();
+        check(t!=0&&!cache.Acquire("other",8,fill,lease),"submission pin prevents eviction");
+        check(!pins.Resolve(1,t,SubmissionPins::Outcome::WaitFailed)&&pins.Outstanding()==1,"failed wait retains pin");
+        check(!pins.Resolve(1,t,SubmissionPins::Outcome::DeviceLost),"device loss alone retains pin");
+        check(!pins.Resolve(2,t,SubmissionPins::Outcome::FenceComplete),"wrong generation rejected");
+        const auto mark=pins.Watermark();
+        check(cache.Acquire("gpu",8,fill,lease),"submission second lease");
+        const auto newer=pins.Retain(1,{lease});
+        check(newer!=0&&pins.Retain(1,{lease})==0,"submission capacity enforced");
+        lease.reset();
+        check(pins.ReclaimConfirmedIdle(1,mark)==1&&pins.Outstanding()==1,"idle watermark excludes newer ticket");
+        check(!cache.Acquire("other",8,fill,lease),"newer submission remains pinned");
+        check(pins.Resolve(1,newer,SubmissionPins::Outcome::FenceComplete)&&pins.Outstanding()==0,"completion releases pin");
+        check(!pins.Resolve(1,newer,SubmissionPins::Outcome::FenceComplete),"duplicate completion rejected");
+        check(cache.Acquire("other",8,fill,lease),"completed payload evictable");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
