@@ -3,6 +3,8 @@
 #include "deep2/ReapExportBudget.hpp"
 #include "deep2/ReapShardIdentity.hpp"
 #include "deep2/ReapQuantRange.hpp"
+#include "deep2/ReapTensorBounds.hpp"
+#include "deep2/QuantTypeTable.hpp"
 
 #include "deep2/GGUFLoader.hpp"
 #include <nlohmann/json.hpp>
@@ -194,38 +196,9 @@ uint64_t alignUp(uint64_t value, uint64_t alignment) {
 
 bool tensorGeometry(uint32_t type, const std::vector<uint64_t>& dims,
                     uint64_t& bytes) {
-    if (dims.empty()) return false;
-    uint64_t blockElems = 1, blockBytes = 0;
-    switch (type) {
-    case 0: blockBytes = 4; break; case 1: blockBytes = 2; break;
-    case 2: blockElems = 32; blockBytes = 18; break;
-    case 3: blockElems = 32; blockBytes = 20; break;
-    case 6: blockElems = 32; blockBytes = 22; break;
-    case 7: blockElems = 32; blockBytes = 24; break;
-    case 8: blockElems = 32; blockBytes = 34; break;
-    case 10: blockElems = 256; blockBytes = 84; break;
-    case 11: blockElems = 256; blockBytes = 110; break;
-    case 12: blockElems = 256; blockBytes = 144; break;
-    case 13: blockElems = 256; blockBytes = 176; break;
-    case 14: blockElems = 256; blockBytes = 210; break;
-    case 15: blockElems = 256; blockBytes = 292; break;
-    case 16: blockElems = 256; blockBytes = 66; break;
-    case 24: blockBytes = 1; break; case 25: blockBytes = 2; break;
-    case 26: blockBytes = 4; break; case 27: case 28: blockBytes = 8; break;
-    case 30: blockBytes = 2; break; case 40: blockElems = 64; blockBytes = 36; break;
-    default: return false;
-    }
-    uint64_t rows = 1;
-    for (size_t i = 1; i < dims.size(); ++i) {
-        if (!dims[i] || rows > std::numeric_limits<uint64_t>::max() / dims[i]) return false;
-        rows *= dims[i];
-    }
-    const uint64_t blocks = (dims[0] + blockElems - 1) / blockElems;
-    if (!blocks || blocks > std::numeric_limits<uint64_t>::max() / blockBytes) return false;
-    const uint64_t rowBytes = blocks * blockBytes;
-    if (rows > std::numeric_limits<uint64_t>::max() / rowBytes) return false;
-    bytes = rows * rowBytes;
-    return true;
+    const auto* descriptor=LookupQuantType(type);
+    return descriptor && descriptor->persistedGGUF &&
+        ReapBounds::ByteSize(dims,descriptor->blockElements,descriptor->blockBytes,bytes);
 }
 
 bool parseShard(const fs::path& path, ParsedShard& shard, std::string& error) {
@@ -270,7 +243,6 @@ bool parseShard(const fs::path& path, ParsedShard& shard, std::string& error) {
             !tensorGeometry(tensor.type, tensor.dims, tensor.bytes)) {
             error = "unsupported tensor geometry: " + tensor.name; return false;
         }
-        const uint64_t absolute = alignUp(0, 1); (void)absolute;
         shard.tensors.emplace_back(std::move(tensor));
     }
     const auto headerEnd = static_cast<uint64_t>(in.tellg());
@@ -278,11 +250,14 @@ bool parseShard(const fs::path& path, ParsedShard& shard, std::string& error) {
     if (!shard.dataStart || shard.dataStart > shard.fileBytes) {
         error = "invalid tensor data start in " + path.string(); return false;
     }
-    for (const auto& tensor : shard.tensors) {
-        if (tensor.offset > shard.fileBytes - shard.dataStart ||
-            tensor.bytes > shard.fileBytes - shard.dataStart - tensor.offset) {
-            error = "tensor exceeds shard bounds: " + tensor.name; return false;
-        }
+    std::vector<ReapBounds::Range> ranges;
+    ranges.reserve(shard.tensors.size());
+    for (const auto& tensor : shard.tensors)
+        ranges.push_back({tensor.offset,tensor.bytes});
+    if (!ReapBounds::ValidRanges(std::move(ranges),shard.fileBytes-shard.dataStart,
+                                 shard.alignment ? shard.alignment : 32)) {
+        error = "invalid, overlapping or misaligned tensor ranges: " + path.string();
+        return false;
     }
     shard.path = path;
     return true;
@@ -348,12 +323,7 @@ bool validateExpertTensorGeometry(const TensorDesc& tensor, uint32_t layer,
 }
 
 bool layerFromName(const std::string& name, uint32_t& layer) {
-    if (name.rfind("blk.", 0) != 0) return false;
-    const size_t begin = 4, end = name.find('.', begin);
-    if (end == std::string::npos || end == begin) return false;
-    try { layer = static_cast<uint32_t>(std::stoul(name.substr(begin, end - begin))); }
-    catch (...) { return false; }
-    return true;
+    return ReapBounds::LayerIndex(name,layer);
 }
 
 bool loadSelection(const std::string& path, uint32_t activeExperts,
@@ -574,8 +544,12 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
     // before writing a single output byte. A dense-only shard is legitimate.
     ReapBank::Contract bank;
     ReapExport::GroupFields groupFields;
+    std::unordered_set<std::string> sourceTensorNames;
     for (const auto& shard : shards) {
         for (const auto& tensor : shard.tensors) {
+            if (!sourceTensorNames.insert(tensor.name).second) {
+                result.error="duplicate source tensor name across checkpoint: "+tensor.name;return result;
+            }
             const bool expertTensor = isProjection(tensor.name, "gate") ||
                 isProjection(tensor.name, "up") || isProjection(tensor.name, "down") ||
                 tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
@@ -698,9 +672,13 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
             if (unsupported) {
                 result.error="unsupported expert tensor layout: "+tensor.name;return result;
             }
+            const auto* descriptor=LookupQuantType(tensor.type);
+            uint64_t sliceStride=0;
             if ((projection||router) && (!layerFromName(tensor.name,layer) ||
                 !sourceMoeLayers.count(layer) || tensor.dims.empty() ||
-                tensor.dims.back()!=bank.original || tensor.bytes%bank.original ||
+                tensor.dims.back()!=bank.original || !descriptor ||
+                !ReapBounds::SliceStride(tensor.dims,descriptor->blockElements,
+                    descriptor->blockBytes,tensor.bytes,sliceStride) ||
                 (!inspection && !validateExpertTensorGeometry(tensor,layer,selection,result.error)))) {
                 if(result.error.empty())result.error="invalid expert tensor layer";
                 return result;
