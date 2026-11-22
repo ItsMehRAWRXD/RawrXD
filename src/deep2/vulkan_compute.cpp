@@ -7311,7 +7311,24 @@ bool VulkanCompute::DownloadVerifiedHidden(
         verifiedHidden_,dst,(size_t)hiddenWidth*sizeof(float));
 }
 void VulkanCompute::cleanup() {
-    if (device_) vkDeviceWaitIdle(device_);
+    // TERMINAL DEVICE-LOSS TEARDOWN: a permanently lost device may never
+    // return VK_SUCCESS from vkDeviceWaitIdle(), so waiting on it here can
+    // block forever and deadlock recovery/shutdown. When the device is known
+    // lost (DeviceIsLost / lostSeq_.lost), skip the idle wait entirely and
+    // proceed straight to resource destruction — the driver has already torn
+    // the device down, so the destroy/free calls are safe no-ops that reclaim
+    // our bookkeeping without GPU completion.
+    if (device_ && !DeviceIsLost()) {
+        const VkResult idleRes = vkDeviceWaitIdle(device_);
+        if (idleRes != VK_SUCCESS) {
+            // Idle wait failed (timeout/device lost mid-teardown): treat as
+            // terminal loss and do not block further.
+            std::fprintf(stderr,
+                "[GPU] cleanup vkDeviceWaitIdle vk=%d -> terminal teardown\n",
+                static_cast<int>(idleRes));
+            std::fflush(stderr);
+        }
+    }
     ResetDownloadRing();
     ResetAsyncCmdRing();
 

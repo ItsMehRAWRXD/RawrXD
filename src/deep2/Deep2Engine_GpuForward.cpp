@@ -772,17 +772,41 @@ bool Deep2Engine::forwardGpuContiguousRange(
     // turning one token into N queue fences.  The device-resident operands and
     // per-dispatch barriers already provide ordering within a recording, so a
     // single terminal fence is both safe and substantially cheaper.
-    if (!gpu->BeginFusedLayer()) {
-        gpuForwardTrace("reject: contiguousRange BeginFusedLayer");
-        return false;
-    }
-    for (uint32_t layer = lo; layer <= hi; ++layer) {
-        if (!forwardLayerGpuResident(layer, slot, false, false, false)) {
-            (void)gpu->EndFusedLayer();
+    //
+    // RAWRXD_GPU_UNFUSED=1 restores the pre-batching behaviour (one command
+    // buffer per layer, each with its own fence).  It exists as a correctness
+    // bisect for the fused recording: if a fused token diverges from the same
+    // token recorded layer-by-layer, the missing/incorrect barrier is in the
+    // fused path rather than in the layer kernels.
+    // FUSED DISPATCH IS OPT-IN. The fused single-command-buffer recording
+    // (all layers, one fence) was observed to race on shared arena buffers
+    // (ArenaQ/K/V, residual): the per-dispatch barriers do NOT fully order
+    // dependent dispatches, producing divergent tokens AND a GPU device loss
+    // that resets the host (Kernel-Power 41). Until the barrier scope is
+    // corrected and validated with Vulkan validation layers, the safe
+    // per-layer-fence path is the default. Set RAWRXD_GPU_FUSED=1 to opt in
+    // to the (currently unsafe) fused recording for the correctness bisect.
+    static const bool unfused = [] {
+        const char* f = std::getenv("RAWRXD_GPU_FUSED");
+        const bool fusedOptIn = f && f[0] == '1' && f[1] == '\0';
+        if (fusedOptIn) return false;          // explicit opt-in -> fused
+        const char* v = std::getenv("RAWRXD_GPU_UNFUSED");
+        if (v && v[0] == '1' && v[1] == '\0') return true;
+        return true;                            // default: safe unfused path
+    }();
+    if (!unfused) {
+        if (!gpu->BeginFusedLayer()) {
+            gpuForwardTrace("reject: contiguousRange BeginFusedLayer");
             return false;
         }
     }
-    if (!gpu->EndFusedLayer()) {
+    for (uint32_t layer = lo; layer <= hi; ++layer) {
+        if (!forwardLayerGpuResident(layer, slot, false, false, unfused)) {
+            if (!unfused) (void)gpu->EndFusedLayer();
+            return false;
+        }
+    }
+    if (!unfused && !gpu->EndFusedLayer()) {
         gpuForwardTrace("reject: contiguousRange EndFusedLayer");
         return false;
     }
