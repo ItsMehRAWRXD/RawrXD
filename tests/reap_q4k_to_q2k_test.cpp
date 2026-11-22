@@ -12,6 +12,8 @@
 #include "deep2/ReapMlaReference.hpp"
 #include "deep2/ReapLocalRequest.hpp"
 #include "deep2/ReapAgentGroup.hpp"
+#include "deep2/ReapFairDispatch.hpp"
+#include "deep2/ReapDemandHistory.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -345,6 +347,23 @@ int main(){
         check(!RunAgentGroup(model,budget,amounts,3,5,cancels,factory,consumer,reports),"agent concurrency limit");
         cancels[1]=cancels[0];
         check(!RunAgentGroup(model,budget,amounts,3,6,cancels,factory,consumer,reports),"agent duplicate cancellation rejected");
+    }
+    {
+        FairDispatch queue(4,2);
+        const auto a=queue.Submit(1),b=queue.Submit(1),c=queue.Submit(2),d=queue.Submit(3);
+        check(a&&b&&c&&d&&!queue.Submit(4),"dispatch bounded admission");
+        FairDispatch::Job job;
+        check(queue.Pop(job)&&job.ticket==a,"dispatch first agent");
+        check(!queue.Submit(0),"dispatch invalid agent");
+        check(queue.Pop(job)&&job.ticket==c,"dispatch round robin second agent");
+        check(queue.CancelQueued(3)==1&&queue.Pending()==1,"dispatch queued cancellation");
+        queue.Close();
+        check(!queue.Submit(2)&&queue.Pop(job)&&job.ticket==b&&!queue.Pop(job),"dispatch close drains admitted work");
+        DemandHistory history(4,0.5);
+        check(history.Predict(2).empty(),"predictor cold start");
+        check(history.Observe({0,1})&&history.Predict(2)==std::vector<uint32_t>({0,1}),"predictor deterministic tie");
+        check(history.Observe({2})&&history.Predict(2)==std::vector<uint32_t>({2,0}),"predictor recency");
+        check(!history.Observe({2,2})&&!history.Observe({4})&&history.Predict(2)==std::vector<uint32_t>({2,0}),"predictor invalid observation transactional");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
