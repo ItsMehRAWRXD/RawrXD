@@ -1,5 +1,5 @@
 #pragma once
-// Legacy routing-weight accumulator state, not activation-output saliency.
+// Versioned calibration state; caller selects a distinct schema for each metric.
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
@@ -17,6 +17,7 @@ struct Identity {
     std::string model, config;
     uint32_t layers=0, experts=0, topK=0;
     std::vector<std::string> prompts;
+    std::string schema="RAWRXD_REAP_ROUTING_STATE_002";
 };
 struct Metric { uint32_t layer=0, expert=0; uint64_t count=0; double activation=0, weight=0; };
 struct State { uint64_t observations=0; std::vector<uint64_t> completed; std::vector<Metric> metrics; };
@@ -35,7 +36,7 @@ inline bool valid(const Identity& id,const State& s) {
 inline bool Write(std::ostream& o,const Identity& id,const State& s){
     if(!valid(id,s))return false;
     o.imbue(std::locale::classic());o<<std::setprecision(std::numeric_limits<double>::max_digits10);
-    o<<"RAWRXD_REAP_ROUTING_STATE_002\n"<<std::quoted(id.model)<<'\n'<<std::quoted(id.config)<<'\n'<<id.layers<<' '<<id.experts<<' '<<id.topK<<' '<<id.prompts.size()<<'\n';
+    o<<id.schema<<'\n'<<std::quoted(id.model)<<'\n'<<std::quoted(id.config)<<'\n'<<id.layers<<' '<<id.experts<<' '<<id.topK<<' '<<id.prompts.size()<<'\n';
     for(size_t i=0;i<id.prompts.size();++i)o<<std::quoted(id.prompts[i])<<' '<<s.completed[i]<<'\n';
     o<<s.observations<<' '<<s.metrics.size()<<'\n';
     for(const auto& m:s.metrics)o<<m.layer<<' '<<m.expert<<' '<<m.count<<' '<<m.activation<<' '<<m.weight<<'\n';
@@ -43,7 +44,7 @@ inline bool Write(std::ostream& o,const Identity& id,const State& s){
 }
 inline bool Read(std::istream& in,const Identity& id,State& result){
     in.imbue(std::locale::classic());std::string schema,model,config,prompt;uint32_t layers=0,experts=0,top=0;size_t n=0;
-    if(!(in>>schema>>std::quoted(model)>>std::quoted(config)>>layers>>experts>>top>>n)||schema!="RAWRXD_REAP_ROUTING_STATE_002"||model!=id.model||config!=id.config||layers!=id.layers||experts!=id.experts||top!=id.topK||n!=id.prompts.size())return false;
+    if(!(in>>schema>>std::quoted(model)>>std::quoted(config)>>layers>>experts>>top>>n)||schema!=id.schema||model!=id.model||config!=id.config||layers!=id.layers||experts!=id.experts||top!=id.topK||n!=id.prompts.size())return false;
     State s;s.completed.resize(n);
     for(size_t i=0;i<n;++i)if(!(in>>std::quoted(prompt)>>s.completed[i])||prompt!=id.prompts[i])return false;
     uint64_t rows=0;if(!(in>>s.observations>>rows)||rows>uint64_t(layers)*experts||rows>10000000)return false;
