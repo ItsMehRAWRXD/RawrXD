@@ -6,8 +6,14 @@
 #include <cstddef>
 #include <limits>
 
-#if defined(__AVX2__)
+#if defined(__AVX2__) || ((defined(__GNUC__) || defined(__clang__)) && (defined(__x86_64__) || defined(__i386__)))
 #include <immintrin.h>
+#define RAWRXD_REAP_HAS_AVX2_KERNEL 1
+#endif
+#if defined(RAWRXD_REAP_HAS_AVX2_KERNEL) && (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER)
+#define RAWRXD_REAP_AVX2_TARGET __attribute__((target("avx2"),noinline))
+#else
+#define RAWRXD_REAP_AVX2_TARGET
 #endif
 
 namespace Deep2 { namespace ReapQuant {
@@ -101,11 +107,11 @@ inline bool Convert(const Q4Block& source,Q2Block& target,Error& error) noexcept
     target=next;error=e;return true;
 }
 
-#if defined(__AVX2__)
+#if defined(RAWRXD_REAP_HAS_AVX2_KERNEL)
 // AVX2 reference-equivalent decode for the packed Q4_K layout.  The scalar
 // decoder remains the numerical reference; this path is intentionally kept
 // beside it so parity can be tested on the exact same block bytes.
-inline bool DecodeQ4AVX2(const Q4Block& b,Values& out) noexcept {
+RAWRXD_REAP_AVX2_TARGET inline bool DecodeQ4AVX2(const Q4Block& b,Values& out) noexcept {
     const float d=Half(LoadHalf(b.data())),m=Half(LoadHalf(b.data()+2));
     if(!std::isfinite(d)||!std::isfinite(m))return false;
     const __m256i mask=_mm256_set1_epi32(0x0f);
@@ -126,7 +132,7 @@ inline bool DecodeQ4AVX2(const Q4Block& b,Values& out) noexcept {
     return true;
 }
 
-inline bool ConvertAVX2(const Q4Block& source,Q2Block& target,Error& error) noexcept {
+RAWRXD_REAP_AVX2_TARGET inline bool ConvertAVX2(const Q4Block& source,Q2Block& target,Error& error) noexcept {
     Values before{},after{};Q2Block next{};
     if(!DecodeQ4AVX2(source,before)||!EncodeQ2(before,next)||!DecodeQ2(next,after))return false;
     Error e;
@@ -134,6 +140,23 @@ inline bool ConvertAVX2(const Q4Block& source,Q2Block& target,Error& error) noex
     target=next;error=e;return true;
 }
 #endif
+
+// Baseline callers may select the isolated accelerated kernel on GNU x86.
+inline bool AdaptiveAvx2Available() noexcept {
+#if defined(RAWRXD_REAP_HAS_AVX2_KERNEL) && (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER)
+    return __builtin_cpu_supports("avx2") != 0;
+#else
+    return false;
+#endif
+}
+inline bool ConvertAdaptive(const Q4Block& source,Q2Block& target,Error& error) noexcept {
+#if defined(RAWRXD_REAP_HAS_AVX2_KERNEL)
+    if(AdaptiveAvx2Available())return ConvertAVX2(source,target,error);
+#endif
+    return Convert(source,target,error);
+}
+#undef RAWRXD_REAP_AVX2_TARGET
+#undef RAWRXD_REAP_HAS_AVX2_KERNEL
 
 // GGUF Q3_K: 32 high-mask bytes, 64 low-plane bytes,
  // 12 packed signed six-bit scales, and one binary16 multiplier.
