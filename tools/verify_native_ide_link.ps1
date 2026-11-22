@@ -50,8 +50,9 @@ try {
     $exeInfo = Get-Item -LiteralPath $executable[0]
     if ($exeInfo.Length -lt 1024) { throw "Native IDE executable is unexpectedly small" }
     # NTFS write timestamps may have coarse resolution. Allow two seconds
-    # while rejecting executables from earlier builds.
-    if ($exeInfo.LastWriteTimeUtc -lt $linkStartUtc.AddSeconds(-2)) {
+    # while rejecting executables from earlier builds in clean mode.
+    # Incremental builds may correctly reuse an unchanged binary.
+    if ($CleanBuild -and $exeInfo.LastWriteTimeUtc -lt $linkStartUtc.AddSeconds(-2)) {
         throw "Native IDE executable is stale: no newly linked binary was produced"
     }
     $script:log.Add("NATIVE_IDE_EXECUTABLE_BYTES=$($exeInfo.Length)")
