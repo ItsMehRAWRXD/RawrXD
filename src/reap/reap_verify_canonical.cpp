@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -167,6 +168,24 @@ int main(int argc, char** argv) {
         expect(layers[0].kvCachePerToken ==
                    static_cast<uint64_t>(layers[0].kvHeads) * layers[0].headDim,
                "kv_cache_per_token_consistent");
+
+    // R07 structural precondition: every physical tensor must be referenced by
+    // the compiled plan (preamble / visits / epilogue) — no orphaned weights.
+    std::set<uint32_t> referenced;
+    for (const auto& op : plan.preamble) referenced.insert(op.physicalTensorIndex);
+    for (const auto& vp : plan.visits)
+        for (const auto& op : vp.ops) referenced.insert(op.physicalTensorIndex);
+    for (const auto& op : plan.epilogue) referenced.insert(op.physicalTensorIndex);
+    uint64_t covered = 0, uncovered = 0;
+    for (size_t i = 0; i < tensors.size(); ++i) {
+        if (referenced.count(static_cast<uint32_t>(i))) ++covered;
+        else { ++uncovered; if (uncovered <= 8) std::printf("  UNCOVERED: %s (%s)\n", tensors[i].name.c_str(), tensors[i].family.c_str()); }
+    }
+    std::printf("coverage: covered=%llu uncovered=%llu total=%llu\n",
+                static_cast<unsigned long long>(covered),
+                static_cast<unsigned long long>(uncovered),
+                static_cast<unsigned long long>(tensors.size()));
+    expect(uncovered == 0, "r07_all_tensors_referenced_by_plan");
 
     std::printf("role_counts: attnQ=%llu attnK=%llu attnV=%llu attnOut=%llu "
                 "routerIn=%llu expertGate=%llu expertUp=%llu expertDown=%llu shared=%llu\n",

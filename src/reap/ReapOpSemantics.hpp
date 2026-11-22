@@ -73,7 +73,7 @@ inline LayerSemantics BuildLayerSemantics(const CanonicalIR& ir, uint32_t physic
         op.physicalTensorIndex = static_cast<uint32_t>(i);
         switch (op.role) {
             case OpRole::AttnQ: case OpRole::AttnK: case OpRole::AttnV:
-            case OpRole::AttnOutput: case OpRole::AttnNorm:
+            case OpRole::AttnOutput: case OpRole::AttnNorm: case OpRole::FfnNorm:
                 ls.attention.push_back(op); break;
             case OpRole::RouterInput: case OpRole::RouterBias:
             case OpRole::ExpertGate: case OpRole::ExpertUp:

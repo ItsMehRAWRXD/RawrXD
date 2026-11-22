@@ -54,11 +54,12 @@ inline ExecutionPlan CompileGraph(const CanonicalIR& ir) {
     for (const auto& t : ir.tensors)
         plan.physicalParamCount += TensorParamCount(t);
 
-    // Global tensors: embedding preamble, output head epilogue.
+    // Global tensors: embedding preamble, output head + output norm epilogue.
     for (size_t i = 0; i < ir.tensors.size(); ++i) {
         const auto& t = ir.tensors[i];
-        if (t.family == "embedding")        plan.preamble.push_back({(uint32_t)i, "embedding"});
-        else if (t.family == "output_head") plan.epilogue.push_back({(uint32_t)i, "output_head"});
+        if (t.family == "embedding")             plan.preamble.push_back({(uint32_t)i, "embedding"});
+        else if (t.family == "output_head")      plan.epilogue.push_back({(uint32_t)i, "output_head"});
+        else if (t.family == "output_norm")      plan.epilogue.push_back({(uint32_t)i, "output_norm"});
     }
 
     // Per-visit ops: tensors whose physical layer == visit.physicalLayer.
