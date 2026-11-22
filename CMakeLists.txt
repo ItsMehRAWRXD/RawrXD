@@ -4733,6 +4733,25 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_lostseq_failure_injec
     add_test(NAME deep2_lostseq_failure_injection COMMAND deep2_lostseq_failure_injection)
 endif()
 
+# Centralized submission-completion decision (ReapSubmissionCompletion.hpp) —
+# CPU-only certification of the reclaim/retain/terminal-teardown contract.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_submission_completion_test.cpp")
+    add_executable(deep2_submission_completion_test
+        tests/deep2/deep2_submission_completion_test.cpp)
+    target_include_directories(deep2_submission_completion_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(deep2_submission_completion_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(deep2_submission_completion_test PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(deep2_submission_completion_test PRIVATE -Wall -Wextra)
+    endif()
+    set_target_properties(deep2_submission_completion_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME deep2_submission_completion_test COMMAND deep2_submission_completion_test)
+endif()
+
 # REAP-AutoFit R02: canonical IR (physical tensors vs logical execution visits).
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_canonical_ir_test.cpp")
     add_executable(reap_canonical_ir_test

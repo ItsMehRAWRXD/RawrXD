@@ -4,6 +4,7 @@
 #include "vulkan_compute.h"
 #include "QuantKernelRegistry.hpp"
 #include "quant_dot_dispatch.hpp"
+#include "ReapSubmissionCompletion.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -1578,25 +1579,23 @@ bool VulkanCompute::endSubmitWait(
                                                          : "fence");
     }
 
-    // COMPLETION-BACKED QUARANTINE: only reclaim the fence/query/command
-    // buffer once the GPU has CONFIRMED completion (wait == VK_SUCCESS).
-    // On VK_TIMEOUT or VK_ERROR_DEVICE_LOST the submission may still be
-    // in-flight on the GPU; destroying the fence/query/command buffer here
-    // would free resources the GPU is still referencing — the exact
+    // COMPLETION-BACKED QUARANTINE (centralized contract, see
+    // ReapSubmissionCompletion.hpp). Only reclaim the fence/query/command
+    // buffer once the GPU has CONFIRMED completion. On timeout/device-lost the
+    // submission may still be in-flight; freeing those resources is the
     // premature-reclamation defect class that caused repeated TDRs. Retain
-    // them (leak-safe containment) and let terminal device-loss teardown
-    // (cleanup / RecoverDeviceIfOptIn) reclaim them after the device is
-    // confirmed idle or lost. This is the centralized completion contract:
-    // no in-flight resource is freed before its completion is confirmed.
-    if (wait == VK_SUCCESS) {
+    // them (leak-safe) and let terminal teardown reclaim after idle/lost.
+    const Deep2::Submit::Completion completion =
+        Deep2::Submit::Classify(static_cast<int>(wait), /*submitted=*/true);
+    if (Deep2::Submit::MayReclaim(completion)) {
         vkDestroyFence(device_, fence, nullptr);
         if (query) vkDestroyQueryPool(device_, query, nullptr);
         vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
     } else {
         std::fprintf(stderr,
                      "[GPU] endSubmitWait QUARANTINE retained in-flight resources "
-                     "vk=%d (no free before confirmed completion)\n",
-                     static_cast<int>(wait));
+                     "vk=%d decision=%d (no free before confirmed completion)\n",
+                     static_cast<int>(wait), static_cast<int>(completion));
         std::fflush(stderr);
         // Intentionally leak the fence/query/command buffer. They are reclaimed
         // by the terminal device-loss teardown path once the device is idle or
