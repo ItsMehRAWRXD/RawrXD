@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <cstring>
 #include <filesystem>
@@ -754,6 +755,12 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         result.error = "output directory could not be created";
         return result;
     }
+    const auto txnId = std::chrono::steady_clock::now().time_since_epoch().count();
+    const fs::path stagingDir = outputDir / (".reap-txn-" + std::to_string(txnId));
+    if (!fs::create_directory(stagingDir, ec) || ec) {
+        result.error = "transaction staging directory could not be created";
+        return result;
+    }
     OutputCleanup cleanup{outputDir, true, !outputExisted};
 
     for (size_t shardIndex = 0; shardIndex < shards.size(); ++shardIndex) {
@@ -796,7 +803,7 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         patchMetadata(metadata, bank.original, request.activeExperts,
                       static_cast<uint32_t>(shardIndex), shardCount,
                       static_cast<uint32_t>(routerGeometry.groups));
-        const fs::path outputPath = outputDir / shard.path.filename();
+        const fs::path outputPath = stagingDir / shard.path.filename();
         cleanup.files.push_back(outputPath);
         std::ofstream out(outputPath, std::ios::binary | std::ios::trunc);
         if (!out) { result.error = "output shard open failed: " + outputPath.string(); return result; }
@@ -906,9 +913,9 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         return result;
     }
 
-    const fs::path outputFirst = outputDir / paths.front().filename();
+    const fs::path stagedFirst = stagingDir / paths.front().filename();
     GGUFLoader verify;
-    if (!verify.load(outputFirst.string())) {
+    if (!verify.load(stagedFirst.string())) {
         result.error = "rewritten GGUF reload failed: " + verify.error();
         return result;
     }
@@ -916,8 +923,39 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         result.error = "rewritten GGUF inventory mismatch";
         return result;
     }
+
+    // Publish only after every shard has been serialized and the staged
+    // checkpoint reloads successfully. Rename is the commit boundary; if any
+    // publication fails, remove only files published by this transaction.
+    std::vector<fs::path> published;
+    for (const auto& path : paths) {
+        const fs::path staged = stagingDir / path.filename();
+        const fs::path final = outputDir / path.filename();
+        ec.clear();
+        const bool destinationExists = fs::exists(final, ec);
+        if (ec || destinationExists) {
+            for (const auto& done : published) {
+                std::error_code rollbackError;
+                fs::remove(done, rollbackError);
+            }
+            result.error = "transactional shard publication failed: " + final.string();
+            return result;
+        }
+        ec.clear();
+        fs::rename(staged, final, ec);
+        if (ec) {
+            for (const auto& done : published) {
+                std::error_code rollbackError;
+                fs::remove(done, rollbackError);
+            }
+            result.error = "transactional shard publication failed: " + final.string();
+            return result;
+        }
+        published.push_back(final);
+    }
+    cleanup.active = false;
     result.success = true;
-    result.outputFirstShard = outputFirst.string();
+    result.outputFirstShard = (outputDir / paths.front().filename()).string();
     result.sourceShardCount = shardCount;
     result.outputShardCount = verify.shardCount();
     cleanup.active = false;
