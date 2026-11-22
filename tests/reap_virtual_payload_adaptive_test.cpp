@@ -76,6 +76,7 @@ int main(){
     // their model identities are part of the key.
     BoundedExpertCache shared(3*blocks*Q2Bytes);
     MemoryReader secondModel=reader;
+    secondModel.reads=0;
     // Change packed quant values while preserving the same geometry.
     for(unsigned n=0;n<blocks;++n)
         secondModel.data[n*Q4Bytes+16]^=0x0fu;
