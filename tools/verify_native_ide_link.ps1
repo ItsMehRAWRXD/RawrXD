@@ -23,9 +23,9 @@ function Invoke-CertCommand([string[]]$Arguments) {
 }
 $certified = $false
 try {
-    Invoke-CertCommand @("-S", $root, "-B", $buildPath, "-G", $Generator,
+    Invoke-CertCommand -Arguments @("-S", $root, "-B", $buildPath, "-G", $Generator,
         "-A", "x64", "-DRAWRXD_REQUIRE_NATIVE_IDE_LINK=ON")
-    Invoke-CertCommand @("--build", $buildPath, "--config", $Configuration,
+    Invoke-CertCommand -Arguments @("--build", $buildPath, "--config", $Configuration,
         "--target", "RawrXD-Win32IDE-Native", "--parallel", "2")
     $unresolved = @($log | Where-Object { $_ -match 'LNK(?:2001|2019|1120)\b|unresolved external symbol' })
     if ($unresolved.Count -gt 0) { throw "Unresolved external(s) found in native IDE build output" }
@@ -33,7 +33,7 @@ try {
 }
 catch {
     $log.Add("CERTIFICATION_FAILED: $($_.Exception.Message)")
-    Write-Error $_.Exception.Message
+    Write-Host "CERTIFICATION_FAILED: $($_.Exception.Message)"
 }
 finally {
     $log.Add("NATIVE_IDE_LINK_CERTIFIED=$([int]$certified)")
