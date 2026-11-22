@@ -3986,7 +3986,12 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     {
         double ss = 0.0;
         for (size_t i = 0; i < lora; ++i) ss += double(latentFull[i]) * double(latentFull[i]);
-        const float scale = 1.0f / std::sqrt(float(ss / double(lora)) + 1e-6f);
+        // Use the model's OWN rms_norm_eps (llama.cpp: hparams.f_norm_rms_eps),
+        // not a hardcoded constant. DeepSeek/GLM ship 1e-6 while other families
+        // ship 1e-5; hardcoding either silently mis-normalises the KV latent and
+        // corrupts every attention block while all shape checks still pass.
+        const float rmsEps = static_cast<float>(spec_.rms_eps);
+        const float scale = 1.0f / std::sqrt(float(ss / double(lora)) + rmsEps);
         for (size_t i = 0; i < lora; ++i)
             latent[i] = latentFull[i] * (i < nw.size() ? nw[i] : 1.0f) * scale;
     }
