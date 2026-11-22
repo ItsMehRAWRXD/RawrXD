@@ -54,6 +54,35 @@ int main(){
     std::ostringstream closed;closed.setstate(std::ios::badbit);check(!ConvertRange(input,closed,Q4Bytes,stats)&&stats.blocks==saved.blocks,"write failure retains prior stats");
     StoreHalf(source.data(),0x7c00);std::string invalid(reinterpret_cast<const char*>(source.data()),source.size());
     std::istringstream nonfinite(invalid);check(!ConvertRange(nonfinite,bad,Q4Bytes,stats)&&stats.blocks==saved.blocks,"invalid block rejected");
+    // A truncated second batch may leave staged bytes, but must never commit
+    // aggregate evidence. The caller must discard staged output on failure.
+    std::string truncated=many;
+    truncated.resize(256*Q4Bytes+Q4Bytes/2);
+    std::istringstream secondBatchShort(truncated);
+    std::ostringstream staged;
+    RangeStats prior;
+    prior.blocks=7;prior.squared=1.25;prior.signal=9.5;prior.maxAbs=0.75;
+    const RangeStats priorCopy=prior;
+    check(!ConvertRange(secondBatchShort,staged,257*Q4Bytes,prior) &&
+          staged.str().size()==256*Q2Bytes &&
+          prior.blocks==priorCopy.blocks &&
+          prior.squared==priorCopy.squared &&
+          prior.signal==priorCopy.signal &&
+          prior.maxAbs==priorCopy.maxAbs,
+          "second batch truncated: staging retained but stats atomic");
+    std::istringstream validForOverflow(raw);
+    std::ostringstream noOverflowOutput;
+    RangeStats overflow;
+    overflow.blocks=UINT64_MAX;
+    check(!ConvertRange(validForOverflow,noOverflowOutput,Q4Bytes,overflow) &&
+          overflow.blocks==UINT64_MAX&&noOverflowOutput.str().empty(),
+          "block count overflow rejected before output");
+    std::istringstream validForZero(raw);
+    std::ostringstream noZeroOutput;
+    RangeStats zeroStats;
+    check(!ConvertRange(validForZero,noZeroOutput,0,zeroStats)&&
+          noZeroOutput.str().empty()&&zeroStats.blocks==0,
+          "zero-byte range rejected");
     // Reject malformed cumulative quality evidence before any bytes are read.
     for(unsigned field=0;field<3;++field) {
         for(unsigned mode=0;mode<3;++mode) {
