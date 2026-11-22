@@ -40,13 +40,17 @@ inline bool PositiveHalf(double x,uint16_t& h) noexcept {
     if(bits>=0x7c00u)return false;
     h=static_cast<uint16_t>(bits);return true;
 }
+// Shared GGUF scale/min unpacking. Both backends use identical byte geometry.
+inline void Q4ScaleMin(const uint8_t* s,unsigned g,unsigned& sc,unsigned& mn) noexcept {
+    sc=g<4?s[g]&63u:(s[g+4]&15u)|((s[g-4]>>6)<<4);
+    mn=g<4?s[g+4]&63u:(s[g+4]>>4)|((s[g]>>6)<<4);
+}
 inline bool DecodeQ4(const Q4Block& b,Values& out) noexcept {
     const float d=Half(LoadHalf(b.data())),m=Half(LoadHalf(b.data()+2));
     if(!std::isfinite(d)||!std::isfinite(m))return false;
     const auto* s=b.data()+4;
     for(unsigned g=0;g<8;++g){
-        const unsigned sc=g<4?s[g]&63u:(s[g+4]&15u)|((s[g-4]>>6)<<4);
-        const unsigned mn=g<4?s[g+4]&63u:(s[g+4]>>4)|((s[g]>>6)<<4);
+        unsigned sc=0,mn=0; Q4ScaleMin(s,g,sc,mn);
         for(unsigned i=0;i<32;++i){
             const unsigned q=(b[16+(g/2)*32+i]>>(4*(g%2)))&15u;
             out[32*g+i]=d*sc*q-m*mn;
@@ -107,8 +111,7 @@ inline bool DecodeQ4AVX2(const Q4Block& b,Values& out) noexcept {
     const __m256i mask=_mm256_set1_epi32(0x0f);
     for(unsigned g=0;g<8;++g){
         const auto* packed=b.data()+16+(g/2)*32;
-        const unsigned sc=g<4?(b[4+g]&63u):(b[8+g]&15u)|((b[4+g-4]>>6)<<4);
-        const unsigned mn=g<4?(b[8+g]&63u):(b[8+g]>>4)|((b[4+g]>>6)<<4);
+        unsigned sc=0,mn=0; Q4ScaleMin(b.data()+4,g,sc,mn);
         const __m256 scale=_mm256_set1_ps(d*float(sc));
         const __m256 minimum=_mm256_set1_ps(m*float(mn));
         for(unsigned half=0;half<4;++half){
