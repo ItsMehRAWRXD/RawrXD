@@ -3714,6 +3714,76 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     }
     dumpMoe("down", dyAll.data(), dyAll.size());
 
+    // ---- MOE_EXPERT_ORACLE (DEEP2_MOE_ORACLE=1) ---------------------------
+    // Independent scalar FP64 reference for the FIRST selected expert, derived
+    // from the same GGUF weights through DequantPrefix — a separate dequant path
+    // from the production quant-dot kernels. It reports per-stage agreement so
+    // the first divergent stage (SwiGLU product / down projection) is identified
+    // by measurement rather than inferred.
+    if (std::getenv("DEEP2_MOE_ORACLE") && nSel > 0 &&
+        (size_t)ids[0] < usableE && !hAll.empty() && !dyAll.empty()) {
+        const size_t e0 = (size_t)ids[0];
+        auto expertView = [](const TensorRec& t, size_t e) {
+            TensorRec v = t;
+            const size_t heads = (t.dims.size() == 3) ? (size_t)t.dims[2] : 1;
+            const size_t per = heads ? (t.bytes / heads) : t.bytes;
+            v.data = t.data + e * per;
+            v.bytes = per;
+            return v;
+        };
+        std::vector<float> gW, uW, dW;
+        DequantPrefix(expertView(*gateT, e0), gW, elemStrideG);
+        DequantPrefix(expertView(*upT, e0), uW, elemStrideU);
+        DequantPrefix(expertView(*downT, e0), dW, elemStrideD);
+        if (gW.size() >= elemStrideG && uW.size() >= elemStrideU &&
+            dW.size() >= elemStrideD && x.size() >= gIn &&
+            hAll.size() >= ffn && dyAll.size() >= embd) {
+            std::vector<double> gv(glen, 0.0), uv(ulen, 0.0), hv(glen, 0.0);
+            for (size_t o = 0; o < glen; ++o) {
+                double a = 0.0;
+                for (size_t i = 0; i < gIn; ++i)
+                    a += double(gW[static_cast<size_t>(i) + o * gIn]) * double(x[i]);
+                gv[o] = a;
+            }
+            for (size_t o = 0; o < ulen; ++o) {
+                double a = 0.0;
+                for (size_t i = 0; i < uIn; ++i)
+                    a += double(uW[static_cast<size_t>(i) + o * uIn]) * double(x[i]);
+                uv[o] = a;
+            }
+            for (size_t i = 0; i < glen && i < ulen; ++i)
+                hv[i] = (gv[i] / (1.0 + std::exp(-gv[i]))) * uv[i];
+            std::vector<double> dv(olen, 0.0);
+            for (size_t o = 0; o < olen; ++o) {
+                double a = 0.0;
+                for (size_t i = 0; i < dIn && i < glen; ++i)
+                    a += double(dW[static_cast<size_t>(i) + o * dIn]) * hv[i];
+                dv[o] = a;
+            }
+            auto stage = [&](const char* name, const std::vector<double>& ref,
+                             const float* prod, size_t n) {
+                double se = 0.0, sr = 0.0, sp = 0.0, mx = 0.0;
+                size_t nf = 0, worst = 0;
+                for (size_t i = 0; i < n; ++i) {
+                    const double p = double(prod[i]);
+                    if (!std::isfinite(p)) { ++nf; continue; }
+                    const double d = p - ref[i];
+                    if (std::fabs(d) > mx) { mx = std::fabs(d); worst = i; }
+                    se += d * d; sr += ref[i] * ref[i]; sp += p * p;
+                }
+                const double rms = n ? std::sqrt(se / double(n)) : 0.0;
+                const double cos = (sr > 0.0 && sp > 0.0)
+                    ? (sr + sp > 0.0 ? 1.0 - std::sqrt(se / (sr + sp)) : 0.0) : 0.0;
+                std::fprintf(stderr,
+                    "MOE_ORACLE block=%d expert=%zu stage=%s n=%zu "
+                    "maxAbs=%.9g rms=%.9g nonfinite=%zu worst=%zu\n",
+                    (int)moe.block, e0, name, n, mx, rms, nf, worst);
+            };
+            stage("swiglu", hv, hAll.data(), glen);
+            stage("down", dv, dyAll.data(), olen);
+        }
+    }
+
     // ---- routing-weighted accumulation ---------------------------------------
     for (size_t e = 0; e < nSel; ++e)
     {
