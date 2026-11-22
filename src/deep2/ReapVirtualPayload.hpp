@@ -5,11 +5,15 @@
 #include <cstring>
 namespace Deep2 { namespace ReapQuant {
 // Reader contract: Read(ShardRange,uint64_t,vector<uint8_t>&).
-// Each cache must be scoped to one immutable checkpoint identity.
+// Callers sharing a cache between checkpoints must supply an immutable
+// model identity. The legacy overload below is valid only for a cache
+// exclusively owned by one immutable checkpoint.
 template<class Reader>
 bool AcquireVirtualPayload(Reader& reader,BoundedExpertCache& cache,
- const ShardRange& source,Precision precision,uint64_t maxSourceBytes,
+ const std::string& modelIdentity,const ShardRange& source,
+ Precision precision,uint64_t maxSourceBytes,
  BoundedExpertCache::Lease& out){
+    if(modelIdentity.empty())return false;
     if(!source.bytes||source.bytes%Q4Bytes||maxSourceBytes<Q4Bytes||
        source.offset>UINT64_MAX-source.bytes)return false;
     const uint64_t stride=precision==Precision::Q2?Q2Bytes:
@@ -21,7 +25,9 @@ bool AcquireVirtualPayload(Reader& reader,BoundedExpertCache& cache,
     // so a future format cannot silently wrap the allocation length.
     if(blocks>UINT64_MAX/stride||blocks>SIZE_MAX/stride)return false;
     const uint64_t targetBytes=blocks*stride;
-    const std::string key=std::to_string(source.shard)+":"+
+    // Length-prefix the identity to avoid separator collisions.
+    const std::string key=std::to_string(modelIdentity.size())+":"+
+        modelIdentity+":"+std::to_string(source.shard)+":"+
         std::to_string(source.offset)+":"+std::to_string(source.bytes)+":"+
         std::to_string(unsigned(precision));
     return cache.Acquire(key,targetBytes,[&](uint8_t* dst,size_t size){
@@ -52,5 +58,14 @@ bool AcquireVirtualPayload(Reader& reader,BoundedExpertCache& cache,
         }
         return true;
     },out);
+}
+// Compatibility for existing callers: this cache must be checkpoint-scoped.
+// Shared caches must use the overload with explicit modelIdentity.
+template<class Reader>
+bool AcquireVirtualPayload(Reader& reader,BoundedExpertCache& cache,
+ const ShardRange& source,Precision precision,uint64_t maxSourceBytes,
+ BoundedExpertCache::Lease& out){
+    return AcquireVirtualPayload(reader,cache,std::string("checkpoint-scoped"),
+                                 source,precision,maxSourceBytes,out);
 }
 } }
