@@ -1975,6 +1975,14 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         return false;
     }
     const size_t ropeDim = isMla ? (size_t)spec_.rope_dim : D;
+    // Expanded MLA caches are indexed by query head in the AV loop.
+    // Reject inconsistent metadata before unsigned subtraction or cache access.
+    if (isMla && (hk != H || ropeDim > kl || (ropeDim % 2) != 0 ||
+                  qD < kl || kPerHead != kl)) {
+        err = "attention: unsupported expanded MLA head or rotary geometry";
+        return false;
+    }
+
     const size_t qk_nope = isMla ? (kl - ropeDim) : 0;
     const size_t q_rope_dim = isMla ? (qD - qk_nope) : D;
     const size_t k_rope_dim = isMla ? (kPerHead - qk_nope) : D;
