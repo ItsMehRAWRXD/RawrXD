@@ -1101,6 +1101,7 @@ bool VulkanCompute::RunWeightBatchQ4KTop1(
 
 bool VulkanCompute::initialize() {
     cleanup();
+    if (!CleanupComplete()) return false;
     if (!createInstance() || !selectPhysical() || !createDevice() ||
         !createCommandPool() || !createDescriptorSystems()) {
         cleanup();
@@ -1301,6 +1302,7 @@ void VulkanCompute::destroyBuffer(DeviceBuf& b) {
 bool VulkanCompute::ensureMappedStaging(
     bool upload, size_t bytes, DeviceBuf*& buffer, void*& mapped)
 {
+    if (OneShotBlocked() || DeviceIsLost()) return false;
     buffer = upload ? &uploadStaging_ : &downloadStaging_;
     void*& mapRef = upload ? uploadMapped_ : downloadMapped_;
     size_t& cap = upload ? uploadStagingBytes_ : downloadStagingBytes_;
@@ -1349,6 +1351,7 @@ bool VulkanCompute::beginCommand(
 {
     cmd = VK_NULL_HANDLE;
     query = VK_NULL_HANDLE;
+    if (OneShotBlocked() || !device_ || DeviceIsLost()) return false;
     VkCommandBufferAllocateInfo ai{};
     ai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     ai.commandPool = commandPool_;
@@ -1461,12 +1464,19 @@ void VulkanCompute::recordInterval(const GpuWorkInterval& interval) {
     while (intervals_.size() > 256) intervals_.pop_front();
 }
 
+void VulkanCompute::releaseOneShot(const OneShotHandles& h) noexcept {
+    if (h.cmd) vkFreeCommandBuffers(device_, commandPool_, 1, &h.cmd);
+    if (h.query) vkDestroyQueryPool(device_, h.query, nullptr);
+    if (h.fence) vkDestroyFence(device_, h.fence, nullptr);
+}
+
 bool VulkanCompute::endSubmitWait(
     VkCommandBuffer cmd, VkQueryPool query,
     GpuWorkKind kind, uint64_t bytes, uint64_t epoch,
     GpuWorkInterval* interval, uint64_t timeoutNs)
 {
-    if (!cmd) return false;
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!cmd || !device_) return false;
     // Before queue submission this call owns the acquired command and query.
     const auto discardUnsubmitted = [&] {
         vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
@@ -1475,7 +1485,7 @@ bool VulkanCompute::endSubmitWait(
     // RAWRXD_GUARD_5: once the device has been lost, refuse every further
     // submission so callers fail fast instead of executing on a dead queue.
     // Reuses the existing deviceLostCount_ marker (no second flag).
-    if (lostSeq_.lost) {
+    if (OneShotBlocked() || DeviceIsLost()) {
         std::fprintf(stderr, "[GPU] endSubmitWait refused: device_lost=%llu\n",
                      (unsigned long long)device_lost_.load());
         std::fflush(stderr);
@@ -1494,6 +1504,7 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait stage=end_command vk=%d\n",
                      static_cast<int>(endResult));
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(endResult), "presubmit");
         discardUnsubmitted();
         return false;
     }
@@ -1506,6 +1517,7 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait stage=create_fence vk=%d\n",
                      static_cast<int>(fenceResult));
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(fenceResult), "presubmit");
         discardUnsubmitted();
         return false;
     }
@@ -1515,6 +1527,13 @@ bool VulkanCompute::endSubmitWait(
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
 
+    // Own the handles before attempting queue submission. The slot requires
+    // no heap allocation during failure handling and blocks reuse until drain.
+    if (!oneShot_.Acquire({cmd, query, fence}, deviceGeneration_)) {
+        discardUnsubmitted();
+        vkDestroyFence(device_, fence, nullptr);
+        return false;
+    }
     const uint64_t submitNs = nowNs();
     if (std::getenv("DEEP2_SUBMIT_TRACE")) {
         std::fprintf(stderr,
@@ -1536,14 +1555,11 @@ bool VulkanCompute::endSubmitWait(
     }
     VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
     if (submit != VK_SUCCESS) {
-        // RAWRXD_GUARD_5: latch current-device health so dispatch, submission
-        // and readback fail closed instead of using a dead queue.
-        device_lost_.store(true);
-        std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",
+        // Submission outcome is unresolved. Keep the owned slot intact.
+        std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit quarantined vk=%d\n",
                      static_cast<int>(submit));
         std::fflush(stderr);
         (void)NoteVkResult(static_cast<int>(submit), "submit");
-        vkDestroyFence(device_, fence, nullptr);
         if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
@@ -1588,27 +1604,12 @@ bool VulkanCompute::endSubmitWait(
                                                          : "fence");
     }
 
-    // COMPLETION-BACKED QUARANTINE (centralized contract, see
-    // ReapSubmissionCompletion.hpp). Only reclaim the fence/query/command
-    // buffer once the GPU has CONFIRMED completion. On timeout/device-lost the
-    // submission may still be in-flight; freeing those resources is the
-    // premature-reclamation defect class that caused repeated TDRs. Retain
-    // them (leak-safe) and let terminal teardown reclaim after idle/lost.
-    const Deep2::Submit::Completion completion =
-        Deep2::Submit::Classify(static_cast<int>(wait), /*submitted=*/true);
-    if (Deep2::Submit::MayReclaim(completion)) {
-        vkDestroyFence(device_, fence, nullptr);
-        if (query) vkDestroyQueryPool(device_, query, nullptr);
-        vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
-    } else {
-        std::fprintf(stderr,
-                     "[GPU] endSubmitWait QUARANTINE retained in-flight resources "
-                     "vk=%d decision=%d (no free before confirmed completion)\n",
-                     static_cast<int>(wait), static_cast<int>(completion));
+    const bool reclaimed = oneShot_.Complete(static_cast<int>(wait), deviceGeneration_,
+        [this](const OneShotHandles& h) noexcept { releaseOneShot(h); });
+    if (!reclaimed) {
+        std::fprintf(stderr, "[GPU] endSubmitWait owned quarantine vk=%d\n",
+                     static_cast<int>(wait));
         std::fflush(stderr);
-        // Intentionally leak the fence/query/command buffer. They are reclaimed
-        // by the terminal device-loss teardown path once the device is idle or
-        // confirmed lost. Freeing them here risks GPU corruption / TDR.
     }
     if (globalSerial) {
         g_gpuInFlight.fetch_sub(1);
@@ -1616,7 +1617,7 @@ bool VulkanCompute::endSubmitWait(
                      (unsigned long long)globalSeq);
         std::fflush(stderr);
     }
-    return wait == VK_SUCCESS;
+    return reclaimed;
 }
 
 // Gate-protected submit helper. The caller MUST hold g_gpuSubmitGate when
@@ -7357,22 +7358,24 @@ bool VulkanCompute::DownloadVerifiedHidden(
         verifiedHidden_,dst,(size_t)hiddenWidth*sizeof(float));
 }
 void VulkanCompute::cleanup() {
-    // TERMINAL DEVICE-LOSS TEARDOWN: a permanently lost device may never
-    // return VK_SUCCESS from vkDeviceWaitIdle(), so waiting on it here can
-    // block forever and deadlock recovery/shutdown. When the device is known
-    // lost (DeviceIsLost / lostSeq_.lost), skip the idle wait entirely and
-    // proceed straight to resource destruction — the driver has already torn
-    // the device down, so the destroy/free calls are safe no-ops that reclaim
-    // our bookkeeping without GPU completion.
-    if (device_ && !DeviceIsLost()) {
+    // Caller must have quiesced every submission/reader before cleanup.
+    // Only an actual idle result can authorize teardown; synthetic host-loss
+    // markers do not prove Vulkan completion or terminal device loss.
+    if (device_) {
         const VkResult idleRes = vkDeviceWaitIdle(device_);
-        if (idleRes != VK_SUCCESS) {
-            // Idle wait failed (timeout/device lost mid-teardown): treat as
-            // terminal loss and do not block further.
-            std::fprintf(stderr,
-                "[GPU] cleanup vkDeviceWaitIdle vk=%d -> terminal teardown\n",
-                static_cast<int>(idleRes));
+        if (!Submit::MayTeardownAfterIdle(static_cast<int>(idleRes))) {
+            cleanupBlocked_.store(true, std::memory_order_release);
+            std::fprintf(stderr, "[GPU] cleanup quarantined vk=%d\n", static_cast<int>(idleRes));
             std::fflush(stderr);
+            return;
+        }
+        if (idleRes == VK_ERROR_DEVICE_LOST)
+            (void)NoteVkResult(static_cast<int>(idleRes), "cleanup");
+        if (oneShot_.Active() &&
+            !oneShot_.Drain(static_cast<int>(idleRes), deviceGeneration_,
+                [this](const OneShotHandles& h) noexcept { releaseOneShot(h); })) {
+            cleanupBlocked_.store(true, std::memory_order_release);
+            return;
         }
     }
     ResetDownloadRing();
@@ -7508,6 +7511,7 @@ void VulkanCompute::cleanup() {
     fusedQuery_=VK_NULL_HANDLE;
     hidden_=intermediate_=heads_=kvHeads_=headDim_=maxSeq_=layers_=kvDim_=0;
     weightBudgetBytes_=weightCacheBytes_=0;
+    cleanupBlocked_.store(false, std::memory_order_release);
 }
 
 bool VulkanCompute::SpecBatchRmsNorm(
