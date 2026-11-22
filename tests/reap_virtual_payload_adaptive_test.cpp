@@ -75,6 +75,29 @@ int main(){
                                  Q4Bytes,rejected)&&!rejected&&
           separate.Reserved()==0,
           "failed reader releases cache reservation");
+    // Invalid quantization must not install a partially initialized entry.
+    MemoryReader nonfinite=reader;
+    StoreHalf(nonfinite.data.data(),0x7c00u);
+    BoundedExpertCache invalidCache(blocks*Q2Bytes);
+    BoundedExpertCache::Lease invalidLease;
+    check(!AcquireVirtualPayload(nonfinite,invalidCache,range,Precision::Q2,
+                                 Q4Bytes,invalidLease)&&!invalidLease&&
+          invalidCache.Reserved()==0,
+          "nonfinite source releases reservation without caching payload");
+    // Recovery must be possible under the same key after the source is fixed.
+    BoundedExpertCache::Lease recovered;
+    check(AcquireVirtualPayload(reader,invalidCache,range,Precision::Q2,
+                                Q4Bytes,recovered)&&recovered&&
+          invalidCache.Reserved()==blocks*Q2Bytes,
+          "retry after conversion failure populates cache");
+    // A lease held by the caller must remain valid across a failed admission.
+    BoundedExpertCache::Lease held=recovered;
+    BoundedExpertCache::Lease refused;
+    const ShardRange other{3,Q4Bytes,Q4Bytes};
+    check(!AcquireVirtualPayload(reader,invalidCache,other,Precision::Q2,
+                                 Q4Bytes,refused)&&!refused&&
+          held==recovered&&held->size()==blocks*Q2Bytes,
+          "held payload survives capacity admission failure");
     std::printf("PASS_COUNT=%u FAIL_COUNT=%u\n",passed,failed);
     return failed?1:0;
 }
