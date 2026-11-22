@@ -1,5 +1,6 @@
 #include "deep2/GGUFLoader.hpp"
 #include "deep2/ReapMoETransformer.hpp"
+#include "deep2/ReapQ4KToQ2K.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -38,12 +39,13 @@ std::vector<uint8_t> readAll(const fs::path& path) {
                                 std::istreambuf_iterator<char>());
 }
 
-bool writeFixture(const fs::path& path) {
+bool writeFixture(const fs::path& path, bool quantized=false) {
     struct Tensor {
         std::string name;
         std::vector<uint64_t> dims;
         uint64_t offset = 0;
         std::vector<uint8_t> bytes;
+        uint32_t type=0;
     };
 
     std::vector<Tensor> tensors = {
@@ -57,6 +59,18 @@ bool writeFixture(const fs::path& path) {
     };
     uint8_t marker = 1;
     for (auto& tensor : tensors) {
+        if (quantized && tensor.name.find("_exps.weight")!=std::string::npos) {
+            tensor.dims={256,1,2};
+            tensor.type=12;
+            Deep2::ReapQuant::Q4Block block{};
+            Deep2::ReapQuant::StoreHalf(block.data(),0x3c00);
+            for (unsigned i=4;i<16;++i) block[i]=1;
+            for (unsigned i=16;i<144;++i) block[i]=static_cast<uint8_t>(i);
+            tensor.bytes.insert(tensor.bytes.end(),block.begin(),block.end());
+            for (unsigned i=16;i<144;++i) block[i]^=0x5a;
+            tensor.bytes.insert(tensor.bytes.end(),block.begin(),block.end());
+            continue;
+        }
         uint64_t elements = 1;
         for (uint64_t dim : tensor.dims) elements *= dim;
         tensor.bytes.resize(static_cast<size_t>(elements * sizeof(float)));
@@ -88,7 +102,7 @@ bool writeFixture(const fs::path& path) {
         stringValue(out, tensor.name);
         put(out, static_cast<uint32_t>(tensor.dims.size()));
         for (uint64_t dim : tensor.dims) put(out, dim);
-        put(out, uint32_t{0}); // GGML_TYPE_F32
+        put(out, tensor.type);
         put(out, tensor.offset);
     }
     const uint64_t dataStart = alignUp(static_cast<uint64_t>(out.tellp()), 32);
@@ -240,6 +254,46 @@ int main() {
         std::cerr << "EXISTING_TARGET_ENFORCEMENT_FAIL " << existingResult.error << "\n";
         return 8;
     }
+    const fs::path quantSource=root/"quant_fixture.gguf";
+    if (!writeFixture(quantSource,true)) return 12;
+    const auto quantBefore=readAll(quantSource);
+    const auto quantBudget=Deep2::inspectMoEGGUFBudget(quantSource.string(),4096,true);
+    const auto originalBudget=Deep2::inspectMoEGGUFBudget(quantSource.string(),4096);
+    if (!quantBudget.success || !originalBudget.success ||
+        quantBudget.requantizableTensors!=3 ||
+        quantBudget.minimumBytes>=originalBudget.minimumBytes) return 13;
+    Deep2::ReapMoETransformRequest quantRequest=request;
+    quantRequest.sourceFirstShard=quantSource.string();
+    quantRequest.outputDirectory=(root/"candidate_q2").string();
+    quantRequest.requantizeQ4KToQ2K=true;
+    quantRequest.maxQuantRelativeRmse=1.0;
+    quantRequest.targetSizeBytes=quantBudget.minimumBytes;
+    const auto quantOutput=Deep2::transformMoEGGUF(quantRequest);
+    if (!quantOutput.success || quantOutput.outputBytes!=quantBudget.minimumBytes ||
+        quantOutput.requantizedBlocks!=3 || readAll(quantSource)!=quantBefore) {
+        std::cerr<<"Q2_TRANSFORM_FAIL "<<quantOutput.error<<"\n";return 14;
+    }
+    Deep2::GGUFLoader q4Loader,q2Loader;
+    if (!q4Loader.load(quantSource.string()) || !q2Loader.load(quantOutput.outputFirstShard)) return 15;
+    const auto* q4=q4Loader.getTensor("blk.0.ffn_gate_exps.weight");
+    const auto* q2=q2Loader.getTensor("blk.0.ffn_gate_exps.weight");
+    if (!q4 || !q2 || q4->sizeBytes!=288 || q2->sizeBytes!=84 ||
+        static_cast<uint32_t>(q2->type)!=10 || q2->shape.back()!=1) return 16;
+    Deep2::ReapQuant::Q4Block selectedBlock{};
+    std::copy_n(q4->data+144,144,selectedBlock.begin());
+    Deep2::ReapQuant::Q2Block expectedBlock{};
+    Deep2::ReapQuant::Error error;
+    if (!Deep2::ReapQuant::Convert(selectedBlock,expectedBlock,error) ||
+        !std::equal(expectedBlock.begin(),expectedBlock.end(),q2->data) ||
+        !equalSlice(q4Loader.getTensor("blk.0.ffn_gate_inp.weight"),
+                    q2Loader.getTensor("blk.0.ffn_gate_inp.weight"))) return 17;
+    quantRequest.outputDirectory=(root/"candidate_q2_rejected").string();
+    quantRequest.maxQuantRelativeRmse=0;
+    const auto quantRejected=Deep2::transformMoEGGUF(quantRequest);
+    if (quantRejected.success || fs::exists(quantRequest.outputDirectory) ||
+        quantRejected.error.find("requantization error limit exceeded")==std::string::npos ||
+        readAll(quantSource)!=quantBefore) return 18;
+    std::cout << "NATIVE_Q2_TRANSFORM_PASS\n";
     std::cout << "REAP_MOE_TRANSFORM_PASS\n"
               << "SOURCE_BYTES=" << before.size() << "\n"
               << "OUTPUT_BYTES=" << result.outputBytes << "\n"
