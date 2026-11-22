@@ -1205,6 +1205,16 @@ bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
     }
     wf.resize(x.size());
     RmsNormVec(y, x, wf, spec_.rms_eps);
+    // MLA-H08: dump the block-0 attn_norm output to match llama's attn_norm-0.
+    if (in.block == 0 && in.outName == "attn_norm") {
+        if (const char* dir = std::getenv("DEEP2_MLA_LATENT_DUMP"); dir && *dir) {
+            std::string p = std::string(dir) + "/attn_norm-0.f32";
+            if (std::FILE* f = std::fopen(p.c_str(), "wb")) {
+                std::fwrite(y.data(), sizeof(float), y.size(), f);
+                std::fclose(f);
+            }
+        }
+    }
     return true;
 }
 
