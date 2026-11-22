@@ -4768,6 +4768,14 @@ add_test(NAME reap_selection_plan_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_selection_plan_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_selection_plan_regression.cmake")
 
+add_test(NAME reap_selection_pipeline_regression
+    COMMAND "${CMAKE_COMMAND}"
+        "-DPLANNER=$<TARGET_FILE:reap_selection_plan>"
+        "-DSCORER=$<TARGET_FILE:reap_activation_score>"
+        "-DFIXTURE=$<TARGET_FILE:reap_activation_score_fixture>"
+        "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_selection_pipeline_fixtures"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_selection_pipeline_regression.cmake")
+
 # Native paired capture filter, record count and overflow regression.
 add_executable(reap_capture_policy_test tests/reap_capture_policy_test.cpp)
 target_include_directories(reap_capture_policy_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
