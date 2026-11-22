@@ -41,7 +41,11 @@ struct ExecutionPlan {
 inline uint64_t TensorParamCount(const PhysicalTensor& t) {
     if (t.dims.empty()) return 0;
     uint64_t n = 1;
-    for (uint64_t d : t.dims) n *= d;
+    for (uint64_t d : t.dims) {
+        if (d == 0) return 0;
+        if (n > UINT64_MAX / d) throw std::overflow_error("tensor parameter count overflow");
+        n *= d;
+    }
     return n;
 }
 
@@ -51,8 +55,12 @@ inline ExecutionPlan CompileGraph(const CanonicalIR& ir) {
     plan.recurrentMultiplier =
         ir.geometry.loopCount > 0 ? ir.geometry.loopCount : 1;
 
-    for (const auto& t : ir.tensors)
-        plan.physicalParamCount += TensorParamCount(t);
+    for (const auto& t : ir.tensors) {
+        const uint64_t n = TensorParamCount(t);
+        if (n > UINT64_MAX - plan.physicalParamCount)
+            throw std::overflow_error("physical parameter count overflow");
+        plan.physicalParamCount += n;
+    }
 
     // Global tensors: embedding preamble, output head + output norm epilogue.
     for (size_t i = 0; i < ir.tensors.size(); ++i) {
@@ -74,22 +82,24 @@ inline ExecutionPlan CompileGraph(const CanonicalIR& ir) {
         plan.visits.push_back(std::move(vp));
     }
 
-    // Logical params = physical + re-execution of loop layers on extra passes.
-    uint64_t loopLayerParams = 0;
-    const uint64_t passes = plan.recurrentMultiplier;
-    if (passes > 1 && ir.geometry.blockCount > 0) {
-        uint64_t start = ir.geometry.loopStart;
-        uint64_t end = ir.geometry.loopEnd > 0 ? ir.geometry.loopEnd
-                                               : ir.geometry.blockCount;
-        if (end > ir.geometry.blockCount) end = ir.geometry.blockCount;
-        if (end <= start) { start = 0; end = ir.geometry.blockCount; }
-        for (const auto& t : ir.tensors) {
-            if (t.layerIndex != UINT32_MAX &&
-                t.layerIndex >= start && t.layerIndex < end)
-                loopLayerParams += TensorParamCount(t);
-        }
+    // Count the actual layer visits, not a separately interpreted loop range.
+    // Global tensors are counted once; each physical layer tensor contributes
+    // once per scheduled visit.
+    std::vector<uint64_t> visitCounts(static_cast<size_t>(ir.geometry.blockCount), 0);
+    for (const auto& visit : ir.visits) {
+        if (visit.physicalLayer >= visitCounts.size())
+            throw std::invalid_argument("visit outside model topology");
+        ++visitCounts[visit.physicalLayer];
     }
-    plan.logicalParamCount = plan.physicalParamCount + (passes - 1) * loopLayerParams;
+    for (const auto& t : ir.tensors) {
+        if (t.layerIndex != UINT32_MAX && t.layerIndex >= visitCounts.size())
+            throw std::invalid_argument("tensor outside model topology");
+        const uint64_t count = t.layerIndex == UINT32_MAX ? 1 : visitCounts[t.layerIndex];
+        const uint64_t params = TensorParamCount(t);
+        if (count != 0 && params > (UINT64_MAX - plan.logicalParamCount) / count)
+            throw std::overflow_error("logical parameter count overflow");
+        plan.logicalParamCount += params * count;
+    }
     return plan;
 }
 
