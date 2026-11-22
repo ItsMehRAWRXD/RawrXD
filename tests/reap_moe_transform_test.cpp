@@ -3,6 +3,7 @@
 #include "deep2/ReapQ4KToQ2K.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -11,6 +12,10 @@
 #include <string>
 #include <thread>
 #include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -148,9 +153,48 @@ bool equalSlice(const Deep2::GGUFTensor* source, const Deep2::GGUFTensor* output
            std::equal(source->data + stride, source->data + stride * 2, output->data);
 }
 
+#ifdef _WIN32
+std::string quoteProcessArgument(const std::string& value) {
+    std::string quoted = "\"";
+    for (const char c : value) {
+        if (c == '\"') quoted += "\\\"";
+        else quoted += c;
+    }
+    quoted += "\"";
+    return quoted;
+}
+
+bool hasTransactionDirectory(const fs::path& parent, const std::string& base) {
+    std::error_code ec;
+    if (!fs::exists(parent, ec) || ec) return false;
+    const std::string prefix = base + ".reap-txn-";
+    for (const auto& entry : fs::directory_iterator(parent, ec)) {
+        if (ec) return false;
+        if (entry.is_directory(ec) && !ec &&
+            entry.path().filename().string().rfind(prefix, 0) == 0) return true;
+    }
+    return false;
+}
+#endif
+
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
+#ifdef _WIN32
+    if (argc == 5 && std::string(argv[1]) == "--crash-child") {
+        Deep2::ReapMoETransformRequest childRequest;
+        childRequest.sourceFirstShard = argv[2];
+        childRequest.selectionManifest = argv[3];
+        childRequest.outputDirectory = argv[4];
+        childRequest.activeExperts = 1;
+        childRequest.targetSizeBytes = 4096;
+        _putenv_s("RAWR_REAP_TEST_PAUSE_BEFORE_PUBLICATION_MS", "30000");
+        const auto childResult = Deep2::transformMoEGGUF(childRequest);
+        std::cerr << "CRASH_CHILD_RETURNED success=" << childResult.success
+                  << " error=" << childResult.error << "\n";
+        return childResult.success ? 0 : 2;
+    }
+#endif
     const fs::path root = fs::temp_directory_path() / "rawrxd_reap_moe_transform_test";
     std::error_code ec;
     fs::remove_all(root, ec);
@@ -322,6 +366,96 @@ int main() {
         return 24;
     }
     std::cout << "R22A_CONCURRENT_PUBLICATION_COLLISION_PASS\n";
+    const fs::path stale = root / "candidate_stale";
+    const fs::path staleTransaction = root / "candidate_stale.reap-txn-orphan";
+    fs::create_directories(staleTransaction, ec);
+    std::ofstream(staleTransaction / "incomplete.gguf", std::ios::binary) << "partial";
+    Deep2::ReapMoETransformRequest staleRequest = request;
+    staleRequest.outputDirectory = stale.string();
+    const auto staleRecovery = Deep2::transformMoEGGUF(staleRequest);
+    if (!staleRecovery.success || fs::exists(staleTransaction) || !fs::exists(stale) ||
+        readAll(source) != before) {
+        std::cerr << "STALE_TRANSACTION_RECOVERY_FAIL " << staleRecovery.error << "\n";
+        return 25;
+    }
+    std::cout << "R22B_STALE_TRANSACTION_RECOVERY_PASS\n";
+
+#ifdef _WIN32
+    // Exercise recovery after the process is terminated while the production
+    // exporter owns the transaction lease and has already serialized/validated
+    // the staged checkpoint.  This deliberately terminates a real child
+    // process; the parent then retries the same export and verifies that the
+    // abandoned staging directory and lock are recovered before publication.
+    const fs::path crashSource = root / "crash_fixture.gguf";
+    const fs::path crashSelection = root / "crash_selection.json";
+    const fs::path crashOutput = root / "candidate_crash";
+    if (!writeFixture(crashSource) || !writeSelection(crashSelection)) {
+        std::cerr << "CRASH_FIXTURE_WRITE_FAIL\n";
+        return 26;
+    }
+    const std::string command = quoteProcessArgument(argv[0]) +
+        " --crash-child " + quoteProcessArgument(crashSource.string()) +
+        " " + quoteProcessArgument(crashSelection.string()) +
+        " " + quoteProcessArgument(crashOutput.string());
+    std::vector<char> commandLine(command.begin(), command.end());
+    commandLine.push_back('\0');
+    STARTUPINFOA startup{};
+    startup.cb = sizeof(startup);
+    PROCESS_INFORMATION process{};
+    if (!CreateProcessA(nullptr, commandLine.data(), nullptr, nullptr, FALSE,
+                        CREATE_NO_WINDOW, nullptr, nullptr, &startup, &process)) {
+        std::cerr << "CRASH_CHILD_SPAWN_FAIL win32=" << GetLastError() << "\n";
+        return 27;
+    }
+    bool stagingSeen = false;
+    for (int attempt = 0; attempt < 150; ++attempt) {
+        if (hasTransactionDirectory(root, crashOutput.filename().string())) {
+            stagingSeen = true;
+            break;
+        }
+        if (WaitForSingleObject(process.hProcess, 0) != WAIT_TIMEOUT) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    if (!stagingSeen) {
+        TerminateProcess(process.hProcess, 137);
+        WaitForSingleObject(process.hProcess, INFINITE);
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+        std::cerr << "CRASH_CHILD_STAGING_NOT_OBSERVED\n";
+        return 28;
+    }
+    if (!TerminateProcess(process.hProcess, 137)) {
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+        std::cerr << "CRASH_CHILD_TERMINATE_FAIL win32=" << GetLastError() << "\n";
+        return 29;
+    }
+    WaitForSingleObject(process.hProcess, INFINITE);
+    DWORD childExit = STILL_ACTIVE;
+    GetExitCodeProcess(process.hProcess, &childExit);
+    CloseHandle(process.hThread);
+    CloseHandle(process.hProcess);
+    if (childExit == 0 || fs::exists(crashOutput) ||
+        !hasTransactionDirectory(root, crashOutput.filename().string())) {
+        std::cerr << "CRASH_CHILD_RECOVERY_SETUP_FAIL exit=" << childExit << "\n";
+        return 30;
+    }
+    Deep2::ReapMoETransformRequest crashRetry = request;
+    crashRetry.sourceFirstShard = crashSource.string();
+    crashRetry.selectionManifest = crashSelection.string();
+    crashRetry.outputDirectory = crashOutput.string();
+    const auto crashRecovery = Deep2::transformMoEGGUF(crashRetry);
+    if (!crashRecovery.success || !fs::exists(crashOutput) ||
+        hasTransactionDirectory(root, crashOutput.filename().string()) ||
+        readAll(crashSource) != before) {
+        std::cerr << "ABRUPT_TERMINATION_RECOVERY_FAIL " << crashRecovery.error << "\n";
+        return 31;
+    }
+    std::cout << "R22B_ABRUPT_TERMINATION_RECOVERY_PASS\n";
+#else
+    std::cout << "R22B_ABRUPT_TERMINATION_RECOVERY_NOT_APPLICABLE=WINDOWS_ONLY\n";
+#endif
+
     const fs::path quantSource=root/"quant_fixture.gguf";
     if (!writeFixture(quantSource,true)) return 12;
     const auto quantBefore=readAll(quantSource);

@@ -20,6 +20,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <thread>
 #include <unordered_set>
 #include <unordered_map>
 #ifdef _WIN32
@@ -541,6 +542,89 @@ struct OutputCleanup {
     }
 };
 
+bool removeStaleTransactions(const fs::path& parent, const std::string& base,
+                            std::string& error) {
+    std::error_code ec;
+    if (!fs::exists(parent, ec)) return true;
+    const std::string prefix = base + ".reap-txn-";
+    for (const auto& entry : fs::directory_iterator(parent, ec)) {
+        if (ec) { error = "transaction recovery directory enumeration failed"; return false; }
+        if (!entry.is_directory(ec) || ec) continue;
+        const std::string name = entry.path().filename().string();
+        if (name.rfind(prefix, 0) != 0) continue;
+        fs::remove_all(entry.path(), ec);
+        if (ec) {
+            error = "abandoned transaction cleanup failed: " + entry.path().string();
+            return false;
+        }
+    }
+    return true;
+}
+
+struct TransactionLease {
+    fs::path path;
+#ifdef _WIN32
+    HANDLE handle = INVALID_HANDLE_VALUE;
+#endif
+    bool active = false;
+
+    bool acquire(const fs::path& lockPath, std::string& error) {
+        path = lockPath;
+#ifdef _WIN32
+        handle = CreateFileW(path.wstring().c_str(), GENERIC_READ | GENERIC_WRITE,
+                             0, nullptr, CREATE_NEW,
+                             FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_TEMPORARY, nullptr);
+        if (handle == INVALID_HANDLE_VALUE) {
+            // A crashed owner leaves the namespace entry behind, but its
+            // exclusive handle is gone. Probe with delete access: an active
+            // owner still denies this open through its share mode.
+            HANDLE stale = CreateFileW(path.wstring().c_str(), DELETE,
+                                       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                       nullptr, OPEN_EXISTING,
+                                       FILE_ATTRIBUTE_TEMPORARY, nullptr);
+            if (stale != INVALID_HANDLE_VALUE) {
+                CloseHandle(stale);
+                DeleteFileW(path.wstring().c_str());
+                handle = CreateFileW(path.wstring().c_str(), GENERIC_READ | GENERIC_WRITE,
+                                     0, nullptr, CREATE_NEW,
+                                     FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_TEMPORARY, nullptr);
+            }
+        }
+        if (handle == INVALID_HANDLE_VALUE) {
+            error = "transaction destination is already active";
+            return false;
+        }
+#else
+        std::error_code ec;
+        if (!fs::create_directory(path, ec) || ec) {
+            error = "transaction destination is already active";
+            return false;
+        }
+#endif
+        active = true;
+        return true;
+    }
+
+    ~TransactionLease() {
+        if (!active) return;
+#ifdef _WIN32
+        CloseHandle(handle);
+        DeleteFileW(path.wstring().c_str());
+#else
+        std::error_code ec;
+        fs::remove_all(path, ec);
+#endif
+    }
+};
+
+uint64_t testPauseBeforePublicationMs() {
+    const char* value = std::getenv("RAWR_REAP_TEST_PAUSE_BEFORE_PUBLICATION_MS");
+    if (!value || !*value) return 0;
+    char* end = nullptr;
+    const unsigned long long parsed = std::strtoull(value, &end, 10);
+    return (end && *end == '\0') ? static_cast<uint64_t>(parsed) : 0;
+}
+
 } // namespace
 
 static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
@@ -794,6 +878,12 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
             return result;
         }
     }
+    const fs::path leasePath = outputDir.parent_path() /
+        (outputDir.filename().string() + ".reap-lock");
+    TransactionLease lease;
+    if (!lease.acquire(leasePath, result.error)) return result;
+    if (!removeStaleTransactions(outputDir.parent_path(), outputDir.filename().string(), result.error))
+        return result;
     const auto txnId = std::chrono::steady_clock::now().time_since_epoch().count();
     const fs::path stagingDir = outputDir.parent_path() /
         (outputDir.filename().string() + ".reap-txn-" + std::to_string(txnId));
@@ -970,6 +1060,9 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         }
         verifiedShardCount = verify.shardCount();
     }
+
+    const uint64_t pauseMs = testPauseBeforePublicationMs();
+    if (pauseMs) std::this_thread::sleep_for(std::chrono::milliseconds(pauseMs));
 
     // Publish only after every shard has been serialized and the complete
     // staged checkpoint reloads successfully. A single directory rename is
