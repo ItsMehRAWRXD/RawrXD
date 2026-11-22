@@ -39,6 +39,10 @@ jobs:
         run: |
           g++ -std=c++17 -O2 -Wall -Wextra -I src tests/reap_half_roundtrip_test.cpp -o reap-half
           ./reap-half
+      - name: Concurrent native expert cache single-flight regression
+        run: |
+          g++ -std=c++17 -O2 -pthread -Wall -Wextra -I src tests/reap_cache_singleflight_test.cpp -o reap-cache-singleflight
+          ./reap-cache-singleflight
       - name: Compile and execute virtual expert payload integration
         run: |
           g++ -std=c++17 -O2 -pthread -Wall -Wextra -I src tests/reap_virtual_payload_adaptive_test.cpp -o reap-virtual
