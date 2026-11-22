@@ -7891,6 +7891,7 @@ void Win32IDE::generateResponseAsync(
     
     // Route from the selected model entry. Local GGUF uses the native agent,
     // Ollama uses its local HTTP API, and Kilo uses the existing cloud client.
+    try {
     m_inferenceThread = std::thread([this, prompt, callback, selectedModel,
                                      requestMaxTokens, requestContextTokens, reasoningMode,
                                      webBrowsingEnabled, requestGeneration, explicitDeep2]() {
@@ -8039,6 +8040,8 @@ void Win32IDE::generateResponseAsync(
                 // the selected model is loaded explicitly so a stale
                 // hard-coded startup model cannot capture the request.
                 if (explicitDeep2) {
+                    if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+                        m_activeInferenceGeneration.load(std::memory_order_acquire) != requestGeneration) return;
                     if (!m_deep2Bridge) initializeDeep2Bridge();
                     if (!m_deep2Bridge || !m_deep2Bridge->IsInitialized()) {
                         finishIfCurrent("Deep2 backend is unavailable. Unset RAWRXD_CHAT_BACKEND=deep2 or repair the Deep2 runtime.", false);
@@ -8049,6 +8052,8 @@ void Win32IDE::generateResponseAsync(
                         finishIfCurrent("Deep2 could not load the selected GGUF: " + selectedModel.identifier, false);
                         return;
                     }
+                    if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+                        m_activeInferenceGeneration.load(std::memory_order_acquire) != requestGeneration) return;
                     // Stream the response instead of GenerateSync: a blocking
                     // call keeps the transcript empty for the whole generation
                     // (thousands of tokens at decode speed), which presents as a
@@ -8139,9 +8144,13 @@ void Win32IDE::generateResponseAsync(
                     }
                     m_agenticChatLoadedModelPath = selectedModel.identifier;
                 }
+                    if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+                        m_activeInferenceGeneration.load(std::memory_order_acquire) != requestGeneration) return;
                 m_agenticBridge->SetOutputCallback(
-                    [this, callback](const std::string&, const std::string& chunk) {
-                        if (!m_inferenceStopRequested && callback) callback(chunk, false, true);
+                    [this, callback, requestGeneration](const std::string&, const std::string& chunk) {
+                        if (!m_inferenceStopRequested.load(std::memory_order_acquire) &&
+                            m_activeInferenceGeneration.load(std::memory_order_acquire) == requestGeneration &&
+                            callback) callback(chunk, false, true);
                     });
                 const AgentResponse generated = m_agenticBridge->ExecuteAgentCommand(prompt);
                 if (generated.type == AgentResponseType::AGENT_ERROR) {
@@ -8160,7 +8169,15 @@ void Win32IDE::generateResponseAsync(
         } catch (...) {
             finishIfCurrent("Chat route failed with an unknown error.", false);
         }
-    });
+    });
+    } catch (...) {
+        m_activeInferenceGeneration.store(0, std::memory_order_release);
+        m_inferenceRunning.store(false, std::memory_order_release);
+        m_inferenceCallback = {};
+        if (assignedGeneration) *assignedGeneration = 0;
+        lock.unlock();
+        if (callback) callback("Unable to start inference worker.", true, false);
+    }
 }
 
 void Win32IDE::abortActiveOllamaHttp()
