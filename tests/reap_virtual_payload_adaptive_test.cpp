@@ -93,6 +93,27 @@ int main(){
                                  Q4Bytes,rejected)&&!rejected&&
           separate.Reserved()==0,
           "failed reader releases cache reservation");
+    // Failure after a successful first chunk must roll back the entire
+    // reservation, not publish a partially converted expert payload.
+    struct LateFailReader {
+        MemoryReader& source;
+        unsigned reads=0;
+        bool Read(ShardRange r,uint64_t limit,std::vector<uint8_t>& out) {
+            if(++reads==2)return false;
+            return source.Read(r,limit,out);
+        }
+    } late{reader};
+    BoundedExpertCache lateCache(blocks*Q2Bytes);
+    BoundedExpertCache::Lease lateLease;
+    check(!AcquireVirtualPayload(late,lateCache,range,Precision::Q2,
+                                 Q4Bytes,lateLease)&&!lateLease&&
+          late.reads==2&&lateCache.Reserved()==0,
+          "second-chunk reader failure rolls back full cache reservation");
+    BoundedExpertCache::Lease lateRecovered;
+    check(AcquireVirtualPayload(reader,lateCache,range,Precision::Q2,
+                                Q4Bytes,lateRecovered)&&lateRecovered&&
+          lateCache.Reserved()==blocks*Q2Bytes,
+          "successful retry after late reader failure");
     // Invalid quantization must not install a partially initialized entry.
     MemoryReader nonfinite=reader;
     StoreHalf(nonfinite.data.data(),0x7c00u);
