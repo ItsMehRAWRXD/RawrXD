@@ -8,6 +8,7 @@
 #include "deep2/ReapSubmissionPins.hpp"
 #include "deep2/ReapStrataBudget.hpp"
 #include "deep2/ReapExpertCompute.hpp"
+#include "deep2/ReapGlmMoe.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -245,6 +246,30 @@ int main(){
             check(!ExpertMatVec(bad,x,y)&&y==previous,"expert invalid geometry preserves output");
             check(!ExecuteRoutedExperts(routes,x,[](uint32_t,SwiGluExpert&){return false;},y)&&y==previous,"expert missing payload preserves output");
         }
+    }
+    {
+        Values w{};w.fill(1.f);Q3Block block{};
+        if(EncodeQ3(w,block)){
+            auto payload=std::make_shared<std::vector<uint8_t>>(256*Q3Bytes);
+            for(size_t i=0;i<256;++i)std::memcpy(payload->data()+i*Q3Bytes,block.data(),Q3Bytes);
+            ExpertMatrix m{256,256,Precision::Q3,payload};
+            SwiGluExpert e{m,m,m};
+            std::vector<float> x(256,1.f/256),y;
+            Values decoded{};DecodeQ3(block,decoded);
+            double a=0;for(float v:decoded)a+=double(v)/256;
+            const double expected=2.8*256*a*a*a/(1+std::exp(-a));
+            unsigned routed=0,shared=0;
+            auto rr=[&](uint32_t slot,SwiGluExpert& out){++routed;out=e;return slot<4;};
+            auto sr=[&](size_t slot,SwiGluExpert& out){++shared;out=e;return slot==0;};
+            const bool ok=ExecuteGlmMoe(x,{0,1,2,3},{3,1,0,2},4,1.8,1,rr,sr,y);
+            check(ok&&routed==4&&shared==1,"GLM four routed one shared");
+            bool parity=ok&&y.size()==256;
+            for(float v:y)parity=parity&&std::abs(v-expected)<0.005;
+            check(parity,"GLM shared plus routed analytical parity");
+            const auto previous=y;
+            check(!ExecuteGlmMoe(x,{0,1,2,3},{3,1,0,2},4,1.8,0,rr,sr,y)&&y==previous,"GLM missing shared configuration rejected");
+            check(!ExecuteGlmMoe(x,{0,1,2,3},{3,1,0,2},4,1.8,1,rr,[](size_t,SwiGluExpert&){return false;},y)&&y==previous,"GLM missing shared weights transactional");
+        }else check(false,"GLM fixture encoding");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
