@@ -5239,9 +5239,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     rowView.dims[1] = 1;                 // exactly one row
                     DequantPrefix(rowView, hidden_, n_in);
                     // MLA-H08: dump Deep2's raw token embedding for the
-                    // independent GGUF row comparison.
+                    // independent GGUF row comparison. Write once per token
+                    // (the first lookup = input embedding; later lookups for
+                    // output tokens must not overwrite it).
                     if (const char* dir = std::getenv("DEEP2_MLA_LATENT_DUMP"); dir && *dir) {
-                        std::string p = std::string(dir) + "/embd.f32";
+                        std::string p = std::string(dir) + "/embd_" + std::to_string(token) + ".f32";
                         if (std::FILE* f = std::fopen(p.c_str(), "wb")) {
                             std::fwrite(hidden_.data(), sizeof(float), hidden_.size(), f);
                             std::fclose(f);
