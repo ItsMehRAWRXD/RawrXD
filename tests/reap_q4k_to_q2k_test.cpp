@@ -4,6 +4,7 @@
 #include "deep2/ReapRetainedRouting.hpp"
 #include "deep2/ReapBoundedExpertCache.hpp"
 #include "deep2/ReapExpertPrefetch.hpp"
+#include "deep2/ReapVirtualPayload.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -146,6 +147,27 @@ int main(){
         }
         prefetch.Stop();
         check(!prefetch.Submit("closed",8,1,load(1)),"prefetch stopped admission");
+    }
+    {
+        struct FixtureReader {
+            std::vector<uint8_t> bytes=std::vector<uint8_t>(2*Q4Bytes,0);
+            unsigned reads=0;
+            bool Read(ShardRange r,uint64_t limit,std::vector<uint8_t>& out){
+                if(r.shard!=1||r.bytes>limit||r.offset>bytes.size()||r.bytes>bytes.size()-r.offset)return false;
+                ++reads;out.assign(bytes.begin()+r.offset,bytes.begin()+r.offset+r.bytes);return true;
+            }
+        } reader;
+        BoundedExpertCache cache(1024);
+        BoundedExpertCache::Lease a,b;
+        const ShardRange source{1,0,2*Q4Bytes};
+        check(AcquireVirtualPayload(reader,cache,source,Precision::Q2,Q4Bytes,a)&&a->size()==2*Q2Bytes&&reader.reads==2,"virtual Q2 bounded conversion");
+        check(AcquireVirtualPayload(reader,cache,source,Precision::Q2,Q4Bytes,b)&&a==b&&reader.reads==2,"virtual cache hit no extra reads");
+        check(AcquireVirtualPayload(reader,cache,source,Precision::Q3,Q4Bytes,b)&&b->size()==2*Q3Bytes&&reader.reads==4,"virtual Q3 conversion");
+        check(AcquireVirtualPayload(reader,cache,source,Precision::Q4,Q4Bytes,b)&&*b==reader.bytes,"virtual Q4 exact bytes");
+        check(!AcquireVirtualPayload(reader,cache,{1,0,143},Precision::Q2,Q4Bytes,b),"virtual partial block rejected");
+        check(!AcquireVirtualPayload(reader,cache,source,Precision::Q2,Q4Bytes-1,b),"virtual source budget rejected");
+        const auto before=cache.Reserved();
+        check(!AcquireVirtualPayload(reader,cache,{2,0,Q4Bytes},Precision::Q2,Q4Bytes,b)&&cache.Reserved()==before&&b->size()==2*Q4Bytes,"virtual read failure rollback");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
