@@ -46,7 +46,13 @@ try {
     $script:log.Add("NATIVE_IDE_EXECUTABLE=$($executable[0])")
     $script:log.Add("NATIVE_IDE_SHA256=$((Get-FileHash -LiteralPath $executable[0] -Algorithm SHA256).Hash)")
     $unresolved = @($log | Where-Object { $_ -match 'LNK(?:2001|2019|1120)\b|unresolved external symbol' })
-    if ($unresolved.Count -gt 0) { throw "Unresolved external(s) found in native IDE build output" }
+    $script:log.Add("UNRESOLVED_EXTERNAL_DIAGNOSTICS=$($unresolved.Count)")
+    if ($unresolved.Count -gt 0) {
+        foreach ($diagnostic in $unresolved) {
+            $script:log.Add("UNRESOLVED_EXTERNAL: $diagnostic")
+        }
+        throw "Unresolved external(s) found in native IDE build output"
+    }
     $certified = $true
 }
 catch {
