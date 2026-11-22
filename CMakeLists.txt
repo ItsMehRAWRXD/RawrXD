@@ -1172,6 +1172,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
@@ -1404,6 +1405,46 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
     else()
         target_compile_options(deep2_strata_bench PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
     endif()
+
+    # Sprint 9 P0-02 Commit E: execute QuantDot ownership regressions through
+    # the production dispatch implementation, not a test-only state machine.
+    add_executable(deep2_residency_concurrency
+        tools/deep2_residency_concurrency.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp)
+    target_include_directories(deep2_residency_concurrency PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${_rawrxd_vk_sdk_inc})
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_residency_concurrency PRIVATE ggml_interface)
+    endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_residency_concurrency PRIVATE rawrxd_compression_core)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_residency_concurrency PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_residency_concurrency PRIVATE ggml-vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_residency_concurrency PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_residency_concurrency PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    message(STATUS "deep2_residency_concurrency enabled (Sprint9 Commit E)")
 
     add_executable(deep2_dualgpu_forward
         tools/deep2_dualgpu_forward.cpp

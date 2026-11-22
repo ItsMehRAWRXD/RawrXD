@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.19)
 project("vulkan-shaders-gen" C CXX)
 # Add custom include path for Windows SDK headers
 if(WIN32)
-    include_directories(BEFORE SYSTEM "D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include")
 endif()
 
 
