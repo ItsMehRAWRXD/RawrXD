@@ -1,5 +1,6 @@
 // Native candidate planner. Consumes measured scorer TSV plus producer receipt.
-// Group geometry is caller-supplied; this is not checkpoint provenance or parity.
+// Optional budget report comes from the physical GGUF exporter inspection.
+// Report consistency is not cryptographic provenance or parity.
 #include <algorithm>
 #include <charconv>
 #include <cmath>
@@ -68,6 +69,37 @@ Scores readScores(const char* path,const Receipt& r) {
     for(const auto& row:result){U n=0;for(auto s:row.second)n=add(n,s.count);require(n%r.top==0,"incomplete layer route count");for(auto s:row.second)require(s.count<=n/r.top,"expert count exceeds layer routes");}
     return result;
 }
+struct Budget { U groups=0,used=0,bytes=0,minimum=0,maxRetained=0,predictedMax=0; };
+std::string lowerHex(std::string s) {
+    for(auto& c:s)if(c>='A'&&c<='F')c=static_cast<char>(c-'A'+'a');
+    return s;
+}
+Budget readBudget(const char* path,const Receipt& r) {
+    std::ifstream in(path);require(bool(in),"budget report unavailable");
+    std::map<std::string,std::string> fields;std::set<U> layers;std::string line;
+    while(std::getline(in,line)){
+        auto f=split(line);require(f.size()==2,"bad budget report row");
+        if(f[0]=="expected_layer")require(layers.insert(integer(f[1])).second,"duplicate budget layer");
+        else require(fields.emplace(f[0],f[1]).second,"duplicate budget field");
+    }
+    require(!in.bad()&&fields.size()==11&&fields.at("schema")=="RAWRXD_REAP_PRUNE_BUDGET_001"&&fields.at("rewrite_authorized")=="0","invalid budget schema");
+    require(lowerHex(fields.at("first_shard_sha256"))==lowerHex(r.hash)&&layers==r.layers&&integer(fields.at("expert_count"))==r.experts&&integer(fields.at("top_k"))==r.top,"budget/calibration source mismatch");
+    Budget b{integer(fields.at("group_count")),integer(fields.at("groups_used")),integer(fields.at("budget_bytes")),integer(fields.at("minimum_bytes")),integer(fields.at("max_retained")),integer(fields.at("predicted_max_bytes"))};
+    require(b.groups&&b.groups<=r.experts&&b.used&&b.used<=b.groups&&r.experts%b.groups==0&&mul(b.used,r.experts/b.groups)>=r.top,"invalid budget group geometry");
+    require(b.bytes&&b.minimum,"invalid serialized budget");
+    if(!b.maxRetained){require(b.minimum>b.bytes&&!b.predictedMax,"inconsistent infeasible budget");throw std::runtime_error("no feasible prune-only retention at current dtype");}
+    require(b.maxRetained<=r.experts&&b.maxRetained%b.groups==0&&mul(b.used,b.maxRetained/b.groups)>=r.top&&b.minimum<=b.predictedMax&&b.predictedMax<=b.bytes,"invalid feasible budget bound");
+    return b;
+}
+U measuredRetention(const Receipt& r,const Scores& scores,const Budget& b) {
+    U keep=b.maxRetained;const U width=r.experts/b.groups;
+    for(const auto& row:scores){
+        std::vector<U> counts(static_cast<size_t>(b.groups));
+        for(const auto& s:row.second)++counts[static_cast<size_t>(s.id/width)];
+        keep=std::min(keep,mul(*std::min_element(counts.begin(),counts.end()),b.groups));
+    }
+    return keep;
+}
 using Plan=std::map<U,std::vector<U>>;
 Plan choose(const Receipt& r,const Scores& scores,U keep,U groups,U used) {
     require(keep>=r.top && keep<=r.experts && groups && groups<=r.experts && used && used<=groups,"invalid retention/group geometry");
@@ -89,12 +121,21 @@ Plan choose(const Receipt& r,const Scores& scores,U keep,U groups,U used) {
 }
 int main(int argc,char** argv){
     try {
-        require(argc==6,"usage: reap_selection_plan RECEIPT.tsv SCORES.tsv RETAIN GROUP_COUNT GROUPS_USED");
+        const bool autoBudget=argc==5 && std::string(argv[3])=="--budget-report";
+        require(argc==6||autoBudget,"usage: reap_selection_plan RECEIPT.tsv SCORES.tsv RETAIN GROUP_COUNT GROUPS_USED | RECEIPT.tsv SCORES.tsv --budget-report BUDGET.tsv");
         const auto r=readReceipt(argv[1]);const auto scores=readScores(argv[2],r);
-        const U keep=integer(argv[3]),groups=integer(argv[4]),used=integer(argv[5]);const auto plan=choose(r,scores,keep,groups,used);
+        Budget budget;U keep=0,groups=0,used=0;
+        if(autoBudget){budget=readBudget(argv[4],r);groups=budget.groups;used=budget.used;keep=measuredRetention(r,scores,budget);}
+        else {keep=integer(argv[3]);groups=integer(argv[4]);used=integer(argv[5]);}
+        const auto plan=choose(r,scores,keep,groups,used);
         std::cout<<"{\n  \"schema\": \"RAWRXD_REAP_EXPERT_SELECTION_001\",\n  \"rewrite_authorized\": false,\n  \"reference_parity_pass\": false,\n  \"experimental_offline\": false,\n  \"first_shard_sha256\": \""<<r.hash<<"\",\n  \"source_experts\": "<<r.experts<<",\n  \"retained_experts\": "<<keep<<",\n  \"top_k\": "<<r.top<<",\n  \"candidate_group_count\": "<<groups<<",\n  \"candidate_groups_used\": "<<used<<",\n  \"layers\": [\n";
         bool firstLayer=true;for(const auto& row:plan){if(!firstLayer)std::cout<<",\n";firstLayer=false;std::cout<<"    {\"layer\": "<<row.first<<", \"selected\": [";bool first=true;for(auto id:row.second){if(!first)std::cout<<", ";first=false;std::cout<<"{\"expert\": "<<id<<"}";}std::cout<<"]}";}
-        std::cout<<"\n  ]\n}\n";
+        std::cout<<"\n  ]";
+        if(autoBudget)std::cout<<",\n  \"candidate_budget_bytes\": "<<budget.bytes
+            <<",\n  \"budget_max_retained\": "<<budget.maxRetained
+            <<",\n  \"candidate_serialized_upper_bytes\": "<<budget.predictedMax
+            <<",\n  \"budget_report_consistent\": true";
+        std::cout<<"\n}\n";
         std::cerr<<"CANDIDATE_PLAN=PASS REWRITE_AUTHORIZED=0 GROUP_GEOMETRY_ATTESTED=0\n";return std::cout.good()?0:2;
     }catch(const std::exception& e){std::cerr<<"INVALID_PLAN: "<<e.what()<<'\n';return 2;}
 }
