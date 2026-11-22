@@ -1,5 +1,7 @@
 #include "deep2/ReapOneShotOwnership.hpp"
+#include <atomic>
 #include <cstdio>
+#include <thread>
 using namespace Deep2::Submit;
 struct Handles { int cmd=0, query=0, fence=0; };
 int main() {
@@ -61,6 +63,34 @@ int main() {
     // Teardown result allowlist.
     check(MayTeardownAfterIdle(0)&&MayTeardownAfterIdle(-4),"exact teardown result allowlist");
     check(!MayTeardownAfterIdle(31)&&!MayTeardownAfterIdle(-2)&&!MayTeardownAfterIdle(1),"foreign and ambiguous codes rejected");
+    // H52: concurrent Complete() with the same ticket -> exactly one wins
+    // (atomic claim), exactly one native release.
+    {
+        OneShotOwner<Handles> owner;
+        int releases = 0;
+        auto reclaim = [&](const Handles&) { ++releases; };
+        const uint64_t t = owner.Acquire({1,2,3}, 1);
+        std::atomic<int> wins{0};
+        std::thread thA([&]{ if (owner.Complete(0, t, reclaim)) wins.fetch_add(1); });
+        std::thread thB([&]{ if (owner.Complete(0, t, reclaim)) wins.fetch_add(1); });
+        thA.join(); thB.join();
+        check(wins.load() == 1, "concurrent complete exactly one wins");
+        check(releases == 1, "concurrent complete exactly one release");
+        check(!owner.Active(), "concurrent complete clears active");
+    }
+    // H52: concurrent Drain() with the same ticket -> exactly one wins.
+    {
+        OneShotOwner<Handles> owner;
+        int releases = 0;
+        auto reclaim = [&](const Handles&) { ++releases; };
+        const uint64_t t = owner.Acquire({4,5,6}, 1);
+        std::atomic<int> wins{0};
+        std::thread thA([&]{ if (owner.Drain(0, t, reclaim)) wins.fetch_add(1); });
+        std::thread thB([&]{ if (owner.Drain(0, t, reclaim)) wins.fetch_add(1); });
+        thA.join(); thB.join();
+        check(wins.load() == 1, "concurrent drain exactly one wins");
+        check(releases == 1, "concurrent drain exactly one release");
+    }
     std::printf("PASS_COUNT=%d FAIL_COUNT=%d\n",pass,fail);
     return fail?1:0;
 }

@@ -37,13 +37,19 @@ public:
 
     // The caller supplies the exact result of the current submission's wait
     // AND the ticket returned by Acquire(). A stale ticket is rejected.
+    // H46/H52: the active->false transition is a compare_exchange, so exactly
+    // one caller can complete a given acquisition even under concurrent
+    // Complete() calls (exactly-once destruction).
     template<class Release>
     bool Complete(int result, uint64_t ticket, Release&& release) {
         if (result != 0) return false;
-        if (!Active() || ticket != epoch_) return false;   // stale/wrong ticket
+        if (ticket != epoch_) return false;   // stale/wrong ticket (fast path)
+        bool expected = true;
+        if (!active_.compare_exchange_strong(expected, false,
+                std::memory_order_acq_rel))
+            return false;   // already completed by another caller
         release(handles_);
         handles_ = {};
-        active_.store(false, std::memory_order_release);
         return true;
     }
 
@@ -51,14 +57,17 @@ public:
     // ticket captured BEFORE the idle wait (H38/H39): if a new acquisition
     // occurred after idle evidence was collected, the stale ticket no longer
     // matches epoch_ and the drain is refused — a new submission is never
-    // reclaimed with stale idle evidence.
+    // reclaimed with stale idle evidence. Atomic claim (H52 exactly-once).
     template<class Release>
     bool Drain(int idle, uint64_t ticket, Release&& release) {
         if (!MayTeardownAfterIdle(idle)) return false;
-        if (!Active() || ticket != epoch_) return false;   // stale ticket -> refuse
+        if (ticket != epoch_) return false;   // stale ticket -> refuse
+        bool expected = true;
+        if (!active_.compare_exchange_strong(expected, false,
+                std::memory_order_acq_rel))
+            return false;   // already drained by another caller
         release(handles_);
         handles_ = {};
-        active_.store(false, std::memory_order_release);
         return true;
     }
 
