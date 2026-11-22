@@ -13,6 +13,8 @@ bool AcquireVirtualPayload(Reader& reader,BoundedExpertCache& cache,
  const std::string& modelIdentity,const ShardRange& source,
  Precision precision,uint64_t maxSourceBytes,
  BoundedExpertCache::Lease& out){
+    // Fail closed even for errors detected before cache admission.
+    out.reset();
     if(modelIdentity.empty())return false;
     if(!source.bytes||source.bytes%Q4Bytes||maxSourceBytes<Q4Bytes||
        source.offset>UINT64_MAX-source.bytes)return false;
