@@ -4815,15 +4815,17 @@ foreach(_reap_quant_test IN ITEMS reap_q4k_to_q2k_test reap_quant_range_test)
 endforeach()
 # Isolated native adaptive codec acceptance: baseline source remains non-AVX2.
 if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    add_library(reap_msvc_avx2 OBJECT src/deep2/ReapAvx2Msvc.cpp)
+    target_include_directories(reap_msvc_avx2 PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(reap_msvc_avx2 PRIVATE cxx_std_17)
+    target_compile_options(reap_msvc_avx2 PRIVATE /arch:AVX2)
+    target_compile_definitions(reap_msvc_avx2 PRIVATE __AVX2__=1)
     add_executable(reap_adaptive_dispatch_test
         tests/reap_adaptive_dispatch_test.cpp
-        src/deep2/ReapAvx2Msvc.cpp)
+        $<TARGET_OBJECTS:reap_msvc_avx2>)
     target_include_directories(reap_adaptive_dispatch_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
     target_compile_features(reap_adaptive_dispatch_test PRIVATE cxx_std_17)
     target_compile_definitions(reap_adaptive_dispatch_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
-    set_source_files_properties(src/deep2/ReapAvx2Msvc.cpp PROPERTIES
-        COMPILE_OPTIONS "/arch:AVX2"
-        COMPILE_DEFINITIONS "__AVX2__=1")
     add_test(NAME reap_adaptive_dispatch_test COMMAND reap_adaptive_dispatch_test)
 endif()
 if(TARGET ggml-base)
