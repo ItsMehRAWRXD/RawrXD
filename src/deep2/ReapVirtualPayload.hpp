@@ -34,7 +34,7 @@ bool AcquireVirtualPayload(Reader& reader,BoundedExpertCache& cache,
                 auto target=dst+(i+j)*stride;
                 Error error{};
                 if(precision==Precision::Q2){
-                    Q2Block q{};if(!Convert(q4,q,error))return false;
+                    Q2Block q{};if(!ConvertAdaptive(q4,q,error))return false;
                     std::memcpy(target,q.data(),Q2Bytes);
                 }else if(precision==Precision::Q3){
                     Q3Block q{};if(!ConvertQ4ToQ3(q4,q,error))return false;
