@@ -1892,6 +1892,22 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     const size_t qWidth = qInput.size();
     const size_t kWidth = k.size();
     const size_t vWidth = v.size();
+    // MLA-H01/Qcur geometry witness (one-shot per block at pos 0): print the
+    // actual tensor widths and H so a Qcur mismatch (e.g. 11520 vs 5120) is
+    // visible before the empty-per-head-width failure.
+    if (std::getenv("DEEP2_MLA_TRACE") && in.block >= 0 && in.block <= 1 && position <= 1) {
+        static int s_reported = 0;
+        if (s_reported < 4) {
+            std::fprintf(stderr,
+                "[attn-geom] blk=%d pos=%zu H=%zu qWidth=%zu kWidth=%zu vWidth=%zu "
+                "spec.heads_kv=%llu kv_lora=%llu key_len_mla=%llu val_len_mla=%llu\n",
+                (int)in.block, position, H, qWidth, kWidth, vWidth,
+                (unsigned long long)spec_.heads_kv, (unsigned long long)spec_.kv_lora_rank,
+                (unsigned long long)spec_.key_length_mla, (unsigned long long)spec_.value_length_mla);
+            std::fflush(stderr);
+            ++s_reported;
+        }
+    }
     const size_t qPerHead = qWidth / H;
 
     // The value head dim must match the query head dim, otherwise the output
