@@ -4813,6 +4813,12 @@ foreach(_reap_quant_test IN ITEMS reap_q4k_to_q2k_test reap_quant_range_test)
     enable_testing()
     add_test(NAME ${_reap_quant_test} COMMAND ${_reap_quant_test})
 endforeach()
+# Exhaustive binary16 conversion and rounding acceptance, independent of GPU.
+add_executable(reap_half_roundtrip_test tests/reap_half_roundtrip_test.cpp)
+target_include_directories(reap_half_roundtrip_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_half_roundtrip_test PRIVATE cxx_std_17)
+add_test(NAME reap_half_roundtrip_test COMMAND reap_half_roundtrip_test)
+
 # Portable native K-quant regression must not require AVX2.
 add_executable(reap_scalar_acceptance_test tests/reap_q4k_to_q2k_test.cpp)
 target_include_directories(reap_scalar_acceptance_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
