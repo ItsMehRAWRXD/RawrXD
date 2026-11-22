@@ -7390,6 +7390,10 @@ bool VulkanCompute::DownloadVerifiedHidden(
         verifiedHidden_,dst,(size_t)hiddenWidth*sizeof(float));
 }
 void VulkanCompute::cleanup() {
+    // H47: close submission admission BEFORE destroying any resource, so no new
+    // submission can reference a buffer being reclaimed. Cleared at the end of
+    // a successful cleanup; left set on early (quarantine) returns (terminal).
+    cleanupBlocked_.store(true, std::memory_order_release);
     // Caller must have quiesced every submission/reader before cleanup.
     // Only an actual idle result can authorize teardown; synthetic host-loss
     // markers do not prove Vulkan completion or terminal device loss.
