@@ -4882,6 +4882,7 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     target_include_directories(reap_msvc_link_contract_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
     target_compile_features(reap_msvc_link_contract_test PRIVATE cxx_std_17)
     target_compile_definitions(reap_msvc_link_contract_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
+    target_link_options(reap_msvc_link_contract_test PRIVATE /WX /INCREMENTAL:NO)
     add_test(NAME reap_msvc_link_contract_test COMMAND reap_msvc_link_contract_test)
 
     # Production IDE and its REAP streaming conversion share the isolated
@@ -4889,6 +4890,11 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     if(TARGET RawrXD-Win32IDE-Native)
         target_sources(RawrXD-Win32IDE-Native PRIVATE $<TARGET_OBJECTS:reap_msvc_avx2>)
         target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
+        # Do not mask unresolved externals with forced output or incremental
+        # artifacts; treat Release linker warnings as build failures.
+        target_link_options(RawrXD-Win32IDE-Native PRIVATE
+            $<$<CONFIG:Release>:/WX>
+            $<$<CONFIG:Release>:/INCREMENTAL:NO>)
     endif()
 endif()
 if(TARGET ggml-base)
