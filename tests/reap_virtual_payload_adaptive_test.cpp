@@ -75,14 +75,20 @@ int main(){
     // One shared cache may serve multiple immutable checkpoints only when
     // their model identities are part of the key.
     BoundedExpertCache shared(3*blocks*Q2Bytes);
+    MemoryReader secondModel=reader;
+    // Change packed quant values while preserving the same geometry.
+    for(unsigned n=0;n<blocks;++n)
+        secondModel.data[n*Q4Bytes+16]^=0x0fu;
     BoundedExpertCache::Lease modelA,modelB,modelAAgain,emptyIdentity;
     const unsigned beforeShared=reader.reads;
     check(AcquireVirtualPayload(reader,shared,std::string("model:A"),range,
                                 Precision::Q2,Q4Bytes,modelA)&&modelA&&
-          AcquireVirtualPayload(reader,shared,std::string("model:B"),range,
+          AcquireVirtualPayload(secondModel,shared,std::string("model:B"),range,
                                 Precision::Q2,Q4Bytes,modelB)&&modelB&&
-          modelA!=modelB&&reader.reads==beforeShared+2*blocks,
-          "shared cache separates identical shard ranges by model identity");
+          modelA!=modelB&&reader.reads==beforeShared+blocks&&
+          secondModel.reads==blocks&&
+          std::memcmp(modelA->data(),modelB->data(),blocks*Q2Bytes)!=0,
+          "shared cache separates different checkpoint weights at identical shard ranges");
     const unsigned beforeModelHit=reader.reads;
     check(AcquireVirtualPayload(reader,shared,std::string("model:A"),range,
                                 Precision::Q2,Q4Bytes,modelAAgain)&&
