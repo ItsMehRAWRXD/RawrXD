@@ -6572,3 +6572,10 @@ set_target_properties(agent_acceptance_smoke PROPERTIES
 add_test(NAME agent_acceptance_smoke_negative COMMAND agent_acceptance_smoke)
 add_test(NAME agent_acceptance_smoke_positive COMMAND agent_acceptance_smoke --positive)
 message(STATUS "agent_acceptance_smoke enabled (Qt-free native acceptance)")
+
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_zero_prune_verify.cpp")
+  add_executable(reap-zero-prune-verify tools/reap_zero_prune_verify.cpp)
+  target_compile_features(reap-zero-prune-verify PRIVATE cxx_std_20)
+  target_link_libraries(reap-zero-prune-verify PRIVATE bcrypt)
+  target_compile_definitions(reap-zero-prune-verify PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+endif()
