@@ -1256,6 +1256,58 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         target_compile_options(deep2_strata_chat PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
     endif()
 
+    # Sprint 9 P0-02: serial-vs-batched CPU prefill first-divergence driver.
+    # Same source set as deep2_strata_chat (it drives the real executor and
+    # PrefillBatch); adds ParityCapture per-position/per-layer comparison.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_first_divergence.cpp")
+        add_executable(deep2_parity_first_divergence
+            tools/deep2_parity_first_divergence.cpp
+            src/deep2/op_gdn.cpp
+            src/deep2/runtime_graph_executor.cpp
+            src/deep2/generic_vulkan_matmul.cpp
+            src/deep2/op_linear.cpp
+            src/deep2/modelgenie/universal_gguf.cpp
+            src/deep2/quant_dot_dispatch.cpp
+            src/deep2/vulkan_compute.cpp
+            src/deep2/QuantKernelRegistry.cpp
+            src/deep2/asm_stubs.cpp
+            src/deep2/lavapath/GpuDeviceLostReset.cpp
+            src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+            src/vulkan_compute.cpp
+            src/vulkan_compute_attn.cpp
+            src/streaming_gguf_loader.cpp
+            src/gguf_loader.cpp
+            src/gguf_vocab_resolver.cpp
+            src/utils/Diagnostics.cpp
+            src/utils/input_sanitizer.cpp)
+        target_include_directories(deep2_parity_first_divergence PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}
+            ${CMAKE_SOURCE_DIR}/tools
+            ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+            ${_rawrxd_vk_sdk_inc})
+        if(TARGET ggml_interface)
+            target_link_libraries(deep2_parity_first_divergence PRIVATE ggml_interface)
+        endif()
+        if(TARGET Vulkan::Vulkan)
+            target_link_libraries(deep2_parity_first_divergence PRIVATE Vulkan::Vulkan)
+        endif()
+        if(TARGET ggml-vulkan)
+            target_link_libraries(deep2_parity_first_divergence PRIVATE ggml-vulkan)
+        endif()
+        if(TARGET rawrxd_compression_core)
+            target_link_libraries(deep2_parity_first_divergence PRIVATE rawrxd_compression_core)
+        endif()
+        if(MSVC)
+            target_compile_options(deep2_parity_first_divergence PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        else()
+            target_compile_options(deep2_parity_first_divergence PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+        endif()
+        message(STATUS "deep2_parity_first_divergence enabled (Sprint9 P0-02)")
+    endif()
+
     # Reusable request-scoped Strata chat session (headless). Same sources as the
     # benchmark; this is the component the IDE/CLI will call once integrated.
     add_executable(deep2_strata_chat_session
@@ -6520,4 +6572,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/native_logit_parity_test.cpp")
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
     add_test(NAME native_logit_parity_test COMMAND native_logit_parity_test)
     message(STATUS "Native logit parity/capture tools enabled")
+endif()
+
+# Sprint 9 P0-01: dependency-free ParityCapture contract unit test.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/parity_capture_test.cpp")
+    add_executable(parity_capture_test tests/deep2/parity_capture_test.cpp)
+    target_include_directories(parity_capture_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(parity_capture_test PRIVATE cxx_std_17)
+    set_target_properties(parity_capture_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    add_test(NAME parity_capture_test COMMAND parity_capture_test)
+    message(STATUS "Sprint9 ParityCapture test enabled")
 endif()
