@@ -4425,6 +4425,15 @@ void VulkanCompute::Cleanup() {
         ReleaseQuantFastPath();
 
         // Quant-dot and RoPE permanent descriptor systems
+        if (attn_desc_pool_) {
+            for (VkDescriptorSet ds : attn_quarantined_descriptors_) {
+                if (ds) vkFreeDescriptorSets(device_, attn_desc_pool_, 1, &ds);
+            }
+            attn_quarantined_descriptors_.clear();
+            attn_submission_in_flight_ = false;
+            vkDestroyDescriptorPool(device_, attn_desc_pool_, nullptr);
+            attn_desc_pool_ = nullptr;
+        }
         if (quant_descriptor_pool_) {
             vkDestroyDescriptorPool(device_, quant_descriptor_pool_, nullptr);
             quant_descriptor_pool_ = nullptr;

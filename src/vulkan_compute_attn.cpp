@@ -163,6 +163,11 @@ bool VulkanCompute::ExecuteAttnDecodeGqa(
     uint32_t seq_len, float scale) {
     if (!device_ || !compute_queue_ || !q || !k_cache || !v_cache || !out)
         return false;
+    // A failed wait leaves the command buffer, buffers and descriptor set
+    // potentially referenced by the device. Do not reset the fence or submit
+    // another request until Cleanup() reaches a successful idle boundary.
+    if (attn_submission_in_flight_)
+        return false;
     if (!head_dim || !heads || !kv_heads || !seq_len) return false;
     if ((heads % kv_heads) != 0u) return false;
     // Shader shared score scratch is 256 floats (sealed decode=32 fits).
@@ -309,6 +314,7 @@ bool VulkanCompute::ExecuteAttnDecodeGqa(
         vkFreeDescriptorSets(device_, attn_desc_pool_, 1, &ds);
         return false;
     }
+    attn_submission_in_flight_ = true;
     ++gpu_counters_.submits;
     if (quant_fuse_active_) ++quant_fuse_submits_;
     if (std::getenv("DEEP2_SUBMIT_TRACE")) {
@@ -319,9 +325,12 @@ bool VulkanCompute::ExecuteAttnDecodeGqa(
         std::fflush(stderr);
     }
     if (WaitAttnFence(device_, quant_fence_) != VK_SUCCESS) {
-        vkFreeDescriptorSets(device_, attn_desc_pool_, 1, &ds);
+        // The submission may still reference this descriptor set. Keep it out
+        // of the reusable pool until Cleanup() has proven device idleness.
+        attn_quarantined_descriptors_.push_back(ds);
         return false;
     }
+    attn_submission_in_flight_ = false;
     ++gpu_counters_.waits;
     ++quant_epoch_;
     NoteSubmissionComplete();

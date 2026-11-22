@@ -480,6 +480,10 @@ private:
     // DEEP2_VULKAN_SUBMIT_OPT_001 AttnDecode scratch (QuantDot device)
     VkDescriptorSetLayout attn_set_layout_ = nullptr;
     VkDescriptorPool attn_desc_pool_ = nullptr;
+    // Descriptor sets whose submissions did not reach completion remain
+    // quarantined until a successful device-idle boundary permits reclamation.
+    std::vector<VkDescriptorSet> attn_quarantined_descriptors_;
+    bool attn_submission_in_flight_ = false;
     VkBuffer attn_q_dev_ = nullptr, attn_k_dev_ = nullptr, attn_v_dev_ = nullptr, attn_o_dev_ = nullptr;
     VkDeviceMemory attn_q_mem_ = nullptr, attn_k_mem_ = nullptr, attn_v_mem_ = nullptr, attn_o_mem_ = nullptr;
     size_t attn_q_cap_ = 0, attn_k_cap_ = 0, attn_v_cap_ = 0, attn_o_cap_ = 0;
