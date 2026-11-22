@@ -257,6 +257,20 @@ int main(int argc, char** argv) {
     double worstLogitRel = 0.0;
     std::size_t worstLogitPos = 0;
     std::size_t nonFinitePositions = 0;
+    // Argmax alignment bookkeeping. A maxRel near 2.0 is produced by an element
+    // whose reference value is ~0, so maxRel alone cannot distinguish "gross
+    // model error" from "near-zero denominator". The predicted next token can:
+    // if argmax agrees at every position the divergence is numeric, not
+    // structural. This is reported as evidence only and never changes verdict.
+    std::size_t argmaxCompared = 0;
+    std::size_t argmaxAgree = 0;
+    std::size_t argmaxDisagree = 0;
+    std::size_t firstArgmaxDisagreePos = std::numeric_limits<std::size_t>::max();
+    std::size_t firstArgmaxDisagreeRef = 0;
+    std::size_t firstArgmaxDisagreeCand = 0;
+    std::size_t firstDivArgmaxRef = 0;
+    std::size_t firstDivArgmaxCand = 0;
+    bool firstDivArgmaxKnown = false;
 
     for (std::size_t pos = 0; pos < P; ++pos) {
         const PC::ParityCapture cap = PC::Compare(
@@ -297,6 +311,22 @@ int main(int argc, char** argv) {
             };
             const size_t ra = am(refLogits[pos]);
             const size_t ca = am(candLogits[pos]);
+            ++argmaxCompared;
+            if (ra == ca) {
+                ++argmaxAgree;
+            } else {
+                ++argmaxDisagree;
+                if (firstArgmaxDisagreePos == std::numeric_limits<std::size_t>::max()) {
+                    firstArgmaxDisagreePos = pos;
+                    firstArgmaxDisagreeRef = ra;
+                    firstArgmaxDisagreeCand = ca;
+                }
+            }
+            if (pos == firstDivPos) {
+                firstDivArgmaxRef = ra;
+                firstDivArgmaxCand = ca;
+                firstDivArgmaxKnown = true;
+            }
             std::printf("  ALIGN ref_argmax=%zu cand_argmax=%zu %s",
                         ra, ca, ra == ca ? "AGREE" : "DISAGREE");
             const size_t n8 = std::min<size_t>(8, refLogits[pos].size());
@@ -367,6 +397,16 @@ int main(int argc, char** argv) {
                     PC::Describe(firstDivCap).c_str());
     }
     std::printf("worst_logit_maxRel=%.9g at_pos=%zu\n", worstLogitRel, worstLogitPos);
+    std::printf("argmax_compared=%zu agree=%zu disagree=%zu\n",
+                argmaxCompared, argmaxAgree, argmaxDisagree);
+    if (argmaxDisagree != 0) {
+        std::printf("first_argmax_disagreement pos=%zu ref=%zu cand=%zu\n",
+                    firstArgmaxDisagreePos, firstArgmaxDisagreeRef,
+                    firstArgmaxDisagreeCand);
+    } else if (argmaxCompared != 0) {
+        std::printf("argmax_note=all positions predicted the same next token; "
+                    "maxRel is dominated by near-zero reference elements\n");
+    }
     std::printf("kv_blocks_compared=%zu\n", blocks);
     std::printf("kv_diverged=%s\n", anyKvDiverged ? "YES" : "NO");
     if (anyKvDiverged) {
@@ -408,6 +448,44 @@ int main(int argc, char** argv) {
             out << "  \"first_divergent_position_maxRel\": " << firstDivCap.maxRelError << ",\n";
             out << "  \"first_divergent_position_rms\": " << firstDivCap.rmsError << ",\n";
             out << "  \"first_divergent_position_firstMismatch\": " << firstDivCap.firstMismatchIndex << ",\n";
+            if (firstDivCap.hasWorstRelative) {
+                out << "  \"first_divergent_position_worstRelIndex\": "
+                    << firstDivCap.worstRelativeIndex << ",\n";
+                out << "  \"first_divergent_position_worstReference\": "
+                    << firstDivCap.worstReference << ",\n";
+                out << "  \"first_divergent_position_worstCandidate\": "
+                    << firstDivCap.worstCandidate << ",\n";
+                out << "  \"first_divergent_position_worstAbsolute\": "
+                    << firstDivCap.worstAbsoluteError << ",\n";
+                out << "  \"first_divergent_position_worstRelative\": "
+                    << firstDivCap.worstRelativeError << ",\n";
+            } else {
+                out << "  \"first_divergent_position_worstRelIndex\": null,\n";
+                out << "  \"first_divergent_position_worstReference\": null,\n";
+                out << "  \"first_divergent_position_worstCandidate\": null,\n";
+                out << "  \"first_divergent_position_worstAbsolute\": null,\n";
+                out << "  \"first_divergent_position_worstRelative\": null,\n";
+            }
+            out << "  \"first_divergent_position_argmax_ref\": ";
+            if (firstDivArgmaxKnown) out << firstDivArgmaxRef;
+            else out << "null";
+            out << ",\n";
+            out << "  \"first_divergent_position_argmax_candidate\": ";
+            if (firstDivArgmaxKnown) out << firstDivArgmaxCand;
+            else out << "null";
+            out << ",\n";
+            out << "  \"argmax_compared\": " << argmaxCompared << ",\n";
+            out << "  \"argmax_agree\": " << argmaxAgree << ",\n";
+            out << "  \"argmax_disagree\": " << argmaxDisagree << ",\n";
+            out << "  \"argmax_all_positions_agree\": "
+                << ((argmaxCompared > 0 && argmaxDisagree == 0) ? "true" : "false")
+                << ",\n";
+            out << "  \"first_argmax_disagreement_position\": ";
+            if (firstArgmaxDisagreePos == std::numeric_limits<std::size_t>::max())
+                out << "null";
+            else
+                out << firstArgmaxDisagreePos;
+            out << ",\n";
             out << "  \"worst_logit_maxRel\": " << worstLogitRel << ",\n";
             out << "  \"worst_logit_pos\": " << worstLogitPos << ",\n";
             out << "  \"kv_diverged\": " << (anyKvDiverged ? "true" : "false") << ",\n";
@@ -419,6 +497,9 @@ int main(int argc, char** argv) {
             out << "  \"first_divergent_layer_stream\": \""
                 << (firstKvStream == 0 ? "K" : (firstKvStream == 1 ? "V" : "none")) << "\",\n";
             out << "  \"first_divergent_layer_maxRel\": " << firstKvCap.maxRelError << ",\n";
+            out << "  \"first_divergent_layer_maxAbs\": " << firstKvCap.maxAbsError << ",\n";
+            out << "  \"first_divergent_layer_worstRelIndex\": "
+                << firstKvCap.worstRelativeIndex << ",\n";
             out << "  \"worst_kv_maxRel\": " << worstKvRel << ",\n";
             out << "  \"verdict\": \"" << (logitsEquivalent ? "PASS" : "FAIL") << "\"\n";
             out << "}\n";

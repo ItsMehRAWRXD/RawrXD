@@ -1,0 +1,50 @@
+PROMPT_TOKENS 6
+arch=llama blocks=22 embd=2048
+DISPATCH reference{gpu=0 cpu=930}
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+DISPATCH candidate{gpu=1012 cpu=0}
+POS 0 ParityCapture{layer=4294967295 position=0 operation=4294967295 elements=32000 maxAbs=0.365615 maxRel=1.997864 rms=0.065124 firstMismatch=0 worstRelIndex=6021 worstRel=1.997864 MISMATCH}
+  ALIGN ref_argmax=2760 cand_argmax=2760 AGREE first8[-1.8948/-1.8989,1.2745/1.2654,1.4195/1.4521,2.4462/2.5134,0.5770/0.6225,-0.3214/-0.3091,-0.1795/-0.1327,-1.5616/-1.5206]
+POS 1 ParityCapture{layer=4294967295 position=1 operation=4294967295 elements=32000 maxAbs=0.388147 maxRel=1.981494 rms=0.091893 firstMismatch=0 worstRelIndex=4081 worstRel=1.981494 MISMATCH}
+  ALIGN ref_argmax=399 cand_argmax=399 AGREE first8[-10.9003/-10.9198,-10.8881/-10.9143,1.2009/1.4282,-6.1907/-6.1972,-7.3397/-7.3727,-7.3015/-7.3533,-7.6600/-7.7272,-8.7311/-8.7786]
+POS 2 ParityCapture{layer=4294967295 position=2 operation=4294967295 elements=32000 maxAbs=0.540628 maxRel=1.993622 rms=0.118339 firstMismatch=0 worstRelIndex=24284 worstRel=1.993622 MISMATCH}
+  ALIGN ref_argmax=310 cand_argmax=310 AGREE first8[-9.8178/-9.9544,-10.1897/-10.3498,3.9416/3.6971,-4.5189/-4.6945,-6.6678/-6.7871,-7.3228/-7.3774,-7.1960/-7.3121,-8.7994/-8.8474]
+POS 3 ParityCapture{layer=4294967295 position=3 operation=4294967295 elements=32000 maxAbs=0.438666 maxRel=1.989265 rms=0.102406 firstMismatch=0 worstRelIndex=26946 worstRel=1.989265 MISMATCH}
+  ALIGN ref_argmax=278 cand_argmax=278 AGREE first8[-9.7032/-9.6763,-9.7679/-9.7434,3.0079/2.9029,-3.2418/-3.2532,-5.3636/-5.4340,-5.5103/-5.5477,-4.9906/-5.0407,-6.4731/-6.4732]
+POS 4 ParityCapture{layer=4294967295 position=4 operation=4294967295 elements=32000 maxAbs=0.526635 maxRel=1.999937 rms=0.122054 firstMismatch=2 worstRelIndex=24126 worstRel=1.999937 MISMATCH}
+  ALIGN ref_argmax=29892 cand_argmax=29892 AGREE first8[-9.7987/-9.7947,-9.8509/-9.8589,8.5518/8.3433,-4.8004/-4.8668,-4.6453/-4.7194,-5.5700/-5.5656,-5.4270/-5.4491,-7.4232/-7.3991]
+POS 5 ParityCapture{layer=4294967295 position=5 operation=4294967295 elements=32000 maxAbs=0.512531 maxRel=1.989427 rms=0.110451 firstMismatch=0 worstRelIndex=10914 worstRel=1.989427 MISMATCH}
+  ALIGN ref_argmax=3681 cand_argmax=3681 AGREE first8[-7.2386/-7.3837,-6.8122/-6.9695,7.8718/7.7333,-4.2917/-4.3660,-4.0617/-4.0688,-5.0693/-5.0942,-5.9047/-5.8845,-5.8500/-5.8536]
+
+===== SPRINT9 P0-02 FIRST-DIVERGENCE SUMMARY =====
+mode=GPU_BATCH_VS_CPU_SERIAL
+positions_compared=6
+reference_gpu_calls=0 (must be 0)
+candidate_gpu_calls=1012 (must be >0)
+logits_diverged_positions=YES
+first_divergent_position=0
+first_divergent_position_record=ParityCapture{layer=4294967295 position=0 operation=4294967295 elements=32000 maxAbs=0.365615 maxRel=1.997864 rms=0.065124 firstMismatch=0 worstRelIndex=6021 worstRel=1.997864 MISMATCH}
+worst_logit_maxRel=1.99993684 at_pos=4
+argmax_compared=6 agree=6 disagree=0
+argmax_note=all positions predicted the same next token; maxRel is dominated by near-zero reference elements
+kv_blocks_compared=22
+kv_diverged=YES
+first_divergent_layer=1 pos=0 stream=K
+first_divergent_layer_record=ParityCapture{layer=1 position=0 operation=0 elements=256 maxAbs=0.003906 maxRel=0.259481 rms=0.001180 firstMismatch=0 worstRelIndex=230 worstRel=0.259481 MISMATCH}
+worst_kv_maxRel=2
+PARITY_VERDICT=FAIL
+RECEIPT F:\rawrxd\.kilo\worktrees\sprint9-parity\evidence\SPRINT9_COMMIT_D_20261122\parity_first_divergence_commitD.json
+Released all tensors
+Vulkan resources cleaned up successfully
