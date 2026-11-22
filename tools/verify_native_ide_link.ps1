@@ -3,17 +3,25 @@
 param(
     [string]$BuildDir = "build-native-link-cert",
     [string]$Generator = "Visual Studio 17 2022",
-    [string]$Configuration = "Release"
+    [string]$Configuration = "Release",
+    [switch]$CleanBuild
 )
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $buildPath = if ([IO.Path]::IsPathRooted($BuildDir)) { $BuildDir } else { Join-Path $root $BuildDir }
+if ($CleanBuild -and (Test-Path -LiteralPath $buildPath)) {
+    Remove-Item -LiteralPath $buildPath -Recurse -Force
+}
 New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
 $logPath = Join-Path $buildPath "native-ide-link-certification.log"
 $log = New-Object 'System.Collections.Generic.List[string]'
 function Invoke-CertCommand([string[]]$Arguments) {
-    $output = & cmake @Arguments 2>&1
-    $exit = $LASTEXITCODE
+    # Native compiler diagnostics may be written to stderr even on success.
+    # Capture both streams without treating a warning as a PowerShell exception.
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try { $output = & cmake @Arguments 2>&1; $exit = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $previousPreference }
     foreach ($line in $output) {
         $text = [string]$line
         $script:log.Add($text)
@@ -27,6 +35,16 @@ try {
         "-A", "x64", "-DRAWRXD_REQUIRE_NATIVE_IDE_LINK=ON")
     Invoke-CertCommand -Arguments @("--build", $buildPath, "--config", $Configuration,
         "--target", "RawrXD-Win32IDE-Native", "--parallel", "2")
+    # A successful command is not enough: verify the executable was produced.
+    $exeCandidates = @(
+        (Join-Path $buildPath "bin\$Configuration\RawrXD-Win32IDE-Native.exe"),
+        (Join-Path $buildPath "$Configuration\RawrXD-Win32IDE-Native.exe"),
+        (Join-Path $buildPath "bin\RawrXD-Win32IDE-Native.exe")
+    )
+    $executable = @($exeCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1)
+    if ($executable.Count -eq 0) { throw "Native IDE executable missing after successful build" }
+    $script:log.Add("NATIVE_IDE_EXECUTABLE=$($executable[0])")
+    $script:log.Add("NATIVE_IDE_SHA256=$((Get-FileHash -LiteralPath $executable[0] -Algorithm SHA256).Hash)")
     $unresolved = @($log | Where-Object { $_ -match 'LNK(?:2001|2019|1120)\b|unresolved external symbol' })
     if ($unresolved.Count -gt 0) { throw "Unresolved external(s) found in native IDE build output" }
     $certified = $true
