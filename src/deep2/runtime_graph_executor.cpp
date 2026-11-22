@@ -2068,6 +2068,29 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // executes with the wrong-scale scores.
     const double scoreScale = AttentionScoreScale(qD, yarn);
 
+    // MLA geometry witness (DEEP2_MLA_TRACE=1). Dumps the exact rotary slice,
+    // offsets and score scale the production kernel uses, so a wrong split is
+    // visible without guessing.
+    if (std::getenv("DEEP2_MLA_TRACE") && in.block >= 0 && in.block <= 1 &&
+        position <= 2) {
+        std::fprintf(stderr,
+                     "MLA_GEOM block=%d pos=%zu mla=%d heads=%zu kv_heads=%zu "
+                     "q=%zu k=%zu v=%zu rope=%zu nope=%zu q_rope_dim=%zu "
+                     "k_rope_dim=%zu q_off=%zu k_off=%zu scale=%.12g "
+                     "base=%.12g yarn=%d\n",
+                     (int)in.block, position, isMla ? 1 : 0, H, hk, qD, kPerHead,
+                     vPerHead, ropeLen, qk_nope, q_rope_dim, k_rope_dim,
+                     qRopeOff, kRopeOff, scoreScale,
+                     1.0 / std::sqrt((double)qD), yarn ? 1 : 0);
+    }
+
+    // Position-0 invariant (independent of score scale): with exactly one
+    // visible KV token, softmax over a single element is exactly 1.0, so the
+    // attention output MUST equal V for that head. If this fails, the defect is
+    // in the AV accumulation or per-head KV indexing, not in attention scaling.
+    const bool checkPos0 = std::getenv("DEEP2_MLA_TRACE") && isMla &&
+                           position == 0 && in.block >= 0 && in.block <= 1;
+
     // ---- Geometry validation (fail closed on inconsistency) ----
     // The Q/K/V widths must agree with the head counts actually in use. An
     // inconsistency here is exactly what previously walked 31*128 bytes into a
@@ -2360,6 +2383,28 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                             "[attn-parity] h0 t=%zu score=%.8f prob=%.8f\n",
                             t, (double)sc[t], (double)pr[t]);
                 }
+            }
+            // Position-0 invariant: with T==1, softmax([s]) == 1.0 exactly, so
+            // the attention output must equal V. Any deviation here isolates the
+            // defect to the AV accumulation / per-head KV indexing and rules out
+            // attention scaling (which cannot affect a single-element softmax).
+            if (checkPos0) {
+                double worst = 0.0;
+                size_t worstIdx = 0;
+                for (size_t h = 0; h < H; ++h) {
+                    const size_t g = h / grp;
+                    const float* vp = V.data() + g * vPerHead;
+                    const float* op = cref.data() + h * outW;
+                    for (size_t d = 0; d < outW && d < vPerHead; ++d) {
+                        const double diff =
+                            std::fabs(double(op[d]) - double(vp[d]));
+                        if (diff > worst) { worst = diff; worstIdx = h * outW + d; }
+                    }
+                }
+                std::fprintf(stderr,
+                    "MLA_POS0_V block=%d maxAbs=%.8g at=%zu "
+                    "(0 => AV accumulation correct, defect is upstream)\n",
+                    (int)in.block, worst, worstIdx);
             }
             double maxAbs = 0.0, maxRel = 0.0;
             size_t maxIdx = 0;
