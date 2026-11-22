@@ -44,7 +44,10 @@ public:
     // H47: close/open submission admission atomically with registration.
     // cleanup() calls SetBlocked(true) before destroying resources; initialize()
     // calls SetBlocked(false) after a fresh device is ready.
-    void SetBlocked(bool b) noexcept { blocked_.store(b, std::memory_order_release); }
+    void SetBlocked(bool b) noexcept {
+        std::lock_guard<std::mutex> lock(mutex_);
+        blocked_.store(b, std::memory_order_release);
+    }
     bool IsBlocked() const noexcept { return blocked_.load(std::memory_order_acquire); }
 
     // The caller supplies the exact result of the current submission's wait
