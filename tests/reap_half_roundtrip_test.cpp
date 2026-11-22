@@ -13,8 +13,18 @@ int main() {
     };
     // Every finite, nonnegative binary16 value must round-trip exactly.
     for(uint32_t bits=0;bits<0x7c00u;++bits) {
-        // Exhaustively verify round-to-nearest ties-to-even between all
-    // adjacent positive finite half values (including subnormal/normal).
+        uint16_t encoded=0xffffu;
+        const float value=Half(static_cast<uint16_t>(bits));
+        if(!PositiveHalf(value,encoded)||encoded!=bits) {
+            ++fail;
+            std::printf("FAIL half roundtrip bits=0x%04x encoded=0x%04x\n",
+                        unsigned(bits),unsigned(encoded));
+            break;
+        }
+        ++pass;
+    }
+    // Exhaustively verify round-to-nearest ties-to-even between adjacent
+    // positive finite half values (including subnormal/normal boundary).
     for(uint32_t bits=0;bits<0x7bffu;++bits) {
         const double midpoint=(double(Half(static_cast<uint16_t>(bits)))+
                                double(Half(static_cast<uint16_t>(bits+1))))/2.0;
@@ -22,18 +32,8 @@ int main() {
         uint16_t actual=0xffffu;
         if(!PositiveHalf(midpoint,actual)||actual!=expected) {
             ++fail;
-            std::printf("FAIL half midpoint bits=0x%04x encoded=0x%04x expected=0x%04x\\n",
+            std::printf("FAIL half midpoint bits=0x%04x encoded=0x%04x expected=0x%04x\n",
                         unsigned(bits),unsigned(actual),unsigned(expected));
-            break;
-        }
-        ++pass;
-    }
-    uint16_t encoded=0xffffu;
-        const float value=Half(static_cast<uint16_t>(bits));
-        if(!PositiveHalf(value,encoded)||encoded!=bits) {
-            ++fail;
-            std::printf("FAIL half roundtrip bits=0x%04x encoded=0x%04x\n",
-                        unsigned(bits),unsigned(encoded));
             break;
         }
         ++pass;
