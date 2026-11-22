@@ -6579,3 +6579,8 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_zero_prune_verify.cpp")
   target_link_libraries(reap-zero-prune-verify PRIVATE bcrypt)
   target_compile_definitions(reap-zero-prune-verify PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
 endif()
+
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_zero_prune_manifest.cpp")
+  add_executable(reap-zero-prune-manifest tools/reap_zero_prune_manifest.cpp)
+  target_compile_features(reap-zero-prune-manifest PRIVATE cxx_std_20)
+endif()
