@@ -32,6 +32,20 @@ function Invoke-CertCommand([string[]]$Arguments) {
 }
 $certified = $false
 try {
+    # Bind evidence to an immutable source revision. Refuse a dirty tree:
+    # a commit hash alone does not identify uncommitted source changes.
+    $revision = (& git -C $root rev-parse --verify HEAD 2>&1)
+    if ($LASTEXITCODE -ne 0 -or -not $revision) {
+        throw "Cannot resolve source commit for native linker certification"
+    }
+    $script:log.Add("SOURCE_COMMIT=$([string]$revision)")
+    $dirty = @(& git -C $root status --porcelain --untracked-files=no 2>&1)
+    if ($LASTEXITCODE -ne 0) { throw "Cannot inspect source worktree status" }
+    $script:log.Add("SOURCE_TRACKED_DIRTY=$([int]($dirty.Count -gt 0))")
+    if ($dirty.Count -gt 0) {
+        throw "Tracked source changes are uncommitted; certification requires an immutable source revision"
+    }
+
     Invoke-CertCommand -Arguments @("-S", $root, "-B", $buildPath, "-G", $Generator,
         "-A", "x64", "-DRAWRXD_REQUIRE_NATIVE_IDE_LINK=ON")
     # Reject stale executables left over from an earlier successful build.
