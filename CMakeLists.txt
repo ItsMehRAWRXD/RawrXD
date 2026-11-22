@@ -4917,6 +4917,20 @@ target_compile_features(reap_bank_contract_test PRIVATE cxx_std_17)
 enable_testing()
 add_test(NAME reap_bank_contract_test COMMAND reap_bank_contract_test)
 
+# P0-06C: Transfer::Execute failure injection + MayReclaim reclamation invariant.
+add_executable(reap_transfer_failure_injection_test
+    tests/deep2/reap_transfer_failure_injection_test.cpp)
+target_include_directories(reap_transfer_failure_injection_test PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/deep2")
+target_compile_features(reap_transfer_failure_injection_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_transfer_failure_injection_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_transfer_failure_injection_test PRIVATE -Wall -Wextra)
+endif()
+enable_testing()
+add_test(NAME reap_transfer_failure_injection_test COMMAND reap_transfer_failure_injection_test)
+
 # Native metadata-driven MoE routing core regression (softmax/sigmoid + bias +
 # group-limited top-k + routed scaling + norm_topk_prob + REAP mask).
 add_executable(reap_moe_routing_core_test tests/reap_moe_routing_core_test.cpp)
