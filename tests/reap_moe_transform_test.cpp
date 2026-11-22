@@ -147,6 +147,14 @@ int main() {
         return 1;
     }
     const auto before = readAll(source);
+    const auto inspection = Deep2::inspectMoEGGUFBudget(source.string(),4096);
+    if (!inspection.success || inspection.originalExperts!=2 ||
+        inspection.topK!=1 || inspection.groups!=1 || inspection.groupsUsed!=1 ||
+        inspection.maxRetained!=2 || inspection.routedLayers!=std::vector<uint32_t>{0} ||
+        fs::exists(output) || readAll(source)!=before) {
+        std::cerr<<"READ_ONLY_INSPECTION_FAIL "<<inspection.error<<"\n";
+        return 10;
+    }
 
     Deep2::ReapMoETransformRequest request;
     request.sourceFirstShard = source.string();
@@ -200,6 +208,15 @@ int main() {
     if (!exactResult.success || exactResult.outputBytes != result.outputBytes) {
         std::cerr << "EXACT_BUDGET_FAIL " << exactResult.error << "\n";
         return 9;
+    }
+    const auto boundary = Deep2::inspectMoEGGUFBudget(source.string(),result.outputBytes);
+    const auto impossible = Deep2::inspectMoEGGUFBudget(source.string(),result.outputBytes-1);
+    if (!boundary.success || boundary.minimumBytes!=result.outputBytes ||
+        boundary.predictedBytes!=result.outputBytes || !boundary.maxRetained ||
+        !impossible.success || impossible.maxRetained!=0 || impossible.predictedBytes!=0 ||
+        impossible.minimumBytes!=result.outputBytes || readAll(source)!=before) {
+        std::cerr<<"INSPECTION_WRITER_BOUNDARY_MISMATCH\n";
+        return 11;
     }
     const fs::path tooSmall = root / "candidate_too_small";
     Deep2::ReapMoETransformRequest rejected = request;
