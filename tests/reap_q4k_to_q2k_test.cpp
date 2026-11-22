@@ -46,6 +46,35 @@ int main(){
         return 2;
     }
 #endif
+    // Independent packed fixture: generate logical scales and codes first,
+    // then encode the GGUF bytes without using either decoder.
+    uint32_t rng=0x923abcdu;
+    auto next=[&](){rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng;};
+    bool oracle=true, bytesParity=true;
+    for(unsigned trial=0;trial<4096 && oracle && bytesParity;++trial){
+        Q4Block block{}; Values expected{}, a{}, b{};
+        StoreHalf(block.data(),0x3c00); StoreHalf(block.data()+2,0x3800);
+        for(unsigned g=0;g<8;++g){
+            unsigned sc=next()&63u,mn=next()&63u;
+            if(g<4){block[4+g]|=sc;block[8+g]|=mn;}
+            else {
+                block[g]|=(sc>>4)<<6;
+                block[4+g]|=(mn>>4)<<6;
+                block[8+g]=(sc&15u)|((mn&15u)<<4);
+            }
+            for(unsigned i=0;i<32;++i){
+                unsigned q=next()&15u;
+                block[16+32*(g/2)+i]|=q<<(4*(g%2));
+                expected[32*g+i]=float(sc*q)-0.5f*float(mn);
+            }
+        }
+        oracle=DecodeQ4(block,a)&&DecodeQ4AVX2(block,b)&&a==expected&&b==expected;
+        Q2Block qa{},qb{}; Error ea{},eb{};
+        bytesParity=Convert(block,qa,ea)&&ConvertAVX2(block,qb,eb)&&qa==qb&&
+            ea.squared==eb.squared&&ea.signal==eb.signal&&ea.maxAbs==eb.maxAbs;
+    }
+    check(oracle,"R23 independent 4096-block packed oracle");
+    check(bytesParity,"R23 independent fixtures exact conversion parity");
     Values scalarValues{},simdValues{};
     Q2Block scalarConverted{},simdConverted{};
     Error scalarError{},simdError{};
