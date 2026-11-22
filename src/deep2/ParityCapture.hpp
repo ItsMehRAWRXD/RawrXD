@@ -77,6 +77,14 @@ struct ParityCapture {
     std::uint64_t firstMismatchIndex = 0;
     bool valid = false;
     bool hasMismatch = false;
+    std::uint64_t worstRelativeIndex = 0;
+    double worstReference = 0.0;
+    double worstCandidate = 0.0;
+    double worstAbsoluteError = 0.0;
+    double worstRelativeError = 0.0;
+    bool hasWorstRelative = false;
+    bool hasNonFinite = false;
+    std::uint64_t nonFiniteIndex = 0;
 
     // True when the capture is valid AND no element exceeded tolerance.
     bool Equivalent() const noexcept { return valid && !hasMismatch; }
@@ -143,6 +151,8 @@ inline ParityCapture Compare(const float* reference,
         const double b = static_cast<double>(candidate[i]);
         if (!std::isfinite(a) || !std::isfinite(b)) {
             sawNonFinite = true;
+            cap.hasNonFinite = true;
+            cap.nonFiniteIndex = static_cast<std::uint64_t>(i);
             break;
         }
         const double d = a - b;
@@ -153,6 +163,14 @@ inline ParityCapture Compare(const float* reference,
         sumSq += absErr * absErr;
         if (absErr > cap.maxAbsError) cap.maxAbsError = absErr;
         if (relErr > cap.maxRelError) cap.maxRelError = relErr;
+        if (!cap.hasWorstRelative || relErr > cap.worstRelativeError) {
+            cap.hasWorstRelative = true;
+            cap.worstRelativeIndex = static_cast<std::uint64_t>(i);
+            cap.worstReference = a;
+            cap.worstCandidate = b;
+            cap.worstAbsoluteError = absErr;
+            cap.worstRelativeError = relErr;
+        }
 
         if (!sawMismatch && absErr > tol.absTol + tol.relTol * scale) {
             sawMismatch = true;
@@ -309,6 +327,11 @@ inline std::string Describe(const ParityCapture& cap) {
     s += " maxRel=" + std::to_string(cap.maxRelError);
     s += " rms=" + std::to_string(cap.rmsError);
     s += " firstMismatch=" + std::to_string(cap.firstMismatchIndex);
+    if (cap.hasWorstRelative)
+        s += " worstRelIndex=" + std::to_string(cap.worstRelativeIndex) +
+             " worstRel=" + std::to_string(cap.worstRelativeError);
+    if (cap.hasNonFinite)
+        s += " nonFiniteIndex=" + std::to_string(cap.nonFiniteIndex);
     s += cap.hasMismatch ? " MISMATCH}" : " OK}";
     return s;
 }

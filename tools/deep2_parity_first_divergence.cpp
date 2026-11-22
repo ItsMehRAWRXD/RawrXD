@@ -283,6 +283,28 @@ int main(int argc, char** argv) {
             }
         }
         std::printf("POS %zu %s\n", pos, PC::Describe(cap).c_str());
+        // Alignment check: confirm reference and candidate describe the SAME
+        // token position (guards against a perPosLogits off-by-one) and report
+        // whether they agree on the predicted next token, plus the first 8 raw
+        // logit pairs. A maxRel near 2.0 with matching argmax usually means an
+        // opposite-sign / near-zero element, not a gross model error.
+        if (!refLogits[pos].empty() && !candLogits[pos].empty() &&
+            refLogits[pos].size() == candLogits[pos].size()) {
+            auto am = [](const std::vector<float>& v) {
+                size_t b = 0;
+                for (size_t i = 1; i < v.size(); ++i) if (v[i] > v[b]) b = i;
+                return b;
+            };
+            const size_t ra = am(refLogits[pos]);
+            const size_t ca = am(candLogits[pos]);
+            std::printf("  ALIGN ref_argmax=%zu cand_argmax=%zu %s",
+                        ra, ca, ra == ca ? "AGREE" : "DISAGREE");
+            const size_t n8 = std::min<size_t>(8, refLogits[pos].size());
+            std::printf(" first8[");
+            for (size_t i = 0; i < n8; ++i)
+                std::printf("%s%.4f/%.4f", i ? "," : "", refLogits[pos][i], candLogits[pos][i]);
+            std::printf("]\n");
+        }
     }
     std::fflush(stdout);
 

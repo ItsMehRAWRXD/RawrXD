@@ -75,6 +75,13 @@ int main() {
         Check(cap.firstMismatchIndex == 2, "injected: firstMismatchIndex==2");
         Check(Near(cap.maxAbsError, 0.5), "injected: maxAbs==0.5");
         Check(Near(cap.maxRelError, 0.5 / 3.5), "injected: maxRel==0.5/3.5");
+        Check(cap.hasWorstRelative && cap.worstRelativeIndex == 2,
+              "injected: worst-relative index==2");
+        Check(Near(cap.worstReference, 3.0) && Near(cap.worstCandidate, 3.5),
+              "injected: worst-relative operands preserved");
+        Check(Near(cap.worstAbsoluteError, 0.5) &&
+              Near(cap.worstRelativeError, 0.5 / 3.5),
+              "injected: worst-relative metrics preserved");
         Check(Near(cap.rmsError, std::sqrt(0.25 / 4.0)),
               "injected: rms==sqrt(0.25/4)");
         Check(!cap.Equivalent(), "injected: not Equivalent");
@@ -142,6 +149,8 @@ int main() {
         ParityCapture cap = Compare(ref, cand, 0, 0, 0);
         Check(!cap.valid, "non-finite(inf): invalid");
         Check(!cap.Equivalent(), "non-finite(inf): not Equivalent");
+        Check(cap.hasNonFinite && cap.nonFiniteIndex == 1,
+              "non-finite(inf): index surfaced");
 
         std::vector<float> ref2 = {1.0f, nan, 3.0f};
         ParityCapture cap2 = Compare(ref2, cand, 0, 0, 0);
