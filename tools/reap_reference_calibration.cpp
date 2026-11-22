@@ -169,9 +169,22 @@ static bool run_once(const std::string & modelPath, const std::vector<int32_t> &
 }
 
 int main(int argc, char ** argv) {
-    if (argc < 6) { std::fprintf(stderr, "usage: reap_reference_calibration <model> <out-dir> <model-sha256> <prompt-sha256> <reference-revision> <token>...\n"); return 2; }
+    if (argc < 6) { std::fprintf(stderr, "usage: reap_reference_calibration <model> <out-dir> <model-sha256> <prompt-sha256> <reference-revision> [--manifest <token-file>|<token> ...]\n"); return 2; }
     const std::string model = argv[1], outDir = argv[2], modelHash = argv[3], promptHash = argv[4], revision = argv[5];
-    std::vector<int32_t> tokens; for (int i = 6; i < argc; ++i) tokens.push_back(std::atoi(argv[i]));
+    std::vector<int32_t> tokens;
+    if (argc >= 8 && std::strcmp(argv[6], "--manifest") == 0) {
+        std::ifstream manifest(argv[7]);
+        long long value = 0;
+        while (manifest >> value) {
+            if (value < INT32_MIN || value > INT32_MAX || tokens.size() >= 512) {
+                std::fprintf(stderr, "CALIBRATION_FAIL=MANIFEST_INVALID\n"); return 2;
+            }
+            tokens.push_back(static_cast<int32_t>(value));
+        }
+        if (!manifest.eof()) { std::fprintf(stderr, "CALIBRATION_FAIL=MANIFEST_READ\n"); return 2; }
+    } else {
+        for (int i = 6; i < argc; ++i) tokens.push_back(std::atoi(argv[i]));
+    }
     if (tokens.empty() || !load_api()) { std::fprintf(stderr, "CALIBRATION_FAIL=API_OR_INPUT\n"); return 3; }
     fs::create_directories(outDir);
     Run plain, instrumented;
