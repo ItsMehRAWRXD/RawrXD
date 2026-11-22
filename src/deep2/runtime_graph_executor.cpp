@@ -2841,6 +2841,7 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     // expert_weights_scale: applied only when the model sets it to something
     // other than 0 (absent) or 1 (identity), exactly like the reference.
     const float wscale = (float)spec_.expert_weights_scale;
+    if (!std::isfinite(wscale) || wscale < 0.0f) { last_error_ = "router: invalid weight scale"; return false; }
     if (wscale != 0.0f && wscale != 1.0f) {
         for (size_t i = 0; i < kused; ++i) w[i] *= wscale;
     }
@@ -2863,6 +2864,7 @@ static size_t elemCountOf(const TensorRec& t) {
     if (!tr || tr->type_size == 0 || tr->blck_size == 0) return 0;
     const size_t ts = static_cast<size_t>(tr->type_size);
     const size_t blk = static_cast<size_t>(tr->blck_size);
+    if (t.bytes % ts || t.bytes / ts > std::numeric_limits<size_t>::max() / blk) return 0;
     return (t.bytes / ts) * blk;
 }
 
@@ -3085,7 +3087,11 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const size_t gExperts = elemCountOf(*gateT) / elemStrideG;
     const size_t uExperts = elemCountOf(*upT) / elemStrideU;
     const size_t dExperts = elemCountOf(*downT) / elemStrideD;
-    const size_t usableE = std::min(gExperts, std::min(uExperts, dExperts));
+    if (elemCountOf(*gateT) % elemStrideG || elemCountOf(*upT) % elemStrideU ||
+        elemCountOf(*downT) % elemStrideD || gExperts != uExperts || uExperts != dExperts) {
+        err = "moe: inconsistent retained expert banks"; return false;
+    }
+    const size_t usableE = gExperts;
     if (usableE == 0) { err = "moe: no expert blocks available"; return false; }
 
     if (std::getenv("MOE_TRACE")) {
@@ -3098,7 +3104,12 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
 
     // Validate every selected expert before computing anything.
     for (size_t e = 0; e < ids.size() && e < w.size(); ++e) {
-        if ((size_t)ids[e] >= usableE) { err = "moe: selected expert out of range"; return false; }
+        if ((size_t)ids[e] >= usableE || !std::isfinite(w[e]) || w[e] < 0.0f) {
+            err = "moe: invalid selected expert or routing weight"; return false;
+        }
+        for (size_t prev = 0; prev < e; ++prev) {
+            if (ids[prev] == ids[e]) { err = "moe: duplicate selected expert"; return false; }
+        }
     }
 
     std::vector<float> g(ffn), u(ffn);
