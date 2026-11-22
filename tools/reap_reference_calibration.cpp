@@ -26,6 +26,7 @@ struct Capture {
     std::map<int, std::vector<int32_t>> ids;
     std::map<int, std::vector<float>> weights;
     std::vector<std::string> trace;
+    std::vector<std::pair<std::string, std::vector<float>>> trace_values;
 };
 
 static bool starts(const char * s, const char * p) {
@@ -65,6 +66,7 @@ static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
             std::vector<float> values(elements); p_ggml_backend_tensor_get(t, values.data(), 0, elements * sizeof(float));
             for (float value : values) if (!std::isfinite(value)) { c->invalid = true; c->error = "layer-0 trace tensor is nonfinite"; return false; }
             c->trace.emplace_back(std::string(t->name) + ":" + std::to_string(elements));
+            c->trace_values.emplace_back(t->name, std::move(values));
             return true;
         }
         return false;
@@ -230,6 +232,15 @@ int main(int argc, char ** argv) {
     if (instrumented.capture.trace.size() != 22) {
         std::fprintf(stderr, "CALIBRATION_FAIL=INCOMPLETE_LAYER0_TRACE count=%zu expected=22\n", instrumented.capture.trace.size());
         return 7;
+    }
+    for (size_t traceIndex = 0; traceIndex < instrumented.capture.trace_values.size(); ++traceIndex) {
+        const auto & trace = instrumented.capture.trace_values[traceIndex];
+        std::string safe = trace.first;
+        for (char & ch : safe) if (ch == ' ' || ch == '(' || ch == ')' || ch == ':') ch = '_';
+        std::ofstream traceFile(fs::path(outDir) / ("reference_" + std::to_string(traceIndex) + "_" + safe + ".f32"), std::ios::binary | std::ios::trunc);
+        if (!traceFile) return 7;
+        traceFile.write(reinterpret_cast<const char *>(trace.second.data()), static_cast<std::streamsize>(trace.second.size() * sizeof(float)));
+        if (!traceFile) return 7;
     }
     for (size_t position = 0; position < tokens.size(); ++position) {
         std::ofstream logitsFile(fs::path(outDir) / ("reference_logits_pos" + std::to_string(position) + ".bin"), std::ios::binary | std::ios::trunc);
