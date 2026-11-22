@@ -4875,6 +4875,15 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     target_compile_definitions(reap_virtual_payload_msvc_adaptive_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
     add_test(NAME reap_virtual_payload_msvc_adaptive_test COMMAND reap_virtual_payload_msvc_adaptive_test)
 
+    # Link-contract gate: fail at link time on unresolved ConvertMsvcAvx2.
+    add_executable(reap_msvc_link_contract_test
+        tests/reap_msvc_link_contract_test.cpp
+        $<TARGET_OBJECTS:reap_msvc_avx2>)
+    target_include_directories(reap_msvc_link_contract_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(reap_msvc_link_contract_test PRIVATE cxx_std_17)
+    target_compile_definitions(reap_msvc_link_contract_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
+    add_test(NAME reap_msvc_link_contract_test COMMAND reap_msvc_link_contract_test)
+
     # Production IDE and its REAP streaming conversion share the isolated
     # object. Do not add AVX2 compile flags to the IDE's source files.
     if(TARGET RawrXD-Win32IDE-Native)
