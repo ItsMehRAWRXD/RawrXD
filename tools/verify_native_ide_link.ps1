@@ -4,7 +4,8 @@ param(
     [string]$BuildDir = "build-native-link-cert",
     [string]$Generator = "Visual Studio 17 2022",
     [string]$Configuration = "Release",
-    [switch]$CleanBuild
+    [switch]$CleanBuild,
+    [switch]$RunReapTests
 )
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -45,6 +46,19 @@ try {
     if ($executable.Count -eq 0) { throw "Native IDE executable missing after successful build" }
     $script:log.Add("NATIVE_IDE_EXECUTABLE=$($executable[0])")
     $script:log.Add("NATIVE_IDE_SHA256=$((Get-FileHash -LiteralPath $executable[0] -Algorithm SHA256).Hash)")
+    if ($RunReapTests) {
+        Invoke-CertCommand -Arguments @("--build", $buildPath, "--config", $Configuration,
+            "--target", "reap_msvc_link_contract_test", "reap_msvc_anchor_only_test",
+            "reap_virtual_payload_msvc_adaptive_test", "--parallel", "2")
+        $ctestOutput = & ctest --test-dir $buildPath -C $Configuration --output-on-failure -R "^reap_(msvc_link_contract_test|msvc_anchor_only_test|virtual_payload_msvc_adaptive_test)$" 2>&1
+        $ctestExit = $LASTEXITCODE
+        foreach ($line in $ctestOutput) {
+            $text = [string]$line
+            $script:log.Add($text)
+            Write-Host $text
+        }
+        if ($ctestExit -ne 0) { throw "REAP native linker acceptance tests failed with exit $ctestExit" }
+    }
     $certified = $true
 }
 catch {
