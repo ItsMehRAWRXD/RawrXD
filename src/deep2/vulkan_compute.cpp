@@ -2003,6 +2003,13 @@ bool VulkanCompute::downloadFromBuffer(
                      "[GPU] downloadFromBuffer failed stage=%s bytes=%zu\n",
                      failedStage, bytes);
         std::fflush(stderr);
+        // NOTE: do NOT destroy/unmap/free downloadStaging_ here. On a failed
+        // fence wait the GPU may still be reading that allocation; freeing it
+        // reproduces the premature-reclamation defect class (see commits
+        // c31a82675a..ea9c94b6d0). Correct containment is completion-backed
+        // quarantine of the whole submission dependency graph, which must be
+        // implemented centrally in endSubmitWait(), not by invalidating a
+        // caller's staging buffer. Left unchanged pending that audit.
     }
     if (ok) std::memcpy(dst, mapped, bytes);
     return ok;
