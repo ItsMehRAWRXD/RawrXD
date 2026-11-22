@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <cstddef>
 #include <limits>
+#if defined(_MSC_VER) && defined(RAWRXD_REAP_MSVC_ISOLATED_AVX2) && (defined(_M_X64) || defined(_M_IX86))
+#include <intrin.h>
+#endif
 
 #if defined(__AVX2__) || ((defined(__GNUC__) || defined(__clang__)) && (defined(__x86_64__) || defined(__i386__)))
 #include <immintrin.h>
@@ -142,15 +145,32 @@ RAWRXD_REAP_AVX2_TARGET inline bool ConvertAVX2(const Q4Block& source,Q2Block& t
 #endif
 
 // Baseline callers may select the isolated accelerated kernel on GNU x86.
+#if defined(_MSC_VER) && defined(RAWRXD_REAP_MSVC_ISOLATED_AVX2) && (defined(_M_X64) || defined(_M_IX86))
+bool ConvertMsvcAvx2(const Q4Block&,Q2Block&,Error&) noexcept;
+#endif
 inline bool AdaptiveAvx2Available() noexcept {
 #if defined(RAWRXD_REAP_HAS_AVX2_KERNEL) && (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER)
     return __builtin_cpu_supports("avx2") != 0;
+#elif defined(_MSC_VER) && defined(RAWRXD_REAP_MSVC_ISOLATED_AVX2) && (defined(_M_X64) || defined(_M_IX86))
+    static const bool supported=[]() noexcept {
+        int regs[4]{};
+        __cpuid(regs,0);
+        if(regs[0]<7)return false;
+        __cpuid(regs,1);
+        if((regs[2]&((1<<27)|(1<<28)))!=((1<<27)|(1<<28)))return false;
+        if((_xgetbv(0)&6)!=6)return false;
+        __cpuidex(regs,7,0);
+        return (regs[1]&(1<<5))!=0;
+    }();
+    return supported;
 #else
     return false;
 #endif
 }
 inline bool ConvertAdaptive(const Q4Block& source,Q2Block& target,Error& error) noexcept {
-#if defined(RAWRXD_REAP_HAS_AVX2_KERNEL)
+#if defined(_MSC_VER) && defined(RAWRXD_REAP_MSVC_ISOLATED_AVX2) && (defined(_M_X64) || defined(_M_IX86))
+    if(AdaptiveAvx2Available())return ConvertMsvcAvx2(source,target,error);
+#elif defined(RAWRXD_REAP_HAS_AVX2_KERNEL)
     if(AdaptiveAvx2Available())return ConvertAVX2(source,target,error);
 #endif
     return Convert(source,target,error);
