@@ -215,7 +215,15 @@ static int capabilities(const std::string& input) {
             if (!ec && e.is_regular_file() && e.path().extension() == ".gguf") { candidate = e.path(); break; }
         }
     }
-    const bool recognized = candidate.extension() == ".gguf";
+    // Ollama stores imported GGUFs as content-addressed blobs without a
+    // filename extension.  Admission must be based on the actual format
+    // header, not the container name, while still rejecting arbitrary files.
+    uint32_t magic = 0;
+    const bool regularFile = fs::is_regular_file(candidate, ec);
+    const bool hasGgufMagic = regularFile && readU32LE(candidate.string(), magic) &&
+                              magic == 0x46554747u; // "GGUF" little-endian
+    const bool recognized = regularFile &&
+                            (candidate.extension() == ".gguf" || hasGgufMagic);
     if (!recognized) {
         std::cout << "{\"source\":" << json_quote(input)
                   << ",\"format\":\"unknown\",\"inspectable\":false,\"calibratable\":false,\"transformable\":false,\"reason\":\"unsupported_format_or_missing_metadata\"}\n";
