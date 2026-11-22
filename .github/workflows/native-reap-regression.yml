@@ -129,6 +129,11 @@ jobs:
           if errorlevel 1 exit /b 1
           cl /nologo /std:c++17 /EHsc /O2 /DRAWRXD_REAP_MSVC_ISOLATED_AVX2=1 /I src /c tests\reap_msvc_link_contract_test.cpp /Fo:reap-link-contract.obj
           if errorlevel 1 exit /b 1
+          rem Negative control: omitting the isolated object MUST fail with an unresolved external.
+          link /nologo /WX reap-link-contract.obj /OUT:reap-link-missing.exe > reap-link-missing.log 2>&1
+          if not errorlevel 1 exit /b 1
+          findstr /C:"LNK2019" /C:"LNK2001" reap-link-missing.log
+          if errorlevel 1 exit /b 1
           link /nologo /WX reap-link-contract.obj reap-avx2.obj /OUT:reap-link-contract.exe
           if errorlevel 1 exit /b 1
           reap-link-contract.exe
