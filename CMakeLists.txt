@@ -4837,6 +4837,15 @@ else()
     target_compile_options(reap_mixed_precision_plan_test PRIVATE -Wall -Wextra)
 endif()
 add_test(NAME reap_mixed_precision_plan_test COMMAND reap_mixed_precision_plan_test)
+add_executable(reap_activation_optimizer_test tests/reap_activation_optimizer_test.cpp)
+target_include_directories(reap_activation_optimizer_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_activation_optimizer_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_activation_optimizer_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_activation_optimizer_test PRIVATE -Wall -Wextra)
+endif()
+add_test(NAME reap_activation_optimizer_test COMMAND reap_activation_optimizer_test)
 add_test(NAME reap_quant_profile_regression
     COMMAND "${CMAKE_COMMAND}"
         "-DPLANNER=$<TARGET_FILE:reap_selection_plan>"
