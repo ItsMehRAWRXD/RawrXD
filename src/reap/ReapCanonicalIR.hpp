@@ -13,9 +13,11 @@
 //   - PhysicalTensor : one per physical tensor, tagged with its layer index
 //   - LogicalVisit   : (pass, ordinal, physicalLayer) schedule
 //
-// loop_end is EXCLUSIVE; loop_count is the TOTAL number of passes.
+// loop_count is the TOTAL number of passes; NormalizeLoop reconciles raw end conventions.
 
 #pragma once
+
+#include "reap/ReapVisitSchedule.hpp"
 
 #include <cstdint>
 #include <string>
@@ -37,7 +39,7 @@ struct ModelGeometry {
     // Recurrent loop metadata (0 / absent => single pass, no recurrence).
     uint64_t loopCount   = 0;         // TOTAL passes (>=1 once normalized)
     uint64_t loopStart   = 0;         // inclusive first physical layer in loop
-    uint64_t loopEnd     = 0;         // EXCLUSIVE end (0 => blockCount)
+    uint64_t loopEnd     = 0;         // raw end; normalized by architecture
     uint64_t loopGateRank = 0;
 };
 
@@ -54,13 +56,6 @@ struct PhysicalTensor {
     uint64_t    tensorOffset = 0;
     uint64_t    expertCount = 0;
     uint32_t    layerIndex = UINT32_MAX;   // UINT32_MAX = global
-};
-
-// One logical execution visit. Reuses physicalLayer's weights; no new storage.
-struct LogicalVisit {
-    uint32_t pass         = 0;   // 0..loopCount-1
-    uint32_t layerOrdinal = 0;   // 0..(visits-1), execution order
-    uint32_t physicalLayer = 0;  // 0..blockCount-1
 };
 
 struct CanonicalIR {
@@ -92,32 +87,12 @@ inline uint32_t ParseLayerIndex(const std::string& name) {
     return static_cast<uint32_t>(value);
 }
 
-// Build the logical visit schedule. loopEnd is exclusive; loopCount is total
-// passes. With blockCount=24, loopCount=2, loopStart=0, loopEnd=24 => 48 visits
-// (two passes over 24 physical layers). With loopCount<=1 => one pass.
+// Normalize the discovered loop metadata and include all non-recurrent layers.
+inline LoopSchedule ModelLoop(const ModelGeometry& g) {
+    return NormalizeLoop(g.architecture, g.blockCount, g.loopCount, g.loopStart, g.loopEnd);
+}
 inline std::vector<LogicalVisit> BuildVisitSchedule(const ModelGeometry& g) {
-    std::vector<LogicalVisit> out;
-    const uint64_t blockCount = g.blockCount;
-    if (blockCount == 0) return out;
-
-    const uint64_t passes = g.loopCount > 0 ? g.loopCount : 1;
-    uint64_t start = g.loopStart;
-    if (start > blockCount) start = blockCount;
-    uint64_t end = (g.loopEnd > 0) ? g.loopEnd : blockCount;   // exclusive
-    if (end > blockCount) end = blockCount;
-    if (end <= start) { end = blockCount; start = 0; }          // safety
-
-    uint32_t ordinal = 0;
-    for (uint64_t p = 0; p < passes; ++p) {
-        for (uint64_t layer = start; layer < end; ++layer) {
-            LogicalVisit v;
-            v.pass = static_cast<uint32_t>(p);
-            v.layerOrdinal = ordinal++;
-            v.physicalLayer = static_cast<uint32_t>(layer);
-            out.push_back(v);
-        }
-    }
-    return out;
+    return BuildLayerVisits(ModelLoop(g));
 }
 
 // Build the full canonical IR: assign layer indices to tensors and expand the
