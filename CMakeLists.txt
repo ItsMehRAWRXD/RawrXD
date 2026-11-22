@@ -4776,6 +4776,12 @@ add_test(NAME reap_selection_pipeline_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_selection_pipeline_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_selection_pipeline_regression.cmake")
 
+add_test(NAME reap_budget_selection_regression
+    COMMAND "${CMAKE_COMMAND}"
+        "-DPLANNER=$<TARGET_FILE:reap_selection_plan>"
+        "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_budget_selection_fixtures"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_budget_selection_regression.cmake")
+
 # Native group geometry and serialized prune-only export budget.
 add_executable(reap_export_budget_test tests/reap_export_budget_test.cpp)
 target_include_directories(reap_export_budget_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
