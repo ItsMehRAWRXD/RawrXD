@@ -7618,26 +7618,23 @@ bool Win32IDE::initializeInference()
     return true;
 }
 
-void Win32IDE::shutdownInference()
-{
-    std::lock_guard<std::mutex> lock(m_inferenceMutex);
-    
-    if (m_inferenceRunning) {
-        m_inferenceStopRequested = true;
-        if (m_inferenceThread.joinable()) {
-            m_inferenceThread.join();
-        }
-    }
-    
-    m_inferenceRunning = false;
-    m_inferenceStopRequested = false;
-    m_activeInferenceGeneration = 0;
-    m_currentInferencePrompt.clear();
-    m_currentInferenceResponse.clear();
-    
-    appendToOutput("Inference shutdown complete", "Output", OutputSeverity::Info);
-}
-
+void Win32IDE::shutdownInference()
+{
+    // UI-owner lifecycle: stop and drain even when Stop already cleared running.
+    stopInference();
+    if (m_inferenceThread.joinable()) m_inferenceThread.join();
+    {
+        std::lock_guard<std::mutex> lock(m_inferenceMutex);
+        m_inferenceRunning = false;
+        m_inferenceStopRequested = false;
+        m_activeInferenceGeneration = 0;
+        m_inferenceCallback = {};
+        m_currentInferencePrompt.clear();
+        m_currentInferenceResponse.clear();
+    }
+    appendToOutput("Inference shutdown complete", "Output", OutputSeverity::Info);
+}
+
 std::string Win32IDE::generateResponse(const std::string& prompt)
 {
     if (m_inferenceRunning) {
@@ -8104,18 +8101,22 @@ void Win32IDE::generateResponseAsync(
                     }
                     m_deep2Bridge->GenerateStream(
                         routedPrompt,
-                        [this, &response, callback](const std::string& token, bool) {
-                            if (!m_inferenceStopRequested && callback) callback(token, false, true);
-                            response += token;
-                            return !m_inferenceStopRequested;
+                        [this, &response, callback, requestGeneration](const std::string& token, bool) {
+                            if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+                                m_activeInferenceGeneration.load(std::memory_order_acquire) != requestGeneration)
+                                return false;
+                            response += token;
+                            if (callback) callback(token, false, true);
+                            return !m_inferenceStopRequested.load(std::memory_order_acquire) &&
+                                m_activeInferenceGeneration.load(std::memory_order_acquire) == requestGeneration;
                         },
                         requestMaxTokens);
                     const bool success = !response.empty() &&
                         response.rfind("Error:", 0) != 0 &&
                         response.rfind("[Deep2", 0) != 0;
-                    finishIfCurrent(response.empty()
-                        ? "Deep2 returned an empty response."
-                        : response, success);
+                    finishIfCurrent(response.empty()
+                        ? "Deep2 returned an empty response."
+                        : (success ? std::string{} : response), success);
                     return;
                 }
 
