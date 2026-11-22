@@ -112,6 +112,17 @@ int main(){
                                 Precision::Q2,Q4Bytes,punctB)&&punctB&&
           punctA!=punctB,
           "length-prefixed checkpoint keys distinguish delimiter-bearing identities");
+    // Reusing an output lease must never expose stale weights after a
+    // failed request (invalid precision, identity or cache admission).
+    BoundedExpertCache::Lease stale=q2;
+    check(!AcquireVirtualPayload(reader,cache,range,
+                                 static_cast<Precision>(99),Q4Bytes,stale)&&
+          !stale,
+          "invalid precision clears previously acquired output lease");
+    stale=q2;
+    check(!AcquireVirtualPayload(reader,shared,std::string(),range,
+                                 Precision::Q2,Q4Bytes,stale)&&!stale,
+          "empty model identity clears previously acquired output lease");
     BoundedExpertCache::Lease rejected;
     check(!AcquireVirtualPayload(reader,cache,{3,0,Q4Bytes-1},Precision::Q2,
                                  Q4Bytes,rejected)&&!rejected,
