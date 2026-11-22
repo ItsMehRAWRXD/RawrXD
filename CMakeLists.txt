@@ -4821,7 +4821,10 @@ target_compile_definitions(reap_scalar_acceptance_test PRIVATE RAWRXD_REAP_SCALA
 if(MSVC)
     target_compile_options(reap_scalar_acceptance_test PRIVATE /EHsc /W4)
 else()
-    target_compile_options(reap_scalar_acceptance_test PRIVATE -Wall -Wextra -mno-avx -mno-avx2)
+    target_compile_options(reap_scalar_acceptance_test PRIVATE -Wall -Wextra)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64|i[3-6]86)$")
+        target_compile_options(reap_scalar_acceptance_test PRIVATE -mno-avx -mno-avx2)
+    endif()
 endif()
 add_test(NAME reap_scalar_acceptance_test COMMAND reap_scalar_acceptance_test)
 
