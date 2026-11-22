@@ -72,6 +72,26 @@ int main(){
                                 2*Q4Bytes,q4)&&q4&&q4->size()==reader.data.size()&&
           std::memcmp(q4->data(),reader.data.data(),reader.data.size())==0,
           "Q4 payload retains original block bytes");
+    // One shared cache may serve multiple immutable checkpoints only when
+    // their model identities are part of the key.
+    BoundedExpertCache shared(3*blocks*Q2Bytes);
+    BoundedExpertCache::Lease modelA,modelB,modelAAgain,emptyIdentity;
+    const unsigned beforeShared=reader.reads;
+    check(AcquireVirtualPayload(reader,shared,std::string("model:A"),range,
+                                Precision::Q2,Q4Bytes,modelA)&&modelA&&
+          AcquireVirtualPayload(reader,shared,std::string("model:B"),range,
+                                Precision::Q2,Q4Bytes,modelB)&&modelB&&
+          modelA!=modelB&&reader.reads==beforeShared+2*blocks,
+          "shared cache separates identical shard ranges by model identity");
+    const unsigned beforeModelHit=reader.reads;
+    check(AcquireVirtualPayload(reader,shared,std::string("model:A"),range,
+                                Precision::Q2,Q4Bytes,modelAAgain)&&
+          modelAAgain==modelA&&reader.reads==beforeModelHit,
+          "model identity cache hit avoids duplicate shard reads");
+    check(!AcquireVirtualPayload(reader,shared,std::string(),range,
+                                 Precision::Q2,Q4Bytes,emptyIdentity)&&
+          !emptyIdentity&&reader.reads==beforeModelHit,
+          "empty checkpoint identity rejected before I/O");
     BoundedExpertCache::Lease rejected;
     check(!AcquireVirtualPayload(reader,cache,{3,0,Q4Bytes-1},Precision::Q2,
                                  Q4Bytes,rejected)&&!rejected,
