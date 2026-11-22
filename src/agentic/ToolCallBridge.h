@@ -80,7 +80,11 @@ struct ToolResultMessage {
     std::string content;       // Result text (or error message)
     bool        success;
     // G: authoritative acceptance verdict (from rawrxd::tools::Result).
-    bool        accepted = true;
+    // Fail-closed: default is NotEvaluated and accepted=false so an
+    // unevaluated path can never report success.
+    enum class Acceptance { NotEvaluated, Accepted, Rejected, NotApplicable };
+    Acceptance  acceptance = Acceptance::NotEvaluated;
+    bool        accepted = false;
     std::string firstFailure;
 };
 
@@ -422,8 +426,15 @@ inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
     rawrxd::tools::Result tool_result = m_registry->call(req, approve);
     m_motdAuthorization.NoteExecution(m_authorizationSession, m_authorizationTurn);
     result_msg.content = tool_result.ok ? tool_result.output : tool_result.error;
-    result_msg.accepted = (tool_result.acceptance == rawrxd::tools::Result::Acceptance::Accepted ||
-                           tool_result.acceptance == rawrxd::tools::Result::Acceptance::NotApplicable);
+    result_msg.acceptance = (tool_result.acceptance == rawrxd::tools::Result::Acceptance::Accepted)
+        ? ToolResultMessage::Acceptance::Accepted
+        : ((tool_result.acceptance == rawrxd::tools::Result::Acceptance::Rejected)
+            ? ToolResultMessage::Acceptance::Rejected
+            : ((tool_result.acceptance == rawrxd::tools::Result::Acceptance::NotApplicable)
+                ? ToolResultMessage::Acceptance::NotApplicable
+                : ToolResultMessage::Acceptance::NotEvaluated));
+    result_msg.accepted = (result_msg.acceptance == ToolResultMessage::Acceptance::Accepted ||
+                           result_msg.acceptance == ToolResultMessage::Acceptance::NotApplicable);
     result_msg.firstFailure = tool_result.firstFailure;
     result_msg.success = tool_result.ok && result_msg.accepted;
 
