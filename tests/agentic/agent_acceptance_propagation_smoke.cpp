@@ -19,6 +19,7 @@
 //
 // Exit: 0 = all controls behaved correctly, 1 = a control failed.
 
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -265,6 +266,35 @@ int main() {
             rt::Result r7 = reg.call(reqT, approve);
             expect(!r7.ok && r7.acceptance == rt::Result::Acceptance::Rejected,
                    "terminal_timeout_rejected");
+        }
+
+        // concurrent terminal requests with OPPOSITE verdicts: each call's
+        // acceptance is request-associated, no cross-request contamination.
+        setMarker("BRIDGE_GEN_MARKER");
+        rt::Result rcA, rcB;
+        std::thread tcA([&] { rcA = run("echo BRIDGE_GEN_MARKER 1>&2", approve); });
+        std::thread tcB([&] { rcB = run("exit 0", approve); });
+        tcA.join();
+        tcB.join();
+        expect(rcA.ok && rcA.acceptance == rt::Result::Acceptance::Accepted,
+               "terminal_concurrent_A_accepted");
+        expect(!rcB.ok && rcB.acceptance == rt::Result::Acceptance::Rejected,
+               "terminal_concurrent_B_rejected");
+
+        // high-volume dual-pipe drainage: a command that writes far more than a
+        // pipe buffer to BOTH stdout and stderr must complete without deadlock.
+        setMarker("");  // ordinary command, judged on exit code only
+        {
+            rt::Request reqH; reqH.name = "runInTerminal";
+            reqH.args["command"] =
+                "for /L %i in (1,1,20000) do @(echo O%i & echo E%i 1>&2)";
+            reqH.args["timeoutMs"] = "60000";
+            const auto h0 = std::chrono::steady_clock::now();
+            rt::Result rh = reg.call(reqH, approve);
+            const auto h1 = std::chrono::steady_clock::now();
+            const double secs = std::chrono::duration<double>(h1 - h0).count();
+            expect(rh.ok, "terminal_high_volume_completes");
+            expect(secs < 55.0, "terminal_high_volume_no_deadlock");
         }
 
         std::filesystem::remove_all(root, ec);
