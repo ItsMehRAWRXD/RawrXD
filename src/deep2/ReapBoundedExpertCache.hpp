@@ -63,6 +63,8 @@ public:
             Lease value=it->second.data;
             lock.unlock();out=std::move(value);return true;
         }
+        // If every candidate is pinned or still loading, fail rather than
+        // overcommitting the budget. Keep the subtraction overflow-safe.
         while(bytes>budget_-reserved_){
             auto victim=entries_.end();
             for(auto it=entries_.begin();it!=entries_.end();++it)
