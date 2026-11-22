@@ -48,6 +48,17 @@ try {
 
     Invoke-CertCommand -Arguments @("-S", $root, "-B", $buildPath, "-G", $Generator,
         "-A", "x64", "-DRAWRXD_REQUIRE_NATIVE_IDE_LINK=ON")
+    # Hash the generated build configuration as part of the evidence chain.
+    # This identifies the actual CMake configuration used by the linker.
+    $cachePath = Join-Path $buildPath "CMakeCache.txt"
+    if (-not (Test-Path -LiteralPath $cachePath)) {
+        throw "CMakeCache.txt missing after configure; configuration cannot be identified"
+    }
+    $script:log.Add("CMAKE_GENERATOR=$Generator")
+    $script:log.Add("CMAKE_CONFIGURATION=$Configuration")
+    $script:log.Add("CMAKE_CACHE_SHA256=$((Get-FileHash -LiteralPath $cachePath -Algorithm SHA256).Hash)")
+    $script:log.Add("CLEAN_BUILD=$([int][bool]$CleanBuild)")
+    $script:log.Add("REAP_ACCEPTANCE_REQUIRED=$([int][bool]$RunReapTests)")
     # Reject stale executables left over from an earlier successful build.
     # This marker is captured immediately before invoking the native link.
     $linkStartUtc = [DateTime]::UtcNow
