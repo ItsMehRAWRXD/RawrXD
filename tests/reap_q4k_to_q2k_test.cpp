@@ -108,7 +108,9 @@ int main(){
         check(cache.Acquire("a",8,fill,a)&&cache.Reserved()==8,"cache first load");
         check(cache.Acquire("a",8,fill,b)&&a==b&&loads==1,"cache shared hit");
         check(cache.Acquire("b",8,fill,c)&&cache.Reserved()==16,"cache budget filled");
-        check(!cache.Acquire("c",8,fill,c)&&cache.Reserved()==16&&(*c)[0]==42,"cache pinned budget refusal");
+        auto pinnedB=c;
+        check(!cache.Acquire("c",8,fill,c)&&!c&&cache.Reserved()==16,"cache pinned budget refusal clears output");
+        pinnedB.reset();
         a.reset();b.reset();
         check(cache.Acquire("c",8,fill,a)&&cache.Reserved()==16,"cache evicts unpinned entry");
         c.reset();
@@ -181,7 +183,7 @@ int main(){
         check(!AcquireVirtualPayload(reader,cache,{1,0,143},Precision::Q2,Q4Bytes,b),"virtual partial block rejected");
         check(!AcquireVirtualPayload(reader,cache,source,Precision::Q2,Q4Bytes-1,b),"virtual source budget rejected");
         const auto before=cache.Reserved();
-        check(!AcquireVirtualPayload(reader,cache,{2,0,Q4Bytes},Precision::Q2,Q4Bytes,b)&&cache.Reserved()==before&&b->size()==2*Q4Bytes,"virtual read failure rollback");
+        check(!AcquireVirtualPayload(reader,cache,{2,0,Q4Bytes},Precision::Q2,Q4Bytes,b)&&cache.Reserved()==before&&!b,"virtual read failure clears output and rolls back");
     }
     {
         BoundedExpertCache cache(8);

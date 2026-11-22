@@ -2653,6 +2653,12 @@ endif()
 if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
     add_library(rawrxd_gpu_compute STATIC
         src/deep2/vulkan_compute.cpp
+        # The Deep2 wrapper delegates the VulkanCompute methods referenced by
+        # quant_dot_dispatch.cpp to the global implementation. Keep both
+        # translation units in this production library so the native IDE link
+        # cannot succeed with unresolved GPU symbols deferred to consumers.
+        src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         # G44 link fix: vulkan_compute.cpp calls QuantDot::WeightCacheRetention();
         # keep the policy definition in the same library so consumers do not need
         # executable-specific symbol injection.

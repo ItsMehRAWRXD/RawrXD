@@ -35,6 +35,12 @@ int main() {
             static_cast<unsigned long long>(cache.Reserved()));
         return 1;
     }
+    BoundedExpertCache::Lease retained;
+    if(!cache.Acquire("same-checkpoint:expert:Q2",64,
+        [](uint8_t*,size_t){ return true; },retained) || !retained) {
+        std::puts("FAIL retained payload acquisition");
+        return 3;
+    }
     BoundedExpertCache::Lease stale;
     bool failed=cache.Acquire("other-expert",64,
         [](uint8_t*,size_t){return false;},stale);
