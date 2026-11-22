@@ -27,6 +27,8 @@ public:
     uint64_t Acquire(const Handles& handles, uint64_t generation) noexcept {
         std::lock_guard<std::mutex> lock(mutex_);
         if (active_.load(std::memory_order_relaxed)) return 0;
+        // H53: ticket overflow -> fail closed (never reuse ticket 0).
+        if (nextEpoch_ == UINT64_MAX) return 0;
         handles_ = handles;
         generation_ = generation;
         epoch_ = ++nextEpoch_;   // unique per acquisition (S9.02)
