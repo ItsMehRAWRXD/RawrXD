@@ -14,7 +14,10 @@ struct RangeStats {
 // Streams whole Q4_K blocks into Q2_K. Caller owns the staging output and
 // must discard it on failure, including failure of the quality gate.
 inline bool ConvertRange(std::istream& in,std::ostream& out,uint64_t sourceBytes,RangeStats& stats) {
-    if(!sourceBytes||sourceBytes%Q4Bytes)return false;
+    if(!sourceBytes||sourceBytes%Q4Bytes||!in.good()||!out.good()||
+       !std::isfinite(stats.squared)||!std::isfinite(stats.signal)||
+       !std::isfinite(stats.maxAbs)||stats.squared<0||stats.signal<0||
+       stats.maxAbs<0)return false;
     constexpr size_t batch=256;
     std::array<Q4Block,batch> source{};
     std::array<Q2Block,batch> target{};
@@ -29,7 +32,8 @@ inline bool ConvertRange(std::istream& in,std::ostream& out,uint64_t sourceBytes
             if(!ConvertAdaptive(source[i],target[i],error))return false;
             next.squared+=error.squared;next.signal+=error.signal;next.maxAbs=std::max(next.maxAbs,error.maxAbs);
         }
-        if(!std::isfinite(next.squared)||!std::isfinite(next.signal)||!out.write(reinterpret_cast<const char*>(target.data()),static_cast<std::streamsize>(count*Q2Bytes)))return false;
+        if(!std::isfinite(next.squared)||!std::isfinite(next.signal)||
+           !std::isfinite(next.maxAbs)||!out.write(reinterpret_cast<const char*>(target.data()),static_cast<std::streamsize>(count*Q2Bytes)))return false;
         next.blocks+=count;remaining-=count;
     }
     stats=next;return true;
