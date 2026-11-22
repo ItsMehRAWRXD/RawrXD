@@ -4712,6 +4712,27 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_acceptance_propagation_smoke.
     add_test(NAME agent_acceptance_propagation_smoke COMMAND agent_acceptance_propagation_smoke)
 endif()
 
+# Deep2 device-loss quarantine state machine — CPU-only failure-injection
+# (no physical Vulkan device). Certifies GpuLost::Seq Mark/RunReset/fail_closed.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_lostseq_failure_injection.cpp"
+   AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/lavapath/GpuDeviceLostReset.cpp")
+    add_executable(deep2_lostseq_failure_injection
+        tests/deep2/deep2_lostseq_failure_injection.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp)
+    target_include_directories(deep2_lostseq_failure_injection PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(deep2_lostseq_failure_injection PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(deep2_lostseq_failure_injection PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(deep2_lostseq_failure_injection PRIVATE -Wall -Wextra)
+    endif()
+    set_target_properties(deep2_lostseq_failure_injection PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME deep2_lostseq_failure_injection COMMAND deep2_lostseq_failure_injection)
+endif()
+
 # REAP-AutoFit R02: canonical IR (physical tensors vs logical execution visits).
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_canonical_ir_test.cpp")
     add_executable(reap_canonical_ir_test
