@@ -61,11 +61,11 @@ try {
     if ($RunReapTests) {
         Invoke-CertCommand -Arguments @("--build", $buildPath, "--config", $Configuration,
             "--target", "reap_msvc_link_contract_test", "reap_msvc_anchor_only_test",
-            "reap_virtual_payload_msvc_adaptive_test", "--parallel", "2")
+            "reap_virtual_payload_msvc_adaptive_test", "reap_cache_singleflight_test", "--parallel", "2")
         $previousPreference = $ErrorActionPreference
         $ErrorActionPreference = "Continue"
         try {
-            $ctestOutput = & ctest --test-dir $buildPath -C $Configuration --output-on-failure --no-tests=error -R "^reap_(msvc_link_contract_test|msvc_anchor_only_test|virtual_payload_msvc_adaptive_test)$" 2>&1
+            $ctestOutput = & ctest --test-dir $buildPath -C $Configuration --output-on-failure --no-tests=error -R "^reap_(msvc_link_contract_test|msvc_anchor_only_test|virtual_payload_msvc_adaptive_test|cache_singleflight_test)$" 2>&1
             $ctestExit = $LASTEXITCODE
         }
         finally { $ErrorActionPreference = $previousPreference }
@@ -76,11 +76,12 @@ try {
         }
         if ($ctestExit -ne 0) { throw "REAP native linker acceptance tests failed with exit $ctestExit" }
         # CTest may return success when only a subset of expected tests is
-        # registered. Require all three linker acceptance cases to execute.
+        # registered. Require all linker and concurrency acceptance cases to execute.
         $expectedTests = @(
             "reap_msvc_link_contract_test",
             "reap_msvc_anchor_only_test",
-            "reap_virtual_payload_msvc_adaptive_test"
+            "reap_virtual_payload_msvc_adaptive_test",
+            "reap_cache_singleflight_test"
         )
         foreach ($testName in $expectedTests) {
             $matched = @($ctestOutput | Where-Object {
