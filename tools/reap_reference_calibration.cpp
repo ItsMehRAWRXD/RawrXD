@@ -227,7 +227,16 @@ int main(int argc, char ** argv) {
     if (maxDiff != 0.0f || instrumented.capture.invalid || !coverageOk) { std::fprintf(stderr, "CALIBRATION_FAIL=PARITY_OR_COVERAGE max_logit_diff=%g layers=%zu weights=%zu error=%s\n", maxDiff, instrumented.capture.ids.size(), instrumented.capture.weights.size(), instrumented.capture.error.c_str()); return 6; }
     std::ofstream receipt(fs::path(outDir) / "calibration_receipt.json", std::ios::binary | std::ios::trunc);
     if (!receipt) return 7;
-    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.003\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"layer0_trace_count\":" << instrumented.capture.trace.size() << ",\"per_layer\":[";
+    if (instrumented.capture.trace.size() != 22) {
+        std::fprintf(stderr, "CALIBRATION_FAIL=INCOMPLETE_LAYER0_TRACE count=%zu expected=22\n", instrumented.capture.trace.size());
+        return 7;
+    }
+    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.004\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"layer0_trace_count\":" << instrumented.capture.trace.size() << ",\"layer0_trace_names\":[";
+    for (size_t i = 0; i < instrumented.capture.trace.size(); ++i) {
+        if (i) receipt << ',';
+        receipt << '"' << instrumented.capture.trace[i] << '"';
+    }
+    receipt << "],\"per_layer\":[";
     for (int layer = 0; layer < 46; ++layer) {
         if (layer) receipt << ',';
         receipt << "{\"layer\":" << layer + 1 << ",\"tokens\":" << tokens.size() << ",\"expert_counts\":[";
