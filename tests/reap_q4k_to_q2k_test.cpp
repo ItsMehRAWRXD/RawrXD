@@ -3,6 +3,7 @@
 #include "deep2/ReapShardIndex.hpp"
 #include "deep2/ReapRetainedRouting.hpp"
 #include "deep2/ReapBoundedExpertCache.hpp"
+#include "deep2/ReapExpertPrefetch.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -110,6 +111,41 @@ int main(){
         check(successes==6&&sharedLoads==1&&shared.Reserved()==8,"cache six worker coalesced load");
         bool same=true;for(const auto& lease:leases)same=same&&lease&&lease==leases[0]&&(*lease)[0]==17;
         check(same,"cache six worker identical payload");
+    }
+    {
+        BoundedExpertCache cache(32);
+        ExpertPrefetch prefetch(cache,3);
+        std::mutex gate;
+        std::condition_variable signal;
+        bool started=false,released=false;
+        std::vector<int> order;
+        auto blocking=[&](uint8_t* p,size_t n){
+            std::unique_lock<std::mutex> lock(gate);
+            started=true;signal.notify_all();
+            signal.wait(lock,[&]{return released;});
+            std::fill(p,p+n,11);return true;
+        };
+        auto load=[&](int id){return [&,id](uint8_t* p,size_t n){
+            order.push_back(id);std::fill(p,p+n,uint8_t(id));return true;
+        };};
+        const bool submitted=prefetch.Submit("running",8,0,blocking);
+        check(submitted,"prefetch initial submit");
+        if(submitted){
+            {std::unique_lock<std::mutex> lock(gate);signal.wait(lock,[&]{return started;});}
+            check(prefetch.Submit("low",8,1,load(1)),"prefetch low priority queued");
+            check(prefetch.Submit("high",8,9,load(9)),"prefetch high priority queued");
+            check(!prefetch.Submit("running",8,1,load(2)),"prefetch duplicate rejected");
+            check(!prefetch.Submit("overflow",8,1,load(2)),"prefetch outstanding bound");
+            check(prefetch.CancelQueued("low")&&!prefetch.CancelQueued("running"),"prefetch queued-only cancellation");
+            check(prefetch.Submit("medium",8,4,load(4)),"prefetch slot reused");
+            {std::lock_guard<std::mutex> lock(gate);released=true;signal.notify_all();}
+            prefetch.WaitIdle();
+            check(order==std::vector<int>({9,4}),"prefetch priority and canceled job order");
+            BoundedExpertCache::Lease lease;
+            check(cache.Acquire("high",8,[](uint8_t*,size_t){return false;},lease)&&lease&&(*lease)[0]==9,"prefetch actual cache residency");
+        }
+        prefetch.Stop();
+        check(!prefetch.Submit("closed",8,1,load(1)),"prefetch stopped admission");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
