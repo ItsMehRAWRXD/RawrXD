@@ -329,6 +329,13 @@ private:
     // Async command buffer pooling for high-performance batching
     std::vector<CommandBufferPool> command_buffer_pool_;
     std::queue<size_t> available_buffer_indices_;
+    struct PendingOneShotSubmission {
+        VkCommandBuffer command = nullptr;
+        VkFence fence = nullptr;
+    };
+    // A failed wait does not prove completion; retain both handles until a
+    // successful device-idle boundary makes destruction safe.
+    std::vector<PendingOneShotSubmission> pending_one_shot_submissions_;
 
     // Permanent descriptor system for MatMul (avoid per-dispatch allocation overhead)
     VkDescriptorSetLayout matmul_descriptor_set_layout_ = nullptr;

@@ -4425,6 +4425,15 @@ void VulkanCompute::Cleanup() {
         // Clean up async command buffer pool
         CleanupCommandBufferPool();
 
+        // Successful device-idle is the only boundary that permits cleanup
+        // of one-shot submissions quarantined after failed fence waits.
+        for (const PendingOneShotSubmission& pending : pending_one_shot_submissions_) {
+            if (pending.fence) vkDestroyFence(device_, pending.fence, nullptr);
+            if (pending.command && command_pool_)
+                vkFreeCommandBuffers(device_, command_pool_, 1, &pending.command);
+        }
+        pending_one_shot_submissions_.clear();
+
         // RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY: cached weights, pooled
         // scratch, persistent staging/readback, command buffer and fence.
         ReleaseQuantFastPath();

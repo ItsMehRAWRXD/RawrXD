@@ -149,6 +149,10 @@ bool VulkanCompute::LoadComputePipeline(
 }
 
 bool VulkanCompute::SubmitOne(VkCommandBuffer cmd) {
+    if (!pending_one_shot_submissions_.empty()) {
+        last_d2h_phase_ = "quarantined";
+        return false;
+    }
     last_d2h_vk_ = 0;
     last_d2h_phase_ = "submit";
     VkFence fence = nullptr;
@@ -176,9 +180,10 @@ bool VulkanCompute::SubmitOne(VkCommandBuffer cmd) {
     const VkResult wr =
         vkWaitForFences(device_, 1, &fence, VK_TRUE, 30ull * 1000000000ull);
     last_d2h_vk_ = (int)wr;
-    vkDestroyFence(device_, fence, nullptr);
-    vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
     if (wr != VK_SUCCESS) {
+        // The command may still be executing. Destruction here would permit
+        // command-pool reuse and fence reclamation while the device owns it.
+        pending_one_shot_submissions_.push_back({cmd, fence});
         const int code = (int)wr;
         if (code == 31)
             last_d2h_phase_ = "code_31";
@@ -188,6 +193,8 @@ bool VulkanCompute::SubmitOne(VkCommandBuffer cmd) {
             last_d2h_phase_ = "fence";
         return false;
     }
+    vkDestroyFence(device_, fence, nullptr);
+    vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
     last_d2h_phase_ = "ok";
     ++op_submits_;
     return true;
