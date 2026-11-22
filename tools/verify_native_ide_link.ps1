@@ -34,6 +34,9 @@ $certified = $false
 try {
     Invoke-CertCommand -Arguments @("-S", $root, "-B", $buildPath, "-G", $Generator,
         "-A", "x64", "-DRAWRXD_REQUIRE_NATIVE_IDE_LINK=ON")
+    # Reject stale executables left over from an earlier successful build.
+    # This marker is captured immediately before invoking the native link.
+    $linkStartUtc = [DateTime]::UtcNow
     Invoke-CertCommand -Arguments @("--build", $buildPath, "--config", $Configuration,
         "--target", "RawrXD-Win32IDE-Native", "--parallel", "2")
     # A successful command is not enough: verify the executable was produced.
@@ -44,6 +47,14 @@ try {
     )
     $executable = @($exeCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1)
     if ($executable.Count -eq 0) { throw "Native IDE executable missing after successful build" }
+    $exeInfo = Get-Item -LiteralPath $executable[0]
+    if ($exeInfo.Length -lt 1024) { throw "Native IDE executable is unexpectedly small" }
+    # NTFS write timestamps may have coarse resolution. Allow two seconds
+    # while rejecting executables from earlier builds.
+    if ($exeInfo.LastWriteTimeUtc -lt $linkStartUtc.AddSeconds(-2)) {
+        throw "Native IDE executable is stale: no newly linked binary was produced"
+    }
+    $script:log.Add("NATIVE_IDE_EXECUTABLE_BYTES=$($exeInfo.Length)")
     $script:log.Add("NATIVE_IDE_EXECUTABLE=$($executable[0])")
     $script:log.Add("NATIVE_IDE_SHA256=$((Get-FileHash -LiteralPath $executable[0] -Algorithm SHA256).Hash)")
     if ($RunReapTests) {
