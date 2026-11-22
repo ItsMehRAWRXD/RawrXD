@@ -4845,6 +4845,14 @@ else()
 endif()
 add_test(NAME reap_scalar_acceptance_test COMMAND reap_scalar_acceptance_test)
 
+# Dependency-free concurrent expert-cache acceptance.
+find_package(Threads REQUIRED)
+add_executable(reap_cache_singleflight_test tests/reap_cache_singleflight_test.cpp)
+target_include_directories(reap_cache_singleflight_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_cache_singleflight_test PRIVATE cxx_std_17)
+target_link_libraries(reap_cache_singleflight_test PRIVATE Threads::Threads)
+add_test(NAME reap_cache_singleflight_test COMMAND reap_cache_singleflight_test)
+
 # Opt-in production certification gate. A missing IDE target must never be
 # reported as a successful native IDE link merely because CMake skipped it.
 option(RAWRXD_REQUIRE_NATIVE_IDE_LINK
