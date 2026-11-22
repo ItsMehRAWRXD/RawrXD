@@ -10,10 +10,6 @@ param(
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $buildPath = if ([IO.Path]::IsPathRooted($BuildDir)) { $BuildDir } else { Join-Path $root $BuildDir }
-if ($CleanBuild -and (Test-Path -LiteralPath $buildPath)) {
-    Remove-Item -LiteralPath $buildPath -Recurse -Force
-}
-New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
 $logPath = Join-Path $buildPath "native-ide-link-certification.log"
 $log = New-Object 'System.Collections.Generic.List[string]'
 function Invoke-CertCommand([string[]]$Arguments) {
@@ -32,6 +28,10 @@ function Invoke-CertCommand([string[]]$Arguments) {
 }
 $certified = $false
 try {
+    if ($CleanBuild -and (Test-Path -LiteralPath $buildPath)) {
+        Remove-Item -LiteralPath $buildPath -Recurse -Force
+    }
+    New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
     # Bind evidence to an immutable source revision. Refuse a dirty tree:
     # a commit hash alone does not identify uncommitted source changes.
     $revision = (& git -C $root rev-parse --verify HEAD 2>&1)
@@ -124,6 +124,10 @@ finally {
     }
     if ($unresolved.Count -gt 0) { $certified = $false }
     $log.Add("NATIVE_IDE_LINK_CERTIFIED=$([int]$certified)")
+    # Even an early preflight or clean-directory failure must leave evidence.
+    if (-not (Test-Path -LiteralPath $buildPath)) {
+        New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
+    }
     [IO.File]::WriteAllLines($logPath, [string[]]$log)
     Write-Host "Evidence: $logPath"
 }
