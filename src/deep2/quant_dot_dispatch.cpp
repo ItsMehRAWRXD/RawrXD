@@ -190,12 +190,34 @@ bool EndBatchImpl()
 {
     if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
     if (!g_batch_active) return false;
+    // RAWRXD_DEEP2_BATCH_LIFECYCLE_FIX (Sprint9 Commit C).
+    // BeginBatchImpl opened the device-level QuantDot batch (quant_batch_active_)
+    // while holding this same mutex, so every successfully opened batch MUST have
+    // exactly one matching close -- INCLUDING the empty (CPU-only) queue case.
+    // Previously the empty-queue early return skipped Gpu().EndQuantDotBatch(),
+    // leaking quant_batch_active_ and causing the next BeginQuantDotBatch() to be
+    // rejected as "nested". Serialize the ownership flip, the queue swap and the
+    // device close under g_gpu_mutex so we never close another thread's batch.
+    std::lock_guard<std::mutex> lk(g_gpu_mutex);
+    // Re-check under the lock: another thread may have closed the batch between
+    // the fast-path check above and here. Only the thread that still observes
+    // g_batch_active owns the close.
+    if (!g_batch_active) return false;
     g_batch_active = false;
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);
-    if (qs.empty()) return true;
+    if (qs.empty()) {
+        // No GPU dots were queued (e.g. a CPU-pinned reference session). The
+        // device batch BeginBatchImpl opened still has to be closed, or its
+        // quant_batch_active_ flag leaks. Propagate a close failure as failure;
+        // never report success for a batch that did not close.
+        const bool closed = Gpu().EndQuantDotBatch();
+        g_receipt = Receipt{};
+        g_receipt.used_gpu = false;
+        QDTRACE_DISPATCH("EndBatch empty-close ok=" << (int)closed);
+        return closed;
+    }
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
-    std::lock_guard<std::mutex> lk(g_gpu_mutex);
     // RAWRXD_DEEP2_MOE_BATCH_CHUNK_001. One device batch holds BatchCapacity()
     // descriptor sets. A MoE block queues one dot per selected expert, so a
     // 199-expert model asks for 199 entries and entry 32 was rejected before any
