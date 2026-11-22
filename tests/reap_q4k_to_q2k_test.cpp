@@ -1,4 +1,5 @@
 #include "deep2/ReapQ4KToQ2K.hpp"
+#include "deep2/ReapQ3KCodec.hpp"
 #include "deep2/ReapMixedPrecision.hpp"
 #include "deep2/ReapShardIndex.hpp"
 #include "deep2/ReapRetainedRouting.hpp"

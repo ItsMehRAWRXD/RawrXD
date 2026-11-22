@@ -59,13 +59,15 @@ inline bool EncodeQ3(const Values& input, Q3Block& output) noexcept {
     std::array<double, 16> steps{};
     double maximumStep = 0.0;
     for (unsigned group = 0; group < 16; ++group) {
-        double maximum = 0.0;
+        double minimum = 0.0;
+        double positiveMaximum = 0.0;
         for (unsigned i = 0; i < 16; ++i) {
             const float value = input[group * 16 + i];
             if (!std::isfinite(value)) return false;
-            maximum = std::max(maximum, std::abs(double(value)));
+            minimum = std::min(minimum, double(value));
+            positiveMaximum = std::max(positiveMaximum, double(value));
         }
-        steps[group] = maximum / 3.0;
+        steps[group] = std::max(-minimum / 4.0, positiveMaximum / 3.0);
         maximumStep = std::max(maximumStep, steps[group]);
     }
 
@@ -113,6 +115,43 @@ inline bool EncodeQ3(const Values& input, Q3Block& output) noexcept {
                     (low[chunk * 128 + i + 96] << 6));
         }
     }
+    return true;
+}
+
+inline bool ConvertQ4ToQ3(const Q4Block& source, Q3Block& target,
+                          Error& error) noexcept {
+    Values before{}, after{};
+    Q3Block next{};
+    if (!DecodeQ4(source, before) ||
+        !EncodeQ3(before, next) ||
+        !DecodeQ3(next, after)) {
+        return false;
+    }
+    Error e{};
+    for (size_t i = 0; i < Elements; ++i) {
+        const double x = before[i];
+        const double delta = x - after[i];
+        e.squared += delta * delta;
+        e.signal += x * x;
+        e.maxAbs = std::max(e.maxAbs, std::abs(delta));
+    }
+    target = next;
+    error = e;
+    return true;
+}
+
+inline bool ConvertedQ3Bytes(uint64_t rowWidth, uint64_t originalBytes,
+                             uint64_t& bytes) noexcept {
+    if (!rowWidth || rowWidth % Elements || !originalBytes ||
+        originalBytes % Q4Bytes) {
+        return false;
+    }
+    const uint64_t blocks = originalBytes / Q4Bytes;
+    if (blocks % (rowWidth / Elements) ||
+        blocks > UINT64_MAX / Q3Bytes) {
+        return false;
+    }
+    bytes = blocks * Q3Bytes;
     return true;
 }
 
