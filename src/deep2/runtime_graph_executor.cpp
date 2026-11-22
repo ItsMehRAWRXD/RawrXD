@@ -3,6 +3,7 @@
 // ============================================================================
 #include <fstream>
 #include "runtime_graph_executor.hpp"
+#include "MoERoutingCore.hpp"
 #include <limits>
 
 #include <algorithm>
@@ -25,6 +26,8 @@
 namespace RawrXD { namespace Deep2 { namespace RuntimeGraph {
 
 using Universal::TensorRec;
+// MoERoutingCore lives in ::Deep2::moe, not RawrXD::Deep2::RuntimeGraph::moe.
+namespace moe = ::Deep2::moe;
 
 namespace {
 
@@ -2778,15 +2781,8 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     }
     if (spec_.expert_used == 0) { last_error_ = "router: expert_used 0"; return false; }
     const size_t kused = (size_t)spec_.expert_used;
-    // The routing formula is architecture-specific and is the difference between
-    // a coherent model and plausible noise:
-    //   softmax  (deepseek2 default): scores = softmax(logits), top-k greedy,
-    //             then renormalise the SELECTED scores to sum to 1.
-    //   sigmoid  (deepseek3-style):  scores = sigmoid(logits) before top-k.
-    // Softmax over ALL experts followed by renormalising the top-k is NOT
-    // equivalent to either: softmax spreads mass over 64 experts, so the top-k
-    // renormalised weights are not the reference's, and the ORDER can differ
-    // whenever two experts sit within the softmax's dynamic range.
+    // ROUTER_TRACE: dump the raw pre-activation logits so an independent
+    // reference can verify logits -> activation -> selection -> scale.
     if (std::getenv("ROUTER_TRACE")) {
         std::fprintf(stderr, "[router-raw] blk=%d n_exp=%zu k=%zu logits=",
                      (int)router.block, n_exp, kused);
@@ -2795,49 +2791,81 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
         std::fprintf(stderr, "\n");
         std::fflush(stderr);
     }
-    const bool sigmoid_routing = (spec_.architecture == "deepseek3" ||
-                                  spec_.architecture == "deepseek4");
-    if (sigmoid_routing) {
-        for (size_t e = 0; e < n_exp; ++e)
-            logits[e] = 1.0f / (1.0f + std::exp(-logits[e]));
-    } else {
-        SoftmaxVec(logits);
+
+    // R-H01: route through the SINGLE metadata-driven core shared with
+    // MoERouter. Architecture-specific behavior comes from metadata, never
+    // from a hardcoded architecture-name list.
+    moe::RoutingParams rp;
+    rp.scoring = (spec_.scoring_func == 1) ? moe::ScoringFunc::Sigmoid
+                                           : moe::ScoringFunc::Softmax;
+    rp.topK = (int)kused;
+    rp.nGroup = spec_.n_group;
+    rp.topkGroup = spec_.topk_group;
+    rp.normTopkProb = spec_.expert_weights_norm;
+    // routed_scaling_factor: absent means identity (1.0) for softmax families.
+    rp.routedScalingFactor = (spec_.expert_weights_scale != 0.0)
+        ? (float)spec_.expert_weights_scale : 1.0f;
+    // Correction bias (exp_probs_b): selection only. The executor loads the
+    // tensor by name when the checkpoint ships it.
+    if (spec_.scoring_func == 1 && spec_.expert_correction_bias.empty() &&
+        spec_.expert_count > 0) {
+        const std::string bname = "blk." + std::to_string((int)router.block) + ".exp_probs_b.bias";
+        for (const auto& t : tensors_) {
+            if (t.name != bname) continue;
+            const size_t n = (size_t)spec_.expert_count;
+            if (n == 0 || n > 1024) break;
+            const uint8_t* raw = t.data;
+            if (t.ggml_type == GGML_TYPE_F32 && raw && t.bytes >= n * sizeof(float)) {
+                const float* src = reinterpret_cast<const float*>(raw);
+                spec_.expert_correction_bias.assign(src, src + n);
+                break;
+            }
+            if (t.ggml_type == GGML_TYPE_F16 && raw && t.bytes >= n * sizeof(uint16_t)) {
+                const uint16_t* src = reinterpret_cast<const uint16_t*>(raw);
+                spec_.expert_correction_bias.resize(n);
+                for (size_t i = 0; i < n; ++i) {
+                    // Inline IEEE binary16 -> binary32 (no external helper).
+                    const uint32_t h = src[i];
+                    const uint32_t sign = (h & 0x8000u) << 16;
+                    const uint32_t exp = (h >> 10) & 0x1Fu;
+                    const uint32_t mant = h & 0x3FFu;
+                    uint32_t bits;
+                    if (exp == 0) {
+                        if (mant == 0) bits = sign;
+                        else {
+                            uint32_t e = 0, m = mant;
+                            while (!(m & 0x400u)) { m <<= 1; ++e; }
+                            m &= 0x3FFu;
+                            bits = sign | ((127 - 15 - e + 1) << 23) | (m << 13);
+                        }
+                    } else if (exp == 31) {
+                        bits = sign | 0x7F800000u | (mant << 13);
+                    } else {
+                        bits = sign | ((exp - 15 + 127) << 23) | (mant << 13);
+                    }
+                    float out;
+                    std::memcpy(&out, &bits, sizeof(out));
+                    spec_.expert_correction_bias[i] = out;
+                }
+                break;
+            }
+        }
     }
-    std::vector<uint32_t> idx(n_exp);
-    for (uint32_t i = 0; i < n_exp; ++i) idx[i] = i;
-    std::stable_sort(idx.begin(), idx.end(),
-                     [&](uint32_t a, uint32_t b) { return logits[a] > logits[b]; });
-    ids.assign(kused, 0);
-    w.assign(kused, 0.0f);
-    // 3. weight transformation.
-    //
-    // The reference renormalises the selected top-k scores to sum to 1 ONLY
-    // when the model declares expert_weights_norm (qwen3-moe / gpt-oss style
-    // MoE). DeepSeek-Coder-V2 emits no expert_weights_norm key, so its routing
-    // weights stay the RAW softmax probabilities, whose sum is < 1 (on this
-    // checkpoint the top-6 probs sum to ~0.18-0.45). Normalising them
-    // unconditionally inflated every routed expert contribution by 1/sum
-    // (~2.3x at block 1, ~5x at block 8) - the "same direction, wrong
-    // magnitude" MoE divergence certified against llama.cpp.
-    double renorm = 1.0;
-    if (spec_.expert_weights_norm) {
-        renorm = 0.0;
-        for (size_t i = 0; i < kused; ++i) renorm += logits[idx[i]];
-        if (!(renorm > 0.0)) { last_error_ = "router: zero weight"; return false; }
+    if (!spec_.expert_correction_bias.empty() &&
+        spec_.expert_correction_bias.size() == spec_.expert_count) {
+        rp.hasCorrectionBias = true;
+        rp.correctionBias = spec_.expert_correction_bias.data();
     }
-    for (size_t i = 0; i < kused; ++i) {
-        ids[i] = idx[i];
-        w[i] = (float)(logits[idx[i]] / renorm);
-    }
-    // expert_weights_scale: applied only when the model sets it to something
-    // other than 0 (absent) or 1 (identity), exactly like the reference.
-    const float wscale = (float)spec_.expert_weights_scale;
-    if (wscale != 0.0f && wscale != 1.0f) {
-        for (size_t i = 0; i < kused; ++i) w[i] *= wscale;
-    }
+
+    moe::RoutingResult routed = moe::Route(logits.data(), (int)n_exp, rp);
+    ids.clear();
+    ids.reserve(routed.expertIds.size());
+    for (int e : routed.expertIds) ids.push_back((uint32_t)e);
+    w = routed.weights;
+
     if (std::getenv("ROUTER_TRACE")) {
         std::fprintf(stderr, "[router-sel] blk=%d selected=", (int)router.block);
-        for (size_t i = 0; i < kused; ++i)
+        for (size_t i = 0; i < ids.size(); ++i)
             std::fprintf(stderr, "%zu:%.5f,", (size_t)ids[i], (double)w[i]);
         std::fprintf(stderr, "\n");
         std::fflush(stderr);

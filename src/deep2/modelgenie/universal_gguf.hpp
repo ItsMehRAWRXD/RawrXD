@@ -144,6 +144,20 @@ struct ModelSpec {
     // something other than 0 (absent) or 1 (identity), matching the reference.
     bool expert_weights_norm = false;
     double expert_weights_scale = 0.0;
+
+    // --- Metadata-driven routing semantics (R-H01 unification) ---
+    // 0 = softmax (llama.cpp LLAMA_EXPERT_GATING_FUNC_TYPE_SOFTMAX)
+    // 1 = sigmoid (llama.cpp LLAMA_EXPERT_GATING_FUNC_TYPE_SIGMOID)
+    // Parsed from expert_gating_func / scoring_func so routing never depends on
+    // a hardcoded architecture-name list.
+    int32_t scoring_func = 0;
+    // Group-limited routing: nGroup groups of experts, keep topkGroup groups.
+    // nGroup <= 1 or topkGroup <= 0 disables group limiting.
+    int32_t n_group = 1;
+    int32_t topk_group = 0;
+    // Selection-only correction bias (exp_probs_b), [expert_count].
+    // Applied to the SELECTION scores only; contribution weights stay unbiased.
+    std::vector<float> expert_correction_bias;
     // MLA
     uint64_t kv_lora_rank = 0;
     uint64_t key_length = 0;

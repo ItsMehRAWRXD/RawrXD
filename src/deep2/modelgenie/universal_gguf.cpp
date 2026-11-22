@@ -7,7 +7,9 @@
 #include "../QuantTypeTable.hpp"
 #include "../GGUFLoader.hpp"
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <mutex>
 
@@ -748,6 +750,41 @@ void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
         GetU(m, p + "expert_weights_norm", GetU(m, "expert_weights_norm", 0)) != 0;
     s.expert_weights_scale =
         GetD(m, p + "expert_weights_scale", GetD(m, "expert_weights_scale", 0.0));
+
+    // --- Metadata-driven routing semantics (R-H01) ---
+    // llama.cpp stores expert_gating_func as 1=softmax, 2=sigmoid.
+    // Some converters emit the string scoring_func instead. Suffix matching
+    // keeps this independent of the architecture prefix.
+    {
+        auto lookupSuffix = [&](std::initializer_list<const char*> suffixes) -> std::string {
+            for (const auto& kv : m) {
+                const std::string& k = kv.first;
+                for (const char* suf : suffixes) {
+                    const size_t sl = std::char_traits<char>::length(suf);
+                    if (k.size() >= sl && k.compare(k.size() - sl, sl, suf) == 0)
+                        return kv.second;
+                }
+            }
+            return std::string();
+        };
+        const std::string scoringStr = lookupSuffix({".scoring_func", "scoring_func"});
+        uint32_t gating = 0;
+        {
+            const std::string g = lookupSuffix({".expert_gating_func", "expert_gating_func"});
+            if (!g.empty()) { char* end = nullptr; gating = (uint32_t)std::strtoul(g.c_str(), &end, 10); }
+        }
+        if (!scoringStr.empty()) {
+            std::string sname = scoringStr;
+            for (auto& c : sname) c = (char)std::tolower((unsigned char)c);
+            s.scoring_func = (sname == "sigmoid") ? 1 : 0;
+        } else {
+            s.scoring_func = (gating == 2u) ? 1 : 0;
+        }
+        const std::string ng = lookupSuffix({".n_group", "n_group"});
+        const std::string tg = lookupSuffix({".topk_group", "topk_group"});
+        if (!ng.empty()) { char* e = nullptr; s.n_group = (int32_t)std::strtoul(ng.c_str(), &e, 10); }
+        if (!tg.empty()) { char* e = nullptr; s.topk_group = (int32_t)std::strtoul(tg.c_str(), &e, 10); }
+    }
     pick("attention.kv_lora_rank", s.kv_lora_rank);
     pick("attention.key_length", s.key_length);
     pick("attention.value_length", s.value_length);
