@@ -42,6 +42,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -52,6 +53,20 @@
 using namespace RawrXD::Deep2::QuantDot;
 
 namespace {
+
+// Hang-localization checkpoints. Every phase boundary and every serial
+// reference dot prints one line and flushes, so a hang names the exact
+// operation that never returned (Sprint9 residency-concurrency hang diag).
+std::atomic<uint64_t> g_checkpoint_seq{0};
+void Checkpoint(const char* name, size_t index = static_cast<size_t>(-1)) {
+    const uint64_t seq = g_checkpoint_seq.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (index == static_cast<size_t>(-1))
+        std::printf("CHECKPOINT seq=%llu %s\n", (unsigned long long)seq, name);
+    else
+        std::printf("CHECKPOINT seq=%llu %s index=%zu\n",
+                    (unsigned long long)seq, name, index);
+    std::fflush(stdout);
+}
 
 // ---------------------------------------------------------------------------
 // Independent CPU reference for Q4_K x Q8_K (mirrors ggml's block layout).
@@ -263,6 +278,7 @@ int main(int argc, char** argv) {
     SetWeightCacheBudget(forced_budget);
     std::printf("bank_bytes=%zu forced_budget=%lld (%.1f banks)\n",
                 bank_bytes, (long long)forced_budget, double(forced_budget) / double(bank_bytes));
+    Checkpoint("SERIAL_REFERENCE_BEGIN");
 
     // ---- serial reference: one GPU dot per bank -----------------------------
     std::vector<std::vector<float>> ref(n_banks);
@@ -270,6 +286,7 @@ int main(int argc, char** argv) {
         uint64_t gpu_before = GetCacheStats().submits;
         bool all_ok = true, all_gpu = true;
         for (size_t i = 0; i < n_banks; ++i) {
+            Checkpoint("SERIAL_DOT_BEGIN", i);
             std::vector<float> y(n_out, 0.0f);
             const CpuDot cpu = MakeCpuRef(banks[i]);
             const bool ok = DotBlocked(0, banks[i].bytes.data(), banks[i].packedBytes(),
@@ -278,6 +295,7 @@ int main(int argc, char** argv) {
             if (!ok) { all_ok = false; break; }
             if (!LastReceipt().used_gpu) all_gpu = false;
             ref[i] = y;
+            Checkpoint("SERIAL_DOT_COMPLETE", i);
         }
         const uint64_t gpu_after = GetCacheStats().submits;
         std::printf("serial reference: ok=%s gpu=%s submits=%llu\n",
@@ -291,11 +309,13 @@ int main(int argc, char** argv) {
         Check(all_gpu, "serial reference dispatched on the GPU (receipt used_gpu)");
         Check(gpu_after > gpu_before, "serial reference produced real submits");
     }
+    Checkpoint("SERIAL_REFERENCE_COMPLETE");
 
     // =========================================================================
     // A. Concurrent steering under eviction pressure.
     // =========================================================================
     std::printf("\n--- A. concurrent steering under eviction pressure ---\n");
+    Checkpoint("SECTION_A_BEGIN");
     const Snap a0 = Take();
     std::atomic<size_t> a_dispatch{0}, a_prefetch{0}, a_lease{0};
     std::atomic<bool> a_bad{false};
@@ -349,10 +369,13 @@ int main(int argc, char** argv) {
     //     re-uploaded) and the results must still be bit-exact.
     // =========================================================================
     std::printf("\n--- B1. dispatch-layer batch vs concurrent eviction ---\n");
+    Checkpoint("SECTION_B1_BEGIN");
     const size_t batch_n = std::min<size_t>(BatchCapacity(), n_banks);
     std::vector<std::vector<float>> bout(batch_n);
     std::vector<std::vector<float>> bref(batch_n);
+    Checkpoint("B1_REFERENCE_BEGIN");
     for (size_t i = 0; i < batch_n; ++i) {
+        bout[i].resize(n_out);
         std::vector<float> y(n_out);
         const CpuDot cpu = MakeCpuRef(banks[i]);
         if (!DotBlocked(0, banks[i].bytes.data(), banks[i].packedBytes(),
@@ -362,6 +385,7 @@ int main(int argc, char** argv) {
         }
         bref[i] = y;
     }
+    Checkpoint("B1_REFERENCE_COMPLETE");
     {
         std::atomic<bool> storm_stop{false};
         std::atomic<bool> storm_ready{false};
@@ -378,11 +402,15 @@ int main(int argc, char** argv) {
             };
             spin();
             storm_ready.store(true);
+            storm_ready.notify_one();
             while (!storm_stop.load()) spin();
         });
         storm_ready.wait(false);
+        Checkpoint("B1_STORM_READY");
         const Snap b0 = Take();
+        Checkpoint("B1_BEFORE_BEGIN");
         if (!BeginBatch()) { std::printf("B1: BeginBatch failed\n"); return 3; }
+        Checkpoint("B1_BATCH_OPEN");
         bool queued_ok = true;
         for (size_t i = 0; i < batch_n; ++i) {
             const CpuDot cpu = MakeCpuRef(banks[i]);
@@ -390,11 +418,18 @@ int main(int argc, char** argv) {
                             act.data(), n_in, bout[i].data(), n_out, cpu,
                             q8.data(), q8.size() * sizeof(float), false))
                 queued_ok = false;
+            Checkpoint("B1_QUEUE_COMPLETE", i);
         }
+        Checkpoint("B1_ALL_QUEUED");
         const Snap b_open = Take();
+        Checkpoint("B1_OPEN_SNAPSHOT");
         storm_stop.store(true);
+        Checkpoint("B1_STORM_STOP_REQUESTED");
         storm.join();
+        Checkpoint("B1_STORM_JOINED");
+        Checkpoint("B1_END_BEGIN");
         const bool ended = EndBatch();
+        Checkpoint("B1_END_COMPLETE");
         const Snap b1 = Take();
         std::printf("  queued=%zu open: prefetches=%llu evictions=%llu overrides=%llu "
                     "evicted_while_open=%llu\n",
@@ -421,6 +456,7 @@ int main(int argc, char** argv) {
     //     the pending batch still references.
     // =========================================================================
     std::printf("\n--- B2. device-level batch in-flight pinning ---\n");
+    Checkpoint("SECTION_B2_BEGIN");
     {
         // Budget holds ~2 banks; the batch pins 8, so the budget cannot be met
         // by eviction and the deferred path is the only legal outcome.
@@ -431,6 +467,7 @@ int main(int argc, char** argv) {
         std::vector<std::vector<float>> bout2(pin_n);
         std::vector<std::vector<float>> bref2(pin_n);
         for (size_t i = 0; i < pin_n; ++i) {
+            bout2[i].resize(n_out);
             std::vector<float> y(n_out);
             const CpuDot cpu = MakeCpuRef(banks[i]);
             if (!vk.ExecuteQuantDot(banks[i].bytes.data(), banks[i].packedBytes(),
@@ -461,6 +498,7 @@ int main(int argc, char** argv) {
             };
             spin();
             storm_ready.store(true);
+            storm_ready.notify_one();
             while (!storm_stop.load()) spin();
         });
         storm_ready.wait(false);
@@ -507,11 +545,13 @@ int main(int argc, char** argv) {
     // C. Generation leases.
     // =========================================================================
     std::printf("\n--- C. generation leases ---\n");
+    Checkpoint("SECTION_C_BEGIN");
     {
         const size_t i = n_banks - 1;
         const uint64_t lease = AcquireWeightLease(banks[i].bytes.data(),
                                                   banks[i].packedBytes(), 0);
         Check(lease != 0, "C: lease acquired on a fresh weight");
+        Checkpoint("C_LEASE_ACQUIRED");
         std::atomic<bool> storm_stop{false};
         std::atomic<bool> storm_ready{false};
         std::atomic<uint64_t> storm_prefetch{0};
@@ -522,19 +562,26 @@ int main(int argc, char** argv) {
                     rng = rng * 1664525u + 1013904223u;
                     const Bank& b = banks[rng % n_banks];
                     if (PrefetchWeight(b.bytes.data(), b.packedBytes(), 0)) ++storm_prefetch;
+                    std::this_thread::yield();
                 }
             };
             spin();
             storm_ready.store(true);
-            while (!storm_stop.load()) spin();
+            storm_ready.notify_one();
+            while (!storm_stop.load()) {
+                spin();
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
         });
         storm_ready.wait(false);
+        Checkpoint("C_STORM_READY");
         const Snap c0 = Take();
         bool resident = true;
         for (int r = 0; r < 200 && resident; ++r) {
             if (!IsWeightResident(banks[i].bytes.data(), banks[i].packedBytes(), 0)) resident = false;
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
+        Checkpoint("C_RESIDENCY_CHECK_COMPLETE");
         std::vector<float> y(n_out);
         const CpuDot cpu = MakeCpuRef(banks[i]);
         const bool ok = DotBlocked(0, banks[i].bytes.data(), banks[i].packedBytes(),
@@ -542,7 +589,9 @@ int main(int argc, char** argv) {
                                    q8.data(), q8.size() * sizeof(float), false);
         const bool leased_result_ok = ok && SameBits(y, ref[i]);
         storm_stop.store(true);
+        Checkpoint("C_STORM_STOP_REQUESTED");
         storm.join();
+        Checkpoint("C_STORM_JOINED");
         const Snap c1 = Take();
         Check(resident, "C: leased weight stayed resident through the eviction storm");
         Check(c0.pinned >= 1, "C: the lease shows up as an in-flight pin");
@@ -551,6 +600,7 @@ int main(int argc, char** argv) {
         ReleaseWeightLease(lease);
         ReleaseWeightLease(lease);                       // double release: must be a no-op
         ReleaseWeightLease(0xDEADBEEFu);                  // stale id: must be a no-op
+        Checkpoint("C_LEASE_RELEASED");
         const Snap c2 = Take();
         Check(c2.leases == 0, "C: lease released; double/stale release are no-ops");
         Check(c2.pinned == 0, "C: pin dropped once the lease was released");
@@ -559,15 +609,18 @@ int main(int argc, char** argv) {
         {
             std::vector<float> y2(n_out);
             const CpuDot cpu2 = MakeCpuRef(banks[0]);
+            Checkpoint("C_DRAIN_DISPATCH_BEGIN");
             (void)DotBlocked(0, banks[0].bytes.data(), banks[0].packedBytes(),
                              act.data(), n_in, y2.data(), n_out, cpu2,
                              q8.data(), q8.size() * sizeof(float), false);
+            Checkpoint("C_DRAIN_DISPATCH_COMPLETE");
         }
         const Snap c3 = Take();
         Check(c3.retired_pending == 0, "C: deferred destruction drained after one dispatch");
         Check(c3.evictions == c3.retired_reaped, "C: evictions == reaped (fence-safe)");
     }
     std::printf("\n--- D. dispatch determinism under concurrency ---\n");
+    Checkpoint("SECTION_D_BEGIN");
     {
         std::vector<std::vector<float>> outs(n_threads);
         std::atomic<bool> bad{false};
@@ -595,6 +648,7 @@ int main(int argc, char** argv) {
     }
 
     std::printf("\n--- E. batch ownership and empty-close regression ---\n");
+    Checkpoint("SECTION_E_BEGIN");
     {
         bool repeated_empty = true;
         for (int i = 0; i < 8; ++i) {
