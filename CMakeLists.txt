@@ -4753,6 +4753,13 @@ add_test(NAME reap_activation_score_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_activation_score_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_activation_score_regression.cmake")
 
+# Native paired capture filter, record count and overflow regression.
+add_executable(reap_capture_policy_test tests/reap_capture_policy_test.cpp)
+target_include_directories(reap_capture_policy_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_capture_policy_test PRIVATE cxx_std_17)
+enable_testing()
+add_test(NAME reap_capture_policy_test COMMAND reap_capture_policy_test)
+
 # Native checkpoint-wide MoE bank contract.
 add_executable(reap_bank_contract_test tests/reap_bank_contract_test.cpp)
 target_include_directories(reap_bank_contract_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
