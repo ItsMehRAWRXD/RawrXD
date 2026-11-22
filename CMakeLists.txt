@@ -4771,6 +4771,21 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_logit_quality.cpp")
     endif()
 endif()
 
+# Native CPU capture writer regression; does not link the inference engine or Vulkan.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_cpu_capture_test.cpp")
+    add_executable(reap_cpu_capture_test tests/reap/reap_cpu_capture_test.cpp)
+    target_include_directories(reap_cpu_capture_test PRIVATE "${CMAKE_SOURCE_DIR}/tools")
+    target_compile_features(reap_cpu_capture_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(reap_cpu_capture_test PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(reap_cpu_capture_test PRIVATE -Wall -Wextra)
+    endif()
+    enable_testing()
+    add_test(NAME reap_cpu_capture_test COMMAND reap_cpu_capture_test
+        "${CMAKE_CURRENT_BINARY_DIR}/reap_cpu_capture_fixtures")
+endif()
+
 # REAP-AutoFit R02: canonical IR (physical tensors vs logical execution visits).
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_canonical_ir_test.cpp")
     add_executable(reap_canonical_ir_test
