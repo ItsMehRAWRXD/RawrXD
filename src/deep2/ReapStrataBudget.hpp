@@ -20,6 +20,10 @@ private:
         std::shared_ptr<State> state;
         Amount amount;
         Reservation(std::shared_ptr<State> s,Amount a):state(std::move(s)),amount(a){}
+        Reservation(const Reservation&) = delete;
+        Reservation& operator=(const Reservation&) = delete;
+        Reservation(Reservation&&) = delete;
+        Reservation& operator=(Reservation&&) = delete;
         ~Reservation(){
             std::lock_guard<std::mutex> lock(state->mutex);
             for(size_t i=0;i<amount.size();++i)state->used[i]-=amount[i];
