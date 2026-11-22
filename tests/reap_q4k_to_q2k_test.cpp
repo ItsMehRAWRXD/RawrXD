@@ -1,5 +1,6 @@
 #include "deep2/ReapQ4KToQ2K.hpp"
 #include "deep2/ReapMixedPrecision.hpp"
+#include "deep2/ReapShardIndex.hpp"
 #include <cstdio>
 #if defined(_WIN32) && defined(_MSC_VER)
 #include <intrin.h>
@@ -24,6 +25,19 @@ int main(){
     check(!PlanMixed(invalid,288,plan),"mixed nonfinite importance rejected");
     invalid=costs;invalid[0].blocks=UINT64_MAX;
     check(!PlanMixed(invalid,UINT64_MAX,plan),"mixed overflow rejected");
+    ShardIndex index; ShardRange range{};
+    check(index.AddShard(1,UINT64_C(1)<<40)&&index.AddShard(2,4096),"shard register large and small");
+    check(!index.AddShard(1,128),"shard duplicate rejected");
+    check(index.AddTensor("gate",{1,UINT64_C(1)<<39,1024})&&index.AddTensor("up",{2,128,1024}),"tensor register across shards");
+    check(!index.AddTensor("bad",{2,4090,8}),"tensor outside shard rejected");
+    check(!index.AddTensor("gate",{2,0,32}),"tensor duplicate rejected");
+    check(!index.Resolve("gate",0,16,range),"unsealed lookup rejected");
+    check(index.Seal()&&!index.AddShard(3,4096),"sealed index immutable");
+    check(index.ResolveExpert("gate",3,8,128,84,range)&&range.shard==1&&range.offset==(UINT64_C(1)<<39)+384&&range.bytes==84,"expert 64-bit shard address");
+    check(index.ResolveExpert("up",7,8,128,110,range)&&range.shard==2&&range.offset==1024,"expert second shard address");
+    check(!index.ResolveExpert("up",8,8,128,110,range),"expert index bounds");
+    check(!index.ResolveExpert("up",0,UINT64_MAX,128,110,range),"expert stride overflow");
+    check(!index.Resolve("up",1020,8,range)&&range.shard==2&&range.offset==1024,"failed lookup preserves output");
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
     check(PositiveHalf(std::ldexp(1.0,-24),h)&&h==1,"binary16 subnormal");
