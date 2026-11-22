@@ -19,16 +19,19 @@ int main(int argc, char** argv) {
         std::printf("INIT_FAIL=1\n");
         return 2;
     }
+    // Force CPU-only BEFORE loadModel so model loading does not perform GPU
+    // work. The engine initializes Vulkan in initialize(); disabling it here
+    // (before loadModel) keeps the CPU reference path truly CPU-only.
+    eng.enableVulkan(false);
     if (!eng.loadModel(gguf)) {
         std::printf("LOAD_FAIL=1 MODEL=%s\n", gguf);
         return 3;
     }
     std::printf("MODEL=%s\n%s\n", gguf, eng.kvGeometryReceipt().c_str());
 
-    // Force CPU-only for parity test so both serial and batched prefill write
-    // to the same CPU KV cache. GPU forward bypasses the CPU cache, which
-    // would make serial KV all zeros vs batched real values.
-    eng.enableVulkan(false);
+    // CPU-only for parity: both serial and batched prefill write to the same
+    // CPU KV cache. GPU forward bypasses the CPU cache, which would make serial
+    // KV all zeros vs batched real values.
 
     auto ids = eng.tokenize(prompt);
     if (ids.empty()) {
