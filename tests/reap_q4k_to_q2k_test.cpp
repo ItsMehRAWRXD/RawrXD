@@ -1,6 +1,7 @@
 #include "deep2/ReapQ4KToQ2K.hpp"
 #include "deep2/ReapMixedPrecision.hpp"
 #include "deep2/ReapShardIndex.hpp"
+#include "deep2/ReapNativeShardReader.hpp"
 #include <cstdio>
 #if defined(_WIN32) && defined(_MSC_VER)
 #include <intrin.h>
@@ -38,6 +39,38 @@ int main(){
     check(!index.ResolveExpert("up",8,8,128,110,range),"expert index bounds");
     check(!index.ResolveExpert("up",0,UINT64_MAX,128,110,range),"expert stride overflow");
     check(!index.Resolve("up",1020,8,range)&&range.shard==2&&range.offset==1024,"failed lookup preserves output");
+#ifdef _WIN32
+    {
+        wchar_t dir[MAX_PATH]{},name[MAX_PATH]{};
+        const DWORD n=GetTempPathW(MAX_PATH,dir);
+        const bool temp=n>0&&n<MAX_PATH&&GetTempFileNameW(dir,L"rxq",0,name)!=0;
+        check(temp,"native shard temporary fixture");
+        if(temp){
+            const std::vector<uint8_t> fixture{10,20,30,40,50,60,70,80};
+            HANDLE h=CreateFileW(name,GENERIC_WRITE,0,nullptr,TRUNCATE_EXISTING,0,nullptr);
+            DWORD written=0;
+            bool ready=h!=INVALID_HANDLE_VALUE&&WriteFile(h,fixture.data(),DWORD(fixture.size()),&written,nullptr)&&written==fixture.size();
+            if(h!=INVALID_HANDLE_VALUE)CloseHandle(h);
+            check(ready,"native shard fixture write");
+            if(ready){
+                NativeShardReader reader;
+                check(!reader.Open(1,name,7),"native shard size mismatch rejected");
+                check(reader.Open(1,name,8),"native shard open");
+                std::vector<uint8_t> data{99};
+                check(!reader.Read({1,2,3},3,data)&&data==std::vector<uint8_t>{99},"native shard unsealed read rejected");
+                check(reader.Seal(),"native shard seal");
+                check(reader.Read({1,2,3},3,data)&&data==std::vector<uint8_t>({30,40,50}),"native shard exact offset read");
+                check(!reader.Read({1,2,3},2,data)&&data==std::vector<uint8_t>({30,40,50}),"native shard budget preserves output");
+                check(!reader.Read({1,7,2},8,data),"native shard EOF bounds");
+                HANDLE writer=CreateFileW(name,GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,nullptr,OPEN_EXISTING,0,nullptr);
+                check(writer==INVALID_HANDLE_VALUE,"native shard denies concurrent writer");
+                if(writer!=INVALID_HANDLE_VALUE)CloseHandle(writer);
+                check(!reader.Open(2,name,8),"native shard sealed registration refused");
+            }
+            check(DeleteFileW(name)!=0,"native shard handle released");
+        }
+    }
+#endif
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
     check(PositiveHalf(std::ldexp(1.0,-24),h)&&h==1,"binary16 subnormal");
