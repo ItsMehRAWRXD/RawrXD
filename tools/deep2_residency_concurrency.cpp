@@ -594,6 +594,34 @@ int main(int argc, char** argv) {
         PrintSnap("D final:", d1);
     }
 
+    std::printf("\n--- E. batch ownership and empty-close regression ---\n");
+    {
+        bool repeated_empty = true;
+        for (int i = 0; i < 8; ++i) {
+            if (!BeginBatch() || !EndBatch()) { repeated_empty = false; break; }
+        }
+        Check(repeated_empty, "E: repeated empty batches close exactly once");
+
+        const bool owner_opened = BeginBatch();
+        std::atomic<bool> contender_started{false};
+        bool contender_acquired = true;
+        std::thread contender([&]() {
+            contender_started.store(true, std::memory_order_release);
+            contender_acquired = BeginBatch();
+            if (contender_acquired) (void)EndBatch();
+        });
+        while (!contender_started.load(std::memory_order_acquire)) std::this_thread::yield();
+        contender.join();
+        const bool owner_closed = owner_opened && EndBatch();
+        Check(owner_opened, "E: primary executor acquired batch ownership");
+        Check(!contender_acquired, "E: concurrent executor cannot acquire active batch");
+        Check(owner_closed, "E: owning executor closes its batch");
+
+        const bool retry_opened = BeginBatch();
+        const bool retry_closed = retry_opened && EndBatch();
+        Check(retry_opened && retry_closed, "E: ownership is reusable after close");
+    }
+
     // ---- final invariants ---------------------------------------------------
     const Snap f = Take();
     std::printf("\n--- final invariants ---\n");
