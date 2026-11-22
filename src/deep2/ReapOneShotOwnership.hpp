@@ -36,6 +36,7 @@ public:
         handles_ = handles;
         generation_ = generation;
         epoch_ = ++nextEpoch_;   // unique per acquisition (S9.02)
+        submitted_ = false;      // H47-C: not yet submitted to the queue
         active_.store(true, std::memory_order_release);
         return epoch_;
     }
@@ -61,14 +62,26 @@ public:
         return true;
     }
 
+    // Mark the active acquisition as submitted to the GPU queue. H47-C: cleanup
+    // must distinguish an acquired-but-not-yet-submitted operation (whose
+    // handles are about to be used) from a submitted one. Drain refuses to
+    // reclaim an unsubmitted acquisition so resources are never freed between
+    // Acquire() and vkQueueSubmit().
+    void MarkSubmitted() noexcept {
+        std::lock_guard<std::mutex> lock(mutex_);
+        submitted_ = true;
+    }
+
     // Teardown of the owning device. Takes the ticket captured BEFORE the idle
-    // wait (H38/H39). Under the mutex, validation + transfer are atomic (H56).
+    // wait (H38/H39). H47-C: refuses to drain an acquisition that has not been
+    // submitted to the queue (its handles are still about to be used).
     template<class Release>
     bool Drain(int idle, uint64_t ticket, Release&& release) {
         if (!MayTeardownAfterIdle(idle)) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if (!active_.load(std::memory_order_relaxed) || ticket != epoch_)
             return false;   // stale ticket -> refuse
+        if (!submitted_) return false;   // H47-C: acquired but not submitted
         release(handles_);
         handles_ = {};
         active_.store(false, std::memory_order_release);
@@ -90,6 +103,7 @@ private:
     uint64_t nextEpoch_ = 0;    // monotonic ticket source
     std::atomic<bool> active_{false};
     std::atomic<bool> blocked_{false};   // H47: admission closed during cleanup
+    bool submitted_ = false;             // H47-C: guarded by mutex_
 };
 
 } } // namespace Deep2::Submit

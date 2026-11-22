@@ -1576,6 +1576,7 @@ bool VulkanCompute::endSubmitWait(
         return false;
     }
     const uint64_t submitReturnedNs = nowNs();
+    oneShot_.MarkSubmitted();   // H47-C: the acquisition reached the GPU queue
     ++queueSubmitCount_;
     if (globalSerial) {
         std::fprintf(stderr,
