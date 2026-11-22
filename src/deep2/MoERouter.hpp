@@ -92,6 +92,11 @@ public:
     // Returns empty if no route has been computed yet.
     std::vector<int> GetLastRouteExpertIds() const;
 
+    // Last full router logits (one per expert) from Route(). Exposed so a
+    // reference implementation can verify the whole chain
+    // logits -> activation -> selection -> normalize -> scale.
+    const std::vector<float>& GetLastRouterLogits() const { return lastRouterLogits_; }
+
     // Get expert weights (router parameters)
     void SetRouterWeights(const float* weights, size_t rows, size_t cols);
 
@@ -147,6 +152,9 @@ private:
 
     // Last route result (stored for prefetch prediction exposure)
     mutable std::vector<int> lastRouteExpertIds_;
+
+    // Last full router logits, one per expert (diagnostic / reference parity).
+    mutable std::vector<float> lastRouterLogits_;
 
     // Softmax over router logits
     std::vector<float> Softmax(const std::vector<float>& logits) const;

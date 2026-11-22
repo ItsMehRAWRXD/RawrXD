@@ -78,6 +78,7 @@ TokenRoute MoERouter::Route(const float* hiddenState) {
         logits[e] = score;
     }
     route.routerLogits = logits;
+    lastRouterLogits_ = logits;
 
     // ------------------------------------------------------------------
     // Single metadata-driven routing core (see MoERoutingCore.hpp).
