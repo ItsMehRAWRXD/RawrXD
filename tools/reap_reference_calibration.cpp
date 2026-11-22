@@ -231,6 +231,13 @@ int main(int argc, char ** argv) {
         std::fprintf(stderr, "CALIBRATION_FAIL=INCOMPLETE_LAYER0_TRACE count=%zu expected=22\n", instrumented.capture.trace.size());
         return 7;
     }
+    for (size_t position = 0; position < tokens.size(); ++position) {
+        std::ofstream logitsFile(fs::path(outDir) / ("reference_logits_pos" + std::to_string(position) + ".bin"), std::ios::binary | std::ios::trunc);
+        if (!logitsFile) return 7;
+        const float * row = plain.logits.data() + position * static_cast<size_t>(plain.vocab);
+        logitsFile.write(reinterpret_cast<const char *>(row), static_cast<std::streamsize>(plain.vocab * sizeof(float)));
+        if (!logitsFile) return 7;
+    }
     receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.004\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"layer0_trace_count\":" << instrumented.capture.trace.size() << ",\"layer0_trace_names\":[";
     for (size_t i = 0; i < instrumented.capture.trace.size(); ++i) {
         if (i) receipt << ',';
