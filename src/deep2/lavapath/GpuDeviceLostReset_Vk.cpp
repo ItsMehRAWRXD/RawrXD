@@ -10,7 +10,7 @@ bool TeardownThunk(void* ud) {
     auto* self = static_cast<VulkanCompute*>(ud);
     if (!self) return false;
     self->cleanup();
-    return true;
+    return self->CleanupComplete();
 }
 
 bool RecreateThunk(void* ud) {
