@@ -6,6 +6,7 @@
 #include "deep2/ReapExpertPrefetch.hpp"
 #include "deep2/ReapVirtualPayload.hpp"
 #include "deep2/ReapSubmissionPins.hpp"
+#include "deep2/ReapStrataBudget.hpp"
 #include <thread>
 #include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
@@ -191,6 +192,33 @@ int main(){
         check(pins.Resolve(1,newer,SubmissionPins::Outcome::FenceComplete)&&pins.Outstanding()==0,"completion releases pin");
         check(!pins.Resolve(1,newer,SubmissionPins::Outcome::FenceComplete),"duplicate completion rejected");
         check(cache.Acquire("other",8,fill,lease),"completed payload evictable");
+    }
+    {
+        StrataBudget budget({16,32,16,64,2});
+        StrataBudget::Lease a,b;
+        check(budget.Acquire({8,16,0,32,1},a),"strata atomic acquisition");
+        check(budget.Used()==StrataBudget::Amount({8,16,0,32,1}),"strata exact accounting");
+        check(!budget.Acquire({1,17,0,1,1},b)&&!b&&budget.Used()==StrataBudget::Amount({8,16,0,32,1}),"strata failed admission no partial reservation");
+        check(budget.Acquire({8,0,16,32,1},b),"strata independent second GPU");
+        check(!budget.SetLimits({15,32,16,64,2}),"strata refuses unsafe shrink");
+        auto copy=a;a.reset();
+        check(budget.Used()[0]==16,"strata shared lease retains reservation");
+        copy.reset();
+        check(budget.Used()==StrataBudget::Amount({8,0,16,32,1}),"strata final lease releases");
+        check(budget.SetLimits({8,32,16,32,1}),"strata safe resize");
+        check(budget.Available()==StrataBudget::Amount({0,32,0,0,0}),"strata available accounting");
+        check(!budget.Acquire({0,0,0,0,0},a),"strata zero reservation rejected");
+        b.reset();
+        check(budget.Used()==StrataBudget::Amount{},"strata all reservations released");
+        StrataBudget shared({6,6,0,0,6});
+        std::array<StrataBudget::Lease,12> leases{};
+        std::atomic<unsigned> successes{0};
+        std::vector<std::thread> workers;
+        for(size_t i=0;i<leases.size();++i)workers.emplace_back([&,i]{
+            if(shared.Acquire({1,1,0,0,1},leases[i]))++successes;
+        });
+        for(auto& worker:workers)worker.join();
+        check(successes==6&&shared.Used()==StrataBudget::Amount({6,6,0,0,6}),"strata concurrent admission exact bound");
     }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
