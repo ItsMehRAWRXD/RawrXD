@@ -468,6 +468,11 @@ private:
     };
     static constexpr uint32_t kQuantBatchMaxSets = 32;
     bool quant_batch_active_ = false;
+    // A successful queue submit whose fence has not yet completed.  Failed
+    // waits quarantine the batch until Cleanup() after device-idle teardown;
+    // normal batch reuse must not unpin or recycle these resources.
+    bool quant_submission_in_flight_ = false;
+    bool quant_submission_failed_ = false;
     bool quant_fuse_active_ = false;   // DEEP2_VULKAN_SUBMIT_OPT_001
     uint32_t quant_fuse_submits_ = 0;
 

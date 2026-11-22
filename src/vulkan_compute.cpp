@@ -1834,6 +1834,10 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 bool VulkanCompute::BeginQuantDotBatch() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (quant_batch_active_) return false;   // batches do not nest
+    // A failed fence wait means submitted work may still reference every
+    // pinned weight and batch buffer. Do not recycle or unpin them here;
+    // Cleanup() is the only recovery boundary after device-idle teardown.
+    if (quant_submission_failed_ || quant_submission_in_flight_) return false;
     if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return false;
     auto it = shaders_.find("quantdot");
     if (it == shaders_.end() || !it->second.pipeline) return false;
@@ -2049,17 +2053,24 @@ bool VulkanCompute::EndQuantDotBatch() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!quant_batch_active_) return false;
     quant_batch_active_ = false;
-    // RAWRXD_G04: the in-flight pins are released on EVERY exit path, including
-    // the early failure returns below. A path that returns with pins still held
-    // would leave those entries permanently un-evictable.
+    // RAWRXD_G04: pre-submit failures release pins, and successful completion
+    // releases them after the fence. A failed post-submit wait deliberately
+    // preserves pins and quarantines the batch until Cleanup() has established
+    // device-idle teardown.
+    bool fence_completed = false;
     struct PinReleaseGuard {
         VulkanCompute& v;
         std::unordered_set<const void*>& pins;
+        bool& submitted;
+        bool& completed;
         ~PinReleaseGuard() {
+            if (submitted && !completed) return;
+            // Before queue submission, or after a successful fence wait, no
+            // in-flight command can reference the pinned weights.
             for (const void* key : pins) v.UnpinQuantWeight(key);
             pins.clear();
         }
-    } pin_guard{*this, batch_pinned_};
+    } pin_guard{*this, batch_pinned_, quant_submission_in_flight_, fence_completed};
     const size_t n = quant_batch_entries_.size();
     if (n == 0) return true;
 
@@ -2258,6 +2269,7 @@ bool VulkanCompute::EndQuantDotBatch() {
         std::cerr << "[QUANT_DOT] batch queue submit failed" << std::endl;
         return false;
     }
+    quant_submission_in_flight_ = true;
     QDTRACE("end-batch submitted entries=" << quant_batch_entries_.size());
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
@@ -2276,8 +2288,12 @@ bool VulkanCompute::EndQuantDotBatch() {
     if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) {
         std::cerr << "[QUANT_DOT] batch fence wait failed" << std::endl;
         QDTRACE("end-batch fence ERROR");
+        quant_submission_failed_ = true;
         return false;
     }
+    quant_submission_in_flight_ = false;
+    quant_submission_failed_ = false;
+    fence_completed = true;
     QDTRACE("end-batch fence done");
     // RAWRXD_G04: the batch's in-flight work is complete; retire is now safe.
     NoteSubmissionComplete();
@@ -3475,6 +3491,8 @@ void VulkanCompute::ReleaseQuantFastPath() {
     quant_batch_sets_.clear();
     quant_batch_entries_.clear();
     quant_batch_active_ = false;
+    quant_submission_in_flight_ = false;
+    quant_submission_failed_ = false;
     for (auto& up : quant_scratch_pool_) {
         if (up->buffer) vkDestroyBuffer(device_, up->buffer, nullptr);
         if (up->memory) vkFreeMemory(device_, up->memory, nullptr);
