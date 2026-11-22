@@ -197,6 +197,13 @@ int main(){
                                 Q4Bytes,recovered)&&recovered&&
           invalidCache.Reserved()==blocks*Q2Bytes,
           "retry after conversion failure populates cache");
+    // Cache admission failure must clear the caller's output, while an
+    // independently held lease remains valid.
+    BoundedExpertCache::Lease staleAdmission=recovered;
+    check(!AcquireVirtualPayload(reader,invalidCache,{3,Q4Bytes,Q4Bytes},
+                                 Precision::Q2,Q4Bytes,staleAdmission)&&
+          !staleAdmission&&recovered&&recovered->size()==blocks*Q2Bytes,
+          "capacity refusal clears output without invalidating another lease");
     // A lease held by the caller must remain valid across a failed admission.
     BoundedExpertCache::Lease held=recovered;
     BoundedExpertCache::Lease refused;
