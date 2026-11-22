@@ -2,6 +2,9 @@
 #include "deep2/ReapMixedPrecision.hpp"
 #include "deep2/ReapShardIndex.hpp"
 #include "deep2/ReapRetainedRouting.hpp"
+#include "deep2/ReapBoundedExpertCache.hpp"
+#include <thread>
+#include <atomic>
 #include "deep2/ReapNativeShardReader.hpp"
 #include <cstdio>
 #if defined(_WIN32) && defined(_MSC_VER)
@@ -81,6 +84,33 @@ int main(){
     check(!RouteRetained({0,1},{0,2},{},RouterScore::Softmax,1,true,1,routes),"invalid original expert rejected");
     check(!RouteRetained({0,1},{0},{},RouterScore::Softmax,2,true,1,routes),"invalid top k rejected");
     check(!RouteRetained({-1000},{0},{},RouterScore::Sigmoid,1,true,1,routes),"zero selected mass rejected");
+    {
+        BoundedExpertCache cache(16);
+        BoundedExpertCache::Lease a,b,c;
+        std::atomic<unsigned> loads{0};
+        auto fill=[&](uint8_t* p,size_t n){++loads;std::fill(p,p+n,42);return true;};
+        check(cache.Acquire("a",8,fill,a)&&cache.Reserved()==8,"cache first load");
+        check(cache.Acquire("a",8,fill,b)&&a==b&&loads==1,"cache shared hit");
+        check(cache.Acquire("b",8,fill,c)&&cache.Reserved()==16,"cache budget filled");
+        check(!cache.Acquire("c",8,fill,c)&&cache.Reserved()==16&&(*c)[0]==42,"cache pinned budget refusal");
+        a.reset();b.reset();
+        check(cache.Acquire("c",8,fill,a)&&cache.Reserved()==16,"cache evicts unpinned entry");
+        c.reset();
+        auto failLoad=[](uint8_t*,size_t){return false;};
+        check(!cache.Acquire("d",8,failLoad,b)&&cache.Reserved()==8,"cache failed load rollback");
+        check(!cache.Acquire("c",7,fill,b),"cache conflicting size rejected");
+        BoundedExpertCache shared(8);
+        std::atomic<unsigned> sharedLoads{0}, successes{0};
+        std::vector<std::thread> workers;
+        std::array<BoundedExpertCache::Lease,6> leases{};
+        for(size_t i=0;i<leases.size();++i)workers.emplace_back([&,i]{
+            if(shared.Acquire("shared",8,[&](uint8_t* p,size_t n){++sharedLoads;std::fill(p,p+n,17);return true;},leases[i]))++successes;
+        });
+        for(auto& worker:workers)worker.join();
+        check(successes==6&&sharedLoads==1&&shared.Reserved()==8,"cache six worker coalesced load");
+        bool same=true;for(const auto& lease:leases)same=same&&lease&&lease==leases[0]&&(*lease)[0]==17;
+        check(same,"cache six worker identical payload");
+    }
     uint16_t h=0;
     check(PositiveHalf(1,h)&&h==0x3c00&&Half(h)==1,"binary16 one");
     check(PositiveHalf(std::ldexp(1.0,-24),h)&&h==1,"binary16 subnormal");
