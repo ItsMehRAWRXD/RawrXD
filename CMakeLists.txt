@@ -4802,6 +4802,11 @@ foreach(_reap_quant_test IN ITEMS reap_q4k_to_q2k_test reap_quant_range_test)
     target_compile_features(${_reap_quant_test} PRIVATE cxx_std_17)
     if(MSVC)
         target_compile_options(${_reap_quant_test} PRIVATE /EHsc /W4)
+        # R23 compares the real AVX2 implementation against the scalar
+        # reference on the same packed bytes.  Keep this explicit and scoped
+        # to the native K-quant regression targets.
+        target_compile_options(${_reap_quant_test} PRIVATE /arch:AVX2)
+        target_compile_definitions(${_reap_quant_test} PRIVATE __AVX2__=1)
     else()
         target_compile_options(${_reap_quant_test} PRIVATE -Wall -Wextra)
     endif()

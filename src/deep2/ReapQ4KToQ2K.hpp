@@ -6,6 +6,10 @@
 #include <cstddef>
 #include <limits>
 
+#if defined(__AVX2__)
+#include <immintrin.h>
+#endif
+
 namespace Deep2 { namespace ReapQuant {
 constexpr size_t Elements=256, Q4Bytes=144, Q2Bytes=84;
 using Values=std::array<float,Elements>;
@@ -50,6 +54,7 @@ inline bool DecodeQ4(const Q4Block& b,Values& out) noexcept {
     }
     return true;
 }
+
 inline bool DecodeQ2(const Q2Block& b,Values& out) noexcept {
     const float d=Half(LoadHalf(b.data()+80)),m=Half(LoadHalf(b.data()+82));
     if(!std::isfinite(d)||!std::isfinite(m))return false;
@@ -91,6 +96,42 @@ inline bool Convert(const Q4Block& source,Q2Block& target,Error& error) noexcept
     for(size_t i=0;i<Elements;++i){const double x=before[i],delta=x-after[i];e.squared+=delta*delta;e.signal+=x*x;e.maxAbs=std::max(e.maxAbs,std::abs(delta));}
     target=next;error=e;return true;
 }
+
+#if defined(__AVX2__)
+// AVX2 reference-equivalent decode for the packed Q4_K layout.  The scalar
+// decoder remains the numerical reference; this path is intentionally kept
+// beside it so parity can be tested on the exact same block bytes.
+inline bool DecodeQ4AVX2(const Q4Block& b,Values& out) noexcept {
+    const float d=Half(LoadHalf(b.data())),m=Half(LoadHalf(b.data()+2));
+    if(!std::isfinite(d)||!std::isfinite(m))return false;
+    const __m256i mask=_mm256_set1_epi32(0x0f);
+    for(unsigned g=0;g<8;++g){
+        const auto* packed=b.data()+16+(g/2)*32;
+        const unsigned sc=g<4?(b[4+g]&63u):(b[8+g]&15u)|((b[4+g-4]>>6)<<4);
+        const unsigned mn=g<4?(b[8+g]&63u):(b[8+g]>>4)|((b[4+g]>>6)<<4);
+        const __m256 scale=_mm256_set1_ps(d*float(sc));
+        const __m256 minimum=_mm256_set1_ps(m*float(mn));
+        for(unsigned half=0;half<4;++half){
+            const __m128i bytes=_mm_loadl_epi64(reinterpret_cast<const __m128i*>(packed+half*8));
+            const __m256i widened=_mm256_cvtepu8_epi32(bytes);
+            const __m256i shifted=(g&1u)?_mm256_srli_epi32(widened,4):widened;
+            const __m256i q=_mm256_and_si256(shifted,mask);
+            const __m256 values=_mm256_sub_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(q),scale),minimum);
+            _mm256_storeu_ps(out.data()+g*32+half*8,values);
+        }
+    }
+    return true;
+}
+
+inline bool ConvertAVX2(const Q4Block& source,Q2Block& target,Error& error) noexcept {
+    Values before{},after{};Q2Block next{};
+    if(!DecodeQ4AVX2(source,before)||!EncodeQ2(before,next)||!DecodeQ2(next,after))return false;
+    Error e;
+    for(size_t i=0;i<Elements;++i){const double x=before[i],delta=x-after[i];e.squared+=delta*delta;e.signal+=x*x;e.maxAbs=std::max(e.maxAbs,std::abs(delta));}
+    target=next;error=e;return true;
+}
+#endif
+
 inline bool ConvertedBytes(uint64_t rowWidth,uint64_t originalBytes,uint64_t& bytes) noexcept {
     if(!rowWidth||rowWidth%Elements||!originalBytes||originalBytes%Q4Bytes)return false;
     const uint64_t blocks=originalBytes/Q4Bytes;

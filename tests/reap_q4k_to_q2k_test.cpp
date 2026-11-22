@@ -1,5 +1,13 @@
 #include "deep2/ReapQ4KToQ2K.hpp"
 #include <cstdio>
+#if defined(_WIN32) && defined(_MSC_VER)
+#include <intrin.h>
+static bool hasAvx2(){
+    int info[4]{};
+    __cpuidex(info,7,0);
+    return (info[1] & (1<<5)) != 0;
+}
+#endif
 using namespace Deep2::ReapQuant;
 int main(){
     int pass=0,fail=0;auto check=[&](bool ok,const char* n){std::printf("%s %s\n",ok?"PASS":"FAIL",n);ok?++pass:++fail;};
@@ -31,6 +39,45 @@ int main(){
     x[17]=std::numeric_limits<float>::quiet_NaN();auto prior=q2;
     check(!EncodeQ2(x,q2)&&q2==prior,"NaN rejected without publishing");
     check(Convert(q4,q2,e)&&e.signal>0&&e.squared>=0&&std::isfinite(e.maxAbs),"Q4_K to Q2_K actual conversion and error");
+#if defined(__AVX2__)
+#if defined(_WIN32) && defined(_MSC_VER)
+    if(!hasAvx2()){
+        std::printf("R23_AVX2_UNVERIFIED=CPU_DOES_NOT_REPORT_AVX2\n");
+        return 2;
+    }
+#endif
+    Values scalarValues{},simdValues{};
+    Q2Block scalarConverted{},simdConverted{};
+    Error scalarError{},simdError{};
+    const bool scalarDecoded=DecodeQ4(q4,scalarValues);
+    const bool simdDecoded=DecodeQ4AVX2(q4,simdValues);
+    bool decodeParity=scalarDecoded&&simdDecoded;
+    unsigned firstDecodeMismatch=Elements; float maxDecodeDiff=0;
+    for(unsigned i=0;i<Elements&&decodeParity;++i){
+        const float diff=std::abs(scalarValues[i]-simdValues[i]);
+        maxDecodeDiff=std::max(maxDecodeDiff,diff);
+        if(diff>1e-6f){firstDecodeMismatch=i;decodeParity=false;}
+    }
+    if(!decodeParity) std::printf("R23_DECODE_DIFF index=%u scalar=%g simd=%g max=%g\n",
+                                  firstDecodeMismatch,scalarValues[firstDecodeMismatch],
+                                  simdValues[firstDecodeMismatch],maxDecodeDiff);
+    check(decodeParity,"R23 AVX2/scalar Q4_K decode parity");
+    const bool converted=Convert(q4,scalarConverted,scalarError)&&
+        ConvertAVX2(q4,simdConverted,simdError);
+    const bool conversionParity=converted && scalarConverted==simdConverted &&
+        std::abs(scalarError.squared-simdError.squared)<=1e-5 &&
+        std::abs(scalarError.signal-simdError.signal)<=1e-5 &&
+        std::abs(scalarError.maxAbs-simdError.maxAbs)<=1e-6;
+    if(!conversionParity) std::printf("R23_CONVERSION_DIFF bytes=%d squared=%g/%g signal=%g/%g max=%g/%g\n",
+                                      scalarConverted==simdConverted,
+                                      scalarError.squared,simdError.squared,
+                                      scalarError.signal,simdError.signal,
+                                      scalarError.maxAbs,simdError.maxAbs);
+    check(conversionParity,"R23 AVX2/scalar Q4_K to Q2_K parity");
+#else
+    std::printf("R23_AVX2_UNVERIFIED=AVX2_BUILD_REQUIRED\n");
+    return 2;
+#endif
     StoreHalf(q4.data(),0x7c00);prior=q2;check(!Convert(q4,q2,e)&&q2==prior,"nonfinite source rejected");
     uint64_t bytes=0;check(ConvertedBytes(7168,144*28*3,bytes)&&bytes==84*28*3,"exact Kimi row byte conversion");
     check(!ConvertedBytes(255,144,bytes)&&!ConvertedBytes(256,145,bytes)&&!ConvertedBytes(512,144,bytes),"partial blocks and rows rejected");
