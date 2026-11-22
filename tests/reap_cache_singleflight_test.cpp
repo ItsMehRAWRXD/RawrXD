@@ -41,10 +41,29 @@ int main() {
         std::puts("FAIL retained payload acquisition");
         return 3;
     }
+    // A full pinned cache must reject admission without invoking the loader.
     BoundedExpertCache::Lease stale;
+    std::atomic<unsigned> rejectedLoaderCalls{0};
     bool failed=cache.Acquire("other-expert",64,
-        [](uint8_t*,size_t){return false;},stale);
-    if(failed||stale||cache.Reserved()!=64)return 2;
+        [&](uint8_t*,size_t){
+            ++rejectedLoaderCalls;
+            return false;
+        },stale);
+    if(failed||stale||cache.Reserved()!=64||rejectedLoaderCalls!=0)return 2;
+    // Independently exercise a loader failure after successful reservation,
+    // then retry the same key. No failed entry or budget may remain pinned.
+    BoundedExpertCache failingCache(64);
+    BoundedExpertCache::Lease failedLease;
+    if(failingCache.Acquire("retry-key",64,
+        [](uint8_t*,size_t){return false;},failedLease)||
+       failedLease||failingCache.Reserved()!=0)return 3;
+    BoundedExpertCache::Lease recovered;
+    if(!failingCache.Acquire("retry-key",64,
+        [](uint8_t* dst,size_t n){
+            for(size_t j=0;j<n;++j)dst[j]=uint8_t(j);
+            return true;
+        },recovered)||!recovered||recovered->size()!=64||
+       failingCache.Reserved()!=64)return 4;
     std::puts("PASS concurrent single-flight cache acquisition");
     return 0;
 }
