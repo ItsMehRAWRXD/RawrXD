@@ -4786,6 +4786,22 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_cpu_capture_test.cpp")
         "${CMAKE_CURRENT_BINARY_DIR}/reap_cpu_capture_fixtures")
 endif()
 
+# Shared recurrent scheduling and canonical graph integration (CPU-only).
+foreach(_reap_test IN ITEMS reap_visit_schedule_test reap_partial_loop_graph_test)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/${_reap_test}.cpp")
+        add_executable(${_reap_test} "tests/reap/${_reap_test}.cpp")
+        target_include_directories(${_reap_test} PRIVATE "${CMAKE_SOURCE_DIR}/src")
+        target_compile_features(${_reap_test} PRIVATE cxx_std_17)
+        if(MSVC)
+            target_compile_options(${_reap_test} PRIVATE /EHsc /W4)
+        else()
+            target_compile_options(${_reap_test} PRIVATE -Wall -Wextra)
+        endif()
+        enable_testing()
+        add_test(NAME ${_reap_test} COMMAND ${_reap_test})
+    endif()
+endforeach()
+
 # REAP-AutoFit R02: canonical IR (physical tensors vs logical execution visits).
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap/reap_canonical_ir_test.cpp")
     add_executable(reap_canonical_ir_test
