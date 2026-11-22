@@ -399,6 +399,8 @@ struct RefRoutingSink {
 };
 
 static RefRoutingSink g_refRouting;
+// Preallocated per-prompt counters for the full paired capture only.
+static std::vector<ReapCapture::LayerCounts> g_saliencyLayerCounts;
 
 static bool RefRoutingObserver(const Deep2Engine::MoERoutingObservation& obs, void* user) {
     auto* sink = static_cast<RefRoutingSink*>(user);
@@ -425,6 +427,10 @@ static bool RefRoutingObserver(const Deep2Engine::MoERoutingObservation& obs, vo
     }
     if (fwrite(obs.expert_input, sizeof(float), obs.hidden_size, sink->fp)
         != obs.hidden_size) return fail();
+    if (!g_saliencyLayerCounts.empty()) {
+        if (obs.layer >= g_saliencyLayerCounts.size()) return fail();
+        ++g_saliencyLayerCounts[obs.layer].routes;
+    }
     ++sink->captures;
     return true;
 }
@@ -467,6 +473,12 @@ static bool RefExpertOutObserver(const Deep2Engine::MoEExpertOutputObservation& 
     if (fwrite(&obs.element_count, sizeof(uint32_t), 1, sink->fp) != 1) return fail();
     if (fwrite(obs.output, sizeof(float), obs.element_count, sink->fp)
         != obs.element_count) return fail();
+    if (!g_saliencyLayerCounts.empty()) {
+        if (obs.layer >= g_saliencyLayerCounts.size() || obs.kind > 1) return fail();
+        auto& c = g_saliencyLayerCounts[obs.layer];
+        ++c.records;
+        if (obs.kind == 0) ++c.shared; else ++c.routed;
+    }
     ++sink->records;
     if (obs.kind == 0) ++sink->shared; else ++sink->routed;
     return true;
@@ -684,6 +696,25 @@ public:
             return false;
         }
         
+        if (config_.saliencyCapture) {
+            // Same routed-layer predicate as the production transformer path.
+            expectedSaliencyLayers_.resize(modelWeights.layers.size(), false);
+            for (size_t layer = 0; layer < modelWeights.layers.size(); ++layer) {
+                const auto& router = modelWeights.layers[layer].moeRouter;
+                expectedSaliencyLayers_[layer] = router.data && router.sizeBytes > 0 &&
+                    (config_.dumpRoutingLayer < 0 ||
+                     layer == static_cast<size_t>(config_.dumpRoutingLayer));
+            }
+            if (std::find(expectedSaliencyLayers_.begin(), expectedSaliencyLayers_.end(), true)
+                    == expectedSaliencyLayers_.end() ||
+                !modelInfo_.numActiveExperts ||
+                modelInfo_.numActiveExperts > modelInfo_.numExperts) {
+                cerr << "No valid routed source layers or top-k for saliency capture" << endl;
+                return false;
+            }
+            g_saliencyLayerCounts.resize(expectedSaliencyLayers_.size());
+        }
+
         // Install REAP observer to capture routing statistics
         phase("CALIBRATION_TRACKER_INIT", "BEGIN");
         phase("REAP_OBSERVER_INSTALL", "BEGIN");
@@ -788,6 +819,9 @@ public:
                      << ": " << prompt.substr(0, min<size_t>(80, prompt.size())) << "..." << endl;
             }
             
+            if (config_.saliencyCapture)
+                std::fill(g_saliencyLayerCounts.begin(), g_saliencyLayerCounts.end(),
+                          ReapCapture::LayerCounts{});
             uint64_t tokensBefore = accumulator_.tokenCount();
             phase("INFERENCE_CONTEXT_READY", "BEGIN");
             if (!runInferenceOnPrompt(prompt, genOptions)) {
@@ -804,6 +838,12 @@ public:
                  (g_refRouting.fp && std::fflush(g_refRouting.fp) != 0) ||
                  (g_refExpertOut.fp && std::fflush(g_refExpertOut.fp) != 0))) {
                 cerr << "Saliency capture I/O failed" << endl;
+                return false;
+            }
+            if (config_.saliencyCapture &&
+                !ReapCapture::CompleteCoverage(expectedSaliencyLayers_, g_saliencyLayerCounts,
+                                                modelInfo_.numActiveExperts)) {
+                cerr << "Incomplete per-layer saliency coverage on prompt " << i << endl;
                 return false;
             }
             // Paired captures are evidence, not routing-only ranking files.
@@ -916,7 +956,7 @@ public:
                         if (std::fread(&count, 4, 1, rf) != 1) break;
                         if (_fseeki64(rf, static_cast<__int64>(count) * 4, SEEK_CUR) != 0) break;
                         if (kind == 0) ++keptShared; else ++keptRouted;
-                        if (keptShared == 1 && keptRouted == 6) {
+                        if (keptShared == 1 && keptRouted == modelInfo_.numActiveExperts) {
                             _chsize_s(_fileno(rf), _ftelli64(rf));
                             break;
                         }
@@ -975,6 +1015,8 @@ public:
                     << "\nfirst_shard_sha256\t" << modelSha256_
                     << "\nlayer_filter\t" << config_.dumpRoutingLayer
                     << "\nrewrite_authorized\t0\n";
+            for (size_t layer = 0; layer < expectedSaliencyLayers_.size(); ++layer)
+                if (expectedSaliencyLayers_[layer]) receipt << "expected_layer\t" << layer << "\n";
             receipt.close();
             if (!receipt) return false;
             error_code ec;
@@ -1004,6 +1046,7 @@ private:
     
     // Reap activation accumulator
     ReapActivationAccumulator accumulator_;
+    std::vector<bool> expectedSaliencyLayers_;
     
     // Checkpoint state
     string modelSha256_;
