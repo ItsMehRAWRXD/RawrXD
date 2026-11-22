@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "agent/acceptance_gate.hpp"
 #ifdef _WIN32
 // replace_windows_file() below calls ReplaceFileW; include <windows.h> for its
 // declaration (NOMINMAX so the min/max macros do not break <algorithm>).
@@ -26,7 +27,12 @@ namespace rawrxd::tools {
 namespace fs=std::filesystem;
 enum class Risk { ReadOnly, Write, Execute, Network, External };
 struct Request { std::string name; std::map<std::string,std::string> args; };
-struct Result { bool ok=false; std::string output; std::string error; };
+struct Result {
+    bool ok=false; std::string output; std::string error;
+    enum class Acceptance { NotEvaluated, Accepted, Rejected, NotApplicable };
+    Acceptance acceptance = Acceptance::NotApplicable;
+    std::string firstFailure;
+};
 struct Tool { std::string name, description; Risk risk; std::vector<std::string> required; std::function<Result(const Request&)> invoke; };
 
 // T05 crash-recovery: track child process handles spawned by runInTerminal
@@ -254,8 +260,22 @@ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"com
 
     UntrackToolChildProcess(pi.hProcess);
 
-    if (ec != 0) return {false, out, "exit=" + std::to_string(ec)};
-    return {true, out, ""};
+    // G: evaluate acceptance on the captured outcome (merged pipe).
+    {
+        rawrxd::AcceptanceCriteria crit;
+        crit.expectedExit = 0;
+        if (const char* m = std::getenv("RAWRXD_ACCEPTANCE_MARKER"); m && *m)
+            crit.stderrMustContain = m;
+        rawrxd::ProcessOutcome po;
+        po.launched = true;
+        po.exitCode = static_cast<int>(ec);
+        po.stdoutText = out;
+        po.stderrText = out;
+        const auto verdict = rawrxd::EvaluateAcceptance(po, crit);
+        if (ec != 0) return {false, out, "exit=" + std::to_string(ec)};
+        if (!verdict.passed) return {false, out, verdict.firstFailure};
+        return {true, out, ""};
+    }
 #else
     std::string full=std::string("cd \"")+path_utf8(root)+"\" && "+cmd;
     FILE* pipe=popen(full.c_str(),"r");
