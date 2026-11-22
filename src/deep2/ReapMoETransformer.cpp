@@ -21,6 +21,9 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace Deep2 {
 namespace {
@@ -745,23 +748,27 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
 
     std::error_code ec;
     const fs::path outputDir(request.outputDirectory);
-    const bool outputExisted = fs::exists(outputDir, ec);
     if (fs::exists(outputDir, ec)) {
         if (!fs::is_directory(outputDir, ec) || fs::directory_iterator(outputDir, ec) != fs::directory_iterator()) {
             result.error = "output directory must be new or empty";
             return result;
         }
-    } else if (!fs::create_directories(outputDir, ec) || ec) {
-        result.error = "output directory could not be created";
-        return result;
+    } else {
+        const fs::path parent = outputDir.parent_path().empty()
+            ? fs::current_path(ec) : outputDir.parent_path();
+        if (ec || (!fs::exists(parent, ec) && !fs::create_directories(parent, ec)) || ec) {
+            result.error = "output parent directory could not be created";
+            return result;
+        }
     }
     const auto txnId = std::chrono::steady_clock::now().time_since_epoch().count();
-    const fs::path stagingDir = outputDir / (".reap-txn-" + std::to_string(txnId));
+    const fs::path stagingDir = outputDir.parent_path() /
+        (outputDir.filename().string() + ".reap-txn-" + std::to_string(txnId));
     if (!fs::create_directory(stagingDir, ec) || ec) {
         result.error = "transaction staging directory could not be created";
         return result;
     }
-    OutputCleanup cleanup{outputDir, true, !outputExisted};
+    OutputCleanup cleanup{stagingDir, true, true};
 
     for (size_t shardIndex = 0; shardIndex < shards.size(); ++shardIndex) {
         const auto& shard = shards[shardIndex];
@@ -914,50 +921,56 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
     }
 
     const fs::path stagedFirst = stagingDir / paths.front().filename();
-    GGUFLoader verify;
-    if (!verify.load(stagedFirst.string())) {
-        result.error = "rewritten GGUF reload failed: " + verify.error();
-        return result;
-    }
-    if (verify.shardCount() != shardCount || verify.tensorCount() != result.outputTensors) {
-        result.error = "rewritten GGUF inventory mismatch";
-        return result;
+    uint32_t verifiedShardCount = 0;
+    {
+        // Release the mapped validation files before the directory publication
+        // boundary; Windows will otherwise reject the rename with sharing
+        // violation even though serialization and validation succeeded.
+        GGUFLoader verify;
+        if (!verify.load(stagedFirst.string())) {
+            result.error = "rewritten GGUF reload failed: " + verify.error();
+            return result;
+        }
+        if (verify.shardCount() != shardCount || verify.tensorCount() != result.outputTensors) {
+            result.error = "rewritten GGUF inventory mismatch";
+            return result;
+        }
+        verifiedShardCount = verify.shardCount();
     }
 
-    // Publish only after every shard has been serialized and the staged
-    // checkpoint reloads successfully. Rename is the commit boundary; if any
-    // publication fails, remove only files published by this transaction.
-    std::vector<fs::path> published;
-    for (const auto& path : paths) {
-        const fs::path staged = stagingDir / path.filename();
-        const fs::path final = outputDir / path.filename();
-        ec.clear();
-        const bool destinationExists = fs::exists(final, ec);
-        if (ec || destinationExists) {
-            for (const auto& done : published) {
-                std::error_code rollbackError;
-                fs::remove(done, rollbackError);
-            }
-            result.error = "transactional shard publication failed: " + final.string();
-            return result;
-        }
-        ec.clear();
-        fs::rename(staged, final, ec);
-        if (ec) {
-            for (const auto& done : published) {
-                std::error_code rollbackError;
-                fs::remove(done, rollbackError);
-            }
-            result.error = "transactional shard publication failed: " + final.string();
-            return result;
-        }
-        published.push_back(final);
+    // Publish only after every shard has been serialized and the complete
+    // staged checkpoint reloads successfully. A single directory rename is
+    // the commit boundary, so model discovery cannot observe a partial shard
+    // set. Existing destinations are never replaced.
+    ec.clear();
+    if (fs::exists(outputDir, ec) || ec) {
+        result.error = "transactional destination appeared during export";
+        return result;
     }
+    bool published = false;
+#ifdef _WIN32
+    published = MoveFileExW(stagingDir.wstring().c_str(), outputDir.wstring().c_str(),
+                            MOVEFILE_WRITE_THROUGH) != 0;
+    if (!published) {
+        result.error = "transactional directory publication failed: win32=" +
+                       std::to_string(static_cast<unsigned long>(GetLastError()));
+        return result;
+    }
+#else
+    ec.clear();
+    fs::rename(stagingDir, outputDir, ec);
+    if (ec) {
+        result.error = "transactional directory publication failed: " + ec.message();
+        return result;
+    }
+    published = true;
+#endif
+    if (!published) return result;
     cleanup.active = false;
     result.success = true;
     result.outputFirstShard = (outputDir / paths.front().filename()).string();
     result.sourceShardCount = shardCount;
-    result.outputShardCount = verify.shardCount();
+    result.outputShardCount = verifiedShardCount;
     cleanup.active = false;
     return result;
 }
