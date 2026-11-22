@@ -141,6 +141,24 @@ jobs:
           if errorlevel 1 exit /b 1
           reap-link-contract.exe
           if errorlevel 1 exit /b 1
+      - name: Prove production AVX2 anchor survives dead-code elimination
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 /I src /c tests\reap_msvc_anchor_only_test.cpp /Fo:reap-anchor-only.obj
+          if errorlevel 1 exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 /DRAWRXD_REAP_MSVC_ISOLATED_AVX2=1 /I src /c tests\reap_msvc_link_contract.cpp /Fo:reap-anchor-contract.obj
+          if errorlevel 1 exit /b 1
+          rem No direct kernel call exists in this executable; only the forced anchor can require resolution.
+          link /nologo /WX /OPT:REF /INCREMENTAL:NO reap-anchor-only.obj reap-anchor-contract.obj /OUT:reap-anchor-negative.exe > reap-anchor-negative.log 2>&1
+          if not errorlevel 1 exit /b 1
+          findstr /C:"LNK2019" /C:"LNK2001" reap-anchor-negative.log
+          if errorlevel 1 exit /b 1
+          link /nologo /WX /OPT:REF /INCREMENTAL:NO reap-anchor-only.obj reap-anchor-contract.obj reap-avx2.obj /OUT:reap-anchor-positive.exe
+          if errorlevel 1 exit /b 1
+          reap-anchor-positive.exe
+          if errorlevel 1 exit /b 1
       - name: Compile and execute MSVC adaptive virtual expert payload
         shell: cmd
         run: |
