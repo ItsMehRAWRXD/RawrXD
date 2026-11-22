@@ -87,6 +87,23 @@ int main(){
     check(!AcquireVirtualPayload(reader,cache,{3,UINT64_MAX-10,Q4Bytes},
                                  Precision::Q2,Q4Bytes,rejected)&&!rejected,
           "source offset overflow rejected before shard I/O");
+    // Out-of-range geometry must fail before any I/O or cache reservation.
+    const unsigned readsBeforeGeometry=reader.reads;
+    const uint64_t reservedBeforeGeometry=cache.Reserved();
+    check(!AcquireVirtualPayload(reader,cache,{3,UINT64_MAX-Q4Bytes+1,Q4Bytes},
+                                 Precision::Q2,Q4Bytes,rejected)&&
+          reader.reads==readsBeforeGeometry&&
+          cache.Reserved()==reservedBeforeGeometry,
+          "wrapped source extent rejected before cache admission");
+    check(!AcquireVirtualPayload(reader,cache,{3,0,0},Precision::Q2,
+                                 Q4Bytes,rejected)&&
+          reader.reads==readsBeforeGeometry&&
+          cache.Reserved()==reservedBeforeGeometry,
+          "empty source rejected before cache admission");
+    // A different precision must not alias a Q2 payload even at the same
+    // shard offset; the key includes the precision discriminator.
+    check(q2&&q3&&q4&&q2!=q3&&q2!=q4&&q3!=q4,
+          "precision-specific payloads have distinct cache ownership");
     MemoryReader missing;
     BoundedExpertCache separate(blocks*Q2Bytes);
     check(!AcquireVirtualPayload(missing,separate,range,Precision::Q2,
