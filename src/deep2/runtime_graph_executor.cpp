@@ -5740,6 +5740,14 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                         "weight_sum=%.9g bad_ids=%zu in_rms=%.9g\n",
                         (int)in.block, position, expert_ids.size(), wsum,
                         idsBad, std::sqrt(pre / std::max<size_t>(xi.size(), 1)));
+                    // MOE_ROUTE_RECORD: exact ids/weights so a reference can be
+                    // compared element by element. Order is descending selection
+                    // score, which is part of the contract being verified.
+                    for (size_t i = 0; i < expert_ids.size() && i < expert_w.size(); ++i)
+                        std::fprintf(stderr,
+                            "MOE_ROUTE_REC block=%d pos=%zu rank=%zu id=%u w=%.9g\n",
+                            (int)in.block, position, i,
+                            (unsigned)expert_ids[i], (double)expert_w[i]);
                 }
                 if (!OpMoEExecute(in, xi, expert_ids, expert_w, y, e)) { last_error_ = e; return false; }
                 if (std::getenv("DEEP2_MOE_TRACE")) {
