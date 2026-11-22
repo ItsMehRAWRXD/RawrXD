@@ -1578,9 +1578,30 @@ bool VulkanCompute::endSubmitWait(
                                                          : "fence");
     }
 
-    vkDestroyFence(device_, fence, nullptr);
-    if (query) vkDestroyQueryPool(device_, query, nullptr);
-    vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+    // COMPLETION-BACKED QUARANTINE: only reclaim the fence/query/command
+    // buffer once the GPU has CONFIRMED completion (wait == VK_SUCCESS).
+    // On VK_TIMEOUT or VK_ERROR_DEVICE_LOST the submission may still be
+    // in-flight on the GPU; destroying the fence/query/command buffer here
+    // would free resources the GPU is still referencing — the exact
+    // premature-reclamation defect class that caused repeated TDRs. Retain
+    // them (leak-safe containment) and let terminal device-loss teardown
+    // (cleanup / RecoverDeviceIfOptIn) reclaim them after the device is
+    // confirmed idle or lost. This is the centralized completion contract:
+    // no in-flight resource is freed before its completion is confirmed.
+    if (wait == VK_SUCCESS) {
+        vkDestroyFence(device_, fence, nullptr);
+        if (query) vkDestroyQueryPool(device_, query, nullptr);
+        vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+    } else {
+        std::fprintf(stderr,
+                     "[GPU] endSubmitWait QUARANTINE retained in-flight resources "
+                     "vk=%d (no free before confirmed completion)\n",
+                     static_cast<int>(wait));
+        std::fflush(stderr);
+        // Intentionally leak the fence/query/command buffer. They are reclaimed
+        // by the terminal device-loss teardown path once the device is idle or
+        // confirmed lost. Freeing them here risks GPU corruption / TDR.
+    }
     if (globalSerial) {
         g_gpuInFlight.fetch_sub(1);
         std::fprintf(stderr, "GLOBAL_GPU_SERIAL RELEASE seq=%llu\n",
@@ -1591,7 +1612,6 @@ bool VulkanCompute::endSubmitWait(
 }
 
 // Gate-protected submit helper. The caller MUST hold g_gpuSubmitGate when
-// GlobalGpuSerialEnabled() is true. It increments g_gpuInFlight before
 // vkQueueSubmit and decrements it on submit failure. On success the caller
 // owns the in_flight reference and must decrement it via the ticket's
 // inFlight_ flag in the corresponding wait/cancel path (or at function end
