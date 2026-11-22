@@ -15,6 +15,10 @@ struct ReapMoETransformRequest {
     // bytes.  The writer must reject a candidate that only fits on paper.
     uint64_t targetSizeBytes = 0;
     bool replaceExisting = false;
+    // Experimental native conversion of selected Q4_K expert projections only.
+    // A finite nonnegative per-tensor relative RMSE limit is mandatory.
+    bool requantizeQ4KToQ2K = false;
+    double maxQuantRelativeRmse = -1.0;
 };
 
 struct ReapMoETransformResult {
@@ -29,6 +33,8 @@ struct ReapMoETransformResult {
     uint64_t selectedExpertSlices = 0;
     uint32_t sourceShardCount = 0;
     uint32_t outputShardCount = 0;
+    uint64_t requantizedBlocks = 0;
+    double maxTensorQuantRelativeRmse = 0.0;
 };
 
 // Transform a real split GGUF by selecting the calibrated experts in each
@@ -47,8 +53,11 @@ struct ReapMoEBudgetResult {
     uint64_t originalExperts = 0, topK = 0, groups = 0, groupsUsed = 0;
     uint64_t maxRetained = 0;
     std::vector<uint32_t> routedLayers;
+    uint64_t requantizableTensors = 0;
+    bool requantizeQ4KToQ2K = false;
 };
 ReapMoEBudgetResult inspectMoEGGUFBudget(const std::string& sourceFirstShard,
-                                      uint64_t budgetBytes);
+                                      uint64_t budgetBytes,
+                                      bool requantizeQ4KToQ2K = false);
 
 } // namespace Deep2
