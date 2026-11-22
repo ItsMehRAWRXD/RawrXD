@@ -1,51 +1,45 @@
-/* ReapSubmissionCompletion.hpp — Deep2 centralized submission-completion contract.
- *
- * Pure, dependency-free decision function extracted from
- * VulkanCompute::endSubmitWait so the completion/quarantine policy can be
- * CPU-tested without a physical Vulkan device. The production path consumes
- * this decision directly.
- *
- * Contract (see RawrXD Deep2 lifetime audit):
- *   Confirmed pre-submit failure -> Reclaim  (nothing in flight)
- *   Successful completion        -> Reclaim  (fence/query/cmd safe to free)
- *   Post-submit timeout          -> Retain  (may still be in-flight)
- *   Completion unknown           -> Retain  (VK_ERROR_* non-lost)
- *   Terminal device loss         -> TerminalTeardown (controlled teardown only)
- */
 #pragma once
+// Native completion decisions shared by the Deep2 and device-level Vulkan paths.
+// A negative result after a queue submission attempt does not establish safety.
+namespace Deep2 { namespace Submit {
 
-namespace Deep2 {
-namespace Submit {
+enum class Completion : int { Reclaim = 0, Retain = 1, TerminalTeardown = 2 };
+enum : int { kVkSuccess = 0, kVkTimeout = 2, kVkErrorDeviceLost = -4 };
 
-enum class Completion : int {
-    Reclaim = 0,          // confirmed completion or pre-submit failure: free
-    Retain = 1,           // timeout / unknown: keep in-flight resources
-    TerminalTeardown = 2, // device lost: controlled teardown, never recycle
-};
-
-// VK result codes used by the contract (avoid a Vulkan header dependency).
-enum : int {
-    kVkSuccess = 0,
-    kVkTimeout = 2,       // VK_TIMEOUT (VkResult ABI value)
-    kVkErrorDeviceLost = -4,
-};
-
-// Classify a vkWaitForFences / vkQueueSubmit result into the completion
-// decision. `submitted` distinguishes a pre-submit failure (no fence was
-// signaled, nothing in flight -> Reclaim) from a post-submit wait result.
-inline Completion Classify(int vkResult, bool submitted) noexcept {
-    if (!submitted) return Completion::Reclaim;          // pre-submit failure
-    if (vkResult == kVkSuccess) return Completion::Reclaim;
-    if (vkResult == kVkErrorDeviceLost) return Completion::TerminalTeardown;
-    // VK_TIMEOUT or any other non-success after submission: may be in-flight.
+inline Completion Classify(int result, bool submitted) noexcept {
+    if (result == kVkErrorDeviceLost) return Completion::TerminalTeardown;
+    if (!submitted || result == kVkSuccess) return Completion::Reclaim;
     return Completion::Retain;
 }
+inline bool MayReclaim(Completion c) noexcept { return c == Completion::Reclaim; }
 
-// True when the completion decision permits freeing the fence/query/command
-// buffer immediately (confirmed completion or nothing was submitted).
-inline bool MayReclaim(Completion c) noexcept {
-    return c == Completion::Reclaim;
+// These transitions operate on the root backend's existing shared-fence state.
+// The caller serializes their use with the same lock as command recording.
+inline bool MayReuseQuant(bool pending, bool failed, bool cleanupQuarantined) noexcept {
+    return !pending && !failed && !cleanupQuarantined;
+}
+inline bool MayReleaseQuantPins(bool pending, bool failed) noexcept {
+    return !pending && !failed;
+}
+// Called only AFTER attempting vkQueueSubmit. Conservatively quarantine any
+// rejected submission until an independent completion/idle boundary is proven.
+inline bool RecordQuantSubmit(int result, bool& pending, bool& failed) noexcept {
+    pending = true;
+    failed = result != kVkSuccess;
+    return !failed;
+}
+inline bool RecordQuantWait(int result, bool& pending, bool& failed) noexcept {
+    if (!pending) return false;
+    const bool complete = MayReclaim(Classify(result, true));
+    pending = !complete;
+    failed = !complete;
+    return complete;
+}
+// Root backend cleanup remains fail-closed on ALL unsuccessful idle waits.
+// This is not a terminal-device-loss teardown authorization.
+inline bool RecordIdleWait(int result, bool& cleanupQuarantined) noexcept {
+    cleanupQuarantined = result != kVkSuccess;
+    return !cleanupQuarantined;
 }
 
-} // namespace Submit
-} // namespace Deep2
+} } // namespace Deep2::Submit
