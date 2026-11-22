@@ -1341,6 +1341,8 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     // has been waited on. Dispatch is serialised, which is the pre-existing
     // contract; what is new is that residency steering can no longer race it.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     if (!packed || !q8_interleaved || !out) return false;
     if (kind < 0 || (kind > 6 && kind != 8)) return false;
     if (n_out == 0 || n_in == 0 || n_blocks == 0) return false;
@@ -1382,8 +1384,12 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     struct WeightPin {
         VulkanCompute& v;
         const void* key;
-        ~WeightPin() { v.UnpinQuantWeight(key); }
-    } weight_pin{*this, packed};
+        const bool& pending;
+        const bool& failed;
+        ~WeightPin() {
+            if (Deep2::Submit::MayReleaseQuantPins(pending, failed)) v.UnpinQuantWeight(key);
+        }
+    } weight_pin{*this, packed, quant_submission_in_flight_, quant_submission_failed_};
     PinQuantWeight(packed, packed_bytes, kind);
 
     const bool direct_io = QuantDotDirectIoEnabled();
@@ -1555,13 +1561,17 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit.commandBufferCount = 1;
         submit.pCommandBuffers = &plan->command;
-        if (vkQueueSubmit(compute_queue_, 1, &submit, quant_fence_) != VK_SUCCESS) return false;
+        const VkResult submitResult = vkQueueSubmit(compute_queue_, 1, &submit, quant_fence_);
+        if (!Deep2::Submit::RecordQuantSubmit(static_cast<int>(submitResult),
+                quant_submission_in_flight_, quant_submission_failed_)) return false;
         ++quant_epoch_;
         ++gpu_counters_.submits;
         const auto submit_end = std::chrono::steady_clock::now();
         gpu_counters_.submit_ms += std::chrono::duration<double, std::milli>(
             submit_end - submit_begin).count();
-        if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) return false;
+        const VkResult waitResult = WaitQuantFence(device_, quant_fence_);
+        if (!Deep2::Submit::RecordQuantWait(static_cast<int>(waitResult),
+                quant_submission_in_flight_, quant_submission_failed_)) return false;
         NoteSubmissionComplete();
         const auto wait_end = std::chrono::steady_clock::now();
         ++gpu_counters_.waits;
@@ -1766,10 +1776,11 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &quant_cmd_;
-    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) {
-        std::cerr << "Quant-dot queue submit failed" << std::endl;
-        ReleaseQuantScratch(obuf);
-        ReleaseQuantScratch(q8buf);
+    const VkResult submitResult = vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_);
+    if (!Deep2::Submit::RecordQuantSubmit(static_cast<int>(submitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) {
+        // Keep scratch and pinned weights until the cleanup boundary.
+        std::cerr << "Quant-dot queue submit quarantined VkResult=" << static_cast<int>(submitResult) << std::endl;
         return false;
     }
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
@@ -1781,11 +1792,12 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
                                << " kind=" << kind << " q8_bytes=" << q8_bytes
                                << " packed_bytes=" << packed_bytes << " out_bytes=" << out_bytes);
 
-    if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) {
+    const VkResult waitResult = WaitQuantFence(device_, quant_fence_);
+    if (!Deep2::Submit::RecordQuantWait(static_cast<int>(waitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) {
         QDTRACE("fence wait returned error");
-        std::cerr << "Quant-dot fence wait failed" << std::endl;
-        ReleaseQuantScratch(obuf);
-        ReleaseQuantScratch(q8buf);
+        // Scratch remains in-use; the GPU may still be referencing it.
+        std::cerr << "Quant-dot fence wait quarantined VkResult=" << static_cast<int>(waitResult) << std::endl;
         return false;
     }
     // RAWRXD_G04: this epoch's fence has signalled, so weights retired during
@@ -2011,6 +2023,8 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
 
 bool VulkanCompute::BeginFusedLayer() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     if (quant_fuse_active_) return false;
     quant_fuse_active_ = true;
     quant_fuse_submits_ = 0;
@@ -2510,6 +2524,8 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
     const bool trace = (std::getenv("RR_F16_TRACE") != nullptr);
     // RAWRXD_G04: same atomic-residency contract as ExecuteQuantDot.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
 #define F16_FAIL(msg) do { if (trace) { std::cerr << "[f16-trace] " << msg << std::endl; } return false; } while (0)
     if (!packed || !x || !out) F16_FAIL("null argument");
     if (n_out == 0 || n_in == 0 || (n_in % 2u) != 0) F16_FAIL("n_in odd/zero");
@@ -2530,8 +2546,12 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
     struct WeightPin {
         VulkanCompute& v;
         const void* key;
-        ~WeightPin() { v.UnpinQuantWeight(key); }
-    } weight_pin{*this, packed};
+        const bool& pending;
+        const bool& failed;
+        ~WeightPin() {
+            if (Deep2::Submit::MayReleaseQuantPins(pending, failed)) v.UnpinQuantWeight(key);
+        }
+    } weight_pin{*this, packed, quant_submission_in_flight_, quant_submission_failed_};
     PinQuantWeight(packed, packed_bytes, -2);
 
     // Device-side activation (scratch) and output (scratch).
@@ -2665,18 +2685,20 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &quant_cmd_;
-    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) {
-        std::cerr << "fp16 dot queue submit failed" << std::endl;
-        ReleaseQuantScratch(obuf);
-        ReleaseQuantScratch(xbuf);
+    const VkResult submitResult = vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_);
+    if (!Deep2::Submit::RecordQuantSubmit(static_cast<int>(submitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) {
+        // Keep scratch and pinned weights until the cleanup boundary.
+        std::cerr << "fp16 dot queue submit quarantined VkResult=" << static_cast<int>(submitResult) << std::endl;
         return false;
     }
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
-    if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) {
-        std::cerr << "fp16 dot fence wait failed" << std::endl;
-        ReleaseQuantScratch(obuf);
-        ReleaseQuantScratch(xbuf);
+    const VkResult waitResult = WaitQuantFence(device_, quant_fence_);
+    if (!Deep2::Submit::RecordQuantWait(static_cast<int>(waitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) {
+        // Scratch remains in-use; the GPU may still be referencing it.
+        std::cerr << "fp16 dot fence wait quarantined VkResult=" << static_cast<int>(waitResult) << std::endl;
         return false;
     }
     // RAWRXD_G04: the epoch's fence has signalled; deferred destruction is safe.
@@ -2695,6 +2717,8 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
 bool VulkanCompute::UploadBuffer(VkBuffer dst, const void* src, size_t bytes) {
     if (!dst || !src || bytes == 0) return false;
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     if (!EnsureHostVisible(bytes, upload_staging_, upload_staging_mem_,
                            upload_staging_size_, upload_staging_mapped_)) {
         return false;
@@ -2721,10 +2745,14 @@ bool VulkanCompute::UploadBuffer(VkBuffer dst, const void* src, size_t bytes) {
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd;
-    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) return false;
+    const VkResult submitResult = vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_);
+    if (!Deep2::Submit::RecordQuantSubmit(static_cast<int>(submitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) return false;
     ++quant_epoch_;
     ++gpu_counters_.submits;
-    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) return false;
+    const VkResult waitResult = vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX);
+    if (!Deep2::Submit::RecordQuantWait(static_cast<int>(waitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) return false;
     NoteSubmissionComplete();
     ++gpu_counters_.waits;
     return true;
@@ -2733,6 +2761,8 @@ bool VulkanCompute::UploadBuffer(VkBuffer dst, const void* src, size_t bytes) {
 bool VulkanCompute::DownloadBuffer(VkBuffer src, void* dst, size_t bytes) {
     if (!src || !dst || bytes == 0) return false;
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     if (!EnsureHostVisible(bytes, readback_buffer_, readback_memory_,
                            readback_size_, readback_mapped_)) {
         return false;
@@ -2757,10 +2787,14 @@ bool VulkanCompute::DownloadBuffer(VkBuffer src, void* dst, size_t bytes) {
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd;
-    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) return false;
+    const VkResult submitResult = vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_);
+    if (!Deep2::Submit::RecordQuantSubmit(static_cast<int>(submitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) return false;
     ++quant_epoch_;
     ++gpu_counters_.submits;
-    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) return false;
+    const VkResult waitResult = vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX);
+    if (!Deep2::Submit::RecordQuantWait(static_cast<int>(waitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) return false;
     NoteSubmissionComplete();
     ++gpu_counters_.waits;
     gpu_counters_.download_bytes += bytes;
@@ -2788,6 +2822,8 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     const bool trace = (std::getenv("RR_Q4K_BATCH_TRACE") != nullptr);
     // RAWRXD_G04: same atomic-residency contract as ExecuteQuantDot.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     #define Q4K_BATCH_FAIL(msg) do { if (trace) { std::cerr << "[q4k-batch-trace] " << msg << std::endl; } return false; } while (0)
     if (!weights || weightBytes == 0 || !inputBatch || !outputBatch)
         Q4K_BATCH_FAIL("null argument");
@@ -2810,8 +2846,12 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     struct WeightPin {
         VulkanCompute& v;
         const void* key;
-        ~WeightPin() { v.UnpinQuantWeight(key); }
-    } weight_pin{*this, weights};
+        const bool& pending;
+        const bool& failed;
+        ~WeightPin() {
+            if (Deep2::Submit::MayReleaseQuantPins(pending, failed)) v.UnpinQuantWeight(key);
+        }
+    } weight_pin{*this, weights, quant_submission_in_flight_, quant_submission_failed_};
     PinQuantWeight(weights, weightBytes, static_cast<int>(kind));
 
     // Descriptor set from the recycled ring: three storage buffers
@@ -2892,12 +2932,14 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &quant_cmd_;
-    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS)
-        Q4K_BATCH_FAIL("queue submit failed");
+    const VkResult submitResult = vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_);
+    if (!Deep2::Submit::RecordQuantSubmit(static_cast<int>(submitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) Q4K_BATCH_FAIL("queue submit quarantined");
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
-    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
-        Q4K_BATCH_FAIL("fence wait failed");
+    const VkResult waitResult = vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX);
+    if (!Deep2::Submit::RecordQuantWait(static_cast<int>(waitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) Q4K_BATCH_FAIL("fence wait quarantined");
     // RAWRXD_G04: the epoch's fence has signalled; deferred destruction is safe.
     NoteSubmissionComplete();
     ++gpu_counters_.waits;
