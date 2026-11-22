@@ -2653,6 +2653,16 @@ endif()
 if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
     add_library(rawrxd_gpu_compute STATIC
         src/deep2/vulkan_compute.cpp
+        # quant_dot_dispatch.cpp intentionally includes the device-level
+        # ::VulkanCompute contract from include/vulkan_compute.h.  The Deep2
+        # VulkanCompute above is a separate class in namespace Deep2, so the
+        # device-level implementation must be part of this library as well;
+        # otherwise consumers such as RawrXD-CLI-V2 fail at link time with
+        # unresolved ::VulkanCompute symbols.
+        src/vulkan_compute.cpp
+        # Device-level GQA attention is split from the core wrapper and is
+        # required by QuantDot::AttnDecodeGqa consumers.
+        src/vulkan_compute_attn.cpp
         # G44 link fix: vulkan_compute.cpp calls QuantDot::WeightCacheRetention();
         # keep the policy definition in the same library so consumers do not need
         # executable-specific symbol injection.
@@ -5004,6 +5014,44 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_submission_completion_test.cpp"
     add_test(NAME deep2_submission_completion_test COMMAND deep2_submission_completion_test)
 endif()
 
+# Deep2 submission lifecycle state machine — CPU-only adversarial controls.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/submission_lifecycle_test.cpp")
+    add_executable(deep2_submission_lifecycle_test
+        tests/deep2/submission_lifecycle_test.cpp)
+    target_include_directories(deep2_submission_lifecycle_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(deep2_submission_lifecycle_test PRIVATE cxx_std_17)
+    find_package(Threads REQUIRED)
+    target_link_libraries(deep2_submission_lifecycle_test PRIVATE Threads::Threads)
+    if(MSVC)
+        target_compile_options(deep2_submission_lifecycle_test PRIVATE /W4)
+    endif()
+    set_target_properties(deep2_submission_lifecycle_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME deep2_submission_lifecycle COMMAND deep2_submission_lifecycle_test)
+    set_tests_properties(deep2_submission_lifecycle PROPERTIES TIMEOUT 120)
+endif()
+
+# G50/G53: native debugger debuggee + Win32 debug session acceptance.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/debugger/native_debuggee.cpp")
+    add_executable(rawr_native_debuggee tests/debugger/native_debuggee.cpp)
+    if(MSVC)
+        target_compile_options(rawr_native_debuggee PRIVATE /Od /Zi)
+        target_link_options(rawr_native_debuggee PRIVATE /DEBUG:FULL)
+    endif()
+endif()
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/debugger/native_debug_session_test.cpp")
+    add_executable(native_debug_session_test tests/debugger/native_debug_session_test.cpp)
+    target_compile_features(native_debug_session_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(native_debug_session_test PRIVATE /W4)
+    endif()
+    add_test(NAME native_debug_session COMMAND native_debug_session_test
+             $<TARGET_FILE:rawr_native_debuggee>)
+    set_tests_properties(native_debug_session PROPERTIES TIMEOUT 45)
+endif()
+
 # Owned submission-quarantine registry (QuarantineRegistry.hpp) — CPU-only
 # certification of transitive resource ownership across all resource kinds.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/quarantine_registry_test.cpp")
@@ -6431,3 +6479,25 @@ set_target_properties(agent_acceptance_smoke PROPERTIES
 add_test(NAME agent_acceptance_smoke_negative COMMAND agent_acceptance_smoke)
 add_test(NAME agent_acceptance_smoke_positive COMMAND agent_acceptance_smoke --positive)
 message(STATUS "agent_acceptance_smoke enabled (Qt-free native acceptance)")
+
+# Native full-vocabulary logit capture and fail-closed parity certification.
+# These targets are CPU/reference utilities and do not initialize Vulkan.
+add_executable(rawr_logit_certify tools/rawr_logit_certify.cpp)
+target_include_directories(rawr_logit_certify PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_compile_features(rawr_logit_certify PRIVATE cxx_std_17)
+set_target_properties(rawr_logit_certify PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+
+add_executable(rawr_logit_capture tools/rawr_logit_capture.cpp)
+target_include_directories(rawr_logit_capture PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_compile_features(rawr_logit_capture PRIVATE cxx_std_17)
+set_target_properties(rawr_logit_capture PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+
+add_executable(native_logit_parity_test tests/deep2/native_logit_parity_test.cpp)
+target_include_directories(native_logit_parity_test PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2)
+target_compile_features(native_logit_parity_test PRIVATE cxx_std_17)
+set_target_properties(native_logit_parity_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+add_test(NAME native_logit_parity_test COMMAND native_logit_parity_test)
+message(STATUS "Native logit parity/capture tools enabled")
