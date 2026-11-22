@@ -233,8 +233,12 @@ int main(){
         const bool encoded=EncodeQ3(weights,block);
         check(encoded,"expert compute packed fixture");
         if(encoded){
-            auto payload=std::make_shared<std::vector<uint8_t>>(256*Q3Bytes);
-            for(size_t i=0;i<256;++i)std::memcpy(payload->data()+i*Q3Bytes,block.data(),Q3Bytes);
+            BoundedExpertCache fixtureCache(256*Q3Bytes);
+            BoundedExpertCache::Lease payload;
+            check(fixtureCache.Acquire("fixture",256*Q3Bytes,[&](uint8_t* p,size_t){
+                for(size_t i=0;i<256;++i)std::memcpy(p+i*Q3Bytes,block.data(),Q3Bytes);
+                return true;
+            },payload),"expert fixture cache acquisition");
             ExpertMatrix m{256,256,Precision::Q3,payload};
             std::vector<float> x(256,1.0f/256),y;
             Values decoded{};DecodeQ3(block,decoded);
@@ -255,8 +259,12 @@ int main(){
     {
         Values w{};w.fill(1.f);Q3Block block{};
         if(EncodeQ3(w,block)){
-            auto payload=std::make_shared<std::vector<uint8_t>>(256*Q3Bytes);
-            for(size_t i=0;i<256;++i)std::memcpy(payload->data()+i*Q3Bytes,block.data(),Q3Bytes);
+            BoundedExpertCache fixtureCache(256*Q3Bytes);
+            BoundedExpertCache::Lease payload;
+            check(fixtureCache.Acquire("fixture",256*Q3Bytes,[&](uint8_t* p,size_t){
+                for(size_t i=0;i<256;++i)std::memcpy(p+i*Q3Bytes,block.data(),Q3Bytes);
+                return true;
+            },payload),"expert fixture cache acquisition");
             ExpertMatrix m{256,256,Precision::Q3,payload};
             SwiGluExpert e{m,m,m};
             std::vector<float> x(256,1.f/256),y;
