@@ -58,6 +58,16 @@ int main(){
     check(AcquireVirtualPayload(reader,cache,range,Precision::Q3,
                                 2*Q4Bytes,q3)&&q3&&q3->size()==blocks*Q3Bytes,
           "Q3 payload with two-block read windows");
+    if(q3){
+        bool equal=true;
+        for(unsigned n=0;n<blocks;++n){
+            Q4Block source{};Q3Block reference{};Error err{};
+            std::memcpy(source.data(),reader.data.data()+n*Q4Bytes,Q4Bytes);
+            equal=equal&&ConvertQ4ToQ3(source,reference,err)&&
+                  std::memcmp(q3->data()+n*Q3Bytes,reference.data(),Q3Bytes)==0;
+        }
+        check(equal,"virtual Q3 payload matches scalar oracle byte for byte");
+    }
     check(AcquireVirtualPayload(reader,cache,range,Precision::Q4,
                                 2*Q4Bytes,q4)&&q4&&q4->size()==reader.data.size()&&
           std::memcmp(q4->data(),reader.data.data(),reader.data.size())==0,
@@ -69,6 +79,14 @@ int main(){
     check(!AcquireVirtualPayload(reader,cache,range,Precision::Q2,
                                  Q4Bytes-1,rejected)&&!rejected,
           "source window below one block rejected");
+    const unsigned readsBeforeInvalid=reader.reads;
+    check(!AcquireVirtualPayload(reader,cache,range,
+                                 static_cast<Precision>(99),Q4Bytes,rejected)&&
+          !rejected&&reader.reads==readsBeforeInvalid,
+          "unknown precision rejected before shard I/O");
+    check(!AcquireVirtualPayload(reader,cache,{3,UINT64_MAX-10,Q4Bytes},
+                                 Precision::Q2,Q4Bytes,rejected)&&!rejected,
+          "source offset overflow rejected before shard I/O");
     MemoryReader missing;
     BoundedExpertCache separate(blocks*Q2Bytes);
     check(!AcquireVirtualPayload(missing,separate,range,Precision::Q2,
