@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 
+#include "ReapCpuCapture.hpp"
 #include "runtime_graph_executor.hpp"
 #include "universal_gguf.hpp"
 
@@ -159,25 +160,41 @@ int main(int argc, char* argv[]) {
 
     const auto started = std::chrono::steady_clock::now();
     std::string model, tokensArg = "1 185", dump = "gpu_certify", reference;
+    bool cpuCapture = false, explicitDump = false, explicitTokens = false;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "--model" && i + 1 < argc) model = argv[++i];
-        else if (a == "--tokens" && i + 1 < argc) tokensArg = argv[++i];
-        else if (a == "--dump" && i + 1 < argc) dump = argv[++i];
+        else if (a == "--tokens" && i + 1 < argc) { tokensArg = argv[++i]; explicitTokens = true; }
+        else if (a == "--dump" && i + 1 < argc) { dump = argv[++i]; explicitDump = true; }
+        else if (a == "--cpu-capture") cpuCapture = true;
         else if (a == "--reference-dir" && i + 1 < argc) reference = argv[++i];
         else { std::printf("unknown arg %s\n", a.c_str()); return 1; }
+    }
+    if (cpuCapture && (!explicitDump || !explicitTokens || !reference.empty() || model.empty())) {
+        std::fprintf(stderr, "--cpu-capture requires --model, explicit --tokens and a new --dump directory; do not use --reference-dir\n");
+        return 1;
+    }
+    if (cpuCapture) {
+        std::error_code ec;
+        if (std::filesystem::exists(dump, ec) || ec) {
+            std::fprintf(stderr, "CPU capture requires a new output directory\n");
+            return 1;
+        }
     }
     CertificationReceipt receipt;
     receipt.model = model;
     receipt.reference_dir = reference;
     std::error_code mkdir_error;
-    std::filesystem::create_directories(dump, mkdir_error);
+    if (!cpuCapture) std::filesystem::create_directories(dump, mkdir_error);
     auto finish = [&](int code, const char* status, const std::string& reason) {
         receipt.status = status;
         receipt.reason = reason;
         receipt.elapsed_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - started).count());
-        WriteReceipt(dump, receipt);
+        if (!WriteReceipt(dump, receipt)) {
+            std::fprintf(stderr, "FAIL_RECEIPT_WRITE\n");
+            return 1;
+        }
         std::printf("CERT_STATUS=%s\nCERTIFICATION_STATUS=%s\nRECEIPT=%s/full_model_receipt.json\n",
                     receipt.status.c_str(), receipt.certification_status.c_str(), dump.c_str());
         return code;
@@ -191,17 +208,17 @@ int main(int argc, char* argv[]) {
     }
     std::vector<uint32_t> tokens;
     {
-        const char* p = tokensArg.c_str();
-        char* end = nullptr;
-        for (long v = std::strtol(p, &end, 10); end != p; v = std::strtol(p, &end, 10)) {
-            if (v < 0) break;
-            tokens.push_back((uint32_t)v);
-            p = end;
-            while (*p == ' ' || *p == ',') ++p;
-            if (!*p) break;
+        try { tokens = reap_capture::ParseTokens(tokensArg); }
+        catch (const std::exception& e) {
+            if (cpuCapture) { std::fprintf(stderr, "FAIL_ARGUMENTS: %s\n", e.what()); return 1; }
+            return finish(1, "FAIL_ARGUMENTS", e.what());
         }
     }
     if (tokens.empty()) { std::printf("no tokens\n"); return finish(1, "FAIL_ARGUMENTS", "no valid token ids"); }
+    if (cpuCapture && tokens.size() < 2) {
+        std::fprintf(stderr, "CPU capture requires at least one input and one next token\n");
+        return 1;
+    }
     receipt.token_count = tokens.size();
     std::printf("tokens:");
     for (auto t : tokens) std::printf(" %u", t);
@@ -209,6 +226,7 @@ int main(int argc, char* argv[]) {
 
     const Universal::IngestReport& rep = Universal::Ingest(model, false);
     if (!rep.ok) {
+        if (cpuCapture) { std::fprintf(stderr, "BLOCKED_INGEST: %s\n", rep.error.c_str()); return 1; }
         std::printf("INGEST_FAIL: %s\n", rep.error.c_str());
         return finish(1, "BLOCKED_INGEST", rep.error);
     }
@@ -251,6 +269,36 @@ int main(int argc, char* argv[]) {
                 (unsigned long long)rep.spec.embd, (unsigned long long)rep.spec.vocab,
                 (unsigned long long)rep.spec.expert_count,
                 (unsigned long long)rep.spec.expert_used);
+
+    // Explicit CPU-only capture returns before the GPU execution branch.
+    // The final token is a teacher-forced target, not an additional input.
+    if (cpuCapture) {
+        try {
+            reap_capture::Capture capture(dump, tokens, static_cast<size_t>(rep.spec.vocab));
+            RuntimeGraph::Executor ex;
+            ex.SetForceCpu(true);
+            if (!ex.Bind(rep)) return finish(1, "FAIL_CPU_BIND", ex.Stats().error);
+            for (size_t pos = 0; pos + 1 < tokens.size(); ++pos) {
+                if (!ex.ExecuteToken(tokens[pos], pos))
+                    return finish(1, "FAIL_CPU_EXECUTION", ex.LastError());
+                receipt.gpu_calls = ex.Stats().gpu_calls;
+                receipt.cpu_calls = ex.Stats().cpu_calls;
+                if (receipt.gpu_calls != 0)
+                    return finish(1, "FAIL_CPU_PIN", "CPU capture observed GPU dispatches");
+                capture.Append(ex.Logits());
+            }
+            if (receipt.cpu_calls == 0)
+                return finish(1, "FAIL_CPU_EXECUTION", "no recorded CPU kernel calls");
+            receipt.token_count = capture.Count();
+            receipt.execution_status = "PASS_CPU_CAPTURE";
+            receipt.certification_status = "CAPTURE_ONLY_NOT_CERTIFIED";
+            capture.Finish();
+            return finish(0, "PASS_CPU_CAPTURE", "teacher-forced CPU logits captured; independent comparison required");
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "FAIL_CPU_CAPTURE: %s\n", e.what());
+            return 1;
+        }
+    }
 
     // ---- GPU path (no CPU pin) --------------------------------------------
     std::vector<std::vector<float>> gpuLogits;
