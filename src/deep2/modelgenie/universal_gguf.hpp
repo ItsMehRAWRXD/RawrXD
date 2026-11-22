@@ -148,6 +148,8 @@ struct ModelSpec {
     uint64_t kv_lora_rank = 0;
     uint64_t key_length = 0;
     uint64_t value_length = 0;
+    uint64_t key_length_mla = 0;    // MLA per-head key width (qk_nope + qk_rope)
+    uint64_t value_length_mla = 0;  // MLA per-head value width
     uint64_t leading_dense = 0;
     // Qwen4Exp / Flash-Next geometry. These are read from the model's own
     // metadata and are never inferred from a generic Llama layout.

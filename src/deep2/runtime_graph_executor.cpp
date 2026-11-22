@@ -1918,8 +1918,14 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         return false;
     }
 
-    const size_t kl = (size_t)spec_.key_length;
-    const size_t vl = (size_t)spec_.value_length;
+    // MLA per-head widths. Prefer the *_mla metadata (correct for DeepSeek/GLM);
+    // fall back to the expanded widths for archives that omit them. Using the
+    // expanded widths (576/512) instead of the MLA widths (256/256) makes the
+    // attention output 4x wider than the attn_output projection's input dim.
+    const size_t kl = (size_t)(spec_.key_length_mla > 0 ? spec_.key_length_mla
+                                                        : spec_.key_length);
+    const size_t vl = (size_t)(spec_.value_length_mla > 0 ? spec_.value_length_mla
+                                                          : spec_.value_length);
     const bool isMla = !qwen35Gated && (kPerHead == kl && vPerHead == vl && kl > vl);
     const size_t D = isMla ? qPerHead : qPerHead;
     if (D == 0) { err = "attention: head dim 0"; return false; }
@@ -3711,88 +3717,119 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     }
 
     const size_t lora = (size_t)std::max<uint64_t>(spec_.kv_lora_rank, 1);
-    const size_t kl = (size_t)spec_.key_length;    // 192 = 128 nope + 64 rope
-    const size_t vl = (size_t)spec_.value_length;  // 128
+    // MLA per-head widths. Prefer the *_mla metadata (correct for DeepSeek/GLM);
+    // fall back to the expanded widths for archives that omit them.
+    const size_t kl = (size_t)(spec_.key_length_mla > 0 ? spec_.key_length_mla
+                                                        : spec_.key_length);
+    const size_t vl = (size_t)(spec_.value_length_mla > 0 ? spec_.value_length_mla
+                                                          : spec_.value_length);
     const size_t H = (size_t)std::max<uint64_t>(spec_.heads, 1);
-    const size_t rope = (lora + (kl - lora)) > lora ? (size_t)0 : 0;  // fixed below
-    (void)rope;
 
     // Shcarved straight from the recorded tensor dims, never guessed.
     const size_t kvA_in = kvA.dims.empty() ? 0 : (size_t)kvA.dims[0];
     const size_t kvA_out = kvA.dims.size() > 1 ? (size_t)kvA.dims[1] : 0;
     const size_t qk_rope = (kvA_out > lora) ? (kvA_out - lora) : 0;
 
-    // MLA up-projection orientation is NOT uniform across architectures:
-    //   DeepSeek-V3 combined: attn_kv_b [in=lora, out=heads*(nope+v)]  (input-first)
-    //   GLM separate K:       attn_k_b  [out=heads*nope, in=lora, heads] (output-first)
-    //   GLM separate V:       attn_v_b  [in=lora, out=heads*v,   heads] (input-first)
-    // Resolve each tensor's input axis by matching the known kv_lora_rank, and
-    // its output axis as the remaining non-head axis. This is metadata-driven
-    // and never assumes a fixed transpose (MLA04).
-    size_t kvB_in = 0, kvB_out = 0;      // k_b (or combined kv_b)
-    size_t vB_in = 0, vB_out = 0;        // v_b (separate only)
-    bool k_out_first = false;            // k_b stored [out, in, ...]
-    bool v_out_first = false;            // v_b stored [out, in, ...]
-
-    auto resolveProj = [&](const TensorRec& t, size_t& inAxis, size_t& outAxis,
-                           bool& outFirst) -> bool {
-        // Returns false if the lora rank cannot be identified in the dims.
-        const size_t d0 = t.dims.size() > 0 ? (size_t)t.dims[0] : 0;
-        const size_t d1 = t.dims.size() > 1 ? (size_t)t.dims[1] : 0;
-        if (d0 == lora && d1 != lora) { inAxis = d0; outAxis = d1; outFirst = false; return true; }
-        if (d1 == lora && d0 != lora) { inAxis = d1; outAxis = d0; outFirst = true;  return true; }
-        // Ambiguous (both or neither equal lora): fail closed.
-        return false;
+    // MLA up-projection orientation is not uniform across architectures.  The
+    // dimensions and rank-3 head axis are authoritative; the physical index
+    // below follows GGML's contiguous dimension rather than assuming that K
+    // and V share one transpose:
+    //   DeepSeek combined: [lora, total_out] or [total_out, lora]
+    //   GLM K:             [nope, lora, heads]  (output-major payload)
+    //   GLM V:             [lora, v, heads]     (input-major payload)
+    // A tensor with neither dimension equal to lora, an invalid head axis, or
+    // an inconsistent byte count is rejected before any arithmetic occurs.
+    auto totalElements = [](const TensorRec& t) -> size_t {
+        const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
+        if (tr && tr->type_size > 0 && tr->blck_size > 0)
+            return (t.bytes / (size_t)tr->type_size) * (size_t)tr->blck_size;
+        return 0;
+    };
+    struct ProjectionLayout {
+        size_t input = 0;
+        size_t output = 0;       // per-head output for rank-3; total output for rank-2
+        size_t head_count = 1;
+        bool output_major = false;
+        size_t logicalElements = 0;
+    };
+    auto resolveProjection = [&](const TensorRec& t, ProjectionLayout& p,
+                                 const char* label) -> bool {
+        if (t.dims.size() != 2 && t.dims.size() != 3) {
+            err = std::string("mla: ") + label + " must be rank-2 or rank-3";
+            return false;
+        }
+        const size_t d0 = (size_t)t.dims[0];
+        const size_t d1 = (size_t)t.dims[1];
+        p.head_count = t.dims.size() == 3 ? (size_t)t.dims[2] : 1;
+        if (p.head_count == 0 || (t.dims.size() == 3 && p.head_count != H)) {
+            err = std::string("mla: ") + label + " has invalid head axis";
+            return false;
+        }
+        if (d0 == lora && d1 != lora) {
+            p.input = d0; p.output = d1; p.output_major = false;
+        } else if (d1 == lora && d0 != lora) {
+            p.input = d1; p.output = d0; p.output_major = true;
+        } else {
+            err = std::string("mla: ") + label + " has ambiguous latent axis";
+            return false;
+        }
+        p.logicalElements = p.input * p.output * p.head_count;
+        if (p.input != lora || p.logicalElements == 0 ||
+            totalElements(t) < p.logicalElements) {
+            err = std::string("mla: ") + label + " has invalid logical element count";
+            return false;
+        }
+        return true;
     };
 
-    if (kvsep) {
-        if (!resolveProj(kvB, kvB_in, kvB_out, k_out_first)) {
-            err = "mla: attn_k_b dims do not contain kv_lora_rank (ambiguous orientation)";
-            return false;
-        }
-        if (vBT && !resolveProj(*vBT, vB_in, vB_out, v_out_first)) {
-            err = "mla: attn_v_b dims do not contain kv_lora_rank (ambiguous orientation)";
-            return false;
-        }
-    } else {
-        kvB_in  = kvB.dims.empty() ? 0 : (size_t)kvB.dims[0];   // [in, out]
-        kvB_out = kvB.dims.size() > 1 ? (size_t)kvB.dims[1] : 0;
+    ProjectionLayout kLayout, vLayout;
+    if (!resolveProjection(kvB, kLayout, "attn_k_b/attn_kv_b")) return false;
+    if (kvsep && (!vBT || !resolveProjection(*vBT, vLayout, "attn_v_b"))) return false;
+    if (kvA_in == 0 || kvA_out == 0 || qk_rope == 0 ||
+        totalElements(kvA) < kvA_in * kvA_out) {
+        err = "mla: kv_a_mqa has invalid logical element count";
+        return false;
     }
 
-    // Combined variant: kv_b output = heads*(qk_nope + v). Separate variant:
-    // k_b output = heads*qk_nope, v_b output = heads*v.
-    size_t qk_nope = 0;      // per-head k_nope width
-    size_t per_head = 0;     // per-head stride into the combined kvb (combined only)
+    // Combined: one tensor yields k_nope and v per head.
+    // Separate: k_b yields k_nope, v_b yields v.
+    const size_t kOut = kLayout.output * kLayout.head_count;
+    const size_t vOut = (kvsep ? vLayout.output * vLayout.head_count : 0);
+    size_t per_head = 0;    // combined only: k_nope + v
+    size_t qk_nope = 0;     // per-head k_nope width
+    size_t v_per_head = 0;  // per-head v width
     if (kvsep) {
-        qk_nope = kvB_out / std::max<size_t>(H, 1);
-        if (qk_nope == 0 || vB_out == 0) {
-            err = "mla: kvsep k_b/v_b shapes incompatible with spec";
+        if (kOut % H != 0 || vOut % H != 0 ||
+            (kOut / H) + qk_rope != kl || (vOut / H) != vl) {
+            err = "mla: separate K/V geometry does not match MLA metadata";
             return false;
         }
+        qk_nope = kOut / H;
+        v_per_head = vOut / H;
     } else {
-        per_head = kvB_out / std::max<size_t>(H, 1);   // nope + v
-        qk_nope = (per_head > vl) ? (per_head - vl) : 0;
-        if (qk_nope == 0) {
-            err = "mla: tensor shapes incompatible with spec";
+        if (kOut % H != 0) {
+            err = "mla: combined K/V output is not divisible by head count";
             return false;
         }
-    }
-    if (kvA_in == 0 || kvB_in == 0 || qk_rope == 0) {
-        err = "mla: tensor shapes incompatible with spec";
-        return false;
+        per_head = kOut / H;
+        qk_nope = (per_head > vl) ? (per_head - vl) : 0;
+        if (qk_nope == 0 || qk_nope + qk_rope != kl) {
+            err = "mla: combined K/V geometry does not match MLA metadata";
+            return false;
+        }
     }
 
     std::vector<float> A, B, nw, VB;
     DequantPrefix(kvA, A, kvA_in * kvA_out);
-    DequantPrefix(kvB, B, kvB_in * kvB_out);
+    DequantPrefix(kvB, B, kLayout.logicalElements);
     DequantPrefix(norm, nw, lora);
-    if (A.size() < kvA_in * kvA_out || B.size() < kvB_in * kvB_out) {
+    if (A.size() < kvA_in * kvA_out || B.size() < kLayout.logicalElements) {
         err = "mla: weight dequant short";
         return false;
     }
     if (kvsep && vBT) {
-        DequantPrefix(*vBT, VB, vB_in * vB_out);
-        if (VB.size() < vB_in * vB_out) { err = "mla: v_b dequant short"; return false; }
+        DequantPrefix(*vBT, VB, vLayout.logicalElements);
+        if (VB.size() < vLayout.logicalElements) { err = "mla: v_b dequant short"; return false; }
     }
 
     // 1. latentFull = x @ kv_a_mqa
@@ -3800,8 +3837,10 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     const size_t inL = std::min(kvA_in, x.size());
     for (size_t j = 0; j < kvA_out; ++j) {
         double acc = 0.0;
-        const float* col = A.data() + j * kvA_in;
-        for (size_t i = 0; i < inL; ++i) acc += double(col[i]) * double(x[i]);
+        // GGML stores the [input, output] projection with the input
+        // dimension contiguous: element (i,j) is i*output+j.
+        for (size_t i = 0; i < inL; ++i)
+            acc += double(A[i * kvA_out + j]) * double(x[i]);
         latentFull[j] = (float)acc;
     }
 
@@ -3816,46 +3855,35 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
             latent[i] = latentFull[i] * (i < nw.size() ? nw[i] : 1.0f) * scale;
     }
 
-    // 3. kvb = latent @ kv_b   (kv_b input axis must be the lora rank)
-    if (kvB_in != lora) { err = "mla: kv_b input != kv_lora_rank"; return false; }
-    // NOTE (MLA03/MLA04): the separate attn_k_b / attn_v_b up-projections on
-    // GLM-4.7-Flash are rank-3 ([192,512,20] / [512,256,20]) and their GGML
-    // reduction-axis orientation relative to the 512-dim kv_lora latent has NOT
-    // been validated against the llama.cpp reference contraction. Rather than
-    // silently compute with an assumed transpose (which would corrupt every
-    // attention block while leaving the dense block correct), fail closed with
-    // an actionable diagnostic until the per-tensor contraction is certified.
-    if (kvsep) {
-        err = "mla: separate attn_k_b/attn_v_b contraction not yet reference-validated "
-              "(rank-3 per-head layout; needs llama.cpp parity before enabling)";
-        return false;
-    }
-    std::vector<float> kvb(kvB_out, 0.0f);
-    for (size_t j = 0; j < kvB_out; ++j) {
-        double acc = 0.0;
-        // k_out_first: B is [out, in] row-major -> row j contiguous.
-        // input-first: B is [in, out] -> element (i,j) at i*out + j.
-        const float* col = k_out_first ? (B.data() + j * kvB_in) : nullptr;
-        for (size_t i = 0; i < lora; ++i) {
-            const float b = k_out_first ? col[i] : B[i * kvB_out + j];
-            acc += double(b) * double(latent[i]);
+    // 3. up-projection.  The same logical operation uses a different physical
+    // stride for GLM K and V, so keep the layout decision in one production
+    // helper instead of silently transposing one of the tensors.
+    auto project = [&](const std::vector<float>& weights,
+                       const ProjectionLayout& p,
+                       size_t perHeadOut, std::vector<float>& out) {
+        out.assign(H * perHeadOut, 0.0f);
+        const size_t storageHeadElements = p.input * p.output;
+        for (size_t h = 0; h < H; ++h) {
+            const size_t headBase = (p.head_count == H) ? h * storageHeadElements : 0;
+            for (size_t o = 0; o < perHeadOut; ++o) {
+                const size_t globalO = (p.head_count == H) ? o : h * perHeadOut + o;
+                double acc = 0.0;
+                for (size_t i = 0; i < lora; ++i) {
+                    const size_t idx = headBase +
+                        (p.output_major ? globalO * lora + i
+                                        : i * (p.head_count == H ? p.output : kOut) + globalO);
+                    acc += double(weights[idx]) * double(latent[i]);
+                }
+                out[h * perHeadOut + o] = (float)acc;
+            }
         }
-        kvb[j] = (float)acc;
-    }
-    // Separate variant: also compute v = latent @ v_b (orientation-resolved).
+    };
+    std::vector<float> kvb(kOut, 0.0f);
+    project(B, kLayout, kvsep ? qk_nope : per_head, kvb);
+    // Separate variant: v = latent @ v_b (same physical row layout).
     std::vector<float> vb;
     if (kvsep && vBT) {
-        vb.assign(vB_out, 0.0f);
-        for (size_t j = 0; j < vB_out; ++j) {
-            double acc = 0.0;
-            const float* col = v_out_first ? (VB.data() + j * vB_in) : nullptr;
-            const size_t inLim = std::min<size_t>(vB_in, lora);
-            for (size_t i = 0; i < inLim; ++i) {
-                const float b = v_out_first ? col[i] : VB[i * vB_out + j];
-                acc += double(b) * double(latent[i]);
-            }
-            vb[j] = (float)acc;
-        }
+        project(VB, vLayout, v_per_head, vb);
     }
 
     // 4-6. assemble per-head k and v
@@ -3870,7 +3898,7 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
         for (size_t i = 0; i < qk_rope && (qk_nope + i) < kl; ++i)
             kd[qk_nope + i] = latentFull[lora + i];
         // v
-        const float* vsrc = kvsep ? (vb.data() + h * vl)
+        const float* vsrc = kvsep ? (vb.data() + h * v_per_head)
                                   : (kvb.data() + h * per_head + qk_nope);
         for (size_t i = 0; i < vl; ++i) vd[i] = vsrc[i];
     }

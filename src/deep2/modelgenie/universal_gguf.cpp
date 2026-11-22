@@ -751,6 +751,13 @@ void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
     pick("attention.kv_lora_rank", s.kv_lora_rank);
     pick("attention.key_length", s.key_length);
     pick("attention.value_length", s.value_length);
+    // MLA-specific per-head widths. DeepSeek/GLM ship BOTH the expanded widths
+    // (key_length/value_length) and the MLA latent widths (key_length_mla /
+    // value_length_mla). The MLA attention path must use the *_mla values; using
+    // the expanded widths produces a value width that does not match the
+    // attn_output projection's input dim.
+    pick("attention.key_length_mla", s.key_length_mla);
+    pick("attention.value_length_mla", s.value_length_mla);
     pick("leading_dense_block_count", s.leading_dense);
     pick("attention.indexer.head_count", s.indexer_heads);
     pick("attention.indexer.key_length", s.indexer_key_length);
