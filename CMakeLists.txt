@@ -4733,6 +4733,20 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_lostseq_failure_injec
     add_test(NAME deep2_lostseq_failure_injection COMMAND deep2_lostseq_failure_injection)
 endif()
 
+# Native CPU-only MLA geometry and dedicated download ownership regressions.
+foreach(_deep2_test IN ITEMS deep2_mla_geometry_test deep2_download_ownership_test)
+    add_executable(${_deep2_test} "tests/deep2/${_deep2_test}.cpp")
+    target_include_directories(${_deep2_test} PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(${_deep2_test} PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(${_deep2_test} PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(${_deep2_test} PRIVATE -Wall -Wextra)
+    endif()
+    enable_testing()
+    add_test(NAME ${_deep2_test} COMMAND ${_deep2_test})
+endforeach()
+
 # CPU-only async ring ownership regression.
 add_executable(deep2_ring_ownership_test tests/deep2/deep2_ring_ownership_test.cpp)
 target_include_directories(deep2_ring_ownership_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
