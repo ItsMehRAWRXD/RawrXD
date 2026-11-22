@@ -166,6 +166,16 @@ int main(int argc, char* argv[])
     }
     Progress("MODEL_LOAD_COMPLETE");
     RawrXD::Deep2::ModelProvenanceVerifier provenance_verifier;
+    const char* certified_sha = std::getenv("DEEP2_CERTIFIED_SHA256");
+    if (certified_sha && *certified_sha) {
+        if (!provenance_verifier.Start(model, certified_sha) || !provenance_verifier.WaitVerified()) {
+            std::printf("CERTIFIED_EXECUTION_REJECTED state=%s error=%s\n",
+                        provenance_verifier.Error().empty() ? "NOT_VERIFIED" : "FAILED",
+                        provenance_verifier.Error().c_str());
+            return 5;
+        }
+        std::printf("CERTIFIED_EXECUTION_PROVENANCE=VERIFIED\n");
+    }
     if (const char* trusted = std::getenv("DEEP2_ASYNC_VERIFY_SHA256"); trusted && *trusted) {
         if (!provenance_verifier.Start(model, trusted)) {
             std::printf("PROVENANCE_VERIFY_START_FAIL\n");

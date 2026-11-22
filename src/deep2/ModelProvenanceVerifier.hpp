@@ -42,6 +42,11 @@ public:
     void Cancel() noexcept { cancel_.store(true, std::memory_order_release); }
     void Join() noexcept { if (worker_.joinable()) worker_.join(); }
 
+    bool WaitVerified() noexcept {
+        Join();
+        return Verified();
+    }
+
     ProvenanceVerificationState State() const noexcept {
         std::lock_guard<std::mutex> lock(mu_); return state_;
     }
