@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <vector>
 #include "lavapath/GpuDeviceLostReset.hpp"
+#include "ReapOneShotOwnership.hpp"
 
 namespace Deep2 {
 
@@ -148,6 +149,8 @@ public:
     bool initialize();
     bool Initialize() { return initialize(); }
     void cleanup();
+    // Recovery may only recreate after the old device has actually been retired.
+    bool CleanupComplete() const noexcept { return device_ == VK_NULL_HANDLE && instance_ == VK_NULL_HANDLE; }
 
     /* Device-lost / Win32 code-31: detect→mark; opt-in reset via
      * DEEP2_GPU_DEVICE_RESET=1 (teardown→recreate). Fail closed otherwise. */
@@ -1620,6 +1623,17 @@ private:
     // VK_ERROR_DEVICE_LOST result and cleared only by explicit recreation.
     std::atomic<bool> device_lost_{false};
     GpuLost::Seq lostSeq_{};
+    struct OneShotHandles {
+        VkCommandBuffer cmd = VK_NULL_HANDLE;
+        VkQueryPool query = VK_NULL_HANDLE;
+        VkFence fence = VK_NULL_HANDLE;
+    };
+    Submit::OneShotOwner<OneShotHandles> oneShot_;
+    std::atomic<bool> cleanupBlocked_{false};
+    bool OneShotBlocked() const noexcept {
+        return oneShot_.Active() || cleanupBlocked_.load(std::memory_order_acquire);
+    }
+    void releaseOneShot(const OneShotHandles& handles) noexcept;
     uint64_t nextBufferId_ = 1;
     uint64_t workEpoch_ = 0;
 
