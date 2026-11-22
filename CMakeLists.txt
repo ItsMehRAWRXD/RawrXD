@@ -4782,6 +4782,25 @@ add_test(NAME reap_budget_selection_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_budget_selection_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_budget_selection_regression.cmake")
 
+# Native K-quant conversion, streaming and dual-profile selection controls.
+foreach(_reap_quant_test IN ITEMS reap_q4k_to_q2k_test reap_quant_range_test)
+    add_executable(${_reap_quant_test} tests/${_reap_quant_test}.cpp)
+    target_include_directories(${_reap_quant_test} PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(${_reap_quant_test} PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(${_reap_quant_test} PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(${_reap_quant_test} PRIVATE -Wall -Wextra)
+    endif()
+    enable_testing()
+    add_test(NAME ${_reap_quant_test} COMMAND ${_reap_quant_test})
+endforeach()
+add_test(NAME reap_quant_profile_regression
+    COMMAND "${CMAKE_COMMAND}"
+        "-DPLANNER=$<TARGET_FILE:reap_selection_plan>"
+        "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_quant_profile_fixtures"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_quant_profile_regression.cmake")
+
 # Native group geometry and serialized prune-only export budget.
 add_executable(reap_export_budget_test tests/reap_export_budget_test.cpp)
 target_include_directories(reap_export_budget_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
