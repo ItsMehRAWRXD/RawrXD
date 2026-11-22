@@ -7785,24 +7785,23 @@ void Win32IDE::generateResponseAsync(
 {
     std::unique_lock<std::mutex> lock(m_inferenceMutex);
     if (assignedGeneration) *assignedGeneration = 0;
-    // Backend routing is decided before any model-specific dispatch:
-    // an unavailable Strata selection must fail closed regardless of
-    // which model is selected, so it cannot be bypassed by model type.
-    if (environmentValue("RAWRXD_CHAT_BACKEND") == "strata") {
-        if (callback) {
-            callback("STRATA_NOT_ROUTABLE: expert residency is not activated on this path.", false, false);
+    // Snapshot the selected backend once. Explicit unsupported values must
+    // never silently fall through to the selected model's default transport.
+    const std::string backend = environmentValue("RAWRXD_CHAT_BACKEND");
+    if (!backend.empty() && backend != "deep2" && backend != "ollama") {
+        const std::string reason = backend == "strata"
+            ? "STRATA_NOT_ROUTABLE: expert residency is not activated on this path."
+            : "Unsupported inference backend: " + backend;
+        if (m_activeInferenceGeneration.load(std::memory_order_acquire) == 0) {
+            m_inferenceRunning.store(false, std::memory_order_release);
+            m_pendingInferenceModel = {};
         }
+        lock.unlock();
+        if (callback) callback(reason, true, false);
         return;
     }
+    const bool explicitDeep2 = backend == "deep2";
 
-    // Explicit Deep2 selection is authoritative. Without this, an Ollama-shaped
-    // sidebar entry (e.g. a model the local Ollama does not have) routes the
-    // request to Ollama even when the harness asked for native Deep2, and the
-    // user sees a model-resolution error instead of inference. Fail closed:
-    // never substitute another backend for an explicit Deep2 request.
-    const bool explicitDeep2 = environmentValue("RAWRXD_CHAT_BACKEND") == "deep2";
-    if (assignedGeneration) *assignedGeneration = 0;
-
     // HandleCopilotSend may already have claimed m_inferenceRunning to close
     // a BN_CLICKED race.  A live worker is generation != 0; stopInference and
     // finishIfCurrent clear generation when releasing. Join drained threads
@@ -8741,7 +8740,7 @@ void Win32IDE::createChatPanel() {
     if (m_hwndBackendSelector) {
         SendMessageA(m_hwndBackendSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
         SendMessageA(m_hwndBackendSelector, CB_ADDSTRING, 0, (LPARAM) "Deep2 (Vulkan)");
-        SendMessageA(m_hwndBackendSelector, CB_ADDSTRING, 0, (LPARAM) "Strata (Deep2 + residency)");
+        SendMessageA(m_hwndBackendSelector, CB_ADDSTRING, 0, (LPARAM) "Strata (unavailable in chat)");
         SendMessageA(m_hwndBackendSelector, CB_ADDSTRING, 0, (LPARAM) "Ollama (HTTP)");
         std::string pref = "ollama";
         if (const char* ov = std::getenv("RAWRXD_BACKEND")) {
