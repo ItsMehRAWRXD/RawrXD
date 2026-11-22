@@ -254,6 +254,22 @@ int main() {
         std::cerr << "EXISTING_TARGET_ENFORCEMENT_FAIL " << existingResult.error << "\n";
         return 8;
     }
+    const fs::path shortWrite = root / "candidate_short_write";
+    Deep2::ReapMoETransformRequest injected = request;
+    injected.outputDirectory = shortWrite.string();
+    _putenv_s("RAWR_REAP_TEST_FAIL_AFTER_BYTES", "64");
+    const auto injectedResult = Deep2::transformMoEGGUF(injected);
+    _putenv_s("RAWR_REAP_TEST_FAIL_AFTER_BYTES", "");
+    if (injectedResult.success || fs::exists(shortWrite) || readAll(source) != before) {
+        std::cerr << "SHORT_WRITE_ROLLBACK_FAIL " << injectedResult.error << "\n";
+        return 19;
+    }
+    const auto retryResult = Deep2::transformMoEGGUF(injected);
+    if (!retryResult.success || !fs::exists(shortWrite) || readAll(source) != before) {
+        std::cerr << "SHORT_WRITE_RETRY_FAIL " << retryResult.error << "\n";
+        return 20;
+    }
+    std::cout << "R22A_SHORT_WRITE_ROLLBACK_PASS\n";
     const fs::path quantSource=root/"quant_fixture.gguf";
     if (!writeFixture(quantSource,true)) return 12;
     const auto quantBefore=readAll(quantSource);

@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cctype>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -58,6 +59,29 @@ struct ParsedShard {
 
 using Selection = std::map<uint32_t, std::vector<uint32_t>>;
 
+// Test-only fault injection for the production writer.  It is inactive unless
+// explicitly requested by a regression test and exercises the same write path
+// used for real exports.
+thread_local uint64_t g_testWriteBytes = 0;
+
+uint64_t testWriteLimit() {
+    const char* value = std::getenv("RAWR_REAP_TEST_FAIL_AFTER_BYTES");
+    if (!value || !*value) return 0;
+    char* end = nullptr;
+    const unsigned long long parsed = std::strtoull(value, &end, 10);
+    return (end && *end == '\0') ? static_cast<uint64_t>(parsed) : 0;
+}
+
+void resetTestWriteBudget() { g_testWriteBytes = 0; }
+
+bool permitTestWrite(size_t bytes) {
+    const uint64_t limit = testWriteLimit();
+    if (!limit) return true;
+    if (g_testWriteBytes > limit || static_cast<uint64_t>(bytes) > limit - g_testWriteBytes) return false;
+    g_testWriteBytes += static_cast<uint64_t>(bytes);
+    return true;
+}
+
 bool readBytes(std::ifstream& in, void* dst, size_t n) {
     if (!n) return true;
     in.read(reinterpret_cast<char*>(dst), static_cast<std::streamsize>(n));
@@ -74,6 +98,7 @@ bool readU64(std::ifstream& in, uint64_t& value) {
 
 bool writeBytes(std::ofstream& out, const void* src, size_t n) {
     if (!n) return true;
+    if (!permitTestWrite(n)) return false;
     out.write(reinterpret_cast<const char*>(src), static_cast<std::streamsize>(n));
     return out.good();
 }
@@ -474,6 +499,7 @@ bool copyRange(std::ifstream& in, std::ofstream& out, uint64_t offset, uint64_t 
         const size_t chunk = static_cast<size_t>((std::min)(bytes, static_cast<uint64_t>(buffer.size())));
         in.read(buffer.data(), static_cast<std::streamsize>(chunk));
         if (in.gcount() != static_cast<std::streamsize>(chunk)) return false;
+        if (!permitTestWrite(chunk)) return false;
         out.write(buffer.data(), static_cast<std::streamsize>(chunk));
         if (!out) return false;
         bytes -= chunk;
@@ -485,6 +511,7 @@ bool writeZeros(std::ofstream& out, uint64_t bytes) {
     static const std::vector<char> zeros(1u << 20, 0);
     while (bytes) {
         const size_t chunk = static_cast<size_t>((std::min)(bytes, static_cast<uint64_t>(zeros.size())));
+        if (!permitTestWrite(chunk)) return false;
         out.write(zeros.data(), static_cast<std::streamsize>(chunk));
         if (!out) return false;
         bytes -= chunk;
@@ -513,6 +540,7 @@ struct OutputCleanup {
 
 static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
                                            ReapMoEBudgetResult* inspection) {
+    resetTestWriteBudget();
     ReapMoETransformResult result;
     if (request.sourceFirstShard.empty() || (!inspection &&
         (request.outputDirectory.empty() || request.selectionManifest.empty() || !request.activeExperts))) {
