@@ -4845,6 +4845,16 @@ else()
 endif()
 add_test(NAME reap_scalar_acceptance_test COMMAND reap_scalar_acceptance_test)
 
+# Opt-in production certification gate. A missing IDE target must never be
+# reported as a successful native IDE link merely because CMake skipped it.
+option(RAWRXD_REQUIRE_NATIVE_IDE_LINK
+       "Fail configuration if the native Win32 IDE target is unavailable" OFF)
+if(RAWRXD_REQUIRE_NATIVE_IDE_LINK AND NOT TARGET RawrXD-Win32IDE-Native)
+    message(FATAL_ERROR
+        "RAWRXD_REQUIRE_NATIVE_IDE_LINK=ON but RawrXD-Win32IDE-Native was not configured. "
+        "Resolve missing sources/dependencies; no linker certification is possible.")
+endif()
+
 # Isolated native adaptive codec acceptance: baseline source remains non-AVX2.
 if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     add_library(reap_msvc_avx2 OBJECT src/deep2/ReapAvx2Msvc.cpp)
