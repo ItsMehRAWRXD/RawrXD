@@ -82,6 +82,14 @@ public:
     uint64_t tokenCount() const { std::lock_guard<std::mutex> l(mu_); return tokens_; }
     std::unordered_map<std::pair<size_t,size_t>, ReapExpertMetric,
         PairHash> Snapshot() const { std::lock_guard<std::mutex> l(mu_); return metrics_; }
+    // Caller has validated the complete checkpoint against source topology.
+    // Replace both counters and metrics together, never replay rounded ranks.
+    void Restore(std::unordered_map<std::pair<size_t,size_t>, ReapExpertMetric, PairHash> metrics,
+                 uint64_t observations) {
+        std::lock_guard<std::mutex> l(mu_);
+        metrics_.swap(metrics);
+        tokens_ = observations;
+    }
 private:
     mutable std::mutex mu_;
     std::unordered_map<std::pair<size_t,size_t>, ReapExpertMetric, PairHash> metrics_;
