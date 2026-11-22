@@ -1532,7 +1532,10 @@ bool VulkanCompute::endSubmitWait(
 
     // Own the handles before attempting queue submission. The slot requires
     // no heap allocation during failure handling and blocks reuse until drain.
-    if (!oneShot_.Acquire({cmd, query, fence}, deviceGeneration_)) {
+    // The returned ticket binds Complete() to THIS acquisition (S9.02).
+    const uint64_t oneShotTicket =
+        oneShot_.Acquire({cmd, query, fence}, deviceGeneration_);
+    if (!oneShotTicket) {
         discardUnsubmitted();
         vkDestroyFence(device_, fence, nullptr);
         return false;
@@ -1607,7 +1610,7 @@ bool VulkanCompute::endSubmitWait(
                                                          : "fence");
     }
 
-    const bool reclaimed = oneShot_.Complete(static_cast<int>(wait), deviceGeneration_,
+    const bool reclaimed = oneShot_.Complete(static_cast<int>(wait), oneShotTicket,
         [this](const OneShotHandles& h) noexcept { releaseOneShot(h); });
     if (!reclaimed) {
         std::fprintf(stderr, "[GPU] endSubmitWait owned quarantine vk=%d\n",
