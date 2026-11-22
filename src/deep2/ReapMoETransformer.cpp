@@ -1,6 +1,7 @@
 #include "deep2/ReapMoETransformer.hpp"
 #include "deep2/ReapBankContract.hpp"
 #include "deep2/ReapExportBudget.hpp"
+#include "deep2/ReapShardIdentity.hpp"
 
 #include "deep2/GGUFLoader.hpp"
 #include <nlohmann/json.hpp>
@@ -535,40 +536,32 @@ struct OutputCleanup {
 
 } // namespace
 
-ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) {
+static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
+                                           ReapMoEBudgetResult* inspection) {
     ReapMoETransformResult result;
-    if (request.sourceFirstShard.empty() || request.outputDirectory.empty() ||
-        request.selectionManifest.empty() || !request.activeExperts) {
+    if (request.sourceFirstShard.empty() || (!inspection &&
+        (request.outputDirectory.empty() || request.selectionManifest.empty() || !request.activeExperts))) {
         result.error = "source, output directory, selection manifest and active experts are required";
         return result;
     }
     Selection selection;
-    if (!loadSelection(request.selectionManifest, request.activeExperts, selection, result.error)) return result;
+    if (!inspection && !loadSelection(request.selectionManifest, request.activeExperts, selection, result.error)) return result;
 
     const fs::path source(request.sourceFirstShard);
-    const std::string filename = source.filename().string();
-    const size_t marker = filename.find("-00001-of-");
-    uint32_t shardCount = 1;
-    std::string prefix = filename;
-    if (marker != std::string::npos) {
-        prefix = filename.substr(0, marker);
-        const size_t end = filename.find(".gguf", marker);
-        if (end == std::string::npos) { result.error = "invalid split GGUF name"; return result; }
-        try { shardCount = static_cast<uint32_t>(std::stoul(filename.substr(marker + 10, end - (marker + 10)))); }
-        catch (...) { result.error = "invalid split GGUF shard count"; return result; }
+    std::vector<fs::path> paths;
+    if (!ReapState::ShardPaths(source,paths) || paths.empty()) {
+        result.error="invalid canonical first shard";return result;
     }
-    if (!shardCount || shardCount > 4096) { result.error = "invalid shard count"; return result; }
-
+    const uint32_t shardCount=static_cast<uint32_t>(paths.size());
     std::vector<ParsedShard> shards;
     shards.reserve(shardCount);
-    for (uint32_t i = 1; i <= shardCount; ++i) {
-        fs::path p = source.parent_path();
-        if (marker != std::string::npos) p /= prefix + "-" + (i < 10 ? "0000" : i < 100 ? "000" : i < 1000 ? "00" : i < 10000 ? "0" : "") + std::to_string(i) + "-of-" + filename.substr(marker + 10, 5) + ".gguf";
-        else p = source;
+    for (const auto& p : paths) {
         ParsedShard shard;
         if (!parseShard(p, shard, result.error)) return result;
-        result.sourceBytes += shard.fileBytes;
-        result.sourceTensors += shard.tensors.size();
+        if (!ReapExport::Add(result.sourceBytes,shard.fileBytes,result.sourceBytes) ||
+            !ReapExport::Add(result.sourceTensors,shard.tensors.size(),result.sourceTensors)) {
+            result.error="source inventory overflow";return result;
+        }
         shards.emplace_back(std::move(shard));
     }
 
@@ -613,6 +606,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         }
     }
     ReapExport::Router routerGeometry;
+    if (inspection) request.activeExperts=bank.original;
     if (!bank.Allows(request.activeExperts) ||
         !groupFields.Resolve(bank.original,bank.topK,routerGeometry) ||
         !routerGeometry.Allows(request.activeExperts)) {
@@ -647,14 +641,15 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             sourceMoeLayers.insert(layer);
         }
     }
-    if (sourceMoeLayers.size() != selection.size()) {
+    if (sourceMoeLayers.empty()) { result.error="no routed projection layers";return result; }
+    if (!inspection && sourceMoeLayers.size() != selection.size()) {
         result.error = "selection topology mismatch: source MoE layers=" +
                        std::to_string(sourceMoeLayers.size()) +
                        " manifest layers=" + std::to_string(selection.size());
         return result;
     }
     for (const uint32_t layer : sourceMoeLayers) {
-        if (selection.find(layer) == selection.end()) {
+        if (!inspection && selection.find(layer) == selection.end()) {
             result.error = "selection missing source MoE layer " + std::to_string(layer);
             return result;
         }
@@ -698,7 +693,9 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
                 result.error="unsupported expert tensor layout: "+tensor.name;return result;
             }
             if ((projection||router) && (!layerFromName(tensor.name,layer) ||
-                !validateExpertTensorGeometry(tensor,layer,selection,result.error))) {
+                !sourceMoeLayers.count(layer) || tensor.dims.empty() ||
+                tensor.dims.back()!=bank.original || tensor.bytes%bank.original ||
+                (!inspection && !validateExpertTensorGeometry(tensor,layer,selection,result.error)))) {
                 if(result.error.empty())result.error="invalid expert tensor layer";
                 return result;
             }
@@ -720,6 +717,22 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
     uint64_t predictedBytes=0;
     if (!ReapExport::MeasureAll(layouts,routerGeometry,request.activeExperts,predictedBytes)) {
         result.error="serialized checkpoint size overflow";return result;
+    }
+    if (inspection) {
+        inspection->originalExperts=routerGeometry.original;
+        inspection->topK=routerGeometry.top;
+        inspection->groups=routerGeometry.groups;
+        inspection->groupsUsed=routerGeometry.used;
+        inspection->routedLayers.assign(sourceMoeLayers.begin(),sourceMoeLayers.end());
+        const uint64_t minRetained=routerGeometry.groups*
+            ((routerGeometry.top+routerGeometry.used-1)/routerGeometry.used);
+        if (!ReapExport::MeasureAll(layouts,routerGeometry,minRetained,inspection->minimumBytes) ||
+            !ReapExport::MaxRetained(layouts,routerGeometry,inspection->budgetBytes,inspection->maxRetained) ||
+            (inspection->maxRetained && !ReapExport::MeasureAll(layouts,routerGeometry,
+                inspection->maxRetained,inspection->predictedBytes))) {
+            result.error="invalid budget inspection";return result;
+        }
+        result.success=true;return result;
     }
     if (request.targetSizeBytes && predictedBytes>request.targetSizeBytes) {
         uint64_t maxRetained=0;
@@ -870,9 +883,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         return result;
     }
 
-    const fs::path outputFirst = marker != std::string::npos
-        ? outputDir / (prefix + "-00001-of-" + (shardCount < 10 ? "0000" : shardCount < 100 ? "000" : shardCount < 1000 ? "00" : "0") + std::to_string(shardCount) + ".gguf")
-        : outputDir / filename;
+    const fs::path outputFirst = outputDir / paths.front().filename();
     GGUFLoader verify;
     if (!verify.load(outputFirst.string())) {
         result.error = "rewritten GGUF reload failed: " + verify.error();
@@ -888,6 +899,23 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
     result.outputShardCount = verify.shardCount();
     cleanup.active = false;
     return result;
+}
+
+ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) {
+    return transformImpl(request,nullptr);
+}
+
+ReapMoEBudgetResult inspectMoEGGUFBudget(const std::string& sourceFirstShard,
+                                      uint64_t budgetBytes) {
+    ReapMoEBudgetResult inspection;
+    inspection.budgetBytes=budgetBytes;
+    if (!budgetBytes) { inspection.error="positive byte budget required";return inspection; }
+    ReapMoETransformRequest request;
+    request.sourceFirstShard=sourceFirstShard;
+    const auto result=transformImpl(request,&inspection);
+    inspection.success=result.success;
+    inspection.error=result.error;
+    return inspection;
 }
 
 } // namespace Deep2
