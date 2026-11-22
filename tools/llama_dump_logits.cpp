@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
     cp.n_ctx = 2048;
     cp.n_threads = 8;
     cp.n_batch = 512;
+    cp.embeddings = true;   // expose final hidden state for the Deep2 differential
     llama_context* ctx = llama_init_from_model(model, cp);
     if (!ctx) { std::fprintf(stderr, "CTX_FAIL\n"); return 1; }
 
@@ -68,6 +69,23 @@ int main(int argc, char** argv) {
         const float* lg = llama_get_logits_ith(ctx, (llama_decode(ctx, batch) == 0) ? 0 : 0);
         (void)lg;
         break;
+    }
+
+    // Dump final hidden state (pre-head) to a file for Deep2 differential.
+    if (const char* out = std::getenv("LLAMA_DUMP_HIDDEN")) {
+        const int nEmbd = llama_model_n_embd(model);
+        const float* embd = llama_get_embeddings_ith(ctx, nTokens - 1);
+        if (embd && nEmbd > 0) {
+            std::FILE* f = std::fopen(out, "wb");
+            if (f) {
+                std::fwrite(embd, sizeof(float), (size_t)nEmbd, f);
+                std::fclose(f);
+                std::fprintf(stderr, "HIDDEN_DUMP n=%d rms=%.6f e0=%.6f e1=%.6f\n",
+                             nEmbd,
+                             [&]{ double s=0; for(int i=0;i<nEmbd;++i) s+=(double)embd[i]*embd[i]; return std::sqrt(s/nEmbd); }(),
+                             embd[0], embd[1]);
+            }
+        }
     }
 
     llama_free(ctx);
