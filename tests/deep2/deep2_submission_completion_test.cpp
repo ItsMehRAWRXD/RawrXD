@@ -20,6 +20,15 @@ static void expect(bool cond, const char* name) {
 }
 
 int main() {
+    static_assert(kVkSuccess == 0 && kVkTimeout == 2 && kVkErrorDeviceLost == -4,
+                  "VkResult ABI drift");
+    expect(Classify(0, true) == Completion::Reclaim, "raw_vk_success");
+    expect(Classify(1, true) == Completion::Retain, "raw_vk_not_ready");
+    expect(Classify(2, true) == Completion::Retain, "raw_vk_timeout");
+    expect(Classify(3, true) == Completion::Retain, "raw_vk_event_set");
+    expect(Classify(-4, true) == Completion::TerminalTeardown, "raw_vk_device_lost");
+    expect(!MayReclaim(Classify(2, true)), "raw_vk_timeout_no_reclaim");
+
     // Confirmed pre-submit failure (submitted=false) -> Reclaim (nothing in flight).
     expect(Classify(kVkErrorDeviceLost, false) == Completion::Reclaim,
            "presubmit_failure_reclaims");
