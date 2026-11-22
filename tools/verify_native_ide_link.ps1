@@ -75,6 +75,21 @@ try {
             Write-Host $text
         }
         if ($ctestExit -ne 0) { throw "REAP native linker acceptance tests failed with exit $ctestExit" }
+        # CTest may return success when only a subset of expected tests is
+        # registered. Require all three linker acceptance cases to execute.
+        $expectedTests = @(
+            "reap_msvc_link_contract_test",
+            "reap_msvc_anchor_only_test",
+            "reap_virtual_payload_msvc_adaptive_test"
+        )
+        foreach ($testName in $expectedTests) {
+            $matched = @($ctestOutput | Where-Object {
+                ([string]$_) -match ("Test\s+#\d+:\s+" + [regex]::Escape($testName) + "\s+\.\.\.\s+Passed")
+            })
+            if ($matched.Count -ne 1) {
+                throw "Required native REAP acceptance test missing or not passed: $testName"
+            }
+        }
     }
     $certified = $true
 }
