@@ -7787,6 +7787,7 @@ void Win32IDE::generateResponseAsync(
     uint64_t* assignedGeneration)
 {
     std::unique_lock<std::mutex> lock(m_inferenceMutex);
+    if (assignedGeneration) *assignedGeneration = 0;
     // Backend routing is decided before any model-specific dispatch:
     // an unavailable Strata selection must fail closed regardless of
     // which model is selected, so it cannot be bypassed by model type.
@@ -7809,9 +7810,10 @@ void Win32IDE::generateResponseAsync(
         }
         std::string path = environmentValue("RAWRXD_MODEL_PATH");
         if (path.empty()) path = environmentValue("RAWRXD_DEEP2_PROBE_MODEL");
+        if (path.empty()) path = m_loadedModelPath;
         if (path.empty()) {
             if (callback) callback(
-                "Deep2 backend unavailable: set RAWRXD_MODEL_PATH to a local GGUF.", false, false);
+                "Deep2 backend unavailable: select a local GGUF or set RAWRXD_MODEL_PATH.", false, false);
             return;
         }
         // Reuse an already-loaded identical model; only load when it differs.
