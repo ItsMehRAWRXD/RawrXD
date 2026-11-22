@@ -15,6 +15,10 @@ jobs:
         run: |
           g++ -std=c++17 -O2 -Wall -Wextra -I src tests/reap_half_roundtrip_test.cpp -o reap-half
           ./reap-half
+      - name: Compile and execute virtual expert payload integration
+        run: |
+          g++ -std=c++17 -O2 -pthread -Wall -Wextra -I src tests/reap_virtual_payload_adaptive_test.cpp -o reap-virtual
+          ./reap-virtual
       - name: Compile baseline scalar regression
         run: g++ -std=c++17 -O2 -mno-avx -mno-avx2 -pthread -Wall -Wextra -DRAWRXD_REAP_SCALAR_ACCEPTANCE -I src tests/reap_q4k_to_q2k_test.cpp -o reap-scalar
       - name: Execute baseline scalar regression
@@ -95,6 +99,15 @@ jobs:
           link /nologo reap-baseline.obj reap-avx2.obj /OUT:reap-adaptive.exe
           if errorlevel 1 exit /b 1
           reap-adaptive.exe
+          if errorlevel 1 exit /b 1
+      - name: Compile and execute baseline virtual expert payload
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 /I src tests\reap_virtual_payload_adaptive_test.cpp /Fe:reap-virtual.exe
+          if errorlevel 1 exit /b 1
+          reap-virtual.exe
           if errorlevel 1 exit /b 1
       - name: Compile and execute MSVC adaptive streaming conversion
         shell: cmd
