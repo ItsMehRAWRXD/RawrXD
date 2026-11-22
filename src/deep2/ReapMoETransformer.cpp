@@ -2,6 +2,7 @@
 #include "deep2/ReapBankContract.hpp"
 #include "deep2/ReapExportBudget.hpp"
 #include "deep2/ReapShardIdentity.hpp"
+#include "deep2/ReapQuantRange.hpp"
 
 #include "deep2/GGUFLoader.hpp"
 #include <nlohmann/json.hpp>
@@ -544,6 +545,10 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         result.error = "source, output directory, selection manifest and active experts are required";
         return result;
     }
+    if (!inspection && request.requantizeQ4KToQ2K &&
+        (!std::isfinite(request.maxQuantRelativeRmse) || request.maxQuantRelativeRmse<0)) {
+        result.error="explicit finite requantization error limit required";return result;
+    }
     Selection selection;
     if (!inspection && !loadSelection(request.selectionManifest, request.activeExperts, selection, result.error)) return result;
 
@@ -665,6 +670,7 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
     // and tensor ordering as the writer. No output paths are created yet.
     std::vector<ReapExport::Shard> layouts;
     std::vector<uint64_t> predictedShardBytes;
+    uint64_t requantizableTensors=0;
     for (size_t i=0;i<shards.size();++i) {
         const auto& shard=shards[i];
         auto metadata=shard.metadata;
@@ -705,7 +711,15 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
                 !ReapExport::Add(layout.header,8ull*tensor.dims.size(),layout.header)) {
                 result.error="descriptor size overflow";return result;
             }
-            layout.tensors.push_back({tensor.bytes,projection||router});
+            uint64_t storedBytes=tensor.bytes;
+            if (request.requantizeQ4KToQ2K && projection && tensor.type==12) {
+                if (!ReapQuant::ConvertedBytes(tensor.dims.front(),tensor.bytes,storedBytes) ||
+                    storedBytes%bank.original) {
+                    result.error="unsupported Q4_K expert row geometry for conversion: "+tensor.name;return result;
+                }
+                ++requantizableTensors;
+            }
+            layout.tensors.push_back({storedBytes,projection||router});
         }
         uint64_t bytes=0;
         if (!ReapExport::Measure(layout,routerGeometry,request.activeExperts,bytes)) {
@@ -714,11 +728,16 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         predictedShardBytes.push_back(bytes);
         layouts.push_back(std::move(layout));
     }
+    if (request.requantizeQ4KToQ2K && !requantizableTensors) {
+        result.error="no Q4_K routed projections available for conversion";return result;
+    }
     uint64_t predictedBytes=0;
     if (!ReapExport::MeasureAll(layouts,routerGeometry,request.activeExperts,predictedBytes)) {
         result.error="serialized checkpoint size overflow";return result;
     }
     if (inspection) {
+        inspection->requantizableTensors=requantizableTensors;
+        inspection->requantizeQ4KToQ2K=request.requantizeQ4KToQ2K;
         inspection->originalExperts=routerGeometry.original;
         inspection->topK=routerGeometry.top;
         inspection->groups=routerGeometry.groups;
@@ -781,6 +800,14 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
                 out.dims.back() = static_cast<uint64_t>(it->second.size());
                 const uint64_t stride = tensor.bytes / tensor.dims.back();
                 out.bytes = stride * it->second.size();
+                if (request.requantizeQ4KToQ2K && projection && tensor.type==12) {
+                    uint64_t converted=0;
+                    if (!ReapQuant::ConvertedBytes(tensor.dims.front(),out.bytes,converted)) {
+                        result.error="invalid retained Q4_K row geometry";return result;
+                    }
+                    out.bytes=converted;
+                    out.type=10; // GGUF Q2_K
+                }
                 ++result.transformedTensors;
                 result.selectedExpertSlices += it->second.size();
             }
@@ -846,6 +873,9 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
             if (projection || router) {
                 const uint64_t stride = original->bytes / original->dims.back();
                 const auto it = selection.find(layer);
+                ReapQuant::RangeStats quantStats;
+                const bool convert=projection && original->type==12 && tensor.type==10 &&
+                    request.requantizeQ4KToQ2K;
                 for (uint32_t expert : it->second) {
                     // Overflow guard already checked in validateExpertTensorGeometry.
                     // Tensor offsets are relative to the source shard's data
@@ -853,7 +883,22 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
                     // corrupts every selected expert whenever the rebuilt
                     // header has a different length from the source header.
                     const uint64_t srcOffset = shard.dataStart + original->offset + stride * expert;
-                    if (!copyRange(in, out, srcOffset, stride)) { result.error = "expert slice copy failed"; return result; }
+                    if (convert) {
+                        if (!in.seekg(static_cast<std::streamoff>(srcOffset),std::ios::beg) ||
+                            !ReapQuant::ConvertRange(in,out,stride,quantStats)) {
+                            result.error="native expert requantization failed: "+tensor.name;return result;
+                        }
+                    } else if (!copyRange(in, out, srcOffset, stride)) {
+                        result.error = "expert slice copy failed"; return result;
+                    }
+                }
+                if (convert) {
+                    const double relative=quantStats.RelativeRmse();
+                    if (!std::isfinite(relative) || relative>request.maxQuantRelativeRmse ||
+                        !ReapExport::Add(result.requantizedBlocks,quantStats.blocks,result.requantizedBlocks)) {
+                        result.error="requantization error limit exceeded: "+tensor.name;return result;
+                    }
+                    result.maxTensorQuantRelativeRmse=std::max(result.maxTensorQuantRelativeRmse,relative);
                 }
             } else if (!copyRange(in, out, shard.dataStart + original->offset, original->bytes)) {
                 result.error = "tensor copy failed: " + tensor.name; return result;
@@ -906,12 +951,14 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
 }
 
 ReapMoEBudgetResult inspectMoEGGUFBudget(const std::string& sourceFirstShard,
-                                      uint64_t budgetBytes) {
+                                      uint64_t budgetBytes,
+                                      bool requantizeQ4KToQ2K) {
     ReapMoEBudgetResult inspection;
     inspection.budgetBytes=budgetBytes;
     if (!budgetBytes) { inspection.error="positive byte budget required";return inspection; }
     ReapMoETransformRequest request;
     request.sourceFirstShard=sourceFirstShard;
+    request.requantizeQ4KToQ2K=requantizeQ4KToQ2K;
     const auto result=transformImpl(request,&inspection);
     inspection.success=result.success;
     inspection.error=result.error;
