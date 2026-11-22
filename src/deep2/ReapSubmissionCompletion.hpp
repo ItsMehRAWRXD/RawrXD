@@ -26,7 +26,7 @@ enum class Completion : int {
 // VK result codes used by the contract (avoid a Vulkan header dependency).
 enum : int {
     kVkSuccess = 0,
-    kVkTimeout = 3,       // VK_TIMEOUT (not a real VkResult value; sentinel)
+    kVkTimeout = 2,       // VK_TIMEOUT (VkResult ABI value)
     kVkErrorDeviceLost = -4,
 };
 
