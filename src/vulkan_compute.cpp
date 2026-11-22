@@ -5,6 +5,7 @@
 // that silently shadows the device-level ::VulkanCompute implemented here.
 // Qualifying the path pins the header to include/vulkan_compute.h.
 #include "include/vulkan_compute.h"
+#include "deep2/ReapSubmissionCompletion.hpp"
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <algorithm>
@@ -1841,7 +1842,8 @@ bool VulkanCompute::BeginQuantDotBatch() {
     // A failed fence wait means submitted work may still reference every
     // pinned weight and batch buffer. Do not recycle or unpin them here;
     // Cleanup() is the only recovery boundary after device-idle teardown.
-    if (quant_submission_failed_ || quant_submission_in_flight_) return false;
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return false;
     auto it = shaders_.find("quantdot");
     if (it == shaders_.end() || !it->second.pipeline) return false;
@@ -2056,25 +2058,26 @@ bool VulkanCompute::EndQuantDotBatch() {
     // epoch's fence is waited on before the lock (and the pins) are released.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!quant_batch_active_) return false;
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     quant_batch_active_ = false;
     // RAWRXD_G04: pre-submit failures release pins, and successful completion
     // releases them after the fence. A failed post-submit wait deliberately
     // preserves pins and quarantines the batch until Cleanup() has established
     // device-idle teardown.
-    bool fence_completed = false;
     struct PinReleaseGuard {
         VulkanCompute& v;
         std::unordered_set<const void*>& pins;
-        bool& submitted;
-        bool& completed;
+        const bool& pending;
+        const bool& failed;
         ~PinReleaseGuard() {
-            if (submitted && !completed) return;
+            if (!Deep2::Submit::MayReleaseQuantPins(pending, failed)) return;
             // Before queue submission, or after a successful fence wait, no
             // in-flight command can reference the pinned weights.
             for (const void* key : pins) v.UnpinQuantWeight(key);
             pins.clear();
         }
-    } pin_guard{*this, batch_pinned_, quant_submission_in_flight_, fence_completed};
+    } pin_guard{*this, batch_pinned_, quant_submission_in_flight_, quant_submission_failed_};
     const size_t n = quant_batch_entries_.size();
     if (n == 0) return true;
 
@@ -2269,11 +2272,12 @@ bool VulkanCompute::EndQuantDotBatch() {
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &quant_cmd_;
-    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) {
-        std::cerr << "[QUANT_DOT] batch queue submit failed" << std::endl;
+    const VkResult submitResult = vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_);
+    if (!Deep2::Submit::RecordQuantSubmit(static_cast<int>(submitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) {
+        std::cerr << "[QUANT_DOT] batch queue submit failed; quarantined VkResult=" << static_cast<int>(submitResult) << std::endl;
         return false;
     }
-    quant_submission_in_flight_ = true;
     QDTRACE("end-batch submitted entries=" << quant_batch_entries_.size());
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
@@ -2289,15 +2293,13 @@ bool VulkanCompute::EndQuantDotBatch() {
     const auto submit_end = std::chrono::steady_clock::now();
     gpu_counters_.submit_ms +=
         std::chrono::duration<double, std::milli>(submit_end - submit_begin).count();
-    if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) {
-        std::cerr << "[QUANT_DOT] batch fence wait failed" << std::endl;
+    const VkResult waitResult = WaitQuantFence(device_, quant_fence_);
+    if (!Deep2::Submit::RecordQuantWait(static_cast<int>(waitResult),
+            quant_submission_in_flight_, quant_submission_failed_)) {
+        std::cerr << "[QUANT_DOT] batch fence wait failed VkResult=" << static_cast<int>(waitResult) << std::endl;
         QDTRACE("end-batch fence ERROR");
-        quant_submission_failed_ = true;
         return false;
     }
-    quant_submission_in_flight_ = false;
-    quant_submission_failed_ = false;
-    fence_completed = true;
     QDTRACE("end-batch fence done");
     // RAWRXD_G04: the batch's in-flight work is complete; retire is now safe.
     NoteSubmissionComplete();
@@ -3343,9 +3345,9 @@ bool VulkanCompute::EnsureQuantFastPath() {
     // All quantized paths share quant_fence_ and quant_cmd_. A failed wait in
     // any producer leaves those objects potentially in use by the device;
     // prevent another path from resetting or overwriting them.
-    if (quant_submission_in_flight_ || quant_submission_failed_)
-        return false;
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
+            quant_submission_failed_, cleanup_quarantined_)) return false;
     if (quant_fast_ready_) return true;
     if (!device_ || quant_descriptor_set_layout_ == nullptr) return false;
 
@@ -4413,11 +4415,10 @@ uint32_t VulkanCompute::FindMemoryType(uint32_t type_filter, VkMemoryPropertyFla
 void VulkanCompute::Cleanup() {
     if (device_) {
         const VkResult idle = vkDeviceWaitIdle(device_);
-        if (idle != VK_SUCCESS) {
+        if (!Deep2::Submit::RecordIdleWait(static_cast<int>(idle), cleanup_quarantined_)) {
             // A failed idle wait means submitted work may still reference
             // every child object. Do not destroy or recycle normal resources
             // on this path; retain them for controlled device-loss teardown.
-            cleanup_quarantined_ = true;
             std::fprintf(stderr,
                          "[VULKAN_CLEANUP] quarantined idle failure VkResult=%d; "
                          "normal resource destruction suppressed\n",
@@ -4425,7 +4426,6 @@ void VulkanCompute::Cleanup() {
             std::fflush(stderr);
             return;
         }
-        cleanup_quarantined_ = false;
         
         // Successful device-idle is the only boundary that permits cleanup
         // of one-shot submissions quarantined after failed fence waits.
