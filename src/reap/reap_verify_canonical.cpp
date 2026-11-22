@@ -115,7 +115,14 @@ int main(int argc, char** argv) {
 
     // Structural verification against the checkpoint's own metadata.
     const uint64_t passes = g.loopCount > 0 ? g.loopCount : 1;
-    expect(ir.visits.size() == g.blockCount * passes, "visits_match_blockcount_x_passes");
+    const auto normalizedLoop = reap::ModelLoop(g);
+    expect(ir.visits.size() == normalizedLoop.visits, "visits_match_full_topology_plus_recurrence");
+    std::vector<uint64_t> actualVisits(static_cast<size_t>(g.blockCount), 0);
+    for (const auto& v : ir.visits) ++actualVisits.at(v.physicalLayer);
+    bool visitMultiplicityOk = true;
+    for (size_t layer = 0; layer < actualVisits.size(); ++layer)
+        if (actualVisits[layer] != reap::VisitMultiplicity(normalizedLoop, layer)) visitMultiplicityOk = false;
+    expect(visitMultiplicityOk, "visit_multiplicity_matches_inventory_contract");
     expect(tensors.size() == static_cast<size_t>(loader.tensorCount()), "tensor_count_matches_loader");
     expect(plan.physicalParamCount > 0, "physical_param_count_positive");
     expect(plan.visits.size() == ir.visits.size(), "plan_visits_match_ir");
