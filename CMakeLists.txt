@@ -4782,6 +4782,19 @@ add_test(NAME reap_budget_selection_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_budget_selection_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_budget_selection_regression.cmake")
 
+# Native whole-block GGUF tensor geometry and packed-scalar regression.
+add_executable(reap_tensor_bounds_test tests/reap_tensor_bounds_test.cpp)
+target_include_directories(reap_tensor_bounds_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(reap_tensor_bounds_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(reap_tensor_bounds_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(reap_tensor_bounds_test PRIVATE -Wall -Wextra)
+endif()
+enable_testing()
+add_test(NAME reap_tensor_bounds_test COMMAND reap_tensor_bounds_test)
+add_test(NAME quant_scalar_smoke COMMAND quant_scalar_smoke)
+
 # Native K-quant conversion, streaming and dual-profile selection controls.
 foreach(_reap_quant_test IN ITEMS reap_q4k_to_q2k_test reap_quant_range_test)
     add_executable(${_reap_quant_test} tests/${_reap_quant_test}.cpp)
