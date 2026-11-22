@@ -1926,7 +1926,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                                                         : spec_.key_length);
     const size_t vl = (size_t)(spec_.value_length_mla > 0 ? spec_.value_length_mla
                                                           : spec_.value_length);
-    const bool isMla = !qwen35Gated && (kPerHead == kl && vPerHead == vl && kl > vl);
+    // MLA is a property of the ARCHITECTURE, not of a width inequality.
+    // The previous test `kl > vl` was only true for DeepSeek-V3 (key 576 >
+    // value 512). GLM-4.7-Flash has key_length_mla == value_length_mla == 256,
+    // so `kl > vl` was false, isMla became false, and RoPE rotated the FULL
+    // 256-dim head instead of the 64-dim rotary slice. That corrupted attention
+    // and produced degenerate (single repeated token) generation.
+    // Derive it from the model's own MLA metadata instead.
+    const bool isMla = !qwen35Gated &&
+                       (spec_.kv_lora_rank > 0 || spec_.key_length_mla > 0) &&
+                       (kPerHead == kl && vPerHead == vl);
     const size_t D = isMla ? qPerHead : qPerHead;
     if (D == 0) { err = "attention: head dim 0"; return false; }
     const size_t qD = isMla ? qPerHead : qPerHead;
