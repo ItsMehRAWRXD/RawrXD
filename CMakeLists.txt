@@ -4735,7 +4735,7 @@ endif()
 
 # Centralized submission-completion decision (ReapSubmissionCompletion.hpp) —
 # CPU-only certification of the reclaim/retain/terminal-teardown contract.
-if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_submission_completion_test.cpp")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_submission_completion_test.cpp")
     add_executable(deep2_submission_completion_test
         tests/deep2/deep2_submission_completion_test.cpp)
     target_include_directories(deep2_submission_completion_test PRIVATE
