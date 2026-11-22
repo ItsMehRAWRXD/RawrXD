@@ -257,6 +257,11 @@ bool VulkanCompute::CopyDeviceToDevice(VkBuffer src, VkBuffer dst, size_t size) 
 
 void VulkanCompute::ReleaseForwardArena() {
     if (!device_) return;
+    if (!pending_one_shot_submissions_.empty()) {
+        std::fprintf(stderr,
+                     "[VULKAN_FWD] arena release deferred: GPU submission completion is unknown\n");
+        return;
+    }
     DestroyBuf(device_, fwd_hidden_);
     DestroyBuf(device_, fwd_residual_);
     DestroyBuf(device_, fwd_normed_);

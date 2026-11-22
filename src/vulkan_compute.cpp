@@ -816,6 +816,10 @@ VulkanTensor VulkanCompute::TransferGGUFTensor(const std::string& tensor_name,
 }
 
 void VulkanCompute::ReleaseTensors() {
+    if (!pending_one_shot_submissions_.empty()) {
+        std::cerr << "ReleaseTensors deferred: GPU submission completion is unknown" << std::endl;
+        return;
+    }
     for (auto& tensor : uploaded_tensors_) {
         if (tensor.device_buffer) {
             vkDestroyBuffer(device_, tensor.device_buffer, nullptr);
@@ -4240,6 +4244,10 @@ bool VulkanCompute::GetKVCacheSlice(uint32_t layer_idx, uint32_t start_pos,
 }
 
 void VulkanCompute::ClearKVCache() {
+    if (!pending_one_shot_submissions_.empty()) {
+        std::cerr << "ClearKVCache deferred: GPU submission completion is unknown" << std::endl;
+        return;
+    }
     if (!kv_cache_allocated_) {
         return;
     }
@@ -4419,12 +4427,6 @@ void VulkanCompute::Cleanup() {
         }
         cleanup_quarantined_ = false;
         
-        // Clean up KV cache
-        ClearKVCache();
-        
-        // Clean up async command buffer pool
-        CleanupCommandBufferPool();
-
         // Successful device-idle is the only boundary that permits cleanup
         // of one-shot submissions quarantined after failed fence waits.
         for (const PendingOneShotSubmission& pending : pending_one_shot_submissions_) {
@@ -4433,6 +4435,12 @@ void VulkanCompute::Cleanup() {
                 vkFreeCommandBuffers(device_, command_pool_, 1, &pending.command);
         }
         pending_one_shot_submissions_.clear();
+
+        // Clean up KV cache
+        ClearKVCache();
+
+        // Clean up async command buffer pool
+        CleanupCommandBufferPool();
 
         // RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY: cached weights, pooled
         // scratch, persistent staging/readback, command buffer and fence.
