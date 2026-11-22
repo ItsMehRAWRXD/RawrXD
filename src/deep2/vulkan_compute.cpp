@@ -1576,7 +1576,11 @@ bool VulkanCompute::endSubmitWait(
         return false;
     }
     const uint64_t submitReturnedNs = nowNs();
-    oneShot_.MarkSubmitted();   // H47-C: the acquisition reached the GPU queue
+    if (!oneShot_.MarkSubmitted(oneShotTicket)) {
+        std::fprintf(stderr, "[GPU] submission ownership acknowledgement failed\n");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
+        return false;
+    }
     ++queueSubmitCount_;
     if (globalSerial) {
         std::fprintf(stderr,
@@ -7410,7 +7414,7 @@ void VulkanCompute::cleanup() {
         // acquisition occurs after idle evidence is collected, the stale
         // ticket will not match epoch_ and Drain() refuses.
         const uint64_t oneShotDrainTicket =
-            oneShot_.Active() ? oneShot_.CurrentTicket() : 0;
+            oneShot_.CurrentTicket();
         const VkResult idleRes = vkDeviceWaitIdle(device_);
         if (!Submit::MayTeardownAfterIdle(static_cast<int>(idleRes))) {
             cleanupBlocked_.store(true, std::memory_order_release);
