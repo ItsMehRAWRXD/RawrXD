@@ -32,7 +32,9 @@ static bool wantTensor(const ggml_tensor* t) {
            std::strcmp(t->name, "kv_cmpr-0") == 0 ||
            std::strcmp(t->name, "Vcur-0") == 0 ||
            std::strcmp(t->name, "Kcur-0") == 0 ||
-           std::strcmp(t->name, "q-0") == 0;
+           std::strcmp(t->name, "q-0") == 0 ||
+           std::strcmp(t->name, "attn_norm-0") == 0 ||
+           std::strcmp(t->name, "embd") == 0;
 }
 
 static bool dumpCbEval(ggml_tensor* t, bool ask, void* ud) {
