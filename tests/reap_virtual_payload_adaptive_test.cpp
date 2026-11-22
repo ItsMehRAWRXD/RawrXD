@@ -102,6 +102,16 @@ int main(){
                                  Precision::Q2,Q4Bytes,emptyIdentity)&&
           !emptyIdentity&&reader.reads==beforeModelHit,
           "empty checkpoint identity rejected before I/O");
+    // The length-prefixed key must distinguish identities that contain
+    // punctuation and numeric shard-like substrings.
+    BoundedExpertCache punctuation(2*blocks*Q2Bytes);
+    BoundedExpertCache::Lease punctA,punctB;
+    check(AcquireVirtualPayload(reader,punctuation,std::string("a:3:0"),range,
+                                Precision::Q2,Q4Bytes,punctA)&&punctA&&
+          AcquireVirtualPayload(secondModel,punctuation,std::string("a"),range,
+                                Precision::Q2,Q4Bytes,punctB)&&punctB&&
+          punctA!=punctB,
+          "length-prefixed checkpoint keys distinguish delimiter-bearing identities");
     BoundedExpertCache::Lease rejected;
     check(!AcquireVirtualPayload(reader,cache,{3,0,Q4Bytes-1},Precision::Q2,
                                  Q4Bytes,rejected)&&!rejected,
