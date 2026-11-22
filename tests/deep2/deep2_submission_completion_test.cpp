@@ -1,72 +1,45 @@
-// deep2_submission_completion_test.cpp — CPU-only certification of the
-// centralized submission-completion contract (ReapSubmissionCompletion.hpp).
-//
-// Exercises the PRODUCTION decision function consumed by
-// VulkanCompute::endSubmitWait, WITHOUT a physical Vulkan device. Certifies
-// the reclaim/retain/terminal-teardown classification for every submission
-// state.
-//
-// Exit 0 = all controls pass.
-
 #include "deep2/ReapSubmissionCompletion.hpp"
 #include <cstdio>
-
 using namespace Deep2::Submit;
-
-static int failures = 0;
-static void expect(bool cond, const char* name) {
-    std::printf("%s %s\n", cond ? "PASS" : "FAIL", name);
-    if (!cond) ++failures;
-}
-
 int main() {
-    static_assert(kVkSuccess == 0 && kVkTimeout == 2 && kVkErrorDeviceLost == -4,
-                  "VkResult ABI drift");
-    expect(Classify(0, true) == Completion::Reclaim, "raw_vk_success");
-    expect(Classify(1, true) == Completion::Retain, "raw_vk_not_ready");
-    expect(Classify(2, true) == Completion::Retain, "raw_vk_timeout");
-    expect(Classify(3, true) == Completion::Retain, "raw_vk_event_set");
-    expect(Classify(-4, true) == Completion::TerminalTeardown, "raw_vk_device_lost");
-    expect(!MayReclaim(Classify(2, true)), "raw_vk_timeout_no_reclaim");
-
-    // Confirmed pre-submit failure (submitted=false) -> Reclaim (nothing in flight).
-    expect(Classify(kVkErrorDeviceLost, false) == Completion::Reclaim,
-           "presubmit_failure_reclaims");
-    expect(Classify(kVkTimeout, false) == Completion::Reclaim,
-           "presubmit_timeout_reclaims");
-
-    // Successful completion -> Reclaim (fence/query/cmd safe to free).
-    expect(Classify(kVkSuccess, true) == Completion::Reclaim,
-           "success_reclaims");
-    expect(MayReclaim(Classify(kVkSuccess, true)), "success_may_reclaim");
-
-    // Post-submit timeout -> Retain (may still be in-flight).
-    expect(Classify(kVkTimeout, true) == Completion::Retain,
-           "postsubmit_timeout_retains");
-    expect(!MayReclaim(Classify(kVkTimeout, true)), "timeout_no_reclaim");
-
-    // Completion unknown (other non-success after submit) -> Retain.
-    expect(Classify(-5, true) == Completion::Retain,
-           "unknown_error_retains");
-    expect(Classify(1, true) == Completion::Retain,
-           "generic_error_retains");
-
-    // Terminal device loss -> TerminalTeardown (controlled teardown only).
-    expect(Classify(kVkErrorDeviceLost, true) == Completion::TerminalTeardown,
-           "device_lost_terminal_teardown");
-    expect(!MayReclaim(Classify(kVkErrorDeviceLost, true)),
-           "device_lost_no_reclaim");
-
-    // MayReclaim is true ONLY for Reclaim.
-    expect(MayReclaim(Completion::Reclaim), "reclaim_may_reclaim");
-    expect(!MayReclaim(Completion::Retain), "retain_no_reclaim");
-    expect(!MayReclaim(Completion::TerminalTeardown), "terminal_no_reclaim");
-
-    // Win32 code 31 (ERROR_GEN_FAILURE) is NOT a Vulkan lost code; after a
-    // submit it is an unknown error -> Retain (not terminal teardown).
-    expect(Classify(31, true) == Completion::Retain, "win31_after_submit_retains");
-
-    std::printf("FAIL_COUNT=%d\n", failures);
-    std::printf("PROMOTE=0\n");
-    return failures == 0 ? 0 : 1;
+    int passed=0, failed=0;
+    auto check=[&](bool ok,const char* name){std::printf("%s %s\n",ok?"PASS":"FAIL",name);ok?++passed:++failed;};
+    static_assert(kVkSuccess==0 && kVkTimeout==2 && kVkErrorDeviceLost==-4, "VkResult ABI drift");
+    check(Classify(0,true)==Completion::Reclaim,"completed");
+    check(Classify(1,true)==Completion::Retain,"not_ready");
+    check(Classify(2,true)==Completion::Retain,"timeout");
+    check(Classify(3,true)==Completion::Retain,"event_set");
+    check(Classify(-5,true)==Completion::Retain,"unknown_error");
+    check(Classify(31,true)==Completion::Retain,"foreign_result");
+    check(Classify(-4,true)==Completion::TerminalTeardown,"device_lost_after_submit");
+    check(Classify(-4,false)==Completion::TerminalTeardown,"device_lost_before_submit");
+    check(Classify(2,false)==Completion::Reclaim,"confirmed_no_submission");
+    check(MayReclaim(Completion::Reclaim),"reclaim");
+    check(!MayReclaim(Completion::Retain),"retain");
+    check(!MayReclaim(Completion::TerminalTeardown),"terminal_no_normal_reclaim");
+    bool pending=false, fault=false, cleanup=false;
+    check(MayReuseQuant(pending,fault,cleanup),"initial_reuse");
+    check(MayReleaseQuantPins(pending,fault),"presubmit_pins");
+    check(!RecordQuantWait(0,pending,fault),"wait_without_submission_rejected");
+    check(RecordQuantSubmit(0,pending,fault)&&pending&&!fault,"submit_pending");
+    check(!MayReuseQuant(pending,fault,cleanup),"pending_blocks_reuse");
+    check(!MayReleaseQuantPins(pending,fault),"pending_retains_pins");
+    check(!RecordQuantWait(2,pending,fault)&&pending&&fault,"timeout_quarantine");
+    check(!MayReuseQuant(pending,fault,cleanup)&&!MayReleaseQuantPins(pending,fault),"timeout_blocks_reuse_and_unpin");
+    check(RecordQuantWait(0,pending,fault)&&!pending&&!fault,"late_proven_completion");
+    check(MayReuseQuant(pending,fault,cleanup)&&MayReleaseQuantPins(pending,fault),"completed_reuse_and_unpin");
+    check(!RecordQuantSubmit(-4,pending,fault)&&pending&&fault,"lost_submit_quarantine");
+    check(!MayReleaseQuantPins(pending,fault),"lost_submit_retains_pins");
+    check(!RecordQuantWait(-4,pending,fault)&&pending&&fault,"lost_wait_quarantine");
+    check(!RecordIdleWait(-4,cleanup)&&cleanup,"lost_idle_no_normal_cleanup");
+    check(!RecordIdleWait(-1,cleanup)&&cleanup,"unknown_idle_no_normal_cleanup");
+    check(!RecordIdleWait(2,cleanup)&&cleanup,"timeout_idle_no_normal_cleanup");
+    check(!MayReuseQuant(false,false,cleanup),"cleanup_failure_blocks_reuse");
+    check(RecordIdleWait(0,cleanup)&&!cleanup,"successful_idle_boundary");
+    check(!MayReuseQuant(pending,fault,cleanup),"idle_policy_does_not_silently_clear_submission");
+    check(!RecordQuantSubmit(-2,pending,fault)&&pending&&fault,"failed_submit_retained_conservatively");
+    check(!MayReleaseQuantPins(false,true),"inconsistent_failed_state_retains_pins");
+    check(!MayReuseQuant(false,true,false),"inconsistent_failed_state_blocks_reuse");
+    std::printf("PASS_COUNT=%d FAIL_COUNT=%d\nPROMOTE=0\n",passed,failed);
+    return failed?1:0;
 }
