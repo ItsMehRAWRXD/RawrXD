@@ -37,11 +37,16 @@ int main(int argc, char **argv)
     // This lifecycle test validates KV semantics, not Vulkan device bring-up.
     // Keep it deterministic and independent of whatever GPU workloads are
     // resident on the developer machine; GPU acceptance has separate tests.
+    const char *gpuRequest = std::getenv("RAWRXD_PERSISTENT_KV_REQUIRE_GPU");
+    const bool requireGpuRequest = gpuRequest && gpuRequest[0] == '1' && gpuRequest[1] == '\0';
+    if (!requireGpuRequest)
+    {
 #ifdef _WIN32
-    _putenv_s("RAWR_REAP_CPU_ONLY", "1");
+        _putenv_s("RAWR_REAP_CPU_ONLY", "1");
 #else
-    setenv("RAWR_REAP_CPU_ONLY", "1", 1);
+        setenv("RAWR_REAP_CPU_ONLY", "1", 1);
 #endif
+    }
     const char *modelPath = argc > 1 ? argv[1] : nullptr;
     if (!modelPath) {
         if (const char *configured = std::getenv("RAWRXD_PERSISTENT_KV_MODEL");
@@ -91,13 +96,27 @@ int main(int argc, char **argv)
         }
     }
 
+    const bool cpuOnly = [] {
+        const char *value = std::getenv("RAWR_REAP_CPU_ONLY");
+        return value && value[0] == '1' && value[1] == '\0';
+    }();
+    const bool requireGpu = [] {
+        const char *value = std::getenv("RAWRXD_PERSISTENT_KV_REQUIRE_GPU");
+        return value && value[0] == '1' && value[1] == '\0';
+    }();
+    if (requireGpu && cpuOnly)
+    {
+        std::printf("FAIL: GPU-required mode conflicts with RAWR_REAP_CPU_ONLY=1\n");
+        return 24;
+    }
+
     EngineConfig cfg;
     cfg.useKVCache = true;
     cfg.useThreadPool = false;
     cfg.maxSeqLen = 512;
 
     Deep2Engine engine;
-    engine.enableVulkan(false);
+    engine.enableVulkan(!cpuOnly);
     std::printf("S02_STAGE initialize\n");
     std::fflush(stdout);
     if (!engine.initialize(cfg))
@@ -134,7 +153,9 @@ int main(int argc, char **argv)
     opts.maxTokens = 8;
     if (const char *limit = std::getenv("RAWRXD_PERSISTENT_KV_MAX_TOKENS")) {
         const long parsed = std::strtol(limit, nullptr, 10);
-        if (parsed > 0 && parsed <= 64) opts.maxTokens = static_cast<size_t>(parsed);
+        // Keep the acceptance budget bounded, but allow KV14's 128-token
+        // workload and leave headroom for later sustained-cache tests.
+        if (parsed > 0 && parsed <= 256) opts.maxTokens = static_cast<size_t>(parsed);
     }
     opts.temperature = 0.0f;
     opts.topK = 1;
@@ -230,6 +251,16 @@ int main(int argc, char **argv)
     check(otherTokens != firstTokens, "second prompt reused first prompt tokens");
     check(kv->currentLength() == otherPrompt.size() + generated4 - 1,
           "second prompt final KV length is wrong");
+
+    if (requireGpu)
+    {
+        const auto &gpu = engine.gpuForwardCounters();
+        check(gpu.forwardLayers > 0, "GPU-required mode observed zero GPU forward layers");
+        check(gpu.layerSubmits > 0 || gpu.opSubmits > 0,
+              "GPU-required mode observed zero Vulkan dispatch submissions");
+        check(gpu.forwardFallbacks == 0,
+              "GPU-required mode observed an unexpected CPU forward fallback");
+    }
 
     std::printf("S02_SUMMARY generated=%zu kv_capacity=ENFORCED kv_advance=STRICT "
                 "reset=ISOLATED batched_parity=%s prompt_isolation=%s failures=%d\n",
