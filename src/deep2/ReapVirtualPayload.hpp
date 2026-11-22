@@ -16,6 +16,10 @@ bool AcquireVirtualPayload(Reader& reader,BoundedExpertCache& cache,
         precision==Precision::Q3?Q3Bytes:precision==Precision::Q4?Q4Bytes:0;
     if(!stride)return false;
     const uint64_t blocks=source.bytes/Q4Bytes;
+    // Reject impossible payload sizes before touching the reader or cache.
+    // Q2/Q3/Q4 strides are currently <= Q4Bytes, but keep this explicit
+    // so a future format cannot silently wrap the allocation length.
+    if(blocks>UINT64_MAX/stride||blocks>SIZE_MAX/stride)return false;
     const uint64_t targetBytes=blocks*stride;
     const std::string key=std::to_string(source.shard)+":"+
         std::to_string(source.offset)+":"+std::to_string(source.bytes)+":"+
