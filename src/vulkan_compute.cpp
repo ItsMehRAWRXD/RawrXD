@@ -1850,16 +1850,37 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 // ---------------------------------------------------------------------------
 bool VulkanCompute::BeginQuantDotBatch() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
-    if (quant_batch_active_) return false;   // batches do not nest
+    if (quant_batch_active_) {   // batches do not nest
+        std::cerr << "[QUANT_DOT] BeginQuantDotBatch FAIL reason=nested (quant_batch_active_ already true)\n";
+        return false;
+    }
     // A failed fence wait means submitted work may still reference every
     // pinned weight and batch buffer. Do not recycle or unpin them here;
     // Cleanup() is the only recovery boundary after device-idle teardown.
     if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
-            quant_submission_failed_, cleanup_quarantined_)) return false;
-    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return false;
+            quant_submission_failed_, cleanup_quarantined_)) {
+        std::cerr << "[QUANT_DOT] BeginQuantDotBatch FAIL reason=may_not_reuse"
+                  << " in_flight=" << (int)quant_submission_in_flight_
+                  << " failed=" << (int)quant_submission_failed_
+                  << " quarantined=" << (int)cleanup_quarantined_ << "\n";
+        return false;
+    }
+    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) {
+        std::cerr << "[QUANT_DOT] BeginQuantDotBatch FAIL reason=pipeline path="
+                  << kQuantDotShaderPath << "\n";
+        return false;
+    }
     auto it = shaders_.find("quantdot");
-    if (it == shaders_.end() || !it->second.pipeline) return false;
-    if (!EnsureQuantFastPath()) return false;
+    if (it == shaders_.end() || !it->second.pipeline) {
+        std::cerr << "[QUANT_DOT] BeginQuantDotBatch FAIL reason=shader_missing"
+                  << " found=" << (it != shaders_.end())
+                  << " pipeline_null=" << (it == shaders_.end() || !it->second.pipeline) << "\n";
+        return false;
+    }
+    if (!EnsureQuantFastPath()) {
+        std::cerr << "[QUANT_DOT] BeginQuantDotBatch FAIL reason=fastpath_init\n";
+        return false;
+    }
 
     // RAWRXD_G04: release any pins left over from a PREVIOUS batch that ended
     // abnormally. A leaked pin would make its entry permanently un-evictable
