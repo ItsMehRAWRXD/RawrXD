@@ -26,7 +26,7 @@ inline bool ConvertRange(std::istream& in,std::ostream& out,uint64_t sourceBytes
         if(!in.read(reinterpret_cast<char*>(source.data()),static_cast<std::streamsize>(count*Q4Bytes)))return false;
         for(size_t i=0;i<count;++i){
             Error error;
-            if(!Convert(source[i],target[i],error))return false;
+            if(!ConvertAdaptive(source[i],target[i],error))return false;
             next.squared+=error.squared;next.signal+=error.signal;next.maxAbs=std::max(next.maxAbs,error.maxAbs);
         }
         if(!std::isfinite(next.squared)||!std::isfinite(next.signal)||!out.write(reinterpret_cast<const char*>(target.data()),static_cast<std::streamsize>(count*Q2Bytes)))return false;
