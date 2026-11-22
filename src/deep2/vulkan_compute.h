@@ -1634,6 +1634,8 @@ private:
         return oneShot_.Active() || cleanupBlocked_.load(std::memory_order_acquire);
     }
     void releaseOneShot(const OneShotHandles& handles) noexcept;
+    bool resetDownloadRing(bool teardownAuthorized);
+    bool resetAsyncCmdRing(bool teardownAuthorized);
     uint64_t nextBufferId_ = 1;
     uint64_t workEpoch_ = 0;
 
