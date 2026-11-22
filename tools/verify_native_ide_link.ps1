@@ -55,7 +55,7 @@ finally {
     # Always extract unresolved externals, including when the build exits nonzero.
     # The previous success-only check never reached this code on LNK2019.
     $unresolved = @($log | Where-Object {
-        $_ -match 'LNK(?:2001|2019|1120)\\b|unresolved external symbol'
+        $_ -match 'LNK(?:2001|2019|1120)\b|unresolved external symbol'
     })
     $log.Add("UNRESOLVED_EXTERNAL_DIAGNOSTICS=$($unresolved.Count)")
     foreach ($diagnostic in $unresolved) {
