@@ -33,7 +33,7 @@ int main() {
     // Stale teardown (wrong ticket) rejected.
     check(!owner.Drain(0,t1+1,reclaim)&&owner.Active(),"stale teardown rejected");
     // Idle success drains (ticket captured before idle; submitted first).
-    owner.MarkSubmitted();
+    owner.MarkSubmitted(t1);
     check(owner.Drain(0,t1,reclaim)&&!owner.Active(),"idle success drains");
     check(releases==1&&last.cmd==1&&last.query==2&&last.fence==3,"original handles reclaimed exactly once");
     check(!owner.Drain(0,t1,reclaim)&&releases==1,"repeated drain idempotence");
@@ -60,7 +60,7 @@ int main() {
     check(!owner.Drain(-4,t3,reclaim)&&owner.Active(),"stale drain ticket rejected (H39)");
     check(releases==3,"stale drain no release (H39)");
     // Terminal loss teardown (generation-wide) with the CURRENT ticket reclaims.
-    owner.MarkSubmitted();
+    owner.MarkSubmitted(t4);
     check(owner.Drain(-4,t4,reclaim)&&releases==4&&!owner.Active(),"terminal loss permits teardown");
     check(last.cmd==13&&last.query==14&&last.fence==15,"terminal teardown owns correct handles");
     // Teardown result allowlist.
@@ -76,9 +76,25 @@ int main() {
         check(!owner.Drain(0, t, reclaim) && owner.Active(), "drain_unsubmitted_refused");
         check(releases == 0, "drain_unsubmitted_no_release");
         // After MarkSubmitted -> Drain succeeds.
-        owner.MarkSubmitted();
+        owner.MarkSubmitted(t);
         check(owner.Drain(0, t, reclaim) && !owner.Active(), "drain_submitted_ok");
         check(releases == 1, "drain_submitted_release");
+    }
+    {
+        OneShotOwner<Handles> owner;
+        int releases = 0;
+        auto reclaim = [&](const Handles&) { ++releases; };
+        const auto old = owner.Acquire({1,2,3}, 1);
+        check(owner.MarkSubmitted(old), "valid submit acknowledgement");
+        check(owner.Complete(0, old, reclaim), "old submission completed");
+        const auto current = owner.Acquire({4,5,6}, 1);
+        check(!owner.MarkSubmitted(old), "stale submit acknowledgement refused");
+        const auto beforeIdle = owner.CurrentTicket();
+        check(beforeIdle == 0, "unsubmitted ticket excluded from idle snapshot");
+        check(owner.MarkSubmitted(current), "current submission acknowledged");
+        check(!owner.Drain(0, beforeIdle, reclaim), "pre-submit idle evidence refused");
+        check(owner.Drain(0, owner.CurrentTicket(), reclaim), "fresh submitted idle snapshot accepted");
+        check(releases == 2, "exactly two resources released");
     }
     // H52: concurrent Complete() with the same ticket -> exactly one wins
     // (atomic claim), exactly one native release.
@@ -101,7 +117,7 @@ int main() {
         int releases = 0;
         auto reclaim = [&](const Handles&) { ++releases; };
         const uint64_t t = owner.Acquire({4,5,6}, 1);
-        owner.MarkSubmitted();
+        owner.MarkSubmitted(t);
         std::atomic<int> wins{0};
         std::thread thA([&]{ if (owner.Drain(0, t, reclaim)) wins.fetch_add(1); });
         std::thread thB([&]{ if (owner.Drain(0, t, reclaim)) wins.fetch_add(1); });
@@ -122,7 +138,7 @@ int main() {
                     const uint64_t ticket = owner.Acquire({i, i, i}, 1);
                     if (!ticket) continue;
                     acquired.fetch_add(1);
-                    owner.MarkSubmitted();
+                    owner.MarkSubmitted(ticket);
                     if (i & 1) (void)owner.Complete(0, ticket, reclaim);
                     else       (void)owner.Drain(0, ticket, reclaim);
                 }
