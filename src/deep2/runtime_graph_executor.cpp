@@ -968,7 +968,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         // guessing. Gated by DEEP2_GEOM_DUMP_ALL=1 to avoid log spam.
         if (std::getenv("DEEP2_GEOM_DUMP_ALL")) {
             for (const auto& t : tensors_) {
-                if (t.name.rfind("blk.0.attn", 0) == 0) {
+                if (t.name.rfind("blk.0.attn", 0) == 0 ||
+                    t.name.rfind("blk.1.ffn", 0) == 0) {
                     std::string full;
                     for (size_t d = 0; d < t.dims.size(); ++d) {
                         full += (d ? "," : "") + std::to_string((unsigned long long)t.dims[d]);
@@ -5479,6 +5480,25 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 }
                 const size_t n = std::max(resid->size(), add->size());
                 if (n == 0) { last_error_ = "residualadd: empty operands"; return false; }
+                // SHARED-EXPERT WITNESS: when the addend is the shared-expert
+                // output, confirm it actually contributes (non-zero, finite).
+                // A zero shared_out would starve the residual stream and produce
+                // degenerate generation even with correct routing.
+                if (std::getenv("DEEP2_MOE_TRACE") && in.block >= 0 &&
+                    in.block <= 2 && position == 0 &&
+                    in.bName.find("shared") != std::string::npos) {
+                    double ra = 0.0, rb = 0.0; size_t nf = 0;
+                    for (float v : *resid) ra += double(v) * double(v);
+                    for (float v : *add) { if (!std::isfinite(v)) ++nf; else rb += double(v) * double(v); }
+                    std::fprintf(stderr,
+                        "SHARED_EXPERT_WITNESS block=%d a='%s' a_rms=%.9g "
+                        "b='%s' b_rms=%.9g nonfinite=%zu pass=%d\n",
+                        (int)in.block, in.aName.c_str(),
+                        std::sqrt(ra / std::max<size_t>(resid->size(), 1)),
+                        in.bName.c_str(),
+                        std::sqrt(rb / std::max<size_t>(add->size(), 1)),
+                        nf, (nf == 0 && rb > 0.0) ? 1 : 0);
+                }
                 std::vector<float> y(n, 0.0f);
                 for (size_t i = 0; i < n; ++i)
                     y[i] = (i < resid->size() ? (*resid)[i] : 0.0f)
