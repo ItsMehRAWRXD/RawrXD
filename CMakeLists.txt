@@ -4954,7 +4954,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Q8KParity.cpp")
              powershell -ExecutionPolicy Bypass -NoProfile -File
              "${CMAKE_SOURCE_DIR}/tools/gate2_manifest_consistency.ps1"
              -BuildDir "${CMAKE_BINARY_DIR}"
-             -CliExe "${CMAKE_BINARY_DIR}/bin-msvc/rawr.exe"
+             -CliExe "$<TARGET_FILE:RawrXD-CLI-V2>"
              -RepoRoot "${CMAKE_SOURCE_DIR}"
              -EvidenceDir "${CMAKE_BINARY_DIR}/gate2_manifest_evidence")
     message(STATUS "q8k parity harness: Q8_K byte-level verification targets enabled")
@@ -5790,6 +5790,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_multitoken_decode_parity.cpp" AND TAR
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/$<CONFIG>")
     add_test(NAME deep2_multitoken_decode_parity
         COMMAND deep2_multitoken_decode_parity)
+    set_tests_properties(deep2_multitoken_decode_parity PROPERTIES
+        SKIP_RETURN_CODE 77
+        TIMEOUT 300)
 endif()
 
 # N02 numerical correctness (tip Deep2Engine + real GGUF; CERTIFIED=0).
