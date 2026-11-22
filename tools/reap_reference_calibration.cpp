@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
@@ -49,9 +50,6 @@ static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
     const bool isWeights = parse_layer(t->name, "ffn_moe_weights_norm-", layer);
     if (!isIds && !isWeights) return false;
     if (ask) return true;
-    std::fprintf(stderr, "CALIBRATION_ROUTING_TENSOR name=%s role=%s layer=%d type=%d ne0=%lld ne1=%lld\n",
-                 t->name, isIds ? "ids" : "weights", layer, static_cast<int>(t->type),
-                 static_cast<long long>(t->ne[0]), static_cast<long long>(t->ne[1]));
     if (layer < 1 || layer > 46) {
         c->invalid = true; c->error = "routing layer outside GLM MoE range"; return false;
     }
@@ -180,10 +178,32 @@ int main(int argc, char ** argv) {
     if (!run_once(model, tokens, false, plain) || !run_once(model, tokens, true, instrumented)) { std::fprintf(stderr, "CALIBRATION_FAIL=REFERENCE_DECODE\n"); return 4; }
     if (plain.vocab != instrumented.vocab || plain.logits.size() != instrumented.logits.size()) { std::fprintf(stderr, "CALIBRATION_FAIL=LOGIT_SHAPE\n"); return 5; }
     float maxDiff = 0.0f; for (size_t i = 0; i < plain.logits.size(); ++i) maxDiff = std::max(maxDiff, std::fabs(plain.logits[i] - instrumented.logits[i]));
-    if (maxDiff != 0.0f || instrumented.capture.invalid || instrumented.capture.ids.size() != 46 || instrumented.capture.weights.size() != 46) { std::fprintf(stderr, "CALIBRATION_FAIL=PARITY_OR_COVERAGE max_logit_diff=%g layers=%zu weights=%zu error=%s\n", maxDiff, instrumented.capture.ids.size(), instrumented.capture.weights.size(), instrumented.capture.error.c_str()); return 6; }
+    std::array<std::array<uint64_t, 59>, 46> expertCounts{};
+    std::array<std::array<double, 59>, 46> expertWeightSums{};
+    bool coverageOk = instrumented.capture.ids.size() == 46 && instrumented.capture.weights.size() == 46;
+    for (int layer = 1; layer <= 46 && coverageOk; ++layer) {
+        const auto & ids = instrumented.capture.ids[layer];
+        const auto & weights = instrumented.capture.weights[layer];
+        coverageOk = ids.size() == weights.size() && ids.size() == tokens.size() * 4;
+        if (!coverageOk) break;
+        for (size_t i = 0; i < ids.size(); ++i) {
+            ++expertCounts[layer - 1][static_cast<size_t>(ids[i])];
+            expertWeightSums[layer - 1][static_cast<size_t>(ids[i])] += weights[i];
+        }
+    }
+    if (maxDiff != 0.0f || instrumented.capture.invalid || !coverageOk) { std::fprintf(stderr, "CALIBRATION_FAIL=PARITY_OR_COVERAGE max_logit_diff=%g layers=%zu weights=%zu error=%s\n", maxDiff, instrumented.capture.ids.size(), instrumented.capture.weights.size(), instrumented.capture.error.c_str()); return 6; }
     std::ofstream receipt(fs::path(outDir) / "calibration_receipt.json", std::ios::binary | std::ios::trunc);
     if (!receipt) return 7;
-    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.001\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true}\n";
+    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.002\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"per_layer\":[";
+    for (int layer = 0; layer < 46; ++layer) {
+        if (layer) receipt << ',';
+        receipt << "{\"layer\":" << layer + 1 << ",\"tokens\":" << tokens.size() << ",\"expert_counts\":[";
+        for (int expert = 0; expert < 59; ++expert) { if (expert) receipt << ','; receipt << expertCounts[layer][expert]; }
+        receipt << "],\"expert_weight_sums\":[";
+        for (int expert = 0; expert < 59; ++expert) { if (expert) receipt << ','; receipt << expertWeightSums[layer][expert]; }
+        receipt << "]}";
+    }
+    receipt << "]}\n";
     std::printf("CALIBRATION_PASS layers=46 tokens=%zu max_logit_diff=%g receipt=%s\n", tokens.size(), maxDiff, (fs::path(outDir) / "calibration_receipt.json").string().c_str());
     return 0;
 }
