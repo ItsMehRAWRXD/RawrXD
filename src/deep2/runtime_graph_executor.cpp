@@ -3935,9 +3935,17 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
                 const size_t globalO = (p.head_count == H) ? o : h * perHeadOut + o;
                 double acc = 0.0;
                 for (size_t i = 0; i < lora; ++i) {
+                    // GGML stores ne[0] innermost. resolveProjection sets
+                    // output_major when ne[0] is the OUTPUT axis (d1 == lora),
+                    // i.e. attn_k_b [192,512,20] -> idx = o + i*192.
+                    // When ne[0] is the INPUT axis (d0 == lora), i.e.
+                    // attn_v_b [512,256,20] -> idx = i + o*512.
+                    // Writing these the other way round silently contracts both
+                    // K and V against the wrong elements while every shape check
+                    // still passes, corrupting all attention.
                     const size_t idx = headBase +
-                        (p.output_major ? globalO * lora + i
-                                        : i * (p.head_count == H ? p.output : kOut) + globalO);
+                        (p.output_major ? globalO + i * p.output
+                                        : globalO * lora + i);
                     acc += double(weights[idx]) * double(latent[i]);
                 }
                 out[h * perHeadOut + o] = (float)acc;
