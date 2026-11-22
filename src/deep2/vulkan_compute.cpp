@@ -6,6 +6,7 @@
 #include "quant_dot_dispatch.hpp"
 #include "ReapSubmissionCompletion.hpp"
 #include "ReapTransferPreflight.hpp"
+#include "ReapRingOwnership.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -7222,28 +7223,34 @@ bool VulkanCompute::CopyDeviceSliceIntoFullOutput(
     return true;
 }
 void VulkanCompute::ResetDownloadRing() {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    (void)resetDownloadRing(false);
+}
+
+bool VulkanCompute::resetDownloadRing(bool teardownAuthorized) {
+    if ((!teardownAuthorized && OneShotBlocked()) ||
+        !Submit::MayResetRing(downloadRing_, teardownAuthorized)) return false;
     for(auto& s:downloadRing_) {
-        if(s.inFlight&&s.fence)
-            (void)vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX);
+        const VkCommandPool pool = transferCommandPool_ ? transferCommandPool_ : commandPool_;
+        if(s.cmd && pool) vkFreeCommandBuffers(device_,pool,1,&s.cmd);
+        if(s.fence) vkDestroyFence(device_,s.fence,nullptr);
         if(s.mapped&&s.staging.memory)
             vkUnmapMemory(device_,s.staging.memory);
-        if(s.fence) vkDestroyFence(device_,s.fence,nullptr);
         destroyBuffer(s.staging);
         s={};
-        if(s.cmd&&transferCommandPool_)
-            vkFreeCommandBuffers(
-                device_,transferCommandPool_,1,&s.cmd);
     }
     downloadRingHead_=0;
+    return true;
 }
 
 bool VulkanCompute::EnsureDownloadRing(size_t bytes) {
-    if(!bytes) return false;
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked() || !bytes) return false;
     bool good=true;
     for(const auto& s:downloadRing_)
-        good=good&&s.staging&&s.capacity>=bytes&&s.mapped&&s.fence;
+        good=good&&s.staging&&s.capacity>=bytes&&s.mapped&&s.fence&&s.cmd;
     if(good) return true;
-    ResetDownloadRing();
+    if(!resetDownloadRing(false)) return false;
     for(auto& s:downloadRing_) {
         if(!createBuffer(
                 bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -7399,8 +7406,8 @@ void VulkanCompute::cleanup() {
             return;
         }
     }
-    ResetDownloadRing();
-    ResetAsyncCmdRing();
+    // Device idle or confirmed terminal loss above authorizes these drains.
+    if (!resetDownloadRing(true) || !resetAsyncCmdRing(true)) return;
 
     clearRecordedQ4K();
     clearRecordedGroups();
@@ -7868,23 +7875,31 @@ bool VulkanCompute::EndSpecLayerGraph() {
     return ok;
 }
 void VulkanCompute::ResetAsyncCmdRing() {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    (void)resetAsyncCmdRing(false);
+}
+
+bool VulkanCompute::resetAsyncCmdRing(bool teardownAuthorized) {
+    if ((!teardownAuthorized && OneShotBlocked()) ||
+        !Submit::MayResetRing(asyncCmdRing_, teardownAuthorized)) return false;
     for(auto& s:asyncCmdRing_) {
-        if(s.inFlight&&s.fence)
-            (void)vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX);
+        if(s.cmd&&commandPool_) vkFreeCommandBuffers(device_,commandPool_,1,&s.cmd);
+        if(s.query) vkDestroyQueryPool(device_,s.query,nullptr);
         if(s.fence) vkDestroyFence(device_,s.fence,nullptr);
-        if(s.cmd&&commandPool_)
-            vkFreeCommandBuffers(device_,commandPool_,1,&s.cmd);
         s={};
     }
     asyncCmdRingHead_=0;
+    return true;
 }
 
 bool VulkanCompute::EnsureAsyncCmdRing() {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(OneShotBlocked()) return false;
     bool good=true;
     for(const auto& s:asyncCmdRing_)
         good=good&&s.cmd&&s.fence;
     if(good) return true;
-    ResetAsyncCmdRing();
+    if(!resetAsyncCmdRing(false)) return false;
     for(auto& s:asyncCmdRing_) {
         VkCommandBufferAllocateInfo ai{};
         ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
