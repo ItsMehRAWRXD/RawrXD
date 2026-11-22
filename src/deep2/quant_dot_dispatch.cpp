@@ -133,6 +133,37 @@ struct QueuedDot {
 bool g_batch_active = false;
 std::vector<QueuedDot> g_queued;
 
+// RAWRXD_DEEP2_BATCH_SYNC_AUDIT (Sprint9 P0).
+//
+// g_batch_active and g_queued describe ONE logical resource: the open batch and
+// the dots queued into it. They must therefore share ONE mutex. Before this fix
+// the begin/end sequence locked g_gpu_mutex while DotBlocked mutated g_queued
+// with no lock at all, which is a data race on the vector (push_back racing
+// swap/clear) and a check-then-act race on the flag: two threads could both
+// observe false, both open a device batch, and the second g_queued.clear() then
+// erased the first thread's already-queued dots. Their callers had been told
+// "queued", so the outputs were never written and the loss was silent.
+//
+// g_batch_mutex is held only for O(1) bookkeeping plus the activation copy, so
+// producers never block on the GPU: device submission stays under g_gpu_mutex.
+// Lock order is always g_batch_mutex -> g_gpu_mutex and never the reverse, so no
+// path can deadlock.
+std::mutex g_batch_mutex;
+
+// Batch accounting. Every accepted dot must reach exactly one terminal outcome:
+//     accepted == completed + failed + pending
+// with pending == 0 once EndBatch has returned. A queued dot is "accepted", not
+// "completed": only a chunk that actually reached the device increments
+// completed, and a dot replayed on the CPU fallback increments failed.
+struct BatchStats {
+    uint64_t accepted = 0;
+    uint64_t completed = 0;
+    uint64_t failed = 0;
+    uint64_t batches_opened = 0;
+    uint64_t device_batches_opened = 0;   // real Gpu().BeginQuantDotBatch() calls
+};
+BatchStats g_batch_stats;
+
 // Implementation of the public BeginBatch: opens a batch on the device fast
 // path. Batches do not nest; an open batch makes DotBlocked queue instead of
 // executing.
@@ -144,13 +175,19 @@ bool BeginBatchImpl()
     // freshly written output rather than a queued zero.  EndBatchImpl treats
     // the matching logical close as a no-op below.
     if (std::getenv("RR_GPU_CHECK")) return true;
+    // P0: the ownership check and the claim are now one critical section. Both
+    // the batch-state mutex and the device mutex are held across the device open
+    // so this cannot race EndBatchImpl's chunk re-opens (which hold g_gpu_mutex).
+    std::lock_guard<std::mutex> bk(g_batch_mutex);
     if (g_batch_active) return false;
-    std::lock_guard<std::mutex> lk(g_gpu_mutex);
+    std::lock_guard<std::mutex> gk(g_gpu_mutex);
     const bool gpu_ok = Gpu().BeginQuantDotBatch();
-    QDTRACE_DISPATCH("BeginBatch gpu_ok=" << (int)gpu_ok << " batch_active_before=" << (int)g_batch_active);
+    QDTRACE_DISPATCH("BeginBatch gpu_ok=" << (int)gpu_ok);
     if (!gpu_ok) return false;
     g_batch_active = true;
     g_queued.clear();
+    ++g_batch_stats.batches_opened;
+    ++g_batch_stats.device_batches_opened;
     return true;
 }
 
@@ -188,24 +225,33 @@ void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
 // command buffer behind one fence and copies the results to the caller buffers.
 bool EndBatchImpl()
 {
-    if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
-    if (!g_batch_active) return false;
+    // P0: the ownership check, the flip and the queue swap are one critical
+    // section under the same mutex that guards push_back. Flipping the flag to
+    // false IS the closing transition: a producer that acquires the mutex after
+    // this point observes "closed" and executes synchronously instead of
+    // appending to a queue that is about to be submitted. No accepted dot can be
+    // lost between the close and the submission.
+    std::vector<QueuedDot> qs;
+    {
+        std::lock_guard<std::mutex> lk(g_batch_mutex);
+        if (!g_batch_active) {
+            // Differential-check mode opens no device batch, so a matching close is
+            // a no-op success. Any other unmatched close is a caller error.
+            return std::getenv("RR_GPU_CHECK") != nullptr;
+        }
+        g_batch_active = false;
+        qs.swap(g_queued);
+    }
     // RAWRXD_DEEP2_BATCH_LIFECYCLE_FIX (Sprint9 Commit C).
     // BeginBatchImpl opened the device-level QuantDot batch (quant_batch_active_)
-    // while holding this same mutex, so every successfully opened batch MUST have
-    // exactly one matching close -- INCLUDING the empty (CPU-only) queue case.
-    // Previously the empty-queue early return skipped Gpu().EndQuantDotBatch(),
-    // leaking quant_batch_active_ and causing the next BeginQuantDotBatch() to be
-    // rejected as "nested". Serialize the ownership flip, the queue swap and the
-    // device close under g_gpu_mutex so we never close another thread's batch.
+    // so every successfully opened batch MUST have exactly one matching close --
+    // INCLUDING the empty (CPU-only) queue case. Previously the empty-queue early
+    // return skipped Gpu().EndQuantDotBatch(), leaking quant_batch_active_ and
+    // causing the next BeginQuantDotBatch() to be rejected as "nested".
+    // Device work is serialized by g_gpu_mutex alone: producers never block on the
+    // GPU, and no two threads touch the device at once. g_batch_mutex is already
+    // released here, so the lock order stays g_batch_mutex -> g_gpu_mutex.
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
-    // Re-check under the lock: another thread may have closed the batch between
-    // the fast-path check above and here. Only the thread that still observes
-    // g_batch_active owns the close.
-    if (!g_batch_active) return false;
-    g_batch_active = false;
-    std::vector<QueuedDot> qs;
-    qs.swap(g_queued);
     if (qs.empty()) {
         // No GPU dots were queued (e.g. a CPU-pinned reference session). The
         // device batch BeginBatchImpl opened still has to be closed, or its
@@ -273,6 +319,16 @@ bool EndBatchImpl()
     // double-executed by the replay below.
     g_receipt.used_gpu = (chunks_ok > 0);
     g_receipt.gpu_rows = total_rows;
+    // P0 accounting: dots in chunks that reached the device are completed; the
+    // failing chunk and everything after it are replayed on the CPU and are
+    // therefore failed, not completed. pending is zero by construction because the
+    // queue was swapped out before submission and the flag already reads closed.
+    {
+        std::lock_guard<std::mutex> lk(g_batch_mutex);
+        const size_t done = ok ? qs.size() : replay_from;
+        g_batch_stats.completed += done;
+        g_batch_stats.failed += qs.size() - done;
+    }
     if (ok) return true;
     // Record which stage and which entry failed BEFORE the replay overwrites the
     // receipt, and name the failing geometry. A rejected queue configuration and a
@@ -522,6 +578,23 @@ size_t BatchCapacity() {
 
 const Receipt& LastReceipt() { return g_receipt; }
 
+// RAWRXD_DEEP2_BATCH_SYNC_AUDIT (Sprint9 P0). Coherent observation of the batch
+// lifecycle counters. Read under the same mutex that guards the queue, so a
+// snapshot can never observe a half-applied begin/end transition.
+BatchAccounting BatchAccountingSnapshot()
+{
+    std::lock_guard<std::mutex> lk(g_batch_mutex);
+    BatchAccounting a;
+    a.accepted = g_batch_stats.accepted;
+    a.completed = g_batch_stats.completed;
+    a.failed = g_batch_stats.failed;
+    a.batches_opened = g_batch_stats.batches_opened;
+    a.device_batches_opened = g_batch_stats.device_batches_opened;
+    a.batch_active = g_batch_active;
+    a.queued = g_queued.size();
+    return a;
+}
+
 const BackendStats& BackendCounters() {
     const GpuCounters& c = Gpu().GetGpuCounters();
     g_backend.buffer_allocations = c.buffer_allocations;
@@ -653,8 +726,15 @@ bool DotBlocked(int kind,
     // untouched zero-filled output and report a false GPU divergence before
     // EndBatch has a chance to submit the work.
     const bool differential_check = std::getenv("RR_GPU_CHECK") != nullptr;
+    // P0: no unsynchronised reads of the batch state remain. The trace only needs
+    // an advisory snapshot; the queuing decision re-checks under the mutex.
+    bool batch_active_snapshot = false;
+    {
+        std::lock_guard<std::mutex> lk(g_batch_mutex);
+        batch_active_snapshot = g_batch_active;
+    }
     if (std::getenv("DEEP2_SUBMIT_TRACE") &&
-        !(g_batch_active && !differential_check && g_active_device < 0 &&
+        !(batch_active_snapshot && !differential_check && g_active_device < 0 &&
           !force_cpu && !g_force_cpu)) {
         std::fprintf(stderr,
             "SUBMIT_TRACE kind=DotBlocked mode=SYNC n_out=%zu "
@@ -668,33 +748,49 @@ bool DotBlocked(int kind,
     // has independent upload/barrier/readback ownership and is numerically
     // verified. Do not return a queued result for Q4_K while its output is not
     // yet trustworthy.
-    if (g_batch_active && kind != 0 && !differential_check && g_active_device < 0 &&
-        !force_cpu && !g_force_cpu) {
-        if (!q8_interleaved) {
-            g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
-            return false;
+    //
+    // P0: the eligibility test, the owned activation copy and the push_back are
+    // one critical section. Deciding from an unlocked read and pushing afterwards
+    // is exactly the interleaving that let EndBatch swap the queue between the two
+    // steps and silently drop the dot. A dot that observes the batch closed now
+    // falls through to the synchronous path instead of vanishing.
+    bool queued = false;
+    {
+        std::lock_guard<std::mutex> lk(g_batch_mutex);
+        if (g_batch_active && kind != 0 && !differential_check && g_active_device < 0 &&
+            !force_cpu && !g_force_cpu) {
+            if (!q8_interleaved) {
+                g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
+                return false;
+            }
+            QueuedDot qd;
+            qd.kind = kind;
+            qd.packed = wBytes;
+            qd.packed_bytes = wBytesCount;
+            // OWN the activation bytes: the caller's buffer may a per-expert local
+            // that does not outlive the loop iteration (the MoE down-phase does
+            // exactly that), and the dot only executes at EndBatch.
+            if (q8_bytes % sizeof(float) != 0) {
+                g_receipt.fallback_reason = "batch queue with a misaligned activation buffer";
+                return false;
+            }
+            qd.q8_storage.resize(q8_bytes / sizeof(float));
+            std::memcpy(qd.q8_storage.data(), q8_interleaved, q8_bytes);
+            qd.q8 = qd.q8_storage.data();
+            qd.q8_bytes = q8_bytes;
+            qd.out = y;
+            qd.out_bytes = n_out * sizeof(float);
+            qd.n_out = n_out;
+            qd.n_in = n_in;
+            qd.cpu = cpu;
+            g_queued.push_back(std::move(qd));
+            ++g_batch_stats.accepted;
+            queued = true;
         }
-        QueuedDot qd;
-        qd.kind = kind;
-        qd.packed = wBytes;
-        qd.packed_bytes = wBytesCount;
-        // OWN the activation bytes: the caller's buffer may a per-expert local
-        // that does not outlive the loop iteration (the MoE down-phase does
-        // exactly that), and the dot only executes at EndBatch.
-        if (q8_bytes % sizeof(float) != 0) {
-            g_receipt.fallback_reason = "batch queue with a misaligned activation buffer";
-            return false;
-        }
-        qd.q8_storage.resize(q8_bytes / sizeof(float));
-        std::memcpy(qd.q8_storage.data(), q8_interleaved, q8_bytes);
-        qd.q8 = qd.q8_storage.data();
-        qd.q8_bytes = q8_bytes;
-        qd.out = y;
-        qd.out_bytes = n_out * sizeof(float);
-        qd.n_out = n_out;
-        qd.n_in = n_in;
-        qd.cpu = cpu;
-        g_queued.push_back(std::move(qd));
+    }
+    if (queued) {
+        // "queued" reports ACCEPTANCE only. It is not evidence of GPU completion:
+        // EndBatch decides that and overwrites the receipt.
         g_receipt.used_gpu = true;
         g_receipt.queued = true;
         g_receipt.gpu_rows = n_out;

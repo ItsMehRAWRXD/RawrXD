@@ -151,6 +151,24 @@ struct Receipt {
 
 const Receipt& LastReceipt();
 
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_BATCH_SYNC_AUDIT (Sprint9 P0).
+// Batch lifecycle accounting. Every accepted dot reaches exactly one terminal
+// outcome:  accepted == completed + failed + pending,  with pending == 0 once
+// EndBatch has returned. Receipt::queued reports ACCEPTANCE, never GPU
+// completion; only a submitted chunk increments `completed`.
+// ---------------------------------------------------------------------------
+struct BatchAccounting {
+    uint64_t accepted = 0;              // dots pushed into a batch
+    uint64_t completed = 0;             // dots a submitted chunk actually ran on the device
+    uint64_t failed = 0;                // dots replayed on the CPU fallback
+    uint64_t batches_opened = 0;        // successful BeginBatch calls
+    uint64_t device_batches_opened = 0; // real Gpu().BeginQuantDotBatch() calls
+    bool batch_active = false;
+    size_t queued = 0;                  // dots still pending in the open batch
+};
+BatchAccounting BatchAccountingSnapshot();
+
 // Backend instrumentation mirror (RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY).
 // `kernel_ms` is retained for compatibility but is a legacy alias of the host
 // fence-wait span in the current implementation. `gpu_ms` is the Vulkan
