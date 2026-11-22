@@ -4399,7 +4399,20 @@ uint32_t VulkanCompute::FindMemoryType(uint32_t type_filter, VkMemoryPropertyFla
 
 void VulkanCompute::Cleanup() {
     if (device_) {
-        vkDeviceWaitIdle(device_);
+        const VkResult idle = vkDeviceWaitIdle(device_);
+        if (idle != VK_SUCCESS) {
+            // A failed idle wait means submitted work may still reference
+            // every child object. Do not destroy or recycle normal resources
+            // on this path; retain them for controlled device-loss teardown.
+            cleanup_quarantined_ = true;
+            std::fprintf(stderr,
+                         "[VULKAN_CLEANUP] quarantined idle failure VkResult=%d; "
+                         "normal resource destruction suppressed\n",
+                         static_cast<int>(idle));
+            std::fflush(stderr);
+            return;
+        }
+        cleanup_quarantined_ = false;
         
         // Clean up KV cache
         ClearKVCache();

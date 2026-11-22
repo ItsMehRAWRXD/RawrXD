@@ -473,6 +473,7 @@ private:
     // normal batch reuse must not unpin or recycle these resources.
     bool quant_submission_in_flight_ = false;
     bool quant_submission_failed_ = false;
+    bool cleanup_quarantined_ = false;
     bool quant_fuse_active_ = false;   // DEEP2_VULKAN_SUBMIT_OPT_001
     uint32_t quant_fuse_submits_ = 0;
 
