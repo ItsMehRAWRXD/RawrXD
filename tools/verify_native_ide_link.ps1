@@ -45,14 +45,6 @@ try {
     if ($executable.Count -eq 0) { throw "Native IDE executable missing after successful build" }
     $script:log.Add("NATIVE_IDE_EXECUTABLE=$($executable[0])")
     $script:log.Add("NATIVE_IDE_SHA256=$((Get-FileHash -LiteralPath $executable[0] -Algorithm SHA256).Hash)")
-    $unresolved = @($log | Where-Object { $_ -match 'LNK(?:2001|2019|1120)\b|unresolved external symbol' })
-    $script:log.Add("UNRESOLVED_EXTERNAL_DIAGNOSTICS=$($unresolved.Count)")
-    if ($unresolved.Count -gt 0) {
-        foreach ($diagnostic in $unresolved) {
-            $script:log.Add("UNRESOLVED_EXTERNAL: $diagnostic")
-        }
-        throw "Unresolved external(s) found in native IDE build output"
-    }
     $certified = $true
 }
 catch {
@@ -60,6 +52,16 @@ catch {
     Write-Host "CERTIFICATION_FAILED: $($_.Exception.Message)"
 }
 finally {
+    # Always extract unresolved externals, including when the build exits nonzero.
+    # The previous success-only check never reached this code on LNK2019.
+    $unresolved = @($log | Where-Object {
+        $_ -match 'LNK(?:2001|2019|1120)\\b|unresolved external symbol'
+    })
+    $log.Add("UNRESOLVED_EXTERNAL_DIAGNOSTICS=$($unresolved.Count)")
+    foreach ($diagnostic in $unresolved) {
+        $log.Add("UNRESOLVED_EXTERNAL: $diagnostic")
+    }
+    if ($unresolved.Count -gt 0) { $certified = $false }
     $log.Add("NATIVE_IDE_LINK_CERTIFIED=$([int]$certified)")
     [IO.File]::WriteAllLines($logPath, [string[]]$log)
     Write-Host "Evidence: $logPath"
