@@ -6,6 +6,15 @@ on:
 permissions:
   contents: read
 jobs:
+  scalar-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile baseline scalar regression
+        run: g++ -std=c++17 -O2 -mno-avx -mno-avx2 -pthread -Wall -Wextra -DRAWRXD_REAP_SCALAR_ACCEPTANCE -I src tests/reap_q4k_to_q2k_test.cpp -o reap-scalar
+      - name: Execute baseline scalar regression
+        run: ./reap-scalar
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
