@@ -28,9 +28,6 @@ function Invoke-CertCommand([string[]]$Arguments) {
 }
 $certified = $false
 try {
-    if ($CleanBuild -and (Test-Path -LiteralPath $buildPath)) {
-        Remove-Item -LiteralPath $buildPath -Recurse -Force
-    }
     New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
     # Bind evidence to an immutable source revision. Refuse a dirty tree:
     # a commit hash alone does not identify uncommitted source changes.
@@ -44,6 +41,22 @@ try {
     $script:log.Add("SOURCE_TRACKED_DIRTY=$([int]($dirty.Count -gt 0))")
     if ($dirty.Count -gt 0) {
         throw "Tracked source changes are uncommitted; certification requires an immutable source revision"
+    }
+
+    # Only delete the dedicated build directory after source preflight passes.
+    # Never erase the repository root or a path outside the repository.
+    if ($CleanBuild) {
+        $repoCanonical = [IO.Path]::GetFullPath($root).TrimEnd('\','/')
+        $buildCanonical = [IO.Path]::GetFullPath($buildPath).TrimEnd('\','/')
+        $prefix = $repoCanonical + [IO.Path]::DirectorySeparatorChar
+        if (-not $buildCanonical.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) {
+            throw "CleanBuild requires a dedicated directory inside the repository"
+        }
+        if ($buildCanonical -eq $repoCanonical) {
+            throw "Refusing to clean the repository root"
+        }
+        Remove-Item -LiteralPath $buildPath -Recurse -Force
+        New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
     }
 
     Invoke-CertCommand -Arguments @("-S", $root, "-B", $buildPath, "-G", $Generator,
