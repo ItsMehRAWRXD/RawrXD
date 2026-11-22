@@ -4733,6 +4733,18 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/deep2_lostseq_failure_injec
     add_test(NAME deep2_lostseq_failure_injection COMMAND deep2_lostseq_failure_injection)
 endif()
 
+# CPU-only synchronous submission ownership regression.
+add_executable(deep2_oneshot_ownership_test tests/deep2/deep2_oneshot_ownership_test.cpp)
+target_include_directories(deep2_oneshot_ownership_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+target_compile_features(deep2_oneshot_ownership_test PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(deep2_oneshot_ownership_test PRIVATE /EHsc /W4)
+else()
+    target_compile_options(deep2_oneshot_ownership_test PRIVATE -Wall -Wextra)
+endif()
+enable_testing()
+add_test(NAME deep2_oneshot_ownership_test COMMAND deep2_oneshot_ownership_test)
+
 # CPU-only native transfer sequencing regression.
 add_executable(deep2_transfer_preflight_test tests/deep2/deep2_transfer_preflight_test.cpp)
 target_include_directories(deep2_transfer_preflight_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
