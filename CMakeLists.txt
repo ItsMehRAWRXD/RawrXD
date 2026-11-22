@@ -4842,6 +4842,14 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     target_compile_features(reap_adaptive_dispatch_test PRIVATE cxx_std_17)
     target_compile_definitions(reap_adaptive_dispatch_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
     add_test(NAME reap_adaptive_dispatch_test COMMAND reap_adaptive_dispatch_test)
+    # Exercise the actual streaming entrypoint with the isolated MSVC kernel.
+    add_executable(reap_adaptive_range_test
+        tests/reap_quant_range_test.cpp
+        $<TARGET_OBJECTS:reap_msvc_avx2>)
+    target_include_directories(reap_adaptive_range_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(reap_adaptive_range_test PRIVATE cxx_std_17)
+    target_compile_definitions(reap_adaptive_range_test PRIVATE RAWRXD_REAP_MSVC_ISOLATED_AVX2=1)
+    add_test(NAME reap_adaptive_range_test COMMAND reap_adaptive_range_test)
 
     # Production IDE and its REAP streaming conversion share the isolated
     # object. Do not add AVX2 compile flags to the IDE's source files.
