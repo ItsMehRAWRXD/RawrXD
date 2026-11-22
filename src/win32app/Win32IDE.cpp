@@ -7803,41 +7803,7 @@ void Win32IDE::generateResponseAsync(
     // request to Ollama even when the harness asked for native Deep2, and the
     // user sees a model-resolution error instead of inference. Fail closed:
     // never substitute another backend for an explicit Deep2 request.
-    if (environmentValue("RAWRXD_CHAT_BACKEND") == "deep2") {
-        if (!m_deep2Bridge) {
-            if (callback) callback("Deep2 backend unavailable: bridge not initialised.", false, false);
-            return;
-        }
-        std::string path = environmentValue("RAWRXD_MODEL_PATH");
-        if (path.empty()) path = environmentValue("RAWRXD_DEEP2_PROBE_MODEL");
-        if (path.empty()) path = m_loadedModelPath;
-        if (path.empty()) {
-            if (callback) callback(
-                "Deep2 backend unavailable: select a local GGUF or set RAWRXD_MODEL_PATH.", false, false);
-            return;
-        }
-        // Reuse an already-loaded identical model; only load when it differs.
-        if (m_deep2Bridge->GetCurrentModel() != path && !m_deep2Bridge->LoadModel(path)) {
-            if (callback) callback(
-                std::string("Deep2 backend unavailable: failed to load ") + path, false, false);
-            return;
-        }
-        if (!m_deep2Bridge->IsModelLoaded()) {
-            if (callback) callback("Deep2 backend unavailable: model not loaded.", false, false);
-            return;
-        }
-        std::string response;
-        m_deep2Bridge->GenerateStream(
-            prompt,
-            [this, &response, callback](const std::string& token, bool) {
-                if (!m_inferenceStopRequested && callback) callback(token, false, true);
-                response += token;
-                return !m_inferenceStopRequested;
-            },
-            256);
-        if (callback) callback("", true, false);
-        return;
-    }
+    const bool explicitDeep2 = environmentValue("RAWRXD_CHAT_BACKEND") == "deep2";
     if (assignedGeneration) *assignedGeneration = 0;
 
     // HandleCopilotSend may already have claimed m_inferenceRunning to close
@@ -7888,6 +7854,17 @@ void Win32IDE::generateResponseAsync(
                 std::string("FORCE_OLLAMA_MODEL=") + forceModel);
         }
     }
+    if (explicitDeep2) {
+        std::string path = environmentValue("RAWRXD_MODEL_PATH");
+        if (path.empty()) path = environmentValue("RAWRXD_DEEP2_PROBE_MODEL");
+        if (path.empty() && selectedModel.source == ChatModelEntry::Source::LocalFile)
+            path = selectedModel.identifier;
+        if (path.empty()) path = m_loadedModelPath;
+        selectedModel.source = ChatModelEntry::Source::LocalFile;
+        selectedModel.identifier = path;
+        selectedModel.breadcrumb = modelRouteBreadcrumb(
+            RawrXD::ChatRouteMenu::RouteKind::LocalFile, path);
+    }
     const int requestMaxTokens = ChatMaxTokensOverride(effectiveMaxTokensForPrompt(prompt));
     const int requestContextTokens = m_currentContextTokens;
     const ReasoningMode reasoningMode = m_reasoningMode;
@@ -7919,7 +7896,7 @@ void Win32IDE::generateResponseAsync(
     // Ollama uses its local HTTP API, and Kilo uses the existing cloud client.
     m_inferenceThread = std::thread([this, prompt, callback, selectedModel,
                                      requestMaxTokens, requestContextTokens, reasoningMode,
-                                     webBrowsingEnabled, requestGeneration]() {
+                                     webBrowsingEnabled, requestGeneration, explicitDeep2]() {
         auto finishIfCurrent = [this, callback, requestGeneration](
             const std::string& result, bool success) {
             const uint64_t active =
@@ -8064,7 +8041,7 @@ void Win32IDE::generateResponseAsync(
                 // bridge is initialized lazily on the inference worker, and
                 // the selected model is loaded explicitly so a stale
                 // hard-coded startup model cannot capture the request.
-                if (environmentValue("RAWRXD_CHAT_BACKEND") == "deep2") {
+                if (explicitDeep2) {
                     if (!m_deep2Bridge) initializeDeep2Bridge();
                     if (!m_deep2Bridge || !m_deep2Bridge->IsInitialized()) {
                         finishIfCurrent("Deep2 backend is unavailable. Unset RAWRXD_CHAT_BACKEND=deep2 or repair the Deep2 runtime.", false);
