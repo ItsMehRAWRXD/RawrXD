@@ -82,6 +82,11 @@ bool permitTestWrite(size_t bytes) {
     return true;
 }
 
+bool testPublicationFailureRequested() {
+    const char* value = std::getenv("RAWR_REAP_TEST_FAIL_PUBLICATION");
+    return value && std::strcmp(value, "1") == 0;
+}
+
 bool readBytes(std::ifstream& in, void* dst, size_t n) {
     if (!n) return true;
     in.read(reinterpret_cast<char*>(dst), static_cast<std::streamsize>(n));
@@ -973,6 +978,10 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
     ec.clear();
     if (fs::exists(outputDir, ec) || ec) {
         result.error = "transactional destination appeared during export";
+        return result;
+    }
+    if (testPublicationFailureRequested()) {
+        result.error = "test-injected publication failure";
         return result;
     }
     bool published = false;

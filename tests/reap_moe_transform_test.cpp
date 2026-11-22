@@ -7,7 +7,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <atomic>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -278,6 +280,48 @@ int main() {
         return 20;
     }
     std::cout << "R22A_SHORT_WRITE_ROLLBACK_PASS\n";
+    const fs::path publicationFailure = root / "candidate_publication_failure";
+    Deep2::ReapMoETransformRequest publicationRequest = request;
+    publicationRequest.outputDirectory = publicationFailure.string();
+    _putenv_s("RAWR_REAP_TEST_FAIL_PUBLICATION", "1");
+    const auto publicationResult = Deep2::transformMoEGGUF(publicationRequest);
+    _putenv_s("RAWR_REAP_TEST_FAIL_PUBLICATION", "");
+    if (publicationResult.success || fs::exists(publicationFailure) || readAll(source) != before) {
+        std::cerr << "PUBLICATION_FAILURE_ROLLBACK_FAIL " << publicationResult.error << "\n";
+        return 22;
+    }
+    const auto publicationRetry = Deep2::transformMoEGGUF(publicationRequest);
+    if (!publicationRetry.success || !fs::exists(publicationFailure) || readAll(source) != before) {
+        std::cerr << "PUBLICATION_RETRY_FAIL " << publicationRetry.error << "\n";
+        return 23;
+    }
+    std::cout << "R22A_PUBLICATION_FAILURE_ROLLBACK_PASS\n";
+    const fs::path collision = root / "candidate_collision";
+    Deep2::ReapMoETransformRequest collisionRequest = request;
+    collisionRequest.outputDirectory = collision.string();
+    std::atomic<int> collisionSuccesses{0};
+    std::atomic<int> collisionFailures{0};
+    std::string collisionErrorA, collisionErrorB;
+    std::thread first([&] {
+        const auto r = Deep2::transformMoEGGUF(collisionRequest);
+        if (r.success) ++collisionSuccesses;
+        else { ++collisionFailures; collisionErrorA = r.error; }
+    });
+    std::thread second([&] {
+        const auto r = Deep2::transformMoEGGUF(collisionRequest);
+        if (r.success) ++collisionSuccesses;
+        else { ++collisionFailures; collisionErrorB = r.error; }
+    });
+    first.join();
+    second.join();
+    if (collisionSuccesses != 1 || collisionFailures != 1 || !fs::exists(collision) ||
+        readAll(source) != before) {
+        std::cerr << "CONCURRENT_PUBLICATION_COLLISION_FAIL success=" << collisionSuccesses
+                  << " failures=" << collisionFailures << " a=" << collisionErrorA
+                  << " b=" << collisionErrorB << "\n";
+        return 24;
+    }
+    std::cout << "R22A_CONCURRENT_PUBLICATION_COLLISION_PASS\n";
     const fs::path quantSource=root/"quant_fixture.gguf";
     if (!writeFixture(quantSource,true)) return 12;
     const auto quantBefore=readAll(quantSource);
