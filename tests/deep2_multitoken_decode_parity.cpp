@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
 #include <limits>
 #include <string>
 #include <vector>
@@ -64,6 +65,16 @@ int main(int argc, char **argv)
     const char *modelPath = argc > 1
                                 ? argv[1]
                                 : "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+
+    // This is a model-backed acceptance test, not a synthetic unit test.  A
+    // missing default fixture must terminate before GPU/engine initialization
+    // instead of blocking while the loader probes an invalid path.  CTest
+    // maps 77 to SKIPPED; an explicitly supplied path remains a hard failure.
+    if (!std::filesystem::is_regular_file(modelPath))
+    {
+        std::printf("SKIP: model fixture not found: %s\n", modelPath);
+        return argc > 1 ? 21 : 77;
+    }
 
     Deep2Engine engine;
     EngineConfig cfg;
@@ -148,6 +159,36 @@ int main(int argc, char **argv)
     check(maxAbsDiff <= 1e-3, "serial vs batched prefill max abs diff exceeds 1e-3");
     std::printf("S03_PREFILL_PARITY maxAbs=%.9e maxRel=%.9e nonFinite=%zu\n",
                 maxAbsDiff, maxRelDiff, nonFinite);
+
+    // P0-05 diagnostic: per-position hidden-state divergence. If the two
+    // prefill paths agree at position 0 but diverge at position N, the defect
+    // is in the batched path's handling of token N (causal mask, KV offset,
+    // or RoPE position) rather than in the layer kernels themselves.
+    {
+        const size_t nPos = std::min(serialDone, batchedDone);
+        int firstDivergentPos = -1;
+        double firstDivergentAbs = 0.0;
+        for (size_t p = 0; p < nPos; ++p) {
+            double posMaxAbs = 0.0;
+            for (size_t h = 0; h < hiddenDim; ++h) {
+                const double a = serialHidden[p * hiddenDim + h];
+                const double b = batchedHidden[p * hiddenDim + h];
+                if (!std::isfinite(a) || !std::isfinite(b)) { posMaxAbs = 1e30; break; }
+                posMaxAbs = std::max(posMaxAbs, std::fabs(a - b));
+            }
+            if (posMaxAbs > 1e-3) {
+                firstDivergentPos = static_cast<int>(p);
+                firstDivergentAbs = posMaxAbs;
+                break;
+            }
+        }
+        if (firstDivergentPos < 0) {
+            std::printf("S03_HIDDEN_PARITY all %zu positions agree (maxAbs<=1e-3)\n", nPos);
+        } else {
+            std::printf("S03_HIDDEN_PARITY first_divergent_pos=%d maxAbs=%.9e of %zu\n",
+                        firstDivergentPos, firstDivergentAbs, nPos);
+        }
+    }
 
     // ---- Reference: full-context recomputation at every step ----
     const size_t steps = 8;
