@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -240,6 +241,46 @@ int main(int argc, char** argv) {
                         delta, deltaPct);
             expect(totalFileBytes >= totalStoredBytes && deltaPct < 0.5,
                    "storage_reconciles_with_shard_files");
+        }
+    }
+
+    // Optional: emit the compiled execution plan as a consumable JSON artifact
+    // (R02 -> R04 pipeline output). Usage: reap_verify_canonical <ckpt> --emit <out.json>
+    if (argc >= 4 && std::string(argv[2]) == "--emit") {
+        std::ofstream out(argv[3], std::ios::trunc);
+        if (out) {
+            out << "{\n";
+            out << "  \"schema\": \"rawrxd.reap.plan.v1\",\n";
+            out << "  \"model\": \"" << path << "\",\n";
+            out << "  \"architecture\": \"" << architecture << "\",\n";
+            out << "  \"blocks\": " << g.blockCount << ",\n";
+            out << "  \"experts\": " << g.expertCount << ",\n";
+            out << "  \"expert_used\": " << g.expertUsedCount << ",\n";
+            out << "  \"kv_heads\": " << g.attentionHeadCountKV << ",\n";
+            out << "  \"head_dim\": "
+                << (g.attentionHeadCount > 0 ? g.embeddingLength / g.attentionHeadCount : 0) << ",\n";
+            out << "  \"loops\": " << (g.loopCount > 0 ? g.loopCount : 1) << ",\n";
+            out << "  \"physical_tensors\": " << ir.tensors.size() << ",\n";
+            out << "  \"logical_visits\": " << ir.visits.size() << ",\n";
+            out << "  \"physical_params\": " << plan.physicalParamCount << ",\n";
+            out << "  \"logical_params\": " << plan.logicalParamCount << ",\n";
+            out << "  \"packed_expert_bytes\": " << packedExpertBytes << ",\n";
+            out << "  \"nonexpert_bytes\": " << nonexpertBytes << ",\n";
+            out << "  \"visits\": [\n";
+            for (size_t i = 0; i < ir.visits.size(); ++i) {
+                const auto& v = ir.visits[i];
+                out << "    {\"pass\": " << v.pass
+                    << ", \"ordinal\": " << v.layerOrdinal
+                    << ", \"physical_layer\": " << v.physicalLayer << "}";
+                if (i + 1 < ir.visits.size()) out << ",";
+                out << "\n";
+            }
+            out << "  ]\n}\n";
+            std::printf("EMITTED_PLAN=%s visits=%zu physical_tensors=%zu\n",
+                        argv[3], ir.visits.size(), ir.tensors.size());
+        } else {
+            std::printf("FAIL emit_plan_open %s\n", argv[3]);
+            ++failures;
         }
     }
 
