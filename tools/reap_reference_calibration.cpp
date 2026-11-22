@@ -25,6 +25,7 @@ struct Capture {
     std::string error;
     std::map<int, std::vector<int32_t>> ids;
     std::map<int, std::vector<float>> weights;
+    std::vector<std::string> trace;
 };
 
 static bool starts(const char * s, const char * p) {
@@ -48,7 +49,26 @@ static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
     int layer = -1;
     const bool isIds = parse_layer(t->name, "ffn_moe_topk-", layer);
     const bool isWeights = parse_layer(t->name, "ffn_moe_weights_norm-", layer);
-    if (!isIds && !isWeights) return false;
+    if (!isIds && !isWeights) {
+        const bool traceTensor = t->name && (std::strncmp(t->name, "attn_norm-0", 11) == 0 ||
+            std::strncmp(t->name, "q-0", 3) == 0 || std::strncmp(t->name, "kv_cmpr_pe-0", 12) == 0 ||
+            std::strncmp(t->name, "kv_cmpr-0", 9) == 0 || std::strncmp(t->name, "k_pe-0", 6) == 0 ||
+            std::strncmp(t->name, "q_nope-0", 8) == 0 || std::strncmp(t->name, "q_pe-0", 6) == 0 ||
+            std::strncmp(t->name, "q_nope_absorbed-0", 17) == 0 ||
+            std::strncmp(t->name, "q_nope_absorbed_perm-0", 22) == 0 ||
+            std::strncmp(t->name, "Qcur-0", 6) == 0 || std::strncmp(t->name, "Kcur-0", 6) == 0 ||
+            std::strncmp(t->name, "Vcur-0", 6) == 0 || std::strncmp(t->name, "ffn_inp-0", 9) == 0);
+        if (traceTensor && ask) return true;
+        if (traceTensor) {
+            size_t elements = 1; for (int d = 0; d < GGML_MAX_DIMS; ++d) { if (t->ne[d] <= 0 || static_cast<size_t>(t->ne[d]) > SIZE_MAX / elements) return false; elements *= static_cast<size_t>(t->ne[d]); }
+            if (t->type != GGML_TYPE_F32 || elements == 0) { c->invalid = true; c->error = "layer-0 trace tensor is not readable F32"; return false; }
+            std::vector<float> values(elements); p_ggml_backend_tensor_get(t, values.data(), 0, elements * sizeof(float));
+            for (float value : values) if (!std::isfinite(value)) { c->invalid = true; c->error = "layer-0 trace tensor is nonfinite"; return false; }
+            c->trace.emplace_back(std::string(t->name) + ":" + std::to_string(elements));
+            return true;
+        }
+        return false;
+    }
     if (ask) return true;
     if (layer < 1 || layer > 46) {
         c->invalid = true; c->error = "routing layer outside GLM MoE range"; return false;
@@ -207,7 +227,7 @@ int main(int argc, char ** argv) {
     if (maxDiff != 0.0f || instrumented.capture.invalid || !coverageOk) { std::fprintf(stderr, "CALIBRATION_FAIL=PARITY_OR_COVERAGE max_logit_diff=%g layers=%zu weights=%zu error=%s\n", maxDiff, instrumented.capture.ids.size(), instrumented.capture.weights.size(), instrumented.capture.error.c_str()); return 6; }
     std::ofstream receipt(fs::path(outDir) / "calibration_receipt.json", std::ios::binary | std::ios::trunc);
     if (!receipt) return 7;
-    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.002\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"per_layer\":[";
+    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.003\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"layer0_trace_count\":" << instrumented.capture.trace.size() << ",\"per_layer\":[";
     for (int layer = 0; layer < 46; ++layer) {
         if (layer) receipt << ',';
         receipt << "{\"layer\":" << layer + 1 << ",\"tokens\":" << tokens.size() << ",\"expert_counts\":[";
