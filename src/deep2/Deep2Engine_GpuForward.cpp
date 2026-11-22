@@ -801,34 +801,17 @@ bool Deep2Engine::forwardGpuContiguousRange(
         }
     }
     // P0-06 diagnostic (opt-in): per-layer residual dump for the unfused path.
-    // After each layer's GPU dispatch completes, download ArenaResidual() (the
-    // layer output hidden state) and print a compact checksum so a caller can
-    // diff serial vs batched per layer and name the first divergent layer.
-    static const bool traceLayers = [] {
-        const char* v = std::getenv("DEEP2_TRACE_LAYERS");
-        return v && v[0] == '1' && v[1] == '\0';
-    }();
+    // DISABLED by default — an earlier version downloaded ArenaResidual() after
+    // every layer, which forced a mid-prefill GPU readback that raced with the
+    // unfused path's own synchronization and triggered a device loss (screen
+    // black + TDR recovery). The per-layer capture must be done WITHOUT a
+    // synchronous DownloadBuf in the hot path (e.g. via a debug copy buffer or
+    // a post-submit hook), not by stalling the pipeline. Left as a documented
+    // no-op until a safe capture mechanism exists.
     for (uint32_t layer = lo; layer <= hi; ++layer) {
         if (!forwardLayerGpuResident(layer, slot, false, false, unfused)) {
             if (!unfused) (void)gpu->EndFusedLayer();
             return false;
-        }
-        if (traceLayers && unfused) {
-            const uint32_t hidden = static_cast<uint32_t>(modelWeights.hiddenDim);
-            std::vector<float> res(hidden, 0.0f);
-            const bool ok = gpu->DownloadBuf(gpu->ArenaResidual(), res.data(), hidden);
-            // FNV-1a over the float bit patterns + a 4-value sample.
-            uint64_t h = 1469598103934665603ULL;
-            for (uint32_t i = 0; i < hidden; ++i) {
-                uint32_t bits = 0;
-                std::memcpy(&bits, &res[i], sizeof(bits));
-                h ^= bits; h *= 1099511628211ULL;
-            }
-            std::fprintf(stderr,
-                "[LAYER_TRACE] layer=%u ok=%d fnv=%016llx r0=%.6e r1=%.6e r2=%.6e\n",
-                layer, ok ? 1 : 0, (unsigned long long)h,
-                res[0], res[hidden > 1 ? 1 : 0], res[hidden > 2 ? 2 : 0]);
-            std::fflush(stderr);
         }
     }
     if (!unfused && !gpu->EndFusedLayer()) {
