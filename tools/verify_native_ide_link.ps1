@@ -55,6 +55,13 @@ try {
         if ($buildCanonical -eq $repoCanonical) {
             throw "Refusing to clean the repository root"
         }
+        # Do not recursively delete an arbitrary populated source directory.
+        # Existing nonempty directories must already be CMake build trees.
+        $existingChildren = @(Get-ChildItem -LiteralPath $buildPath -Force)
+        if ($existingChildren.Count -gt 0 -and
+            -not (Test-Path -LiteralPath (Join-Path $buildPath "CMakeCache.txt"))) {
+            throw "Refusing to clean a nonempty directory without CMakeCache.txt"
+        }
         Remove-Item -LiteralPath $buildPath -Recurse -Force
         New-Item -ItemType Directory -Force -Path $buildPath | Out-Null
     }
