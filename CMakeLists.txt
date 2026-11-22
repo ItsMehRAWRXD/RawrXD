@@ -5215,6 +5215,21 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_autofit_ir_test.cpp")
     add_test(NAME rawr_reap_autofit_ir COMMAND rawr-reap-autofit-ir-test)
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/provider_acceptance_contract_test.cpp")
+    add_executable(rawr-provider-acceptance-contract-test
+        tests/provider_acceptance_contract_test.cpp)
+    target_include_directories(rawr-provider-acceptance-contract-test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawr-provider-acceptance-contract-test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(rawr-provider-acceptance-contract-test PRIVATE /EHsc /W4 /std:c++20)
+    else()
+        target_compile_options(rawr-provider-acceptance-contract-test PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    add_test(NAME rawr_provider_acceptance_contract
+        COMMAND rawr-provider-acceptance-contract-test)
+endif()
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/tensor_residency_budget_test.cpp")
     add_executable(rawr-tensor-residency-budget-test
         tests/tensor_residency_budget_test.cpp)
