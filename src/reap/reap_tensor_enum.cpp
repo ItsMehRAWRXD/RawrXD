@@ -26,12 +26,13 @@ struct TensorEntry {
     uint64_t expertCount = 0;
 };
 
-static std::string classifyFamily(const std::string& name, uint64_t& expertCount) {
+static std::string classifyFamily(const std::string& name, uint64_t modelExpertCount,
+                                  uint64_t& expertCount) {
     expertCount = 0;
     std::string family = "other";
-    if (name.find("ffn_gate_exps") != std::string::npos) { family = "expert_gate"; expertCount = 384; }
-    else if (name.find("ffn_up_exps") != std::string::npos) { family = "expert_up"; expertCount = 384; }
-    else if (name.find("ffn_down_exps") != std::string::npos) { family = "expert_down"; expertCount = 384; }
+    if (name.find("ffn_gate_exps") != std::string::npos) { family = "expert_gate"; expertCount = modelExpertCount; }
+    else if (name.find("ffn_up_exps") != std::string::npos) { family = "expert_up"; expertCount = modelExpertCount; }
+    else if (name.find("ffn_down_exps") != std::string::npos) { family = "expert_down"; expertCount = modelExpertCount; }
     else if (name.find("exp_probs_b.bias") != std::string::npos) { family = "router_bias"; }
     else if (name.find("ffn_gate_inp.weight") != std::string::npos) { family = "router_input"; }
     else if (name.find("ffn_gate_shexp") != std::string::npos) { family = "shared_expert"; }
@@ -70,9 +71,30 @@ int main(int argc, char** argv) {
     }
 
     auto names = loader.listTensors();
+    const std::string architecture = loader.getMetaString("general.architecture", "unknown");
+    const auto archMeta = [&](const char* suffix, int64_t fallback = 0) -> int64_t {
+        const std::string key = architecture + "." + suffix;
+        const int64_t value = loader.getMetaInt(key, fallback);
+        return value > 0 ? value : fallback;
+    };
+    const uint64_t modelExpertCount = static_cast<uint64_t>(archMeta("expert_count"));
     std::cout << "{\n";
     std::cout << "  \"schema\": \"reap.full_inventory.v1\",\n";
     std::cout << "  \"model\": \"" << esc(path) << "\",\n";
+    std::cout << "  \"architecture\": \"" << esc(architecture) << "\",\n";
+    std::cout << "  \"architecture_metadata\": {\n";
+    std::cout << "    \"embedding_length\": " << archMeta("embedding_length") << ",\n";
+    std::cout << "    \"block_count\": " << archMeta("block_count") << ",\n";
+    std::cout << "    \"context_length\": " << archMeta("context_length") << ",\n";
+    std::cout << "    \"expert_count\": " << modelExpertCount << ",\n";
+    std::cout << "    \"expert_used_count\": " << archMeta("expert_used_count") << ",\n";
+    std::cout << "    \"attention_head_count\": " << archMeta("attention.head_count") << ",\n";
+    std::cout << "    \"attention_head_count_kv\": " << archMeta("attention.head_count_kv") << ",\n";
+    std::cout << "    \"loop_count\": " << archMeta("loop.count") << ",\n";
+    std::cout << "    \"loop_start\": " << archMeta("loop.start") << ",\n";
+    std::cout << "    \"loop_end\": " << archMeta("loop.end") << ",\n";
+    std::cout << "    \"loop_gate_rank\": " << archMeta("loop.gate_rank") << "\n";
+    std::cout << "  },\n";
     std::cout << "  \"shard_count\": " << loader.shardCount() << ",\n";
     std::cout << "  \"total_logical_tensors\": " << loader.tensorCount() << ",\n";
     std::cout << "  \"tensors\": [\n";
@@ -96,7 +118,8 @@ int main(int argc, char** argv) {
         }
 
         uint64_t expertCount = 0;
-        std::string family = classifyFamily(name, expertCount);
+        uint64_t tensorExpertCount = 0;
+        std::string family = classifyFamily(name, modelExpertCount, tensorExpertCount);
 
         if (!first) std::cout << ",\n";
         first = false;
@@ -121,7 +144,7 @@ int main(int argc, char** argv) {
         std::cout << "      \"file_offset\": " << t->fileOffset << ",\n";
         std::cout << "      \"tensor_offset\": " << t->tensorOffset << ",\n";
         std::cout << "      \"family\": \"" << family << "\",\n";
-        std::cout << "      \"expert_count\": " << expertCount << "\n";
+        std::cout << "      \"expert_count\": " << tensorExpertCount << "\n";
         std::cout << "    }";
     }
 
