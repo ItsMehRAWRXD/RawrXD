@@ -16,6 +16,7 @@
 #include <vector>
 #include "lavapath/GpuDeviceLostReset.hpp"
 #include "ReapOneShotOwnership.hpp"
+#include "ReapDownloadOwnership.hpp"
 
 namespace Deep2 {
 
@@ -675,9 +676,11 @@ public:
         VkQueryPool query = VK_NULL_HANDLE;
         size_t bytes = 0;
         bool active = false;
-        // Set to true after a gated submit succeeds; cleared (with
-        // g_gpuInFlight decrement) in WaitDownloadAsync.
+        // Caller fields are a receipt; the backend owns the actual handles.
         bool inFlight_ = false;
+        uint64_t ownershipId = 0;
+        uint64_t deviceGeneration = 0;
+        bool counted_ = false;
     };
     bool SubmitDownloadAsync(
         DeviceBuf& src, size_t bytes, DownloadTicket& ticket);
@@ -1636,6 +1639,8 @@ private:
     void releaseOneShot(const OneShotHandles& handles) noexcept;
     bool resetDownloadRing(bool teardownAuthorized);
     bool resetAsyncCmdRing(bool teardownAuthorized);
+    Submit::DownloadOwnership<DownloadTicket> downloadOwners_;
+    void releaseDownloadTicket(DownloadTicket& owner) noexcept;
     uint64_t nextBufferId_ = 1;
     uint64_t workEpoch_ = 0;
 
