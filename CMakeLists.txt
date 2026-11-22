@@ -4776,6 +4776,23 @@ add_test(NAME reap_selection_pipeline_regression
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/reap_selection_pipeline_fixtures"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/reap_selection_pipeline_regression.cmake")
 
+# Native routing checkpoint persistence and resumed accumulator equivalence.
+add_executable(reap_calibration_state_test tests/reap_calibration_state_test.cpp)
+add_executable(reap_resume_integration_test tests/reap_resume_integration_test.cpp)
+foreach(_reap_resume_test IN ITEMS reap_calibration_state_test reap_resume_integration_test)
+    target_include_directories(${_reap_resume_test} PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(${_reap_resume_test} PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(${_reap_resume_test} PRIVATE /EHsc /W4)
+    else()
+        target_compile_options(${_reap_resume_test} PRIVATE -Wall -Wextra)
+    endif()
+endforeach()
+enable_testing()
+add_test(NAME reap_calibration_state_test COMMAND reap_calibration_state_test
+    "${CMAKE_CURRENT_BINARY_DIR}/reap_calibration_state_fixtures")
+add_test(NAME reap_resume_integration_test COMMAND reap_resume_integration_test)
+
 # Native paired capture filter, record count and overflow regression.
 add_executable(reap_capture_policy_test tests/reap_capture_policy_test.cpp)
 target_include_directories(reap_capture_policy_test PRIVATE "${CMAKE_SOURCE_DIR}/src")
