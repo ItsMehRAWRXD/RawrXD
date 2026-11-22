@@ -80,18 +80,37 @@ int main() {
         expect(reg.ReclaimGeneration(2) == 0, "reclaim_gen2_without_confirm_refused");
     }
 
-    // ReclaimTicket executes the specific deleter (late completion).
+    // ReclaimTicket enforces completion evidence (late completion).
     {
         QuarantineRegistry reg;
         int id1 = 1, id2 = 2;
         resetCounters();
         const uint64_t t1 = reg.Retain(1, 10, ResourceKind::DescriptorSet, mockDeleter, &id1);
         const uint64_t t2 = reg.Retain(1, 10, ResourceKind::StagingBuffer, mockDeleter, &id2);
+        // Without ConfirmIdle -> refused (completion evidence required).
+        expect(!reg.ReclaimTicket(t1), "reclaim_ticket_without_confirm_refused");
+        expect(g_destroyCount == 0, "reclaim_ticket_without_confirm_no_destroy");
+        expect(reg.Contains(t1), "reclaim_ticket_without_confirm_keeps_entry");
+        // With ConfirmIdle -> reclaims the specific ticket.
+        reg.ConfirmIdle(1);
         expect(reg.ReclaimTicket(t1), "reclaim_ticket_found");
         expect(g_destroyOrder == std::vector<int>({1}), "reclaim_ticket_executes_deleter");
         expect(!reg.Contains(t1) && reg.Contains(t2), "reclaim_ticket_isolated");
         expect(!reg.ReclaimTicket(t1), "reclaim_ticket_idempotent_false");
         expect(g_destroyCount == 1, "reclaim_ticket_no_double_destroy");
+    }
+
+    // Capacity exhaustion is fail-closed: Retain returns 0 AND does not register
+    // the resource (caller retains ownership of the unregistered resource).
+    {
+        QuarantineRegistry reg;
+        int dummy = 0;
+        for (size_t i = 0; i < 4096; ++i)
+            reg.Retain(1, 1, ResourceKind::Fence, mockDeleter, &dummy);
+        const size_t before = reg.Size();
+        const uint64_t overflow = reg.Retain(1, 1, ResourceKind::Fence, mockDeleter, &dummy);
+        expect(overflow == 0, "capacity_overflow_returns_zero");
+        expect(reg.Size() == before, "capacity_overflow_not_registered");
     }
 
     // Fail-closed capacity: Retain returns 0 when full (no terminate).

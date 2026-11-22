@@ -103,13 +103,19 @@ public:
         return n;
     }
 
-    // Reclaim a single ticket (late completion notification). Executes its
-    // deleter. Returns true if the ticket was still quarantined.
+    // Reclaim a single ticket (late completion notification). Enforces the same
+    // completion-evidence invariant as ReclaimGeneration: the ticket's device
+    // generation must have been confirmed idle via ConfirmIdle(). Executes its
+    // deleter. Returns true if the ticket was still quarantined AND confirmed.
     bool ReclaimTicket(uint64_t ticket) noexcept {
         std::lock_guard<std::mutex> lock(mutex_);
         const auto it = std::find_if(entries_.begin(), entries_.end(),
             [&](const Entry& e) { return e.ticket == ticket; });
         if (it == entries_.end()) return false;
+        // Completion evidence required on EVERY reclamation path.
+        if (std::find(confirmed_.begin(), confirmed_.end(), it->deviceGeneration)
+            == confirmed_.end())
+            return false;   // no completion evidence -> refuse
         if (it->deleter) it->deleter(it->ctx);   // native destruction
         entries_.erase(it);
         return true;
