@@ -28,6 +28,7 @@
 
 #include "runtime_graph_executor.hpp"
 #include "universal_gguf.hpp"
+#include "ModelProvenanceVerifier.hpp"
 
 using namespace RawrXD::Deep2;
 
@@ -164,6 +165,14 @@ int main(int argc, char* argv[])
         return 1;
     }
     Progress("MODEL_LOAD_COMPLETE");
+    RawrXD::Deep2::ModelProvenanceVerifier provenance_verifier;
+    if (const char* trusted = std::getenv("DEEP2_ASYNC_VERIFY_SHA256"); trusted && *trusted) {
+        if (!provenance_verifier.Start(model, trusted)) {
+            std::printf("PROVENANCE_VERIFY_START_FAIL\n");
+            return 1;
+        }
+        std::printf("PROVENANCE_VERIFY_STATE=PENDING\n");
+    }
     std::printf("arch=%s blocks=%llu embd=%llu heads=%llu kv=%llu lora=%llu kl=%llu vl=%llu "
                 "experts=%llu used=%llu shared=%llu dense_lead=%llu rope_dim=%llu eps=%g\n",
                 rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count,
@@ -367,6 +376,15 @@ int main(int argc, char* argv[])
         return g4_failures == 0 ? 0 : 4;
     }
 
+    if (const char* trusted = std::getenv("DEEP2_ASYNC_VERIFY_SHA256"); trusted && *trusted) {
+        provenance_verifier.Join();
+        const auto state = provenance_verifier.State();
+        const char* name = state == RawrXD::Deep2::ProvenanceVerificationState::Verified ? "VERIFIED" :
+                           state == RawrXD::Deep2::ProvenanceVerificationState::Cancelled ? "CANCELLED" :
+                           state == RawrXD::Deep2::ProvenanceVerificationState::Failed ? "FAILED" : "INCOMPLETE";
+        std::printf("PROVENANCE_VERIFY_STATE=%s%s%s\n", name,
+                    provenance_verifier.Error().empty() ? "" : " error=", provenance_verifier.Error().c_str());
+    }
     Progress("SHUTDOWN_COMPLETE");
     std::printf("gpu_calls=%llu cpu_calls=%llu fallback=%s\n", (unsigned long long)b.gpu_calls,
                 (unsigned long long)b.cpu_calls, b.fallback_reason.empty() ? "<none>" : b.fallback_reason.c_str());
