@@ -51,7 +51,7 @@ using GovernorLease = rawrxd::deep2::Governor::Lease;
 namespace RawrXD { namespace Deep2 { namespace RuntimeGraph {
 
 enum class OpKind : uint8_t {
-    EmbeddingLookup = 0, RmsNorm, Linear, Attention, MlaDecompress,
+    EmbeddingLookup = 0, RmsNorm, Linear, Attention, MlaDecompress, MlaQueryAbsorb,
     Router, TopK, MoEExecute, ResidualAdd, LmHead,
     SsmScan,      // Mamba2 selective scan (nemotron_h, qwen3-next)
     Qsa,          // Qwen4Exp indexer + compressed-key sparse attention
@@ -424,6 +424,8 @@ private:
       bool OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
                            std::vector<float>& k_out, std::vector<float>& v_out,
                            size_t position, std::string& err);
+      bool OpMlaQueryAbsorb(const Instr& in, const std::vector<float>& q,
+                            std::vector<float>& out, std::string& err);
       // Mamba2 selective scan.
       //
       // state_ [slot] holds the per-channel recurrence state, laid out as

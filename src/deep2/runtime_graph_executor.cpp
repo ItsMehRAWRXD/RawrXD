@@ -658,6 +658,7 @@ const char* OpKindName(OpKind k) {
         case OpKind::Linear: return "Linear";
         case OpKind::Attention: return "Attention";
         case OpKind::MlaDecompress: return "MlaDecompress";
+        case OpKind::MlaQueryAbsorb: return "MlaQueryAbsorb";
         case OpKind::Router: return "Router";
         case OpKind::TopK: return "TopK";
         case OpKind::MoEExecute: return "MoEExecute";
@@ -864,6 +865,7 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             case Universal::Op::MatMul: in.op = OpKind::Unsupported; break;
             case Universal::Op::Attention: in.op = OpKind::Attention; break;
             case Universal::Op::MlaDecompress: in.op = OpKind::MlaDecompress; break;
+            case Universal::Op::MlaQueryAbsorb: in.op = OpKind::MlaQueryAbsorb; break;
             case Universal::Op::Router: in.op = OpKind::Router; break;
             case Universal::Op::TopK: in.op = OpKind::TopK; break;
             case Universal::Op::MoEExecute: in.op = OpKind::MoEExecute; break;
@@ -1009,6 +1011,7 @@ bool Executor::Bind(const Universal::IngestReport& report) {
                 case OpKind::Linear:          return "Linear";
                 case OpKind::Attention:       return "Attention";
                 case OpKind::MlaDecompress:   return "MlaDec";
+                case OpKind::MlaQueryAbsorb:  return "MlaQuery";
                 case OpKind::Router:          return "Router";
                 case OpKind::TopK:            return "TopK";
                 case OpKind::MoEExecute:      return "MoE";
@@ -3748,6 +3751,40 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     return true;
 }
 
+bool Executor::OpMlaQueryAbsorb(const Instr& in, const std::vector<float>& q,
+                                std::vector<float>& out, std::string& err) {
+    if (in.b < 0 || (size_t)in.b >= tensors_.size()) { err = "mla-query: missing attn_k_b"; return false; }
+    const TensorRec& w = tensors_[(size_t)in.b];
+    if (!w.data || (w.dims.size() != 2 && w.dims.size() != 3)) { err = "mla-query: invalid attn_k_b descriptor"; return false; }
+    const size_t H = (size_t)std::max<uint64_t>(spec_.heads, 1);
+    if (H == 0 || q.empty() || q.size() % H != 0) { err = "mla-query: compact query is not divisible by head count"; return false; }
+    const size_t compact = q.size() / H, rope = (size_t)spec_.rope_dim;
+    if (rope == 0 || rope >= compact || (rope & 1u) != 0) { err = "mla-query: invalid rotary geometry"; return false; }
+    const size_t nope = compact - rope, latent = (size_t)std::max<uint64_t>(spec_.kv_lora_rank, 1);
+    const size_t d0 = (size_t)w.dims[0], d1 = (size_t)w.dims[1], wh = w.dims.size() == 3 ? (size_t)w.dims[2] : 1;
+    if (w.dims.size() == 3 && wh != H) { err = "mla-query: attn_k_b head axis mismatch"; return false; }
+    const bool inputFirst = d0 == nope && d1 == latent, outputFirst = d0 == latent && d1 == nope;
+    if (!inputFirst && !outputFirst) { err = "mla-query: attn_k_b does not match compact query geometry"; return false; }
+    std::vector<float> wb; DequantPrefix(w, wb, d0 * d1 * wh);
+    if (wb.size() < d0 * d1 * wh) { err = "mla-query: attn_k_b payload is short"; return false; }
+    out.assign(H * (latent + rope), 0.0f);
+    for (size_t h = 0; h < H; ++h) {
+        const size_t qb = h * compact, ob = h * (latent + rope);
+        for (size_t o = 0; o < latent; ++o) {
+            double acc = 0.0;
+            for (size_t i = 0; i < nope; ++i) {
+                const size_t base = w.dims.size() == 3 ? h * d0 * d1 : 0;
+                const size_t wi = base + (inputFirst ? o * d0 + i : i * d1 + o);
+                acc += double(q[qb + i]) * double(wb[wi]);
+            }
+            out[ob + o] = (float)acc;
+        }
+        std::copy(q.begin() + (long)(qb + nope), q.begin() + (long)(qb + compact), out.begin() + (long)(ob + latent));
+    }
+    for (float v : out) if (!std::isfinite(v)) { err = "mla-query: nonfinite absorbed query"; return false; }
+    return true;
+}
+
 bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
                                std::vector<float>& k_out, std::vector<float>& v_out,
                                size_t position, std::string& err) {
@@ -4300,6 +4337,19 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                     ts[t].act[kvName] = k;
                     ts[t].act["k"] = k;
                     ts[t].act["v"] = v;
+                }
+                break;
+            }
+            case OpKind::MlaQueryAbsorb: {
+                for (size_t t = 0; t < P; ++t) {
+                    bool token_ok = true;
+                    const std::vector<float>& q = resolveIn(t, in, token_ok);
+                    if (!token_ok) return false;
+                    std::vector<float> qcur;
+                    std::string e;
+                    if (!OpMlaQueryAbsorb(in, q, qcur, e)) { last_error_ = e; return false; }
+                    ts[t].act[in.outName.empty() ? std::string("qcur") : in.outName] = qcur;
+                    ts[t].hidden = qcur;
                 }
                 break;
             }
@@ -5365,6 +5415,15 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 arena("k") = k;
                 arena("v") = v;
                 break;            }
+            case OpKind::MlaQueryAbsorb: {
+                const std::vector<float>& q = act.count(in.aName) ? act[in.aName] : xi;
+                std::vector<float> qcur;
+                std::string e;
+                if (!OpMlaQueryAbsorb(in, q, qcur, e)) { last_error_ = e; return false; }
+                arena(in.outName.empty() ? std::string("qcur") : in.outName) = qcur;
+                hidden_ = qcur;
+                break;
+            }
             case OpKind::Attention: {
                 std::vector<float> y;
                 std::string e;

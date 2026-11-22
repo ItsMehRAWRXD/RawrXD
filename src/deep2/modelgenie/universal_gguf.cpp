@@ -1053,6 +1053,17 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o.a = "attn_norm"; o.b = name(Role::AttnQ); o.out = "q";
                 g.ops.push_back(o);
             }
+            // The compact q has q_nope followed by q_pe. Absorb q_nope through
+            // attn_k_b and retain q_pe for the attention RoPE stage.
+            {
+                GraphOp o;
+                o.op = Op::MlaQueryAbsorb; o.block = (int32_t)b;
+                o.a = "q";
+                o.b = !name(Role::AttnKB).empty() ? name(Role::AttnKB) : name(Role::AttnKvB);
+                o.out = "qcur";
+                o.detail = "source=q;rope=metadata";
+                g.ops.push_back(o);
+            }
             // kv_a_mqa -> (latent norm) -> kv_b -> MlaDecompress.
             //
             // Slot convention, matching OpMlaDecompress:
@@ -1097,7 +1108,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             {
                 GraphOp o;
                 o.op = Op::Attention; o.block = (int32_t)b;
-                o.a = "q"; o.b = "kv"; o.out = "attn_out";
+                o.a = "qcur"; o.b = "kv"; o.out = "attn_out";
                 g.ops.push_back(o);
             }
             {

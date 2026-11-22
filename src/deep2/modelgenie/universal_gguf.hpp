@@ -195,7 +195,7 @@ struct ModelSpec {
 // ---------------------------------------------------------------------------
 enum class Op : uint8_t {
     EmbeddingLookup, RmsNorm, Linear, Attention, MatMul,
-    MlaDecompress, Router, TopK, MoEExecute, ResidualAdd, LmHead,
+    MlaDecompress, MlaQueryAbsorb, Router, TopK, MoEExecute, ResidualAdd, LmHead,
     SsmScan,      // Mamba2 selective scan (nemotron_h, qwen3-next)
     Qsa,          // Qwen4Exp indexer + compressed-key sparse attention
     Gdn,          // Qwen4Exp gated delta-net recurrent state update
