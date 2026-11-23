@@ -146,7 +146,7 @@ bool layerIsMla(const LayerWeights& lw) noexcept {
 bool mlaLayerReady(const LayerWeights& lw, bool isMoe) noexcept {
     // The output projection may be stored in lw.wo (raw load) or lw.attnO
     // (mapped load); denseLayerReady resolves the same alias.
-    const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
     // MoE layers carry no dense FFN tensors; their experts live in the proxy.
     const bool ffnReady = isMoe ? true
         : (usableWeight(lw.wGate) && usableWeight(lw.wUp) && usableWeight(lw.wDown));
@@ -221,7 +221,7 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         largest = std::max(largest, weightBytes(lw.wq));
         largest = std::max(largest, weightBytes(lw.wk));
         largest = std::max(largest, weightBytes(lw.wv));
-        largest = std::max(largest, weightBytes(lw.wo.data ? lw.wo : lw.attnO));
+        largest = std::max(largest, weightBytes(hasWeightStorage(lw.wo) ? lw.wo : lw.attnO));
         largest = std::max(largest, weightBytes(lw.wGate));
         largest = std::max(largest, weightBytes(lw.wUp));
         largest = std::max(largest, weightBytes(lw.wDown));
@@ -259,7 +259,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (!gpu) return reject("reject: no gpu slot");
     if (!ensureGpuForwardArena(slot)) return reject("reject: ensureGpuForwardArena failed");
     const LayerWeights& lw = modelWeights.layers[layer];
-    const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
     
     // Check if layer is ready for GPU execution
     // MLA layers need different weights than dense layers
@@ -274,7 +274,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             : (usableWeight(lw.wGate) && usableWeight(lw.wUp) && usableWeight(lw.wDown));
         // Output projection aliases lw.wo on the raw load path and lw.attnO on
         // the mapped path; resolve the alias before testing readiness.
-        const WeightTensor& woReady = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& woReady = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         layerReady = usableWeight(lw.attnNorm) &&
                      usableWeight(lw.wq) &&
                      usableWeight(woReady) &&
@@ -331,7 +331,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             return reject("reject: attnKV_a_mqa shape mismatch");
         if (!usableWeight(lw.attnK_b))
             return reject("reject: attnK_b absent");
-        const WeightTensor& woMla = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& woMla = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         if (woMla.rows != hidden || woMla.cols != hidden)
             return reject("reject: attnO shape mismatch");
     } else {
@@ -342,7 +342,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             return reject("reject: wk.rows mismatch");
         if (lw.wv.rows != static_cast<size_t>(kvDim))
             return reject("reject: wv.rows mismatch");
-        const WeightTensor& wo_check = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& wo_check = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         if (wo_check.rows != hidden || wo_check.cols != hidden)
             return reject("reject: wo shape mismatch");
     }
@@ -934,7 +934,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
                     i, isMla ? 1 : 0,
                     usableWeight(lw.attnNorm), usableWeight(lw.wq),
                     usableWeight(lw.wk), usableWeight(lw.wv),
-                    usableWeight(lw.wo.data ? lw.wo : lw.attnO),
+                    usableWeight(hasWeightStorage(lw.wo) ? lw.wo : lw.attnO),
                     usableWeight(lw.ffnNorm), usableWeight(lw.wGate),
                     usableWeight(lw.wUp), usableWeight(lw.wDown),
                     usableWeight(lw.attnKV_a_mqa), usableWeight(lw.attnK_b));
@@ -942,7 +942,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             }
             return false;
         }
-        const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         // MoE layers have no dense FFN tensors, so the dense FFN type checks
         // only apply to non-MoE models.
         const bool ffnTypesOk = modelWeights.isMoE
