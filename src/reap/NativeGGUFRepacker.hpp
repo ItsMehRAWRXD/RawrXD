@@ -100,6 +100,23 @@ inline bool PadTo(std::ofstream& out, uint64_t alignment) {
     for(uint64_t i=0;i<missing;++i)out.put('\0');
     return static_cast<bool>(out);
 }
+// GGML tensor naming conventions: normalization and embedding/output weights
+// are quality-sensitive. Never silently requantize these in broad --q4-0
+// mode. Explicitly preserve tensors that need a dedicated calibration policy.
+inline bool IsQualitySensitiveTensor(const std::string& name) {
+    std::string lower;
+    lower.reserve(name.size());
+    for(unsigned char c:name)
+        lower.push_back(c>='A'&&c<='Z'?static_cast<char>(c+('a'-'A')):static_cast<char>(c));
+    return lower.find("norm")!=std::string::npos ||
+           lower.find("embed")!=std::string::npos ||
+           lower.find("token_embd")!=std::string::npos ||
+           lower.find("output.weight")!=std::string::npos ||
+           lower.find("lm_head")!=std::string::npos ||
+           lower.find("rope_freq")!=std::string::npos ||
+           lower.find("freqs")!=std::string::npos ||
+           lower.find("bias")!=std::string::npos;
+}
 inline bool ConvertF32RangeToF16(std::ifstream& in, std::ofstream& out,
                                   uint64_t from, uint64_t sourceBytes) {
     if(sourceBytes%4 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -668,7 +685,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
-        if(convert_q8_0_to_q4_0 &&
+        if(convert_q8_0_to_q4_0 && !IsQualitySensitiveTensor(t.name) &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
             t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) && t.dims[0]%32==0) {
             t.q4_source_type=t.type;
