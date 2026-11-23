@@ -108,6 +108,10 @@ int main() {
     std::vector<uint8_t> exportedHalf;
     assert(uniformHalfStorage.ExportUniform16Bit(exportedEncoding,exportedHalf));
     assert(exportedEncoding==Encoding::F16 && exportedHalf==adaptive.payload);
+    const float multiChunkExact[]={1.0f,-2.0f,0.5f,4.0f,8.0f,-16.0f,0.25f,0.125f};
+    auto multiChunkStorage=ChunkedF32Storage::Build(multiChunkExact,8,0.0f,4);
+    assert(multiChunkStorage.ExportUniform16Bit(exportedEncoding,exportedHalf));
+    assert(exportedEncoding==Encoding::F16 && exportedHalf.size()==sizeof(multiChunkExact)/2);
     const float adaptiveWide[]={1.0e20f,-1.0e20f,3.25f,4.0f};
     auto adaptiveBf=EncodeAdaptiveF32(adaptiveWide,4,1.0e18f);
     assert(adaptiveBf.encoding==Encoding::BF16);
