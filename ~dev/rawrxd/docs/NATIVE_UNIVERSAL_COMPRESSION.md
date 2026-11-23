@@ -66,3 +66,7 @@ The native test target `rawrxd-native-tensor-compression-test` currently contain
 `WeightTensor::hasBacking()` treats raw mappings, chunked F32 backing, and losslessly compressed quantized-byte backing as valid tensor ownership. CPU `LinearW`, embeddings, RMSNorm, attention/FFN dispatch, MoE expert paths, and logits validation accept compressed-only tensors. When the source pointer is absent, `LinearW` deliberately bypasses GPU routes that still require a raw source pointer and uses bounded row/range decoding instead. GPU cache identity and stream-size accounting include compressed backing ownership.
 
 This is an enabling correctness change, not a claim that GGUF mappings are already released. The current loader still retains shard mappings, and some auxiliary/state/attention paths still consume direct mapped pointers. Source mapping reclamation remains gated on migrating every consumer and introducing per-tensor mapping ownership.
+
+## Strict GPU execution contract
+
+When `vulkanStrictNoCpuFallback_` is enabled, Deep2 rejects unsupported compressed-only weight execution instead of silently falling back to CPU range decoding. Fused Vulkan paths requiring raw mapped pointers remain explicitly gated until owner-backed compressed-tile GPU uploads are implemented and independently validated. This preserves strict-mode semantics but does not constitute GPU compressed-only parity or GGUF mapping reclamation.
