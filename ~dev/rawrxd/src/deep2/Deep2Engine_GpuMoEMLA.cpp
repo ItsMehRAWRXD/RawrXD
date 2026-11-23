@@ -245,15 +245,22 @@ bool Deep2Engine::tryVulkanHostGEMV(
             const size_t rows0 = wt.rows / 2;
             const size_t rows1 = wt.rows - rows0;
             TileStats stats0{}, stats1{};
-            auto task0 = std::async(std::launch::async, [&] {
-                return runCompressedSlice(device0, 0, rows0, stats0);
-            });
-            auto task1 = std::async(std::launch::async, [&] {
-                return runCompressedSlice(device1, rows0, rows1, stats1);
-            });
             bool ok0 = false, ok1 = false;
-            try { ok0 = task0.get(); } catch (...) { ok0 = false; }
-            try { ok1 = task1.get(); } catch (...) { ok1 = false; }
+            try {
+                auto task0 = std::async(std::launch::async, [&] {
+                    return runCompressedSlice(device0, 0, rows0, stats0);
+                });
+                auto task1 = std::async(std::launch::async, [&] {
+                    return runCompressedSlice(device1, rows0, rows1, stats1);
+                });
+                ok0 = task0.get();
+                ok1 = task1.get();
+            } catch (...) {
+                // Failed launch/submit on either device falls through to the
+                // existing single-device attempt; no partial output is trusted.
+                ok0 = false;
+                ok1 = false;
+            }
             if (ok0 && ok1 && finiteVec(output, outDim)) {
                 if (usedDualGpu) *usedDualGpu = true;
                 ++gpuFwd_.dualRowSplitOps;
