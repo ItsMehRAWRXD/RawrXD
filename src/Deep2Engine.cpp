@@ -7,9 +7,11 @@
 #include "MasmCoreKernels.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
