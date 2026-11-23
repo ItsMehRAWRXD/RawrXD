@@ -4454,6 +4454,16 @@ if(BUILD_TESTING AND ZLIB_FOUND)
         target_link_libraries(brutal_gzip_portable_contract_test PRIVATE ${ZLIB_LIBRARIES})
     endif()
     add_test(NAME brutal_gzip_portable_contract COMMAND brutal_gzip_portable_contract_test)
+    if(TARGET ZLIB::ZLIB)
+        get_target_property(_portable_zlib_kind ZLIB::ZLIB TYPE)
+        if(_portable_zlib_kind STREQUAL "SHARED_LIBRARY")
+            add_custom_command(TARGET brutal_gzip_portable_contract_test POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:ZLIB::ZLIB>"
+                    "$<TARGET_FILE_DIR:brutal_gzip_portable_contract_test>"
+                VERBATIM)
+        endif()
+    endif()
 endif()
 
 # MASM God-Mode deflate benchmark
