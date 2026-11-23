@@ -58,6 +58,20 @@ int main() {
                            input.data(), output.data(), rows, cols);
     } catch (const std::invalid_argument&) { rejected = true; }
     assert(rejected);
+    // F32 storage is byte-exact (no implicit F32-to-F16 conversion).
+    std::vector<std::uint8_t> f32(rows * cols * sizeof(float), 0);
+    for (std::size_t row = 0; row < rows; ++row) {
+        const float value = 1.25f;
+        std::memcpy(f32.data() + row * cols * sizeof(float), &value, sizeof(value));
+    }
+    if (!store.addTensor("f32", f32.data(), f32.size(), &error,
+                         GGML_TYPE_F32, true)) {
+        std::cerr << "F32 compression failed: " << error << "\n";
+        return EXIT_FAILURE;
+    }
+    StoredTensorMatvec(store, "f32", ResidentWeightType::F32,
+                       input.data(), output.data(), rows, cols, 1);
+    for (float v : output) assert(v == 3.75f);
     // A correctly sized tensor with the wrong GGML encoding must fail closed.
     rejected = false;
     try {
