@@ -83,7 +83,7 @@ def run(binary):
         for source_type in (28,0,1,30):
             inp=root/("source-%d.gguf"%source_type)
             raw=make_source(inp,source_type,values)
-            for out_type,name,tol,size in ((13,"q5_k",0.5,176),(14,"q6_k",0.15,210)):
+            for out_type,name,tol,size in ((10,"q2_k",2.0,84),(11,"q3_k",1.0,110),(12,"q4_k",0.8,144),(13,"q5_k",0.5,176),(14,"q6_k",0.15,210)):
                 dst=root/("%d-%s.gguf"%(source_type,name))
                 subprocess.run([binary,str(inp),str(dst),str(tol),name],check=True)
                 data,start,meta,tensors=parse(dst)
@@ -109,7 +109,7 @@ def run(binary):
                 strict_values[0]=1.0+2**-40
                 strict=root/"strict-source.gguf"
                 raw_strict=make_source(strict,28,strict_values)
-                for fmt in ("q5_k","q6_k"):
+                for fmt in ("q2_k","q3_k","q4_k","q5_k","q6_k"):
                     dst=root/("strict-"+fmt+".gguf")
                     subprocess.run([binary,str(strict),str(dst),"0",fmt],check=True)
                     data,start,meta,tensors=parse(dst)
@@ -124,7 +124,7 @@ def run(binary):
                     data,start,_,tensors=parse(dst)
                     kind,_,offset=tensors["blk.0.attn_q.weight"]
                     assert kind==28 and data[start+offset:start+offset+len(badbytes)]==badbytes
-    print("GGUF Q5_K/Q6_K F64 F32 F16 BF16 + strict fallback tests PASS")
+    print("GGUF Q2_K-Q6_K F64 F32 F16 BF16 + independent decode + strict fallback tests PASS")
 
 if __name__=="__main__":
     run(sys.argv[1])
