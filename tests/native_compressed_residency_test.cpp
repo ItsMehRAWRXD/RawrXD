@@ -8,7 +8,10 @@
 
 int main() {
     using namespace rawrxd::compression;
-    const std::vector<std::uint8_t> repeated(4096, 0x7f);
+    std::vector<std::uint8_t> repeated;
+    repeated.reserve(750);
+    for (std::uint16_t value = 1; value <= 250; ++value)
+        repeated.insert(repeated.end(), 3, static_cast<std::uint8_t>(value));
     const auto packed = encode(repeated.data(), repeated.size());
     CHECK(packed.rle);
     CHECK(packed.payload.size() < repeated.size());
