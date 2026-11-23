@@ -1,6 +1,6 @@
 #pragma once
 // Native, dependency-free tensor storage optimizer. No changes to GGUF wire types.
-// Lossless byte RLE is a private storage representation, not a GGUF quantization.
+// Lossless RLE/LZ4 byte codecs are private storage representations, not GGUF quantizations.
 // F32->F16/BF16 are lossy; callers opt in and supply a maximum absolute error.
 #include <cstdint>
 #include <cstddef>
@@ -199,7 +199,7 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
     }
     return best;
 }
-// Per-tensor adaptive F32 storage: lossless RLE is always considered;
+// Per-tensor adaptive F32 storage: lossless RLE/LZ4 and precision-safe F16/BF16 are considered;
 // F16 is preferred when valid, with BF16 as the wider-exponent fallback.
 // The original bytes remain the fallback whenever neither meets the budget.
 inline Result EncodeAdaptiveF32(const float* values,size_t count,float max_abs_error) {
@@ -442,7 +442,7 @@ private:
 
  // Generic lossless byte storage for non-F32 tensors. Encoded GGUF blocks
  // remain byte-identical after decode; only independently addressable chunks
- // are RLE-compressed, and raw chunks are retained only when needed.
+ // use adaptive lossless RLE/LZ4 encoding; raw chunks are retained when compression does not win.
  class ChunkedByteStorage {
  public:
      ChunkedByteStorage() = default;
