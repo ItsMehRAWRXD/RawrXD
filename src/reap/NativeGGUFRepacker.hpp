@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
+#include <filesystem>
 #include <limits>
 #include <set>
 #include <string>
@@ -120,6 +121,11 @@ inline RepackError RepackGGUF(const std::string& input,
                              uint64_t max_output_bytes=UINT64_MAX,
                              bool convert_f32_to_f16=false) {
     if(input==output)return RepackError::Output;
+    // A different spelling of the same file must not truncate the source.
+    // This also catches hard links and relative/absolute path aliases.
+    std::error_code pathError;
+    const bool sameFile=std::filesystem::equivalent(input,output,pathError);
+    if(!pathError && sameFile)return RepackError::Output;
     std::ifstream in(input,std::ios::binary);
     if(!in)return RepackError::Input;
     uint32_t magic=0,version=0;
