@@ -25,7 +25,8 @@ public:
         std::size_t first = 0;
         std::size_t count = 0;
         Encoding encoding = Encoding::F32;
-        std::vector<std::uint8_t> payload;
+        std::size_t payloadOffset = 0;
+        std::size_t payloadBytes = 0;
         float maxAbsError = 0.0f;
     };
 
@@ -69,15 +70,21 @@ public:
                     ? Encoding::F16 : Encoding::BF16;
                 chunk.maxAbsError = chunk.encoding == Encoding::F16 ? halfError : bfloatError;
                 const auto& encoded = chunk.encoding == Encoding::F16 ? half : bfloat;
-                chunk.payload.resize(count * sizeof(std::uint16_t));
-                std::memcpy(chunk.payload.data(), encoded.data(), chunk.payload.size());
+                chunk.payloadBytes = count * sizeof(std::uint16_t);
+                chunk.payloadOffset = result.payload_.size();
+                const std::size_t oldSize = result.payload_.size();
+                result.payload_.resize(oldSize + chunk.payloadBytes);
+                std::memcpy(result.payload_.data() + oldSize, encoded.data(), chunk.payloadBytes);
             } else {
                 chunk.encoding = Encoding::F32;
                 chunk.maxAbsError = 0.0f;
-                chunk.payload.resize(count * sizeof(float));
-                std::memcpy(chunk.payload.data(), source + first, chunk.payload.size());
+                chunk.payloadBytes = count * sizeof(float);
+                chunk.payloadOffset = result.payload_.size();
+                const std::size_t oldSize = result.payload_.size();
+                result.payload_.resize(oldSize + chunk.payloadBytes);
+                std::memcpy(result.payload_.data() + oldSize, source + first, chunk.payloadBytes);
             }
-            result.storedBytes_ += chunk.payload.size();
+            result.storedBytes_ = result.payload_.size();
             result.maxAbsError_ = std::max(result.maxAbsError_, chunk.maxAbsError);
             result.chunks_.push_back(std::move(chunk));
             first += count;
@@ -113,11 +120,11 @@ public:
             const std::size_t n = finish - begin;
             if (chunk.encoding == Encoding::F32) {
                 std::memcpy(destination + dstOffset,
-                    chunk.payload.data() + srcOffset * sizeof(float), n * sizeof(float));
+                    payload_.data() + chunk.payloadOffset + srcOffset * sizeof(float), n * sizeof(float));
             } else {
                 for (std::size_t i = 0; i < n; ++i) {
                     std::uint16_t bits;
-                    std::memcpy(&bits, chunk.payload.data() +
+                    std::memcpy(&bits, payload_.data() + chunk.payloadOffset +
                         (srcOffset + i) * sizeof(bits), sizeof(bits));
                     destination[dstOffset + i] = chunk.encoding == Encoding::F16
                         ? halfToFloat(bits) : bfloatToFloat(bits);
@@ -127,19 +134,35 @@ public:
         return true;
     }
 
-    bool ExportUniform16Bit(Encoding& encoding, std::vector<std::uint8_t>& bytes) const {
-        bytes.clear();
+    // Returns a stable zero-copy view when every chunk shares one 16-bit encoding.
+    // The caller must retain this storage object for the lifetime of the view.
+    bool GetUniform16BitView(Encoding& encoding, const std::uint8_t*& data,
+                             std::size_t& bytes) const noexcept {
+        data = nullptr;
+        bytes = 0;
         if (chunks_.empty()) { encoding = Encoding::F16; return elements_ == 0; }
         encoding = chunks_.front().encoding;
-        if (encoding == Encoding::F32) return false;
-        for (const Chunk& chunk : chunks_) {
-            if (chunk.encoding != encoding) return false;
-        }
-        if (elements_ > std::numeric_limits<std::size_t>::max() / 2) return false;
-        bytes.reserve(elements_ * 2);
+        if (encoding == Encoding::F32 ||
+            elements_ > std::numeric_limits<std::size_t>::max() / 2)
+            return false;
         for (const Chunk& chunk : chunks_)
-            bytes.insert(bytes.end(), chunk.payload.begin(), chunk.payload.end());
-        return bytes.size() == elements_ * 2;
+            if (chunk.encoding != encoding) return false;
+        if (payload_.size() != elements_ * 2) return false;
+        data = payload_.data();
+        bytes = payload_.size();
+        return true;
+    }
+
+    bool ExportUniform16Bit(Encoding& encoding, std::vector<std::uint8_t>& bytes) const {
+        const std::uint8_t* view = nullptr;
+        std::size_t viewBytes = 0;
+        if (!GetUniform16BitView(encoding, view, viewBytes)) {
+            bytes.clear();
+            return false;
+        }
+        if (viewBytes == 0) { bytes.clear(); return true; }
+        bytes.assign(view, view + viewBytes);
+        return true;
     }
 
 private:
@@ -224,6 +247,7 @@ private:
     std::size_t storedBytes_ = 0;
     float maxAbsError_ = 0.0f;
     std::vector<Chunk> chunks_;
+    std::vector<std::uint8_t> payload_; // one contiguous backing; chunks index into it
 };
 
 } // namespace RawrXD::TensorCompression
