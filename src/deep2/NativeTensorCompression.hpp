@@ -666,6 +666,14 @@ private:
          return total;
      }
 
+     // Convenience API for callers that do not retain a scratch buffer.
+     // Raw and RLE ranges allocate no decompression scratch; LZ4 retains
+     // bounded per-chunk scratch until a streaming decoder is available.
+     void ReadRange(size_t first, size_t count, uint8_t* destination) const {
+         std::vector<uint8_t> scratch;
+         ReadRange(first, count, destination, scratch);
+     }
+
      void ReadRange(size_t first, size_t count, uint8_t* destination,
                     std::vector<uint8_t>& scratch) const {
          if (first > byte_count_ || count > byte_count_ - first)
