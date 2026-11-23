@@ -468,12 +468,16 @@ bool Deep2Engine::forwardLayerGpuResident(
             if (packed) {
                 rowBytes = Gpu::QuantPackedRowBytes(wt.type, cols);
             } else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
-                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(float))
+                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(float)) {
+                    (void)resumeFused();
                     return false;
+                }
                 rowBytes = static_cast<std::size_t>(cols) * sizeof(float);
             } else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F16)) {
-                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(uint16_t))
+                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(uint16_t)) {
+                    (void)resumeFused();
                     return false;
+                }
                 rowBytes = static_cast<std::size_t>(cols) * sizeof(uint16_t);
             } else {
                 (void)resumeFused();
