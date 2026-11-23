@@ -65,6 +65,9 @@ jobs:
           "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_gguf_compressed_residency.cpp -o gguf_compressed_residency
           ./gguf_compressed_residency
 
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_streaming_tile_residency.cpp -o streaming_tile_residency
+          ./streaming_tile_residency
+
       - name: Compile and run Qt/zlib codec regression (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -103,7 +106,8 @@ jobs:
             @{ Name = 'compressed_model_e2e'; Source = 'tests/compressed_weight_store/test_compressed_model_e2e.cpp' },
             @{ Name = 'compressed_transformer_generation'; Source = 'tests/compressed_weight_store/test_compressed_transformer_generation.cpp' },
             @{ Name = 'stored_tensor_matvec'; Source = 'tests/compressed_weight_store/test_stored_tensor_matvec.cpp' },
-            @{ Name = 'gguf_compressed_residency'; Source = 'tests/compressed_weight_store/test_gguf_compressed_residency.cpp' }
+            @{ Name = 'gguf_compressed_residency'; Source = 'tests/compressed_weight_store/test_gguf_compressed_residency.cpp' },
+            @{ Name = 'streaming_tile_residency'; Source = 'tests/compressed_weight_store/test_streaming_tile_residency.cpp' }
           )
           foreach ($case in $cases) {
             & cl.exe @common $store $case.Source ("/Fe:" + $case.Name + ".exe")
