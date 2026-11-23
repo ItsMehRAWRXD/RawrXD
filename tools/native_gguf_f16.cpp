@@ -393,10 +393,44 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q2k && !q3k && !q4k && !q5k && !q6k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
-            // Q5_K/Q6_K: independent GGML block layout, whole-tensor
-            // precision gate. No original tensor is modified on rejection.
-            if((q5k||q6k) && t.dims[0]%256==0) {
-                const uint32_t type=q5k?13u:14u;
+            // Native GGML K-block codecs are shared across manual selection
+            // and automatic per-tensor precision selection. Candidate order is
+            // smallest storage first; one failed block rejects that format for
+            // the entire tensor and leaves the original payload untouched.
+            if((q2k||q3k||q4k||q5k||q6k||automatic) &&
+               t.dims[0]%256==0) {
+                const size_t stride=t.type==28?8:(t.type==0?4:2);
+                const U rawBlockBytes=mul(256,stride);
+                if(t.bytes%rawBlockBytes==0) {
+                    const uint32_t first=automatic?10u:(q2k?10u:q3k?11u:q4k?12u:q5k?13u:14u);
+                    const uint32_t last=automatic?14u:first;
+                    for(uint32_t type=first;type<=last;++type) {
+                        seek(in,add(dataStart,t.offset));
+                        std::vector<uint8_t> raw(size_t(rawBlockBytes));
+                        bool valid=true;
+                        for(U off=0;off<t.bytes;off+=rawBlockBytes) {
+                            if(!in.read(reinterpret_cast<char*>(raw.data()),
+                                        std::streamsize(raw.size())))
+                                throw std::runtime_error("truncated native K-quant preflight");
+                            double values[256];uint8_t encoded[210];
+                            if(!RawrXD::NativeKQuant::ReadFloatingBlock(raw.data(),t.type,values) ||
+                               !RawrXD::NativeKQuant::EncodeBlock(type,values,tolerance,encoded)) {
+                                valid=false;break;
+                            }
+                        }
+                        if(valid) {
+                            streamNativeK[i]=type;
+                            outputTypes[i]=type;
+                            ++changed;
+                            break;
+                        }
+                    }
+                }
+                if(streamNativeK[i] || !automatic)continue;
+            }
+            if(q2k||q3k||q4k||q5k||q6k)continue;
+            // The remaining formats use their dedicated GGML block encoders.
+            
                 const size_t stride=t.type==28?8:(t.type==0?4:2);
                 const U rawBlockBytes=mul(256,stride);
                 if(t.bytes%rawBlockBytes==0) {
