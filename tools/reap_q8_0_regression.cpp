@@ -53,6 +53,47 @@ int main() {
         }
         check(accurate,"q8_0_payload_decode_within_error");
     }
+    // Independently verify the FP16 source path (64-byte input block).
+    const char* f16src="reap_q8_f16_source.gguf";
+    const char* f16dst="reap_q8_f16_output.gguf";
+    {
+        std::ofstream out(f16src,std::ios::binary);
+        WriteU32(out,0x46554747);WriteU32(out,3);
+        WriteU64(out,1);WriteU64(out,0);
+        WriteName(out,"weight");WriteU32(out,2);
+        WriteU64(out,32);WriteU64(out,1);
+        WriteU32(out,1);WriteU64(out,0);
+        PadTo(out,32);
+        for(int i=0;i<32;++i) {
+            const float value=static_cast<float>(i-16);
+            uint32_t bits=0;std::memcpy(&bits,&value,4);
+            const uint16_t h=Float32BitsToFloat16(bits);
+            out.put(static_cast<char>(h));out.put(static_cast<char>(h>>8));
+        }
+    }
+    check(RepackGGUF(f16src,f16dst,UINT64_MAX,false,true)==RepackError::None,
+          "f16_to_q8_0_repack_success");
+    {
+        std::ifstream in(f16dst,std::ios::binary);
+        uint32_t u=0,nd=0,type=0;uint64_t n=0,offset=0;
+        std::string name;
+        ReadU32(in,u);ReadU32(in,u);ReadU64(in,n);ReadU64(in,n);
+        ReadName(in,name);ReadU32(in,nd);ReadU64(in,n);ReadU64(in,n);
+        ReadU32(in,type);ReadU64(in,offset);
+        const uint64_t start=(static_cast<uint64_t>(in.tellg())+31)&~uint64_t(31);
+        in.seekg(static_cast<std::streamoff>(start));
+        unsigned char bytes[34]={};
+        in.read(reinterpret_cast<char*>(bytes),34);
+        const uint16_t h=uint16_t(bytes[0])|(uint16_t(bytes[1])<<8);
+        const uint32_t scaleBits=Float16ToFloat32Bits(h);
+        float scale=0;std::memcpy(&scale,&scaleBits,4);
+        bool accurate=in.good()&&type==8&&scale>0;
+        for(int i=0;i<32;++i)
+            accurate &= std::abs(static_cast<int8_t>(bytes[i+2])*scale-
+                                  static_cast<float>(i-16))<0.15f;
+        check(accurate,"f16_to_q8_0_decoded_weights");
+    }
+    std::remove(f16src);std::remove(f16dst);
     check(RepackGGUF(src,dst,UINT64_MAX,true,true)==RepackError::Unsupported,
           "mutually_exclusive_quantization_modes");
     std::remove(src);std::remove(dst);
