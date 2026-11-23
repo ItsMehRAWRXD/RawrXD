@@ -9169,7 +9169,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         }
 
         // Final norm before logits (if not done in last layer)
-        if (modelWeights.finalNorm.data)
+        if (modelWeights.finalNorm.hasBacking())
         {
             RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
         }
@@ -10211,7 +10211,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     const bool hasMoEFFN = lw.moeRouter.data && lw.moeRouter.sizeBytes > 0;
     const bool hasDenseFFN = lw.wGate.data || lw.wUp.data || lw.wDown.data;
     const bool hasMixer = isNemotronSsm || hasMoEFFN || hasDenseFFN;
-    const bool hasDedicatedMixerNorm = lw.ffnNorm.data != nullptr;
+    const bool hasDedicatedMixerNorm = lw.ffnNorm.hasBacking();
     if (Deep2DebugEnabled()) {
         fprintf(stderr, "[DBG-FWD] enter layer=%zu seqLen=%zu liveSeq=%zu\n", layer, seqLen, liveSeq);
         fflush(stderr);
@@ -10364,7 +10364,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // post_attention_norm as the MoE input norm AFTER residual (no ffn_norm) —
     // do not apply pre-residual sandwich there (GDN or full-attn).
     if (hasAttention && !isGdn && hasDedicatedMixerNorm &&
-        lw.attnPostNorm.data && lw.attnPostNorm.sizeBytes > 0)
+        lw.attnPostNorm.hasBacking() && lw.attnPostNorm.sizeBytes > 0)
     {
         static bool s_sandwichAttnLogged = false;
         if (!s_sandwichAttnLogged)
@@ -10472,7 +10472,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         {
             RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
         }
-        else if (lw.attnPostNorm.data && lw.attnPostNorm.sizeBytes > 0)
+        else if (lw.attnPostNorm.hasBacking() && lw.attnPostNorm.sizeBytes > 0)
         {
             RMSNormW(lw.attnPostNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
         }
@@ -10584,7 +10584,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     Deep2ValidateVector("FFN_OUTPUT", layer, ffnOutput, hiddenDim);
 
     // Gemma sandwich: post_ffw_norm on FFN out BEFORE residual add.
-    if (hasMixer && lw.ffnPostNorm.data && lw.ffnPostNorm.sizeBytes > 0)
+    if (hasMixer && lw.ffnPostNorm.hasBacking() && lw.ffnPostNorm.sizeBytes > 0)
     {
         static bool s_sandwichFfnLogged = false;
         if (!s_sandwichFfnLogged)
@@ -13635,7 +13635,7 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input, float
 // ============================================================================
 void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
 {
-    if (!modelWeights.loaded || !modelWeights.lmHead.data)
+    if (!modelWeights.loaded || !modelWeights.lmHead.hasBacking())
     {
         // No model loaded - error
         memset(logits, 0, config.vocabSize * sizeof(float));
