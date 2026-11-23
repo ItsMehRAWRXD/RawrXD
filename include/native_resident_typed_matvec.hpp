@@ -627,6 +627,39 @@ inline std::vector<float> resident_k_matvec(
     return output;
 }
 
+
+template<std::size_t BlockBytes, void (*Decode)(const std::uint8_t*, float*)>
+inline std::vector<float> resident_k_row(
+    const ResidentCompressedTensor& weights, std::size_t rowIndex,
+    std::size_t rows, std::size_t cols,
+    std::size_t stagingBudgetBytes = 64 * 1024) {
+    constexpr auto values = resident_k_detail::kValues;
+    if (!cols || cols % values || rowIndex >= rows)
+        throw std::invalid_argument("K-quant embedding row geometry mismatch");
+    const auto blocksPerRow = cols / values;
+    if (blocksPerRow > std::numeric_limits<std::size_t>::max() / BlockBytes)
+        throw std::length_error("K-quant embedding row size overflow");
+    const auto rowBytes = blocksPerRow * BlockBytes;
+    if (rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
+        rows * rowBytes != weights.size())
+        throw std::invalid_argument("K-quant embedding tensor size mismatch");
+    const auto chunkBytes = resident_detail::aligned_chunk(stagingBudgetBytes, BlockBytes);
+    BoundedWeightStager stager(chunkBytes);
+    std::vector<float> output(cols);
+    const auto base = rowIndex * rowBytes;
+    stager.for_each_chunk(weights, base, rowBytes,
+        [&](std::size_t offset, const std::uint8_t* data, std::size_t size) {
+            const auto firstBlock = (offset - base) / BlockBytes;
+            for (std::size_t b = 0; b < size; b += BlockBytes) {
+                float decoded[values];
+                Decode(data + b, decoded);
+                const auto first = (firstBlock + b / BlockBytes) * values;
+                std::copy_n(decoded, values, output.begin() + static_cast<std::ptrdiff_t>(first));
+            }
+        });
+    return output;
+}
+
 inline std::vector<float> resident_q2_k_matvec(const ResidentCompressedTensor& w,
     const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
     return resident_k_matvec<84, resident_k_detail::decode_q2>(w, x, rows, cols, budget);
