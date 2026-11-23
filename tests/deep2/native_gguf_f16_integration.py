@@ -247,6 +247,28 @@ def run(binary):
         assert wt["blk.0.attn_q.weight"][0]==30
         assert len(wd)-ws==len(doubles)*2
         assert struct.unpack_from("<H",wd,ws)[0]==0x7180
+        # Explicit 16-bit modes must narrow F64 only to the requested type.
+        for mode,typ in (("f16",1),("bf16",30)):
+            dest=root/("f64-explicit-"+mode+".gguf")
+            subprocess.run([binary,str(f64),str(dest),"0",mode],check=True)
+            dd,ds,dm,dt=parse(dest)
+            assert dt["blk.0.attn_q.weight"][0]==typ
+            assert len(dd)-ds==len(doubles)*2
+            if mode=="f16":
+                assert struct.unpack_from("<"+"e"*len(doubles),dd,ds)==tuple(doubles)
+            else:
+                assert struct.unpack_from("<H",dd,ds)[0]==0x3f80
+        # F16 cannot represent the wide BF16 fixture at zero error.
+        rejected_f16=root/"f64-wide-f16.gguf"
+        subprocess.run([binary,str(f64_wide),str(rejected_f16),"0","f16"],check=True)
+        rd,rs,rm,rt=parse(rejected_f16)
+        assert rt["blk.0.attn_q.weight"][0]==28
+        # BF16 can represent it exactly.
+        accepted_bf16=root/"f64-wide-bf16.gguf"
+        subprocess.run([binary,str(f64_wide),str(accepted_bf16),"0","bf16"],check=True)
+        ad,az,am,at=parse(accepted_bf16)
+        assert at["blk.0.attn_q.weight"][0]==30
+        assert struct.unpack_from("<H",ad,az)[0]==0x7180
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
