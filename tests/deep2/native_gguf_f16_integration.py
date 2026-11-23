@@ -109,6 +109,22 @@ def run(binary):
             off=nt["blk.0.attn_q.weight"][2]
             assert nb[ns+off:ns+off+len(values)*4]==broken[orig_start:orig_start+len(values)*4]
             assert nt["blk.0.attn_k.weight"][0]==6
+        # BF16 uses round-to-nearest-even and preserves the GGML type 30.
+        bfout=root/"f32-to-bf16.gguf"
+        subprocess.run([binary,str(source),str(bfout),"300","bf16"],check=True)
+        bfb,bfs,bfm,bft=parse(bfout)
+        assert bfm==metadata
+        assert bft["blk.0.attn_q.weight"][0]==30
+        for j,value in enumerate(values):
+            stored=struct.unpack_from("<H",bfb,bfs+bft["blk.0.attn_q.weight"][2]+2*j)[0]
+            restored=struct.unpack("<f",struct.pack("<I",stored<<16))[0]
+            assert abs(restored-value)<=300
+        assert bft["blk.0.attn_k.weight"][0]==6
+        bfstrict=root/"strict-bf16.gguf"
+        subprocess.run([binary,str(inexact),str(bfstrict),"0","bf16"],check=True)
+        sb,ss,sm,st=parse(bfstrict)
+        assert st["blk.0.attn_q.weight"][0]==0
+        assert sb[ss+st["blk.0.attn_q.weight"][2]:ss+st["blk.0.attn_q.weight"][2]+4]==struct.pack("<f",1.0001)
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
