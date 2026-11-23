@@ -146,7 +146,10 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
                     const size_t lane = j & 15u;
                     const uint8_t packed = qs[lane];
                     const int low = (j < 16) ? int(packed & 0x0fu) : int(packed >> 4);
-                    const size_t highBit = j;
+                    // GGML's second Q5 nibble lane uses qh bits 12..27,
+                    // not bits 16..31. This is the canonical block bit-plane
+                    // ordering used by ggml-quants.c.
+                    const size_t highBit = j < 16 ? j : j - 4;
                     const int high = (qh[highBit >> 3] >> (highBit & 7u)) & 1;
                     const int q = low | (high << 4);
                     out[base + j] = type == 6
