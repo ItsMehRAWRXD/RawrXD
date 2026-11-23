@@ -35,6 +35,31 @@ public:
     TensorByteResidencyCache(const TensorByteResidencyCache&) = delete;
     TensorByteResidencyCache& operator=(const TensorByteResidencyCache&) = delete;
 
+    // Explicit model boundary: equal-sized keys are not proof of identical
+    // weights. A new identity invalidates both encoded entries and fallback
+    // decisions, after all in-flight readers release their leases.
+    // The caller must stop starting reads for the old model before switching.
+    void SetModelIdentity(const std::string& identity) {
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (modelIdentity_ == identity) return;
+        readersDrained_.wait(lock, [this] {
+            for (const auto& item : entries_)
+                if (item.second.activeReaders != 0) return false;
+            return true;
+        });
+        evictions_ += entries_.size();
+        entries_.clear();
+        rawFallback_.clear();
+        compressedBytes_ = logicalBytes_ = 0;
+        modelIdentity_ = identity;
+    }
+
+    std::string ModelIdentity() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return modelIdentity_;
+    }
+
     void SetBudget(size_t bytes) {
         std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
@@ -180,6 +205,8 @@ public:
         return stats;
     }
 private:
+    std::string modelIdentity_;
+
     struct Entry {
         std::shared_ptr<RawrXD::TensorCompression::ChunkedByteStorage> storage;
         size_t compressedBytes = 0;
