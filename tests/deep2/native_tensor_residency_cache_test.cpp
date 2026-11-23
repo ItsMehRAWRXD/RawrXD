@@ -124,6 +124,21 @@ int main() {
     assert(finalStats.compressedBytes==0 && finalStats.logicalBytes==0);
     assert(finalStats.evictions>=2);
 
+    // Unexpected runtime/allocation-style failures are retryable; only a
+    // typed admission rejection is memoized as a permanent raw fallback.
+    Deep2::TensorResidencyCache retryable(4096);
+    size_t transientAttempts = 0;
+    for (int attempt = 0; attempt < 2; ++attempt) {
+        const bool admitted = retryable.RegisterF32FromReader("transient", 64,
+            0.0f, [&](size_t, size_t, float*) -> bool {
+                ++transientAttempts;
+                throw std::runtime_error("simulated transient runtime failure");
+            }, 16);
+        assert(!admitted);
+    }
+    assert(transientAttempts == 2);
+    assert(!retryable.IsRawFallback("transient"));
+
     // Bounds are fail-closed and never write beyond the requested output.
     Deep2::TensorResidencyCache bounded(4096);
     std::vector<float> small(128,2.0f);
