@@ -131,6 +131,7 @@ void PageCache::release(Page* page) {
 
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
     if (size == 0) return true;
+    if (!out || offset > UINT64_MAX - (size - 1)) return false;
     std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
     std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
     std::vector<Page*> held;
