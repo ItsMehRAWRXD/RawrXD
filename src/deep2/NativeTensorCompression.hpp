@@ -595,6 +595,13 @@ public:
                 }
                 continue;
             }
+            // Full compressed F32 chunks can decode directly into the caller's
+            // destination. Partial requests retain the bounded scratch path.
+            if (n == chunk_count) {
+                DecodeInto(encoded, destination + (copy_first - first),
+                           static_cast<size_t>(encoded.original_bytes));
+                continue;
+            }
             scratch.resize(static_cast<size_t>(encoded.original_bytes));
             DecodeInto(encoded,scratch.data(),scratch.size());
             std::memcpy(destination+(copy_first-first),
