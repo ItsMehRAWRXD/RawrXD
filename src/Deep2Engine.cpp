@@ -605,9 +605,10 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 upOut[i] = gelu;
             }
 
-            static thread_local float downOutStatic[3072];
-            float* downOut = downOutStatic;
-            std::fill_n(downOut, hiddenDim, 0.0f);
+            // Geometry-sized output: the previous 3072-float TLS array
+            // overflowed for models with larger hidden dimensions.
+            std::vector<float> downOutStorage(hiddenDim, 0.0f);
+            float* downOut = downOutStorage.data();
             if (downCompressed) {
                 if (!gemvROMCompressedF32(downName, upOut.data(), downOut,
                                           hiddenDim, intermediateDim)) return false;
