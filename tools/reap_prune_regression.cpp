@@ -25,7 +25,9 @@ static void PutStr(std::vector<uint8_t>& v, const std::string& s) { PutU64(v, s.
 
 struct SynTensor { std::string name; std::vector<uint64_t> dims; std::vector<uint8_t> data; };
 
-static std::vector<uint8_t> BuildGGUF(const std::vector<SynTensor>& ts) {
+static std::vector<uint8_t> BuildGGUF(const std::vector<SynTensor>& ts,
+                                      const std::string& arch = "llama",
+                                      uint32_t expert_count = 4) {
     std::vector<uint8_t> h;
     PutU32(h, 0x46554747u); PutU32(h, 3u);
     PutU64(h, ts.size()); PutU64(h, 4u);
@@ -39,8 +41,8 @@ static std::vector<uint8_t> BuildGGUF(const std::vector<SynTensor>& ts) {
     auto kv_u32 = [&](const std::string& k, uint32_t v) { PutStr(h, k); PutU32(h, 4); PutU32(h, v); };
     kv_str("general.architecture", "llama");
     kv_u32("general.alignment", 32u);
-    kv_u32("llama.expert_count", 4u);
-    kv_u32("llama.expert_used_count", 4u);
+    kv_u32(arch + ".expert_count", expert_count);
+    kv_u32(arch + ".expert_used_count", 4u);
     uint64_t cursor = 0;
     std::vector<uint64_t> offsets(ts.size());
     for (size_t i = 0; i < ts.size(); ++i) {
@@ -87,7 +89,10 @@ static bool LoadGGUF(const std::string& path, LoadedGGUF& g) {
         if (!rd_name(key) || !in.read(reinterpret_cast<char*>(&type),4)) return false;
         if (type == 8) { uint64_t vn=0; if(!in.read(reinterpret_cast<char*>(&vn),8)||vn>(1ULL<<26)) return false; std::string v(vn,'\0'); if (vn && !in.read(&v[0], vn)) return false; }
         else if (type == 9) { uint32_t el=0; uint64_t c=0; if(!in.read(reinterpret_cast<char*>(&el),4)||!in.read(reinterpret_cast<char*>(&c),8)||el>12||el==9) return false; if (el==8) { for (uint64_t k=0;k<c;++k) { std::string s; if(!rd_name(s)) return false; } } else { if (el==9 || !sz[el]) return false; in.seekg(c*sz[el], std::ios::cur); } }
-        else { if (type > 12 || !sz[type]) return false; if (type == 4) { uint32_t v=0; in.read(reinterpret_cast<char*>(&v),4); if (key == "llama.expert_count") g.expert_count = v; if (key == "llama.expert_used_count") g.expert_used_count = v; } else in.seekg(sz[type], std::ios::cur); }
+        else { if (type > 12 || !sz[type]) return false; if (type == 4) { uint32_t v=0; in.read(reinterpret_cast<char*>(&v),4);
+            if (key.size() >= 18 && key.compare(key.size()-18, 18, ".expert_used_count") == 0) g.expert_used_count = v;
+            else if (key.size() >= 13 && key.compare(key.size()-13, 13, ".expert_count") == 0) g.expert_count = v;
+        } else in.seekg(sz[type], std::ios::cur); }
         if (!in) return false;
     }
     for (uint64_t i = 0; i < nt; ++i) {
@@ -229,6 +234,56 @@ int main() {
     Check(shared_ok, "shared experts / router / norm bit-identical");
     Check(rep.output_bytes < rep.input_bytes && rep.bytes_saved == rep.input_bytes - rep.output_bytes,
           "bytes_saved == input - output");
+
+    // ---- Grouped deepseek2 fixture: whole-group (max-member) selection ----
+    // 16 experts (2 groups of 8); experts 8-15 carry higher router norms, so
+    // max-member group ranking must keep exactly group 1 ({8..15}).
+    {
+        const std::string src2 = "reap_prune_group_src.gguf";
+        const std::string dst2 = "reap_prune_group_dst.gguf";
+        const uint32_t GE = 16, GEMB = 8, GFF = 4;
+        std::vector<SynTensor> gts;
+        { SynTensor t; t.name = "blk.0.ffn_gate_inp.weight"; t.dims = {GEMB, GE}; t.data.resize(GEMB*GE*4);
+          for (uint32_t e = 0; e < GE; ++e) for (uint32_t r = 0; r < GEMB; ++r) {
+              float v = (float)(r + 1) * (float)(e + 1);
+              std::memcpy(t.data.data() + (e*GEMB + r)*4, &v, 4);
+          }
+          gts.push_back(std::move(t)); }
+        const char* gnames[3] = { "ffn_gate_exps.weight", "ffn_up_exps.weight", "ffn_down_exps.weight" };
+        for (int g = 0; g < 3; ++g) {
+            SynTensor t; t.name = std::string("blk.0.") + gnames[g]; t.dims = {GEMB, GFF, GE};
+            t.data.resize(GEMB*GFF*GE*4);
+            for (uint32_t e = 0; e < GE; ++e) for (uint32_t i = 0; i < GEMB*GFF; ++i) {
+                float v = (float)(e * 1000 + i);
+                std::memcpy(t.data.data() + (e*GEMB*GFF + i)*4, &v, 4);
+            }
+            gts.push_back(std::move(t)); }
+        { std::ofstream f(src2, std::ios::binary | std::ios::trunc);
+          const auto bytes = BuildGGUF(gts, "deepseek2", GE);
+          f.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())); }
+        PruneRequest greq; greq.keep_ratio = 0.5;
+        PruneReport grep;
+        const PruneError gerr = PruneGGUF(src2, dst2, greq, grep);
+        Check(gerr == PruneError::None, "B3g: deepseek2 group prune succeeded");
+        Check(grep.experts_removed == 24, "B3g: experts removed = 24 (3 tensors x 8)");
+        bool whole_group = (grep.layers.size() == 3);
+        const std::vector<uint32_t> want = {8,9,10,11,12,13,14,15};
+        for (const auto& l : grep.layers) if (l.kept != want) whole_group = false;
+        Check(whole_group, "B3g: kept set is exactly one whole group {8..15} (all 3 tensors)");
+        LoadedGGUF gg;
+        Check(LoadGGUF(dst2, gg), "B3g: grouped output re-parsed");
+        Check(gg.expert_count == 8, "B3g: expert_count rewritten to 8");
+        Check(gg.expert_used_count == 4, "B3g: expert_used_count = min(4,8) = 4");
+        bool gdims = true;
+        for (size_t i = 0; i < gg.names.size(); ++i) {
+            if (gg.names[i].find("_exps.") != std::string::npos)
+                if (!(gg.dims[i] == std::vector<uint64_t>({GEMB, GFF, 8}))) gdims = false;
+            if (gg.names[i] == "blk.0.ffn_gate_inp.weight")
+                if (!(gg.dims[i] == std::vector<uint64_t>({GEMB, 8}))) gdims = false;
+        }
+        Check(gdims, "B3g: exps dims [8,4,8] + router dims [8,8]");
+        std::printf("B3G_RESULT=%s (failures so far=%d)\n", g_fail == 0 ? "PASS" : "FAIL", g_fail);
+    }
 
     std::printf("R04_RESULT=%s (failures=%d)\n", g_fail == 0 ? "PASS" : "FAIL", g_fail);
     return g_fail == 0 ? 0 : 1;
