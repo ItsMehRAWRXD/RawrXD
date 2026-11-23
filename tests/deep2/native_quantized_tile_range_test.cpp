@@ -73,6 +73,20 @@ static void testFixedBlockRange(uint32_t type) {
     }
 }
 
+static void testTQ2Range() {
+    assert(deep2::tensorStorageBytes(256, deep2::TensorType::TQ2_0) == 66);
+    std::vector<uint8_t> encoded(2 * 66, 0);
+    for (int block = 0; block < 2; ++block) {
+        for (int i = 0; i < 64; ++i) encoded[block * 66 + i] = 0xE4;
+        put16(encoded.data() + block * 66 + 64, 0x3c00); // scale = 1
+    }
+    float tile[4]{};
+    assert(deep2::dequantizeTensorRange(deep2::TensorType::TQ2_0,
+        512, 254, 4, encoded.data(), encoded.size(), tile));
+    assert(tile[0] == 1.0f && tile[1] == 2.0f);
+    assert(tile[2] == -1.0f && tile[3] == 0.0f);
+}
+
 static void testNVFP4Range() {
     assert(deep2::tensorStorageBytes(64, deep2::TensorType::NVFP4) == 36);
     std::vector<uint8_t> encoded(2 * 36, 0);
@@ -184,6 +198,7 @@ static void testF32Range() {
 }
 
 int main() {
+    testTQ2Range();
     testNVFP4Range();
     testMXFP4Range();
     testIQ4XSRange();
