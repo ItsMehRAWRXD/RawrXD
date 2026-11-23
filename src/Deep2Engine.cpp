@@ -1037,8 +1037,16 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     // the full tensor remains in compressed host residency / the ROM pager.
     // Vulkan buffer-copy sizes/offsets are 4-byte aligned. Pad the final
     // compact word without changing the logical element count seen by the shader.
-    std::vector<uint8_t> alignedWeights(static_cast<size_t>(weightBufferBytes), 0);
-    std::memcpy(alignedWeights.data(), wView.data, logicalWeightBytes);
+    // Most packed tiles are already Vulkan-aligned. Upload directly from the
+    // compressed residency export instead of cloning the entire tile in RAM.
+    // Only the rare unaligned tail requires a zero-padded staging copy.
+    const void* weightUploadData = wView.data;
+    std::vector<uint8_t> alignedWeights;
+    if (weightBufferBytes != static_cast<VkDeviceSize>(logicalWeightBytes)) {
+        alignedWeights.assign(static_cast<size_t>(weightBufferBytes), 0);
+        std::memcpy(alignedWeights.data(), wView.data, logicalWeightBytes);
+        weightUploadData = alignedWeights.data();
+    }
     size_t defaultGpuBudget = 512ull * kResidencyMiB;
     if (gpu.vramBytes) {
         const uint64_t deviceBudget = std::max<uint64_t>(64ull * kResidencyMiB,
@@ -1050,7 +1058,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
                                                defaultGpuBudget);
     if (!weightCacheKey.empty()) {
         cachedWeightBuffer = vulkan->getOrCreateCachedWeightBuffer(
-            gpu, weightCacheKey, alignedWeights.data(), weightBufferBytes,
+            gpu, weightCacheKey, weightUploadData, weightBufferBytes,
             gpuBudget, Wbuf);
     }
     if (!cachedWeightBuffer) {
@@ -1060,7 +1068,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Wbuf, Wmem, nullptr)) {
             cleanup(); return false;
         }
-        if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, alignedWeights.data(), weightBufferBytes)) {
+        if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, weightUploadData, weightBufferBytes)) {
             cleanup(); return false;
         }
     }
