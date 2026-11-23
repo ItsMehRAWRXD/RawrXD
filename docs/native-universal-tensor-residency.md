@@ -86,3 +86,14 @@ The Vulkan initialization step builds the fixed-stride GPU F16/BF16 payload dire
 The WeightTensor builder uses the bounded streaming reader API and enforces the remaining model budget while building chunks. It does not create a second full-size F32 staging vector. Regression coverage verifies chunk-boundary reads, bounded admission, and budget rejection.
 
 **Memory accounting caveat:** the GGUF file mapping remains the authoritative source and is retained for fallback. This change adds bounded compressed private storage; it does not yet unmap or replace the original file mapping, so a 50% reduction in total host working set is not claimed. The device-side F16/BF16 savings apply only to tensors promoted and submitted through supported Vulkan QGEMV paths. Measured process working-set and per-device VRAM receipts remain required.
+
+
+## Lossless residency for already-quantized GGUF tensors
+
+Model binding also evaluates non-F32 tensor payloads for lossless byte compression. The native `ChunkedByteStorage` retains independently encoded RLE/LZ4/raw chunks only when the complete tensor has a net storage win and fits the same per-model 512 MiB residency budget used by F32 private storage. The GGML wire type, block geometry, and source mapping remain unchanged. Set `RAWRXD_COMPRESS_QUANTIZED_BYTES=0` to disable this path.
+
+For supported Vulkan QGEMV types (Q8_0, Q2_K, Q4_K, Q6_K), the resident forward path reconstructs only a bounded 256 KiB row tile from compressed byte chunks, then dispatches that original quantized block representation to the existing shader. Output-row offsets preserve the final matrix layout. Each immutable tile has a distinct cache key incorporating tensor identity, row window, and quant type; the cache fails closed on key/type/size mismatches. The path avoids fused-command lifetimes so a tile cannot be evicted while an unsubmitted command references it.
+
+The CPU LinearW fallback uses the registered GGML block geometry and dequantizer to reconstruct one quantized row at a time into reusable scratch, then computes that row's dot product. It does not expand the full quantized matrix to F32. Quantized types not supported by the packed Vulkan shader can still use the CPU row path when a compressed byte backing exists.
+
+**Remaining scope:** compressed-byte residency is currently attached to model-bound tensors and selected supported quantized operators. Embedding lookup, all normalization/state tensors, every quantized GGML type on Vulkan, expert-prefetch/fused execution, and lazy tensor-loading paths still require dedicated integration. The source GGUF mapping remains available for fallback; this is not yet a claim that all mapped pages have been released or that process RSS has fallen by the compressed-byte ratio.
