@@ -65,6 +65,7 @@ public:
                                        const void* data, VkDeviceSize size,
                                        size_t budgetBytes, VkBuffer& buffer);
     size_t cachedWeightBytes() const;
+    size_t weightCacheBudgetBytes() const;
 
 private:
     struct CachedWeightBuffer {
