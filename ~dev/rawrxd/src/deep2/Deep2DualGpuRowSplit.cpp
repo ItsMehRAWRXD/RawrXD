@@ -1,5 +1,6 @@
 // Deep2DualGpuRowSplit.cpp
 #include "Deep2DualGpuRowSplit.hpp"
+#include "QuantKernelRegistry.hpp"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -116,6 +117,25 @@ const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
     const long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
     const uint16_t pm=(uint16_t)std::max<long double>(
         1,std::min<long double>(999,s0/(s0+s1)*1000.0L+0.5L));
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    if (compressedAvailable) {
+        // Do not retain decompressed host slices in the process-wide plan
+        // cache. Keep only the current call's bounded pair of row tiles.
+        static thread_local CachedDualRowPlan transient;
+        transient = {};
+        transient.split = chooseThroughputSplit((uint32_t)wt.rows,g0,g1);
+        transient.valid = transient.split.valid &&
+            Deep2BuildGpuWeightView(
+                wt,transient.split.row0Begin,transient.split.row0Count,
+                transient.gpu0) &&
+            Deep2BuildGpuWeightView(
+                wt,transient.split.row1Begin,transient.split.row1Count,
+                transient.gpu1);
+        return transient.valid ? &transient : nullptr;
+    }
     const DualPlanKey key{
         wt.data,(uint32_t)wt.rows,(uint32_t)wt.cols,wt.type,pm};
     static std::mutex mu;
@@ -161,7 +181,12 @@ struct Q4KColumnSlices {
 // One mutable/latest slice set per weight tensor pointer, keyed by wt.data only.
 // Replaced when ratio changes — prevents unbounded growth under varying ratioPermille.
 const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
-    if(wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    if(compressedAvailable ||
+       wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
        !wt.rows||!wt.cols||wt.cols%256u!=0u) return nullptr;
 
     struct Entry { Q4KColumnSlices s; uint16_t ratioPermille=0; };
@@ -631,10 +656,14 @@ bool supportedGpuType(int t) noexcept {
 uint64_t sliceKey(const WeightTensor& wt,uint32_t begin,uint32_t count) noexcept {
     uint64_t h=14695981039346656037ull;
     for(unsigned char c:wt.name){h^=c;h*=1099511628211ull;}
+    for(unsigned char c:wt.residencyKey){h^=c;h*=1099511628211ull;}
+    h^=wt.fileOffset+0x9E3779B97F4A7C15ull+(h<<6)+(h>>2);
+    h^=static_cast<uint64_t>(reinterpret_cast<uintptr_t>(wt.data));
+    h^=(uint64_t)wt.shardId<<48;
     h^=(uint64_t)begin<<32;
     h^=count;
     h^=(uint64_t)(uint32_t)wt.type*0x9E3779B185EBCA87ull;
-    return h;
+    return h ? h : 1ull;
 }
 
 bool Deep2BuildGpuWeightView(
@@ -642,21 +671,26 @@ bool Deep2BuildGpuWeightView(
     GpuWeightView& out) noexcept
 {
     out={};
-    if(!wt.data || !rowCount || rowBegin>=wt.rows ||
-       rowCount>wt.rows-rowBegin || !wt.cols ||
-       !supportedGpuType(wt.type))
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    const int sourceType = compressedAvailable ? wt.residencyType : wt.type;
+    if((!wt.data && !compressedAvailable) || !rowCount ||
+       rowBegin>=wt.rows || rowCount>wt.rows-rowBegin || !wt.cols ||
+       !supportedGpuType(sourceType))
         return false;
 
-    size_t rowBytes=0;
-    if(wt.type==0){
-        if(wt.cols>std::numeric_limits<size_t>::max()/sizeof(float))
-            return false;
-        rowBytes=wt.cols*sizeof(float);
-    } else {
-        if(!wt.sizeBytes || wt.rows==0 || wt.sizeBytes%wt.rows!=0)
-            return false;
-        rowBytes=wt.sizeBytes/wt.rows;
-    }
+    const auto* desc = LookupQuantType(static_cast<uint32_t>(sourceType));
+    if(!desc || !desc->blockElements || !desc->blockBytes ||
+       (desc->blockElements > 1 && wt.cols % desc->blockElements != 0))
+        return false;
+    const size_t blocksPerRow =
+        (wt.cols + desc->blockElements - 1) / desc->blockElements;
+    if(!blocksPerRow ||
+       blocksPerRow > std::numeric_limits<size_t>::max()/desc->blockBytes)
+        return false;
+    const size_t rowBytes=blocksPerRow*desc->blockBytes;
     if(!rowBytes ||
        rowBegin>std::numeric_limits<size_t>::max()/rowBytes ||
        rowCount>std::numeric_limits<size_t>::max()/rowBytes)
@@ -664,15 +698,30 @@ bool Deep2BuildGpuWeightView(
 
     const size_t off=(size_t)rowBegin*rowBytes;
     const size_t bytes=(size_t)rowCount*rowBytes;
-    if(wt.sizeBytes && (off>wt.sizeBytes || bytes>wt.sizeBytes-off))
-        return false;
-
-    out.data=static_cast<const uint8_t*>(wt.data)+off;
+    if(compressedAvailable) {
+        try {
+            out.ownedBytes=std::make_shared<std::vector<uint8_t>>(bytes);
+        } catch(...) {
+            out={};
+            return false;
+        }
+        if(!wt.residencyCache->ReadRange(
+                wt.residencyKey,off,bytes,out.ownedBytes->data())) {
+            out={};
+            return false;
+        }
+        out.data=out.ownedBytes->data();
+    } else {
+        if(wt.sizeBytes && (off>wt.sizeBytes || bytes>wt.sizeBytes-off))
+            return false;
+        out.data=static_cast<const uint8_t*>(wt.data)+off;
+    }
     out.bytes=bytes;
-    out.type=wt.type;
+    out.type=sourceType;
     out.rows=rowCount;
     out.cols=(uint32_t)wt.cols;
-    out.key=sliceKey(wt,rowBegin,rowCount);
+    out.key=sliceKey(wt,rowBegin,rowCount) ^
+        (compressedAvailable ? 0xC04D505245535345ull : 0ull);
     return true;
 }
 
@@ -1290,21 +1339,22 @@ bool Deep2RunDualGpuRowSplitBatch4PrimaryAssembled(
         uint32_t rows;
         uint32_t cols;
         uint32_t batch;
+        uint64_t stableKey;
         bool ok;
     };
     auto runFn=[](void* p) noexcept -> bool {
         auto* c=static_cast<AssembledCtx*>(p);
         c->ok=c->g->DispatchGemvQ4KBatch(
             c->wdata,c->wbytes,c->input,c->output,
-            c->rows,c->cols,c->batch);
+            c->rows,c->cols,c->batch,c->stableKey);
         return c->ok;
     };
     AssembledCtx c0{&primary,w0.data,w0.bytes,
         primary.ResidentBatchInput(),y0,
-        w0.rows,w0.cols,batch,false};
+        w0.rows,w0.cols,batch,w0.key,false};
     AssembledCtx c1{&secondary,w1.data,w1.bytes,
         secondary.ResidentBatchInput(),y1,
-        w1.rows,w1.cols,batch,false};
+        w1.rows,w1.cols,batch,w1.key,false};
 
     const bool both=rowExecutor().run(
         DualRowJob{runFn,&c0},

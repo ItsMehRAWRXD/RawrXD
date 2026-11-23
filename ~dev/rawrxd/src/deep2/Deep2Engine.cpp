@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cstdint>
 #include <limits>
+#include <cstdlib>
 #include <new>
 #include <stdexcept>
 
@@ -22,6 +23,52 @@
 #endif
 
 namespace Deep2 {
+
+static bool deep2CompressedResidencyEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_COMPRESSED_RESIDENCY");
+        return value && value[0] == '1';
+    }();
+    return enabled;
+}
+
+static bool deep2F16ResidencyEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_RESIDENCY_FP16");
+        return value && value[0] == '1';
+    }();
+    return enabled;
+}
+
+static void attachCompressedResidency(WeightTensor& wt,
+                                      const GGUFTensor& tensor,
+                                      TensorResidencyCache& cache) {
+    if (!deep2CompressedResidencyEnabled() || !tensor.data ||
+        tensor.sizeBytes == 0 || tensor.name.empty())
+        return;
+    const std::string key = tensor.name + "@" +
+        std::to_string(tensor.shardId) + ":" +
+        std::to_string(tensor.fileOffset);
+    bool stored = false;
+    int storedType = static_cast<int>(tensor.type);
+    const size_t elementCount = tensor.numElements();
+    if (tensor.type == GGMLType::GGML_TYPE_F32 &&
+        deep2F16ResidencyEnabled() && elementCount != 0 &&
+        elementCount <= std::numeric_limits<size_t>::max() / sizeof(float) &&
+        tensor.sizeBytes == elementCount * sizeof(float)) {
+        stored = cache.RegisterF32AsF16(
+            key, reinterpret_cast<const float*>(tensor.data),
+            elementCount);
+        if (stored) storedType = static_cast<int>(GGMLType::GGML_TYPE_F16);
+    } else {
+        stored = cache.Register(key, tensor.data, tensor.sizeBytes, true);
+    }
+    if (stored) {
+        wt.residencyCache = &cache;
+        wt.residencyKey = key;
+        wt.residencyType = storedType;
+    }
+}
 
 // =================== HELPER: RMSNorm ====================
 static void rmsnorm(float* out, const float* in, const float* weight,
@@ -448,7 +495,8 @@ void Deep2Engine::reset() {
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
     if (ggufPath.empty()) return false;
 
-    // Tear down aliases before replacing the mapping.
+    // Tear down prior cache entries before replacing mapped tensor aliases.
+    tensorResidencyCache_.Clear();
     modelWeights = {};
     ggufResult = {};
     modelState_ = ModelState::Closed;
@@ -493,6 +541,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         wt.shardId = t->shardId;
         wt.fileOffset = t->fileOffset;
         wt.hasFileBacking = true;
+        attachCompressedResidency(wt, *t, tensorResidencyCache_);
 
         if (t->shape.size() >= 2) {
             wt.cols = static_cast<size_t>(t->shape[0]);
@@ -726,6 +775,16 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     return false;
                 wt.fileOffset = t->fileOffset + static_cast<uint64_t>(byteOffset);
                 wt.hasFileBacking = true;
+                if (deep2CompressedResidencyEnabled()) {
+                    GGUFTensor expertTensor = *t;
+                    expertTensor.data = t->data + byteOffset;
+                    expertTensor.sizeBytes = sliceBytes;
+                    expertTensor.name = wt.name;
+                    expertTensor.fileOffset = wt.fileOffset;
+                    expertTensor.shape = { t->shape[0], t->shape[1] };
+                    attachCompressedResidency(
+                        wt, expertTensor, tensorResidencyCache_);
+                }
             }
             return true;
         };
@@ -1137,6 +1196,7 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize) {
 }
 
 void Deep2Engine::unloadModel() {
+    tensorResidencyCache_.Clear();
     deallocateBuffers();
     delete[] reinterpret_cast<uint8_t*>(weights);
     weights = nullptr;
@@ -1181,7 +1241,12 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (!wt.data || wt.rows != V || wt.cols != H || H == 0)
         return false;
 
-    const auto* desc = LookupQuantType(static_cast<uint32_t>(wt.type));
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    const int sourceType = compressedAvailable ? wt.residencyType : wt.type;
+    const auto* desc = LookupQuantType(static_cast<uint32_t>(sourceType));
     if (!desc || desc->blockBytes == 0 || desc->blockElements == 0)
         return false;
 
@@ -1200,14 +1265,24 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
         return false;
 
     const size_t offset = row * rowBytes;
-    if (wt.sizeBytes != 0 &&
+    if (!compressedAvailable && wt.sizeBytes != 0 &&
         (offset > wt.sizeBytes || rowBytes > wt.sizeBytes - offset))
         return false;
 
-    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
+    auto dequant = QuantKernelRegistry::Instance().GetDequant(sourceType);
     if (!dequant) return false;
 
-    const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
+    std::vector<uint8_t> rowTile;
+    const uint8_t* src = nullptr;
+    if (compressedAvailable) {
+        try { rowTile.resize(rowBytes); } catch (...) { return false; }
+        if (!wt.residencyCache->ReadRange(
+                wt.residencyKey, offset, rowBytes, rowTile.data()))
+            return false;
+        src = rowTile.data();
+    } else {
+        src = static_cast<const uint8_t*>(wt.data) + offset;
+    }
     dequant(src, output, H);
     parityEmit(ParityCheckpoint::Embed, output, H);
     return finiteVector(output, H);
@@ -1367,8 +1442,19 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         throw std::runtime_error("LinearW: tensor backing smaller than geometry");
     }
 
+    // FP32-to-FP16 residency is intentionally CPU-only until Vulkan has a
+    // numerically validated F16 weight kernel. Lossless same-type cache
+    // entries can use compressed-range Vulkan staging.
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    const bool gpuResidencyCompatible =
+        !compressedAvailable || wt.residencyType == wt.type;
+
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
-    if (vulkanInitialized_ && !vulkanDevices_.empty()) {
+    if (vulkanInitialized_ && !vulkanDevices_.empty() &&
+        gpuResidencyCompatible) {
         std::memset(output, 0, outDim * sizeof(float));
         if (deep2ForwardTraceEnabled()) {
             std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
@@ -1471,13 +1557,42 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     if (deep2ForwardTraceEnabled()) {
         std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
     }
-    auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    const int cpuWeightType =
+        compressedAvailable ? wt.residencyType : wt.type;
+    auto kernel = QuantKernelRegistry::Instance().GetGEMV(cpuWeightType);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
     }
 
     std::memset(output, 0, outDim * sizeof(float));
-    kernel(static_cast<const uint8_t*>(wt.data), input, output, rows, cols);
+    if (compressedAvailable) {
+        // Decode exactly one matrix row at a time. Transient decompression
+        // memory is bounded to one packed row, never the full tensor.
+        const size_t cachedBytes =
+            packedBytesRequired(cpuWeightType, rows, cols);
+        if (cachedBytes == 0 || cachedBytes % rows != 0)
+            throw std::runtime_error("LinearW: invalid compressed row geometry");
+        const size_t rowBytes = cachedBytes / rows;
+        std::vector<uint8_t> rowTile;
+        try { rowTile.resize(rowBytes); }
+        catch (...) {
+            throw std::runtime_error("LinearW: compressed row allocation failed");
+        }
+        for (size_t row = 0; row < rows; ++row) {
+            if (!wt.residencyCache->ReadRange(
+                    wt.residencyKey, row * rowBytes, rowBytes,
+                    rowTile.data())) {
+                throw std::runtime_error("LinearW: compressed row read failed");
+            }
+            kernel(rowTile.data(), input, output + row, 1, cols);
+        }
+    } else {
+        kernel(static_cast<const uint8_t*>(wt.data), input, output, rows, cols);
+    }
 
     if (bias) {
         for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
@@ -1509,23 +1624,42 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
     if (!normWeight.data) {
         for (size_t i = 0; i < dim; ++i) output[i] = input[i] * invRms;
     } else {
-        const auto* desc = LookupQuantType(static_cast<uint32_t>(normWeight.type));
+        const bool compressedAvailable =
+            normWeight.residencyCache && !normWeight.residencyKey.empty() &&
+            normWeight.residencyType >= 0 &&
+            normWeight.residencyCache->Contains(normWeight.residencyKey);
+        const int sourceType =
+            compressedAvailable ? normWeight.residencyType : normWeight.type;
+        const auto* desc = LookupQuantType(static_cast<uint32_t>(sourceType));
         if (!desc || desc->blockBytes == 0 || desc->blockElements == 0) {
             throw std::runtime_error("RMSNormW: unsupported weight type");
         }
         const size_t required =
             ((dim + desc->blockElements - 1) / desc->blockElements) *
             desc->blockBytes;
-        if (normWeight.sizeBytes != 0 && required > normWeight.sizeBytes) {
+        if (!compressedAvailable && normWeight.sizeBytes != 0 &&
+            required > normWeight.sizeBytes) {
             throw std::runtime_error("RMSNormW: norm tensor too small");
         }
 
         std::vector<float> w(dim);
-        auto dequant = QuantKernelRegistry::Instance().GetDequant(normWeight.type);
+        auto dequant = QuantKernelRegistry::Instance().GetDequant(sourceType);
         if (!dequant) {
             throw std::runtime_error("RMSNormW: no dequant kernel");
         }
-        dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
+        std::vector<uint8_t> packedTile;
+        const uint8_t* packed = static_cast<const uint8_t*>(normWeight.data);
+        if (compressedAvailable) {
+            try { packedTile.resize(required); } catch (...) {
+                throw std::runtime_error("RMSNormW: compressed tile allocation failed");
+            }
+            if (!normWeight.residencyCache->ReadRange(
+                    normWeight.residencyKey, 0, required, packedTile.data())) {
+                throw std::runtime_error("RMSNormW: compressed tile read failed");
+            }
+            packed = packedTile.data();
+        }
+        dequant(packed, w.data(), dim);
         if (!finiteVector(w.data(), dim)) {
             throw std::runtime_error("RMSNormW: non-finite norm weights");
         }
@@ -2650,6 +2784,7 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
     wt.shardId = t->shardId;
     wt.fileOffset = t->fileOffset;
     wt.hasFileBacking = true;
+    attachCompressedResidency(wt, *t, tensorResidencyCache_);
 
     if (t->shape.size() == 1) {
         wt.rows = static_cast<size_t>(t->shape[0]);

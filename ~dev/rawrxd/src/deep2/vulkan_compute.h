@@ -76,6 +76,10 @@ struct GpuWeightView {
     uint32_t cols = 0;
     uint64_t key = 0;
 
+    // Optional host-side materialization for compressed-range staging.
+    // PinWeightView copies this into device-local residency synchronously.
+    std::shared_ptr<std::vector<uint8_t>> ownedBytes;
+
     bool valid() const noexcept {
         return data && bytes && rows && cols;
     }
@@ -204,7 +208,7 @@ public:
                             uint32_t rows, uint32_t cols);
     bool DispatchGemvQuant(int type, const void* weights, size_t weightBytes,
                            DeviceBuf& input, DeviceBuf& output,
-                           uint32_t rows, uint32_t cols);
+                           uint32_t rows, uint32_t cols, uint64_t stableKey = 0);
 
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
@@ -270,7 +274,7 @@ public:
     bool DispatchGemvQ4KBatch(
         const void* weights, size_t weightBytes,
         DeviceBuf& inputBatch, DeviceBuf& outputBatch,
-        uint32_t rows, uint32_t cols, uint32_t batch);
+        uint32_t rows, uint32_t cols, uint32_t batch, uint64_t stableKey = 0);
     struct QBatchPush {
         uint32_t type = 12;
         uint32_t rows = 0;
@@ -554,7 +558,7 @@ public:
     bool DispatchGemvQ4KBatch4Row(
         const void* weights, size_t weightBytes,
         DeviceBuf& inputBatch, DeviceBuf& outputBatch,
-        uint32_t rows, uint32_t cols, uint32_t batch);
+        uint32_t rows, uint32_t cols, uint32_t batch, uint64_t stableKey = 0);
     VkPipeline qBatch4RowPipeline_ = VK_NULL_HANDLE;
     VkPipelineLayout qBatch4RowPipelineLayout_ = VK_NULL_HANDLE;
     uint64_t Q4KBatchWeightBytes() const noexcept {
@@ -585,11 +589,11 @@ public:
     bool DispatchGemvQ4KBatch8Row(
         const void* weights, size_t weightBytes,
         DeviceBuf& inputBatch, DeviceBuf& outputBatch,
-        uint32_t rows, uint32_t cols, uint32_t batch);
+        uint32_t rows, uint32_t cols, uint32_t batch, uint64_t stableKey = 0);
     Q4KBatchTile SelectQ4KBatchTile(
         const void* weights, size_t weightBytes,
         DeviceBuf& inputBatch, DeviceBuf& scratchOutput,
-        uint32_t rows, uint32_t cols, uint32_t batch);
+        uint32_t rows, uint32_t cols, uint32_t batch, uint64_t stableKey = 0);
     VkPipeline qBatch8RowPipeline_ = VK_NULL_HANDLE;
     VkPipelineLayout qBatch8RowPipelineLayout_ = VK_NULL_HANDLE;
     std::unordered_map<Q4KTileKey, Q4KTileChoice, Q4KTileKeyHash>
@@ -1377,7 +1381,7 @@ private:
     bool ensureWeightF32(const float* weights, uint64_t key,
                          size_t bytes, DeviceBuf*& out);
     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
-                           DeviceBuf*& out);
+                           DeviceBuf*& out, uint64_t stableKey = 0);
     void clearWeightCache();
 
     // B5.2 probe state
