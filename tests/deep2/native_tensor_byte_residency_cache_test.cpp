@@ -26,6 +26,15 @@ int main() {
     };
     assert(cache.RegisterFromReader("shard0:weight0",source.size(),reader,4096));
     assert(reads==(source.size()+4095)/4096);
+    // Rebinding the same cache key to a different tensor size must fail
+    // without invoking the new source or corrupting the original resident.
+    size_t collisionReads = 0;
+    assert(!cache.RegisterFromReader("shard0:weight0", source.size() + 4096,
+        [&](size_t,size_t,uint8_t*) { ++collisionReads; return false; },4096));
+    assert(collisionReads == 0);
+    assert(cache.Contains("shard0:weight0"));
+    assert(cache.GetStats().tensorCount == 1);
+
     auto stats=cache.GetStats();
     assert(stats.tensorCount==1);
     assert(stats.logicalBytes==source.size());
