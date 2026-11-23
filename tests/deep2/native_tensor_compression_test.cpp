@@ -232,5 +232,32 @@ int main() {
     bool rejected=false;
     try { auto bad=r; bad.payload[0]=0; (void)Decode(bad); } catch(const std::invalid_argument&) {rejected=true;}
     assert(rejected);
+
+    // Count the retained per-chunk directory against the hard budget before
+    // source I/O. Tiny chunks cannot create unbounded metadata outside the cap.
+    size_t f32MetadataReads = 0;
+    bool f32MetadataRejected = false;
+    try {
+        (void)ChunkedF32Storage::BuildFromReader(
+            1024, 0.0f,
+            [&](size_t, size_t, float*) { ++f32MetadataReads; return true; },
+            1, false, 512);
+    } catch (const StorageAdmissionRejected&) {
+        f32MetadataRejected = true;
+    }
+    assert(f32MetadataRejected && f32MetadataReads == 0);
+
+    size_t byteMetadataReads = 0;
+    bool byteMetadataRejected = false;
+    try {
+        (void)ChunkedByteStorage::BuildFromReader(
+            1024,
+            [&](size_t, size_t, uint8_t*) { ++byteMetadataReads; return true; },
+            1, false, 512);
+    } catch (const StorageAdmissionRejected&) {
+        byteMetadataRejected = true;
+    }
+    assert(byteMetadataRejected && byteMetadataReads == 0);
+
     std::cout<<"native tensor compression tests PASS\n";
 }
