@@ -19,9 +19,8 @@ int main() {
         for(unsigned block=0;block<2;++block) {
             const float scale=block?0.25f:0.5f;
             uint32_t bits=0;std::memcpy(&bits,&scale,4);
-            WriteU32(out,bits);
-            const float sum=123.0f;std::memcpy(&bits,&sum,4);
-            WriteU32(out,bits); // must NOT affect decoding
+            WriteU16(out,Float32BitsToFloat16(bits));
+            WriteU16(out,0x7e00u); // must NOT affect decoding
             for(unsigned i=0;i<32;++i)
                 out.put(static_cast<char>(static_cast<int>(i)-16));
         }
