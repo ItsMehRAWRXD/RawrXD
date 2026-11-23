@@ -3457,7 +3457,21 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
                 packedRowBytes * wt.rows == wt.sizeBytes;
 
-            if (eligibleCompressedMatrix && t.data)
+            // RMSNorm weights are small one-dimensional F32/F16 vectors. Their
+            // consumer is range-aware below, so they can remain compressed too.
+            // Do not admit biases or unrelated vectors through this route.
+            const bool normVectorName = name.find("norm") != std::string::npos;
+            const std::size_t normElementBytes =
+                wt.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+                wt.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+            const bool eligibleCompressedNorm =
+                compressedModeEnabled && normVectorName &&
+                t.dimensions.size() == 1 && normElementBytes != 0 &&
+                wt.cols > 0 &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+                wt.cols * normElementBytes == wt.sizeBytes;
+
+            if ((eligibleCompressedMatrix || eligibleCompressedNorm) && t.data)
             {
                 constexpr std::size_t kDefaultCompressedModelBudget =
                     4ull * 1024ull * 1024ull * 1024ull;
