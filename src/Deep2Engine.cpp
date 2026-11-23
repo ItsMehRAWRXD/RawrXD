@@ -312,9 +312,15 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     VkDeviceSize ysize = (VkDeviceSize)rows * 4;
 
     auto cleanup = [&]() {
+        if (Wmapped && Wmem) vkUnmapMemory(gpu.device, Wmem);
+        if (xmapped && xmem) vkUnmapMemory(gpu.device, xmem);
+        if (ymapped && ymem) vkUnmapMemory(gpu.device, ymem);
+        Wmapped = xmapped = ymapped = nullptr;
         vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
+        Wbuf = xbuf = ybuf = VK_NULL_HANDLE;
+        Wmem = xmem = ymem = VK_NULL_HANDLE;
     };
 
     VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -333,6 +339,118 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     }
 
     std::memcpy(y.data(), ymapped, static_cast<size_t>(ysize));
+    cleanup();
+    return true;
+}
+
+
+bool Deep2Engine::vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
+                                       const deep2::TensorEntry& weight,
+                                       const float* x, uint64_t xCount,
+                                       std::vector<float>& y, uint32_t tileRows) {
+    y.clear();
+    if (!vulkanReady || !vulkan || !x || tileRows == 0 ||
+        weight.dims.size() < 2 || gpu.device == VK_NULL_HANDLE) return false;
+
+    // GGUF stores matrix dimensions in reverse logical order. The existing ROM
+    // dequant path exposes logical [rows, cols], with cols contiguous in memory.
+    const uint64_t cols = weight.dims[0];
+    const uint64_t rows = weight.dims[1];
+    if (cols == 0 || rows == 0 || xCount != cols ||
+        rows > UINT32_MAX || cols > UINT32_MAX ||
+        rows > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        cols > std::numeric_limits<size_t>::max() / sizeof(float)) return false;
+
+    const uint64_t block = static_cast<uint64_t>(deep2::quantBlockSize(weight.type));
+    if (block == 0 || (cols % block) != 0) {
+        fprintf(stderr, "[VULKAN_COMPRESSED_GEMV] row width %llu is not aligned to quant block %llu\n",
+                static_cast<unsigned long long>(cols),
+                static_cast<unsigned long long>(block));
+        return false;
+    }
+
+    // Bound all decoded weight residency to one tile. A tile is uploaded,
+    // consumed synchronously, and released before the next range is decoded.
+    tileRows = static_cast<uint32_t>(std::min<uint64_t>(tileRows, rows));
+    const uint64_t maxRowsByStorage =
+        gpu.props.limits.maxStorageBufferRange / (cols * sizeof(float));
+    if (maxRowsByStorage == 0) return false;
+    tileRows = static_cast<uint32_t>(std::min<uint64_t>(tileRows, maxRowsByStorage));
+    if (tileRows == 0) return false;
+
+    static deep2::VulkanProgram program;
+    static VkDevice boundDevice = VK_NULL_HANDLE;
+    if (boundDevice != gpu.device) {
+        if (boundDevice != VK_NULL_HANDLE) program.destroy(boundDevice);
+        const std::string spv = exeDir() + "shaders\\gemv_f32.spv";
+        if (!program.init(gpu.device, spv)) {
+            fprintf(stderr, "[VULKAN_COMPRESSED_GEMV] program init failed: %s\n", spv.c_str());
+            boundDevice = VK_NULL_HANDLE;
+            return false;
+        }
+        boundDevice = gpu.device;
+    }
+
+    const VkDeviceSize xSize = static_cast<VkDeviceSize>(cols) * sizeof(float);
+    const VkDeviceSize wCapacity = static_cast<VkDeviceSize>(tileRows) * xSize;
+    const VkDeviceSize yCapacity = static_cast<VkDeviceSize>(tileRows) * sizeof(float);
+    if (xSize > gpu.props.limits.maxStorageBufferRange ||
+        wCapacity > gpu.props.limits.maxStorageBufferRange ||
+        yCapacity > gpu.props.limits.maxStorageBufferRange) return false;
+
+    VkBuffer wBuffer = VK_NULL_HANDLE, xBuffer = VK_NULL_HANDLE, yBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory wMemory = VK_NULL_HANDLE, xMemory = VK_NULL_HANDLE, yMemory = VK_NULL_HANDLE;
+    void* wMapped = nullptr; void* xMapped = nullptr; void* yMapped = nullptr;
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags memory = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    auto cleanup = [&]() {
+        if (wMapped && wMemory) vkUnmapMemory(gpu.device, wMemory);
+        if (xMapped && xMemory) vkUnmapMemory(gpu.device, xMemory);
+        if (yMapped && yMemory) vkUnmapMemory(gpu.device, yMemory);
+        wMapped = xMapped = yMapped = nullptr;
+        vulkan->destroyBuffer(gpu, wBuffer, wMemory);
+        vulkan->destroyBuffer(gpu, xBuffer, xMemory);
+        vulkan->destroyBuffer(gpu, yBuffer, yMemory);
+        wBuffer = xBuffer = yBuffer = VK_NULL_HANDLE;
+        wMemory = xMemory = yMemory = VK_NULL_HANDLE;
+    };
+
+    if (!vulkan->createBuffer(gpu, wCapacity, usage, memory, wBuffer, wMemory, &wMapped) ||
+        !vulkan->createBuffer(gpu, xSize, usage, memory, xBuffer, xMemory, &xMapped) ||
+        !vulkan->createBuffer(gpu, yCapacity, usage, memory, yBuffer, yMemory, &yMapped)) {
+        cleanup();
+        return false;
+    }
+    std::memcpy(xMapped, x, static_cast<size_t>(xSize));
+    y.assign(static_cast<size_t>(rows), 0.0f);
+
+    for (uint64_t rowStart = 0; rowStart < rows; rowStart += tileRows) {
+        const uint32_t activeRows = static_cast<uint32_t>(
+            std::min<uint64_t>(tileRows, rows - rowStart));
+        const uint64_t firstElement = rowStart * cols;
+        const uint64_t count = static_cast<uint64_t>(activeRows) * cols;
+        std::vector<float> decodedTile;
+        if (!dequantTensorRange(weight, firstElement, count, decodedTile) ||
+            decodedTile.size() != static_cast<size_t>(count)) {
+            cleanup();
+            y.clear();
+            return false;
+        }
+        const VkDeviceSize activeWBytes = static_cast<VkDeviceSize>(count) * sizeof(float);
+        const VkDeviceSize activeYBytes = static_cast<VkDeviceSize>(activeRows) * sizeof(float);
+        std::memcpy(wMapped, decodedTile.data(), static_cast<size_t>(activeWBytes));
+        std::memset(yMapped, 0, static_cast<size_t>(activeYBytes));
+
+        if (!program.dispatch(gpu, wBuffer, xBuffer, yBuffer, activeRows,
+                              static_cast<uint32_t>(cols))) {
+            cleanup();
+            y.clear();
+            return false;
+        }
+        std::memcpy(y.data() + rowStart, yMapped, static_cast<size_t>(activeYBytes));
+    }
+
     cleanup();
     return true;
 }
@@ -369,34 +487,49 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
         std::cout << "[VERIFY] blk.0.attn_qkv.weight not present in ROM\n";
         return;
     }
-    deep2::DequantizedTensor dq;
-    if (!engine.dequantTensor(*qkv, dq)) {
-        std::cout << "[VERIFY] dequant of blk.0.attn_qkv.weight failed\n";
+    const uint64_t rows = qkv->dims.size() >= 2 ? qkv->dims[1] : 0;
+    const uint64_t cols = qkv->dims.size() >= 2 ? qkv->dims[0] : 0;
+    if (rows == 0 || cols == 0 || cols > UINT32_MAX) {
+        std::cout << "[VERIFY] invalid QKV matrix geometry\n";
         return;
     }
-    std::cout << "[VERIFY] dequantized blk.0.attn_qkv.weight -> " << dq.rows << "x" << dq.cols << " f32\n";
-
-    uint64_t testRows = std::min<uint64_t>(16, dq.rows);
-    std::vector<float> x(dq.cols, 1.0f), y(testRows, 0.0f);
-    engine.gemvFloat(dq.data.data(), x.data(), y.data(), testRows, dq.cols);
-    float sum = 0.0f;
-    for (float v : y) sum += v;
-    std::cout << "[VERIFY] GEMV(" << testRows << "x" << dq.cols << ") sum = " << sum << "\n";
+    const uint64_t testRows = std::min<uint64_t>(16, rows);
+    std::vector<float> x(static_cast<size_t>(cols), 1.0f);
+    std::vector<float> cpuTile;
+    std::vector<float> y(static_cast<size_t>(testRows), 0.0f);
+    if (!engine.dequantTensorRange(*qkv, 0, testRows * cols, cpuTile) ||
+        cpuTile.size() != static_cast<size_t>(testRows * cols)) {
+        std::cout << "[VERIFY] bounded compressed QKV range decode failed\n";
+        return;
+    }
+    engine.gemvFloat(cpuTile.data(), x.data(), y.data(), testRows, cols);
+    float cpuSum = 0.0f;
+    for (float v : y) cpuSum += v;
+    std::cout << "[VERIFY] bounded CPU GEMV(" << testRows << "x" << cols
+              << ") sum = " << cpuSum << "\n";
 
     if (engine.vulkanReady) {
-        deep2::TensorView wSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(dq.data.data()),
-                           static_cast<size_t>(testRows * dq.cols * 4),
-                           { testRows, dq.cols }, true };
-        deep2::TensorView xSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(x.data()),
-                           static_cast<size_t>(x.size() * 4), { dq.cols }, true };
         for (size_t gi = 0; gi < engine.vulkan->gpuCount(); ++gi) {
             const auto* g = engine.vulkan->gpu(gi);
             std::vector<float> yVulkan;
-            bool ok = engine.vulkanGemv(*g, wSlice, xSlice, yVulkan);
+            const bool ok = engine.vulkanGemvCompressed(
+                *g, *qkv, x.data(), cols, yVulkan, 16);
             float vs = 0.0f;
-            for (float v : yVulkan) vs += v;
-            std::cout << "[VERIFY] Vulkan GEMV on " << g->name << ": " << (ok ? "OK" : "FAILED")
-                      << " sum = " << vs << "\n";
+            bool parity = ok && yVulkan.size() == rows;
+            if (parity) {
+                for (uint64_t i = 0; i < testRows; ++i) {
+                    vs += yVulkan[static_cast<size_t>(i)];
+                    const float reference = y[static_cast<size_t>(i)];
+                    const float actual = yVulkan[static_cast<size_t>(i)];
+                    const float tolerance = 1e-3f + 1e-3f * std::fabs(reference);
+                    if (!std::isfinite(actual) || std::fabs(actual - reference) > tolerance)
+                        parity = false;
+                }
+            }
+            std::cout << "[VERIFY] compressed Vulkan GEMV on " << g->name
+                      << ": " << (ok ? "OK" : "FAILED")
+                      << " | first-row-window sum = " << vs
+                      << " | CPU parity = " << (parity ? "PASS" : "FAIL") << "\n";
         }
     }
     std::cout << "[STATUS] ROM execution bridge complete\n";

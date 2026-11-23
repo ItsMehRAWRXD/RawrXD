@@ -87,6 +87,12 @@ struct Deep2Engine {
     // Vulkan GEMV consuming TensorViews (dequant on CPU, real compute on GPU).
     bool vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
                     const deep2::TensorView& xView, std::vector<float>& y);
+    // Stream/dequantize bounded weight-row tiles from compressed ROM pages directly into Vulkan.
+    // xCount must equal the logical matrix column count; quantized row boundaries must be block-aligned.
+    bool vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
+                              const deep2::TensorEntry& weight,
+                              const float* x, uint64_t xCount,
+                              std::vector<float>& y, uint32_t tileRows = 16);
 
     // ---- Move 10: Full Phi-3 ROM-Path Forward Pass ----
     // Execute complete 32-layer Phi-3 forward pass through virtual ROM path
