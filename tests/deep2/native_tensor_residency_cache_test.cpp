@@ -36,6 +36,28 @@ int main() {
     assert(!cache.RegisterF32FromReader("layer.0.weight",source.size()+1,0.0f,
         [&](size_t,size_t,float*) { ++collisionReads; return false; },1024));
     assert(collisionReads == 0);
+    // A cached lossy representation must not satisfy a later stricter
+    // numerical tolerance for the same tensor key. A relaxed request may
+    // reuse an entry built with stricter bounds, but never the reverse.
+    Deep2::TensorResidencyCache toleranceCache(8192);
+    std::vector<float> toleranceSource(1024, 1.0001f);
+    size_t toleranceReads = 0;
+    auto toleranceReader = [&](size_t offset, size_t count, float* out) {
+        ++toleranceReads;
+        std::copy(toleranceSource.begin() + offset,
+                  toleranceSource.begin() + offset + count, out);
+        return true;
+    };
+    assert(toleranceCache.RegisterF32FromReader(
+        "tolerance.weight", toleranceSource.size(), 0.01f, toleranceReader, 256));
+    const size_t toleranceBuiltReads = toleranceReads;
+    assert(!toleranceCache.RegisterF32FromReader(
+        "tolerance.weight", toleranceSource.size(), 0.0f, toleranceReader, 256));
+    assert(toleranceReads == toleranceBuiltReads);
+    assert(toleranceCache.RegisterF32FromReader(
+        "tolerance.weight", toleranceSource.size(), 0.02f, toleranceReader, 256));
+    assert(toleranceReads == toleranceBuiltReads);
+    assert(toleranceCache.GetStats().tensorCount == 1);
     assert(cache.Contains("layer.0.weight"));
     assert(cache.GetStats().tensorCount == 1);
 
