@@ -128,6 +128,12 @@ Result decompress(const std::uint8_t* data,
         return {Status::InvalidInput, {}};
     }
 
+    // The one-shot zlib API reports output lengths in uLongf. On targets
+    // where uLongf is narrower than size_t, never allocate a buffer that
+    // zlib cannot represent or write into safely.
+    maxOutputBytes = std::min(maxOutputBytes,
+        static_cast<std::size_t>(std::numeric_limits<uLongf>::max()));
+
     if (maxOutputBytes == 0) {
         return {Status::OutputLimitExceeded, {}};
     }
