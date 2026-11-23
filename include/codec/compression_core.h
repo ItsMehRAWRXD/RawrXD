@@ -13,7 +13,7 @@
 //   * explicit binary buffers with lengths (no implicit NUL termination)
 //   * explicit status codes instead of a bare bool + empty QByteArray
 //   * bounded decompression (caller declares a hard output ceiling)
-//   * inputs larger than zlib's uInt range are streamed in bounded chunks
+//   * inputs larger than zlib's one-shot limit are rejected; callers must chunk
 //
 // No Qt types appear in this header. Qt consumers adapt through
 // src/codec/compression_qt.cpp.
@@ -55,7 +55,8 @@ struct Result {
 // (32-bit) length, so a single call cannot exceed MaxOneShotBytes. Inputs at or
 // above that size return InvalidInput rather than silently truncating. Callers
 // that may handle model-sized buffers should chunk at or below this limit and
-// concatenate the resulting independent zlib streams, or use a streaming API.
+// store independent chunk lengths and decode each stream separately, or use
+// a streaming API. Concatenating streams is NOT supported by uncompress().
 Result compress(const std::uint8_t* data,
                 std::size_t size,
                 int level = -1);
