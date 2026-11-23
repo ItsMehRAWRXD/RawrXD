@@ -24,7 +24,7 @@ int main() {
     float y[2] = {};
     Resident f16{{0,0x3c, 0,0xc0, 0,0x38, 0,0x40}};
     ResidentMatvec(f16, ResidentWeightType::F16, x, y, 2, 2, 2);
-    assert(y[0] == -3.f && y[1] == 5.5f);
+    assert(y[0] == -3.f && y[1] == 4.5f);
     Resident f32;
     for (float f : {1.f, -2.f, 0.5f, 2.f}) {
         std::uint8_t b[4];
@@ -32,7 +32,7 @@ int main() {
         f32.bytes.insert(f32.bytes.end(), b, b + 4);
     }
     ResidentMatvec(f32, ResidentWeightType::F32, x, y, 2, 2, 4);
-    assert(y[0] == -3.f && y[1] == 5.5f);
+    assert(y[0] == -3.f && y[1] == 4.5f);
     Resident q8;
     q8.bytes.resize(68, 0);
     q8.bytes[1] = 0x3c; q8.bytes[35] = 0x3c;
