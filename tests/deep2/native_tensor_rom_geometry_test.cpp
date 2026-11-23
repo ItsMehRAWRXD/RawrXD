@@ -1,6 +1,7 @@
 #include "../../src/TensorROM.hpp"
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -73,6 +74,30 @@ static void testRejectedAlignment() {
     std::filesystem::remove(path);
 }
 
+static void testPagerStreamingAndEviction() {
+    std::vector<uint8_t> backing(128);
+    for (size_t i = 0; i < backing.size(); ++i) backing[i] = static_cast<uint8_t>(i);
+    deep2::PageCache cache(32, 16);
+    cache.setReader([&](uint32_t, uint64_t pageNo, uint8_t* out, size_t size) {
+        const uint64_t offset = pageNo * 16;
+        if (offset > backing.size() || size > backing.size() - offset) return false;
+        std::memcpy(out, backing.data() + static_cast<size_t>(offset), size);
+        return true;
+    });
+    uint8_t actual[40]{};
+    assert(cache.readRange(0, 12, sizeof(actual), actual));
+    assert(std::memcmp(actual, backing.data() + 12, sizeof(actual)) == 0);
+    assert(cache.residentBytes() <= cache.capacityBytes());
+    assert(cache.pageCount() <= 2);
+
+    deep2::Page* pinned = cache.acquire(0, 2);
+    assert(pinned != nullptr);
+    assert(cache.evictUnleasedRange(0, 32, 16) == 0); // leased pages cannot be reclaimed
+    cache.release(pinned);
+    assert(cache.evictUnleasedRange(0, 32, 16) == 1);
+    assert(cache.residentBytes() <= cache.capacityBytes());
+}
+
 static void testResetBetweenModels() {
     const auto first = std::filesystem::temp_directory_path()/"rawrxd-rom-reset-first.gguf";
     const auto second = std::filesystem::temp_directory_path()/"rawrxd-rom-reset-second.gguf";
@@ -91,6 +116,7 @@ static void testResetBetweenModels() {
 }
 
 int main() {
+    testPagerStreamingAndEviction();
     testResetBetweenModels();
     testRejectedAlignment();
     testValid(0,{16,2},16*2*4);
