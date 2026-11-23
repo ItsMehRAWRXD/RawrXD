@@ -83,6 +83,12 @@ public:
         if (prompt.size() > config_.max_context ||
             max_new_tokens > config_.max_context - prompt.size())
             throw std::out_of_range("prompt plus generation exceeds transformer context");
+        // Validate the complete prompt before any model reads or KV mutation.
+        // Otherwise an invalid later token can waste a full prefix forward.
+        for (const auto token : prompt) {
+            if (token < 0 || static_cast<std::size_t>(token) >= config_.vocabulary)
+                throw std::out_of_range("prompt token is outside vocabulary");
+        }
         if (max_new_tokens == 0) return {};
         // The last emitted token is never forwarded. Reserve KV memory only
         // for prompt tokens and the preceding generated tokens.
@@ -110,11 +116,8 @@ public:
         }
         std::vector<float> logits;
         std::size_t position = 0;
-        for (const auto token : prompt) {
-            if (token < 0 || static_cast<std::size_t>(token) >= config_.vocabulary)
-                throw std::out_of_range("prompt token is outside vocabulary");
+        for (const auto token : prompt)
             logits = forwardToken(token, position++, keys, values);
-        }
         std::vector<int32_t> generated;
         generated.reserve(max_new_tokens);
         for (std::size_t n = 0; n < max_new_tokens; ++n) {
