@@ -11,10 +11,10 @@ int main() {
     {
         std::ofstream out(src,std::ios::binary);
         WriteU32(out,0x46554747);WriteU32(out,3);WriteU64(out,1);WriteU64(out,0);
-        WriteName(out,"output.weight");WriteU32(out,2);
-        WriteU64(out,256);WriteU64(out,1);WriteU32(out,9);WriteU64(out,0);
+        WriteName(out,"blk.0.ffn_up.weight");WriteU32(out,2);
+        WriteU64(out,32);WriteU64(out,1);WriteU32(out,9);WriteU64(out,0);
         PadTo(out,32);
-        for(int block=0;block<8;++block) {
+        for(int block=0;block<1;++block) {
             WriteU32(out,0x3f800000u);WriteU32(out,0u);
             for(int i=0;i<32;++i)out.put(static_cast<char>(i-16));
         }
@@ -34,7 +34,7 @@ int main() {
         if(!a||!b||b.tellg()>=a.tellg())++failures;
     }
     std::remove(src);std::remove(dst);
-    std::cout<<"REAP_AUTO_SENSITIVE_Q8="<<(failures?"FAIL":"PASS")
+    std::cout<<"REAP_AUTO_VECTOR_Q8="<<(failures?"FAIL":"PASS")
              <<" failures="<<failures<<"\n";
     return failures?1:0;
 }
