@@ -1,0 +1,35 @@
+name: Qt zlib codec smoke
+
+on:
+  push:
+    branches: [main, "codex/zlib-streaming-inflate-mainline-20261123"]
+    paths:
+      - "src/codec/compression.cpp"
+      - "include/codec/compression.h"
+      - "tests/qt_zlib_codec_test.cpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/zlib-codec-smoke.yml"
+  pull_request:
+    paths:
+      - "src/codec/compression.cpp"
+      - "include/codec/compression.h"
+      - "tests/qt_zlib_codec_test.cpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/zlib-codec-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  linux-qt-zlib:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install codec build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libvulkan-dev qt6-base-dev zlib1g-dev
+      - name: Configure
+        run: cmake -S . -B build/zlib-codec -DCMAKE_BUILD_TYPE=Release
+      - name: Build production adapter and test
+        run: cmake --build build/zlib-codec --target qt_zlib_codec_test --parallel 2
+      - name: Run streaming inflate regression
+        run: ctest --test-dir build/zlib-codec -R '^qt_zlib_codec_test$' --output-on-failure
