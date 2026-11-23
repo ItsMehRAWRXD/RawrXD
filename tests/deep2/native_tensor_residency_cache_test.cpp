@@ -310,12 +310,13 @@ int main() {
 
     // A uniform 16-bit range can be exported directly for packed GPU upload;
     // this must not materialize an intermediate F32 tile on the host.
-    Encoding packedEncoding = Encoding::Raw;
+    RawrXD::TensorCompression::Encoding packedEncoding =
+        RawrXD::TensorCompression::Encoding::Raw;
     std::vector<uint8_t> packedRange;
     const auto beforePackedExport = mixedF32Cache.GetStats().bytesDecoded;
     assert(mixedF32Cache.ExportUniform16BitRange(
         "mixed.f32", 2048, 1, packedEncoding, packedRange));
-    assert(packedEncoding == Encoding::F16);
+    assert(packedEncoding == RawrXD::TensorCompression::Encoding::F16);
     assert(packedRange.size() == sizeof(uint16_t));
     assert(mixedF32Cache.GetStats().bytesDecoded == beforePackedExport);
 
