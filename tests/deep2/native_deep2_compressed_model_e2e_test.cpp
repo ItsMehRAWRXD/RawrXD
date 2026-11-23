@@ -157,7 +157,37 @@ int main() {
                 const auto best = static_cast<size_t>(
                     std::max_element(logits.begin(), logits.end()) - logits.begin());
                 const auto stats = engine.GetTensorResidencySnapshot();
+
+                // Independent analytic oracle for this deliberately tiny model:
+                // V=[1,1,2,2,0...], FFN=0, then the engine's final LayerNorm.
+                std::vector<float> oracleHidden(H, 0.0f);
+                oracleHidden[0] = 1.0f;
+                oracleHidden[1] = 1.0f;
+                oracleHidden[2] = 2.0f;
+                oracleHidden[3] = 2.0f;
+                float mean = 0.0f;
+                for (float value : oracleHidden) mean += value;
+                mean /= static_cast<float>(H);
+                float variance = 0.0f;
+                for (float value : oracleHidden) {
+                    const float delta = value - mean;
+                    variance += delta * delta;
+                }
+                variance /= static_cast<float>(H);
+                const float inverseStd = 1.0f / std::sqrt(variance + 1.0e-5f);
+                for (float& value : oracleHidden) value = (value - mean) * inverseStd;
+                std::vector<float> oracleLogits(outputRows, 0.0f);
+                for (size_t row = 0; row < H - 1; ++row)
+                    oracleLogits[row] = oracleHidden[row];
+                oracleLogits[outputRows - 1] =
+                    2.0f * oracleHidden[0] + 2.0f * oracleHidden[1];
+                float maxOracleError = 0.0f;
+                for (size_t i = 0; i < outputRows; ++i)
+                    maxOracleError = std::max(maxOracleError,
+                        std::fabs(logits[i] - oracleLogits[i]));
+
                 if (best != outputRows - 1 || logits != baseline ||
+                    maxOracleError > 1.0e-4f ||
                     stats.f32TensorCount == 0 ||
                     stats.f32CompressedBytes >= stats.f32LogicalBytes ||
                     stats.encodedTensorCount == 0 ||
@@ -180,6 +210,7 @@ int main() {
                               << " f32_logical=" << stats.f32LogicalBytes
                               << " encoded_compressed=" << stats.encodedCompressedBytes
                               << " encoded_logical=" << stats.encodedLogicalBytes
+                              << " oracle_max_error=" << maxOracleError
                               << " pager_resident=" << stats.sourcePagerResidentBytes << "\n";
                 }
             }
