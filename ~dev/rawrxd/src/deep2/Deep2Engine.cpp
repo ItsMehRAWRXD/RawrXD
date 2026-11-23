@@ -1465,20 +1465,6 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         throw std::runtime_error("LinearW: tensor backing smaller than geometry");
     }
 
-    // Compressed F32 tensors stay chunked between invocations. The CPU kernel
-    // expands one row at a time into reusable scratch rather than materializing
-    // a second full-size F32 matrix. GPU dispatch remains on the mapped path
-    // until a native compressed-weight Vulkan descriptor/kernel is available.
-    if (wt.compressedF32) {
-        if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
-            throw std::runtime_error("LinearW: compressed backing requires F32 wire type");
-        GEMVChunkedF32(*wt.compressedF32,input,output,rows,cols);
-        if (bias) for (size_t i=0;i<outDim;++i) output[i]+=bias[i];
-        if (!finiteVector(output,outDim))
-            throw std::runtime_error("LinearW: non-finite compressed output");
-        return;
-    }
-
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
     if (vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
@@ -1577,6 +1563,20 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         }
         if (vulkanStrictNoCpuFallback_)
             throw std::runtime_error("LinearW: GPU path failed under strict mode");
+    }
+
+    // Compressed F32 tensors remain available for CPU execution after GPU
+    // attempts. This ordering lets eligible exact F16/BF16 representations use
+    // Vulkan QGEMV first, while RLE/LZ4/mixed chunks decode only the rows needed
+    // by the CPU GEMV when no packed GPU view is available.
+    if (wt.compressedF32) {
+        if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
+            throw std::runtime_error("LinearW: compressed backing requires F32 wire type");
+        GEMVChunkedF32(*wt.compressedF32,input,output,rows,cols);
+        if (bias) for (size_t i=0;i<outDim;++i) output[i]+=bias[i];
+        if (!finiteVector(output,outDim))
+            throw std::runtime_error("LinearW: non-finite compressed output");
+        return;
     }
 
     // CPU fallback
