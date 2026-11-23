@@ -37,6 +37,7 @@ struct RepackTensor {
     bool q8_source_q8_1 = false;
     bool convert_q4_0 = false;
     bool convert_q5_0 = false;
+    bool q5_source_q5_1 = false;
     uint32_t q4_source_type = 0;
 };
 inline bool ReadU32(std::istream& in, uint32_t& v) {
@@ -488,6 +489,56 @@ inline bool ConvertQ6KToQ5_0(std::ifstream& in,std::ofstream& out,
     }
     return true;
 }
+// GGML Q5_1 -> Q5_0: both use 32 weights, but Q5_1 carries a
+// separate minimum. Decode the original values before requantizing.
+// This is lossy unless the original affine offset matches Q5_0.
+inline bool ConvertQ5_1ToQ5_0(std::ifstream& in,std::ofstream& out,
+                               uint64_t from,uint64_t sourceBytes) {
+    if(sourceBytes%24 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char source[24],encoded[22];
+    while(sourceBytes) {
+        if(!in.read(reinterpret_cast<char*>(source),24))return false;
+        const uint16_t dh=uint16_t(source[0])|(uint16_t(source[1])<<8);
+        const uint16_t mh=uint16_t(source[2])|(uint16_t(source[3])<<8);
+        const uint32_t db=Float16ToFloat32Bits(dh),mb=Float16ToFloat32Bits(mh);
+        float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
+        if(!std::isfinite(d)||!std::isfinite(m))return false;
+        float values[32],extreme=0;
+        for(unsigned i=0;i<32;++i) {
+            const unsigned j=i%16;
+            const unsigned low=i<16?(source[8+j]&15):(source[8+j]>>4);
+            const unsigned high=(source[4+i/8]>>(i%8))&1;
+            values[i]=d*static_cast<float>(low|(high<<4))+m;
+            if(!std::isfinite(values[i]))return false;
+            if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
+        }
+        const float target=extreme/-16.0f;
+        uint32_t bits=0;std::memcpy(&bits,&target,4);
+        const uint16_t half=Float32BitsToFloat16(bits);
+        const uint32_t actualBits=Float16ToFloat32Bits(half);
+        float actual=0;std::memcpy(&actual,&actualBits,4);
+        if(extreme!=0 && (!std::isfinite(actual)||actual==0))return false;
+        encoded[0]=static_cast<unsigned char>(half);
+        encoded[1]=static_cast<unsigned char>(half>>8);
+        unsigned char codes[32];
+        for(unsigned i=0;i<32;++i) {
+            const double normalized=actual==0?0.0:static_cast<double>(values[i])/actual;
+            const double q=std::floor(normalized+16.5);
+            codes[i]=static_cast<unsigned char>(std::max(0.0,std::min(31.0,q)));
+        }
+        std::memset(encoded+2,0,4);
+        for(unsigned i=0;i<32;++i)
+            encoded[2+i/8]|=static_cast<unsigned char>(((codes[i]>>4)&1)<<(i%8));
+        for(unsigned i=0;i<16;++i)
+            encoded[6+i]=static_cast<unsigned char>((codes[i]&15)|((codes[i+16]&15)<<4));
+        if(!out.write(reinterpret_cast<const char*>(encoded),22))return false;
+        sourceBytes-=24;
+    }
+    return true;
+}
 inline bool ConvertQ5KToQ4_0(std::ifstream& in,std::ofstream& out,
                               uint64_t from,uint64_t sourceBytes) {
     if(sourceBytes%176 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -833,6 +884,22 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=6; // GGML_TYPE_Q5_0: 8 x 22-byte blocks per 256 weights
             t.bytes=q5Bytes;
         }
+        // Keep quality-sensitive Q5_1 tensors at five-bit precision:
+        // Q5_1 (24 bytes) -> Q5_0 (22 bytes) per 32 weights.
+        // Ordinary matrices may already have selected the smaller Q4_0.
+        if(auto_compress && (sensitive || !matrix) && t.type==7 &&
+           !t.convert_q4_0 && !t.convert_q8_0 && !t.convert_f16 &&
+           t.dims[0]%32==0) {
+            uint64_t q5Bytes=0;
+            if(!CheckedMultiply(count/32,22,q5Bytes))
+                return RepackError::Overflow;
+            if(q5Bytes<t.bytes) {
+                t.convert_q5_0=true;
+                t.q5_source_q5_1=true;
+                t.type=6;
+                t.bytes=q5Bytes;
+            }
+        }
         tensors.push_back(std::move(t));
     }
     const auto directoryEnd=in.tellg();
@@ -964,7 +1031,9 @@ inline RepackError RepackGGUF(const std::string& input,
                                t.source_bytes,t.q4_source_type)))
                 return RepackError::Output;
         } else if(t.convert_q5_0) {
-            if(!ConvertQ6KToQ5_0(in,out,dataStart+t.old_offset,t.source_bytes))
+            if(!(t.q5_source_q5_1 ?
+                 ConvertQ5_1ToQ5_0(in,out,dataStart+t.old_offset,t.source_bytes) :
+                 ConvertQ6KToQ5_0(in,out,dataStart+t.old_offset,t.source_bytes)))
                 return RepackError::Output;
         } else if(t.convert_q8_0) {
             if(!(t.q8_source_k ?
