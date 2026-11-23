@@ -88,6 +88,39 @@ int main() {
     CHECK(bf16.DecodeRange(0,1,bf16Out));
     CHECK(std::fabs(bf16Out[0]-largeFinite[0])<=1024.0f);
 
+    // Lossless LZ4 byte chunks keep already-quantized GGUF blocks packed.
+    std::vector<std::uint8_t> byteSource(256u*1024u);
+    for (std::size_t i=0;i<byteSource.size();++i)
+        byteSource[i]=static_cast<std::uint8_t>(i%97u);
+    auto byteStore=RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
+        byteSource.size(),
+        [&byteSource](std::size_t offset,std::size_t count,std::uint8_t* out) {
+            std::memcpy(out,byteSource.data()+offset,count);
+            return true;
+        },64u*1024u,false,byteSource.size());
+    CHECK(byteStore.storedBytes()<byteStore.size());
+    std::vector<std::uint8_t> byteOut(5000),byteScratch;
+    byteStore.ReadRange(61337,byteOut.size(),byteOut.data(),byteScratch);
+    CHECK(std::memcmp(byteOut.data(),byteSource.data()+61337,byteOut.size())==0);
+
+    // Incompressible payloads fall back to raw bytes and remain lossless.
+    std::vector<std::uint8_t> randomBytes(32768);
+    std::uint32_t randomState=0x12345678u;
+    for (auto& value:randomBytes) {
+        randomState=randomState*1664525u+1013904223u;
+        value=static_cast<std::uint8_t>(randomState>>24);
+    }
+    auto rawStore=RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
+        randomBytes.size(),
+        [&randomBytes](std::size_t offset,std::size_t count,std::uint8_t* out) {
+            std::memcpy(out,randomBytes.data()+offset,count);
+            return true;
+        },8192,false,randomBytes.size());
+    CHECK(rawStore.storedBytes()==rawStore.size());
+    std::vector<std::uint8_t> rawOut(randomBytes.size()),rawScratch;
+    rawStore.ReadRange(0,rawOut.size(),rawOut.data(),rawScratch);
+    CHECK(std::memcmp(rawOut.data(),randomBytes.data(),randomBytes.size())==0);
+
     // Invalid ranges fail closed and do not touch caller memory.
     float untouched[2] = {7.0f,8.0f};
     CHECK(!compact.DecodeRange(compact.elements()-1,2,untouched));
