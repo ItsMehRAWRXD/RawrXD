@@ -257,6 +257,26 @@ int main() {
     assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
 
+    // Distinct FP16/BF16-like values with a shared exponent byte. The
+    // low byte varies, so whole 16-bit words are not a repetitive byte run.
+    std::vector<uint16_t> varied16(4096);
+    for (size_t i = 0; i < varied16.size(); ++i)
+        varied16[i] = uint16_t(0x3c00u | ((i * 73u) & 0x03ffu));
+    auto packed16 = Encode(varied16.data(), varied16.size() * sizeof(uint16_t));
+    assert(packed16.encoding == Encoding::Shuffle16LZ4);
+    assert(packed16.payload.size() < varied16.size() * sizeof(uint16_t));
+    auto decoded16 = Decode(packed16);
+    assert(std::memcmp(decoded16.data(), varied16.data(), decoded16.size()) == 0);
+    auto corrupt16 = packed16;
+    corrupt16.payload.clear();
+    std::vector<uint8_t> untouched16(decoded16.size(), 0x5a);
+    bool caught16 = false;
+    try { DecodeInto(corrupt16, untouched16.data(), untouched16.size()); }
+    catch (const std::invalid_argument&) { caught16 = true; }
+    assert(caught16);
+    assert(std::all_of(untouched16.begin(), untouched16.end(),
+                       [](uint8_t x) { return x == 0x5a; }));
+
     // Non-repeating F32 weights can still have compressible exponent lanes.
     // This lossless shuffled representation must beat raw without relying on
     // repeated whole float values, and must roundtrip bit-for-bit.
