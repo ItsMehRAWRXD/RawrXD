@@ -42,7 +42,13 @@ bool PackedQuant(const WeightTensor& wt) {
 
 size_t StreamBytes(const WeightTensor& wt) {
     if (!wt.data || !wt.rows || !wt.cols) return 0;
-    return PackedQuant(wt) ? wt.sizeBytes : wt.rows * wt.cols * sizeof(float);
+    if (PackedQuant(wt)) return wt.sizeBytes;
+    if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+        const auto packed = std::atomic_load_explicit(
+            &wt.gpuF16Payload, std::memory_order_acquire);
+        if (packed && !packed->bytes.empty()) return packed->bytes.size();
+    }
+    return wt.rows * wt.cols * sizeof(float);
 }
 
 const float* EnsureF32(Deep2Engine& e, const WeightTensor& wt,
