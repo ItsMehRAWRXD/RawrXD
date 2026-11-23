@@ -42,7 +42,7 @@ def independent_decode(typ, block):
         scales=struct.unpack_from("<16b",block,192)
         for j in range(256):
             chunk=j//128;lane=(j%128)//32;col=j%32
-            lo=(block[chunk*64+(lane%2)*32+col]>>(4*(lane//2)))&15
+            lo=(block[chunk*64+(lane//2)*32+col]>>(4*(lane%2)))&15
             high=(block[128+chunk*32+col]>>(2*lane))&3
             out.append(d*scales[j//16]*((lo|(high<<4))-32))
     return out
