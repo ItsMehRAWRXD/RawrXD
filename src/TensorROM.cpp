@@ -342,27 +342,30 @@ uint64_t TensorROM::tensorStorageBytes(const TensorEntry& e) {
 }
 
 bool TensorROM::readTensor(const TensorEntry& entry, uint8_t* out) const {
-    if (!m_pager) return false;
-    const ShardManifest& m = m_shards[entry.shardIndex];
-    return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
-                              m.dataOffset + entry.offset, entry.byteSize(), out);
+    return readTensorRange(entry, 0, entry.byteSize(), out);
 }
 
 bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
                                 uint64_t size, uint8_t* out) const {
-    if (!m_pager) return false;
+    if (!m_pager || entry.shardIndex >= m_shards.size() ||
+        entry.shardIndex > UINT32_MAX || relOffset > entry.byteSize() ||
+        size > entry.byteSize() - relOffset || (size && !out)) return false;
     const ShardManifest& m = m_shards[entry.shardIndex];
-    if (entry.shardIndex >= m_shards.size() || relOffset > entry.byteSize() ||
-        (size && !out)) return false;
-    uint64_t avail = entry.byteSize() - relOffset;
-    if (size > avail) return false;
+    if (entry.offset > m.dataSize ||
+        entry.byteSize() > m.dataSize - entry.offset ||
+        m.dataOffset > UINT64_MAX - entry.offset ||
+        m.dataOffset + entry.offset > UINT64_MAX - relOffset) return false;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
                               m.dataOffset + entry.offset + relOffset, size, out);
 }
 
 TensorLease TensorROM::leaseTensor(const TensorEntry& entry) const {
-    if (!m_pager) return TensorLease(*m_pager, 0, 0, 0); // empty
+    if (!m_pager || entry.shardIndex >= m_shards.size() ||
+        entry.shardIndex > UINT32_MAX) return {};
     const ShardManifest& m = m_shards[entry.shardIndex];
+    if (entry.offset > m.dataSize ||
+        entry.byteSize() > m.dataSize - entry.offset ||
+        m.dataOffset > UINT64_MAX - entry.offset) return {};
     return TensorLease(*m_pager, static_cast<uint32_t>(entry.shardIndex),
                        m.dataOffset + entry.offset, entry.byteSize());
 }
