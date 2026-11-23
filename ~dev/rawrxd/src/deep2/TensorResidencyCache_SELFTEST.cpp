@@ -1,6 +1,7 @@
 #include "TensorResidencyCache.hpp"
 #include <algorithm>
-#include <cassert>
+#include <atomic>
+
 #include <cstdint>
 #include <cstring>
 #include <cmath>
@@ -8,30 +9,32 @@
 #include <thread>
 #include <vector>
 
+#define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
+
 int main() {
     Deep2::TensorResidencyCache cache(1u << 20, 1024);
     std::vector<uint8_t> source(8192);
     for (size_t i = 0; i < source.size(); ++i)
         source[i] = static_cast<uint8_t>((i / 512) & 3u ? 0x5a : 0x11);
-    assert(cache.Register("weights.layer0", source.data(), source.size()));
-    assert(cache.Contains("weights.layer0"));
+    CHECK(cache.Register("weights.layer0", source.data(), source.size()));
+    CHECK(cache.Contains("weights.layer0"));
 
     auto stats = cache.GetStats();
-    assert(stats.tensorCount == 1);
-    assert(stats.chunkCount == 8);
-    assert(stats.storedBytes < stats.logicalBytes);
+    CHECK(stats.tensorCount == 1);
+    CHECK(stats.chunkCount == 8);
+    CHECK(stats.storedBytes < stats.logicalBytes);
 
     // Read a range crossing multiple independent chunks.
     std::vector<uint8_t> tile(2700, 0);
-    assert(cache.ReadRange("weights.layer0", 777, tile.size(), tile.data()));
-    assert(std::equal(tile.begin(), tile.end(), source.begin() + 777));
+    CHECK(cache.ReadRange("weights.layer0", 777, tile.size(), tile.data()));
+    CHECK(std::equal(tile.begin(), tile.end(), source.begin() + 777));
 
     // Invalid range and missing key must not mutate the destination.
     std::vector<uint8_t> untouched(16, 0xa5);
-    assert(!cache.ReadRange("weights.layer0", source.size() - 2, 4, untouched.data()));
-    assert(std::all_of(untouched.begin(), untouched.end(),
+    CHECK(!cache.ReadRange("weights.layer0", source.size() - 2, 4, untouched.data()));
+    CHECK(std::all_of(untouched.begin(), untouched.end(),
                        [](uint8_t v) { return v == 0xa5; }));
-    assert(!cache.ReadRange("missing", 0, untouched.size(), untouched.data()));
+    CHECK(!cache.ReadRange("missing", 0, untouched.size(), untouched.data()));
 
     // Incompressible input is rejected rather than retained as duplicate raw data.
     std::vector<uint8_t> noisy(2048);
@@ -40,21 +43,29 @@ int main() {
         state ^= state << 13; state ^= state >> 17; state ^= state << 5;
         value = static_cast<uint8_t>(state);
     }
-    assert(!cache.Register("noisy", noisy.data(), noisy.size()));
-    assert(!cache.Contains("noisy"));
+    CHECK(!cache.Register("noisy", noisy.data(), noisy.size()));
+    CHECK(!cache.Contains("noisy"));
 
     // Concurrent readers share immutable encoded chunks safely.
     std::vector<uint8_t> a(2048), b(2048);
-    std::thread t0([&] { assert(cache.ReadRange("weights.layer0", 0, a.size(), a.data())); });
-    std::thread t1([&] { assert(cache.ReadRange("weights.layer0", 4096, b.size(), b.data())); });
+    std::atomic<bool> readersOk{true};
+    std::thread t0([&] {
+        if (!cache.ReadRange("weights.layer0", 0, a.size(), a.data()))
+            readersOk.store(false, std::memory_order_relaxed);
+    });
+    std::thread t1([&] {
+        if (!cache.ReadRange("weights.layer0", 4096, b.size(), b.data()))
+            readersOk.store(false, std::memory_order_relaxed);
+    });
     t0.join(); t1.join();
-    assert(std::equal(a.begin(), a.end(), source.begin()));
-    assert(std::equal(b.begin(), b.end(), source.begin() + 4096));
+    CHECK(readersOk.load(std::memory_order_relaxed));
+    CHECK(std::equal(a.begin(), a.end(), source.begin()));
+    CHECK(std::equal(b.begin(), b.end(), source.begin() + 4096));
 
     stats = cache.GetStats();
-    assert(stats.cacheHits >= 3);
-    assert(stats.cacheMisses >= 1);
-    assert(stats.bytesDecoded >= tile.size() + a.size() + b.size());
+    CHECK(stats.cacheHits >= 3);
+    CHECK(stats.cacheMisses >= 1);
+    CHECK(stats.bytesDecoded >= tile.size() + a.size() + b.size());
 
     // Explicit lossy FP32 -> FP16 residency: half-size storage and
     // conversion of only the requested range, including a chunk boundary.
@@ -64,23 +75,23 @@ int main() {
     fp32[20] = std::numeric_limits<float>::infinity();
     fp32[21] = -std::numeric_limits<float>::infinity();
     fp32[22] = std::numeric_limits<float>::quiet_NaN();
-    assert(cache.RegisterF32AsF16("fp32.norm", fp32.data(), fp32.size()));
+    CHECK(cache.RegisterF32AsF16("fp32.norm", fp32.data(), fp32.size()));
     std::vector<float> fp16Decoded(17);
-    assert(cache.ReadF32Range("fp32.norm", 509, fp16Decoded.size(),
+    CHECK(cache.ReadF32Range("fp32.norm", 509, fp16Decoded.size(),
                               fp16Decoded.data()));
     for (size_t i = 0; i < fp16Decoded.size(); ++i) {
         const float expected = fp32[509 + i];
-        if (std::isnan(expected)) assert(std::isnan(fp16Decoded[i]));
-        else if (std::isinf(expected)) assert(fp16Decoded[i] == expected);
-        else assert(std::fabs(fp16Decoded[i] - expected) < 0.002f);
+        if (std::isnan(expected)) CHECK(std::isnan(fp16Decoded[i]));
+        else if (std::isinf(expected)) CHECK(fp16Decoded[i] == expected);
+        else CHECK(std::fabs(fp16Decoded[i] - expected) < 0.002f);
     }
     const auto fpStats = cache.GetStats();
-    assert(fpStats.logicalBytes >= fp32.size() * sizeof(uint16_t));
-    assert(fpStats.storedBytes < fpStats.logicalBytes + source.size());
+    CHECK(fpStats.logicalBytes >= fp32.size() * sizeof(uint16_t));
+    CHECK(fpStats.storedBytes < fpStats.logicalBytes + source.size());
 
     cache.SetBudget(1);
-    assert(!cache.Contains("weights.layer0"));
-    assert(cache.GetStats().storedBytes == 0);
-    assert(cache.GetStats().evictions == 1);
+    CHECK(!cache.Contains("weights.layer0"));
+    CHECK(cache.GetStats().storedBytes == 0);
+    CHECK(cache.GetStats().evictions == 1);
     return 0;
 }
