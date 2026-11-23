@@ -158,6 +158,18 @@ int main() {
     assert(admissionAfter.compressed_bytes == admissionBefore.compressed_bytes);
     assert(!budgetError.empty());
 
+    // The store-wide encoded residency cap is shared across tensors and
+    // enforced under the same lock as publication, including concurrent
+    // admission attempts.
+    CompressedWeightStore cappedStore(0, 64, 32);
+    assert(cappedStore.addTensor("first", weights.data(), weights.size(), &error,
+                                 GGML_TYPE_F16, false, 1024));
+    assert(cappedStore.stats().compressed_bytes <= 32);
+    assert(!cappedStore.addTensor("second", weights.data(), weights.size(), &budgetError,
+                                  GGML_TYPE_F16, false, 1024));
+    assert(!cappedStore.contains("second"));
+    assert(cappedStore.stats().compressed_bytes <= 32);
+
     const auto finalStats = store.stats();
     assert(finalStats.compressed_bytes < finalStats.raw_bytes);
     assert(finalStats.cached_decoded_bytes == 0);
