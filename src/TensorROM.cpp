@@ -67,7 +67,6 @@ static void skipValue(uint32_t type, std::ifstream& f) {
 static std::string readValueAsString(uint32_t type, std::ifstream& f) {
     char buf[64];
     if (type <= 7) {
-        const uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
         switch (type) {
             case 0: { uint8_t v = 0; f.read(reinterpret_cast<char*>(&v), 1); std::snprintf(buf, sizeof(buf), "%u", v); return buf; }
             case 1: { int8_t v = 0; f.read(reinterpret_cast<char*>(&v), 1); std::snprintf(buf, sizeof(buf), "%d", v); return buf; }
