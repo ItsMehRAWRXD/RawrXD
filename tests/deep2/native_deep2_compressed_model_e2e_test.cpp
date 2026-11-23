@@ -186,7 +186,23 @@ int main() {
                     maxOracleError = std::max(maxOracleError,
                         std::fabs(logits[i] - oracleLogits[i]));
 
-                if (best != outputRows - 1 || logits != baseline ||
+                // Repeat the real ROM forward path after warm admission. The second
+                // pass must remain numerically identical and exercise retained
+                // compressed weights rather than depending on first-read behavior.
+                const auto beforeRepeat = stats;
+                std::vector<float> repeatedLogits, repeatedBaseline;
+                const bool repeatOk = engine.executePhi3ROMForwardPass(
+                    {1}, repeatedLogits, repeatedBaseline);
+                const auto repeatedStats = engine.GetTensorResidencySnapshot();
+                const bool repeatParity = repeatOk &&
+                    repeatedLogits == logits && repeatedBaseline == baseline &&
+                    repeatedLogits.size() == outputRows &&
+                    repeatedStats.f32CacheHits > beforeRepeat.f32CacheHits &&
+                    repeatedStats.encodedCacheHits > beforeRepeat.encodedCacheHits &&
+                    repeatedStats.f32ActiveReaders == 0 &&
+                    repeatedStats.encodedActiveReaders == 0;
+
+                if (!repeatParity || best != outputRows - 1 || logits != baseline ||
                     maxOracleError > 1.0e-4f ||
                     stats.f32TensorCount == 0 ||
                     stats.f32CompressedBytes >= stats.f32LogicalBytes ||
