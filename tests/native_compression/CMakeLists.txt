@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.16)
+project(RawrXDNativeCompression LANGUAGES CXX)
+enable_testing()
+foreach(name residency packed_view q4_0_dot)
+  add_executable(rawrxd_${name}_test ../native_${name}_test.cpp)
+  target_compile_features(rawrxd_${name}_test PRIVATE cxx_std_17)
+  add_test(NAME rawrxd_${name} COMMAND rawrxd_${name}_test)
+endforeach()
