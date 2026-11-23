@@ -3,6 +3,7 @@
 // ============================================================================
 #include <fstream>
 #include "runtime_graph_executor.hpp"
+#include "native_resident_matvec.hpp"
 #include "ReapRetainedRouting.hpp"
 #include <limits>
 
@@ -1560,6 +1561,46 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                 }
                 return true;
             }
+        }
+    }
+
+    // Optional bounded-resident CPU execution path. This is the production
+    // graph's bridge to the same reader contract used by compressed tensors.
+    // The adapter reads directly from GGUF's mapped bytes; it does NOT claim
+    // that the mapped GGUF has been evicted or compressed in RAM. A future
+    // compressed source can replace this adapter without changing the kernel.
+    if (w.ggml_type == GGML_TYPE_F16 && n_in > 0 && n_out > 0 &&
+        (force_cpu_ || std::getenv("DEEP2_RESIDENT_F16_CPU"))) {
+        if (n_in > std::numeric_limits<size_t>::max() / 2 ||
+            n_out > std::numeric_limits<size_t>::max() / (n_in * 2) ||
+            w.bytes != n_out * n_in * 2) {
+            err = "linear: resident F16 geometry or byte extent invalid";
+            return false;
+        }
+        struct MappedTensorReader {
+            const uint8_t* data;
+            size_t length;
+            size_t size() const noexcept { return length; }
+            void read(size_t off, uint8_t* out, size_t count) const {
+                if (off > length || count > length - off)
+                    throw std::out_of_range("mapped resident tensor read");
+                std::memcpy(out, data + off, count);
+            }
+        };
+        try {
+            y.assign(n_out, 0.0f);
+            rawrxd::compression::ResidentMatvec(
+                MappedTensorReader{reinterpret_cast<const uint8_t*>(w.data), w.bytes},
+                rawrxd::compression::ResidentWeightType::F16,
+                x.data(), y.data(), n_out, n_in);
+            ++cpu_calls_;
+            trace_dispatch_backend_ = "cpu-bounded-resident-f16";
+            trace_dispatch_forced_ = force_cpu_;
+            trace_dispatch_fallback_ = "bounded mapped GGUF source (not compressed RAM)";
+            return true;
+        } catch (const std::exception& ex) {
+            err = std::string("linear: bounded resident F16 failed: ") + ex.what();
+            return false;
         }
     }
 
