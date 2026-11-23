@@ -213,7 +213,7 @@ bool encodeQ51Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|f16|bf16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|f32|f16|bf16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     bool ownsTemporary=false;
@@ -227,6 +227,7 @@ int main(int argc,char** argv) {
             throw std::runtime_error("input and output refer to the same file");
         if(fs::exists(partialPath) && fs::equivalent(inputPath,partialPath))
             throw std::runtime_error("temporary output refers to the input file");
+        const bool f32=argc==5 && std::string(argv[4])=="f32";
         const bool automatic=argc==5 && std::string(argv[4])=="auto";
         const bool bf16=argc==5 && std::string(argv[4])=="bf16";
         const bool q8=argc==5 && std::string(argv[4])=="q8_0";
@@ -234,7 +235,7 @@ int main(int argc,char** argv) {
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
         const bool quantized=q8||q4||q5||q41||q51;
@@ -337,8 +338,8 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ41(ts.size(),false);
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && !(automatic && t.type==28) && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
-            if(automatic && t.type==28) {
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32) && t.type==28) && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            if((automatic || f32) && t.type==28) {
                 // GGML F64 (type 28) to F32: 50% storage reduction only
                 // when every finite double survives the precision budget.
                 seek(in,add(dataStart,t.offset));
@@ -364,6 +365,7 @@ int main(int argc,char** argv) {
                 if(valid){streamF64toF32[i]=true;outputTypes[i]=0;++changed;}
                 continue;
             }
+            if(f32)continue;
             if(automatic && t.dims[0]>=32 && t.dims[0]%32==0 &&
                (t.type==0 || t.type==1 || t.type==30)) {
                 const size_t inputBlock=t.type==0?128:64;
