@@ -787,7 +787,24 @@ inline RepackError RepackGGUF(const std::string& input,
     // Reject the plan before opening the destination if it cannot shrink.
     if(auto_compress && newData+cursor>=static_cast<uint64_t>(fileEnd))
         return RepackError::Unsupported;
-    std::ofstream out(output,std::ios::binary|std::ios::trunc);
+    // Convert into a sibling staging file. A malformed tensor, an I/O error,
+    // or a failed quantizer must never truncate the requested output path.
+    // Refuse an occupied staging name instead of clobbering another job.
+    const std::filesystem::path stage=std::filesystem::path(output).concat(".reap-part");
+    std::error_code stageError;
+    if(std::filesystem::exists(stage,stageError) || stageError)
+        return RepackError::Output;
+    struct StageCleanup {
+        std::filesystem::path path;
+        bool committed=false;
+        ~StageCleanup() {
+            if(!committed) {
+                std::error_code ignored;
+                std::filesystem::remove(path,ignored);
+            }
+        }
+    } cleanup{stage};
+    std::ofstream out(stage,std::ios::binary|std::ios::trunc);
     if(!out)return RepackError::Output;
     if(!CopyRange(in,out,0,static_cast<uint64_t>(metadataEnd)))
         return RepackError::Output;
@@ -850,6 +867,13 @@ inline RepackError RepackGGUF(const std::string& input,
     if(finalPosition<0||static_cast<uint64_t>(finalPosition)!=newData+cursor)
         return RepackError::Output;
     out.close();
-    return out?RepackError::None:RepackError::Output;
+    if(!out)return RepackError::Output;
+    // On platforms where rename cannot replace an existing destination,
+    // report failure and preserve it rather than deleting it first.
+    std::error_code renameError;
+    std::filesystem::rename(stage,output,renameError);
+    if(renameError)return RepackError::Output;
+    cleanup.committed=true;
+    return RepackError::None;
 }
 }} // namespace RawrXD::REAP
