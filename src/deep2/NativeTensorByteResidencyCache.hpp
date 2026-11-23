@@ -82,8 +82,11 @@ public:
         auto existing = entries_.find(key);
         if (existing != entries_.end()) { existing->second.lastUse = ++tick_; return true; }
         EvictToFitLocked(stored, key);
-        if (stored > budgetBytes_ - compressedBytes_) {
-            rawFallback_.insert(key);
+        // A reader can pin old entries while SetBudget lowers the limit.
+        // Guard subtraction against size_t underflow and keep this temporary
+        // capacity miss retryable after those leases have drained.
+        if (compressedBytes_ > budgetBytes_ ||
+            stored > budgetBytes_ - compressedBytes_) {
             return false;
         }
         Entry e;
