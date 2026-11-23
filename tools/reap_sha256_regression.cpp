@@ -18,6 +18,15 @@ int main(){
     check(abc.Update(reinterpret_cast<const uint8_t*>(value.data()),value.size()) &&
           abc.Finish()=="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
           "sha256_abc");
+    SHA256 boundary;
+    const std::string boundaryData(64,'a');
+    check(boundary.Update(nullptr,0) &&
+          boundary.Update(reinterpret_cast<const uint8_t*>(boundaryData.data()),1) &&
+          boundary.Update(reinterpret_cast<const uint8_t*>(boundaryData.data()+1),63) &&
+          boundary.Finish()=="ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb",
+          "sha256_split_64_byte_boundary");
+    SHA256 invalid;
+    check(!invalid.Update(nullptr,1),"sha256_null_nonempty_rejected");
     SHA256 chunked;
     const std::string many(1000000,'a');
     for(size_t i=0;i<many.size();i+=777){
