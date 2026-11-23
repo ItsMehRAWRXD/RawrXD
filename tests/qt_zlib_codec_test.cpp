@@ -21,6 +21,19 @@ int main() {
     const auto brutalDecoded = codec::inflate(brutal, &ok);
     CHECK(ok && brutalDecoded == input);
 
+    // High expansion ratio must not depend on a guessed output/input ratio.
+    const QByteArray repetitive(1024 * 1024, 'R');
+    const auto highlyCompressed = codec::deflate(repetitive, &ok);
+    CHECK(ok && !highlyCompressed.isEmpty());
+    const auto expanded = codec::inflate(highlyCompressed, &ok);
+    CHECK(ok && expanded == repetitive);
+
+    // Exactly one zlib stream is accepted; arbitrary suffixes are rejected.
+    QByteArray trailing = compressed;
+    trailing.append('x');
+    const auto trailingRejected = codec::inflate(trailing, &ok);
+    CHECK(!ok && trailingRejected.isEmpty());
+
     const QByteArray empty;
     const auto emptyCompressed = codec::deflate(empty, &ok);
     CHECK(ok && emptyCompressed.isEmpty());
