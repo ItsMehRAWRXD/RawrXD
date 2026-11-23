@@ -280,9 +280,20 @@ def run(binary):
         q8_exact=root/"f64-q8-exact.gguf"
         subprocess.run([binary,str(f64),str(q8_exact),"0","q8_0"],check=True)
         assert q8_exact.read_bytes()==f64.read_bytes()
+        # Native F64 Q4_0 and Q5_0 use the original double values for
+        # precision validation and the exact GGML block payload sizes.
+        for mode,typ,block_bytes in (("q4_0",2,18),("q5_0",6,22)):
+            dest=root/("f64-"+mode+".gguf")
+            subprocess.run([binary,str(f64),str(dest),"10000",mode],check=True)
+            data,start,meta,tensors=parse(dest)
+            assert tensors["blk.0.attn_q.weight"][0]==typ
+            assert len(data)-start==(len(doubles)//32)*block_bytes
+            strict=root/("f64-"+mode+"-strict.gguf")
+            subprocess.run([binary,str(f64),str(strict),"0",mode],check=True)
+            assert strict.read_bytes()==f64.read_bytes()
         # Other explicit quantizers preserve F64 until their native F64
         # paths have independent decoder validation.
-        for mode in ("q4_0","q4_1","q5_0","q5_1"):
+        for mode in ("q4_1","q5_1"):
             dest=root/("f64-preserve-"+mode+".gguf")
             subprocess.run([binary,str(f64),str(dest),"10000",mode],check=True)
             assert dest.read_bytes()==f64.read_bytes()
