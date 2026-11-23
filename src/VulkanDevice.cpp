@@ -340,6 +340,16 @@ void VulkanDevice::evictCachedWeightsLocked(size_t requiredBytes) {
     }
 }
 
+static uint64_t hashWeightPayload(const void* data, size_t size) noexcept {
+    const auto* bytes = static_cast<const uint8_t*>(data);
+    uint64_t hash = 14695981039346656037ull;
+    for (size_t i = 0; i < size; ++i) {
+        hash ^= bytes[i];
+        hash *= 1099511628211ull;
+    }
+    return hash ? hash : 1ull;
+}
+
 bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::string& key,
                                                   const void* data, VkDeviceSize size,
                                                   size_t budgetBytes, VkBuffer& buffer) {
@@ -348,6 +358,8 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
         size > static_cast<VkDeviceSize>(std::numeric_limits<size_t>::max()))
         return false;
 
+    const uint64_t contentHash =
+        hashWeightPayload(data, static_cast<size_t>(size));
     std::lock_guard<std::mutex> lock(m_weightCacheMutex);
     m_weightCacheBudgetBytes = budgetBytes;
     evictCachedWeightsLocked(0);
@@ -356,7 +368,9 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
         std::to_string(reinterpret_cast<std::uintptr_t>(gpu.device)) + ":" + key;
     auto existing = m_weightBuffers.find(cacheKey);
     if (existing != m_weightBuffers.end()) {
-        if (existing->second.size == size && existing->second.owner == gpu.device) {
+        if (existing->second.size == size &&
+            existing->second.owner == gpu.device &&
+            existing->second.contentHash == contentHash) {
             existing->second.lastUse = ++m_weightCacheTick;
             buffer = existing->second.buffer;
             return true;
@@ -393,6 +407,7 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
     entry.buffer = created;
     entry.memory = memory;
     entry.size = size;
+    entry.contentHash = contentHash;
     entry.lastUse = ++m_weightCacheTick;
     m_weightBuffers.emplace(cacheKey, entry);
     m_weightCacheBytes += static_cast<size_t>(size);
