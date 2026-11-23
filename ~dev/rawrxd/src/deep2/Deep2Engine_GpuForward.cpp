@@ -45,6 +45,8 @@ bool PackedQuant(const WeightTensor& wt) {
 
 size_t StreamBytes(const WeightTensor& wt) {
     if (!wt.data || !wt.rows || !wt.cols) return 0;
+    if (wt.compressedBytes)
+        return std::min<size_t>(wt.sizeBytes, 256u * 1024u);
     if (PackedQuant(wt)) return wt.sizeBytes;
     if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
         const auto packed = std::atomic_load_explicit(
@@ -808,11 +810,11 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         if (next && nLo < modelWeights.layers.size() &&
             !next->WeightPrefetchActive()) {
             const WeightTensor& wt = modelWeights.layers[nLo].wq;
-            const bool gpuPacked =
-                wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
+            const bool gpuPacked = !wt.compressedBytes &&
+                (wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
                 wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
                 wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
-                wt.type == (int)GGMLType::GGML_TYPE_Q6_K;
+                wt.type == (int)GGMLType::GGML_TYPE_Q6_K);
             GpuWeightView packedF32{};
             const bool gpuCompressedF32 =
                 wt.type == (int)GGMLType::GGML_TYPE_F32 &&
