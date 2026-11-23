@@ -104,8 +104,8 @@ public:
 
     TensorLease(const TensorLease&) = delete;
     TensorLease& operator=(const TensorLease&) = delete;
-    TensorLease(TensorLease&& other) noexcept = default;
-    TensorLease& operator=(TensorLease&& other) noexcept = default;
+    TensorLease(TensorLease&& other) noexcept;
+    TensorLease& operator=(TensorLease&& other) noexcept;
 
     explicit operator bool() const { return m_ok; }
     uint32_t shard() const { return m_shard; }
@@ -119,7 +119,7 @@ public:
     const std::uint8_t* direct(uint64_t relOffset, std::uint64_t size) const;
 
 private:
-    PageCache* m_cache;   // not owned; must outlive the lease
+    PageCache* m_cache = nullptr;   // not owned; must outlive the lease
     uint32_t m_shard = 0;
     uint64_t m_offset = 0;
     uint64_t m_size = 0;
