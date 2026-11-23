@@ -27,6 +27,16 @@ Lossless byte-preserving storage is the default. F32-to-F16 conversion is a sepa
 
 The tile size is currently 32 output rows. This is a correctness-oriented bounded default, not a claim that 32 is optimal for every GPU. Future tuning must preserve a hard memory ceiling and be validated on each backend.
 
+## Decoder-only compressed runtime and grouped-query attention
+
+The synthetic CompressedTransformerRuntime executes a complete decoder-only token path using only compressed-store range reads and bounded matrix projections: token embedding, pre-attention RMSNorm, Q/K/V, RoPE, causal attention, attention output projection, residual, pre-FFN RMSNorm, SwiGLU, down projection, final RMSNorm, and vocabulary logits. Autoregressive generation owns its KV state per request and checks context and cache-byte limits before allocating it.
+
+The runtime now supports grouped-query attention (GQA) as well as ordinary multi-head attention. Config::kv_heads == 0 preserves the multi-head default; otherwise the KV-head count must evenly divide the query-head count. K/V projection geometry is kv_heads * head_dim, while Q and attention output remain heads * head_dim. Query heads map to a KV head by their contiguous group index. RoPE is applied to Q and K using their respective head counts.
+
+The KV-cache budget is calculated from the actual K/V width (layers * tokens * kv_heads * head_dim * 2 * sizeof(float)), rather than charging GQA as if every query head had a separate K/V state. The synthetic regression exercises two query heads sharing one KV head, validates compact-cache admission at the exact byte budget, rejects a one-byte-under budget, and rejects a KV-head count that does not divide the query-head count.
+
+This is a deterministic architectural execution contract, not proof that every production GGUF architecture has been mapped correctly. Architecture-specific tensor names, RoPE variants/scaling, sliding-window policies, MLA, MoE, quantized K/V caches, and the production Vulkan lane remain separate integration and parity gates.
+
 ## What is not yet certified
 
 - The CI suite must compile the canonical GPU forward translation unit on Windows and Linux.
