@@ -99,8 +99,11 @@ int main() {
     CHECK(std::isnan(special[2]));
     CHECK(special[3] == 5.960464477539063e-8f);
     const auto fpStats = cache.GetStats();
-    CHECK(fpStats.logicalBytes >= fp32.size() * sizeof(uint16_t));
-    CHECK(fpStats.storedBytes < fpStats.logicalBytes + source.size());
+    CHECK(fpStats.logicalBytes == source.size() +
+          fp32.size() * sizeof(uint16_t));
+    CHECK(fpStats.logicalBytes == source.size() +
+          (fp32.size() * sizeof(float)) / 2u);
+    CHECK(fpStats.storedBytes < fpStats.logicalBytes);
 
     cache.SetBudget(1);
     CHECK(!cache.Contains("weights.layer0"));
