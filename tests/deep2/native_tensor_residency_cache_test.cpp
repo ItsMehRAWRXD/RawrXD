@@ -30,6 +30,15 @@ int main() {
     };
     assert(cache.RegisterF32FromReader("layer.0.weight",source.size(),0.0f,reader,1024));
     assert(sourceReads==10); // source was consumed in bounded chunks, not one tensor read
+    // A second model's differently sized tensor must never silently reuse
+    // an existing compressed entry merely because its key is identical.
+    size_t collisionReads = 0;
+    assert(!cache.RegisterF32FromReader("layer.0.weight",source.size()+1,0.0f,
+        [&](size_t,size_t,float*) { ++collisionReads; return false; },1024));
+    assert(collisionReads == 0);
+    assert(cache.Contains("layer.0.weight"));
+    assert(cache.GetStats().tensorCount == 1);
+
     assert(cache.Contains("layer.0.weight"));
     auto before=cache.GetStats();
     assert(before.tensorCount==1);
