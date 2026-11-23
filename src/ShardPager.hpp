@@ -65,6 +65,10 @@ public:
     std::size_t pageCount() const;
     std::size_t leaseCount() const;
 
+    // Evict only unleased pages intersecting an absolute file byte range.
+    // Offset semantics match readRange(): absolute file offsets.
+    std::size_t evictUnleasedRange(uint32_t shard, uint64_t offset, uint64_t size);
+
     // Evict every unleased page (useful between layer groups).
     void evictUnleasedAll();
 
