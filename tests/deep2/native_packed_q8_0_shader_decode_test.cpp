@@ -187,6 +187,16 @@ static void testKQuantBlock(uint32_t type) {
             std::memcpy(p, &scale, sizeof(scale));
         }
     }
+    // Exercise the Q4_K/Q5_K upper-group scale and minimum bit fields
+    // independently of the patterned block bytes. A regression in either
+    // source offset must be visible in the dequantized outputs.
+    if (type == 12u || type == 13u) {
+        for (size_t block = 0; block < 2; ++block) {
+            uint8_t* p = encoded.data() + block * blockBytes;
+            for (uint32_t i = 0; i < 12u; ++i)
+                p[4u + i] = static_cast<uint8_t>((i * 29u + 0x69u + block * 7u) & 0xffu);
+        }
+    }
     const auto tensorType = static_cast<deep2::TensorType>(type);
     float canonical[512]{};
     assert(deep2::dequantizeTensorRange(tensorType, 512, 0, 512,
