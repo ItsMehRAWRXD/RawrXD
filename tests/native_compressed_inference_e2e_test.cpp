@@ -50,9 +50,12 @@ static ResidentCompressedTensor load_resident(
                    static_cast<std::streamsize>(bytes.size()));
         if (!file) throw std::runtime_error("cannot write synthetic tensor fixture");
     }
-    rawrxd::compression::FileTensorReader source(path, 0, bytes.size());
     ResidentCompressedTensor resident(64);
-    resident.load(source);
+    {
+        rawrxd::compression::FileTensorReader source(path, 0, bytes.size());
+        resident.load(source);
+    }
+    // Close the file before removal; required by Windows sharing semantics.
     std::remove(path.c_str());
     return resident;
 }
