@@ -1653,6 +1653,15 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             throw std::runtime_error("LinearW: GPU path failed under strict mode");
     }
 
+    // Strict GPU mode is a hard execution contract, including for tensors
+    // whose raw GGUF pointer has been released. Do not silently run the CPU
+    // range decoder after bypassing the raw-pointer-only Vulkan upload path.
+    if (vulkanStrictNoCpuFallback_) {
+        throw std::runtime_error(
+            "LinearW: compressed-only tensor requires a supported GPU upload "
+            "path under strict no-CPU-fallback mode");
+    }
+
     // Compressed F32 tensors remain available for CPU execution after GPU
     // attempts. This ordering lets eligible exact F16/BF16 representations use
     // Vulkan QGEMV first, while mixed F32 chunks and losslessly compressed
