@@ -207,7 +207,8 @@ public:
     template<class Reader>
     static ChunkedF32Storage BuildFromReader(size_t count,float max_abs_error,
                                              Reader&& reader,size_t chunk_elements=4096,
-                                             bool require_first_chunk_savings=false) {
+                                             bool require_first_chunk_savings=false,
+                                             size_t max_stored_bytes=std::numeric_limits<size_t>::max()) {
         if(!chunk_elements) throw std::invalid_argument("zero chunk size");
         if(count>std::numeric_limits<size_t>::max()/sizeof(float))
             throw std::length_error("F32 tensor size overflow");
@@ -216,6 +217,7 @@ public:
         result.chunk_elements_=chunk_elements;
         result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
         std::vector<float> tile;
+        size_t storedBytes=0;
         for(size_t offset=0;offset<count;) {
             const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
             tile.resize(n);
@@ -228,6 +230,9 @@ public:
             if(require_first_chunk_savings && offset==0 &&
                encoded.payload.size()>=n*sizeof(float))
                 throw std::runtime_error("first F32 chunk has no smaller safe encoding");
+            if(encoded.payload.size()>max_stored_bytes-storedBytes)
+                throw std::runtime_error("compressed F32 tensor exceeds residency budget");
+            storedBytes+=encoded.payload.size();
             result.chunks_.push_back(std::move(encoded));
             offset+=n;
         }
