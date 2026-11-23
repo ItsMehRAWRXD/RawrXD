@@ -191,6 +191,7 @@ int main() {
     CHECK(stats.hits > 0);
     CHECK(stats.residentBytes < stats.entries * 1024u * sizeof(float));
     owners.clear();
+    m = TinyModel{}; // release model-owned leases before asserting reclamation
     CHECK(cache.Trim(0) == stats.residentBytes);
     CHECK(cache.GetStats().residentBytes == 0);
     std::puts("SYNTHETIC_TRANSFORMER_COMPRESSED_E2E=PASS");
