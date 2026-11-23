@@ -1,7 +1,7 @@
 #pragma once
 // Typed CPU GEMV kernels over immutable compressed-resident GGUF tensors.
 // The byte store remains lossless; decoding happens only for bounded row chunks.
-// Supported layouts here are standard GGML F16, Q4_0 and Q8_0.
+// Supported layouts: F32/F16 and GGML Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1.
 #include "native_bounded_weight_stager.hpp"
 #include <algorithm>
 #include <cmath>
