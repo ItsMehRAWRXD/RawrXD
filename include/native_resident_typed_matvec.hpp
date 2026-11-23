@@ -293,4 +293,194 @@ inline std::vector<float> resident_q4_0_row(
     return output;
 }
 
+inline std::vector<float> resident_q4_1_row(
+    const ResidentCompressedTensor& weights, std::size_t rowIndex,
+    std::size_t rows, std::size_t cols, std::size_t stagingBudgetBytes = 64 * 1024) {
+    constexpr std::size_t kValues = 32, kBytes = 20;
+    if (!cols || cols % kValues) throw std::invalid_argument("Q4_1 columns must be a nonzero multiple of 32");
+    const auto rowBlocks = cols / kValues;
+    if (rowBlocks > std::numeric_limits<std::size_t>::max() / kBytes)
+        throw std::length_error("Q4_1 row size overflow");
+    const auto rowBytes = rowBlocks * kBytes;
+    if (rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
+        rows * rowBytes != weights.size() || rowIndex >= rows)
+        throw std::invalid_argument("Q4_1 embedding row geometry mismatch");
+    const auto chunkBytes = resident_detail::aligned_chunk(stagingBudgetBytes, kBytes);
+    BoundedWeightStager stager(chunkBytes);
+    std::vector<float> output(cols);
+    const auto base = rowIndex * rowBytes;
+    stager.for_each_chunk(weights, base, rowBytes,
+        [&](std::size_t offset, const std::uint8_t* data, std::size_t size) {
+            const auto firstBlock = (offset - base) / kBytes;
+            for (std::size_t b = 0; b < size; b += kBytes) {
+                const float d = resident_detail::half_to_float(
+                    std::uint16_t(data[b]) | (std::uint16_t(data[b + 1]) << 8));
+                const float m = resident_detail::half_to_float(
+                    std::uint16_t(data[b + 2]) | (std::uint16_t(data[b + 3]) << 8));
+                if (!std::isfinite(d) || !std::isfinite(m))
+                    throw std::runtime_error("non-finite Q4_1 block parameter");
+                const auto first = (firstBlock + b / kBytes) * kValues;
+                for (std::size_t j = 0; j < 16; ++j) {
+                    const auto packed = data[b + 4 + j];
+                    output[first + j] = static_cast<float>(packed & 0x0fu) * d + m;
+                    output[first + j + 16] = static_cast<float>(packed >> 4) * d + m;
+                }
+            }
+        });
+    return output;
+}
+
+inline std::vector<float> resident_q5_0_row(
+    const ResidentCompressedTensor& weights, std::size_t rowIndex,
+    std::size_t rows, std::size_t cols, std::size_t stagingBudgetBytes = 64 * 1024) {
+    constexpr std::size_t kValues = 32, kBytes = 22;
+    if (!cols || cols % kValues) throw std::invalid_argument("Q5_0 columns must be a nonzero multiple of 32");
+    const auto rowBlocks = cols / kValues;
+    if (rowBlocks > std::numeric_limits<std::size_t>::max() / kBytes)
+        throw std::length_error("Q5_0 row size overflow");
+    const auto rowBytes = rowBlocks * kBytes;
+    if (rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
+        rows * rowBytes != weights.size() || rowIndex >= rows)
+        throw std::invalid_argument("Q5_0 embedding row geometry mismatch");
+    const auto chunkBytes = resident_detail::aligned_chunk(stagingBudgetBytes, kBytes);
+    BoundedWeightStager stager(chunkBytes);
+    std::vector<float> output(cols);
+    const auto base = rowIndex * rowBytes;
+    stager.for_each_chunk(weights, base, rowBytes,
+        [&](std::size_t offset, const std::uint8_t* data, std::size_t size) {
+            const auto firstBlock = (offset - base) / kBytes;
+            for (std::size_t b = 0; b < size; b += kBytes) {
+                const float d = resident_detail::half_to_float(
+                    std::uint16_t(data[b]) | (std::uint16_t(data[b + 1]) << 8));
+                if (!std::isfinite(d)) throw std::runtime_error("non-finite Q5_0 scale");
+                const auto* qh = data + b + 2;
+                const auto* qs = data + b + 6;
+                const auto first = (firstBlock + b / kBytes) * kValues;
+                for (std::size_t i = 0; i < kValues; ++i) {
+                    const auto packed = qs[i & 15u];
+                    const auto nibble = (i < 16) ? (packed & 0x0fu) : (packed >> 4);
+                    const auto high = (qh[i >> 3] >> (i & 7u)) & 1u;
+                    const float quant = static_cast<float>(nibble | (high << 4)) - 16.0f;
+                    output[first + i] = quant * d;
+                }
+            }
+        });
+    return output;
+}
+
+inline std::vector<float> resident_q5_1_row(
+    const ResidentCompressedTensor& weights, std::size_t rowIndex,
+    std::size_t rows, std::size_t cols, std::size_t stagingBudgetBytes = 64 * 1024) {
+    constexpr std::size_t kValues = 32, kBytes = 24;
+    if (!cols || cols % kValues) throw std::invalid_argument("Q5_1 columns must be a nonzero multiple of 32");
+    const auto rowBlocks = cols / kValues;
+    if (rowBlocks > std::numeric_limits<std::size_t>::max() / kBytes)
+        throw std::length_error("Q5_1 row size overflow");
+    const auto rowBytes = rowBlocks * kBytes;
+    if (rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
+        rows * rowBytes != weights.size() || rowIndex >= rows)
+        throw std::invalid_argument("Q5_1 embedding row geometry mismatch");
+    const auto chunkBytes = resident_detail::aligned_chunk(stagingBudgetBytes, kBytes);
+    BoundedWeightStager stager(chunkBytes);
+    std::vector<float> output(cols);
+    const auto base = rowIndex * rowBytes;
+    stager.for_each_chunk(weights, base, rowBytes,
+        [&](std::size_t offset, const std::uint8_t* data, std::size_t size) {
+            const auto firstBlock = (offset - base) / kBytes;
+            for (std::size_t b = 0; b < size; b += kBytes) {
+                const float d = resident_detail::half_to_float(
+                    std::uint16_t(data[b]) | (std::uint16_t(data[b + 1]) << 8));
+                const float m = resident_detail::half_to_float(
+                    std::uint16_t(data[b + 2]) | (std::uint16_t(data[b + 3]) << 8));
+                if (!std::isfinite(d) || !std::isfinite(m))
+                    throw std::runtime_error("non-finite Q5_1 block parameter");
+                const auto* qh = data + b + 4;
+                const auto* qs = data + b + 8;
+                const auto first = (firstBlock + b / kBytes) * kValues;
+                for (std::size_t i = 0; i < kValues; ++i) {
+                    const auto packed = qs[i & 15u];
+                    const auto nibble = (i < 16) ? (packed & 0x0fu) : (packed >> 4);
+                    const auto high = (qh[i >> 3] >> (i & 7u)) & 1u;
+                    const float quant = static_cast<float>(nibble | (high << 4));
+                    output[first + i] = quant * d + m;
+                }
+            }
+        });
+    return output;
+}
+
+inline std::vector<float> resident_q8_1_row(
+    const ResidentCompressedTensor& weights, std::size_t rowIndex,
+    std::size_t rows, std::size_t cols, std::size_t stagingBudgetBytes = 64 * 1024) {
+    constexpr std::size_t kValues = 32, kBytes = 40;
+    if (!cols || cols % kValues) throw std::invalid_argument("Q8_1 columns must be a nonzero multiple of 32");
+    const auto rowBlocks = cols / kValues;
+    if (rowBlocks > std::numeric_limits<std::size_t>::max() / kBytes)
+        throw std::length_error("Q8_1 row size overflow");
+    const auto rowBytes = rowBlocks * kBytes;
+    if (rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
+        rows * rowBytes != weights.size() || rowIndex >= rows)
+        throw std::invalid_argument("Q8_1 embedding row geometry mismatch");
+    const auto chunkBytes = resident_detail::aligned_chunk(stagingBudgetBytes, kBytes);
+    BoundedWeightStager stager(chunkBytes);
+    std::vector<float> output(cols);
+    const auto base = rowIndex * rowBytes;
+    stager.for_each_chunk(weights, base, rowBytes,
+        [&](std::size_t offset, const std::uint8_t* data, std::size_t size) {
+            const auto firstBlock = (offset - base) / kBytes;
+            for (std::size_t b = 0; b < size; b += kBytes) {
+                const float d = resident_detail::half_to_float(
+                    std::uint16_t(data[b]) | (std::uint16_t(data[b + 1]) << 8));
+                if (!std::isfinite(d)) throw std::runtime_error("non-finite Q8_1 scale");
+                const auto first = (firstBlock + b / kBytes) * kValues;
+                for (std::size_t j = 0; j < kValues; ++j) {
+                    std::int8_t q = 0;
+                    std::memcpy(&q, data + b + 4 + j, sizeof(q));
+                    output[first + j] = d * static_cast<float>(q);
+                }
+            }
+        });
+    return output;
+}
+
+template<class RowReader>
+inline std::vector<float> resident_rows_matvec(
+    const ResidentCompressedTensor& weights, const float* input,
+    std::size_t rows, std::size_t cols, RowReader&& readRow) {
+    if (cols && !input) throw std::invalid_argument("null activation");
+    std::vector<float> output(rows);
+    for (std::size_t row = 0; row < rows; ++row) {
+        const auto values = readRow(weights, row, rows, cols);
+        double sum = 0.0;
+        for (std::size_t col = 0; col < cols; ++col)
+            sum += static_cast<double>(values[col]) * input[col];
+        output[row] = static_cast<float>(sum);
+    }
+    return output;
+}
+inline std::vector<float> resident_q4_1_matvec(
+    const ResidentCompressedTensor& w, const float* x, std::size_t rows,
+    std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_rows_matvec(w, x, rows, cols,
+        [budget](const auto& a, auto r, auto n, auto k) { return resident_q4_1_row(a, r, n, k, budget); });
+}
+inline std::vector<float> resident_q5_0_matvec(
+    const ResidentCompressedTensor& w, const float* x, std::size_t rows,
+    std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_rows_matvec(w, x, rows, cols,
+        [budget](const auto& a, auto r, auto n, auto k) { return resident_q5_0_row(a, r, n, k, budget); });
+}
+inline std::vector<float> resident_q5_1_matvec(
+    const ResidentCompressedTensor& w, const float* x, std::size_t rows,
+    std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_rows_matvec(w, x, rows, cols,
+        [budget](const auto& a, auto r, auto n, auto k) { return resident_q5_1_row(a, r, n, k, budget); });
+}
+inline std::vector<float> resident_q8_1_matvec(
+    const ResidentCompressedTensor& w, const float* x, std::size_t rows,
+    std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_rows_matvec(w, x, rows, cols,
+        [budget](const auto& a, auto r, auto n, auto k) { return resident_q8_1_row(a, r, n, k, budget); });
+}
+
 } // namespace rawrxd::compression
