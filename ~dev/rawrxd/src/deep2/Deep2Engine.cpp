@@ -449,8 +449,11 @@ void Deep2Engine::reset() {
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
     if (ggufPath.empty()) return false;
 
-    // Tear down aliases before replacing the mapping.
+    // Tear down aliases before replacing the mapping. Clear the old cache
+    // only after its per-weight leases are destroyed, so compressed backing
+    // cannot be reclaimed while a WeightTensor still references it.
     modelWeights = {};
+    residencyCache_.reset();
     ggufResult = {};
     modelState_ = ModelState::Closed;
 
