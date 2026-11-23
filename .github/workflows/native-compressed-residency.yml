@@ -1,0 +1,69 @@
+name: Native compressed residency
+
+on:
+  push:
+    branches: [main, "codex/native-compressed-residency-integration-20261123"]
+    paths:
+      - "include/native_*.hpp"
+      - "tests/native_*compression*_test.cpp"
+      - "tests/native_file_tensor_reader_test.cpp"
+      - "tests/native_resident_*_test.cpp"
+      - "tests/native_bounded_weight_stager_test.cpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/native-compressed-residency.yml"
+  pull_request:
+    paths:
+      - "include/native_*.hpp"
+      - "tests/native_*compression*_test.cpp"
+      - "tests/native_file_tensor_reader_test.cpp"
+      - "tests/native_resident_*_test.cpp"
+      - "tests/native_bounded_weight_stager_test.cpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/native-compressed-residency.yml"
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run native residency tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/native-compression
+          for source in \
+            tests/native_compressed_residency_test.cpp \
+            tests/native_compressed_tensor_test.cpp \
+            tests/native_file_tensor_reader_test.cpp \
+            tests/native_resident_compressed_tensor_test.cpp \
+            tests/native_bounded_weight_stager_test.cpp \
+            tests/native_resident_f32_matvec_test.cpp; do
+            name="$(basename "$source" .cpp)"
+            c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include "$source" -o "build/native-compression/$name"
+            "build/native-compression/$name"
+          done
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run native residency tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force build/native-compression | Out-Null
+          $sources = @(
+            "native_compressed_residency_test",
+            "native_compressed_tensor_test",
+            "native_file_tensor_reader_test",
+            "native_resident_compressed_tensor_test",
+            "native_bounded_weight_stager_test",
+            "native_resident_f32_matvec_test"
+          )
+          foreach ($name in $sources) {
+            cl /nologo /std:c++17 /EHsc /W4 /WX /I include "tests/$name.cpp" "/Fe:build/native-compression/$name.exe"
+            if ($LASTEXITCODE -ne 0) { throw "Compile failed: $name" }
+            & "build/native-compression/$name.exe"
+            if ($LASTEXITCODE -ne 0) { throw "Test failed: $name" }
+          }
