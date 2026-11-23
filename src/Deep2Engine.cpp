@@ -433,9 +433,16 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         return rom.readTensorRange(entry, byteOffset, byteCount,
                                    reinterpret_cast<uint8_t*>(destination));
     }
-    return compressedF32Weights.ReadRange(cacheKey,
-        static_cast<size_t>(firstElement), static_cast<size_t>(elementCount), destination,
-        decodeScratch);
+    if (compressedF32Weights.ReadRange(cacheKey,
+            static_cast<size_t>(firstElement), static_cast<size_t>(elementCount),
+            destination, decodeScratch))
+        return true;
+    // Another agent can evict this entry between first-touch admission and
+    // the tile read. Recover from the authoritative ROM source instead of
+    // reporting a spurious inference failure.
+    return rom.readTensorRange(entry, firstElement * sizeof(float),
+                               elementCount * sizeof(float),
+                               reinterpret_cast<uint8_t*>(destination));
 }
 
 bool Deep2Engine::readCompressedEncodedRange(const deep2::TensorEntry& entry,
