@@ -57,6 +57,11 @@ public:
         // Serialize first-touch construction. Concurrent inference agents must
         // not create duplicate temporary compressed copies of one tensor.
         std::lock_guard<std::mutex> buildLock(buildMutex_);
+        auto rejectAndMemoize = [this, &key]() {
+            std::lock_guard<std::mutex> lock(mutex_);
+            rawFallback_.insert(key);
+            return false;
+        };
         size_t buildBudget = 0;
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -73,32 +78,37 @@ public:
             // entries atomically under mutex_.
             buildBudget = budgetBytes_;
         }
-        if (!buildBudget) return false;
+        if (!buildBudget) return rejectAndMemoize();
         std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> built;
         try {
             built = std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
                     elementCount,maxAbsError,std::forward<Reader>(reader),chunkElements,true,
                     buildBudget));
+        } catch (const RawrXD::TensorCompression::SourceReadFailure&) {
+            return false; // retryable: do not memoize transient source I/O failures
         } catch (...) {
-            return false;
+            return rejectAndMemoize();
         }
         if (elementCount > std::numeric_limits<size_t>::max()/sizeof(float))
-            return false;
+            return rejectAndMemoize();
         const size_t stored = built->storedBytes();
         const size_t logical = elementCount * sizeof(float);
         // A raw fallback is not a compression win. Do not duplicate an F32
         // tensor in the cache when no lossless/tolerance-approved encoding
         // actually reduces its resident footprint.
-        if (elementCount && stored >= logical) return false;
+        if (elementCount && stored >= logical) return rejectAndMemoize();
         std::lock_guard<std::mutex> lock(mutex_);
-        if(stored > budgetBytes_) return false;
+        if(stored > budgetBytes_) { rawFallback_.insert(key); return false; }
         if(entries_.find(key)!=entries_.end()) {
             entries_[key].lastUse=++tick_;
             return true;
         }
         EvictToFitLocked(stored,key);
-        if(stored > budgetBytes_ - compressedBytes_) return false;
+        if(stored > budgetBytes_ - compressedBytes_) {
+            rawFallback_.insert(key);
+            return false;
+        }
         Entry e;
         e.storage=std::move(built);
         e.compressedBytes=stored;
