@@ -13,6 +13,7 @@
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "GpuTransferCounters.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "deep2/compression/CompressedWeightTile.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -124,6 +125,25 @@ const float* ensureF32(
     }
     auto inserted = cache.emplace(std::move(key), std::move(decoded));
     return inserted.first->second.data();
+}
+
+
+float halfToFloat(uint16_t h) noexcept {
+    const float sign = (h & 0x8000u) ? -1.0f : 1.0f;
+    const uint16_t exponent = static_cast<uint16_t>((h >> 10) & 0x1fu);
+    const uint16_t mantissa = static_cast<uint16_t>(h & 0x03ffu);
+    if (exponent == 0) {
+        if (mantissa == 0) return std::copysign(0.0f, sign);
+        return sign * std::ldexp(static_cast<float>(mantissa), -24);
+    }
+    if (exponent == 0x1fu) {
+        if (mantissa == 0) return std::copysign(
+            std::numeric_limits<float>::infinity(), sign);
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    return sign * std::ldexp(
+        static_cast<float>(1024u + mantissa),
+        static_cast<int>(exponent) - 25);
 }
 
 bool denseLayerReady(const LayerWeights& lw) noexcept {
@@ -437,21 +457,127 @@ bool Deep2Engine::forwardLayerGpuResident(
                     DeviceBuf& output, uint32_t rows, uint32_t cols) -> bool {
         if (!supportedDenseWeight(wt)) return false;
         const bool packed = gpuPackedType(wt.type);
+        const bool compressedOnly = !wt.data && wt.hasCompressedBacking();
+
+        // A compressed tensor must never be expanded into a whole host or
+        // device allocation on this canonical path. The fused layer is split
+        // at the projection boundary: first finish the producer of 'input',
+        // then execute bounded one-shot row tiles and publish the complete
+        // activation only after every tile succeeds, then resume fusion.
+        if (compressedOnly) {
+            if (!ownRecording || !rows || !cols ||
+                !gpu->EndFusedLayer())
+                return false;
+
+            constexpr std::size_t kCompressedGpuTileRows = 32;
+            if (!gpu->EnsureScratch(172, kCompressedGpuTileRows) ||
+                !gpu->EnsureScratch(173, rows)) {
+                return false;
+            }
+            DeviceBuf& tileOutput = gpu->Scratch(172);
+            DeviceBuf& stagedOutput = gpu->Scratch(173);
+            std::size_t rowBytes = 0;
+            if (packed) {
+                rowBytes = Gpu::QuantPackedRowBytes(wt.type, cols);
+            } else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(float))
+                    return false;
+                rowBytes = static_cast<std::size_t>(cols) * sizeof(float);
+            } else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F16)) {
+                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(uint16_t))
+                    return false;
+                rowBytes = static_cast<std::size_t>(cols) * sizeof(uint16_t);
+            } else {
+                return false;
+            }
+            if (!rowBytes || wt.rows != rows || wt.cols != cols ||
+                rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
+                wt.sizeBytes < static_cast<std::size_t>(rows) * rowBytes)
+                return false;
+
+            bool tiledOk = true;
+            for (std::size_t firstRow = 0; firstRow < rows;
+                 firstRow += kCompressedGpuTileRows) {
+                const std::size_t tileRows =
+                    (std::min)(kCompressedGpuTileRows,
+                               static_cast<std::size_t>(rows) - firstRow);
+                try {
+                    std::string decodeError;
+                    auto tile = rawrxd::compression::ReadCompressedWeightTile(
+                        wt.sizeBytes, rows, rowBytes, firstRow, tileRows,
+                        [&](std::size_t offset, std::uint8_t* destination,
+                            std::size_t length) {
+                            return wt.readBytes(offset, destination, length,
+                                                &decodeError);
+                        });
+
+                    bool dispatched = false;
+                    if (packed) {
+                        dispatched = gpu->DispatchGemvQuant(
+                            wt.type, tile.bytes.data(), tile.bytes.size(),
+                            input, tileOutput, static_cast<uint32_t>(tileRows),
+                            cols, 0);
+                    } else {
+                        std::vector<float> f32Tile(
+                            tileRows * static_cast<std::size_t>(cols));
+                        if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+                            std::memcpy(f32Tile.data(), tile.bytes.data(),
+                                        f32Tile.size() * sizeof(float));
+                        } else {
+                            for (std::size_t i = 0; i < f32Tile.size(); ++i) {
+                                uint16_t half = 0;
+                                std::memcpy(&half,
+                                            tile.bytes.data() + i * sizeof(uint16_t),
+                                            sizeof(half));
+                                f32Tile[i] = halfToFloat(half);
+                            }
+                        }
+                        dispatched = gpu->DispatchGemvDevice(
+                            f32Tile.data(), 0, input, tileOutput,
+                            static_cast<uint32_t>(tileRows), cols);
+                    }
+                    if (!dispatched ||
+                        !gpu->CopyVector(tileOutput, stagedOutput, tileRows,
+                                         0, firstRow)) {
+                        tiledOk = false;
+                        break;
+                    }
+                } catch (const std::exception& ex) {
+                    if (gpuForwardTraceEnabled()) {
+                        std::fprintf(stderr,
+                            "[GPU_FORWARD_TRACE] compressed tile failed tensor=%s row=%zu: %s\n",
+                            wt.name.c_str(), firstRow, ex.what());
+                        std::fflush(stderr);
+                    }
+                    tiledOk = false;
+                    break;
+                }
+            }
+
+            if (tiledOk)
+                tiledOk = gpu->CopyVector(stagedOutput, output, rows);
+            // Reopen the caller-owned fused layer even after a tile failure so
+            // its established failure/cleanup path remains valid.
+            if (!gpu->BeginFusedLayer())
+                return false;
+            if (!tiledOk) return false;
+
+            if (packed) {
+                if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K))
+                    ++counters.q4kPackedOps;
+                else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K))
+                    ++counters.q6kPackedOps;
+                else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q2_K))
+                    ++counters.q2kPackedOps;
+            }
+            ++counters.opSubmits;
+            return true;
+        }
+
         bool ok = false;
         if (packed) {
-            std::vector<uint8_t> compressedPacked;
-            const void* packedData = wt.data;
-            if (!packedData && wt.hasCompressedBacking()) {
-                compressedPacked.resize(wt.sizeBytes);
-                std::string decodeError;
-                if (!wt.readBytes(0, compressedPacked.data(), compressedPacked.size(), &decodeError)) {
-                    gpuForwardTrace("reject: compressed packed-weight read failed");
-                    return false;
-                }
-                packedData = compressedPacked.data();
-            }
-            if (!packedData) return false;
-            ok = gpu->DispatchGemvQuant(wt.type, packedData, wt.sizeBytes,
+            if (!wt.data) return false;
+            ok = gpu->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes,
                                         input, output, rows, cols,
                                         weightKey(wt));
             if (ok) {
@@ -463,34 +589,10 @@ bool Deep2Engine::forwardLayerGpuResident(
                     ++counters.q2kPackedOps;
             }
         } else {
-            std::vector<float> compressedF32;
-            const float* f32 = nullptr;
-            if (!wt.data && wt.hasCompressedBacking()) {
-                if (wt.rows > std::numeric_limits<size_t>::max() / wt.cols)
-                    return false;
-                const size_t elements = wt.rows * wt.cols;
-                if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
-                    return false;
-                compressedF32.resize(elements);
-                if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
-                    if (!wt.readBytes(0, compressedF32.data(), elements * sizeof(float)))
-                        return false;
-                } else {
-                    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
-                    if (!dequant) return false;
-                    std::vector<uint8_t> packedBytes(wt.sizeBytes);
-                    if (!wt.readBytes(0, packedBytes.data(), packedBytes.size()))
-                        return false;
-                    dequant(packedBytes.data(), compressedF32.data(), elements);
-                    ++counters.cpuF32Expands;
-                }
-                f32 = compressedF32.data();
-            } else {
-                f32 = ensureF32(wt, vulkanWeightF32_);
-                if (!f32) return false;
-                if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
-                    ++counters.cpuF32Expands;
-            }
+            const float* f32 = ensureF32(wt, vulkanWeightF32_);
+            if (!f32) return false;
+            if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
+                ++counters.cpuF32Expands;
             ok = gpu->DispatchGemvDevice(f32, weightKey(wt), input, output,
                                          rows, cols);
         }
