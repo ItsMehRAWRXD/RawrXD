@@ -106,6 +106,17 @@ int main() {
     byteStore.ReadRange(61337,byteOut.size(),byteOut.data(),byteScratch);
     CHECK(std::memcmp(byteOut.data(),byteSource.data()+61337,byteOut.size())==0);
 
+    bool oversizedLz4ChunkRejected=false;
+    try {
+        (void)RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
+            1,[](std::size_t,std::size_t,std::uint8_t* out) {
+                out[0]=0; return true;
+            },static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())+1u);
+    } catch (const std::invalid_argument&) {
+        oversizedLz4ChunkRejected=true;
+    }
+    CHECK(oversizedLz4ChunkRejected);
+
     // Incompressible payloads fall back to raw bytes and remain lossless.
     std::vector<std::uint8_t> randomBytes(32768);
     std::uint32_t randomState=0x12345678u;
