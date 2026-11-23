@@ -154,6 +154,8 @@ target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMA
 
 # Synthetic GGUF -> TensorROM pager -> compressed F32/Q4_K residency -> tiled inference.
 find_package(Threads REQUIRED)
+target_link_libraries(test_native_tensor_residency_cache PRIVATE Threads::Threads)
+target_link_libraries(test_native_tensor_byte_residency_cache PRIVATE Threads::Threads)
 add_executable(test_native_compressed_gguf_e2e
     tests/deep2/native_compressed_gguf_e2e_test.cpp
     src/TensorROM.cpp
