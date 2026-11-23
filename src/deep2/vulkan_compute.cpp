@@ -4276,9 +4276,11 @@ bool VulkanCompute::DispatchGemvQuantTile(
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tile))
         return false;
     if (!uploadToBuffer(tile, packedRows, packedBytes)) {
-        // uploadToBuffer is completion-backed; failure may mean device loss.
-        // Retain the allocation for terminal teardown rather than risking a
-        // use-after-free by a queue that has not confirmed completion.
+        // uploadToBuffer is completion-backed; failure may mean the transfer
+        // was submitted but completion was not established. Keep ownership
+        // in the teardown quarantine rather than losing the DeviceBuf handle.
+        quarantinedDeviceBuffers_.push_back(tile);
+        tile = {};
         return false;
     }
 
@@ -4344,7 +4346,10 @@ bool VulkanCompute::DispatchGemvQuantTile(
         ++gemvSuccess_;
         return true;
     }
-    // Do not release resources while completion is unknown.
+    // Do not release resources while completion is unknown. The descriptor
+    // pool and tile are reclaimed only after cleanup's device-idle gate.
+    quarantinedDeviceBuffers_.push_back(tile);
+    tile = {};
     return false;
 }
 
@@ -7547,6 +7552,10 @@ void VulkanCompute::cleanup() {
     }
     // Device idle or confirmed terminal loss above authorizes these drains.
     if (!resetDownloadRing(true) || !resetAsyncCmdRing(true)) return;
+    // Reclaim tile buffers quarantined after an unresolved upload/compute
+    // completion. This point is reached only after the device-idle gate.
+    for (auto& pending : quarantinedDeviceBuffers_) destroyBuffer(pending);
+    quarantinedDeviceBuffers_.clear();
 
     clearRecordedQ4K();
     clearRecordedGroups();
