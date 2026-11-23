@@ -40,6 +40,14 @@ bool SkipArrayValue(std::ifstream& f, unsigned depth) {
         f.setstate(std::ios::failbit);
         return false;
     }
+    // Fixed-width arrays are skipped as one checked extent, not millions of seeks.
+    static constexpr uint8_t widths[13] = {1,1,2,2,4,4,4,1,0,0,8,8,8};
+    if (widths[elementType] != 0) {
+        if (count > UINT64_MAX / widths[elementType]) {
+            f.setstate(std::ios::failbit); return false;
+        }
+        return SkipBytes(f, count * widths[elementType]);
+    }
     for (uint64_t i = 0; i < count; ++i) {
         if (!SkipValue(f, elementType, depth + 1)) return false;
     }
@@ -296,8 +304,31 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
 
     // Bind raw internal device mapping coordinates
     for (auto& pair : parsed.tensors) {
-        if (pair.second.offset >= totalBytes) return false;
-        pair.second.dataData = parsed.tensorWeightsPool.data() + pair.second.offset;
+        const auto& meta = pair.second;
+        if (meta.offset % alignment != 0 || meta.offset >= totalBytes ||
+            meta.dims.empty()) return false;
+        // Validate full extent for scalar F32/F16 and common block-quantized types.
+        // Other types remain bounded by their start offset until their
+        // architecture-specific storage layouts are certified.
+        uint64_t elements = 1;
+        for (uint64_t dim : meta.dims) {
+            if (dim == 0 || elements > UINT64_MAX / dim) return false;
+            elements *= dim;
+        }
+        uint64_t bytes = 0;
+        if (meta.type == 0 || meta.type == 1) {
+            const uint64_t width = meta.type == 0 ? 4 : 2;
+            if (elements > UINT64_MAX / width) return false;
+            bytes = elements * width;
+        } else if (meta.type == 2 || meta.type == 8) {
+            // GGML Q4_0: 32 values/18 bytes; Q8_0: 32 values/34 bytes.
+            if (elements % 32 != 0) return false;
+            const uint64_t blockBytes = meta.type == 2 ? 18 : 34;
+            if (elements / 32 > UINT64_MAX / blockBytes) return false;
+            bytes = (elements / 32) * blockBytes;
+        }
+        if (bytes && bytes > totalBytes - meta.offset) return false;
+        pair.second.dataData = parsed.tensorWeightsPool.data() + meta.offset;
     }
 
     // Dynamic Geometry Adaption Guard - ONLY if metadata not parsed from GGUF keys
