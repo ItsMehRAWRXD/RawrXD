@@ -586,6 +586,16 @@ inline void decode_q6(const std::uint8_t* b, float* out) {
         ql += 64; qh += 32; scales += 8;
     }
 }
+inline void decode_q8(const std::uint8_t* b, float* out) {
+    float d = 0.0f;
+    std::memcpy(&d, b, sizeof(d)); // GGML block_q8_K starts with IEEE F32 scale.
+    if (!std::isfinite(d)) throw std::runtime_error("non-finite Q8_K scale");
+    for (std::size_t i = 0; i < 256; ++i) {
+        std::int8_t q = 0;
+        std::memcpy(&q, b + 4 + i, sizeof(q));
+        out[i] = d * static_cast<float>(q);
+    }
+}
 } // namespace resident_k_detail
 
 template<std::size_t BlockBytes, void (*Decode)(const std::uint8_t*, float*)>
@@ -627,6 +637,11 @@ inline std::vector<float> resident_k_matvec(
     return output;
 }
 
+
+inline std::vector<float> resident_q8_k_row(const ResidentCompressedTensor& w,
+    std::size_t row, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_row<292, resident_k_detail::decode_q8>(w, row, rows, cols, budget);
+}
 
 template<std::size_t BlockBytes, void (*Decode)(const std::uint8_t*, float*)>
 inline std::vector<float> resident_k_row(
@@ -679,6 +694,10 @@ inline std::vector<float> resident_q5_k_matvec(const ResidentCompressedTensor& w
 inline std::vector<float> resident_q6_k_matvec(const ResidentCompressedTensor& w,
     const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
     return resident_k_matvec<210, resident_k_detail::decode_q6>(w, x, rows, cols, budget);
+}
+inline std::vector<float> resident_q8_k_matvec(const ResidentCompressedTensor& w,
+    const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_matvec<292, resident_k_detail::decode_q8>(w, x, rows, cols, budget);
 }
 
 template<class RowReader>
