@@ -160,6 +160,22 @@ enable_testing()
 add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
 add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
+
+# Validate the x64 MASM gzip writer against zlib's independent gzip decoder.
+if(MSVC)
+    enable_language(ASM_MASM)
+    find_package(ZLIB QUIET)
+    if(ZLIB_FOUND)
+        add_executable(test_brutal_gzip_roundtrip
+            tests/bench_deflate_brutal_roundtrip.cpp
+            kernels/deflate_brutal_masm.asm)
+        target_compile_features(test_brutal_gzip_roundtrip PRIVATE cxx_std_17)
+        target_link_libraries(test_brutal_gzip_roundtrip PRIVATE ZLIB::ZLIB)
+        add_test(NAME BrutalGzipRoundtrip COMMAND test_brutal_gzip_roundtrip)
+    else()
+        message(STATUS "ZLIB not found; skipping independent MASM gzip decoder test")
+    endif()
+endif()
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
