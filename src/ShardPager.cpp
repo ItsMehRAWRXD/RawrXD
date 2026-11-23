@@ -150,33 +150,11 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
     const size_t lastPage = static_cast<size_t>(lastPage64);
 
     auto work = [this, shard, firstPage, lastPage]() {
-        // Throttle concurrency by joining the oldest futures opportunistically.
-        for (std::size_t p = firstPage; p <= lastPage; ++p) {
-            Page tmp; // not inserted; just issue the read into a scratch page
-            tmp.shard = shard;
-            tmp.pageNo = static_cast<uint64_t>(p);
-            tmp.fileOffset = tmp.pageNo * m_pageSize;
-            tmp.data.assign(m_pageSize, 0);
-            if (m_reader(shard, tmp.pageNo, tmp.data.data(), m_pageSize)) {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                Key key = makeKey(shard, static_cast<uint64_t>(p));
-                auto it = m_index.find(key);
-                if (it != m_index.end()) {
-                    // Already resident: refresh not needed; keep existing.
-                    m_residentBytes += 0;
-                } else {
-                    Page* page = new Page();
-                    page->shard = shard;
-                    page->pageNo = tmp.pageNo;
-                    page->fileOffset = tmp.fileOffset;
-                    page->data = std::move(tmp.data);
-                    m_residentBytes += m_pageSize;
-                    m_lru.push_front(page);
-                    page->lruIt = m_lru.begin();
-                    m_index[key] = page;
-                    evictToFit(0);
-                }
-            }
+        // Reuse acquire/release so reads are serialized with the shard stream,
+        // cache index, LRU and hard page-budget accounting.
+        for (size_t p = firstPage; p <= lastPage; ++p) {
+            Page* page = acquire(shard, static_cast<uint64_t>(p));
+            if (page) release(page);
         }
     };
 
