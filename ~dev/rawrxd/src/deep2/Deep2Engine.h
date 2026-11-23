@@ -100,8 +100,6 @@ struct WeightTensor {
     // Optional private compressed F32 backing. GGUF wire type and mapped
     // source remain unchanged; CPU inference may opt into row-streamed reads.
     std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> compressedF32;
-    // Original conversion policy; reused when a mixed-codec range is packed for GPU.
-    float compressedF32MaxAbsError = 0.0f;
     // Cache lease pins the canonical compressed payload for this tensor's lifetime.
     Deep2::TensorResidencyCache::Lease compressedF32Lease;
     // Losslessly compressed wire bytes for already-quantized GGUF tensors.
@@ -168,7 +166,6 @@ struct WeightTensor {
                 return false;
             compressedF32=std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 std::move(candidate));
-            compressedF32MaxAbsError = maxAbsError;
             std::atomic_store_explicit(&gpuF16Payload,
                 std::shared_ptr<const GpuCompressedF32Payload>{},
                 std::memory_order_release);
@@ -238,9 +235,8 @@ struct WeightTensor {
     }
 
     // Build a bounded row tile for the packed Vulkan QGEMV shader.
-    // Mixed F16/BF16/F32 source chunks are repacked to one 16-bit type only
-    // when the configured error budget permits it; otherwise exact F32 bytes
-    // are returned. The caller owns the temporary bytes through upload.
+    // Existing F16/BF16 chunks are copied in their original representation;
+    // F32/LZ4 chunks are expanded exactly. Never stack a second lossy cast.
     bool BuildCompressedF32GpuTile(
         uint32_t rowBegin, uint32_t maxRowCount,
         uint32_t& actualRowCount,
