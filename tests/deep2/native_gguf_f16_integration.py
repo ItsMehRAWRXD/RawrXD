@@ -379,6 +379,26 @@ def run(binary):
         assert len(hb)-hbs==n*2
         for j in (0,16383,16384,16385,n-1):
             assert struct.unpack_from("<H",hb,hbs+2*j)[0]==0x3f80
+        # Publishing must not overwrite an existing model artifact.
+        existing=root/"existing-output.gguf"
+        existing.write_bytes(b"EXISTING MODEL ARTIFACT")
+        result=subprocess.run([binary,str(source),str(existing),"0","f16"],
+                              capture_output=True)
+        assert result.returncode!=0
+        assert existing.read_bytes()==b"EXISTING MODEL ARTIFACT"
+        assert not (root/"existing-output.gguf.partial").exists()
+        # A destination symlink must not be followed or replaced.
+        destination_link=root/"existing-link.gguf"
+        try:
+            destination_link.symlink_to(existing)
+        except (OSError, NotImplementedError):
+            destination_link=None
+        if destination_link is not None:
+            result=subprocess.run([binary,str(source),str(destination_link),"0","f16"],
+                                  capture_output=True)
+            assert result.returncode!=0
+            assert destination_link.is_symlink()
+            assert existing.read_bytes()==b"EXISTING MODEL ARTIFACT"
         # A pre-existing staging file belongs to another invocation.
         # A rejected conversion must leave it byte-for-byte unchanged.
         staged=root/"already-staged.gguf.partial"
