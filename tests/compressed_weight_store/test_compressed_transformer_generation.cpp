@@ -153,6 +153,15 @@ int main() {
         rawrxd::compression::CompressedTransformerRuntime bad(model,invalid);
     } catch (const std::invalid_argument&) { rejectedGeometry=true; }
     assert(rejectedGeometry);
+
+    auto bounded=config;
+    bounded.max_context=3;
+    rawrxd::compression::CompressedTransformerRuntime boundedRuntime(model,bounded);
+    bool rejectedContext=false;
+    try { (void)boundedRuntime.generate(prompt,2); }
+    catch (const std::out_of_range&) { rejectedContext=true; }
+    assert(rejectedContext);
+
     const auto stats=model.stats();
     assert(stats.tensors==owned.size());
     assert(stats.compressed_bytes>0 && stats.raw_bytes>0);
