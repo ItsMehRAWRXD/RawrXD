@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <future>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -75,6 +76,27 @@ int main() {
     cachedB.reset();
     requestB.reset();
     cache.Clear();
+    CHECK(cache.entry_count() == 0);
+    CHECK(cache.resident_bytes() == 0);
+
+    // A loader that began before model reload must not repopulate the cleared
+    // cache with bytes from the previous model generation.
+    std::promise<void> loaderStarted;
+    std::promise<void> continueLoad;
+    auto continueSignal = continueLoad.get_future().share();
+    auto startedSignal = loaderStarted.get_future();
+    auto inFlight = std::async(std::launch::async, [&]() {
+        return cache.GetOrLoad("stale-generation", [&]() {
+            loaderStarted.set_value();
+            continueSignal.wait();
+            return make_tensor(repeatedA, pathA);
+        });
+    });
+    startedSignal.wait();
+    cache.Clear();
+    continueLoad.set_value();
+    auto oldGenerationRequest = inFlight.get();
+    CHECK(oldGenerationRequest && oldGenerationRequest->size() == repeatedA.size());
     CHECK(cache.entry_count() == 0);
     CHECK(cache.resident_bytes() == 0);
 
