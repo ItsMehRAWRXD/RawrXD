@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <limits>
 #include <vector>
 using namespace rawrxd::compression;
 struct Resident {
@@ -47,6 +48,20 @@ int main() {
     rejected = false;
     try { ResidentMatvec(f16, ResidentWeightType::F16, x, y, 3, 2); }
     catch (const std::out_of_range&) { rejected = true; }
+    assert(rejected);
+    // Shape must match exactly, including rejection of trailing bytes.
+    Resident trailing = f16;
+    trailing.bytes.push_back(0);
+    rejected = false;
+    try { ResidentMatvec(trailing, ResidentWeightType::F16, x, y, 2, 2); }
+    catch (const std::out_of_range&) { rejected = true; }
+    assert(rejected);
+    // NaN inputs must not silently poison output or parity comparisons.
+    float badInput[32] = {};
+    badInput[0] = std::numeric_limits<float>::quiet_NaN();
+    rejected = false;
+    try { ResidentMatvec(f16, ResidentWeightType::F16, badInput, y, 2, 2); }
+    catch (const std::domain_error&) { rejected = true; }
     assert(rejected);
     q8.bytes[1] = 0x7c; // +infinity scale
     rejected = false;
