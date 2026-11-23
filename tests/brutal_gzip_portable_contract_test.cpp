@@ -1,5 +1,6 @@
 #include "deflate_brutal_qt.hpp"
 #include <zlib.h>
+#include <algorithm>
 
 #include <cstdint>
 #include <cstring>
