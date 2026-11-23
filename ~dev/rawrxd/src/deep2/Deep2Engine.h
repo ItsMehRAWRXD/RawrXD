@@ -266,8 +266,14 @@ struct WeightTensor {
                     return chunk.first + chunk.count <= position;
                 });
             size_t runRows = 0;
-            if (it != chunks.end() && it->first == first && it->count == cols) {
+            bool sourceAlready16Bit = false;
+            const bool rowAlignedSource =
+                it != chunks.end() && it->first == first && it->count == cols;
+            if (rowAlignedSource) {
                 const auto sourceEncoding = it->encoding;
+                sourceAlready16Bit =
+                    sourceEncoding == RawrXD::TensorCompression::Encoding::F16 ||
+                    sourceEncoding == RawrXD::TensorCompression::Encoding::BF16;
                 for (; it != chunks.end() && runRows < maxRowCount; ++it) {
                     const size_t expectedFirst = first + runRows * cols;
                     if (it->first != expectedFirst || it->count != cols ||
@@ -290,7 +296,12 @@ struct WeightTensor {
                 return false;
 
             RawrXD::TensorCompression::Encoding encoding{};
-            if (compressedF32->ExportUniform16BitRange(
+            // F32/LZ4 rows were already tested against this same policy at
+            // model-load time, so do not decode them twice merely to discover
+            // that they still require exact F32. Mixed geometry and stored
+            // 16-bit rows can still use the range exporter.
+            if ((!rowAlignedSource || sourceAlready16Bit) &&
+                compressedF32->ExportUniform16BitRange(
                     first, elements, encoding, packed,
                     compressedF32MaxAbsError)) {
                 ggmlType = encoding ==
