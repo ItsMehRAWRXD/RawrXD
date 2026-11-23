@@ -1,4 +1,5 @@
 #include "quant_kernels.hpp"
+#include "native_resident_typed_matvec.hpp"
 
 #include <cstring>
 #include <cmath>
@@ -189,139 +190,41 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         return true;
     }
 
-    case TensorType::Q4_K_S: {
-        // Block: qs[128] nibbles, scales[16] int8, d fp16 (146 bytes).
-        const uint8_t* p = src.data;
-        uint64_t v = 0;
-        while (v < n) {
-            float d = fp16ToF32(readU16(p + 144));
-            float scale[16];
-            const int8_t* scl = reinterpret_cast<const int8_t*>(p + 128);
-            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q4K_SCALE_DIV;
-            const uint8_t* qs = p;
-            uint64_t take = n - v; if (take > 256) take = 256;
-            for (uint64_t k = 0; k < take; ++k) {
-                uint64_t j = k / 2;            // byte index
-                uint8_t nib = (k & 1) ? (qs[j] & 0x0Fu) : (qs[j] >> 4);
-                int g = static_cast<int>(j >> 3); // 8 bytes per 16-value group
-                out[v + k] = (static_cast<float>(nib) - QuantLayoutH1::Q4K_ZERO_POINT) * scale[g];
+    case TensorType::Q2_K:
+    case TensorType::Q3_K:
+    case TensorType::Q4_K:
+    case TensorType::Q5_K:
+    case TensorType::Q6_K:
+    case TensorType::Q8_K: {
+        if (n % 256u) return false;
+        const std::uint8_t* p = src.data;
+        for (uint64_t v = 0; v < n; v += 256u) {
+            float decoded[256];
+            switch (src.type) {
+                case TensorType::Q2_K:
+                    rawrxd::compression::resident_k_detail::decode_q2(p, decoded);
+                    p += 84; break;
+                case TensorType::Q3_K:
+                    rawrxd::compression::resident_k_detail::decode_q3(p, decoded);
+                    p += 110; break;
+                case TensorType::Q4_K:
+                    rawrxd::compression::resident_k_detail::decode_q4(p, decoded);
+                    p += 144; break;
+                case TensorType::Q5_K:
+                    rawrxd::compression::resident_k_detail::decode_q5(p, decoded);
+                    p += 176; break;
+                case TensorType::Q6_K:
+                    rawrxd::compression::resident_k_detail::decode_q6(p, decoded);
+                    p += 210; break;
+                case TensorType::Q8_K:
+                    rawrxd::compression::resident_k_detail::decode_q8(p, decoded);
+                    p += 292; break;
+                default: return false;
             }
-            v += take;
-            p += 146;
+            std::copy_n(decoded, 256, out + v);
         }
         return true;
     }
-
-    case TensorType::Q2_K: {
-        // Block: qs[64] 2-bit packed, scales[16] uint8, d fp16 (82 bytes).
-        const uint8_t* p = src.data;
-        uint64_t v = 0;
-        while (v < n) {
-            float d = fp16ToF32(readU16(p + 80));
-            float scale[16];
-            const uint8_t* scl = reinterpret_cast<const uint8_t*>(p + 64);
-            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q2K_SCALE_DIV;
-            const uint8_t* qs = p;
-            uint64_t take = n - v; if (take > 256) take = 256;
-            for (uint64_t k = 0; k < take; ++k) {
-                uint64_t j = k / 4;            // byte index
-                uint64_t b = (3 - (k % 4)) * 2; // bit offset: first value = high bits
-                uint8_t q = (qs[j] >> b) & 0x03u;
-                int g = static_cast<int>(j >> 2); // 4 bytes per 16-value group
-                out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q2K_ZERO_POINT) * scale[g];
-            }
-            v += take;
-            p += 82;
-        }
-        return true;
-    }
-
-    case TensorType::Q3_K_S: {
-        // Block: qs[96] 3-bit packed, scales[16] uint8, d fp16 (114 bytes).
-        // Layout and dequant formula validated end-to-end on Phi-3 (correct tokens).
-        const uint8_t* p = src.data;
-        uint64_t v = 0;
-        while (v < n) {
-            float d = fp16ToF32(readU16(p + 112));
-            float scale[16];
-            const uint8_t* scl = reinterpret_cast<const uint8_t*>(p + 96);
-            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
-            const uint8_t* qs = p;
-            uint64_t take = n - v; if (take > 256) take = 256;
-            for (uint64_t k = 0; k < take; ++k) {
-                uint64_t bitOff = k * 3;
-                uint64_t i = bitOff >> 3;
-                unsigned bo = static_cast<unsigned>(bitOff & 7u);
-                uint32_t bits = qs[i] | (uint32_t(qs[i + 1]) << 8);
-                uint8_t q = static_cast<uint8_t>((bits >> bo) & 0x07u);
-                int g = static_cast<int>((k * 3) / 48); // 48 bits (6 bytes) per 16-value group
-                out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q3K_ZERO_POINT) * scale[g];
-            }
-            v += take;
-            p += 114;
-        }
-        return true;
-    }
-
-    case TensorType::Q3_K_M: {
-        // Block: qs[96] 3-bit packed, scales[16] int8, d fp16 (114 bytes).
-        // H2: same packing as Q3_K_S; scales stored as int8.
-        const uint8_t* p = src.data;
-        uint64_t v = 0;
-        while (v < n) {
-            float d = fp16ToF32(readU16(p + 112));
-            float scale[16];
-            const int8_t* scl = reinterpret_cast<const int8_t*>(p + 96);
-            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
-            const uint8_t* qs = p;
-            uint64_t take = n - v; if (take > 256) take = 256;
-            for (uint64_t k = 0; k < take; ++k) {
-                uint64_t bitOff = k * 3;
-                uint64_t i = bitOff >> 3;
-                unsigned bo = static_cast<unsigned>(bitOff & 7u);
-                uint32_t bits = qs[i] | (uint32_t(qs[i + 1]) << 8);
-                uint8_t q = static_cast<uint8_t>((bits >> bo) & 0x07u);
-                int g = static_cast<int>((k * 3) / 48);
-                out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q3K_ZERO_POINT) * scale[g];
-            }
-            v += take;
-            p += 114;
-        }
-        return true;
-    }
-
-    case TensorType::Q6_K: {
-        // Block: qs[192] 6-bit packed, scales[16] uint8, d fp16 (210 bytes).
-        const uint8_t* p = src.data;
-        uint64_t v = 0;
-        while (v < n) {
-            float d = fp16ToF32(readU16(p + 208));
-            float scale[16];
-            const uint8_t* scl = reinterpret_cast<const uint8_t*>(p + 192);
-            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q6K_SCALE_DIV;
-            const uint8_t* qs = p;
-            uint64_t take = n - v; if (take > 256) take = 256;
-            for (uint64_t k = 0; k < take; ++k) {
-                uint64_t bitOff = k * 6;
-                uint64_t i = bitOff >> 3;
-                unsigned bo = static_cast<unsigned>(bitOff & 7u);
-                uint32_t bits = qs[i] | (uint32_t(qs[i + 1]) << 8);
-                uint8_t q = static_cast<uint8_t>((bits >> bo) & 0x3Fu);
-                int g = static_cast<int>(bitOff / 96); // 96 bits (12 bytes) per 16-value group
-                out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q6K_ZERO_POINT) * scale[g];
-            }
-            v += take;
-            p += 210;
-        }
-        return true;
-    }
-
-    case TensorType::Q4_K_M:
-    case TensorType::Q5_K_S:
-    case TensorType::Q5_K_M:
-    case TensorType::Q3_K_L:
-        // Layouts not yet implemented in this milestone.
-        return false;
     }
     return false;
 }
