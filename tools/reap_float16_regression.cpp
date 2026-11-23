@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <iostream>
 using RawrXD::REAP::Float32BitsToFloat16;
+using RawrXD::REAP::Float16ToFloat32Bits;
 int main(){
     int fails=0;
     auto check=[&](uint32_t bits,uint16_t expected,const char* label){
