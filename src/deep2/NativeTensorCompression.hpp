@@ -41,6 +41,12 @@ inline uint16_t ToHalf(float x) {
 // IEEE-754 binary32 -> bfloat16, round-to-nearest ties-to-even.
 inline uint16_t ToBFloat16(float x) {
     const uint32_t u=Bits(x);
+    // Preserve infinities and ensure every NaN remains a quiet NaN.
+    if ((u&0x7f800000u)==0x7f800000u) {
+        uint16_t h=uint16_t(u>>16);
+        if (u&0x007fffffu) h=uint16_t(h|0x0040u);
+        return h;
+    }
     const uint32_t lsb=(u>>16)&1u;
     return uint16_t((u+0x7fffu+lsb)>>16);
 }
