@@ -72,7 +72,7 @@ QByteArray deflate_brutal_masm(const QByteArray& data, bool* success) {
         return QByteArray();
     }
     
-    // Maximum compression with zlib (\"brutal\" mode)
+    // Maximum compression with zlib ("brutal" mode)
     uLongf compressedSize = compressBound(data.size());
     QByteArray compressed(compressedSize, Qt::Uninitialized);
     
@@ -83,10 +83,10 @@ QByteArray deflate_brutal_masm(const QByteArray& data, bool* success) {
     if (result == Z_OK) {
         compressed.resize(compressedSize);
         if (success) *success = true;
-        qDebug() << \"[codec] Brutal compression:\" << data.size() << \"→\" << compressedSize << \"bytes\";\n        return compressed;
+        qDebug() << "[codec] Brutal compression:" << data.size() << "->" << compressedSize << "bytes";
     } else {
         if (success) *success = false;
-        qWarning() << \"Brutal compression failed with error:\" << result;
+        qWarning() << "Brutal compression failed with error:" << result;
         return QByteArray();
     }
 }
