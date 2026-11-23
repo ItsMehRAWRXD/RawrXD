@@ -114,6 +114,32 @@ struct GpuProgram {
         VkFenceCreateInfo fc{}; fc.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO; vkCreateFence(d,&fc,nullptr,&fence);
         return true;
     }
+
+    // Dispatch one matvec: 3 storage buffers (weights, x, y) + dims uniform.
+    // For INT4 (int4Layout=true), binding 1 is scales (unused here) -- caller
+    // passes the right buffers per layout.
+    bool dispatch(VkQueue queue, VkCommandPool pool, VkBuffer w, VkBuffer x, VkBuffer y,
+                  VkBuffer dimsBuf, uint32_t rows, uint32_t blocksPerRow) {
+        if (dev == VK_NULL_HANDLE) return false;
+        VkDescriptorBufferInfo bi[3] = {{w,0,VK_WHOLE_SIZE},{x,0,VK_WHOLE_SIZE},{y,0,VK_WHOLE_SIZE}};
+        VkDescriptorBufferInfo di{dimsBuf,0,sizeof(uint32_t)*3};
+        VkWriteDescriptorSet wr[4]; std::memset(wr,0,sizeof(wr));
+        for (int i=0;i<3;++i){ wr[i].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; wr[i].dstSet=set; wr[i].dstBinding=(uint32_t)i; wr[i].descriptorCount=1; wr[i].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; wr[i].pBufferInfo=&bi[i]; }
+        wr[3].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; wr[3].dstSet=set; wr[3].dstBinding=3; wr[3].descriptorCount=1; wr[3].descriptorType=VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; wr[3].pBufferInfo=&di;
+        vkUpdateDescriptorSets(dev, 4, wr, 0, nullptr);
+
+        VkCommandBufferAllocateInfo ci{}; ci.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO; ci.commandPool=pool; ci.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY; ci.commandBufferCount=1;
+        VkCommandBuffer cb; if (vkAllocateCommandBuffers(dev,&ci,&cb)!=VK_SUCCESS) return false;
+        VkCommandBufferBeginInfo cbi{}; cbi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO; vkBeginCommandBuffer(cb,&cbi);
+        vkCmdBindPipeline(cb,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
+        vkCmdBindDescriptorSets(cb,VK_PIPELINE_BIND_POINT_COMPUTE,layout,0,1,&set,0,nullptr);
+        vkCmdDispatch(cb, rows, 1, 1);
+        vkEndCommandBuffer(cb);
+        VkSubmitInfo si{}; si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO; si.commandBufferCount=1; si.pCommandBuffers=&cb;
+        vkResetFences(dev,1,&fence); vkQueueSubmit(queue,1,&si,fence); vkWaitForFences(dev,1,&fence,VK_TRUE,UINT64_MAX);
+        vkFreeCommandBuffers(dev,pool,1,&cb);
+        return true;
+    }
 };
 
 } // namespace rawrxd::gpu

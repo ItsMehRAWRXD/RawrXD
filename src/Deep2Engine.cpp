@@ -607,6 +607,69 @@ bool Deep2Engine::vulkanInt4Gemv(const float* W, const float* x, float* y,
     return true;
 }
 
+// Stage 6K: format-aware GPU matvec. Routes Q4_0 (type 2) / Q4_K (type 12)
+// packed tensors directly to the native GPU kernel (no F32 expansion).
+bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, size_t packedBytes,
+                                     const float* x, float* y, uint32_t rows, uint32_t cols, uint32_t ggufType) {
+    if (!vulkanReady || !vulkan || !packed || !x || !y) return false;
+    const auto* gpu = vulkan->primary();
+    if (!gpu) return false;
+    const auto fmt = rawrxd::gpu::DetectFormat(ggufType);
+    const uint32_t vpb = rawrxd::gpu::ValuesPerBlock(fmt);
+    if (vpb == 0 || (cols % vpb) != 0) {
+        fprintf(stderr, "[GPU_Q4] unsupported format type=%u or cols=%u not multiple of %u\n", ggufType, cols, vpb);
+        return false;
+    }
+    const uint32_t bpr = cols / vpb;
+
+    // Lazily init the format-specific program.
+    auto& prog = (fmt == rawrxd::gpu::GpuWeightFormat::Q4_0) ? q4_0Prog_ : q4_kProg_;
+    if (!prog) {
+        prog = std::make_unique<rawrxd::gpu::GpuProgram>();
+        std::string spv = exeDir() + ((fmt == rawrxd::gpu::GpuWeightFormat::Q4_0)
+            ? "shaders\\q4_0_matvec.spv" : "shaders\\q4_k_matvec.spv");
+        if (!prog->init(gpu->device, spv, false)) {
+            fprintf(stderr, "[GPU_Q4] program init failed for %s\n", spv.c_str());
+            prog.reset();
+            return false;
+        }
+    }
+
+    // Upload packed weights + x; create y + dims (host-visible for smoke test).
+    VkBuffer wb, xb, yb, db; VkDeviceMemory wm, xm, ym, dm;
+    void *wp, *xp, *yp;
+    const VkDeviceSize wsz = packedBytes, xsz = cols * sizeof(float), ysz = rows * sizeof(float), dsz = 12;
+    auto mk = [&](VkDeviceSize sz, VkBuffer& b, VkDeviceMemory& m, void*& p) {
+        return vulkan->createBuffer(*gpu, sz, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, b, m, &p);
+    };
+    if (!mk(wsz, wb, wm, wp) || !mk(xsz, xb, xm, xp) || !mk(ysz, yb, ym, yp)) return false;
+    std::memcpy(wp, packed, (size_t)wsz);
+    std::memcpy(xp, x, (size_t)xsz);
+    VkBufferCreateInfo dbi{}; dbi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; dbi.size = dsz;
+    dbi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT; dbi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    vkCreateBuffer(gpu->device, &dbi, nullptr, &db);
+    VkMemoryRequirements dmr; vkGetBufferMemoryRequirements(gpu->device, db, &dmr);
+    const auto& mp = gpu->memProps; uint32_t mt = UINT32_MAX;
+    for (uint32_t i = 0; i < mp.memoryTypeCount; ++i)
+        if ((dmr.memoryTypeBits & (1u << i)) && (mp.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) { mt = i; break; }
+    VkMemoryAllocateInfo dai{}; dai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO; dai.allocationSize = dmr.size; dai.memoryTypeIndex = mt;
+    vkAllocateMemory(gpu->device, &dai, nullptr, &dm); vkBindBufferMemory(gpu->device, db, dm, 0);
+    uint32_t dims[3] = {rows, cols, bpr}; void* dp;
+    vkMapMemory(gpu->device, dm, 0, dsz, 0, &dp); std::memcpy(dp, dims, dsz); vkUnmapMemory(gpu->device, dm);
+
+    bool ok = prog->dispatch(gpu->queue, gpu->pool, wb, xb, yb, db, rows, bpr);
+    if (ok) {
+        void* p; vkMapMemory(gpu->device, ym, 0, ysz, 0, &p);
+        std::memcpy(y, p, (size_t)ysz); vkUnmapMemory(gpu->device, ym);
+    }
+    vulkan->destroyBuffer(*gpu, wb, wm); vulkan->destroyBuffer(*gpu, xb, xm);
+    vulkan->destroyBuffer(*gpu, yb, ym); vulkan->destroyBuffer(*gpu, db, dm);
+    std::fprintf(stderr, "[GPU_Q4] %s rows=%u cols=%u type=%u -> %s\n",
+        name.c_str(), rows, cols, ggufType, ok ? "PASS" : "FAIL");
+    return ok;
+}
+
 void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
     if (!engine.initialized) {
         fprintf(stderr, "[ERROR] Engine not initialized\n");
