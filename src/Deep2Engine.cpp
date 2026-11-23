@@ -126,6 +126,11 @@ Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() c
     TensorResidencySnapshot snapshot;
     snapshot.f32BudgetBytes = f32.budgetBytes;
     snapshot.encodedBudgetBytes = encoded.budgetBytes;
+    if (const auto* pager = rom.pager()) {
+        snapshot.sourcePagerBudgetBytes = pager->capacityBytes();
+        snapshot.sourcePagerResidentBytes = pager->residentBytes();
+        snapshot.sourcePagerPageCount = pager->pageCount();
+    }
     snapshot.f32CompressedBytes = f32.compressedBytes;
     snapshot.encodedCompressedBytes = encoded.compressedBytes;
     snapshot.f32LogicalBytes = f32.logicalBytes;
