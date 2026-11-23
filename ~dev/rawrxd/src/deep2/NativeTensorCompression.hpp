@@ -1,10 +1,10 @@
 #pragma once
 
 // Native, dependency-free, chunked F32 weight storage.
-// Each chunk is independently encoded as IEEE F16, BF16, or raw F32.
-// Raw chunks are retained whenever the requested absolute-error bound cannot
-// be met by either 16-bit representation. No whole-tensor decode is required
-// for range reads.
+// Each chunk is independently encoded as IEEE F16, BF16, lossless LZ4, or raw
+// F32. Lossy encodings are selected only when the requested absolute-error
+// bound is met; LZ4 is retained only when smaller than raw F32. No whole-tensor
+// decode is required for range reads.
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
