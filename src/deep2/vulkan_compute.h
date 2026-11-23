@@ -1570,6 +1570,7 @@ private:
                           VkMemoryPropertyFlags required,
                           DeviceBuf& out);
     void destroyBuffer(DeviceBuf& b);
+    void releaseTransientWeightBuffers() noexcept;
     bool uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes);
     bool downloadFromBuffer(const DeviceBuf& src, void* dst, size_t bytes);
 
@@ -1720,6 +1721,9 @@ private:
     size_t deviceLocalHeapHeadroom() const;
     bool checkLiveHeapAdmission(size_t bytes) const;
     std::unordered_map<uint64_t, WeightCacheEntry> weightCache_;
+    // One-shot GEMV weight buffers (cacheKey=0). They are retained through a
+    // fused command buffer and reclaimed only after its fence completes.
+    std::vector<DeviceBuf> transientWeightBuffers_;
     std::vector<PrefetchEntry> prefetch_;
 
     // ===== DEEP2_DIRECT_RESIDENT_DISPATCH_001 ============================
