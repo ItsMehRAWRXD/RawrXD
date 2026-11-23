@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstring>
 #include <map>
+#include <limits>
 #include <set>
 #include <sstream>
 
@@ -114,6 +115,57 @@ inline bool RouterImportance(const std::vector<uint8_t>& bytes, uint32_t type,
         }
         out[e] = std::sqrt(s);
     }
+    return true;
+}
+
+// Select whole DeepSeek-V2 router groups by the strongest member in each
+// group. Ranking by the group sum can suppress a group containing a highly
+// relevant expert merely because its other members have low calibration
+// scores. Ties are deterministic: lower group index wins, then expert index.
+// Non-DeepSeek architectures retain the historical per-expert top-K policy.
+inline bool SelectExpertIndices(const std::string& architecture,
+                                const std::vector<double>& importance,
+                                uint32_t requested_keep,
+                                std::vector<uint32_t>& kept,
+                                uint32_t group_size = 8) {
+    const uint32_t count = static_cast<uint32_t>(importance.size());
+    if (!count || !requested_keep || requested_keep > count) return false;
+    std::vector<uint32_t> order;
+    order.reserve(count);
+    for (uint32_t i = 0; i < count; ++i) order.push_back(i);
+    if (architecture == "deepseek2" && group_size > 1 && count % group_size == 0) {
+        const uint32_t group_count = count / group_size;
+        uint32_t groups_to_keep = (requested_keep + group_size - 1) / group_size;
+        if (!groups_to_keep || groups_to_keep > group_count) return false;
+        std::vector<uint32_t> groups(group_count);
+        std::vector<double> maxima(group_count, -std::numeric_limits<double>::infinity());
+        for (uint32_t g = 0; g < group_count; ++g) {
+            groups[g] = g;
+            for (uint32_t j = 0; j < group_size; ++j) {
+                const double score = importance[g * group_size + j];
+                if (!std::isfinite(score)) return false;
+                if (score > maxima[g]) maxima[g] = score;
+            }
+        }
+        std::stable_sort(groups.begin(), groups.end(), [&](uint32_t a, uint32_t b) {
+            if (maxima[a] != maxima[b]) return maxima[a] > maxima[b];
+            return a < b;
+        });
+        kept.clear();
+        for (uint32_t i = 0; i < groups_to_keep; ++i)
+            for (uint32_t j = 0; j < group_size; ++j)
+                kept.push_back(groups[i] * group_size + j);
+        std::sort(kept.begin(), kept.end());
+        return true;
+    }
+    std::stable_sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b) {
+        if (!std::isfinite(importance[a]) || !std::isfinite(importance[b]))
+            return a < b;
+        return importance[a] > importance[b];
+    });
+    order.resize(requested_keep);
+    std::sort(order.begin(), order.end());
+    kept.swap(order);
     return true;
 }
 
@@ -270,11 +322,9 @@ inline PruneError PruneGGUF(const std::string& input,
             report.layers.push_back({t.name, n_expert, n_expert, t.bytes, t.bytes, {}});
             continue;
         }
-        std::vector<uint32_t> order(n_expert);
-        for (uint32_t e = 0; e < n_expert; ++e) order[e] = e;
-        std::stable_sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b){ return imp[a] > imp[b]; });
-        order.resize(k);
-        std::sort(order.begin(), order.end());
+        std::vector<uint32_t> order;
+        if (!SelectExpertIndices(arch, imp, k, order, 8))
+            return PruneError::Unsupported;
         t.pruned = true;
         t.kept = order;
         // physical bytes per retained expert: the slowest-dim slice

@@ -113,6 +113,24 @@ static std::vector<uint8_t> ReadAt(const std::string& path, uint64_t data_start,
 }
 
 int main() {
+    {
+        // Max-member group ranking must preserve the groups containing the
+        // strongest individual experts; sum ranking would choose group 2.
+        std::vector<double> scores(24, 0.0);
+        scores[0] = 100.0;                         // group 0: max 100, sum 100
+        scores[8] = 90.0;                          // group 1: max 90, sum 90
+        for (uint32_t i = 16; i < 24; ++i) scores[i] = 40.0; // group 2: max 40, sum 320
+        std::vector<uint32_t> selected;
+        const bool ok = SelectExpertIndices("deepseek2", scores, 16, selected, 8);
+        Check(ok, "DeepSeek group max-member selection succeeds");
+        Check(selected.size() == 16, "DeepSeek selection retains exactly two complete groups");
+        Check(selected.size() == 16 && selected.front() == 0 && selected[7] == 7 &&
+              selected[8] == 8 && selected.back() == 15,
+              "max-member ranking retains groups 0 and 1, not high-sum group 2");
+        Check(SelectExpertIndices("llama", scores, 2, selected, 8) &&
+              selected.size() == 2 && selected[0] == 0 && selected[1] == 8,
+              "non-DeepSeek architectures retain per-expert top-K behavior");
+    }
     const std::string src = "reap_prune_src.gguf";
     const std::string dst = "reap_prune_dst.gguf";
     std::vector<SynTensor> ts;
