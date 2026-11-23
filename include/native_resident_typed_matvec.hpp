@@ -587,8 +587,11 @@ inline void decode_q6(const std::uint8_t* b, float* out) {
     }
 }
 inline void decode_q8(const std::uint8_t* b, float* out) {
+    const std::uint32_t bits = std::uint32_t(b[0]) |
+        (std::uint32_t(b[1]) << 8) | (std::uint32_t(b[2]) << 16) |
+        (std::uint32_t(b[3]) << 24);
     float d = 0.0f;
-    std::memcpy(&d, b, sizeof(d)); // GGML block_q8_K starts with IEEE F32 scale.
+    std::memcpy(&d, &bits, sizeof(d)); // GGML block_q8_K starts with LE IEEE F32 scale.
     if (!std::isfinite(d)) throw std::runtime_error("non-finite Q8_K scale");
     for (std::size_t i = 0; i < 256; ++i) {
         std::int8_t q = 0;
