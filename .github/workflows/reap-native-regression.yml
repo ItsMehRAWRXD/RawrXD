@@ -52,6 +52,23 @@ jobs:
           if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-rms 0 >/dev/null 2>&1; then
             echo "FAIL: strict RMS-error threshold accepted"; exit 1
           fi
+          # Reject byte corruption, short output, malformed limits, and duplicate flags.
+          printf '\\x01\\x3c\\x00\\x3c' > reap-test-bin/audit-corrupt.bin
+          printf '\\x00\\x3c' > reap-test-bin/audit-short.bin
+          if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-corrupt.bin 0 0 2 >/dev/null 2>&1; then
+            echo "FAIL: corrupt FP16 payload accepted"; exit 1
+          fi
+          if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-short.bin 0 0 2 >/dev/null 2>&1; then
+            echo "FAIL: truncated FP16 payload accepted"; exit 1
+          fi
+          for invalid in nan inf -1 invalid; do
+            if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-abs "$invalid" >/dev/null 2>&1; then
+              echo "FAIL: invalid threshold $invalid accepted"; exit 1
+            fi
+          done
+          if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-abs 1 --max-abs 1 >/dev/null 2>&1; then
+            echo "FAIL: duplicate accuracy limit accepted"; exit 1
+          fi
           # Invalid invocation must fail closed with a nonzero exit status.
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             if "./reap-test-bin/reap_f16_audit_cli.exe" >/dev/null 2>&1; then
