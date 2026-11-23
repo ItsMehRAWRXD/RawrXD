@@ -51,12 +51,14 @@ static void attachCompressedResidency(WeightTensor& wt,
         std::to_string(tensor.fileOffset);
     bool stored = false;
     int storedType = static_cast<int>(tensor.type);
+    const size_t elementCount = tensor.numElements();
     if (tensor.type == GGMLType::GGML_TYPE_F32 &&
-        deep2F16ResidencyEnabled() &&
-        tensor.sizeBytes == tensor.numElements() * sizeof(float)) {
+        deep2F16ResidencyEnabled() && elementCount != 0 &&
+        elementCount <= std::numeric_limits<size_t>::max() / sizeof(float) &&
+        tensor.sizeBytes == elementCount * sizeof(float)) {
         stored = cache.RegisterF32AsF16(
             key, reinterpret_cast<const float*>(tensor.data),
-            tensor.numElements());
+            elementCount);
         if (stored) storedType = static_cast<int>(GGMLType::GGML_TYPE_F16);
     } else {
         stored = cache.Register(key, tensor.data, tensor.sizeBytes, true);
