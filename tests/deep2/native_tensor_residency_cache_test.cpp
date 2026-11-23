@@ -141,7 +141,7 @@ int main() {
     for(size_t i=0;i<tile2.size();++i) assert(tile2[i]==source[2048+i]);
 
     auto after=cache.GetStats();
-    assert(after.cacheHits==2);
+    assert(after.cacheHits==6); // four compact exports plus two decoded range reads
     assert(after.activeReaders==0);
     assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
 
