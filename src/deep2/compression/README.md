@@ -112,3 +112,13 @@ A dedicated CTest exercises the two nibble lanes, Q5 high-bit extraction,
 scale/minimum application, and exact stored-byte roundtrips. This extends the
 standalone CPU resident matvec adapter; it does not yet route every production
 Deep2 operator or Vulkan shader for these types through the compressed reader.
+
+## Production Deep2 row-slice format geometry
+
+The Deep2 LinearW range reader's packed-row geometry currently covers F32,
+F16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K and
+NVFP4. The compressed store itself is format-agnostic and retains other GGML
+payloads byte-for-byte, but a tensor is admitted to this LinearW path only when
+its row format has a known packed stride and the logical row width is aligned
+to that format's block size. Invalid/non-aligned geometry now rejects
+compressed admission rather than rounding up and risking a kernel over-read.
