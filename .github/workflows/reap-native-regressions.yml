@@ -43,6 +43,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Compile and execute native REAP regressions on Windows
         shell: pwsh
         run: |
