@@ -69,6 +69,7 @@ int main() {
         },2));
     assert(arbitraryReads==1); // only the probe chunk was read
     assert(!cache.Contains("not.compressible"));
+    assert(cache.IsRawFallback("not.compressible")); // rejection is memoized before releasing the build lock
     cache.MarkRawFallback("not.compressible");
     assert(cache.IsRawFallback("not.compressible"));
     size_t repeatedProbeReads=0;
