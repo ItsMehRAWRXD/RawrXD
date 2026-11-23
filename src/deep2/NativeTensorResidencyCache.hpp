@@ -58,10 +58,10 @@ public:
                 existing->second.lastUse = ++tick_;
                 return true;
             }
-            // Temporary construction shares the same residency budget as
-            // already-resident compressed entries.
-            buildBudget = budgetBytes_ > compressedBytes_
-                ? budgetBytes_ - compressedBytes_ : 0;
+            // Bound the candidate itself to the configured budget. Once its
+            // exact encoded size is known, insertion evicts least-recently-used
+            // entries atomically under mutex_.
+            buildBudget = budgetBytes_;
         }
         if (!buildBudget) return false;
         std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> built;
