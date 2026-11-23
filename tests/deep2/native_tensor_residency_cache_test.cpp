@@ -70,6 +70,17 @@ int main() {
     assert(!cache.Contains("not.compressible"));
     cache.MarkRawFallback("not.compressible");
     assert(cache.IsRawFallback("not.compressible"));
+    // The fallback memo is authoritative: a later inference request must not
+    // rescan an already-rejected tensor or admit it behind the fallback path.
+    size_t repeatedProbeReads=0;
+    assert(!cache.RegisterF32FromReader("not.compressible",arbitrary.size(),0.0f,
+        [&](size_t o,size_t n,float* out) {
+            ++repeatedProbeReads;
+            std::copy(arbitrary.begin()+o,arbitrary.begin()+o+n,out);
+            return true;
+        },2));
+    assert(repeatedProbeReads==0);
+    assert(!cache.Contains("not.compressible"));
 
     // A fitting insertion evicts the least-recently-used compressed tensor.
     std::vector<float> second(10003);
