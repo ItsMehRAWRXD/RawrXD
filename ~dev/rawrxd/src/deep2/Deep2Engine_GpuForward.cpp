@@ -444,13 +444,21 @@ bool Deep2Engine::forwardLayerGpuResident(
                     decodedTile.data(), decodeScratch);
 
                 RawrXD::TensorCompression::Encoding encoding{};
-                if (!RawrXD::TensorCompression::EncodeUniform16BitF32(
-                        decodedTile.data(), tileElements, maxAbsError,
-                        encoding, packedTile))
-                    return false;
-                const int packedType = encoding ==
-                    RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
-                if (packedTile.size() != tileElements * sizeof(uint16_t))
+                const bool packed16 = RawrXD::TensorCompression::EncodeUniform16BitF32(
+                    decodedTile.data(), tileElements, maxAbsError,
+                    encoding, packedTile);
+                const int packedType = packed16
+                    ? (encoding == RawrXD::TensorCompression::Encoding::F16 ? 1 : 30)
+                    : 0;
+                const void* tileData = packed16
+                    ? static_cast<const void*>(packedTile.data())
+                    : static_cast<const void*>(decodedTile.data());
+                const size_t tileBytes = packed16
+                    ? packedTile.size()
+                    : tileElements * sizeof(float);
+                if (tileBytes != (packed16
+                        ? tileElements * sizeof(uint16_t)
+                        : tileElements * sizeof(float)))
                     return false;
 
                 uint64_t tileKey = WeightKey(wt);
@@ -460,13 +468,13 @@ bool Deep2Engine::forwardLayerGpuResident(
                 tileKey ^= (static_cast<uint64_t>(packedType) << 57);
                 if (!tileKey) tileKey = 1;
                 if (!vc->DispatchGemvQuantRows(
-                        packedType, packedTile.data(), packedTile.size(),
+                        packedType, tileData, tileBytes,
                         in, out, tileRows, cols, rowBase, tileKey))
                     return false;
 
                 if (packedType == 1) ++c.compressedF16GemvOps;
-                else ++c.compressedBF16GemvOps;
-                const uint64_t bytes = static_cast<uint64_t>(packedTile.size());
+                else if (packedType == 30) ++c.compressedBF16GemvOps;
+                const uint64_t bytes = static_cast<uint64_t>(tileBytes);
                 c.compressedWeightBytesSubmitted =
                     bytes > std::numeric_limits<uint64_t>::max() -
                                 c.compressedWeightBytesSubmitted
