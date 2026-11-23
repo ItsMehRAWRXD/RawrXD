@@ -154,7 +154,7 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
                     page->fileOffset = tmp.fileOffset;
                     page->data = std::move(tmp.data);
                     evictToFit(m_pageSize);
-                    if (m_capacityBytes < m_pageSize || m_residentBytes > m_capacityBytes - m_pageSize) { delete page; continue; }
+                    if (m_capacityBytes < m_pageSize || m_residentBytes > m_capacityBytes - m_pageSize) { delete page; break; }
                     m_residentBytes += page->data.size();
                     m_lru.push_front(page);
                     page->lruIt = m_lru.begin();
