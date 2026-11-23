@@ -1381,6 +1381,23 @@ inline RepackError RepackGGUF(const std::string& input,
             }
         }
     }
+    // Exact F32 narrowing takes precedence over lossy Q4 even for
+    // matrix tensors with a nonstandard row width. The existing Q4
+    // exactness pass handles aligned rows; this catches the F32
+    // matrices the Q4 planner deliberately leaves untouched.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(t.type!=0 || t.convert_f16 || t.convert_q4_0 ||
+               t.convert_q8_0 || t.convert_f64_to_f32 ||
+               t.convert_f64_to_f16)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(IsExactF32ToF16(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_f16=true;
+                t.type=1;
+                t.bytes=t.source_bytes/2;
+            }
+        }
+    }
     // An ordinary F32 vector may have been planned for lossy Q8_0.
     // Prefer bit-exact F16 when all values permit it. This preserves
     // the original reconstructed values while still halving F32 storage.
