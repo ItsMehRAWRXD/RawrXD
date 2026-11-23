@@ -1,5 +1,8 @@
 #include "../../src/deep2/compression/StoredTensorMatvec.hpp"
 #include <algorithm>
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
@@ -29,7 +32,7 @@ int main() {
     std::string error;
     if (!store.addTensor("f16", weights.data(), weights.size(), &error,
                          GGML_TYPE_F16, true)) {
-        std::cerr << "F16 compression failed: " << error << "\\n";
+        std::cerr << "F16 compression failed: " << error << "\n";
         return EXIT_FAILURE;
     }
     const auto before = store.stats();
@@ -70,7 +73,7 @@ int main() {
         q8[row * 34 + 2] = 2;    // first signed Q8 weight
     }
     if (!store.addTensor("q8", q8.data(), q8.size(), &error, 8u, true)) {
-        std::cerr << "Q8_0 compression failed: " << error << "\\n";
+        std::cerr << "Q8_0 compression failed: " << error << "\n";
         return EXIT_FAILURE;
     }
     std::fill(output.begin(), output.end(), 0.f);
