@@ -172,3 +172,22 @@ target_compile_features(native_compressed_inference_e2e_test PRIVATE cxx_std_17)
 target_link_libraries(native_compressed_inference_e2e_test PRIVATE Threads::Threads)
 add_test(NAME native_compressed_inference_e2e_test
          COMMAND native_compressed_inference_e2e_test)
+
+# Optional Qt/zlib codec integration. Keep the core engine build independent
+# of Qt and zlib, but compile and test the adapter whenever both are detected.
+find_package(ZLIB QUIET)
+find_package(Qt6 COMPONENTS Core QUIET)
+if(ZLIB_FOUND AND Qt6_FOUND)
+    add_library(rawrxd_qt_zlib_codec STATIC src/codec/compression.cpp)
+    target_include_directories(rawrxd_qt_zlib_codec PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_compile_features(rawrxd_qt_zlib_codec PUBLIC cxx_std_17)
+    target_link_libraries(rawrxd_qt_zlib_codec PUBLIC Qt6::Core ZLIB::ZLIB)
+
+    add_executable(qt_zlib_codec_test tests/qt_zlib_codec_test.cpp)
+    target_link_libraries(qt_zlib_codec_test PRIVATE rawrxd_qt_zlib_codec)
+    add_test(NAME qt_zlib_codec_test COMMAND qt_zlib_codec_test)
+    message(STATUS "[CODEC] Qt6 Core and ZLIB detected; zlib adapter test enabled")
+else()
+    message(STATUS "[CODEC] Qt6 Core or ZLIB not found; optional Qt zlib adapter test skipped")
+endif()
