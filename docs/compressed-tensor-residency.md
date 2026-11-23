@@ -37,3 +37,26 @@ ctest --test-dir build/compressed-tensor-pager -C Release --output-on-failure
 ```
 
 A passing standalone test does not establish full-model parity, Vulkan synchronization correctness, or end-to-end RAM/VRAM savings. Measure those separately on the target runtime.
+
+## Vulkan staging bridge
+
+`VulkanStagingPipeline::populate_staging_buffer` accepts an exact-range reader and fills an acquired mapped staging slot. A compressed tensor view can be supplied without changing tensor encodings:
+
+```cpp
+auto slot = StagingSlot{};
+if (!pipeline.acquire_staging_buffer(bytes, slot)) return false;
+const bool populated = pipeline.populate_staging_buffer(slot, bytes,
+    [&](uint8_t* dst, size_t count) {
+        return compressedView.readRange(tensorOffset, count, dst);
+    });
+if (!populated) { pipeline.release_staging_buffer(slot); return false; }
+if (!pipeline.enqueue_asynchronous_dma(queue, commandBuffer, slot, deviceBuffer, bytes)) {
+    pipeline.release_staging_buffer(slot);
+    return false;
+}
+// IMPORTANT: retain the slot until the submission is known complete. The current
+// API does not create/return a fence; the caller must synchronize using its own
+// fence or queue-idle policy before release_staging_buffer().
+```
+
+The bridge only fills the host-visible upload buffer. It does not make compressed bytes directly consumable by shader kernels: bytes are expanded into the upload slot before DMA, then copied to the destination GPU buffer. To keep GPU VRAM compressed, a shader-side codec and kernel integration would be required. This path can reduce host-side weight residency; it does not yet prove lower VRAM residency.
