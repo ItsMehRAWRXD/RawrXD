@@ -394,7 +394,7 @@ inline bool IsExactQ4_1ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
         const uint16_t mh=uint16_t(block[2])|(uint16_t(block[3])<<8);
         const uint32_t db=Float16ToFloat32Bits(dh),mb=Float16ToFloat32Bits(mh);
         float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
-        if(!std::isfinite(d)||!std::isfinite(m)||m!=-8.0f*d||
+        if(!std::isfinite(d)||!std::isfinite(m)||
            !AffineBlockCodesBitExact(d,m,8,block+4,nullptr))return false;
         bytes-=20;
     }
@@ -445,10 +445,10 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                 if(!std::isfinite(minimum))return false;
             }
             // Q4_1 and Q4_0 have identical nibble order. When Q4_1's
-            // affine minimum is exactly -8*d, its 16 codes already have
+            // used affine codes reconstruct bit-exactly, its codes already have
             // Q4_0 semantics: drop the minimum, preserve d and all codes.
             // Avoid needless requantization (including FP16 rounding).
-            if(sourceType==3 && minimum==-8.0f*scale &&
+            if(sourceType==3 &&
                AffineBlockCodesBitExact(scale,minimum,8,source+4)) {
                 encoded[0]=source[0];
                 encoded[1]=source[1];
@@ -671,7 +671,7 @@ inline bool IsExactQ5_1ToQ5_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
         const uint16_t mh=uint16_t(block[2])|(uint16_t(block[3])<<8);
         const uint32_t db=Float16ToFloat32Bits(dh),mb=Float16ToFloat32Bits(mh);
         float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
-        if(!std::isfinite(d)||!std::isfinite(m)||m!=-16.0f*d||
+        if(!std::isfinite(d)||!std::isfinite(m)||
            !AffineBlockCodesBitExact(d,m,16,block+8,block+4))return false;
         bytes-=24;
     }
@@ -692,9 +692,9 @@ inline bool ConvertQ5_1ToQ5_0(std::ifstream& in,std::ofstream& out,
         float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
         if(!std::isfinite(d)||!std::isfinite(m))return false;
         // Q5_1 has the same 32 packed codes as Q5_0. When the
-        // affine offset equals -16*d, remove only the redundant minimum.
+        // actual codes reconstruct bit-exactly, remove the redundant minimum.
         // Preserve both the original FP16 scale and every quantized code.
-        if(m==-16.0f*d && AffineBlockCodesBitExact(d,m,16,source+8,source+4)) {
+        if(AffineBlockCodesBitExact(d,m,16,source+8,source+4)) {
             encoded[0]=source[0];
             encoded[1]=source[1];
             std::memcpy(encoded+2,source+4,20);
