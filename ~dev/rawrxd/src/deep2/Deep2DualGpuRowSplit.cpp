@@ -116,6 +116,25 @@ const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
     const long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
     const uint16_t pm=(uint16_t)std::max<long double>(
         1,std::min<long double>(999,s0/(s0+s1)*1000.0L+0.5L));
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    if (compressedAvailable) {
+        // Do not retain decompressed host slices in the process-wide plan
+        // cache. Keep only the current call's bounded pair of row tiles.
+        static thread_local CachedDualRowPlan transient;
+        transient = {};
+        transient.split = chooseThroughputSplit((uint32_t)wt.rows,g0,g1);
+        transient.valid = transient.split.valid &&
+            Deep2BuildGpuWeightView(
+                wt,transient.split.row0Begin,transient.split.row0Count,
+                transient.gpu0) &&
+            Deep2BuildGpuWeightView(
+                wt,transient.split.row1Begin,transient.split.row1Count,
+                transient.gpu1);
+        return transient.valid ? &transient : nullptr;
+    }
     const DualPlanKey key{
         wt.data,(uint32_t)wt.rows,(uint32_t)wt.cols,wt.type,pm};
     static std::mutex mu;
@@ -161,7 +180,12 @@ struct Q4KColumnSlices {
 // One mutable/latest slice set per weight tensor pointer, keyed by wt.data only.
 // Replaced when ratio changes — prevents unbounded growth under varying ratioPermille.
 const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
-    if(wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    if(compressedAvailable ||
+       wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
        !wt.rows||!wt.cols||wt.cols%256u!=0u) return nullptr;
 
     struct Entry { Q4KColumnSlices s; uint16_t ratioPermille=0; };
@@ -631,10 +655,13 @@ bool supportedGpuType(int t) noexcept {
 uint64_t sliceKey(const WeightTensor& wt,uint32_t begin,uint32_t count) noexcept {
     uint64_t h=14695981039346656037ull;
     for(unsigned char c:wt.name){h^=c;h*=1099511628211ull;}
+    for(unsigned char c:wt.residencyKey){h^=c;h*=1099511628211ull;}
+    h^=wt.fileOffset+0x9E3779B97F4A7C15ull+(h<<6)+(h>>2);
+    h^=(uint64_t)wt.shardId<<48;
     h^=(uint64_t)begin<<32;
     h^=count;
     h^=(uint64_t)(uint32_t)wt.type*0x9E3779B185EBCA87ull;
-    return h;
+    return h ? h : 1ull;
 }
 
 bool Deep2BuildGpuWeightView(
