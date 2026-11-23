@@ -48,10 +48,13 @@ int main() {
     // entry; eviction only happens when a fitting insertion needs capacity.
     std::vector<float> tooLarge(20000);
     for(size_t i=0;i<tooLarge.size();++i) tooLarge[i]=float(i%1000);
+    size_t tooLargeReads=0;
     assert(!cache.RegisterF32FromReader("too.large",tooLarge.size(),0.0f,
         [&](size_t o,size_t n,float* out) {
+            ++tooLargeReads;
             std::copy(tooLarge.begin()+o,tooLarge.begin()+o+n,out); return true;
         },1024));
+    assert(tooLargeReads < (tooLarge.size()+1023)/1024); // abort before building an over-budget duplicate
     assert(cache.Contains("layer.0.weight"));
 
     // With a zero error budget, arbitrary F32 values must not be stored as a
