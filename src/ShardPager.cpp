@@ -38,7 +38,7 @@ bool PageCache::loadPage(Page* page) {
 }
 
 void PageCache::evictToFit(std::size_t neededBytes) {
-    while (m_residentBytes + neededBytes > m_capacityBytes && !m_lru.empty()) {
+    while (neededBytes <= m_capacityBytes && m_residentBytes > m_capacityBytes - neededBytes && !m_lru.empty()) {
         Page* victim = m_lru.back();
         if (victim->leaseCount.load(std::memory_order_acquire) > 0) {
             // Leased pages cannot be evicted: rotate them to the front so we make
