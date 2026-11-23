@@ -20,6 +20,8 @@
 #define RESTRICT __restrict__
 #endif
 
+namespace RawrXD::TensorCompression { class ChunkedF32Storage; }
+
 namespace Deep2 {
 
 // ---------------------------------------------------------------------------
@@ -196,6 +198,12 @@ struct CPUFeatures {
 // ---------------------------------------------------------------------------
 // QuantKernelRegistry — singleton dispatch table
 // ---------------------------------------------------------------------------
+// CPU GEMV over compressed F32 weights. Decodes one row at a time into
+// reusable scratch instead of materializing the complete matrix.
+void GEMVChunkedF32(const RawrXD::TensorCompression::ChunkedF32Storage& weights,
+                    const float* input, float* output,
+                    size_t rows, size_t cols);
+
 class QuantKernelRegistry {
 public:
     static QuantKernelRegistry& Instance();
