@@ -271,6 +271,30 @@ int main() {
         addMatrix(owned,p+"ffn_down.weight",hidden,intermediate,down);
     }
 
+    auto tensors=descriptors(owned);
+    rawrxd::compression::CompressedGGUFModel::Options storeOptions;
+    storeOptions.decoded_cache_bytes=0;
+    storeOptions.block_bytes=64;
+    storeOptions.require_savings=false;
+    rawrxd::compression::CompressedGGUFModel model(storeOptions);
+    std::string error, failed;
+    assert(model.loadMappedTensors(tensors,&error,&failed));
+    assert(model.loaded() && model.tensorCount()==owned.size());
+    assert(model.stats().cached_decoded_bytes==0);
+
+    rawrxd::compression::CompressedTransformerRuntime::Config config;
+    config.hidden=hidden;
+    config.intermediate=intermediate;
+    config.vocabulary=vocab;
+    config.layers=2;
+    config.heads=2;
+    config.head_dim=hidden/2;
+    config.rms_epsilon=1.0e-5f;
+    config.rope_theta=10000.0f;
+
+    rawrxd::compression::CompressedTransformerRuntime runtime(model,config);
+    const std::vector<int32_t> prompt{1,2};
+
     // A second copy of the complete synthetic model uses BF16 payloads.
     // Convert the F16 fixture values back to F32 before rounding to BF16 so
     // the test exercises the BF16 wire representation rather than aliasing
@@ -300,29 +324,6 @@ int main() {
     assert(bf16Runtime.generate(prompt, 3) == bf16Generated);
     assert(bf16Model.stats().cached_decoded_bytes == 0);
 
-    auto tensors=descriptors(owned);
-    rawrxd::compression::CompressedGGUFModel::Options storeOptions;
-    storeOptions.decoded_cache_bytes=0;
-    storeOptions.block_bytes=64;
-    storeOptions.require_savings=false;
-    rawrxd::compression::CompressedGGUFModel model(storeOptions);
-    std::string error, failed;
-    assert(model.loadMappedTensors(tensors,&error,&failed));
-    assert(model.loaded() && model.tensorCount()==owned.size());
-    assert(model.stats().cached_decoded_bytes==0);
-
-    rawrxd::compression::CompressedTransformerRuntime::Config config;
-    config.hidden=hidden;
-    config.intermediate=intermediate;
-    config.vocabulary=vocab;
-    config.layers=2;
-    config.heads=2;
-    config.head_dim=hidden/2;
-    config.rms_epsilon=1.0e-5f;
-    config.rope_theta=10000.0f;
-
-    rawrxd::compression::CompressedTransformerRuntime runtime(model,config);
-    const std::vector<int32_t> prompt{1,2};
     const auto generated=runtime.generate(prompt,6);
     assert(generated.size()==6);
     for(auto token:generated) assert(token>=0 && token<static_cast<int32_t>(vocab));
