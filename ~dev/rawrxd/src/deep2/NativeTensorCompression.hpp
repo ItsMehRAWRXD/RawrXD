@@ -324,7 +324,8 @@ public:
         std::size_t bytes, Reader&& reader, std::size_t chunkBytes = 64u * 1024u,
         bool /*reservedPolicy*/ = false,
         std::size_t maxStoredBytes = std::numeric_limits<std::size_t>::max()) {
-        if (chunkBytes == 0)
+        if (chunkBytes == 0 ||
+            chunkBytes > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
             throw std::invalid_argument("invalid ChunkedByteStorage chunk size");
         ChunkedByteStorage result;
         result.size_ = bytes;
