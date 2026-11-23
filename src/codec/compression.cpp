@@ -96,8 +96,7 @@ QByteArray inflate(const QByteArray& data, bool* success) {
         const int result = ::inflate(&stream, Z_NO_FLUSH);
         const std::size_t produced = sizeof(chunk) - stream.avail_out;
 
-        if (output.size() < 0 ||
-            produced > static_cast<std::uint64_t>(maxArraySize - output.size())) {
+        if (produced > static_cast<std::uint64_t>(maxArraySize - output.size())) {
             qWarning() << "[codec] inflated output exceeds QByteArray capacity";
             valid = false;
             break;
