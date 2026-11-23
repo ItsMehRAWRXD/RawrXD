@@ -159,3 +159,8 @@ A residency-cache regression verifies that exporting a uniform F16 range does no
 ## Vulkan packed-weight cache lifetime safety
 
 Packed-weight cache eviction and replacement now wait for the owning Vulkan device to become idle before destroying the cached VkBuffer/VkDeviceMemory allocation. This protects in-flight dispatches from use-after-free when the LRU budget is exceeded or a key is reused with different contents. Cache hits do not wait; synchronization occurs only on eviction or replacement. The device-wide wait is a conservative correctness measure and may introduce stalls under VRAM pressure. A future fence-tracked retirement queue can reduce those stalls without weakening ownership safety. The full concurrent GPU stress test and Windows driver validation remain pending.
+
+
+## Zero-copy host handoff for aligned packed GPU tiles
+
+The packed GEMV Vulkan upload path now passes the existing compressed residency tile buffer directly to the upload/cache helper whenever its byte size is already a multiple of four. Previously it always allocated a second `alignedWeights` vector and copied the complete tile. An unaligned tail still uses a zero-initialized padded vector so the Vulkan copy size remains valid and the shader sees the original logical shape. This removes one transient host-side copy for aligned tiles, but does not eliminate the Vulkan staging transfer or prove zero-copy host-to-device access. Numerical GPU parity, multi-threaded ownership, and peak-memory benchmarks remain release gates.
