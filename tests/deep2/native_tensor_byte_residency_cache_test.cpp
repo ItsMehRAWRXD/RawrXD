@@ -65,6 +65,15 @@ int main() {
     assert(!cache.Contains("noise"));
     cache.MarkRawFallback("noise");
     assert(cache.IsRawFallback("noise"));
+    size_t repeatedNoiseReads=0;
+    assert(!cache.RegisterFromReader("noise",noise.size(),
+        [&](size_t offset,size_t count,uint8_t* out) {
+            ++repeatedNoiseReads;
+            std::copy(noise.begin()+offset,noise.begin()+offset+count,out);
+            return true;
+        },4096));
+    assert(repeatedNoiseReads==0);
+    assert(!cache.Contains("noise"));
 
     assert(cache.Evict("shard0:weight0"));
     assert(!cache.Contains("shard0:weight0"));
