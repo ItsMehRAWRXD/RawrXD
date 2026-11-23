@@ -257,6 +257,20 @@ int main() {
     assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
 
+    // Structured 8-byte records: independent varying payloads and common
+    // metadata bytes. Test exact byte restoration regardless of which
+    // adaptive lossless codec wins the block.
+    std::vector<uint8_t> records(8192);
+    for (size_t i = 0; i < records.size() / 8; ++i) {
+        for (size_t lane = 0; lane < 8; ++lane)
+            records[i * 8 + lane] = lane < 4
+                ? uint8_t((i * 29u + lane * 67u) & 0xffu)
+                : uint8_t(0x40u + lane);
+    }
+    const auto recordsEncoded = Encode(records.data(), records.size());
+    assert(recordsEncoded.payload.size() < records.size());
+    assert(Decode(recordsEncoded) == records);
+
     // Correlated, non-identical 32-bit patterns. XOR prediction must be
     // lossless, including signed zero and NaN payload bits.
     std::vector<uint32_t> correlated(4096);
