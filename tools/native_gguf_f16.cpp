@@ -340,6 +340,8 @@ int main(int argc,char** argv) {
         std::vector<uint32_t> outputTypes(ts.size());
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
+        std::vector<bool> streamF64toQ41(ts.size(),false);
+        std::vector<bool> streamF64toQ51(ts.size(),false);
         std::vector<bool> streamF64toQ4(ts.size(),false);
         std::vector<bool> streamF64toQ5(ts.size(),false);
         std::vector<bool> streamF64toQ8(ts.size(),false);
@@ -355,6 +357,62 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            if(t.type==28 && (automatic || q41 || q51) &&
+               t.dims[0]%32==0 && t.bytes%256==0) {
+                for(int candidate=0;candidate<2;++candidate) {
+                    if((q41 && candidate!=0)||(q51 && candidate!=1))continue;
+                    seek(in,add(dataStart,t.offset));
+                    bool valid=true;
+                    uint8_t raw[256],narrow[128],encoded[24];
+                    for(U off=0;off<t.bytes;off+=256) {
+                        if(!in.read(reinterpret_cast<char*>(raw),256))
+                            throw std::runtime_error("truncated F64 affine preflight");
+                        double original[32];
+                        for(int j=0;j<32;++j) {
+                            uint64_t bits=0;
+                            for(int k=0;k<8;++k)bits|=uint64_t(raw[8*j+k])<<(8*k);
+                            std::memcpy(&original[j],&bits,8);
+                            const float f=static_cast<float>(original[j]);
+                            if(!std::isfinite(original[j])||!std::isfinite(f)){
+                                valid=false;break;
+                            }
+                            uint32_t word;
+                            std::memcpy(&word,&f,4);
+                            for(int k=0;k<4;++k)narrow[4*j+k]=uint8_t(word>>(8*k));
+                        }
+                        if(!valid)break;
+                        const bool ok=candidate==0
+                            ?encodeQ41Block(narrow,0,tolerance,encoded)
+                            :encodeQ51Block(narrow,0,tolerance,encoded);
+                        if(!ok){valid=false;break;}
+                        const float scale=FromHalf(uint16_t(encoded[0])|
+                                                  (uint16_t(encoded[1])<<8));
+                        const float minimum=FromHalf(uint16_t(encoded[2])|
+                                                    (uint16_t(encoded[3])<<8));
+                        uint32_t high=0;
+                        if(candidate==1)
+                            for(int k=0;k<4;++k)high|=uint32_t(encoded[4+k])<<(8*k);
+                        for(int j=0;j<32;++j) {
+                            const uint8_t packed=encoded[(candidate==0?4:8)+(j%16)];
+                            const int nibble=j<16?packed&15:packed>>4;
+                            const int q=candidate==0?nibble:
+                                (nibble|int((high>>j&1u)<<4));
+                            const double restored=double(minimum)+double(scale)*q;
+                            if(!(std::fabs(restored-original[j])<=double(tolerance))){
+                                valid=false;break;
+                            }
+                        }
+                        if(!valid)break;
+                    }
+                    if(valid){
+                        if(candidate==0){streamF64toQ41[i]=true;outputTypes[i]=3;}
+                        else {streamF64toQ51[i]=true;outputTypes[i]=7;}
+                        ++changed;break;
+                    }
+                }
+                if(streamF64toQ41[i]||streamF64toQ51[i])continue;
+                if(q41||q51)continue;
+            }
             if(t.type==28 && (automatic || q4 || q5) &&
                t.dims[0]%32==0 && t.bytes%256==0) {
                 // Native GGML Q4_0 / Q5_0 blocks: preflight against F64
@@ -836,7 +894,9 @@ int main(int argc,char** argv) {
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
             U encodedBytes=t.bytes;
-            if(streamF64toQ4[i])encodedBytes=mul(t.bytes/256,18);
+            if(streamF64toQ41[i])encodedBytes=mul(t.bytes/256,20);
+            else if(streamF64toQ51[i])encodedBytes=mul(t.bytes/256,24);
+            else if(streamF64toQ4[i])encodedBytes=mul(t.bytes/256,18);
             else if(streamF64toQ5[i])encodedBytes=mul(t.bytes/256,22);
             else if(streamF64toQ8[i])encodedBytes=mul(t.bytes/256,34);
             else if(streamF64toF16[i] || streamF64toBf16[i])encodedBytes=t.bytes/4;
@@ -862,7 +922,31 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamF64toQ4[i]||streamF64toQ5[i]) {
+            if(streamF64toQ41[i]||streamF64toQ51[i]) {
+                seek(in,add(dataStart,t.offset));
+                uint8_t raw[256],narrow[128],encoded[24];
+                for(U off=0;off<t.bytes;off+=256) {
+                    if(!in.read(reinterpret_cast<char*>(raw),256))
+                        throw std::runtime_error("truncated F64 affine payload");
+                    for(int j=0;j<32;++j) {
+                        uint64_t bits=0;
+                        for(int k=0;k<8;++k)bits|=uint64_t(raw[8*j+k])<<(8*k);
+                        double original;
+                        std::memcpy(&original,&bits,8);
+                        const float f=static_cast<float>(original);
+                        uint32_t word;
+                        std::memcpy(&word,&f,4);
+                        for(int k=0;k<4;++k)narrow[4*j+k]=uint8_t(word>>(8*k));
+                    }
+                    const bool ok=streamF64toQ41[i]
+                        ?encodeQ41Block(narrow,0,tolerance,encoded)
+                        :encodeQ51Block(narrow,0,tolerance,encoded);
+                    if(!ok)throw std::runtime_error("F64 affine preflight/write mismatch");
+                    out.write(reinterpret_cast<const char*>(encoded),
+                              streamF64toQ41[i]?20:24);
+                    if(!out)throw std::runtime_error("F64 affine write failure");
+                }
+            } else if(streamF64toQ4[i]||streamF64toQ5[i]) {
                 seek(in,add(dataStart,t.offset));
                 uint8_t raw[256],narrow[128],encoded[22];
                 for(U off=0;off<t.bytes;off+=256) {
