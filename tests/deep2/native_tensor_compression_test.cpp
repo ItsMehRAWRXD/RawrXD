@@ -13,6 +13,42 @@ int main() {
     auto r=Encode(repeated.data(),repeated.size());
     assert(r.encoding==Encoding::RLE && r.payload.size()<repeated.size());
     assert(Decode(r)==repeated);
+    // LZ4-block compression captures repeated multi-byte patterns that
+    // byte-run RLE cannot represent compactly.
+    std::vector<uint8_t> patterned(64 * 1024);
+    for(size_t i=0;i<patterned.size();++i)
+        patterned[i]=static_cast<uint8_t>((i % 251) ^ ((i / 251) & 7));
+    auto lz=Encode(patterned.data(),patterned.size());
+    assert(lz.encoding==Encoding::LZ4);
+    assert(lz.payload.size()<patterned.size());
+    assert(Decode(lz)==patterned);
+    std::vector<uint8_t> lzDirect(patterned.size(),0);
+    DecodeInto(lz,lzDirect.data(),lzDirect.size());
+    assert(lzDirect==patterned);
+
+    // Validate malformed LZ4 streams before modifying the destination.
+    Result malformedLz;
+    malformedLz.encoding=Encoding::LZ4;
+    malformedLz.original_bytes=8;
+    malformedLz.payload={0x00,0x01,0x00}; // back-reference before any output
+    std::vector<uint8_t> lzUntouched(8,0xA5);
+    bool malformedLzRejected=false;
+    try { DecodeInto(malformedLz,lzUntouched.data(),lzUntouched.size()); }
+    catch(const std::invalid_argument&) { malformedLzRejected=true; }
+    assert(malformedLzRejected);
+    assert(std::all_of(lzUntouched.begin(),lzUntouched.end(),
+                       [](uint8_t value){return value==0xA5;}));
+
+    // Literal and match extension bytes must handle lengths beyond 15.
+    Result extendedLz;
+    extendedLz.encoding=Encoding::LZ4;
+    extendedLz.original_bytes=40;
+    extendedLz.payload.push_back(0xF0);
+    extendedLz.payload.push_back(25);
+    for(uint8_t value=0;value<40;++value) extendedLz.payload.push_back(value);
+    std::vector<uint8_t> extendedDecoded(40);
+    DecodeInto(extendedLz,extendedDecoded.data(),extendedDecoded.size());
+    for(uint8_t i=0;i<40;++i) assert(extendedDecoded[i]==i);
     std::vector<uint8_t> direct(repeated.size(),0);
     DecodeInto(r,direct.data(),direct.size());
     assert(direct==repeated);
