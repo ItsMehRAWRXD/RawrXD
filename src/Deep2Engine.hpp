@@ -9,6 +9,7 @@
 #include "MasmCoreKernels.hpp"
 #include "native_resident_f32_matvec.hpp"
 #include "native_resident_typed_matvec.hpp"
+#include "native_resident_tensor_cache.hpp"
 
 #include <vector>
 #include <string>
@@ -39,13 +40,10 @@ struct Deep2Engine {
     bool vulkanReady = false;
 
     bool initialized = false;
-    // Persistent compressed weight ownership; entries survive token execution.
-    std::mutex compressedWeightsMutex;
-    std::unordered_map<std::string,
-        std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>> compressedWeights;
-    std::list<std::string> compressedWeightsLru;
-    std::size_t compressedWeightsBytes = 0;
-    std::size_t compressedWeightsBudgetBytes = 256ull * 1024 * 1024;
+    // Persistent compressed weight ownership; shared_ptrs returned to
+    // inference requests pin their entries until the final consumer releases.
+    rawrxd::compression::ResidentTensorCache compressedWeights{
+        256ull * 1024ull * 1024ull};
     void SetCompressedWeightsBudget(std::size_t bytes);
 
 
