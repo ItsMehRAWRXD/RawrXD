@@ -91,8 +91,8 @@ inline bool DecodeBlock(uint32_t type,const uint8_t* b,double v[256]) {
     for(int j=0;j<256;++j) {
         const int group=j/16, chunk=j/128, lane=(j%128)/32;
         const int column=j%32;
-        const int loIndex=chunk*64+(lane/2)*32+column;
-        const unsigned lo=(b[loIndex]>>((lane%2)*4))&15;
+        const int loIndex=chunk*64+(lane%2)*32+column;
+        const unsigned lo=(b[loIndex]>>((lane/2)*4))&15;
         const unsigned hi=(b[128+chunk*32+column]>>(lane*2))&3;
         const int q=int(lo|(hi<<4))-32;
         v[j]=d*int(int8_t(b[192+group]))*q;
