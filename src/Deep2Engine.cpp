@@ -537,6 +537,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
+    baselineLogits.clear();
     std::cout << "[Move 10] Starting Phi-3 ROM-path forward pass for " << inputTokens.size() << " tokens\n" << std::flush;
 
     const auto& geometry = rom.geometry();
@@ -644,6 +645,10 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             } else if (!gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(),
                                   qkvOut.data(), qkvRows, qkvCols)) return false;
 
+            // The current Phi-3 path assumes equal Q/K/V widths.
+            // Reject incompatible grouped-query layouts instead of reading past V.
+            if (qkvOut.size() != hiddenDim * 3 ||
+                hiddenDim > SIZE_MAX / 3) return false;
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
             std::vector<float> Q(qkvOut.begin(), qkvOut.begin() + qSize);
@@ -745,10 +750,9 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         } else if (!gemvFloat(outputDq.data.data(), hiddenStates.data(),
                               outputLogits.data(), outputDq.rows, outputDq.cols)) return false;
 
-        // Store baseline logits for first token (for parity check)
-        if (tokenPos == 0) {
-            baselineLogits = outputLogits;
-        }
+        // Do not fabricate an independent parity baseline by copying our
+        // own output. The caller must supply independently generated logits.
+        // This routine only produces candidate outputLogits.
     }
 
     std::cout << "[Move 10] Forward pass complete. Generated logits for " << inputTokens.size() << " tokens\n";
