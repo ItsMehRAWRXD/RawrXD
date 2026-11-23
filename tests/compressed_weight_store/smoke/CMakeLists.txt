@@ -49,6 +49,10 @@ rawrxd_add_smoke(test_synthetic_gguf_model_e2e
     tests/compressed_weight_store/test_synthetic_gguf_model_e2e.cpp
     synthetic_gguf_compressed_model_e2e)
 
+rawrxd_add_smoke(test_compressed_norm_vector
+    tests/compressed_weight_store/test_compressed_norm_vector.cpp
+    compressed_norm_vector_range_residency)
+
 add_executable(test_compressed_gpu_tile_plan
     "${RAWRXD_ROOT}/tests/compressed_weight_store/test_compressed_gpu_tile_plan.cpp")
 target_include_directories(test_compressed_gpu_tile_plan PRIVATE
