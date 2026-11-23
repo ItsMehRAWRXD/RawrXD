@@ -56,7 +56,7 @@ Elastic residency does not replace an admitted compressed backing with a raw poi
 
 The compressed store is shared by model weight views. Model unload first clears all `WeightTensor` aliases, then resets the compressed store and releases the GGUF loader. GGUF tensor payload pointers alias the loader's mapped shard; they are not individual allocations and must not be passed to `GGUFLoader::FreeTensorData`. The loader owns the mapping and closes it through RAII.
 
-The GGUF mapping remains alive during the loaded model because vectors/norms and the tokenizer/metadata compatibility path still use mapped views. Compressed matrix views do not use their original raw pointer during inference. Consequently, the current implementation reduces active matrix-weight decode working sets and can leave unused mapped pages reclaimable by the OS, but it does not yet unmap the entire GGUF source while a model is loaded.
+The GGUF mapping remains alive during the loaded model because vectors/norms and the tokenizer/metadata compatibility path still use mapped views. Compressed matrix and embedding views do not use their original raw pointer during inference. Consequently, the current implementation reduces active matrix/embedding decode working sets and can leave unused mapped pages reclaimable by the OS, but it does not yet unmap the entire GGUF source while a model is loaded.
 
 ## Validation gates
 
