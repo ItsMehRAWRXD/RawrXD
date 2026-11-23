@@ -14,6 +14,12 @@
 
 namespace rawrxd::compression {
 namespace resident_detail {
+inline float bfloat16_to_float(std::uint16_t h) noexcept {
+    const std::uint32_t bits = std::uint32_t(h) << 16;
+    float value;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
 inline float half_to_float(std::uint16_t h) noexcept {
     const std::uint32_t sign = std::uint32_t(h & 0x8000u) << 16;
     const std::uint32_t exp = (h >> 10) & 31u;
@@ -215,6 +221,34 @@ inline std::vector<float> resident_f16_row(
                 const float value = resident_detail::half_to_float(h);
                 if (!std::isfinite(value))
                     throw std::runtime_error("non-finite F16 embedding weight");
+                output[first + i / 2] = value;
+            }
+        });
+    return output;
+}
+
+inline std::vector<float> resident_bf16_row(
+    const ResidentCompressedTensor& weights, std::size_t rowIndex,
+    std::size_t rows, std::size_t cols, std::size_t stagingBudgetBytes = 64 * 1024) {
+    if (cols > std::numeric_limits<std::size_t>::max() / 2)
+        throw std::length_error("BF16 row size overflow");
+    const auto rowBytes = cols * 2;
+    if (rows > std::numeric_limits<std::size_t>::max() / (rowBytes ? rowBytes : 1) ||
+        rows * rowBytes != weights.size() || rowIndex >= rows)
+        throw std::invalid_argument("BF16 embedding row geometry mismatch");
+    const auto chunkBytes = resident_detail::aligned_chunk(stagingBudgetBytes, 2);
+    BoundedWeightStager stager(chunkBytes);
+    std::vector<float> output(cols);
+    const auto base = rowIndex * rowBytes;
+    stager.for_each_chunk(weights, base, rowBytes,
+        [&](std::size_t offset, const std::uint8_t* data, std::size_t size) {
+            const auto first = (offset - base) / 2;
+            for (std::size_t i = 0; i < size; i += 2) {
+                const auto h = std::uint16_t(data[i]) |
+                               (std::uint16_t(data[i + 1]) << 8);
+                const float value = resident_detail::bfloat16_to_float(h);
+                if (!std::isfinite(value))
+                    throw std::runtime_error("non-finite BF16 embedding weight");
                 output[first + i / 2] = value;
             }
         });
@@ -722,6 +756,16 @@ inline std::vector<float> resident_rows_matvec(
     }
     return output;
 }
+
+inline std::vector<float> resident_bf16_matvec(
+    const ResidentCompressedTensor& weights, const float* input,
+    std::size_t rows, std::size_t cols, std::size_t stagingBudgetBytes = 64 * 1024) {
+    return resident_rows_matvec(weights, input, rows, cols,
+        [stagingBudgetBytes](const auto& tensor, auto row, auto count, auto width) {
+            return resident_bf16_row(tensor, row, count, width, stagingBudgetBytes);
+        });
+}
+
 inline std::vector<float> resident_q4_1_matvec(
     const ResidentCompressedTensor& w, const float* x, std::size_t rows,
     std::size_t cols, std::size_t budget = 64 * 1024) {
