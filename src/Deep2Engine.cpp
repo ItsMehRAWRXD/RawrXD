@@ -497,7 +497,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     if (tokenEmb->type == deep2::TensorType::F32 && tokenEmb->dims.size() == 2 &&
         tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0) {
         if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
-        if (hiddenDim > SIZE_MAX / sizeof(float) ||
+        if (!hiddenDim || hiddenDim > SIZE_MAX / sizeof(float) ||
             firstToken > SIZE_MAX / (hiddenDim * sizeof(float))) return false;
         const auto byteOffset = static_cast<uint64_t>(firstToken) * hiddenDim * sizeof(float);
         if (!rom.readTensorRange(*tokenEmb, byteOffset, hiddenDim * sizeof(float),
