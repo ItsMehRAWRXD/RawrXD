@@ -9,6 +9,9 @@ on:
       - 'tests/deep2/native_k_quant_test.cpp'
       - 'tests/deep2/native_gguf_k_integration.py'
       - 'tests/deep2/native_loader_k_geometry_test.cpp'
+      - 'tests/deep2/native_q5k_runtime_layout_test.cpp'
+      - '~dev/rawrxd/src/deep2/NativeQ5KDecode.hpp'
+      - '~dev/rawrxd/src/deep2/QuantKernelRegistry.cpp'
       - '~dev/rawrxd/src/deep2/GGUFLoader.hpp'
       - 'tools/native_tensor_pack.cpp'
       - 'tests/deep2/native_tensor_compression_test.cpp'
@@ -33,6 +36,8 @@ jobs:
           ./native_k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_loader_k_geometry_test.cpp -o native_loader_k_test
           ./native_loader_k_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_q5k_runtime_layout_test.cpp -o native_q5k_test
+          ./native_q5k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_gguf_f16.cpp -o native_gguf_f16
           python3 tests/deep2/native_gguf_f16_integration.py ./native_gguf_f16
           python3 tests/deep2/native_gguf_k_integration.py ./native_gguf_f16
@@ -61,6 +66,10 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_loader_k_geometry_test.cpp /Fe:native_loader_k_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\native_loader_k_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_q5k_runtime_layout_test.cpp /Fe:native_q5k_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\native_q5k_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 tools/native_gguf_f16.cpp /Fe:native_gguf_f16.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
