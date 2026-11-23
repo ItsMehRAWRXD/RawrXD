@@ -337,7 +337,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
-            if(automatic && t.dims[0]%32==0 &&
+            if(automatic && t.dims[0]>=32 && t.dims[0]%32==0 &&
                (t.type==0 || t.type==1 || t.type==30)) {
                 const size_t inputBlock=t.type==0?128:64;
                 if(t.bytes%inputBlock==0) {
