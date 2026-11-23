@@ -1071,6 +1071,7 @@ namespace Deep2
         // itself remains valid.
         std::vector<std::pair<uint32_t, uint64_t>> standardMultiShardMappingKeys_;
         std::shared_ptr<rawrxd::compression::CompressedWeightStore> compressedWeightStore_;
+        bool standardMultiShardWeightsBound_ = false;
 
         // VAL-051.7: Bounded-window tensor residency manager (legacy)
         std::unique_ptr<ResidencyManager> residencyManager_;
