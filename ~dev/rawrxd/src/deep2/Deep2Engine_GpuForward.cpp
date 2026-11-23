@@ -313,7 +313,7 @@ bool Deep2Engine::forwardLayerGpuResident(
         // Vulkan in independently addressable row tiles. The original GGML
         // quant block format is reconstructed only for the rows consumed by
         // this dispatch; no full quantized tensor copy is created.
-        if (wt.compressedBytes && !vc->FusedRecording() &&
+        if (wt.compressedBytes &&
             (wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
              wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
              wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
@@ -380,8 +380,7 @@ bool Deep2Engine::forwardLayerGpuResident(
         // group of rows, then submit those F32 rows through the typed shader's
         // F32 mode. Unknown geometries/dequantizers stay on the established
         // raw-mapping fallback below.
-        if (wt.compressedBytes && !NativePackedShaderQuant(wt) &&
-            !vc->FusedRecording()) {
+        if (wt.compressedBytes && !NativePackedShaderQuant(wt)) {
             const auto geometry =
                 QuantKernelRegistry::Instance().GetGeometry(wt.type);
             const auto dequant =
@@ -507,8 +506,7 @@ bool Deep2Engine::forwardLayerGpuResident(
         // fixed-stride F16/BF16, and dispatch it into the corresponding output
         // window. This keeps RLE/LZ4/raw chunks compressed between kernel calls
         // and never materializes the full F32 weight matrix.
-        if (wt.type == (int)GGMLType::GGML_TYPE_F32 && wt.compressedF32 &&
-            !vc->FusedRecording()) {
+        if (wt.type == (int)GGMLType::GGML_TYPE_F32 && wt.compressedF32) {
             if (prefetch && vc->WeightStreamActive() &&
                 !vc->FlushWeightComputes())
                 return false;
