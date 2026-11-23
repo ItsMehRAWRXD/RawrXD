@@ -6195,25 +6195,84 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         // Opt-in native compressed residency for matrix weights. Keep norms
         // and vectors mapped because their current consumers read direct pointers.
         const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
-        const bool compressMatrix = compressedMode && compressedMode[0] == '1' &&
-                                    ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
-                                    LinearW_RowBytes(dst.type, dst.cols) > 0;
+        const bool compressedModeEnabled =
+            compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
+        const std::size_t packedRowBytes = LinearW_RowBytes(dst.type, dst.cols);
+        const bool compressMatrix = compressedModeEnabled &&
+            ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
+            packedRowBytes > 0 &&
+            packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
+            packedRowBytes * dst.rows == dst.sizeBytes;
         if (compressMatrix)
         {
+            constexpr std::size_t kDefaultCompressedModelBudget =
+                4ull * 1024ull * 1024ull * 1024ull;
+            std::size_t compressedModelBudget = kDefaultCompressedModelBudget;
+            if (const char* budgetEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_BUDGET_MB"))
+            {
+                char* end = nullptr;
+                const unsigned long long budgetMb = std::strtoull(budgetEnv, &end, 10);
+                constexpr unsigned long long kBytesPerMiB = 1024ull * 1024ull;
+                if (end != budgetEnv && *end == '\0' && budgetMb > 0 &&
+                    budgetMb <= (std::numeric_limits<std::size_t>::max)() / kBytesPerMiB)
+                    compressedModelBudget = static_cast<std::size_t>(budgetMb * kBytesPerMiB);
+            }
             if (!compressedWeightStore_)
                 compressedWeightStore_ = std::make_shared<rawrxd::compression::CompressedWeightStore>();
             std::string compressionError;
-            constexpr std::size_t kCompressedModelBudget = 512u * 1024u * 1024u;
             const auto beforeCompression = compressedWeightStore_->stats();
+            const std::size_t encoded = static_cast<std::size_t>(beforeCompression.compressed_bytes);
             const std::size_t remainingBudget =
-                beforeCompression.compressed_bytes < kCompressedModelBudget
-                    ? kCompressedModelBudget - static_cast<std::size_t>(beforeCompression.compressed_bytes)
-                    : 0;
-            if (remainingBudget > 0 &&
-                compressedWeightStore_->addTensor(
-                    ref->name, mapping->data, dst.sizeBytes, &compressionError,
-                    static_cast<std::uint32_t>(dst.type), true, remainingBudget) &&
-                dst.attachCompressedBacking(compressedWeightStore_, ref->name))
+                encoded < compressedModelBudget ? compressedModelBudget - encoded : 0;
+            const int originalType = dst.type;
+            const std::size_t originalBytes = dst.sizeBytes;
+            const char* f32ToF16Env = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16");
+            const bool allowF32ToF16 =
+                f32ToF16Env && f32ToF16Env[0] == '1' && f32ToF16Env[1] == '\0';
+            bool stored = false;
+            bool convertedF32ToF16 = false;
+
+            if (remainingBudget > 0 && allowF32ToF16 &&
+                originalType == static_cast<int>(GGMLType::GGML_TYPE_F32) &&
+                dst.rows <= (std::numeric_limits<std::size_t>::max)() / dst.cols)
+            {
+                const std::size_t elements = dst.rows * dst.cols;
+                if (elements <= (std::numeric_limits<std::size_t>::max)() / sizeof(float) &&
+                    elements * sizeof(float) == originalBytes &&
+                    elements <= (std::numeric_limits<std::size_t>::max)() / sizeof(std::uint16_t))
+                {
+                    stored = compressedWeightStore_->addTensorF32AsF16FromReader(
+                        ref->name, static_cast<const float*>(mapping->data),
+                        elements, &compressionError, remainingBudget);
+                    if (stored)
+                    {
+                        dst.type = static_cast<int>(GGMLType::GGML_TYPE_F16);
+                        dst.sizeBytes = elements * sizeof(std::uint16_t);
+                        convertedF32ToF16 = true;
+                    }
+                }
+            }
+
+            if (!stored && remainingBudget > 0)
+            {
+                compressionError.clear();
+                stored = compressedWeightStore_->addTensorFromReader(
+                    ref->name, originalBytes,
+                    [](void* context, std::size_t offset, void* destination,
+                       std::size_t length) -> bool {
+                        if ((!context && length) || (!destination && length))
+                            return false;
+                        if (length)
+                            std::memcpy(destination,
+                                static_cast<const std::uint8_t*>(context) + offset,
+                                length);
+                        return true;
+                    },
+                    mapping->data, &compressionError,
+                    static_cast<std::uint32_t>(originalType), true, remainingBudget);
+            }
+
+            if (stored && dst.attachCompressedBacking(compressedWeightStore_, ref->name))
             {
                 // The compressed store now owns the authoritative bytes.
                 // Drop this cache pin immediately; inference reads packed row ranges.
@@ -6221,8 +6280,17 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
                 dst.mapped = false;
                 dst.hasFileBacking = false;
                 residencyCache_->release(mapping);
+                std::fprintf(stderr,
+                    "[COMPRESSED_RESIDENCY] source=multi-shard tensor=%s "
+                    "source_type=%d resident_type=%d source_bytes=%zu resident_bytes=%zu "
+                    "converted_f32_to_f16=%d\n",
+                    ref->name.c_str(), originalType, dst.type,
+                    originalBytes, dst.sizeBytes, convertedF32ToF16 ? 1 : 0);
                 return true;
             }
+
+            dst.type = originalType;
+            dst.sizeBytes = originalBytes;
             fprintf(stderr, "[COMPRESSED_RESIDENCY] tensor=%s fallback=mapped reason=%s\n",
                     ref->name.c_str(), compressionError.c_str());
         }
