@@ -12,6 +12,7 @@
 #include <cstring>
 #include <fstream>
 #include <limits>
+#include <mutex>
 #include <cstdlib>
 #include <windows.h>
 
@@ -665,6 +666,10 @@ static std::string exeDir() {
 
 bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
                              const deep2::TensorView& xView, std::vector<float>& y) {
+    // VulkanProgram owns one descriptor set, fence, and command pool binding.
+    // Serialize its reuse across concurrent inference agents and GPU selection.
+    static std::mutex programDispatchMutex;
+    std::lock_guard<std::mutex> dispatchLock(programDispatchMutex);
     if (!vulkanReady || !vulkan) return false;
 
     if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
