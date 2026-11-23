@@ -14,7 +14,7 @@ Compressed page reads now use zlib's streaming `inflate` API with a fixed 32 KiB
 - Raw-fallback pages continue to copy only the requested interval.
 - The encoded-page cache remains bounded by its configured resident budget.
 
-This bounds transient decompression scratch to 32 KiB per active read, in addition to the caller-owned destination and encoded page cache. The pager still holds its mutex across reads and inflation, so concurrent readers on the same pager serialize; concurrency optimization is a separate follow-up.
+This bounds transient decompression scratch to 32 KiB per active read, in addition to the caller-owned destination and encoded page cache. Page-cache lookup/LRU mutation is protected by a short mutex. Source reads and compression run outside that cache lock, and returned immutable pages use shared leases so eviction cannot invalidate in-flight readers. Streaming inflate also runs outside the cache lock. The current TensorROM file reader still serializes access to its shared file stream, but CPU decompression and cached-page copies can proceed concurrently.
 
 ## Regression
 
