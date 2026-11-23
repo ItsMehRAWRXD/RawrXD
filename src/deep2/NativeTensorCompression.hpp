@@ -72,7 +72,7 @@ inline float FromHalf(uint16_t h) {
 inline bool EncodeLZ4Block(const uint8_t* input, size_t size,
                            std::vector<uint8_t>& output) {
     output.clear();
-    if (size < 8) return false;
+    if (size < 8 || size > static_cast<size_t>(std::numeric_limits<int64_t>::max())) return false;
     std::vector<int64_t> table(1u << 12, -1);
     output.reserve(size);
     auto read32 = [input](size_t at) {
@@ -93,7 +93,7 @@ inline bool EncodeLZ4Block(const uint8_t* input, size_t size,
 
     size_t anchor = 0;
     size_t cursor = 0;
-    while (cursor + 4 <= size) {
+    while (cursor <= size - 4) {
         const size_t h = hash(read32(cursor));
         const int64_t previous = table[h];
         table[h] = static_cast<int64_t>(cursor);
@@ -129,7 +129,7 @@ inline bool EncodeLZ4Block(const uint8_t* input, size_t size,
         anchor = cursor;
         // Seed hashes immediately before the next cursor to find short-period
         // repetitions without scanning the already-consumed match again.
-        if (cursor >= 2 && cursor + 2 <= size)
+        if (cursor >= 2 && cursor <= size - 2)
             table[hash(read32(cursor - 2))] = static_cast<int64_t>(cursor - 2);
     }
 
