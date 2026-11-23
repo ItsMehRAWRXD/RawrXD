@@ -96,6 +96,14 @@ static void testPagerStreamingAndEviction() {
     cache.release(pinned);
     assert(cache.evictUnleasedRange(0, 32, 16) == 1);
     assert(cache.residentBytes() <= cache.capacityBytes());
+
+    deep2::Page* pinnedAgain = cache.acquire(0, 3);
+    assert(pinnedAgain != nullptr);
+    cache.evictUnleasedAll();
+    assert(cache.pageCount() == 1); // leased page survives; every other page is reclaimed
+    cache.release(pinnedAgain);
+    cache.evictUnleasedAll();
+    assert(cache.pageCount() == 0);
 }
 
 static void testResetBetweenModels() {
