@@ -56,6 +56,9 @@ target_include_directories(rawrxd_reap_repack PRIVATE ${CMAKE_CURRENT_SOURCE_DIR
 add_executable(reap_repacker_regression tools/reap_repacker_regression.cpp)
 target_include_directories(reap_repacker_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+add_executable(reap_publisher_regression tools/reap_publisher_regression.cpp)
+target_include_directories(reap_publisher_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
 )
@@ -143,6 +146,7 @@ enable_testing()
 add_test(NAME GGUF_Parser_Regression COMMAND gguf_parser_regression)
 add_test(NAME REAP_Planner_Regression COMMAND reap_planner_regression)
 add_test(NAME REAP_Repacker_Regression COMMAND reap_repacker_regression)
+add_test(NAME REAP_Publisher_Regression COMMAND reap_publisher_regression)
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
