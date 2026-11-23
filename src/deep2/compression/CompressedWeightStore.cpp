@@ -40,11 +40,6 @@ bool CompressedWeightStore::decode(const EncodedBlock& block,
  }
  return true;
 }
-std::uint32_t CompressedWeightStore::crc32(const std::uint8_t* p,std::size_t n) {
- std::uint32_t crc=0xFFFFFFFFu;
- for(std::size_t i=0;i<n;++i){crc^=p[i];for(unsigned b=0;b<8;++b)crc=(crc>>1)^(0xEDB88320u&(0u-(crc&1u)));}
- return ~crc;
-}
 bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
  if(!bytes&&size){if(error)*error="source bytes are required";return false;}
  return addTensorFromReader(std::move(name),size,
