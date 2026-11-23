@@ -160,3 +160,15 @@ target_include_directories(native_quantized_dequant_test PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_features(native_quantized_dequant_test PRIVATE cxx_std_17)
 add_test(NAME native_quantized_dequant_test COMMAND native_quantized_dequant_test)
+
+# Synthetic model inference smoke test: compressed storage -> embedding row ->
+# F16 projection -> Q4_0 logits, plus concurrent request validation.
+find_package(Threads REQUIRED)
+add_executable(native_compressed_inference_e2e_test
+    tests/native_compressed_inference_e2e_test.cpp)
+target_include_directories(native_compressed_inference_e2e_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_features(native_compressed_inference_e2e_test PRIVATE cxx_std_17)
+target_link_libraries(native_compressed_inference_e2e_test PRIVATE Threads::Threads)
+add_test(NAME native_compressed_inference_e2e_test
+         COMMAND native_compressed_inference_e2e_test)
