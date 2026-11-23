@@ -1196,6 +1196,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     const WeightTensor& wt = modelWeights.tokenEmbed;
     const size_t H = modelWeights.hiddenDim;
     const size_t V = modelWeights.vocabSize;
+    const size_t row = static_cast<size_t>(tokenId);
 
     if (!wt.data || wt.rows != V || wt.cols != H || H == 0)
         return false;
@@ -1229,7 +1230,6 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
         return false;
 
     const size_t rowBytes = blocksPerRow * desc->blockBytes;
-    const size_t row = static_cast<size_t>(tokenId);
     if (row > std::numeric_limits<size_t>::max() / rowBytes)
         return false;
 
