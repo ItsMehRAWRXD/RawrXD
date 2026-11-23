@@ -12,10 +12,12 @@ static void put64(std::ostream& o,uint64_t v){for(int i=0;i<8;++i)o.put(char(v>>
 static void putString(std::ostream& o,const std::string& s){put64(o,s.size());o.write(s.data(),std::streamsize(s.size()));}
 
 static bool writeMini(const std::filesystem::path& path,uint32_t type,
-                      const std::vector<uint64_t>& dims,size_t payloadBytes) {
+                      const std::vector<uint64_t>& dims,size_t payloadBytes,
+                      uint32_t alignment=32) {
     std::ofstream out(path,std::ios::binary|std::ios::trunc);
     if(!out)return false;
-    out.write("GGUF",4);put32(out,3);put64(out,1);put64(out,0);
+    out.write("GGUF",4);put32(out,3);put64(out,1);put64(out,alignment==32?0:1);
+    if(alignment!=32) { putString(out,"general.alignment");put32(out,4);put32(out,alignment); }
     putString(out,"tensor");put32(out,static_cast<uint32_t>(dims.size()));
     for(uint64_t d:dims)put64(out,d);
     put32(out,type);put64(out,0);
@@ -26,10 +28,11 @@ static bool writeMini(const std::filesystem::path& path,uint32_t type,
     return bool(out);
 }
 
-static void testValid(uint32_t type,const std::vector<uint64_t>& dims,size_t bytes) {
+static void testValid(uint32_t type,const std::vector<uint64_t>& dims,size_t bytes,
+                      uint32_t alignment=32) {
     const auto path=std::filesystem::temp_directory_path()/
-        ("rawrxd-rom-geometry-"+std::to_string(type)+".gguf");
-    assert(writeMini(path,type,dims,bytes));
+        ("rawrxd-rom-geometry-"+std::to_string(type)+"-"+std::to_string(alignment)+".gguf");
+    assert(writeMini(path,type,dims,bytes,alignment));
     {
         deep2::TensorROM rom;
         assert(rom.addShard(path.string()));
@@ -63,6 +66,7 @@ int main() {
     testValid(0,{16,2},16*2*4);
     testValid(1,{16,2},16*2*2);
     testValid(2,{32,2},2*18);
+    testValid(2,{32,2},2*18,64); // explicit general.alignment override
     testValid(8,{32,2},2*34);
     testValid(9,{32,2},2*36);
     testValid(10,{256,2},2*84);
