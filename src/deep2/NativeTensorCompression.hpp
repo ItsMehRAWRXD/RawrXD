@@ -571,6 +571,8 @@ public:
         for(size_t ci=first_chunk;ci<=last_chunk;++ci) {
             const Result& encoded=chunks_[ci];
             const size_t chunk_first=ci*chunk_elements_;
+            if (encoded.original_bytes % sizeof(float) != 0)
+                throw std::invalid_argument("misaligned compressed F32 chunk");
             const size_t chunk_count=static_cast<size_t>(encoded.original_bytes/sizeof(float));
             const size_t copy_first=first>chunk_first?first:chunk_first;
             const size_t chunk_end=chunk_first+chunk_count;
