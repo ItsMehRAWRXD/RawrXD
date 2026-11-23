@@ -213,7 +213,7 @@ bool encodeQ51Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out
 bool encodeQ3K_F64(const uint8_t* raw,float tolerance,uint8_t out[110]) {
     double v[256],sub[16],maxSub=0;
     for(int i=0;i<256;++i) {uint64_t bits=0;for(int k=0;k<8;++k)bits|=uint64_t(raw[8*i+k])<<(8*k);std::memcpy(&v[i],&bits,8);if(!std::isfinite(v[i]))return false;}
-    for(int g=0;g<16;++g){double a=0;for(int j=0;j<16;++j)a=std::max(a,std::fabs(v[g*16+j]));sub[g]=a/4.0;maxSub=std::max(maxSub,sub[g]);}
+    for(int g=0;g<16;++g){double a=0;for(int j=0;j<16;++j)a=std::max(a,std::fabs(v[g*16+j]));sub[g]=a/3.0;maxSub=std::max(maxSub,sub[g]);}
     const uint16_t hd=ToHalf(float(maxSub/31.0));const double d=FromHalf(hd);if(maxSub>0&&(!(d>0)||!std::isfinite(d)))return false;
     std::memset(out,0,110);uint8_t scales[12]={},low[64]={},high[32]={};int ss[16]={};
     for(int g=0;g<16;++g){ss[g]=d?std::max(0,std::min(31,int(std::round(sub[g]/d)))):0;const int p=ss[g]+32;if(g<8)scales[g]=uint8_t(p&15);else scales[g-8]|=uint8_t((p&15)<<4);scales[g%4+8]|=uint8_t(((p>>4)&3)<<(2*(g/4)));}
