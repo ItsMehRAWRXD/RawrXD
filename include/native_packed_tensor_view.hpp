@@ -20,8 +20,8 @@ struct PackedTensorView {
             throw std::invalid_argument("partial quantization block");
         const uint64_t count = elements / elements_per_block;
         if (count > std::numeric_limits<size_t>::max() / bytes_per_block ||
-            count * bytes_per_block > encoded_bytes)
-            throw std::out_of_range("packed tensor exceeds mapped data");
+            count * bytes_per_block != encoded_bytes)
+            throw std::out_of_range("packed tensor byte count mismatch");
         return count;
     }
     const uint8_t* block(uint64_t index) const {
