@@ -120,6 +120,22 @@ const OwnedTensor& referenceTensor(const std::vector<OwnedTensor>& tensors,
 std::vector<float> referenceValues(const std::vector<OwnedTensor>& tensors,
                                    const std::string& name) {
     const auto& tensor=referenceTensor(tensors,name);
+    if (tensor.type == rawrxd::compression::GGML_TYPE_Q8_0) {
+        if (tensor.bytes.size() % 34u)
+            throw std::runtime_error("invalid Q8_0 oracle geometry");
+        std::vector<float> values(tensor.bytes.size() / 34u * 32u);
+        for (std::size_t block = 0; block < tensor.bytes.size() / 34u; ++block) {
+            const auto* p = tensor.bytes.data() + block * 34u;
+            const auto scaleBits = static_cast<std::uint16_t>(
+                p[0] | (std::uint16_t(p[1]) << 8));
+            const float scale = referenceHalfToFloat(scaleBits);
+            for (std::size_t j = 0; j < 32u; ++j) {
+                const int q = p[2u + j] < 128u ? int(p[2u + j]) : int(p[2u + j]) - 256;
+                values[block * 32u + j] = scale * float(q);
+            }
+        }
+        return values;
+    }
     if(tensor.type != rawrxd::compression::GGML_TYPE_F16 &&
        tensor.type != rawrxd::compression::GGML_TYPE_BF16)
         throw std::runtime_error("reference only supports F16 and BF16");
@@ -553,6 +569,54 @@ int main() {
     try { rawrxd::compression::CompressedTransformerRuntime bad(model, invalidRope); }
     catch (const std::invalid_argument&) { rejectedRope = true; }
     assert(rejectedRope);
+
+    // Full one-layer Q8_0 decoder: embeddings, norms, Q/K/V/O, SwiGLU,
+    // output projection, and independent scalar-oracle token parity.
+    {
+        constexpr std::size_t qHidden = 32, qVocab = 8;
+        std::vector<OwnedTensor> qOwned;
+        std::vector<float> qEmbedding(qVocab * qHidden, 0.0f);
+        for (std::size_t token = 0; token < qVocab; ++token)
+            for (std::size_t j = 0; j < qHidden; ++j)
+                qEmbedding[token * qHidden + j] = 0.01f * float((token + j) % 9);
+        addMatrix(qOwned, "token_embd.weight", qVocab, qHidden, qEmbedding);
+        addVector(qOwned, "output_norm.weight", std::vector<float>(qHidden, 1.0f));
+        std::vector<float> qOutput(qVocab * qHidden);
+        for (std::size_t row = 0; row < qVocab; ++row)
+            for (std::size_t j = 0; j < qHidden; ++j)
+                qOutput[row * qHidden + j] = 0.02f * float(int((row + 3*j) % 13) - 6);
+        addMatrix(qOwned, "output.weight", qVocab, qHidden, qOutput);
+        const std::string prefix = "blk.0.";
+        addVector(qOwned, prefix + "attn_norm.weight", std::vector<float>(qHidden, 1.0f));
+        addVector(qOwned, prefix + "ffn_norm.weight", std::vector<float>(qHidden, 1.0f));
+        addMatrix(qOwned, prefix + "attn_q.weight", qHidden, qHidden, diagonal(qHidden, 0.75f));
+        addMatrix(qOwned, prefix + "attn_k.weight", qHidden, qHidden, diagonal(qHidden, 0.5f));
+        addMatrix(qOwned, prefix + "attn_v.weight", qHidden, qHidden, diagonal(qHidden, 1.0f));
+        addMatrix(qOwned, prefix + "attn_output.weight", qHidden, qHidden, diagonal(qHidden, 1.0f));
+        addMatrix(qOwned, prefix + "ffn_gate.weight", qHidden, qHidden, diagonal(qHidden, 0.25f));
+        addMatrix(qOwned, prefix + "ffn_up.weight", qHidden, qHidden, diagonal(qHidden, 0.5f));
+        addMatrix(qOwned, prefix + "ffn_down.weight", qHidden, qHidden, diagonal(qHidden, 0.25f));
+        for (auto& tensor : qOwned)
+            quantizeQ8Fixture(tensor, qHidden);
+        auto qDescriptors = descriptors(qOwned);
+        rawrxd::compression::CompressedGGUFModel qModel(storeOptions);
+        assert(qModel.loadMappedTensors(qDescriptors, &error, &failed));
+        auto qConfig = config;
+        qConfig.hidden = qHidden;
+        qConfig.intermediate = qHidden;
+        qConfig.vocabulary = qVocab;
+        qConfig.layers = 1;
+        qConfig.heads = 2;
+        qConfig.head_dim = 16;
+        rawrxd::compression::CompressedTransformerRuntime qRuntime(qModel, qConfig);
+        const std::vector<int32_t> qPrompt{1, 2};
+        const auto actual = qRuntime.generate(qPrompt, 3);
+        const auto expectedQ = referenceGenerate(qOwned, qPrompt, 3, qHidden,
+            qHidden, qVocab, 1, 2, 0, 16, qConfig.rms_epsilon, qConfig.rope_theta);
+        assert(actual == expectedQ);
+        assert(actual.size() == 3u);
+        assert(qModel.stats().cached_decoded_bytes == 0u);
+    }
 
     const auto stats=model.stats();
     assert(stats.tensors==owned.size());
