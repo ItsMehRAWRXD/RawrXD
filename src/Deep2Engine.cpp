@@ -14,7 +14,7 @@
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
-    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); compressedWeightsLru.clear(); compressedWeightsBytes = 0; }
+    compressedWeights.Clear();
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
     }
@@ -49,84 +49,20 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 }
 
 void Deep2Engine::SetCompressedWeightsBudget(std::size_t bytes) {
-    std::lock_guard<std::mutex> lock(compressedWeightsMutex);
-    compressedWeightsBudgetBytes = bytes;
-    while (compressedWeightsBytes > compressedWeightsBudgetBytes) {
-        // A shared_ptr returned to an in-flight inference request is a live
-        // lease. Removing that entry would only hide its bytes from accounting
-        // while the request still owns the allocation.
-        auto victim = compressedWeightsLru.end();
-        for (auto it = compressedWeightsLru.end(); it != compressedWeightsLru.begin();) {
-            --it;
-            const auto found = compressedWeights.find(*it);
-            if (found != compressedWeights.end() && found->second.use_count() == 1) {
-                victim = it;
-                break;
-            }
-        }
-        if (victim == compressedWeightsLru.end()) break;
-        const auto found = compressedWeights.find(*victim);
-        if (found != compressedWeights.end()) {
-            const auto residentBytes = found->second->resident_bytes();
-            compressedWeightsBytes = residentBytes > compressedWeightsBytes
-                ? 0 : compressedWeightsBytes - residentBytes;
-            compressedWeights.erase(found);
-        }
-        compressedWeightsLru.erase(victim);
-    }
+    compressedWeights.SetBudget(bytes);
 }
 
 namespace {
 std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>
 getResidentCompressedTensor(Deep2Engine& engine, const deep2::TensorEntry& entry,
-                           std::size_t blockBytes) {
+                            std::size_t blockBytes) {
     const std::string key = entry.name + ":" + std::to_string(entry.shardIndex) +
         ":" + std::to_string(entry.offset) + ":" + std::to_string(entry.byteSize()) +
         ":" + std::to_string(blockBytes);
-    std::lock_guard<std::mutex> lock(engine.compressedWeightsMutex);
-    auto it = engine.compressedWeights.find(key);
-    if (it != engine.compressedWeights.end()) {
-        engine.compressedWeightsLru.remove(key);
-        engine.compressedWeightsLru.push_front(key);
-        return it->second;
-    }
-
-    auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
-        engine.rom.loadResidentCompressedTensor(entry, blockBytes));
-    const auto bytes = loaded->resident_bytes();
-    if (bytes > engine.compressedWeightsBudgetBytes)
-        return loaded; // Request-scoped residency; do not exceed the shared budget.
-
-    while (engine.compressedWeightsBytes >
-               engine.compressedWeightsBudgetBytes - bytes) {
-        // Do not evict entries leased by active requests: their allocation
-        // would remain resident after map erasure and become unaccounted.
-        auto victim = engine.compressedWeightsLru.end();
-        for (auto it = engine.compressedWeightsLru.end();
-             it != engine.compressedWeightsLru.begin();) {
-            --it;
-            const auto found = engine.compressedWeights.find(*it);
-            if (found != engine.compressedWeights.end() &&
-                found->second.use_count() == 1) {
-                victim = it;
-                break;
-            }
-        }
-        if (victim == engine.compressedWeightsLru.end())
-            return loaded; // Request-scoped; keep the shared-cache budget honest.
-        const auto found = engine.compressedWeights.find(*victim);
-        if (found != engine.compressedWeights.end()) {
-            const auto residentBytes = found->second->resident_bytes();
-            engine.compressedWeightsBytes = residentBytes > engine.compressedWeightsBytes
-                ? 0 : engine.compressedWeightsBytes - residentBytes;
-            engine.compressedWeights.erase(found);
-        }
-        engine.compressedWeightsLru.erase(victim);
-    }
-    engine.compressedWeightsBytes += bytes;
-    engine.compressedWeightsLru.push_front(key);
-    auto inserted = engine.compressedWeights.emplace(key, loaded);
-    return inserted.first->second;
+    return engine.compressedWeights.GetOrLoad(key, [&engine, &entry, blockBytes]() {
+        return std::make_shared<const rawrxd::compression::ResidentCompressedTensor>(
+            engine.rom.loadResidentCompressedTensor(entry, blockBytes));
+    });
 }
 
 std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>
@@ -137,48 +73,12 @@ getResidentCompressedTensorRange(Deep2Engine& engine, const deep2::TensorEntry& 
         ":" + std::to_string(entry.offset) + ":" + std::to_string(entry.byteSize()) +
         ":range:" + std::to_string(rangeOffset) + ":" + std::to_string(rangeBytes) +
         ":" + std::to_string(blockBytes);
-    std::lock_guard<std::mutex> lock(engine.compressedWeightsMutex);
-    auto it = engine.compressedWeights.find(key);
-    if (it != engine.compressedWeights.end()) {
-        engine.compressedWeightsLru.remove(key);
-        engine.compressedWeightsLru.push_front(key);
-        return it->second;
-    }
-
-    auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
-        engine.rom.loadResidentCompressedTensorRange(entry, rangeOffset, rangeBytes, blockBytes));
-    const auto bytes = loaded->resident_bytes();
-    if (bytes > engine.compressedWeightsBudgetBytes) return loaded;
-    while (engine.compressedWeightsBytes >
-               engine.compressedWeightsBudgetBytes - bytes) {
-        // Range-backed embedding rows obey the same live-request lease rule
-        // as full tensors; never hide a still-owned allocation from the budget.
-        auto victim = engine.compressedWeightsLru.end();
-        for (auto it = engine.compressedWeightsLru.end();
-             it != engine.compressedWeightsLru.begin();) {
-            --it;
-            const auto found = engine.compressedWeights.find(*it);
-            if (found != engine.compressedWeights.end() &&
-                found->second.use_count() == 1) {
-                victim = it;
-                break;
-            }
-        }
-        if (victim == engine.compressedWeightsLru.end())
-            return loaded; // Request-scoped when every cache entry is leased.
-        const auto found = engine.compressedWeights.find(*victim);
-        if (found != engine.compressedWeights.end()) {
-            const auto residentBytes = found->second->resident_bytes();
-            engine.compressedWeightsBytes = residentBytes > engine.compressedWeightsBytes
-                ? 0 : engine.compressedWeightsBytes - residentBytes;
-            engine.compressedWeights.erase(found);
-        }
-        engine.compressedWeightsLru.erase(victim);
-    }
-    engine.compressedWeightsBytes += bytes;
-    engine.compressedWeightsLru.push_front(key);
-    auto inserted = engine.compressedWeights.emplace(key, loaded);
-    return inserted.first->second;
+    return engine.compressedWeights.GetOrLoad(key,
+        [&engine, &entry, rangeOffset, rangeBytes, blockBytes]() {
+            return std::make_shared<const rawrxd::compression::ResidentCompressedTensor>(
+                engine.rom.loadResidentCompressedTensorRange(
+                    entry, rangeOffset, rangeBytes, blockBytes));
+        });
 }
 } // namespace
 
