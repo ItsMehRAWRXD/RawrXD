@@ -791,7 +791,8 @@ static std::string exeDir() {
 }
 
 bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
-                             const deep2::TensorView& xView, std::vector<float>& y) {
+                             const deep2::TensorView& xView, std::vector<float>& y,
+                             const std::string& weightCacheKey) {
     // VulkanProgram owns one descriptor set, fence, and command pool binding.
     // Serialize reuse across inference agents and GPU selection.
     static std::mutex programDispatchMutex;
@@ -885,15 +886,17 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     VkBuffer Wbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
     VkDeviceMemory Wmem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
     void* Wmapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
+    bool cachedWeightBuffer = false;
     auto cleanup = [&]() {
         if (Wmapped && Wmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, Wmem); Wmapped = nullptr; }
         if (xmapped && xmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, xmem); xmapped = nullptr; }
         if (ymapped && ymem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, ymem); ymapped = nullptr; }
-        vulkan->destroyBuffer(gpu, Wbuf, Wmem);
+        if (!cachedWeightBuffer) vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
-        Wbuf = xbuf = ybuf = VK_NULL_HANDLE;
-        Wmem = xmem = ymem = VK_NULL_HANDLE;
+        if (!cachedWeightBuffer) { Wbuf = VK_NULL_HANDLE; Wmem = VK_NULL_HANDLE; }
+        xbuf = ybuf = VK_NULL_HANDLE;
+        xmem = ymem = VK_NULL_HANDLE;
     };
 
     const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -902,18 +905,34 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     // Weight payloads are uploaded in their compact representation into
     // device-local storage. Only the requested tile is resident on the GPU;
     // the full tensor remains in compressed host residency / the ROM pager.
-    const VkBufferUsageFlags weightUsage =
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    if (!vulkan->createBuffer(gpu, weightBufferBytes, weightUsage,
-                              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Wbuf, Wmem, nullptr)) {
-        cleanup(); return false;
-    }
     // Vulkan buffer-copy sizes/offsets are 4-byte aligned. Pad the final
     // compact word without changing the logical element count seen by the shader.
     std::vector<uint8_t> alignedWeights(static_cast<size_t>(weightBufferBytes), 0);
     std::memcpy(alignedWeights.data(), wView.data, logicalWeightBytes);
-    if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, alignedWeights.data(), weightBufferBytes)) {
-        cleanup(); return false;
+    size_t defaultGpuBudget = 512ull * kResidencyMiB;
+    if (gpu.vramBytes) {
+        const uint64_t deviceBudget = std::max<uint64_t>(64ull * kResidencyMiB,
+                                                         gpu.vramBytes / 8u);
+        defaultGpuBudget = static_cast<size_t>(std::min<uint64_t>(
+            512ull * kResidencyMiB, deviceBudget));
+    }
+    const size_t gpuBudget = readResidencyMiB("DEEP2_GPU_WEIGHT_RESIDENCY_MB",
+                                               defaultGpuBudget);
+    if (!weightCacheKey.empty()) {
+        cachedWeightBuffer = vulkan->getOrCreateCachedWeightBuffer(
+            gpu, weightCacheKey, alignedWeights.data(), weightBufferBytes,
+            gpuBudget, Wbuf);
+    }
+    if (!cachedWeightBuffer) {
+        const VkBufferUsageFlags weightUsage =
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        if (!vulkan->createBuffer(gpu, weightBufferBytes, weightUsage,
+                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Wbuf, Wmem, nullptr)) {
+            cleanup(); return false;
+        }
+        if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, alignedWeights.data(), weightBufferBytes)) {
+            cleanup(); return false;
+        }
     }
     if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) {
         cleanup(); return false;
