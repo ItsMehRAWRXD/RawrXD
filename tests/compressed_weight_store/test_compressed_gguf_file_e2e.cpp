@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -131,6 +132,15 @@ int main() {
     assert(afterInference.compressed_bytes == admitted.compressed_bytes);
     assert(afterInference.cached_decoded_bytes == 0);
     assert(afterInference.cache_misses >= afterRow.cache_misses + rows);
+
+    // Failed inference is transactional: invalid activations cannot publish a
+    // partially written output vector to the caller.
+    input[0] = std::numeric_limits<float>::quiet_NaN();
+    std::fill(output.begin(), output.end(), 123.0f);
+    assert(!model.matvec(tensorName, input.data(), output.data(), 31, &error));
+    assert(!error.empty());
+    for (float value : output) assert(value == 123.0f);
+    input[0] = 1.0f;
 
     // Once the source mapping is closed, the compressed model remains usable:
     // this proves it did not retain a dangling pointer into GGUFLoader memory.
