@@ -4248,7 +4248,7 @@ bool VulkanCompute::DispatchGemvQuantTile(
     uint32_t cols, uint32_t outputRowBase)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
-    if (lostSeq_.lost || !initialized_ || !packedRows || !packedBytes ||
+    if (lostSeq_.lost || !initialized_ || !qPipeline_ || !packedRows || !packedBytes ||
         !input || !output || !rowCount || !cols || type == 40 ||
         (type != 2 && type != 8 && type != 10 && type != 11 &&
          type != 12 && type != 13 && type != 14 && type != 20))
