@@ -8,6 +8,7 @@
 #include "../GGUFLoader.hpp"
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -26,6 +27,10 @@ public:
         std::size_t encoded_residency_bytes = (std::numeric_limits<std::size_t>::max)();
         std::size_t block_bytes = CompressedWeightStore::DefaultBlockBytes;
         bool require_savings = false;
+        // Explicit opt-in: preserve F32 by default. Eligible finite F32 tensors
+        // convert only when every value is within this absolute error bound.
+        bool enable_f32_to_f16 = false;
+        float f32_to_f16_max_abs_error = 0.0f;
     };
 
     CompressedGGUFModel() = default;
@@ -68,6 +73,13 @@ public:
             if (failed_tensor) failed_tensor->clear();
             return false;
         }
+        if (options_.enable_f32_to_f16 &&
+            (!std::isfinite(options_.f32_to_f16_max_abs_error) ||
+             options_.f32_to_f16_max_abs_error < 0.0f)) {
+            if (error) *error = "F32-to-F16 tolerance must be finite and non-negative";
+            if (failed_tensor) failed_tensor->clear();
+            return false;
+        }
 
         auto candidate = std::make_shared<State>();
         try {
@@ -88,17 +100,45 @@ public:
                     if (failed_tensor) *failed_tensor = tensor.name;
                     return false;
                 }
-                if (!StoreMappedGGUFTensor(*candidate->store, tensor, error,
+                const auto remainingBudget = options_.encoded_residency_bytes -
+                    static_cast<std::size_t>(admitted);
+                std::uint32_t storedType = static_cast<std::uint32_t>(tensor.type);
+                std::size_t storedBytes = tensor.sizeBytes;
+                bool stored = false;
+
+                if (options_.enable_f32_to_f16 &&
+                    storedType == GGML_TYPE_F32 &&
+                    tensor.sizeBytes % sizeof(float) == 0) {
+                    bool precisionRejected = false;
+                    std::string conversionError;
+                    const auto count = tensor.sizeBytes / sizeof(float);
+                    if (candidate->store->addTensorF32AsF16FromReader(
+                            tensor.name, tensor.data, count, &conversionError,
+                            remainingBudget, options_.f32_to_f16_max_abs_error,
+                            true, &precisionRejected)) {
+                        storedType = GGML_TYPE_F16;
+                        storedBytes = count * sizeof(std::uint16_t);
+                        stored = true;
+                    } else if (!precisionRejected) {
+                        if (error) *error = conversionError;
+                        if (failed_tensor) *failed_tensor = tensor.name;
+                        return false;
+                    }
+                    // Precision rejection is not a model-load failure: retain
+                    // the original F32 bytes losslessly for this tensor.
+                }
+
+                if (!stored &&
+                    !StoreMappedGGUFTensor(*candidate->store, tensor, error,
                                            options_.require_savings,
-                                           options_.encoded_residency_bytes -
-                                               static_cast<std::size_t>(admitted))) {
+                                           remainingBudget)) {
                     if (failed_tensor) *failed_tensor = tensor.name;
                     return false;
                 }
                 TensorInfo info;
-                info.type = static_cast<std::uint32_t>(tensor.type);
+                info.type = storedType;
                 info.shape = tensor.shape;
-                info.bytes = tensor.sizeBytes;
+                info.bytes = storedBytes;
                 candidate->tensors.emplace(tensor.name, std::move(info));
             } catch (const std::exception& ex) {
                 if (error) *error = ex.what();
