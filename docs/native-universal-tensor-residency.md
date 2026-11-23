@@ -102,7 +102,7 @@ For supported Vulkan QGEMV types (Q8_0, Q2_K, Q4_K, Q6_K), the resident forward 
 
 The CPU LinearW fallback uses the registered GGML block geometry and dequantizer to reconstruct one quantized row at a time into reusable scratch, then computes that row's dot product. It does not expand the full quantized matrix to F32. Quantized types not supported by the packed Vulkan shader can still use the CPU row path when a compressed byte backing exists.
 
-**Remaining scope:** compressed-byte residency is currently attached to model-bound tensors and selected supported quantized operators. Embedding lookup, all normalization/state tensors, every quantized GGML type on Vulkan, expert-prefetch/fused execution, and lazy tensor-loading paths still require dedicated integration. The source GGUF mapping remains available for fallback; this is not yet a claim that all mapped pages have been released or that process RSS has fallen by the compressed-byte ratio.
+**Remaining scope:** compressed-byte residency is attached to model-bound tensors. Selected-row embedding lookup, quantized RMSNorm reads, CPU LinearW, and supported non-fused Vulkan QGEMV (Q8_0, Q2_K, Q4_K, Q6_K) consume bounded decoded ranges. Other normalization/state tensors, every quantized GGML type on Vulkan, expert-prefetch/fused execution, and lazy tensor-loading paths still require dedicated integration. The source GGUF mapping remains available for fallback; this is not yet a claim that all mapped pages have been released or that process RSS has fallen by the compressed-byte ratio.
 
 
 ## Packed Q8_0 and persistent device-local tile cache
