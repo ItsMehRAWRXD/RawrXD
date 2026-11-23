@@ -396,26 +396,35 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &cbi);
+    if (vkBeginCommandBuffer(cmd, &cbi) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
     uint32_t pc[2] = {rows, cols};
     vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
-    uint32_t groups = (rows + 255) / 256;
+    uint32_t groups = rows / 256u + (rows % 256u != 0u ? 1u : 0u);
     vkCmdDispatch(cmd, groups, 1, 1);
 
-    vkEndCommandBuffer(cmd);
-
-    vkResetFences(m_device, 1, &m_fence);
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS ||
+        vkResetFences(m_device, 1, &m_fence) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, m_fence);
-    vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+    const VkResult submitResult = vkQueueSubmit(gpu.queue, 1, &si, m_fence);
+    if (submitResult != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
+    const VkResult waitResult = vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
     vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
-    return true;
+    return waitResult == VK_SUCCESS;
 }
 
 } // namespace deep2
