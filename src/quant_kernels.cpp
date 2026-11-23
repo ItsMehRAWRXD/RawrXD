@@ -117,6 +117,36 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
             out[i] = static_cast<float>(value);
         }
         return true;
+    case TensorType::IQ4_XS: {
+        const size_t blocks = static_cast<size_t>((n + 255) / 256);
+        for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
+            const uint8_t* block = src.data + blockIndex * 136;
+            const float scale = fp16ToF32(readU16(block));
+            const uint16_t highScales = readU16(block + 2);
+            const uint8_t* lowScales = block + 4;
+            const uint8_t* packed = block + 8;
+            const size_t base = blockIndex * 256;
+            const size_t take = std::min<size_t>(256, static_cast<size_t>(n) - base);
+            for (size_t group = 0; group < 8; ++group) {
+                const unsigned low = (lowScales[group / 2] >> (4 * (group % 2))) & 0x0fu;
+                const unsigned high = (highScales >> (2 * group)) & 0x03u;
+                const float groupScale = scale * static_cast<float>((low | (high << 4)) - 32);
+                for (size_t j = 0; j < 16; ++j) {
+                    const size_t first = group * 32 + j;
+                    const size_t second = first + 16;
+                    if (first < take) {
+                        const uint8_t byte = packed[group * 16 + j];
+                        out[base + first] = groupScale * kIQ4NLValues[byte & 0x0fu];
+                    }
+                    if (second < take) {
+                        const uint8_t byte = packed[group * 16 + j];
+                        out[base + second] = groupScale * kIQ4NLValues[byte >> 4];
+                    }
+                }
+            }
+        }
+        return true;
+    }
     case TensorType::IQ4_NL: {
         const size_t blocks = static_cast<size_t>((n + 31) / 32);
         for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
@@ -246,6 +276,7 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::Q8_0:
     case TensorType::Q8_1:
     case TensorType::IQ4_NL:
+    case TensorType::IQ4_XS:
     case TensorType::Q2_K:
     case TensorType::Q3_K:
     case TensorType::Q4_K:
