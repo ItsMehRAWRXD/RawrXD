@@ -115,6 +115,26 @@ int main() {
     assert(after.activeReaders==0);
     assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
 
+    // Production GPU staging API: copy only requested packed rows, preserving
+    // the guard bytes and releasing the cache reader lease after each call.
+    std::vector<uint8_t> gpuTile(257 * sizeof(uint16_t) + 2, 0xa5);
+    RawrXD::TensorCompression::Encoding gpuEncoding =
+        RawrXD::TensorCompression::Encoding::Raw;
+    assert(cache.CopyUniform16BitRange("layer.0.weight", 1023, 257,
+        gpuEncoding, gpuTile.data(), gpuTile.size()));
+    assert(gpuEncoding == RawrXD::TensorCompression::Encoding::F16);
+    for (size_t i = 0; i < 257; ++i) {
+        const uint16_t bits = static_cast<uint16_t>(gpuTile[2*i]) |
+            (static_cast<uint16_t>(gpuTile[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromHalf(bits) == source[1023+i]);
+    }
+    assert(gpuTile[514] == 0xa5 && gpuTile[515] == 0xa5);
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", 1023, 257,
+        gpuEncoding, gpuTile.data(), 2));
+    assert(!cache.CopyUniform16BitRange("missing", 0, 1,
+        gpuEncoding, gpuTile.data(), gpuTile.size()));
+    assert(cache.GetStats().activeReaders == 0);
+
     // A failed streamed registration must not leave a partial cache entry.
     auto badReader=[](size_t,size_t,float*) { return false; };
     assert(!cache.RegisterF32FromReader("broken",512,0.0f,badReader,128));
