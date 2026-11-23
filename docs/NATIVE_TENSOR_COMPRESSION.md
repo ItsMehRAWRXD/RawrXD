@@ -64,20 +64,29 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   TensorROM pager into compressed resident storage. If no safe encoding saves
   space or the cache budget cannot admit the tensor, it reads only the
   requested raw tile instead of duplicating the tensor.
-- `Deep2Engine::gemvTensorROM` computes F32 GEMV in bounded row tiles. The
-  Phi-3 ROM forward path uses it for token embeddings, QKV, FFN up/down and
-  output projection. The full matrix is not reconstructed for those F32
-  operations.
+- `Deep2Engine::gemvTensorROM` computes GEMV in bounded row tiles.
+  The Phi-3 ROM forward path uses it for token embeddings, QKV, FFN up/down
+  and output projection. F32 tiles come from compressed resident chunks;
+  F16/BF16/F64, integer, Q4/Q5/Q8 fixed-block and Q2_K–Q8_K tiles are read
+  as encoded GGUF blocks and decoded only into the current tile scratch.
+- `dequantizeTensorRange` validates block alignment and exact source byte
+  counts before decoding. K-quant decoding delegates to the independent
+  `NativeKQuant` GGML-layout codec; the old guessed 82/114/146/178-byte
+  K-block layouts and incorrect shifted type IDs are no longer used by this
+  ROM inference path.
+- `gemvTensorROMVulkan` shares the same tile readers and submits one bounded
+  F32 weight tile at a time; it publishes output only after all tile calls
+  succeed.
 - F16/BF16 conversion remains opt-in through
   `compressedF32MaxAbsError`; its default is zero, so lossy conversion is
   never silently enabled. Exact F16/BF16 representations and lossless RLE
   may still be retained when they reduce storage.
 
 This is an in-memory runtime cache, not a change to GGUF wire types. Existing
-GGUF Q2_K–Q8_K weights already remain in compact quantized form in the pager;
-their kernel-specific tile decoders are a separate integration step. The
-non-F32 fallback in `gemvTensorROM` currently uses the established
-dequantize-then-GEMV path and is not claimed to be tile-decompressed.
+quantized weights remain encoded in the TensorROM pager; only the requested
+blocks are expanded into the row tile consumed by the CPU or Vulkan GEMV.
+Unsupported GGUF types (including IQ formats not yet implemented in this
+decoder) fail closed rather than being interpreted with guessed geometry.
 
 ## Verification gates
 
