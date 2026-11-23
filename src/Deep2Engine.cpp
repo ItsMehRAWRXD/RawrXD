@@ -595,6 +595,19 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return entry.dims.empty() ? 0 : entry.dims[0];
     };
 
+    // Route F32 ROM projections through bounded compressed tiles on the
+    // primary Vulkan device when available. Non-F32 GGUF tensors retain the
+    // existing dequantized CPU path; a failed Vulkan dispatch is fail-closed.
+    auto runProjection = [this](const deep2::TensorEntry& entry,
+                                const float* input, float* output) -> bool {
+        if (vulkanReady && vulkan && entry.type == deep2::TensorType::F32) {
+            const auto* gpu = vulkan->primary();
+            if (!gpu) return false;
+            return gemvTensorROMVulkan(*gpu, entry, input, output);
+        }
+        return gemvTensorROM(entry, input, output);
+    };
+
     std::cout << "[Move 10] Model geometry: layers=" << numLayers
               << " hidden=" << hiddenDim << " heads=" << numHeads
               << " vocab=" << vocabSize << " intermediate=" << intermediateDim << "\n" << std::flush;
@@ -666,7 +679,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             std::vector<float> hiddenStatesCopy(hiddenDim);
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
             std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
-            if (!gemvTensorROM(*qkv, hiddenStatesCopy.data(), qkvOut.data(),
+            if (!runProjection(*qkv, hiddenStatesCopy.data(), qkvOut.data(),
                                &qkvRows, &qkvCols)) {
                 fprintf(stderr, "[Move 10] Layer %zu: tiled QKV GEMV failed\n", layer);
                 return false;
@@ -706,7 +719,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
 
             // FFN: hidden = down(gelu(up(hidden)))
             std::vector<float> upOut(static_cast<size_t>(upRows), 0.0f);
-            if (!gemvTensorROM(*upEntry, hiddenStates.data(), upOut.data())) {
+            if (!runProjection(*upEntry, hiddenStates.data(), upOut.data())) {
                 fprintf(stderr, "[Move 10] Layer %zu: tiled FFN-up GEMV failed\n", layer);
                 return false;
             }
@@ -719,7 +732,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             }
 
             std::vector<float> downOut(static_cast<size_t>(downRows), 0.0f);
-            if (!gemvTensorROM(*downEntry, upOut.data(), downOut.data())) {
+            if (!runProjection(*downEntry, upOut.data(), downOut.data())) {
                 fprintf(stderr, "[Move 10] Layer %zu: tiled FFN-down GEMV failed\n", layer);
                 return false;
             }
@@ -753,7 +766,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         const uint64_t outputCols = matrixCols(*outputEntry);
         if (!outputRows || outputCols != hiddenDim) return false;
         outputLogits.resize(static_cast<size_t>(outputRows), 0.0f);
-        if (!gemvTensorROM(*outputEntry, hiddenStates.data(), outputLogits.data())) {
+        if (!runProjection(*outputEntry, hiddenStates.data(), outputLogits.data())) {
             fprintf(stderr, "[Move 10] Tiled output projection GEMV failed\n");
             return false;
         }
