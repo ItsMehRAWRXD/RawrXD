@@ -29,11 +29,15 @@ uint64_t WeightKey(const WeightTensor& wt) {
     h *= 1099511628211ull;
     h ^= static_cast<uint64_t>(reinterpret_cast<uintptr_t>(wt.data));
     h *= 1099511628211ull;
+    h ^= static_cast<uint64_t>(reinterpret_cast<uintptr_t>(wt.compressedF32.get()));
+    h *= 1099511628211ull;
+    h ^= static_cast<uint64_t>(reinterpret_cast<uintptr_t>(wt.compressedBytes.get()));
+    h *= 1099511628211ull;
     return h;
 }
 
 bool PackedQuant(const WeightTensor& wt) {
-    if (!wt.data || !wt.sizeBytes) return false;
+    if (!wt.sizeBytes) return false;
     const int t = wt.type;
     return t == (int)GGMLType::GGML_TYPE_Q8_0 ||
            t == (int)GGMLType::GGML_TYPE_Q2_K ||
@@ -46,7 +50,7 @@ bool PackedQuant(const WeightTensor& wt) {
 // Only these four formats have native packed decoders in deep2_qgemv.comp.
 // Q3_K/Q5_K are registered packed formats but must use bounded F32 row tiles.
 bool NativePackedShaderQuant(const WeightTensor& wt) {
-    if (!wt.data || !wt.sizeBytes) return false;
+    if (!wt.sizeBytes) return false;
     const int t = wt.type;
     return t == (int)GGMLType::GGML_TYPE_Q8_0 ||
            t == (int)GGMLType::GGML_TYPE_Q2_K ||
@@ -55,7 +59,8 @@ bool NativePackedShaderQuant(const WeightTensor& wt) {
 }
 
 size_t StreamBytes(const WeightTensor& wt) {
-    if (!wt.data || !wt.rows || !wt.cols) return 0;
+    if ((!wt.data && !wt.compressedBytes && !wt.compressedF32) ||
+        !wt.rows || !wt.cols) return 0;
     if (wt.compressedBytes)
         return std::min<size_t>(wt.sizeBytes, 256u * 1024u);
     if (PackedQuant(wt)) return wt.sizeBytes;
