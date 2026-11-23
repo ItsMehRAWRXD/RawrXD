@@ -42,6 +42,7 @@ Do not equate compressed bytes with total process residency:
 2. `GpuCompressedF32Payload` retains a shared owner and a zero-copy view into the canonical contiguous 16-bit backing; it does not allocate a second host copy.
 3. Vulkan resident-weight bytes are accounted by the Vulkan weight window / compressed dispatch counters.
 4. The original GGUF mapping remains alive and is still the backing source for other tensors. The current implementation does not unmap individual F32 tensor ranges or prove that their file-backed pages have left the process working set.
+5. The model-load `TENSOR_RESIDENCY` diagnostic reports the source bytes represented by successfully retained compressed tensors separately from their encoded resident bytes. This is a representation comparison, not a measured process-memory reduction.
 
 A valid runtime-memory claim must report packed payload bytes, retained host allocation bytes (`residentBytes()`), Vulkan device bytes, GGUF mapped bytes, and process working-set/RSS separately. Never report only the compressed tensor size as total memory saved.
 
