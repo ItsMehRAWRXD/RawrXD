@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <cstdint>
 #include <limits>
 
 namespace codec {
@@ -20,7 +21,7 @@ QByteArray compressData(const QByteArray& data, int level, bool* success) {
     const auto sourceLength = static_cast<std::size_t>(data.size());
     if (sourceLength > (std::numeric_limits<uLong>::max)()) return {};
     const uLong bound = compressBound(static_cast<uLong>(sourceLength));
-    if (bound > static_cast<uLong>((std::numeric_limits<qsizetype>::max)())) return {};
+    if (static_cast<std::uintmax_t>(bound) >\n        static_cast<std::uintmax_t>((std::numeric_limits<qsizetype>::max)())) return {};
     QByteArray output(static_cast<qsizetype>(bound), Qt::Uninitialized);
     uLongf length = bound;
     const int rc = compress2(reinterpret_cast<Bytef*>(output.data()), &length,
