@@ -102,6 +102,23 @@ int main() {
         assert(RawrXD::TensorCompression::FromBFloat16(h) == bf16Source[i + 7]);
     }
 
+    // BF16 direct staging must preserve the original packed encoding and
+    // leave guard bytes untouched, even for a cross-chunk window.
+    std::vector<uint8_t> bf16Staging(39 * sizeof(uint16_t) + 3, 0x6b);
+    assert(bf16Cache.CopyUniform16BitRange(
+        "bf16.exact", 1008, 39, bf16Encoding,
+        bf16Staging.data(), bf16Staging.size()));
+    assert(bf16Encoding == RawrXD::TensorCompression::Encoding::BF16);
+    for (size_t i = 0; i < 39; ++i) {
+        const uint16_t bits = static_cast<uint16_t>(bf16Staging[2*i]) |
+            (static_cast<uint16_t>(bf16Staging[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromBFloat16(bits) == bf16Source[1008+i]);
+    }
+    assert(bf16Staging[78] == 0x6b &&
+           bf16Staging[79] == 0x6b &&
+           bf16Staging[80] == 0x6b);
+    assert(bf16Cache.GetStats().activeReaders == 0);
+
     std::vector<float> tile(1537,-999.0f);
     assert(cache.ReadRange("layer.0.weight",900,tile.size(),tile.data()));
     for(size_t i=0;i<tile.size();++i) assert(tile[i]==source[900+i]);
