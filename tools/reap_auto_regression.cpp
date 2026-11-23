@@ -14,11 +14,11 @@ int main() {
         // F32 normalization stays higher precision (F16); ordinary F32 becomes Q4_0.
         WriteName(out,"blk.0.attn_norm.weight"); WriteU32(out,1);
         WriteU64(out,32); WriteU32(out,0); WriteU64(out,0);
-        WriteName(out,"blk.0.ffn_up.weight"); WriteU32(out,1);
-        WriteU64(out,32); WriteU32(out,0); WriteU64(out,128);
+        WriteName(out,"blk.0.ffn_up.weight"); WriteU32(out,2);
+        WriteU64(out,32); WriteU64(out,1); WriteU32(out,0); WriteU64(out,128);
         // Existing Q4_0 must not be requantized or inflated.
-        WriteName(out,"blk.0.ffn_down.weight"); WriteU32(out,1);
-        WriteU64(out,32); WriteU32(out,2); WriteU64(out,256);
+        WriteName(out,"blk.0.ffn_down.weight"); WriteU32(out,2);
+        WriteU64(out,32); WriteU64(out,1); WriteU32(out,2); WriteU64(out,256);
         PadTo(out,32);
         for(int i=0;i<64;++i) {uint32_t bits=0x3f800000u;WriteU32(out,bits);}
         unsigned char q4[18]={};q4[0]=0; q4[1]=0x3c;
