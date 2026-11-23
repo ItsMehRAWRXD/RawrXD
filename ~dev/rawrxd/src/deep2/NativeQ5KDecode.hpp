@@ -3,6 +3,7 @@
 // and the standalone reference-layout test.
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 namespace Deep2 {
 inline float NativeQ5KHalfToFloat(uint16_t h) {
@@ -23,7 +24,7 @@ inline float NativeQ5KHalfToFloat(uint16_t h) {
         bits = sign | ((exponent + 112u) << 23) | (mantissa << 13);
     }
     float value;
-    __builtin_memcpy(&value, &bits, sizeof(value));
+    std::memcpy(&value, &bits, sizeof(value));
     return value;
 }
 
