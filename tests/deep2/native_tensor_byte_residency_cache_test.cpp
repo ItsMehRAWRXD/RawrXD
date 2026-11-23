@@ -23,6 +23,21 @@ int main() {
     assert(stats.compressedBytes<stats.logicalBytes);
     assert(stats.compressedBytes<=stats.budgetBytes);
 
+    // The byte cache also benefits from LZ when tensor bytes have repeated
+    // structure but no long identical-byte runs (RLE cannot compress these).
+    std::vector<uint8_t> patterned(128*1024);
+    for(size_t i=0;i<patterned.size();++i) patterned[i]=uint8_t(i%251);
+    assert(cache.RegisterFromReader("shard0:patterned",patterned.size(),
+        [&](size_t offset,size_t count,uint8_t* out) {
+            std::copy(patterned.begin()+offset,patterned.begin()+offset+count,out);
+            return true;
+        },4096));
+    std::vector<uint8_t> patternedRange(6000);
+    assert(cache.ReadRange("shard0:patterned",4000,patternedRange.size(),
+                           patternedRange.data(),scratch));
+    assert(std::equal(patternedRange.begin(),patternedRange.end(),
+                      patterned.begin()+4000));
+
     std::vector<uint8_t> decoded(9000,0);
     std::vector<uint8_t> scratch;
     assert(cache.ReadRange("shard0:weight0",4000,decoded.size(),decoded.data(),scratch));
