@@ -1,8 +1,10 @@
 #include "rawrxd/compressed_block_codec_adapters.hpp"
+#include "CompressedWeightStore.hpp"
 
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 int main() {
@@ -48,6 +50,25 @@ int main() {
         return 6;
     }
 #endif
+
+    // The production Deep2 CompressedWeightStore now uses the same extracted
+    // native LZ wire codec. This guards compatibility across the refactor.
+    rawrxd::compression::CompressedWeightStore productionStore(
+        32 * 1024, 16 * 1024, std::numeric_limits<std::size_t>::max());
+    std::string storeError;
+    if (!productionStore.addTensor("adapter-regression", source.data(),
+            source.size(), &storeError, rawrxd::compression::GGML_TYPE_F32)) {
+        std::cerr << "Deep2 CompressedWeightStore admission failed: " << storeError << "\\n";
+        return 8;
+    }
+    std::vector<std::uint8_t> productionRange(8192);
+    if (!productionStore.readRange("adapter-regression", 7000,
+            productionRange.data(), productionRange.size(), &storeError) ||
+        !std::equal(productionRange.begin(), productionRange.end(),
+                    source.begin() + 7000)) {
+        std::cerr << "Deep2 CompressedWeightStore native codec compatibility failed\\n";
+        return 9;
+    }
 
     // Incompressible data must be stored raw per block, never expanded.
     std::uint32_t state = 0x12345678u;
