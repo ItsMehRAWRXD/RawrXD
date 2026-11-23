@@ -83,7 +83,7 @@ QByteArray deflate_brutal_masm(const QByteArray& data, bool* success) {
     if (result == Z_OK) {
         compressed.resize(compressedSize);
         if (success) *success = true;
-        qDebug() << \"[codec] Brutal compression:\" << data.size() << \"→\" << compressedSize << \"bytes\";\n        return compressed;
+        qDebug() << "[codec] Brutal compression:" << data.size() << "->" << compressedSize;
     } else {
         if (success) *success = false;
         qWarning() << \"Brutal compression failed with error:\" << result;
