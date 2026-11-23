@@ -30,12 +30,13 @@ struct Tensor {
     std::vector<uint64_t> dims;
     std::vector<float> values;
     uint64_t offset = 0;
+    uint32_t ggmlType = 0; // F32=0, F16=1
 };
 void putTensorInfo(std::ostream& out, const Tensor& tensor) {
     putString(out, tensor.name);
     put<uint32_t>(out, static_cast<uint32_t>(tensor.dims.size()));
     for (uint64_t d : tensor.dims) put<uint64_t>(out, d);
-    put<uint32_t>(out, 0); // GGML_TYPE_F32
+    put<uint32_t>(out, tensor.ggmlType);
     put<uint64_t>(out, tensor.offset);
 }
 bool writeFixture(const std::filesystem::path& path, std::vector<Tensor>& tensors) {
@@ -44,7 +45,7 @@ bool writeFixture(const std::filesystem::path& path, std::vector<Tensor>& tensor
     for (auto& t : tensors) {
         cursor = alignUp(cursor, alignment);
         t.offset = cursor;
-        cursor += t.values.size() * sizeof(float);
+        cursor += t.values.size() * (t.ggmlType == 1 ? sizeof(uint16_t) : sizeof(float));
     }
     std::ofstream out(path, std::ios::binary | std::ios::trunc);
     if (!out) return false;
@@ -64,14 +65,26 @@ bool writeFixture(const std::filesystem::path& path, std::vector<Tensor>& tensor
     while (static_cast<uint64_t>(out.tellp()) < dataStart) out.put('\0');
     for (const auto& t : tensors) {
         while (static_cast<uint64_t>(out.tellp()) < dataStart + t.offset) out.put('\0');
-        out.write(reinterpret_cast<const char*>(t.values.data()),
-                  static_cast<std::streamsize>(t.values.size() * sizeof(float)));
+        if (t.ggmlType == 1) {
+            // Exact small positive F16 values used by this fixture.
+            for (float value : t.values) {
+                uint16_t half = 0;
+                if (value == 1.0f) half = 0x3c00;
+                else if (value == 2.0f) half = 0x4000;
+                else if (value == 0.5f) half = 0x3800;
+                else if (value != 0.0f) return false;
+                put<uint16_t>(out, half);
+            }
+        } else {
+            out.write(reinterpret_cast<const char*>(t.values.data()),
+                      static_cast<std::streamsize>(t.values.size() * sizeof(float)));
+        }
     }
     return static_cast<bool>(out);
 }
 Tensor makeTensor(std::string name, std::vector<uint64_t> dims,
                   std::vector<float> values) {
-    return Tensor{std::move(name), std::move(dims), std::move(values), 0};
+    return Tensor{std::move(name), std::move(dims), std::move(values), 0, 0};
 }
 }
 
@@ -107,7 +120,9 @@ int main() {
     output[1 * H + 1] = 1.0f;
     output[2 * H + 2] = 1.0f;
     output[3 * H + 3] = 2.0f;
-    tensors.push_back(makeTensor("output.weight", {H, H}, output));
+    Tensor packedOutput = makeTensor("output.weight", {H, H}, output);
+    packedOutput.ggmlType = 1; // Exercise the native packed-F16 inference dispatch.
+    tensors.push_back(std::move(packedOutput));
 
     const auto path = std::filesystem::temp_directory_path() /
         "rawrxd_deep2_compressed_model_e2e.gguf";
@@ -143,7 +158,9 @@ int main() {
                 if (best != 3 || logits != baseline ||
                     stats.f32TensorCount == 0 ||
                     stats.f32CompressedBytes >= stats.f32LogicalBytes ||
-                    stats.f32ActiveReaders != 0) {
+                    stats.encodedTensorCount == 0 ||
+                    stats.encodedCompressedBytes >= stats.encodedLogicalBytes ||
+                    stats.f32ActiveReaders != 0 || stats.encodedActiveReaders != 0) {
                     std::cerr << "synthetic Deep2 inference/residency acceptance failed"
                               << " argmax=" << best
                               << " f32_tensors=" << stats.f32TensorCount
@@ -158,6 +175,8 @@ int main() {
                               << "," << logits[2] << "," << logits[3]
                               << " f32_compressed=" << stats.f32CompressedBytes
                               << " f32_logical=" << stats.f32LogicalBytes
+                              << " encoded_compressed=" << stats.encodedCompressedBytes
+                              << " encoded_logical=" << stats.encodedLogicalBytes
                               << " pager_resident=" << stats.sourcePagerResidentBytes << "\n";
                 }
             }
