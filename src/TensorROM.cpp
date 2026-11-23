@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <limits>
 
 namespace deep2 {
 
@@ -386,20 +387,23 @@ std::vector<TensorROM::ShardStatus> TensorROM::shardStatus() const {
 
 bool TensorROM::readShardRange(size_t shardIndex, uint64_t fileOffset,
                                uint8_t* buf, uint64_t size) const {
-    if (shardIndex >= m_shards.size()) return false;
+    if (shardIndex >= m_shards.size() || (!buf && size)) return false;
     const ShardManifest& m = m_shards[shardIndex];
-    if (fileOffset >= m.dataOffset + m.dataSize) return false;
-    uint64_t avail = (m.dataOffset + m.dataSize) - fileOffset;
-    if (size > avail) size = avail;
+    if (m.dataOffset > UINT64_MAX - m.dataSize) return false;
+    const uint64_t end = m.dataOffset + m.dataSize;
+    if (fileOffset < m.dataOffset || fileOffset > end || size > end - fileOffset)
+        return false; // exact reads only; never silently truncate or zero-pad weights
+    if (size == 0) return true;
+    if (fileOffset > static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()) ||
+        size > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max()))
+        return false;
+    std::lock_guard<std::mutex> lock(m_fileReadMutex);
     auto& f = *m.file;
     f.clear();
     f.seekg(static_cast<std::streamoff>(fileOffset), std::ios::beg);
     if (!f) return false;
     f.read(reinterpret_cast<char*>(buf), static_cast<std::streamsize>(size));
-    std::streamsize got = f.gcount();
-    if (got < 0) return false;
-    if ((uint64_t)got < size) std::memset(buf + got, 0, size - (uint64_t)got);
-    return true;
+    return f.good() || (f.eof() && static_cast<uint64_t>(f.gcount()) == size);
 }
 
 } // namespace deep2
