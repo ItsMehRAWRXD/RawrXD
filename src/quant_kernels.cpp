@@ -8,6 +8,11 @@
 
 namespace deep2 {
 
+static constexpr int8_t kIQ4NLValues[16] = {
+    -127, -104, -83, -65, -49, -35, -22, -10,
+       1,   13,  25,  38,  53,  69,  89, 113
+};
+
 static inline float fp16ToF32(uint16_t v) {
     uint32_t sign = (v & 0x8000u) << 16;
     uint32_t exp  = (v & 0x7C00u) >> 10;
@@ -112,6 +117,22 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
             out[i] = static_cast<float>(value);
         }
         return true;
+    case TensorType::IQ4_NL: {
+        const size_t blocks = static_cast<size_t>((n + 31) / 32);
+        for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
+            const uint8_t* block = src.data + blockIndex * 18;
+            const float scale = fp16ToF32(readU16(block));
+            const uint8_t* packed = block + 2;
+            const size_t base = blockIndex * 32;
+            const size_t take = std::min<size_t>(32, static_cast<size_t>(n) - base);
+            for (size_t j = 0; j < take; ++j) {
+                const uint8_t byte = packed[j & 15u];
+                const uint8_t code = j < 16 ? (byte & 0x0fu) : (byte >> 4);
+                out[base + j] = scale * static_cast<float>(kIQ4NLValues[code]);
+            }
+        }
+        return true;
+    }
     case TensorType::Q4_0:
     case TensorType::Q4_1:
     case TensorType::Q5_0:
@@ -224,6 +245,7 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::Q5_1:
     case TensorType::Q8_0:
     case TensorType::Q8_1:
+    case TensorType::IQ4_NL:
     case TensorType::Q2_K:
     case TensorType::Q3_K:
     case TensorType::Q4_K:
