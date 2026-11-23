@@ -16738,3 +16738,16 @@ if(TARGET InferenceEngine)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME ev512_ide_restore_reload_fault_smoke)
 endif()
+
+# Strict parser regression for the Deep2 F32 compressed-residency opt-in.
+# Kept independent of InferenceEngine so it runs in minimal native CI builds.
+add_executable(test_f32_compression_config
+    tests/deep2/f32_compression_config_test.cpp)
+target_include_directories(test_f32_compression_config PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2)
+target_compile_features(test_f32_compression_config PRIVATE cxx_std_20)
+if(MSVC)
+    target_compile_options(test_f32_compression_config PRIVATE /W4 /permissive-)
+endif()
+add_test(NAME deep2_f32_compression_config
+    COMMAND test_f32_compression_config)
