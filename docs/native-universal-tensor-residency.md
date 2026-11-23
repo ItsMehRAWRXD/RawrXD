@@ -49,3 +49,12 @@ The ROM Vulkan GEMV route still expands only the requested compressed/dequantize
 The synchronous GEMV path now explicitly unmaps each host-visible weight/input/output allocation before destroying its buffer and freeing its memory. The Vulkan buffer allocator also fails closed if binding or mapping fails and clears output handles on those failures. This fixes a per-tile mapped-memory lifetime defect in the current upload path; it does not change numerical behavior or establish GPU decompression parity.
 
 The next GPU-residency milestone requires a separate shader contract that accepts the encoded chunk format and its metadata (encoding kind, compressed byte length, logical element count, and chunk boundaries), validates bounds before decode, and feeds decoded values directly into the compute operation. That work must preserve the existing F32 GEMV reference path until device-side decode has independent correctness and memory measurements.
+
+
+## Compact F16/BF16 range export for device consumers
+
+`ChunkedF32Storage::ExportUniform16BitRange` and `TensorResidencyCache::ExportUniform16BitRange` expose a selected range of cached F16/BF16 payloads without first decoding them to F32. The range must cover complete independently encoded chunks (the final range may end at tensor end), and every chunk must use the same 16-bit encoding. Partial chunks, mixed codecs, raw chunks, RLE, and LZ4 are rejected without returning ambiguous bytes. The cache wrapper pins the entry while exporting so concurrent LRU eviction cannot invalidate the source.
+
+This is the required host-side handoff primitive for a GPU kernel that consumes compressed F16/BF16 weights directly. A regression test verifies the exported bytes round-trip to the exact source values for an F16-exact tensor, rejects unaligned ranges, and confirms the reader pin is released.
+
+**Important boundary:** the current standalone Vulkan GEMV still consumes F32 tiles. This commit does not yet connect the compact export to a Vulkan descriptor or ship a compressed-weight GEMV shader. Until that kernel and independent GPU parity test exist, the runtime GPU-resident memory reduction is not certified. Quantized GGUF RLE/LZ4 payloads also still need an explicit device decoder/kernel contract; their encoded representation must not be mistaken for F16/BF16.
