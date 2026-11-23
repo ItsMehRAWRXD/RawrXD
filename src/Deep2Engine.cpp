@@ -251,6 +251,50 @@ bool Deep2Engine::gemvROMCompressed(
     }
 }
 
+bool Deep2Engine::readROMCompressedRow(
+    const std::string& tensorName, std::size_t rowIndex,
+    std::vector<float>& output, std::size_t blockBytes,
+    std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->dims.size() != 2 ||
+        rowIndex >= entry->dims[1] ||
+        entry->dims[0] > (std::numeric_limits<std::size_t>::max)() ||
+        entry->dims[1] > (std::numeric_limits<std::size_t>::max)())
+        return false;
+    const auto cols = static_cast<std::size_t>(entry->dims[0]);
+    const auto rows = static_cast<std::size_t>(entry->dims[1]);
+    try {
+        auto resident = getResidentCompressedTensor(*this, *entry, blockBytes);
+        std::vector<float> next;
+        switch (entry->type) {
+            case deep2::TensorType::F32:
+                next = rawrxd::compression::resident_f32_row(
+                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::F16:
+                next = rawrxd::compression::resident_f16_row(
+                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::Q4_0:
+                next = rawrxd::compression::resident_q4_0_row(
+                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::Q8_0:
+                next = rawrxd::compression::resident_q8_0_row(
+                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                break;
+            default:
+                return false;
+        }
+        output.swap(next);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_ROW] %s\\n", e.what());
+        return false;
+    }
+}
+
 bool Deep2Engine::gemvResidentF32(
     const rawrxd::compression::ResidentCompressedTensor& weights,
     const float* x, float* y, std::size_t rows, std::size_t cols,
