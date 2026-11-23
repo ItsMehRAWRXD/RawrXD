@@ -28,6 +28,25 @@ namespace Deep2EngineVulkan {
     class VulkanDeviceAllocator;
 }
 
+struct CompressedWeightResidencyStats {
+    uint64_t logicalBytes = 0;
+    uint64_t residentEncodedBytes = 0;
+    uint64_t compressedPages = 0;
+    uint64_t rawPages = 0;
+    uint64_t cacheMisses = 0;
+};
+
+struct VulkanCompressedGemvStats {
+    uint64_t matrixRows = 0;
+    uint64_t matrixCols = 0;
+    uint64_t tileCount = 0;
+    uint64_t decodedWeightBytes = 0;
+    uint64_t peakDecodedTileBytes = 0;
+    uint64_t uploadedWeightBytes = 0;
+    uint64_t encodedResidentBytesBefore = 0;
+    uint64_t encodedResidentBytesAfter = 0;
+};
+
 struct Deep2Engine {
     // Whole-model loader context (fallback / regression baseline).
     EngineContext ctx;
@@ -38,7 +57,7 @@ struct Deep2Engine {
     // avoiding a second uncompressed PageCache copy.
     std::unordered_map<const deep2::TensorEntry*, std::shared_ptr<deep2::TensorROMCompressedView>> compressedWeightViews;
     std::list<const deep2::TensorEntry*> compressedWeightViewLru;
-    std::mutex compressedWeightViewsMutex;
+    mutable std::mutex compressedWeightViewsMutex;
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
 
@@ -79,6 +98,7 @@ struct Deep2Engine {
     // Quantized ranges must begin at a quantization-block boundary.
     bool dequantTensorRange(const deep2::TensorEntry& entry, uint64_t firstElement,
                             uint64_t elementCount, std::vector<float>& output);
+    CompressedWeightResidencyStats compressedWeightResidencyStats() const;
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
@@ -92,7 +112,8 @@ struct Deep2Engine {
     bool vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
                               const deep2::TensorEntry& weight,
                               const float* x, uint64_t xCount,
-                              std::vector<float>& y, uint32_t tileRows = 16);
+                              std::vector<float>& y, uint32_t tileRows = 16,
+                              VulkanCompressedGemvStats* stats = nullptr);
 
     // ---- Move 10: Full Phi-3 ROM-Path Forward Pass ----
     // Execute complete 32-layer Phi-3 forward pass through virtual ROM path
