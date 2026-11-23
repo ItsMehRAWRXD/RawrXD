@@ -710,6 +710,15 @@ int main(int argc,char** argv) {
         }
         out.flush();if(!out)throw std::runtime_error("output write failure");
         out.close();in.close();
+        // Never replace an existing destination: a model conversion must not
+        // silently destroy an earlier artifact. This is a preflight check,
+        // not a cross-process atomic no-clobber guarantee.
+        std::error_code destError;
+        const auto destStatus=std::filesystem::symlink_status(argv[2],destError);
+        if(destError && destError!=std::errc::no_such_file_or_directory)
+            throw std::runtime_error("cannot inspect destination");
+        if(destStatus.type()!=std::filesystem::file_type::not_found)
+            throw std::runtime_error("destination already exists");
         if(std::rename(tmp.c_str(),argv[2]))throw std::runtime_error("rename failed");
         std::cout<<"converted tensors: "<<changed<<"/"<<ts.size()<<"\n";
         return 0;
