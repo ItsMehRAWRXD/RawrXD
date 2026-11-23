@@ -47,6 +47,17 @@ This is a deterministic architectural execution contract, not proof that every p
 - Device-loss recovery, cancellation, concurrent model requests, and multi-agent inference require sustained end-to-end tests.
 - Not every architecture or tensor type is covered by the synthetic decoder fixture. Unsupported shapes/types must reject the GPU path and use the independently validated fallback rather than guessing at geometry.
 
+## Resident-memory telemetry
+
+`StoreStats::compressed_bytes` is the encoded payload length used for compression ratios. It is not the full allocation footprint. The store additionally reports:
+
+- `encoded_capacity_bytes`: sum of encoded payload vector capacities, rather than only their logical lengths.
+- `metadata_bytes_estimate`: an estimate including store/container objects, tensor and block metadata, bucket arrays, cache keys, and LRU nodes.
+- `cached_decoded_bytes`: decoded block vector capacity charged against the decoded-cache budget.
+- `resident_bytes_estimate`: encoded capacity + metadata estimate + decoded-cache capacity.
+
+The metadata figure is deliberately labelled an estimate: allocator bookkeeping, fragmentation, mapped source pages, thread stacks, and caller-owned activations are outside the store's accounting. It must not be presented as measured process RSS or VRAM. Use OS/device telemetry for peak-memory certification.
+
 ## Validation contract
 
 A release claim requires all of the following:
