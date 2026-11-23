@@ -476,6 +476,79 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return loader->getMetaFloat(arch + "." + suffix, def);
     };
 
+    // Native F32 residency is enabled by default with a zero-error budget:
+    // exact F16/BF16 chunks and lossless RLE/LZ4 chunks are retained; chunks
+    // that do not shrink stay mapped and untouched. A bounded per-model budget
+    // prevents compression from consuming unbounded extra host memory.
+    bool compressF32OnLoad = true;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32")) {
+        if (*setting == '0') compressF32OnLoad = false;
+        else if (*setting != '1') {
+            std::fprintf(stderr,
+                "[Deep2Engine] invalid RAWRXD_COMPRESS_F32; compression disabled\n");
+            compressF32OnLoad = false;
+        }
+    }
+    float f32CompressionTolerance = 0.0f;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR")) {
+        char* end = nullptr;
+        const float value = std::strtof(setting, &end);
+        if (end == setting || *end != '\0' || !std::isfinite(value) || value < 0.0f) {
+            std::fprintf(stderr,
+                "[Deep2Engine] invalid F32 compression tolerance; compression disabled\n");
+            compressF32OnLoad = false;
+        } else {
+            f32CompressionTolerance = value;
+        }
+    }
+    size_t f32CompressionBudget = 512ull * 1024ull * 1024ull;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_BUDGET_MB")) {
+        if (!*setting || *setting == '-') {
+            compressF32OnLoad = false;
+        } else {
+            char* end = nullptr;
+            const unsigned long long mb = std::strtoull(setting, &end, 10);
+            if (end == setting || *end != '\0' ||
+                mb > std::numeric_limits<size_t>::max() / (1024ull * 1024ull)) {
+                compressF32OnLoad = false;
+            } else {
+                f32CompressionBudget = static_cast<size_t>(mb) * 1024ull * 1024ull;
+            }
+        }
+    }
+    size_t f32CompressedBytes = 0;
+    size_t f32CompressedTensors = 0;
+    auto compressF32Tensor = [&](WeightTensor& wt) {
+        if (!compressF32OnLoad ||
+            wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+            !wt.data || !wt.rows || !wt.cols || !f32CompressionBudget)
+            return;
+        const size_t remaining = f32CompressionBudget;
+        // Bound peak scratch and retained payload independently. Row-sized
+        // chunks make GEMV decompression reuse one row tile; vectors use 4K.
+        const size_t chunkElements = wt.cols > 1 ? wt.cols : 4096u;
+        if (wt.sizeBytes > remaining &&
+            remaining <= std::numeric_limits<size_t>::max() / 8u &&
+            wt.sizeBytes > remaining * 8u)
+            return;
+        if (!wt.EnableCompressedF32(f32CompressionTolerance,
+                                   chunkElements, remaining))
+            return;
+        const size_t stored = wt.compressedF32->storedBytes();
+        if (!stored || stored > remaining) {
+            wt.compressedF32.reset();
+            return;
+        }
+        f32CompressionBudget -= stored;
+        f32CompressedBytes += stored;
+        ++f32CompressedTensors;
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,
+                "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu remaining=%zu\n",
+                wt.name.c_str(), wt.sizeBytes, stored, f32CompressionBudget);
+        }
+    };
+
     auto tensor = [&](const char* name) -> const GGUFTensor* {
         return loader->getTensor(name);
     };
@@ -512,23 +585,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             return false;
         }
 
-        // Opt-in model-load compression. The mapped GGUF remains authoritative;
-        // only F32 matrices that actually shrink under the requested absolute
-        // error budget gain a private chunked backing used by LinearW.
-        if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
-            const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
-            if (setting && *setting) {
-                char* end=nullptr;
-                const float tolerance=std::strtof(setting,&end);
-                if (end && *end=='\0' && std::isfinite(tolerance) && tolerance>=0.0f) {
-                    if (wt.EnableCompressedF32(tolerance, wt.cols) && deep2ForwardTraceEnabled()) {
-                        std::fprintf(stderr,
-                            "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu\n",
-                            wt.name.c_str(),wt.sizeBytes,wt.compressedF32->storedBytes());
-                    }
-                }
-            }
-        }
+        compressF32Tensor(wt);
         return true;
     };
 
