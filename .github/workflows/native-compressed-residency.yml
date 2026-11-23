@@ -17,6 +17,7 @@ on:
       - '~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp'
       - '~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp'
       - '~dev/rawrxd/tests/native_tensor_compression_test.cpp'
+      - '~dev/rawrxd/tests/native_compressed_inference_e2e_test.cpp'
       - '~dev/rawrxd/CMakeLists.txt'
       - '.github/workflows/native-compressed-residency.yml'
   pull_request:
@@ -33,6 +34,7 @@ on:
       - '~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp'
       - '~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp'
       - '~dev/rawrxd/tests/native_tensor_compression_test.cpp'
+      - '~dev/rawrxd/tests/native_compressed_inference_e2e_test.cpp'
       - '~dev/rawrxd/CMakeLists.txt'
       - '.github/workflows/native-compressed-residency.yml'
   workflow_dispatch:
@@ -52,4 +54,12 @@ jobs:
           cl /nologo /std:c++17 /EHsc /W4 /I"~dev\rawrxd\src\deep2" "~dev\rawrxd\tests\native_tensor_compression_test.cpp" /Fe:"%RUNNER_TEMP%\rawrxd_native_tensor_compression_test.exe"
           if errorlevel 1 exit /b %errorlevel%
           "%RUNNER_TEMP%\rawrxd_native_tensor_compression_test.exe"
+          if errorlevel 1 exit /b %errorlevel%
+
+      - name: Compile and run synthetic compressed inference E2E
+        shell: cmd
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /I"~dev\rawrxd\src\deep2" "~dev\rawrxd\tests\native_compressed_inference_e2e_test.cpp" /Fe:"%RUNNER_TEMP%\rawrxd_compressed_inference_e2e.exe"
+          if errorlevel 1 exit /b %errorlevel%
+          "%RUNNER_TEMP%\rawrxd_compressed_inference_e2e.exe"
           if errorlevel 1 exit /b %errorlevel%
