@@ -43,6 +43,27 @@ and scalar GEMV paths for Q2_K through Q6_K; Q4_K also has its existing
 specialized path. The integration test creates real GGUF files and loads
 each K type through the mapped Deep2 loader.
 
+## Runtime compression controls
+
+The ROM engine sizes its two compressed-residency budgets from available
+physical memory, with conservative defaults and hard caps. Operators can
+override those budgets in MiB before launch:
+
+- `DEEP2_F32_RESIDENCY_MB`: compressed F32 chunk budget (default is derived
+  from available RAM; capped at 2 GiB).
+- `DEEP2_ENCODED_RESIDENCY_MB`: lossless encoded-byte budget (default is
+  derived from available RAM; capped at 512 MiB).
+- `DEEP2_F32_MAX_ABS_ERROR`: optional finite, nonnegative absolute error
+  allowance for per-chunk F32-to-F16/BF16 storage. Unset or zero preserves
+  values exactly; lossy storage is never silently enabled.
+
+Native callers can instead use
+`Deep2Engine::ConfigureTensorCompression(f32Bytes, encodedBytes, maxAbsError)`.
+It validates the error allowance, updates both synchronized cache budgets,
+and publishes the precision policy atomically for concurrent inference.
+A zero byte budget disables admission to that cache; reads continue through
+the bounded TensorROM pager path.
+
 ## Canonical GGUF geometry
 
 The ROM path uses canonical GGML type IDs and block byte counts rather than
