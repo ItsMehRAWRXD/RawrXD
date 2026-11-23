@@ -45,3 +45,13 @@ is to retain those encoded blocks in memory and decode only the byte ranges
 required by an operator. The MASM stored-block path may be useful for fast
 framing or transport, but it must not be described as shrinking random or
 repetitive tensor payloads.
+
+## Runtime decoder contract
+
+The dependency-free C++ wrapper now validates the full stored-block gzip
+contract before returning bytes: every LEN/NLEN pair, the optional header CRC16,
+the IEEE CRC32 trailer, and ISIZE are checked. It rejects trailing bytes and
+supports an explicit decompressed-output ceiling (16 GiB default). The maximum
+output-size planner uses checked arithmetic and accounts for the mandatory
+empty stored block. The CMake test covers both zlib interoperability and
+wrapper-level corruption/ceiling rejection.
