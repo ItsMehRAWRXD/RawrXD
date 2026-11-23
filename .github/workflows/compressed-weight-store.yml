@@ -60,8 +60,10 @@ jobs:
         if: always()
         shell: bash
         run: |
-          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
-          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          # Supply runner-local metadata only for gitlinks missing from .gitmodules.
+          # file:///dev/null is never fetched: foreach skips uninitialized entries.
+          git ls-files --stage | awk '$1 == "160000" {print $4}' | while IFS= read -r path; do
+            mapped_paths="$(git config --file .gitmodules --get-regexp '^submodule\\..*\\.path
 
   zlib-provider:
     runs-on: ubuntu-latest
@@ -84,3 +86,41 @@ jobs:
         run: |
           git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
           git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+ 2>/dev/null | sed 's/^[^ ]* //')"
+            if ! printf '%s\\n' "$mapped_paths" | grep -Fqx "$path"; then
+              key="$(printf '%s' "$path" | sed 's/[^A-Za-z0-9]/-/g')"
+              git config --file .gitmodules "submodule.ci-orphaned-$key.path" "$path"
+              git config --file .gitmodules "submodule.ci-orphaned-$key.url" "file:///dev/null"
+            fi
+          done
+
+  zlib-provider:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: false
+      - name: Install zlib development headers
+        run: sudo apt-get update && sudo apt-get install -y zlib1g-dev
+      - name: Configure provider-detection smoke
+        run: cmake -S tests/compression_zlib_smoke -B build/zlib-provider -DCMAKE_BUILD_TYPE=Release
+      - name: Build production compression core
+        run: cmake --build build/zlib-provider --config Release --parallel
+      - name: Test zlib public API roundtrip
+        run: ctest --test-dir build/zlib-provider -C Release --output-on-failure
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          # Supply runner-local metadata only for gitlinks missing from .gitmodules.
+          # file:///dev/null is never fetched: foreach skips uninitialized entries.
+          git ls-files --stage | awk '$1 == "160000" {print $4}' | while IFS= read -r path; do
+            mapped_paths="$(git config --file .gitmodules --get-regexp '^submodule\\..*\\.path
+ 2>/dev/null | sed 's/^[^ ]* //')"
+            if ! printf '%s\\n' "$mapped_paths" | grep -Fqx "$path"; then
+              key="$(printf '%s' "$path" | sed 's/[^A-Za-z0-9]/-/g')"
+              git config --file .gitmodules "submodule.ci-orphaned-$key.path" "$path"
+              git config --file .gitmodules "submodule.ci-orphaned-$key.url" "file:///dev/null"
+            fi
+          done
