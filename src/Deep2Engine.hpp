@@ -16,6 +16,8 @@
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include <memory>
+#include <mutex>
+#include <list>
 #include <unordered_map>
 #include <queue>
 #include <functional>
@@ -34,7 +36,8 @@ struct Deep2Engine {
     deep2::TensorROM rom;
     // Persistent compressed views: raw GGUF shard pages are fetched directly,
     // avoiding a second uncompressed PageCache copy.
-    std::unordered_map<const deep2::TensorEntry*, std::unique_ptr<deep2::TensorROMCompressedView>> compressedWeightViews;
+    std::unordered_map<const deep2::TensorEntry*, std::shared_ptr<deep2::TensorROMCompressedView>> compressedWeightViews;
+    std::list<const deep2::TensorEntry*> compressedWeightViewLru;
     std::mutex compressedWeightViewsMutex;
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
