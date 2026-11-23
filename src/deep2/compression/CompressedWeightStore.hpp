@@ -58,7 +58,8 @@ public:
     static constexpr std::size_t DefaultBlockBytes=64u*1024u;
     using BlockLease=std::shared_ptr<const std::vector<std::uint8_t>>;
     explicit CompressedWeightStore(std::size_t decoded_cache_budget=256u*1024u*1024u,
-                                   std::size_t block_bytes=DefaultBlockBytes);
+                                   std::size_t block_bytes=DefaultBlockBytes,
+                                   std::size_t encoded_residency_budget=(std::numeric_limits<std::size_t>::max)());
     CompressedWeightStore(const CompressedWeightStore&)=delete;
     CompressedWeightStore& operator=(const CompressedWeightStore&)=delete;
     bool addTensor(std::string name,const void* bytes,std::size_t size,std::string* error=nullptr,
@@ -88,6 +89,7 @@ private:
     const std::size_t block_bytes_;
     mutable std::mutex mutex_;
     std::size_t cache_budget_,cache_bytes_=0;
+    const std::size_t encoded_residency_budget_;
     std::unordered_map<std::string,Tensor> tensors_;
     std::unordered_map<std::string,CacheEntry> cache_;
     std::list<std::string> lru_;
