@@ -6536,12 +6536,13 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
             throw std::runtime_error("RMSNormW: compressed weight tensor is smaller than requested dimension: " +
                                      effectiveWeight.name);
         const size_t requiredBytes = dim * elementBytes;
-        compressedNormBytes.resize(requiredBytes);
         std::string decodeError;
-        if (!effectiveWeight.readBytes(0, compressedNormBytes.data(),
-                                       requiredBytes, &decodeError))
-            throw std::runtime_error("RMSNormW: compressed weight read failed for " +
-                                     effectiveWeight.name + ": " + decodeError);
+        auto normTile = rawrxd::compression::ReadCompressedWeightTile(
+            effectiveWeight.sizeBytes, 1, requiredBytes, 0, 1,
+            [&](std::size_t offset, std::uint8_t* destination, std::size_t length) {
+                return effectiveWeight.readBytes(offset, destination, length, &decodeError);
+            });
+        compressedNormBytes = std::move(normTile.bytes);
         effectiveWeight.data = compressedNormBytes.data();
         effectiveWeight.sizeBytes = requiredBytes;
     }
