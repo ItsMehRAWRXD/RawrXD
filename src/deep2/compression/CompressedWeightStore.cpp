@@ -1,5 +1,6 @@
 #include "CompressedWeightStore.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <limits>
 #include <new>
@@ -171,31 +172,67 @@ bool CompressedWeightStore::addTensorFromReader(std::string name,
         return false;
     }
 }
-bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error) {
- if(!values&&count){if(error)*error="source values are required";return false;}
- if(count>std::numeric_limits<std::size_t>::max()/sizeof(std::uint16_t)){if(error)*error="tensor size overflow";return false;}
- std::vector<std::uint16_t> converted(count);
- for(std::size_t i=0;i<count;++i) converted[i]=floatToHalfRNE(values[i]);
- return addTensor(std::move(name),converted.data(),converted.size()*sizeof(std::uint16_t),error,GGML_TYPE_F16);
+bool CompressedWeightStore::addTensorF32AsF16(
+    std::string name,const float* values,std::size_t count,std::string* error) {
+ return addTensorF32AsF16FromReader(std::move(name),values,count,error);
 }
 bool CompressedWeightStore::addTensorF32AsF16FromReader(
-    std::string name,const float* values,std::size_t count,std::string* error,
-    std::size_t max_encoded_bytes) {
- if(!values&&count){if(error)*error="source values are required";return false;}
- if(count>std::numeric_limits<std::size_t>::max()/sizeof(std::uint16_t)){
+    std::string name,const void* source_bytes,std::size_t count,std::string* error,
+    std::size_t max_encoded_bytes,float max_abs_error,bool reject_non_finite,
+    bool* precision_rejected) {
+ if(precision_rejected) *precision_rejected=false;
+ if(!source_bytes&&count){if(error)*error="source values are required";return false;}
+ const auto max=(std::numeric_limits<std::size_t>::max)();
+ if(count>max/sizeof(std::uint16_t)||count>max/sizeof(float)){
   if(error)*error="F32-to-F16 tensor size overflow";return false;
  }
- struct Context { const float* values; std::size_t count; } context{values,count};
+ if(std::isnan(max_abs_error)||max_abs_error<0.0f){
+  if(error)*error="F32-to-F16 maximum absolute error must be non-negative";return false;
+ }
+ struct Context {
+  const std::uint8_t* source;
+  std::size_t count;
+  float max_abs_error;
+  bool reject_non_finite;
+  bool* precision_rejected;
+ } context{static_cast<const std::uint8_t*>(source_bytes),count,
+           max_abs_error,reject_non_finite,precision_rejected};
  const std::size_t outputBytes=count*sizeof(std::uint16_t);
- return addTensorFromReader(std::move(name),outputBytes,
+ const bool admitted=addTensorFromReader(std::move(name),outputBytes,
   [](void* opaque,std::size_t offset,void* destination,std::size_t length)->bool {
    auto* ctx=static_cast<Context*>(opaque);
-   if(!ctx||(!destination&&length)||offset>ctx->count*2||length>ctx->count*2-offset)
+   const std::size_t total=ctx->count*sizeof(std::uint16_t);
+   if(!ctx||(!destination&&length)||offset>total||length>total-offset)
     return false;
    auto* out=static_cast<std::uint8_t*>(destination);
    const std::size_t end=offset+length;
    for(std::size_t i=offset/2;i<(end+1)/2;++i){
-    const std::uint16_t half=floatToHalfRNE(ctx->values[i]);
+    const auto* p=ctx->source+i*sizeof(float);
+    const std::uint32_t bits=std::uint32_t(p[0])|
+        (std::uint32_t(p[1])<<8)|(std::uint32_t(p[2])<<16)|
+        (std::uint32_t(p[3])<<24);
+    float value=0.0f;
+    std::memcpy(&value,&bits,sizeof(value));
+    if(!std::isfinite(value)&&ctx->reject_non_finite){
+     if(ctx->precision_rejected) *ctx->precision_rejected=true;
+     return false;
+    }
+    const std::uint16_t half=floatToHalfRNE(value);
+    if(std::isfinite(value)){
+     const std::uint32_t sign=std::uint32_t(half&0x8000u)<<16;
+     std::uint32_t exp=(half>>10)&0x1fu,mant=half&0x03ffu,restoredBits=0;
+     if(exp==0){
+      if(!mant) restoredBits=sign;
+      else {int e=-14;while((mant&0x400u)==0){mant<<=1;--e;}
+       mant&=0x3ffu;restoredBits=sign|(std::uint32_t(e+127)<<23)|(mant<<13);}
+     }else if(exp==31) restoredBits=sign|0x7f800000u|(mant<<13);
+     else restoredBits=sign|((exp+112u)<<23)|(mant<<13);
+     float restored=0.0f;std::memcpy(&restored,&restoredBits,sizeof(restored));
+     if(std::fabs(value-restored)>ctx->max_abs_error){
+      if(ctx->precision_rejected) *ctx->precision_rejected=true;
+      return false;
+     }
+    }
     const std::uint8_t encoded[2]={
      static_cast<std::uint8_t>(half&0xffu),
      static_cast<std::uint8_t>((half>>8)&0xffu)};
@@ -207,6 +244,22 @@ bool CompressedWeightStore::addTensorF32AsF16FromReader(
    }
    return true;
   },&context,error,GGML_TYPE_F16,false,max_encoded_bytes);
+ if(!admitted){
+  if(precision_rejected&&*precision_rejected&&error)
+   *error="F32-to-F16 conversion exceeded the configured error tolerance or contained non-finite data";
+  return false;
+ }
+ {
+  std::lock_guard<std::mutex> lock(mutex_);
+  const auto add=[](std::uint64_t& total,std::uint64_t value){
+   if(value>(std::numeric_limits<std::uint64_t>::max)()-total)
+    total=(std::numeric_limits<std::uint64_t>::max)();
+   else total+=value;
+  };
+  add(counters_.f32_to_f16_tensors,1);
+  add(counters_.f32_source_bytes,static_cast<std::uint64_t>(count*sizeof(float)));
+ }
+ return true;
 }
 std::uint32_t CompressedWeightStore::tensorType(const std::string& n)const {
  std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?GGML_TYPE_OPAQUE:i->second.ggml_type;
