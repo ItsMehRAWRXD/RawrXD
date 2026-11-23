@@ -79,6 +79,8 @@ jobs:
         run: |
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
           ./tensor_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -I'~dev/rawrxd/src/deep2' '~dev/rawrxd/tests/native_tensor_compression_test.cpp' -o rawrxd_deep2_compression_test
+          ./rawrxd_deep2_compression_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror $(pkg-config --cflags Qt6Core) -Iinclude src/codec/compression.cpp tests/codec_zlib_smoke.cpp $(pkg-config --libs Qt6Core zlib) -o codec_zlib_smoke
           ./codec_zlib_smoke
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_residency_cache_test.cpp -o residency_cache_test
@@ -122,6 +124,10 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_compression_test.cpp /Fe:tensor_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\tensor_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 /I'~dev/rawrxd/src/deep2' '~dev/rawrxd/tests/native_tensor_compression_test.cpp' /Fe:rawrxd_deep2_compression_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\rawrxd_deep2_compression_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_residency_cache_test.cpp /Fe:residency_cache_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
