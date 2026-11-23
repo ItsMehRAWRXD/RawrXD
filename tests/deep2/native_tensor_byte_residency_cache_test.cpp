@@ -175,7 +175,8 @@ int main() {
     assert(transientAttempts == 2);
     assert(!cache.IsRawFallback("transient"));
 
-    // A one-byte range expands only its intersecting compressed 4 KiB chunk.
+    // Selective RLE expands only requested bytes, not the entire 4 KiB
+    // chunk. Residency telemetry must reflect actual expansion work.
     Deep2::TensorByteResidencyCache decodeMetrics(16 * 1024);
     std::vector<uint8_t> metricSource(8192, 0x6d);
     assert(decodeMetrics.RegisterFromReader("decode.metrics", metricSource.size(),
@@ -186,7 +187,8 @@ int main() {
     uint8_t oneByte = 0;
     assert(decodeMetrics.ReadRange("decode.metrics", 4096 + 17, 1, &oneByte, scratch));
     assert(oneByte == 0x6d);
-    assert(decodeMetrics.GetStats().bytesDecoded == 4096);
+    assert(scratch.empty());
+    assert(decodeMetrics.GetStats().bytesDecoded == 1);
 
     std::cout<<"lossless encoded-byte tensor residency cache PASS\n";
 }
