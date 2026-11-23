@@ -581,6 +581,28 @@ inline bool IsExactQ8_0ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
     }
     return true;
 }
+// Q8_1 has the same reconstructed values as Q8_0; its FP16 sum is
+// auxiliary. Direct Q4_0 conversion is exact when all signed codes fit.
+inline bool IsExactQ8_1ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%36 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char block[36];
+    while(bytes) {
+        if(!in.read(reinterpret_cast<char*>(block),36))return false;
+        const uint16_t half=uint16_t(block[0])|(uint16_t(block[1])<<8);
+        const uint32_t bits=Float16ToFloat32Bits(half);
+        float scale=0;std::memcpy(&scale,&bits,4);
+        if(!std::isfinite(scale))return false;
+        for(unsigned i=0;i<32;++i) {
+            const int q=static_cast<int8_t>(block[4+i]);
+            if(q < -8 || q > 7)return false;
+        }
+        bytes-=36;
+    }
+    return true;
+}
 inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                            uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
     const uint64_t inputBlock=sourceType==0?128:sourceType==1?64:
@@ -625,19 +647,20 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                 std::memcpy(&minimum,&bits,4);
                 if(!std::isfinite(minimum))return false;
             }
-            if(sourceType==8) {
+            if(sourceType==8 || sourceType==9) {
+                const unsigned codeOffset=sourceType==8?2u:4u;
                 bool exact=true;
                 for(unsigned i=0;i<32;++i) {
-                    const int q=static_cast<int8_t>(source[2+i]);
+                    const int q=static_cast<int8_t>(source[codeOffset+i]);
                     if(q < -8 || q > 7){exact=false;break;}
                 }
                 if(exact) {
                     encoded[0]=source[0];encoded[1]=source[1];
                     for(unsigned i=0;i<16;++i) {
                         const unsigned lo=static_cast<unsigned>(
-                            static_cast<int8_t>(source[2+i])+8);
+                            static_cast<int8_t>(source[codeOffset+i])+8);
                         const unsigned hi=static_cast<unsigned>(
-                            static_cast<int8_t>(source[18+i])+8);
+                            static_cast<int8_t>(source[codeOffset+16+i])+8);
                         encoded[2+i]=static_cast<unsigned char>(lo|(hi<<4));
                     }
                     if(!out.write(reinterpret_cast<const char*>(encoded),18))
@@ -1456,6 +1479,28 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.type=1;
                 t.bytes=t.source_bytes/2;
             }
+        }
+    }
+    // Q8_1's auxiliary FP16 sum need not survive repacking. When its
+    // signed codes already fit Q4_0, prefer exact direct Q4_0 over
+    // the Q8_1 -> Q8_0 intermediate, including sensitive tensors.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_q8_0 || !t.q8_source_q8_1)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(!IsExactQ8_1ToQ4_0(in,dataStart+t.old_offset,t.source_bytes))
+                continue;
+            uint64_t count=1,compact=0;
+            for(const auto dim:t.dims)
+                if(!CheckedMultiply(count,dim,count))return RepackError::Overflow;
+            if(!CheckedMultiply(count/32,18,compact))return RepackError::Overflow;
+            if(compact>=t.bytes)continue;
+            t.convert_q8_0=false;
+            t.q8_source_q8_1=false;
+            t.convert_q4_0=true;
+            t.q4_source_type=9;
+            t.type=2;
+            t.bytes=compact;
         }
     }
     // Quality-sensitive and vector Q8_0 tensors may shrink to Q4_0
