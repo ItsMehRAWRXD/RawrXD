@@ -106,3 +106,21 @@ relaxed request can reuse a stricter resident entry. Tensor keys must still
 include model identity: equal-size, equal-tolerance weights from distinct
 models cannot safely share a key. Regression coverage exercises both strict
 rejection and relaxed reuse. This does not certify model-level numerical parity.
+
+
+### Model identity and cache lifecycle
+
+Both compressed caches expose `SetModelIdentity(identity)`. An unchanged
+identity retains resident tensors and raw-fallback memoization. A changed
+identity serializes against first-touch builders, waits for existing reader
+leases, invalidates all encoded entries and fallback decisions, and resets
+resident-byte accounting. Deep2 `Initialize` binds both caches to the model
+path after `Shutdown` has drained the previous model. Callers must stop
+starting reads against the old model before switching identities. The path
+is a lifecycle label, not a content fingerprint: replacing a GGUF at the same
+path still requires a full `Shutdown` / `Initialize` boundary. This does
+not authorize sharing a cache across concurrently active different models.
+
+Deterministic tests cover equal-sized, same-key F32 and byte tensors whose
+values differ across model scopes, including fallback invalidation and
+unchanged-scope retention. Test execution remains a separate CI gate.
