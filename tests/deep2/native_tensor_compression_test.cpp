@@ -79,6 +79,29 @@ int main() {
     try { (void)EncodeAdaptiveF32(nullptr,1,0.1f); }
     catch(const std::invalid_argument&) { nullTensor=true; }
     assert(nullTensor);
+    // Chunked residency decodes only the chunks intersecting an inference
+    // tile; compressed storage size is measured independently of F32 size.
+    std::vector<float> resident(10003);
+    for(size_t i=0;i<resident.size();++i)
+        resident[i]=(i%7==0)?float(i)*0.25f:float(int(i%19)-9);
+    auto chunked=ChunkedF32Storage::Build(resident.data(),resident.size(),0.0f,1024);
+    assert(chunked.size()==resident.size() && chunked.chunkCount()==10);
+    assert(chunked.chunkElements()==1024);
+    assert(chunked.storedBytes()<=resident.size()*sizeof(float));
+    std::vector<float> tile(1500,-999.0f);
+    chunked.ReadRange(900,tile.size(),tile.data());
+    for(size_t i=0;i<tile.size();++i) assert(tile[i]==resident[900+i]);
+    std::vector<float> whole(resident.size());
+    chunked.ReadRange(0,whole.size(),whole.data());
+    assert(whole==resident);
+    bool rangeRejected=false;
+    try { chunked.ReadRange(resident.size()-1,2,tile.data()); }
+    catch(const std::out_of_range&) { rangeRejected=true; }
+    assert(rangeRejected);
+    bool zeroChunkRejected=false;
+    try { (void)ChunkedF32Storage::Build(resident.data(),resident.size(),0.0f,0); }
+    catch(const std::invalid_argument&) { zeroChunkRejected=true; }
+    assert(zeroChunkRejected);
     const float not_exact[]={1.0001f,2.0001f};
     auto preserved=Encode(not_exact,sizeof(not_exact),true,0.0f);
     assert(preserved.encoding!=Encoding::F16);
