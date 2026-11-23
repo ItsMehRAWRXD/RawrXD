@@ -27,3 +27,10 @@ ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
 This is the first runtime-residency primitive, not a claim of completed inference integration. The current branch does not yet route GGUFLoader, Deep2 WeightTensor, CPU GEMV, or Vulkan staging through this store. That wiring must preserve existing quantized kernels and tensor layouts; it must not dequantize the full model to F32. GPU-side staging/reclamation must additionally use the existing submission-completion ownership protocol before reusing or releasing device resources.
 
 The standalone test covers multi-block range reads, exact round trips for compressible and high-entropy data, duplicate-name rejection, bounds checks, and lease survival when the cache budget is reduced.
+
+
+## Tensor precision policy
+
+`addTensor(name, bytes, size, error, ggml_type)` stores an arbitrary GGML payload byte-for-byte and retains its GGML type ID. Use this for native quantized formats (Q4/Q5/Q6/Q8/IQ/etc.); no dequantization or re-quantization occurs.
+
+`addTensorF32AsF16` is an explicit, opt-in lossy precision conversion. It converts IEEE-754 binary32 to binary16 using round-to-nearest, ties-to-even, then stores the result as GGML_TYPE_F16. It is not applied automatically to quantized inputs. Callers must validate model quality and kernel compatibility before selecting this representation.
