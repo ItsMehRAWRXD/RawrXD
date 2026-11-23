@@ -55,6 +55,33 @@ jobs:
       - name: Build Win32 IDE
         run: .\scripts\build.ps1 -Config Release -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
 
+      - name: Verify native IDE and CLI artifacts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $required = @('RawrXD-Win32IDE-Native.exe', 'rawr.exe')
+          foreach ($name in $required) {
+            $matches = @(Get-ChildItem -LiteralPath build -Recurse -File -Filter $name -ErrorAction Stop)
+            if ($matches.Count -eq 0) { throw "Required native executable missing: $name" }
+            foreach ($exe in $matches) {
+              if ($exe.Length -lt 4096) { throw "Native executable unexpectedly small: $($exe.FullName)" }
+              $hash = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash
+              Write-Host "NATIVE_ARTIFACT name=$name bytes=$($exe.Length) sha256=$hash path=$($exe.FullName)"
+            }
+          }
+
+      - name: Verify synthetic-model tests are registered
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $listing = @(ctest --test-dir build -C Release -N)
+          if ($LASTEXITCODE -ne 0) { throw "CTest discovery failed" }
+          foreach ($test in @('Deep2CompressedModelE2E', 'ZlibAutoDetectSmoke')) {
+            if (-not ($listing | Select-String -SimpleMatch $test)) {
+              throw "Required synthetic-model test not registered: $test"
+            }
+          }
+
       - name: Run Deep2 compressed synthetic-model E2E
         shell: pwsh
         run: |
