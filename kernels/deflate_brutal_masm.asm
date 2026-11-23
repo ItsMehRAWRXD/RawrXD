@@ -43,16 +43,25 @@ crc32_table LABEL DWORD
     DWORD 0B3667A2Eh, 0C4614AB8h, 05D681B02h, 02A6F2B94h, 0B40BBE37h, 0C30C8EA1h, 05A05DF1Bh, 02D02EF8Dh
 
 .code
-deflate_brutal_masm PROC
+deflate_brutal_masm PROC FRAME
     ; Windows x64 ABI: RCX=src, RDX=len, R8=out_len.
     push    rbx
+    .pushreg rbx
     push    rsi
+    .pushreg rsi
     push    rdi
+    .pushreg rdi
     push    r12
+    .pushreg r12
     push    r13
+    .pushreg r13
     push    r14
+    .pushreg r14
     push    r15
-    sub     rsp, 64
+    .pushreg r15
+    sub     rsp, 96
+    .allocstack 96
+    .endprolog
 
     mov     rsi, rcx
     mov     rbx, rdx
@@ -89,9 +98,8 @@ _block_count_ready:
 
     ; Allocate exactly header + stored blocks + gzip trailer.
     mov     rcx, rax
-    sub     rsp, 32
+    ; 32-byte Windows x64 shadow space is included in the fixed 96-byte frame.
     call    malloc
-    add     rsp, 32
     test    rax, rax
     jz      _fail
 
@@ -178,7 +186,7 @@ _crc32_done:
 _fail:
     xor     eax, eax
 _exit:
-    add     rsp, 64
+    add     rsp, 96
     pop     r15
     pop     r14
     pop     r13
