@@ -48,6 +48,10 @@ size_t StreamBytes(const WeightTensor& wt) {
             &wt.gpuF16Payload, std::memory_order_acquire);
         if (packed && !packed->bytes.empty()) return packed->bytes.size();
     }
+    if (wt.cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        wt.rows > std::numeric_limits<size_t>::max() /
+                      (wt.cols * sizeof(float)))
+        return 0;
     return wt.rows * wt.cols * sizeof(float);
 }
 
