@@ -12,9 +12,24 @@ layout(push_constant) uniform Parameters {
     uint weightEncoding; // 0=F32 bit pattern, 1=IEEE F16, 2=BF16
 } params;
 
+uint loadByte(uint byteOffset) {
+    uint word = weights.words[byteOffset >> 2u];
+    return (word >> ((byteOffset & 3u) * 8u)) & 0xffu;
+}
+
 float loadWeight(uint index) {
     if (params.weightEncoding == 0u) {
         return uintBitsToFloat(weights.words[index]);
+    }
+    if (params.weightEncoding == 3u) {
+        // GGUF Q8_0: 32 signed int8 values plus one IEEE F16 scale (34 bytes).
+        // Rows are block-aligned by GGUF's quantized tensor geometry.
+        uint blockOffset = (index >> 5u) * 34u;
+        uint scaleBits = loadByte(blockOffset) | (loadByte(blockOffset + 1u) << 8u);
+        float scale = unpackHalf2x16(scaleBits).x;
+        uint qByte = loadByte(blockOffset + 2u + (index & 31u));
+        int q = (qByte >= 128u) ? int(qByte) - 256 : int(qByte);
+        return scale * float(q);
     }
     uint packed = weights.words[index >> 1u];
     uint halfBits = ((index & 1u) == 0u) ? (packed & 0xffffu) : (packed >> 16u);
