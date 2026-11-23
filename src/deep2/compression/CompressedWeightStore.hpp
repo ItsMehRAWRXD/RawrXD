@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <list>
-#include <memory>
+#include <memory>\n#include <limits>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -61,7 +61,7 @@ public:
     CompressedWeightStore(const CompressedWeightStore&)=delete;
     CompressedWeightStore& operator=(const CompressedWeightStore&)=delete;
     bool addTensor(std::string name,const void* bytes,std::size_t size,std::string* error=nullptr,
-                   std::uint32_t ggml_type=GGML_TYPE_OPAQUE);
+                   std::uint32_t ggml_type=GGML_TYPE_OPAQUE,\n                   bool require_savings=false,\n                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     bool addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error=nullptr);
     std::uint32_t tensorType(const std::string& name) const;
     bool contains(const std::string& name) const;
