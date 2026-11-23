@@ -69,3 +69,20 @@ The Vulkan runtime now enables this preparation by default when Vulkan is initia
 The resident forward-layer GEMV dispatch now checks for a uniform packed view before calling EnsureF32. When available, it submits the 16-bit payload through DispatchGemvQuant (or the typed prefetch lane) so the Vulkan weight cache receives half-width bytes and the QGEMV shader accumulates in F32. Counters distinguish F16 and BF16 GEMV submissions and account submitted packed-weight bytes. The existing single-GPU and dual-GPU row-split view builder also exposes the same packed representation.
 
 **Scope and memory accounting:** this is a real device-side storage reduction for the F32 weights that qualify and are actually routed through the Vulkan QGEMV paths; it is not universal model compression. The original host F32 source remains available as the CPU fallback, so this path does not claim a 50% reduction in total host RAM. The separate standalone ROM Vulkan path documented above still uploads F32 tiles. Other operators, mixed-codec chunks, unsupported GGUF types, and nonuniform F32 tensors require additional integration or use their existing fallback. Release claims require Windows/Linux CI, numerical parity against the F32 reference, and measured per-device VRAM before/after receipts.
+
+
+## Automatic F32 residency during model binding
+
+The native Deep2 GGUF binding now evaluates every bound F32 tensor for compressed residency by default. The default precision budget is zero: exact F16/BF16 representations may be retained, and lossless RLE/LZ4 chunks are retained where they reduce storage. Chunks that do not produce a net saving are rejected rather than kept as raw duplicates. Matrix tensors use row-sized chunks for row-at-a-time GEMV; vectors use 4096-element chunks. A 512 MiB per-model compressed-storage budget bounds retained private payloads.
+
+Controls:
+
+- `RAWRXD_COMPRESS_F32=0` disables model-load F32 compression; `1` explicitly enables it.
+- `RAWRXD_COMPRESS_F32_MAX_ABS_ERROR` sets an explicit nonnegative absolute-error tolerance. The default is 0.
+- `RAWRXD_COMPRESS_F32_BUDGET_MB` changes the retained compressed-storage budget in MiB.
+
+The Vulkan initialization step now promotes an existing compressed F32 backing directly into a uniform packed F16/BF16 GPU payload when possible, then releases the intermediate chunk object. Mixed or losslessly encoded RLE/LZ4 tensors remain available to the CPU path and are not mislabeled as GPU F16/BF16. LinearW attempts the GPU route first and uses the chunked CPU GEMV only after GPU fallback, so model-load compression no longer disables Vulkan execution preemptively.
+
+The WeightTensor builder uses the bounded streaming reader API and enforces the remaining model budget while building chunks. It does not create a second full-size F32 staging vector. Regression coverage verifies chunk-boundary reads, bounded admission, and budget rejection.
+
+**Memory accounting caveat:** the GGUF file mapping remains the authoritative source and is retained for fallback. This change adds bounded compressed private storage; it does not yet unmap or replace the original file mapping, so a 50% reduction in total host working set is not claimed. The device-side F16/BF16 savings apply only to tensors promoted and submitted through supported Vulkan QGEMV paths. Measured process working-set and per-device VRAM receipts remain required.
