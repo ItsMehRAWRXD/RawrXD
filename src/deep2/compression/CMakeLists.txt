@@ -44,3 +44,11 @@ if(BUILD_TESTING)
  target_compile_features(test_compressed_weight_tile PRIVATE cxx_std_20)
  add_test(NAME compressed_weight_tile_bounds COMMAND test_compressed_weight_tile)
 endif()
+
+if(BUILD_TESTING)
+ add_executable(test_compressed_model_e2e
+     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_compressed_model_e2e.cpp)
+ target_link_libraries(test_compressed_model_e2e PRIVATE rawrxd_compressed_weight_store)
+ target_compile_features(test_compressed_model_e2e PRIVATE cxx_std_20)
+ add_test(NAME compressed_synthetic_model_e2e COMMAND test_compressed_model_e2e)
+endif()
