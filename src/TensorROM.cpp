@@ -292,6 +292,20 @@ bool TensorROM::finalizeIndex() {
         try { m_geom.vocabSize = std::stoull(*s); } catch (...) {}
     }
 
+    // Validate every tensor's canonical encoded size and shard-relative range
+    // before any pager lease or partial read can expose the payload.
+    for (const ShardManifest& shard : m_shards) {
+        for (const TensorEntry& entry : shard.tensors) {
+            const uint64_t bytes = entry.byteSize();
+            if (bytes == std::numeric_limits<uint64_t>::max() ||
+                entry.offset > shard.dataSize || bytes > shard.dataSize - entry.offset) {
+                fprintf(stderr, "[ROM] tensor %s has an invalid payload range\\n",
+                        entry.name.c_str());
+                return false;
+            }
+        }
+    }
+
     // Global tensor index: every tensor must have a unique name across shards.
     for (size_t s = 0; s < m_shards.size(); ++s) {
         const ShardManifest& m = m_shards[s];
@@ -361,18 +375,23 @@ uint64_t TensorROM::tensorStorageBytes(const TensorEntry& e) {
 }
 
 bool TensorROM::readTensor(const TensorEntry& entry, uint8_t* out) const {
-    if (!m_pager) return false;
+    if (!m_pager || !out || entry.shardIndex >= m_shards.size()) return false;
     const ShardManifest& m = m_shards[entry.shardIndex];
+    const uint64_t bytes = entry.byteSize();
+    if (entry.offset > m.dataSize || bytes > m.dataSize - entry.offset) return false;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
-                              m.dataOffset + entry.offset, entry.byteSize(), out);
+                              m.dataOffset + entry.offset, bytes, out);
 }
 
 bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
                                 uint64_t size, uint8_t* out) const {
-    if (!m_pager) return false;
+    if (!m_pager || (size && !out) || entry.shardIndex >= m_shards.size()) return false;
     const ShardManifest& m = m_shards[entry.shardIndex];
-    uint64_t avail = entry.byteSize() - relOffset;
-    if (size > avail) size = avail;
+    const uint64_t tensorBytes = entry.byteSize();
+    if (relOffset > tensorBytes || size > tensorBytes - relOffset ||
+        entry.offset > m.dataSize || tensorBytes > m.dataSize - entry.offset)
+        return false;
+    if (!size) return true;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
                               m.dataOffset + entry.offset + relOffset, size, out);
 }
