@@ -27,6 +27,7 @@ struct RepackTensor {
     bool convert_q8_0 = false;
     bool q8_source_f16 = false;
     bool q8_source_k = false;
+    bool q8_source_q8_1 = false;
     bool convert_q4_0 = false;
     bool convert_q5_0 = false;
     uint32_t q4_source_type = 0;
@@ -514,6 +515,47 @@ inline bool ConvertQ5KToQ4_0(std::ifstream& in,std::ofstream& out,
 // Requantize GGML Q8_K to eight independent GGML Q8_0 blocks.
 // Each 256-weight Q8_K block is: FP32 d, 256 int8 weights, 16 int16 sums.
 // Q8_0 uses a separately rounded FP16 scale per 32-weight block.
+// Q8_1 has FP32 d, FP32 block sum, and 32 signed weights.
+// Re-encode to the standard 34-byte Q8_0 block with an FP16 scale.
+// The Q8_1 sum is derived metadata, not a second scaling factor.
+inline bool ConvertQ8_1ToQ8_0(std::ifstream& in,std::ofstream& out,
+                               uint64_t from,uint64_t sourceBytes) {
+    if(sourceBytes%40 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char source[40],encoded[34];
+    while(sourceBytes) {
+        if(!in.read(reinterpret_cast<char*>(source),40))return false;
+        const uint32_t bits=uint32_t(source[0])|(uint32_t(source[1])<<8)|
+            (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
+        float scale=0;std::memcpy(&scale,&bits,4);
+        if(!std::isfinite(scale))return false;
+        float values[32],maxAbs=0;
+        for(unsigned i=0;i<32;++i) {
+            values[i]=scale*static_cast<float>(static_cast<int8_t>(source[8+i]));
+            if(!std::isfinite(values[i]))return false;
+            maxAbs=std::max(maxAbs,std::abs(values[i]));
+        }
+        const float d=maxAbs/127.0f;
+        uint32_t dbits=0;std::memcpy(&dbits,&d,4);
+        const uint16_t half=Float32BitsToFloat16(dbits);
+        const uint32_t decoded=Float16ToFloat32Bits(half);
+        float actual=0;std::memcpy(&actual,&decoded,4);
+        if(maxAbs!=0 && (!std::isfinite(actual)||actual==0))return false;
+        encoded[0]=static_cast<unsigned char>(half);
+        encoded[1]=static_cast<unsigned char>(half>>8);
+        for(unsigned i=0;i<32;++i) {
+            const double normalized=actual==0?0.0:static_cast<double>(values[i])/actual;
+            const double q=std::round(normalized);
+            const int value=static_cast<int>(std::max(-127.0,std::min(127.0,q)));
+            encoded[2+i]=static_cast<unsigned char>(static_cast<int8_t>(value));
+        }
+        if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
+        sourceBytes-=40;
+    }
+    return true;
+}
 inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
                               uint64_t from,uint64_t sourceBytes) {
     if(sourceBytes%292 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -622,11 +664,12 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
         }
-        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1 || t.type==15) &&
+        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
            t.dims[0]%32==0) {
             t.convert_q8_0=true;
             t.q8_source_f16=(t.type==1);
             t.q8_source_k=(t.type==15);
+            t.q8_source_q8_1=(t.type==9);
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
@@ -740,6 +783,8 @@ inline RepackError RepackGGUF(const std::string& input,
         } else if(t.convert_q8_0) {
             if(!(t.q8_source_k ?
                  ConvertQ8KToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes) :
+                 t.q8_source_q8_1 ?
+                 ConvertQ8_1ToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes) :
                  ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
                                           t.source_bytes,t.q8_source_f16)))
                 return RepackError::Output;
