@@ -3133,7 +3133,6 @@ bool VulkanCompute::DispatchGemvQuantRows(
         (cols > std::numeric_limits<uint32_t>::max() / 2u ||
          weightBytes != static_cast<size_t>(rows) * static_cast<size_t>(cols) * 2u))
         return false;
-    if (cacheKey && type != 1 && type != 30) return false;
 
     DeviceBuf* w=nullptr;
     if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) return false;
