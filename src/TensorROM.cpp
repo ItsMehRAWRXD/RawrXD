@@ -192,6 +192,7 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
                 manifest.path.c_str(), static_cast<unsigned long long>(alignment));
         return false;
     }
+    manifest.alignment = static_cast<uint32_t>(alignment);
     uint64_t pos = static_cast<uint64_t>(f.tellg());
     if (pos > std::numeric_limits<uint64_t>::max() - (alignment - 1)) return false;
     uint64_t aligned = (pos + alignment - 1) & ~(alignment - 1);
@@ -317,6 +318,7 @@ bool TensorROM::finalizeIndex() {
         for (const TensorEntry& entry : shard.tensors) {
             const uint64_t bytes = entry.byteSize();
             if (bytes == std::numeric_limits<uint64_t>::max() ||
+                entry.offset % shard.alignment != 0 ||
                 entry.offset > shard.dataSize || bytes > shard.dataSize - entry.offset) {
                 fprintf(stderr, "[ROM] tensor %s has an invalid payload range\\n",
                         entry.name.c_str());
