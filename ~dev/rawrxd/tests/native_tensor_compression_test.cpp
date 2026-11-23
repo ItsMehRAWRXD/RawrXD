@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <limits>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -39,6 +40,19 @@ int main() {
     CHECK(compact.DecodeRange(137,decoded.size()-274,decoded.data()));
     for (std::size_t i=0;i<decoded.size()-274;++i)
         CHECK(decoded[i]==values[i+137]);
+
+    // Matching infinities and NaNs remain representable at zero error tolerance.
+    const float specialValues[] = {
+        std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(),
+        std::numeric_limits<float>::quiet_NaN()
+    };
+    auto special=ChunkedF32Storage::Build(specialValues,3,0.0f,3);
+    float specialOut[3]{};
+    CHECK(special.DecodeRange(0,3,specialOut));
+    CHECK(std::isinf(specialOut[0]) && specialOut[0]>0.0f);
+    CHECK(std::isinf(specialOut[1]) && specialOut[1]<0.0f);
+    CHECK(std::isnan(specialOut[2]));
 
     // Reader-backed construction is bounded to chunk-sized source requests.
     std::size_t readerCalls=0,readerElements=0;
