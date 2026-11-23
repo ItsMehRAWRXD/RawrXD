@@ -1,7 +1,7 @@
 #pragma once
 // Typed CPU GEMV kernels over immutable compressed-resident GGUF tensors.
 // The byte store remains lossless; decoding happens only for bounded row chunks.
-// Supported layouts: F32/F16 and GGML Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1.
+// Supported layouts: F32/F16, Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1, and Q2_K through Q6_K.
 #include "native_bounded_weight_stager.hpp"
 #include <algorithm>
 #include <cmath>
@@ -441,6 +441,211 @@ inline std::vector<float> resident_q8_1_row(
             }
         });
     return output;
+}
+
+
+namespace resident_k_detail {
+constexpr std::size_t kValues = 256;
+
+inline std::uint16_t u16(const std::uint8_t* p) noexcept {
+    return std::uint16_t(p[0]) | (std::uint16_t(p[1]) << 8);
+}
+inline void scale_min_k4(int j, const std::uint8_t* q,
+                         std::uint8_t& d, std::uint8_t& m) noexcept {
+    if (j < 4) {
+        d = q[j] & 63u; m = q[j + 4] & 63u;
+    } else {
+        d = (q[j + 4] & 0x0fu) | ((q[j - 4] >> 6) << 4);
+        m = (q[j + 4] >> 4) | ((q[j] >> 6) << 4);
+    }
+}
+inline void decode_q2(const std::uint8_t* b, float* out) {
+    const float d = half_to_float(u16(b + 80));
+    const float dm = half_to_float(u16(b + 82));
+    if (!std::isfinite(d) || !std::isfinite(dm)) throw std::runtime_error("non-finite Q2_K scale");
+    const auto* scales = b;
+    const auto* q = b + 16;
+    std::size_t is = 0;
+    for (std::size_t n = 0; n < 256; n += 128) {
+        unsigned shift = 0;
+        for (std::size_t j = 0; j < 4; ++j) {
+            for (std::size_t half = 0; half < 2; ++half) {
+                const auto sc = scales[is++];
+                const float dl = d * (sc & 0x0fu);
+                const float ml = dm * (sc >> 4);
+                const auto* src = q + half * 16;
+                const auto dst = n + j * 32 + half * 16;
+                for (std::size_t l = 0; l < 16; ++l)
+                    out[dst + l] = dl * static_cast<float>((src[l] >> shift) & 3u) - ml;
+            }
+            shift += 2;
+        }
+        q += 32;
+    }
+}
+inline void decode_q3(const std::uint8_t* b, float* out) {
+    const auto* hm = b;
+    const auto* q = b + 32;
+    const auto* packedScales = b + 96;
+    const float dAll = half_to_float(u16(b + 108));
+    if (!std::isfinite(dAll)) throw std::runtime_error("non-finite Q3_K scale");
+    std::uint32_t aux[4]{};
+    std::memcpy(aux, packedScales, 12);
+    const std::uint32_t tmp = aux[2];
+    constexpr std::uint32_t kmask1 = 0x03030303u;
+    constexpr std::uint32_t kmask2 = 0x0f0f0f0fu;
+    aux[2] = ((aux[0] >> 4) & kmask2) | (((tmp >> 4) & kmask1) << 4);
+    aux[3] = ((aux[1] >> 4) & kmask2) | (((tmp >> 6) & kmask1) << 4);
+    aux[0] = (aux[0] & kmask2) | (((tmp >> 0) & kmask1) << 4);
+    aux[1] = (aux[1] & kmask2) | (((tmp >> 2) & kmask1) << 4);
+    const auto* scales = reinterpret_cast<const std::int8_t*>(aux);
+    std::size_t is = 0;
+    std::uint8_t mask = 1;
+    for (std::size_t n = 0; n < 256; n += 128) {
+        unsigned shift = 0;
+        for (std::size_t j = 0; j < 4; ++j) {
+            for (std::size_t half = 0; half < 2; ++half) {
+                const float dl = dAll * (static_cast<int>(scales[is++]) - 32);
+                const auto* src = q + half * 16;
+                const auto dst = n + j * 32 + half * 16;
+                for (std::size_t l = 0; l < 16; ++l) {
+                    const auto ix = half * 16 + l;
+                    const int low = (src[l] >> shift) & 3u;
+                    const int signedQ = low - ((hm[ix] & mask) ? 0 : 4);
+                    out[dst + l] = dl * static_cast<float>(signedQ);
+                }
+            }
+            shift += 2;
+            mask <<= 1;
+        }
+        q += 32;
+    }
+}
+inline void decode_q4(const std::uint8_t* b, float* out) {
+    const float dAll = half_to_float(u16(b));
+    const float minAll = half_to_float(u16(b + 2));
+    if (!std::isfinite(dAll) || !std::isfinite(minAll)) throw std::runtime_error("non-finite Q4_K scales");
+    const auto* scales = b + 4;
+    const auto* q = b + 16;
+    std::size_t is = 0;
+    for (std::size_t n = 0; n < 256; n += 64) {
+        std::uint8_t sc1, m1, sc2, m2;
+        scale_min_k4(static_cast<int>(is), scales, sc1, m1);
+        scale_min_k4(static_cast<int>(is + 1), scales, sc2, m2);
+        const float d1 = dAll * sc1, min1 = minAll * m1;
+        const float d2 = dAll * sc2, min2 = minAll * m2;
+        for (std::size_t l = 0; l < 32; ++l) {
+            out[n + l] = d1 * (q[l] & 0x0fu) - min1;
+            out[n + 32 + l] = d2 * (q[l] >> 4) - min2;
+        }
+        q += 32; is += 2;
+    }
+}
+inline void decode_q5(const std::uint8_t* b, float* out) {
+    const float dAll = half_to_float(u16(b));
+    const float minAll = half_to_float(u16(b + 2));
+    if (!std::isfinite(dAll) || !std::isfinite(minAll)) throw std::runtime_error("non-finite Q5_K scales");
+    const auto* scales = b + 4;
+    const auto* qh = b + 16;
+    const auto* ql = b + 48;
+    std::size_t is = 0;
+    std::uint8_t u1 = 1, u2 = 2;
+    for (std::size_t n = 0; n < 256; n += 64) {
+        std::uint8_t sc1, m1, sc2, m2;
+        scale_min_k4(static_cast<int>(is), scales, sc1, m1);
+        scale_min_k4(static_cast<int>(is + 1), scales, sc2, m2);
+        const float d1 = dAll * sc1, min1 = minAll * m1;
+        const float d2 = dAll * sc2, min2 = minAll * m2;
+        for (std::size_t l = 0; l < 32; ++l) {
+            out[n + l] = d1 * ((ql[l] & 0x0fu) + ((qh[l] & u1) ? 16u : 0u)) - min1;
+            out[n + 32 + l] = d2 * ((ql[l] >> 4) + ((qh[l] & u2) ? 16u : 0u)) - min2;
+        }
+        ql += 32; is += 2;
+        u1 = static_cast<std::uint8_t>(u1 << 2);
+        u2 = static_cast<std::uint8_t>(u2 << 2);
+    }
+}
+inline void decode_q6(const std::uint8_t* b, float* out) {
+    const auto* ql = b;
+    const auto* qh = b + 128;
+    const auto* scales = reinterpret_cast<const std::int8_t*>(b + 192);
+    const float dAll = half_to_float(u16(b + 208));
+    if (!std::isfinite(dAll)) throw std::runtime_error("non-finite Q6_K scale");
+    for (std::size_t n = 0; n < 256; n += 128) {
+        for (std::size_t l = 0; l < 32; ++l) {
+            const auto is = l / 16;
+            const int q1 = static_cast<int>((ql[l] & 0x0fu) | (((qh[l] >> 0) & 3u) << 4)) - 32;
+            const int q2 = static_cast<int>((ql[l + 32] & 0x0fu) | (((qh[l] >> 2) & 3u) << 4)) - 32;
+            const int q3 = static_cast<int>((ql[l] >> 4) | (((qh[l] >> 4) & 3u) << 4)) - 32;
+            const int q4 = static_cast<int>((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3u) << 4)) - 32;
+            out[n + l] = dAll * scales[is + 0] * q1;
+            out[n + 32 + l] = dAll * scales[is + 2] * q2;
+            out[n + 64 + l] = dAll * scales[is + 4] * q3;
+            out[n + 96 + l] = dAll * scales[is + 6] * q4;
+        }
+        ql += 64; qh += 32; scales += 8;
+    }
+}
+} // namespace resident_k_detail
+
+template<std::size_t BlockBytes, void (*Decode)(const std::uint8_t*, float*)>
+inline std::vector<float> resident_k_matvec(
+    const ResidentCompressedTensor& weights, const float* input,
+    std::size_t rows, std::size_t cols,
+    std::size_t stagingBudgetBytes = 64 * 1024) {
+    constexpr auto values = resident_k_detail::kValues;
+    if (!cols || cols % values)
+        throw std::invalid_argument("K-quant columns must be a nonzero multiple of 256");
+    const auto blocksPerRow = cols / values;
+    if (blocksPerRow > std::numeric_limits<std::size_t>::max() / BlockBytes)
+        throw std::length_error("K-quant row size overflow");
+    const auto rowBytes = blocksPerRow * BlockBytes;
+    resident_detail::validate_matrix(weights, input, rows, cols, rowBytes);
+    const auto chunkBytes = resident_detail::aligned_chunk(stagingBudgetBytes, BlockBytes);
+    BoundedWeightStager stager(chunkBytes);
+    std::vector<float> output(rows, 0.0f);
+    for (std::size_t row = 0; row < rows; ++row) {
+        double sum = 0.0;
+        const auto rowBase = row * rowBytes;
+        for (std::size_t byte = 0; byte < rowBytes;) {
+            const auto take = std::min(chunkBytes, rowBytes - byte);
+            stager.for_each_chunk(weights, rowBase + byte, take,
+                [&](std::size_t offset, const std::uint8_t* data, std::size_t size) {
+                    const auto firstBlock = (offset - rowBase) / BlockBytes;
+                    for (std::size_t b = 0; b < size; b += BlockBytes) {
+                        float decoded[values];
+                        Decode(data + b, decoded);
+                        const auto first = (firstBlock + b / BlockBytes) * values;
+                        for (std::size_t i = 0; i < values; ++i)
+                            sum += static_cast<double>(decoded[i]) * input[first + i];
+                    }
+                });
+            byte += take;
+        }
+        output[row] = static_cast<float>(sum);
+    }
+    return output;
+}
+
+inline std::vector<float> resident_q2_k_matvec(const ResidentCompressedTensor& w,
+    const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_matvec<84, resident_k_detail::decode_q2>(w, x, rows, cols, budget);
+}
+inline std::vector<float> resident_q3_k_matvec(const ResidentCompressedTensor& w,
+    const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_matvec<110, resident_k_detail::decode_q3>(w, x, rows, cols, budget);
+}
+inline std::vector<float> resident_q4_k_matvec(const ResidentCompressedTensor& w,
+    const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_matvec<144, resident_k_detail::decode_q4>(w, x, rows, cols, budget);
+}
+inline std::vector<float> resident_q5_k_matvec(const ResidentCompressedTensor& w,
+    const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_matvec<176, resident_k_detail::decode_q5>(w, x, rows, cols, budget);
+}
+inline std::vector<float> resident_q6_k_matvec(const ResidentCompressedTensor& w,
+    const float* x, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_matvec<210, resident_k_detail::decode_q6>(w, x, rows, cols, budget);
 }
 
 template<class RowReader>
