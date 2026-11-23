@@ -21,7 +21,7 @@ namespace Deep2 {
 
 class TensorResidencyCache {
 public:
-    enum class Encoding : uint8_t { Raw = 0, RLE = 1 };
+    enum class Encoding : uint8_t { Raw = 0, RLE = 1, Zero = 2 };
 
     struct Stats {
         size_t budgetBytes = 0;
@@ -305,6 +305,13 @@ private:
     }
 
     static void EncodeChunk(const uint8_t* src, size_t bytes, Chunk& out) {
+        // Sparse/zero-filled tensor regions need no payload at all.
+        // Preserve logical length so arbitrary cross-chunk reads remain exact.
+        if (std::all_of(src, src + bytes,
+                        [](uint8_t value) { return value == 0; })) {
+            out.encoding = Encoding::Zero;
+            return;
+        }
         std::vector<uint8_t> rle;
         rle.reserve(bytes);
         for (size_t i = 0; i < bytes;) {
@@ -326,6 +333,12 @@ private:
 
     static void DecodeChunk(const Chunk& chunk, std::vector<uint8_t>& out) {
         out.resize(chunk.logicalBytes);
+        if (chunk.encoding == Encoding::Zero) {
+            if (!chunk.payload.empty())
+                throw std::runtime_error("invalid zero residency chunk payload");
+            std::fill(out.begin(), out.end(), uint8_t{0});
+            return;
+        }
         if (chunk.encoding == Encoding::Raw) {
             if (chunk.payload.size() != chunk.logicalBytes)
                 throw std::runtime_error("raw residency chunk size mismatch");
