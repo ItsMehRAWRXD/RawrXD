@@ -985,6 +985,88 @@ int main(int argc, char** argv) {
         const auto g_final = BatchAccountingSnapshot();
         Check(g_final.queued == 0 && !g_final.batch_active,
               "G: no leaked batch or pending queue after all B03 tests");
+
+        // ---- H: B04.1 deterministic inverted completion ordering ----
+        //
+        // G2 ran two executors concurrently but left the order of their EndBatch
+        // calls to chance. Here it is forced: the slow executor queues and then
+        // WAITS for the fast executor to close before closing itself, so the
+        // close order is inverted by construction rather than by timing.
+        //
+        // Every wait is bounded. If the peer stalls, the thread stops waiting and
+        // still closes its own batch, so a stalled peer cannot strand a live GPU
+        // submission or leave a batch open.
+        std::printf("\n--- H. B04.1: inverted completion ordering ---\n");
+        auto run_inverted = [&](size_t bank_slow, size_t bank_fast) -> bool {
+            std::atomic<bool> fast_done{false};
+            std::atomic<bool> slow_ready{false};
+            std::atomic<bool> ok{true};
+            std::atomic<uint64_t> s_acc{0}, s_cmp{0}, s_fail{0};
+            std::atomic<uint64_t> f_acc{0}, f_cmp{0}, f_fail{0};
+            constexpr uint64_t kSpinLimit = 20000000ull;
+
+            auto slow_exec = [&]() {
+                std::vector<float> s(G_OUT, 0.0f), b(G_OUT, 0.0f);
+                const bool serial_ok = dot(bank_slow, s.data()) && LastReceipt().used_gpu;
+                const auto before = BatchAccountingSnapshot();
+                const bool opened = serial_ok && BeginBatch();
+                const bool queued = opened && dot(bank_slow, b.data());
+                slow_ready.store(true, std::memory_order_release);
+                for (uint64_t i = 0; i < kSpinLimit &&
+                     !fast_done.load(std::memory_order_acquire); ++i)
+                    std::this_thread::yield();
+                const bool closed = opened && EndBatch();
+                const auto after = BatchAccountingSnapshot();
+                s_acc.store(after.accepted - before.accepted);
+                s_cmp.store(after.completed - before.completed);
+                s_fail.store(after.failed - before.failed);
+                const bool bits = serial_ok && SameBits(s, b);
+                if (!(serial_ok && opened && queued && closed && bits &&
+                      after.queued == 0 && !after.batch_active))
+                    ok.store(false);
+            };
+            auto fast_exec = [&]() {
+                for (uint64_t i = 0; i < kSpinLimit &&
+                     !slow_ready.load(std::memory_order_acquire); ++i)
+                    std::this_thread::yield();
+                std::vector<float> s(G_OUT, 0.0f), b(G_OUT, 0.0f);
+                const bool serial_ok = dot(bank_fast, s.data()) && LastReceipt().used_gpu;
+                const auto before = BatchAccountingSnapshot();
+                const bool opened = serial_ok && BeginBatch();
+                const bool queued = opened && dot(bank_fast, b.data());
+                const bool closed = opened && EndBatch();
+                fast_done.store(true, std::memory_order_release);
+                const auto after = BatchAccountingSnapshot();
+                f_acc.store(after.accepted - before.accepted);
+                f_cmp.store(after.completed - before.completed);
+                f_fail.store(after.failed - before.failed);
+                const bool bits = serial_ok && SameBits(s, b);
+                if (!(serial_ok && opened && queued && closed && bits &&
+                      after.queued == 0 && !after.batch_active))
+                    ok.store(false);
+            };
+
+            std::thread slow(slow_exec), fast(fast_exec);
+            slow.join();
+            fast.join();
+
+            const bool attributed =
+                s_acc.load() == 1 && s_cmp.load() == 1 && s_fail.load() == 0 &&
+                f_acc.load() == 1 && f_cmp.load() == 1 && f_fail.load() == 0;
+            printf("  H: slow(bank=%zu) accepted=%llu completed=%llu failed=%llu | "
+                   "fast(bank=%zu) accepted=%llu completed=%llu failed=%llu ok=%s\n",
+                   bank_slow, (unsigned long long)s_acc.load(),
+                   (unsigned long long)s_cmp.load(), (unsigned long long)s_fail.load(),
+                   bank_fast, (unsigned long long)f_acc.load(),
+                   (unsigned long long)f_cmp.load(), (unsigned long long)f_fail.load(),
+                   ok.load() ? "yes" : "NO");
+            return ok.load() && attributed;
+        };
+
+        Check(run_inverted(1, 2),
+              "H1: inverted ordering (slow closes after fast) attributes one op each");
+        Check(run_inverted(3, 0),
+              "H2: inverted ordering with roles reversed attributes one op each");
     }
 
     // ---- final invariants ---------------------------------------------------
