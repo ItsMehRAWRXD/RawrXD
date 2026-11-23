@@ -58,10 +58,12 @@ void value(std::istream& f,uint32_t t,U fileSize,int depth=0) {
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|q8_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     try {
+        const bool q8=argc==5 && std::string(argv[4])=="q8_0";
+        if(argc==5 && !q8 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         float tolerance=std::stof(argv[3]);if(!std::isfinite(tolerance)||tolerance<0)throw std::runtime_error("invalid tolerance");
         std::ifstream in(argv[1],std::ios::binary|std::ios::ate);
         if(!in)throw std::runtime_error("cannot open input");
@@ -109,6 +111,8 @@ int main(int argc,char** argv) {
         seek(in,0);copy(in,out,kvEnd); // preserve original header and all metadata bytes
         // Preflight each F32 candidate before writing tensor table.
         std::vector<std::vector<uint8_t>> converted(ts.size());
+        std::vector<uint32_t> outputTypes(ts.size());
+        for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert)continue;
@@ -116,7 +120,38 @@ int main(int argc,char** argv) {
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
             auto r=Encode(raw.data(),raw.size(),true,tolerance);
-            if(r.encoding==Encoding::F16) {converted[i]=std::move(r.payload);++changed;}
+            if(q8 && t.dims[0]%32==0 && raw.size()%128==0) {
+                std::vector<uint8_t> blocks;
+                blocks.reserve(raw.size()/128*34);
+                bool valid=true;
+                for(size_t off=0;off<raw.size();off+=128) {
+                    float values[32];float maxAbs=0;
+                    for(int j=0;j<32;++j) {
+                        std::memcpy(&values[j],raw.data()+off+4*j,4);
+                        if(!std::isfinite(values[j])) {valid=false;break;}
+                        maxAbs=std::max(maxAbs,std::fabs(values[j]));
+                    }
+                    if(!valid)break;
+                    float scale=maxAbs/127.0f;
+                    uint16_t h=ToHalf(scale);
+                    float actual=FromHalf(h);
+                    if(maxAbs && (!std::isfinite(actual) || actual==0)) {valid=false;break;}
+                    blocks.push_back(uint8_t(h));blocks.push_back(uint8_t(h>>8));
+                    for(float f:values) {
+                        float qf=actual?std::round(f/actual):0.0f;
+                        qf=std::max(-128.0f,std::min(127.0f,qf));
+                        int qi=int(qf);
+                        if(std::fabs(actual*qi-f)>tolerance) {valid=false;break;}
+                        blocks.push_back(uint8_t(int8_t(qi)));
+                    }
+                    if(!valid)break;
+                }
+                if(valid && blocks.size()<raw.size()) {
+                    converted[i]=std::move(blocks);outputTypes[i]=8;++changed;
+                }
+            } else if(!q8 && r.encoding==Encoding::F16) {
+                converted[i]=std::move(r.payload);outputTypes[i]=1;++changed;
+            }
         }
         U cursor=0;
         for(auto& t:ts) {
@@ -125,7 +160,7 @@ int main(int argc,char** argv) {
             cursor=add(cursor,converted[i].empty()?t.bytes:converted[i].size());
             write(out,t.name.size(),8);out.write(t.name.data(),std::streamsize(t.name.size()));
             write(out,t.dims.size(),4);for(U d:t.dims)write(out,d,8);
-            write(out,converted[i].empty()?t.type:1,4);write(out,t.newOffset,8);
+            write(out,outputTypes[i],4);write(out,t.newOffset,8);
         }
         U outStart=align(U(out.tellp()),alignment);
         while(U(out.tellp())<outStart)out.put(0);
