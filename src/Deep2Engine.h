@@ -131,6 +131,10 @@ namespace Deep2
             return compressedStore && !compressedKey.empty();
         }
 
+        bool hasBacking() const noexcept {
+            return data != nullptr || hasCompressedBacking();
+        }
+
         bool readBytes(std::size_t offset, void* destination, std::size_t length,
                        std::string* error = nullptr) const
         {
