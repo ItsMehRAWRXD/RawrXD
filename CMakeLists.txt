@@ -133,3 +133,9 @@ add_test(NAME MetadataParity_Phi3
     COMMAND test_metadata_parity "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+# Standalone compressed-residency regression (no Vulkan or Qt dependency).
+add_executable(native_compressed_residency_test
+    tests/native_compressed_residency_test.cpp)
+target_compile_features(native_compressed_residency_test PRIVATE cxx_std_17)
+add_test(NAME NativeCompressedResidency COMMAND native_compressed_residency_test)
