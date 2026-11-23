@@ -45,9 +45,34 @@ public:
             const auto index = offset / blockBytes_;
             const auto within = offset % blockBytes_;
             const auto& block = blocks_.at(index);
-            const auto decoded = decode(block);
-            const auto n = std::min(bytes, decoded.size() - within);
-            std::copy_n(decoded.data() + within, n, out);
+            if (within >= block.decoded_size)
+                throw std::runtime_error("invalid resident block offset");
+            const auto n = std::min(bytes, block.decoded_size - within);
+            if (!block.rle) {
+                if (block.payload.size() != block.decoded_size)
+                    throw std::runtime_error("invalid resident raw block");
+                std::copy_n(block.payload.data() + within, n, out);
+            } else {
+                // Decode only the requested span, without a full-block scratch copy.
+                if (block.payload.size() % 2)
+                    throw std::runtime_error("invalid resident RLE block");
+                std::size_t cursor = 0, copied = 0;
+                for (std::size_t i = 0; i < block.payload.size(); i += 2) {
+                    const auto run = static_cast<std::size_t>(block.payload[i]);
+                    if (!run || run > block.decoded_size - cursor)
+                        throw std::runtime_error("invalid resident RLE run");
+                    const auto begin = std::max(cursor, within);
+                    const auto finish = std::min(cursor + run, within + n);
+                    if (finish > begin) {
+                        std::fill_n(out + (begin - within), finish - begin,
+                                    block.payload[i + 1]);
+                        copied += finish - begin;
+                    }
+                    cursor += run;
+                }
+                if (cursor != block.decoded_size || copied != n)
+                    throw std::runtime_error("truncated resident RLE block");
+            }
             offset += n; out += n; bytes -= n;
         }
     }
