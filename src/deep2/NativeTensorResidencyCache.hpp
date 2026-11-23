@@ -159,6 +159,7 @@ public:
     }
 
     void Clear() {
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
         if(!entries_.empty()) evictions_+=entries_.size();
         entries_.clear();
