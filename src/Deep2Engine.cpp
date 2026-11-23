@@ -56,7 +56,7 @@ void Deep2Engine::SetCompressedWeightsBudget(std::size_t bytes) {
         compressedWeightsLru.pop_back();
         auto it = compressedWeights.find(key);
         if (it == compressedWeights.end()) continue;
-        compressedWeightsBytes -= it->second->compressed_bytes();
+        compressedWeightsBytes -= it->second->resident_bytes();
         compressedWeights.erase(it);
     }
 }
@@ -123,7 +123,7 @@ bool Deep2Engine::gemvROMCompressedF32(
             if (it == compressedWeights.end()) {
                 auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
                     rom.loadResidentCompressedTensor(*entry, blockBytes));
-                const auto bytes = loaded->compressed_bytes();
+                const auto bytes = loaded->resident_bytes();
                 if (bytes <= compressedWeightsBudgetBytes) {
                     while (compressedWeightsBytes > compressedWeightsBudgetBytes - bytes &&
                            !compressedWeightsLru.empty()) {
@@ -131,7 +131,7 @@ bool Deep2Engine::gemvROMCompressedF32(
                         compressedWeightsLru.pop_back();
                         auto found = compressedWeights.find(victim);
                         if (found == compressedWeights.end()) continue;
-                        compressedWeightsBytes -= found->second->compressed_bytes();
+                        compressedWeightsBytes -= found->second->resident_bytes();
                         compressedWeights.erase(found);
                     }
                     compressedWeightsBytes += bytes;
