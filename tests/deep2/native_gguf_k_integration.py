@@ -78,7 +78,13 @@ def independent_decode(typ, block):
     return out
 
 def run(binary):
-    values=[((i*13)%29-14)/8.0 for i in range(256)]
+    values=[]
+    for g in range(16):
+        for k in range(16):
+            if g%4==0: values.append(0.125+k*0.03125)
+            elif g%4==1: values.append(-0.125-k*0.03125)
+            elif g%4==2: values.append(-0.25+k*0.03125)
+            else: values.append(0.0)
     with tempfile.TemporaryDirectory() as d:
         root=pathlib.Path(d)
         for source_type in (28,0,1,30):
