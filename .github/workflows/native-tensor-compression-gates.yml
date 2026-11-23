@@ -36,6 +36,8 @@ jobs:
           g++ -std=c++17 -O2 -Wall -Wextra tools/tensor_codec_benchmark.cpp -o codec-gates/benchmark
           python3 -c "import struct; open('codec-gates/nonrepetitive-f32.bin','wb').write(b''.join(struct.pack('<I', 0x3f800000 | ((i*131) & 0x7fffff)) for i in range(8192)))"
           ./codec-gates/benchmark codec-gates/nonrepetitive-f32.bin
+          python3 -c "import random; rng=random.Random(20261123); open('codec-gates/high-entropy.bin','wb').write(rng.randbytes(32768))"
+          ./codec-gates/benchmark codec-gates/high-entropy.bin
       - name: Compile and execute native codec regression (Windows MSVC)
         if: runner.os == 'Windows'
         shell: cmd
