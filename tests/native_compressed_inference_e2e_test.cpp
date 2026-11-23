@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -41,7 +42,9 @@ static void append_half(std::vector<std::uint8_t>& out, float value) {
 }
 
 static ResidentCompressedTensor load_resident(
-    const std::vector<std::uint8_t>& bytes, const std::string& name) {
+    const std::vector<std::uint8_t>& bytes, const std::string& name,
+    std::size_t rangeOffset = 0,
+    std::size_t rangeBytes = (std::numeric_limits<std::size_t>::max)()) {
     const auto path = name + ".synthetic.gguf.tensor";
     {
         std::ofstream file(path, std::ios::binary | std::ios::trunc);
@@ -50,9 +53,13 @@ static ResidentCompressedTensor load_resident(
                    static_cast<std::streamsize>(bytes.size()));
         if (!file) throw std::runtime_error("cannot write synthetic tensor fixture");
     }
+    if (rangeBytes == (std::numeric_limits<std::size_t>::max)()) {
+        if (rangeOffset > bytes.size()) throw std::out_of_range("synthetic tensor range offset");
+        rangeBytes = bytes.size() - rangeOffset;
+    }
     ResidentCompressedTensor resident(64);
     {
-        rawrxd::compression::FileTensorReader source(path, 0, bytes.size());
+        rawrxd::compression::FileTensorReader source(path, rangeOffset, rangeBytes);
         resident.load(source);
     }
     // Close the file before removal; required by Windows sharing semantics.
@@ -65,6 +72,8 @@ int main() {
     // Synthetic model: token embedding -> F16 identity projection -> Q4_0
     // output projection. The expected logits are independently computed below.
     std::vector<std::uint8_t> embeddingBytes;
+    // Token 0 is all zeros; token 1 is [1, 0.5, 0, ...].
+    for (std::size_t i = 0; i < hidden; ++i) append_half(embeddingBytes, 0.0f);
     for (std::size_t i = 0; i < hidden; ++i)
         append_half(embeddingBytes, i == 0 ? 1.0f : (i == 1 ? 0.5f : 0.0f));
 
@@ -83,10 +92,12 @@ int main() {
                   outputBytes.begin() + static_cast<std::ptrdiff_t>(base + 18), packed);
     }
 
-    const auto embedding = load_resident(embeddingBytes, "embedding");
+    // Stream only token 1's byte range from the two-row embedding file.
+    const auto embedding = load_resident(
+        embeddingBytes, "embedding", hidden * 2, hidden * 2);
     const auto projection = load_resident(identityBytes, "projection");
     const auto output = load_resident(outputBytes, "output");
-    CHECK(embedding.size() == hidden * 2);
+    CHECK(embedding.size() == hidden * 2); // resident object contains one row, not both tokens
     CHECK(projection.size() == hidden * hidden * 2);
     CHECK(output.size() == 2 * 18);
     CHECK(embedding.compressed_bytes() < embedding.size());
@@ -146,7 +157,7 @@ int main() {
     CHECK(rejected);
 
     std::puts("SYNTHETIC_MODEL_E2E=PASS");
-    std::puts("OPERATORS=embedding_f16,f16_projection,q4_0_logits");
+    std::puts("OPERATORS=range_backed_embedding_f16,f16_projection,q4_0_logits");
     std::puts("CONCURRENT_REQUESTS=8");
     return 0;
 }
