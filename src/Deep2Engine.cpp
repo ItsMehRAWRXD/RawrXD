@@ -696,14 +696,27 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 dispatched = true;
             }
         } else if (entry.type == deep2::TensorType::F16 ||
-                   entry.type == deep2::TensorType::BF16) {
-            // GGUF F16/BF16 payloads are already compact. Read only the
-            // requested byte interval and keep them packed through dispatch.
-            if (firstElement > UINT64_MAX / sizeof(uint16_t) ||
-                elements > UINT64_MAX / sizeof(uint16_t))
-                return false;
-            const uint64_t byteOffset = firstElement * sizeof(uint16_t);
-            const uint64_t byteCount = static_cast<uint64_t>(elements) * sizeof(uint16_t);
+                   entry.type == deep2::TensorType::BF16 ||
+                   entry.type == deep2::TensorType::Q8_0) {
+            // F16/BF16 and Q8_0 are already compact in GGUF. Read the exact
+            // requested encoded range and keep it packed through GPU dispatch.
+            uint64_t byteOffset = 0;
+            uint64_t byteCount = 0;
+            if (entry.type == deep2::TensorType::Q8_0) {
+                if ((cols % 32u) != 0u || (firstElement % 32u) != 0u ||
+                    (elements % 32u) != 0u ||
+                    firstElement / 32u > UINT64_MAX / 34u ||
+                    elements / 32u > UINT64_MAX / 34u)
+                    return false;
+                byteOffset = (firstElement / 32u) * 34u;
+                byteCount = (static_cast<uint64_t>(elements) / 32u) * 34u;
+            } else {
+                if (firstElement > UINT64_MAX / sizeof(uint16_t) ||
+                    elements > UINT64_MAX / sizeof(uint16_t))
+                    return false;
+                byteOffset = firstElement * sizeof(uint16_t);
+                byteCount = static_cast<uint64_t>(elements) * sizeof(uint16_t);
+            }
             if (byteOffset > entry.byteSize() ||
                 byteCount > entry.byteSize() - byteOffset ||
                 byteCount > std::numeric_limits<size_t>::max())
@@ -718,8 +731,8 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             if (vulkanGemv(gpu, packedView, inputView, tileOutput)) {
                 dispatched = true;
             } else {
-                // Retain a compatible fallback for systems without the packed
-                // shader binary; only the current logical tile is expanded.
+                // F32 fallback expands only this requested tile when packed
+                // shader loading or device storage limits prevent dispatch.
                 tile.resize(elements);
                 if (!readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
                                                encodedScratch, decodeScratch))
