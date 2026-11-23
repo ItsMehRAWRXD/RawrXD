@@ -107,23 +107,33 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
         const size_t remaining = budgetBytes - storedBytes;
         // Avoid a candidate whose temporary raw-source bound is far beyond
         // the remaining compressed-residency allowance.
-        if (tensor.sizeBytes > remaining * 2u && remaining <=
-                std::numeric_limits<size_t>::max() / 2u)
+        if (remaining <= std::numeric_limits<size_t>::max() / 2u &&
+            tensor.sizeBytes > remaining * 2u)
             return;
         if (!tensor.EnableCompressedF32(tolerance)) {
             ++rejectedTensors;
             return;
         }
-        const size_t bytes = tensor.compressedF32->storedBytes();
-        if (bytes > remaining) {
+        RawrXD::TensorCompression::Encoding encoding{};
+        std::vector<uint8_t> packed;
+        const size_t expectedBytes = tensor.sizeBytes / 2u;
+        if (!tensor.compressedF32->ExportUniform16Bit(encoding, packed) ||
+            packed.size() != expectedBytes || packed.size() > remaining) {
             tensor.compressedF32.reset();
-            std::atomic_store_explicit(&tensor.gpuF16Payload,
-                std::shared_ptr<const WeightTensor::GpuCompressedF32Payload>{},
-                std::memory_order_release);
             ++rejectedTensors;
             return;
         }
-        storedBytes += bytes;
+        auto payload = std::make_shared<WeightTensor::GpuCompressedF32Payload>();
+        payload->bytes = std::move(packed);
+        payload->ggmlType = encoding ==
+            RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
+        std::shared_ptr<const WeightTensor::GpuCompressedF32Payload> immutable = payload;
+        std::atomic_store_explicit(&tensor.gpuF16Payload, immutable,
+            std::memory_order_release);
+        // The raw source remains the CPU fallback. Release the chunk-object
+        // duplicate now that its packed GPU representation owns the payload.
+        tensor.compressedF32.reset();
+        storedBytes += immutable->bytes.size();
         ++compressedTensors;
     };
 
