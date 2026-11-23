@@ -304,7 +304,7 @@ def run(binary):
         subprocess.run([binary,str(huge),str(compact),"0","f16"],check=True)
         data,ds,meta,desc=parse(compact)
         assert desc["blk.0.attn_q.weight"][:2]==(1,(n,))
-        assert len(data)<len(huge.read_bytes())
+        assert len(data)<huge.stat().st_size
         assert data[ds:ds+16]==struct.pack("<e",1.0)*8
         # Verify values straddling each 64 KiB chunk boundary.
         for i in (0, 16383, 16384, 16385, n-1):
