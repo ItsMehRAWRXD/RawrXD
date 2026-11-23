@@ -75,6 +75,23 @@ inline double tensorTypeBytesPerValue(TensorType t) {
         case TensorType::Q5_K: return 176.0 / 256.0;
         case TensorType::Q6_K: return 210.0 / 256.0;
         case TensorType::Q8_K: return 292.0 / 256.0;
+        case TensorType::IQ2_XXS: return 66.0 / 256.0;
+        case TensorType::IQ2_XS: return 74.0 / 256.0;
+        case TensorType::IQ3_XXS: return 98.0 / 256.0;
+        case TensorType::IQ1_S: return 50.0 / 256.0;
+        case TensorType::IQ4_NL: return 18.0 / 32.0;
+        case TensorType::IQ3_S: return 110.0 / 256.0;
+        case TensorType::IQ2_S: return 82.0 / 256.0;
+        case TensorType::IQ4_XS: return 136.0 / 256.0;
+        case TensorType::IQ1_M: return 56.0 / 256.0;
+        case TensorType::TQ1_0: return 54.0 / 256.0;
+        case TensorType::TQ2_0: return 66.0 / 256.0;
+        case TensorType::MXFP4: return 17.0 / 32.0;
+        case TensorType::BF16: return 2.0;
+        case TensorType::I8: return 1.0;
+        case TensorType::I16: return 2.0;
+        case TensorType::I32: return 4.0;
+        case TensorType::I64: case TensorType::F64: return 8.0;
         default: return 1.0;
     }
 }
@@ -88,13 +105,20 @@ inline std::size_t quantBlockSize(TensorType t) {
         case TensorType::Q2_K: case TensorType::Q3_K:
         case TensorType::Q4_K: case TensorType::Q5_K:
         case TensorType::Q6_K: case TensorType::Q8_K:
+        case TensorType::IQ2_XXS: case TensorType::IQ2_XS:
+        case TensorType::IQ3_XXS: case TensorType::IQ1_S:
+        case TensorType::IQ3_S: case TensorType::IQ2_S:
+        case TensorType::IQ4_XS: case TensorType::IQ1_M:
+        case TensorType::TQ1_0: case TensorType::TQ2_0:
             return 256;
+        case TensorType::IQ4_NL: case TensorType::MXFP4:
+            return 32;
         default: return 1;
     }
 }
 
 inline bool isQuantized(TensorType t) {
-    return t != TensorType::F32 && t != TensorType::F16;
+    return quantBlockSize(t) > 1;
 }
 
 // Standard GGML packed storage geometry. Unsupported types deliberately return
@@ -103,7 +127,15 @@ inline bool isQuantized(TensorType t) {
 inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
     const auto max = (std::numeric_limits<std::uint64_t>::max)();
     if (t == TensorType::F32) return numValues > max / 4u ? max : numValues * 4u;
-    if (t == TensorType::F16) return numValues > max / 2u ? max : numValues * 2u;
+    if (t == TensorType::F16 || t == TensorType::BF16)
+        return numValues > max / 2u ? max : numValues * 2u;
+    if (t == TensorType::F64 || t == TensorType::I64)
+        return numValues > max / 8u ? max : numValues * 8u;
+    if (t == TensorType::I32)
+        return numValues > max / 4u ? max : numValues * 4u;
+    if (t == TensorType::I16)
+        return numValues > max / 2u ? max : numValues * 2u;
+    if (t == TensorType::I8) return numValues;
     const std::size_t valuesPerBlock = quantBlockSize(t);
     if (!valuesPerBlock || numValues > max - (valuesPerBlock - 1u)) return max;
     const std::uint64_t blocks =
@@ -123,6 +155,18 @@ inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
         case TensorType::Q5_K: bytesPerBlock = 176; break;
         case TensorType::Q6_K: bytesPerBlock = 210; break;
         case TensorType::Q8_K: bytesPerBlock = 292; break;
+        case TensorType::IQ2_XXS: bytesPerBlock = 66; break;
+        case TensorType::IQ2_XS: bytesPerBlock = 74; break;
+        case TensorType::IQ3_XXS: bytesPerBlock = 98; break;
+        case TensorType::IQ1_S: bytesPerBlock = 50; break;
+        case TensorType::IQ4_NL: bytesPerBlock = 18; break;
+        case TensorType::IQ3_S: bytesPerBlock = 110; break;
+        case TensorType::IQ2_S: bytesPerBlock = 82; break;
+        case TensorType::IQ4_XS: bytesPerBlock = 136; break;
+        case TensorType::IQ1_M: bytesPerBlock = 56; break;
+        case TensorType::TQ1_0: bytesPerBlock = 54; break;
+        case TensorType::TQ2_0: bytesPerBlock = 66; break;
+        case TensorType::MXFP4: bytesPerBlock = 17; break;
         default: return numValues;
     }
     return blocks > max / bytesPerBlock ? max : blocks * bytesPerBlock;
