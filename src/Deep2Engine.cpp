@@ -264,6 +264,16 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
                                                   uint64_t firstElement,
                                                   uint64_t elementCount,
                                                   float* destination) {
+    std::vector<uint8_t> encodedScratch;
+    return readDequantizedTensorTile(entry, firstElement, elementCount,
+                                     destination, encodedScratch);
+}
+
+bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                                  uint64_t firstElement,
+                                                  uint64_t elementCount,
+                                                  float* destination,
+                                                  std::vector<uint8_t>& encodedScratch) {
     if (!romMode || !destination) return false;
     switch (entry.type) {
     case deep2::TensorType::F16:
@@ -331,11 +341,11 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
         byteCount > std::numeric_limits<size_t>::max())
         return false;
 
-    std::vector<uint8_t> encoded(static_cast<size_t>(byteCount));
-    if (!rom.readTensorRange(entry, byteOffset, byteCount, encoded.data()))
+    encodedScratch.resize(static_cast<size_t>(byteCount));
+    if (!rom.readTensorRange(entry, byteOffset, byteCount, encodedScratch.data()))
         return false;
     return deep2::dequantizeTensorRange(entry.type, totalElements, firstElement,
-        elementCount, encoded.data(), encoded.size(), destination);
+        elementCount, encodedScratch.data(), encodedScratch.size(), destination);
 }
 
 bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* input,
