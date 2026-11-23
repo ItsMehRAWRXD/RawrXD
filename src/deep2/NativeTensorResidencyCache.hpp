@@ -58,6 +58,9 @@ public:
                 existing->second.lastUse = ++tick_;
                 return true;
             }
+            // A failed first-touch probe is memoized; never rescan the same
+            // raw-only tensor on each subsequent inference request.
+            if (rawFallback_.find(key) != rawFallback_.end()) return false;
             // Bound the candidate itself to the configured budget. Once its
             // exact encoded size is known, insertion evicts least-recently-used
             // entries atomically under mutex_.
@@ -108,6 +111,9 @@ public:
     // Remember tensors that cannot be compressed safely or do not fit the
     // current budget, so every later tile does not repeat the initial probe.
     void MarkRawFallback(const std::string& key) {
+        // Match the builder lock order (buildMutex_ -> mutex_) so a fallback
+        // cannot be published midway through a concurrent first-touch build.
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
         rawFallback_.insert(key);
     }
