@@ -76,6 +76,7 @@ jobs:
           ./packed_q8_shader_decode_test
           if command -v glslc >/dev/null 2>&1; then
             glslc --target-env=vulkan1.2 -O shaders/gemv_packed16.comp -o gemv_packed16.spv
+            glslc --target-env=vulkan1.2 -O '~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp' -o deep2_qgemv.spv
           else
             echo "glslc unavailable; packed Vulkan shader compilation is covered by SDK-equipped native builds"
           fi
@@ -131,6 +132,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (Get-Command glslc -ErrorAction SilentlyContinue) {
             glslc --target-env=vulkan1.2 -O shaders/gemv_packed16.comp -o gemv_packed16.spv
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            glslc --target-env=vulkan1.2 -O '~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp' -o deep2_qgemv.spv
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
           cl /nologo /EHsc /std:c++17 /O2 /Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp /Fe:quantized_tile_range_test.exe
