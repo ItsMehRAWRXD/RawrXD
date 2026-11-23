@@ -5205,7 +5205,13 @@ add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
 # tool supplied by the Vulkan SDK. The Vulkan runtime loads this exact output
 # through DEEP2_SHADER_DIR; the shader consumes F16/BF16 weight bytes directly.
 if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
-    find_program(RAWRXD_DEEP2_GLSLC glslc REQUIRED)
+    find_program(RAWRXD_DEEP2_GLSLC
+        NAMES glslc glslc.exe
+        HINTS
+            "${RAWR_VULKAN_SDK_ROOT}/Bin"
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VULKAN_SDK}/bin"
+        REQUIRED)
     set(RAWRXD_DEEP2_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/shaders")
     set(RAWRXD_DEEP2_QGEMV_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.comp")
