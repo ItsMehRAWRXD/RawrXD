@@ -37,6 +37,7 @@ int main() {
 
     auto after=cache.GetStats();
     assert(after.cacheHits==2);
+    assert(after.activeReaders==0);
     assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
 
     // A failed streamed registration must not leave a partial cache entry.
