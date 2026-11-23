@@ -90,7 +90,7 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   tensor in an intermediate buffer. The cache probes the first bounded chunk
   and rejects a non-compressible tensor immediately rather than scanning the
   entire model before falling back to raw tile reads.
-- `TensorByteResidencyCache` independently stores losslessly RLE-compressed
+- `TensorByteResidencyCache` independently stores losslessly RLE/LZ4-compressed
   chunks of already-encoded GGUF payloads when they are smaller. Deep2 uses it
   for F16/BF16, fixed-block quantized and K-quant tensor bytes. Once a complete
   compressed representation is admitted, the corresponding unleased raw
@@ -121,7 +121,7 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   succeed.
 - F16/BF16 conversion remains opt-in through
   `compressedF32MaxAbsError`; its default is zero, so lossy conversion is
-  never silently enabled. Exact F16/BF16 representations and lossless RLE
+  never silently enabled. Exact F16/BF16 representations and lossless RLE/LZ4
   may still be retained when they reduce storage.
 
 Deep2 exposes `GetTensorResidencySnapshot()` with per-cache logical bytes,
