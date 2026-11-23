@@ -702,9 +702,26 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     VkDeviceSize ysize = (VkDeviceSize)rows * 4;
 
     auto cleanup = [&]() {
+        // createBuffer maps host-visible allocations for this synchronous GEMV.
+        // Vulkan memory must be unmapped before it is freed; this path previously
+        // freed three still-mapped allocations on every tile dispatch.
+        if (Wmapped && Wmem != VK_NULL_HANDLE) {
+            vkUnmapMemory(gpu.device, Wmem);
+            Wmapped = nullptr;
+        }
+        if (xmapped && xmem != VK_NULL_HANDLE) {
+            vkUnmapMemory(gpu.device, xmem);
+            xmapped = nullptr;
+        }
+        if (ymapped && ymem != VK_NULL_HANDLE) {
+            vkUnmapMemory(gpu.device, ymem);
+            ymapped = nullptr;
+        }
         vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
+        Wbuf = xbuf = ybuf = VK_NULL_HANDLE;
+        Wmem = xmem = ymem = VK_NULL_HANDLE;
     };
 
     VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
