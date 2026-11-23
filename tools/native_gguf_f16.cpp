@@ -392,7 +392,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ41(ts.size(),false);
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q2k && !q3k && !q4k && !q5k && !q6k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
             // Q5_K/Q6_K: independent GGML block layout, whole-tensor
             // precision gate. No original tensor is modified on rejection.
             if((q5k||q6k) && t.dims[0]%256==0) {
