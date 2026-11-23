@@ -29,6 +29,7 @@ int main() {
     assert(std::all_of(decoded.begin(),decoded.end(),[](uint8_t v){return v==0xA7;}));
     stats=cache.GetStats();
     assert(stats.hits==1);
+    assert(stats.activeReaders==0);
     assert(stats.bytesDecoded==decoded.size());
     std::vector<uint8_t> patterned(96*1024);
     for(size_t i=0;i<patterned.size();++i)
