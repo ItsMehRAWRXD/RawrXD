@@ -193,9 +193,17 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it=entries_.find(key);
             if(it==entries_.end()) { ++cacheMisses_; return false; }
+            // F32 callers supply element offsets, while the entry tracks
+            // logical bytes. Validate without overflowing either unit.
+            // Invalid requests must not acquire a lease or mutate output.
+            const size_t elements = it->second.logicalBytes / sizeof(float);
+            if (first > elements || count > elements - first ||
+                (count != 0 && destination == nullptr)) {
+                ++cacheMisses_;
+                return false;
+            }
             it->second.lastUse=++tick_;
             ++it->second.activeReaders;
-            ++cacheHits_;
             storage=it->second.storage;
         }
         bool decoded = false;
@@ -210,9 +218,12 @@ public:
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
             if (decoded) {
+                ++cacheHits_;
                 const uint64_t bytes=static_cast<uint64_t>(count)*sizeof(float);
                 bytesDecoded_ = bytes > std::numeric_limits<uint64_t>::max()-bytesDecoded_
                     ? std::numeric_limits<uint64_t>::max() : bytesDecoded_+bytes;
+            } else {
+                ++cacheMisses_;
             }
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
