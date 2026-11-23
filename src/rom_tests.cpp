@@ -322,6 +322,8 @@ static int cmdQuantReadParity(int argc, char** argv) {
 
     std::vector<TensorType> wanted = { TensorType::Q8_0, TensorType::Q2_K,
                                        TensorType::Q3_K, TensorType::Q4_K,
+                                       TensorType::Q5_K, TensorType::Q6_K,
+                                       TensorType::Q8_K,
                                        TensorType::F32, TensorType::F16 };
     size_t compared = 0, mismatched = 0;
     for (const auto& pair : ref.tensors) {
