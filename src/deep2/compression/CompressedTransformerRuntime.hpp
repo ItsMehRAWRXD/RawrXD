@@ -26,6 +26,7 @@ public:
         std::size_t layers = 1;
         std::size_t heads = 1;
         std::size_t head_dim = 0;
+        std::size_t max_context = 4096;
         float rms_epsilon = 1.0e-5f;
         float rope_theta = 10000.0f;
         int32_t eos_token = -1;
@@ -64,6 +65,9 @@ public:
     std::vector<int32_t> generate(const std::vector<int32_t>& prompt,
                                  std::size_t max_new_tokens) const {
         if (prompt.empty()) throw std::invalid_argument("transformer prompt cannot be empty");
+        if (prompt.size() > config_.max_context ||
+            max_new_tokens > config_.max_context - prompt.size())
+            throw std::out_of_range("prompt plus generation exceeds transformer context");
         if (max_new_tokens == 0) return {};
         std::vector<std::vector<std::vector<float>>> keys(
             config_.layers), values(config_.layers);
