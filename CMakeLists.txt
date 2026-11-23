@@ -154,3 +154,7 @@ add_test(NAME NativeResidentCompressedTensor COMMAND native_resident_compressed_
 add_executable(native_bounded_weight_stager_test tests/native_bounded_weight_stager_test.cpp)
 target_include_directories(native_bounded_weight_stager_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_test(NAME NativeBoundedWeightStager COMMAND native_bounded_weight_stager_test)
+
+add_executable(native_shard_pager_test tests/native_shard_pager_test.cpp src/ShardPager.cpp)
+target_include_directories(native_shard_pager_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_test(NAME NativeShardPager COMMAND native_shard_pager_test)
