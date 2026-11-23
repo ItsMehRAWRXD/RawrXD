@@ -30,6 +30,11 @@ int main() {
     std::vector<std::uint8_t> packed;
     CHECK(compact.ExportUniform16Bit(encoding,packed));
     CHECK(packed.size()==values.size()*2);
+    RawrXD::TensorCompression::Encoding storedRangeEncoding{};
+    std::vector<std::uint8_t> storedRange;
+    CHECK(compact.ExportStored16BitRange(123,777,storedRangeEncoding,storedRange));
+    CHECK(storedRangeEncoding==encoding);
+    CHECK(std::memcmp(storedRange.data(),packed.data()+123*2,storedRange.size())==0);
     const std::uint8_t* packedViewA=nullptr;
     const std::uint8_t* packedViewB=nullptr;
     std::size_t packedViewBytesA=0,packedViewBytesB=0;
