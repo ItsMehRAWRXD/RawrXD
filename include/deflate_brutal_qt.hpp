@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <vector>
 
 #include "brutal_gzip.h"
@@ -47,9 +48,9 @@ inline Bytes compress(const Bytes& in)
         in.empty() ? nullptr : static_cast<const void*>(in.data()),
         in.size(), &packedSz);
     if (!p) return {};
+    std::unique_ptr<void, decltype(&std::free)> owner(p, &std::free);
     Bytes out(static_cast<const uint8_t*>(p),
               static_cast<const uint8_t*>(p) + packedSz);
-    std::free(p);
     return out;
 #else
     return compressStoredPortable(in.empty() ? nullptr : in.data(), in.size());
@@ -59,7 +60,7 @@ inline Bytes compress(const Bytes& in)
 /**
  * @brief Compress a raw pointer/size pair using stored-block gzip.
  */
-#if !defined(QT_CORE_LIB)
+#if !defined(QT_CORE_LIB) && !defined(Q_QDOC)
 inline Bytes compress(const void* data, std::size_t size)
 {
     if (!data && size != 0) return {};
@@ -67,9 +68,9 @@ inline Bytes compress(const void* data, std::size_t size)
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(data, size, &packedSz);
     if (!p) return {};
+    std::unique_ptr<void, decltype(&std::free)> owner(p, &std::free);
     Bytes out(static_cast<const uint8_t*>(p),
               static_cast<const uint8_t*>(p) + packedSz);
-    std::free(p);
     return out;
 #else
     return compressStoredPortable(static_cast<const uint8_t*>(data), size);
@@ -290,12 +291,10 @@ inline QByteArray compress(const QByteArray& in)
         reinterpret_cast<const void*>(in.constData()),
         static_cast<size_t>(in.size()), &packedSz);
     if (!p) return {};
-    if (packedSz > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
-        std::free(p);
+    std::unique_ptr<void, decltype(&std::free)> owner(p, &std::free);
+    if (packedSz > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
         return {};
-    }
     QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
-    std::free(p);
     return out;
 #else
     const Bytes encoded = compressStoredPortable(
