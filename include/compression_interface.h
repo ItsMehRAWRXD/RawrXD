@@ -167,4 +167,3 @@ struct CompressionStats {
     std::string ToString() const;
 };
 
-#endif // COMPRESSION_INTERFACE_H

@@ -7,6 +7,7 @@
 #include "VulkanDeviceAllocator.hpp"
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
+#include "native_resident_f32_matvec.hpp"
 
 #include <vector>
 #include <string>
@@ -16,6 +17,8 @@
 #include <pmmintrin.h>
 #include <memory>
 #include <unordered_map>
+#include <mutex>
+#include <list>
 #include <queue>
 #include <functional>
 
@@ -35,6 +38,15 @@ struct Deep2Engine {
     bool vulkanReady = false;
 
     bool initialized = false;
+    // Persistent compressed weight ownership; entries survive token execution.
+    std::mutex compressedWeightsMutex;
+    std::unordered_map<std::string,
+        std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>> compressedWeights;
+    std::list<std::string> compressedWeightsLru;
+    std::size_t compressedWeightsBytes = 0;
+    std::size_t compressedWeightsBudgetBytes = 256ull * 1024 * 1024;
+    void SetCompressedWeightsBudget(std::size_t bytes);
+
 
     bool Initialize(const std::string& modelPath, const std::string& manifestPath = "", bool forceWholeLoader = false);
     void Shutdown();
@@ -67,6 +79,28 @@ struct Deep2Engine {
     TensorHandle getTensor(const std::string& name);
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
+
+    // Bounded compressed-resident CPU GEMV (no full weight-matrix expansion).
+    bool gemvResidentF32(const rawrxd::compression::ResidentCompressedTensor& weights,
+                         const float* x, float* y, std::size_t rows, std::size_t cols,
+                         std::size_t stagingBudgetBytes = 64 * 1024);
+
+    // Resolve an F32 GGUF tensor and run bounded compressed-resident CPU GEMV.
+    // Unlike dequantTensor, this path does not allocate a full decoded matrix.
+    bool gemvROMCompressedF32(const std::string& tensorName,
+                              const float* x, float* y,
+                              std::size_t rows, std::size_t cols,
+                              std::size_t blockBytes = 64 * 1024,
+                              std::size_t stagingBudgetBytes = 64 * 1024);
+
+    bool gemvROMCompressedF16(const std::string& tensorName,
+                              const float* x, float* y, std::size_t rows,
+                              std::size_t cols, std::size_t blockBytes = 65536,
+                              std::size_t stagingBudgetBytes = 65536);
+
+    // Direct GGUF Q8_0 block GEMV; never expands the full matrix.
+    bool gemvROMQ8_0(const std::string& tensorName,
+                      const float* x, float* y, std::size_t rows, std::size_t cols);
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,

@@ -1,4 +1,6 @@
 #include "Deep2Engine.hpp"
+#include "native_q8_0_kernel.hpp"
+#include "native_resident_f16_matvec.hpp"
 #include "TensorROM.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
@@ -13,6 +15,7 @@
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); compressedWeightsLru.clear(); compressedWeightsBytes = 0; }
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
     }
@@ -46,7 +49,150 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     return true;
 }
 
+void Deep2Engine::SetCompressedWeightsBudget(std::size_t bytes) {
+    std::lock_guard<std::mutex> lock(compressedWeightsMutex);
+    compressedWeightsBudgetBytes = bytes;
+    while (compressedWeightsBytes > compressedWeightsBudgetBytes &&
+           !compressedWeightsLru.empty()) {
+        const auto key = compressedWeightsLru.back();
+        compressedWeightsLru.pop_back();
+        auto it = compressedWeights.find(key);
+        if (it == compressedWeights.end()) continue;
+        compressedWeightsBytes -= it->second->compressed_bytes();
+        compressedWeights.erase(it);
+    }
+}
+
+bool Deep2Engine::gemvROMCompressedF16(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols, std::size_t blockBytes,
+    std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode || (rows && !y)) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::F16 ||
+        entry->dims.size() != 2 || entry->dims[0] != cols ||
+        entry->dims[1] != rows) return false;
+    try {
+        // F16 tensors are already half-size on disk. Preserve their compressed
+        // payload in memory and decode only bounded fragments per operation.
+        auto resident = rom.loadResidentCompressedTensor(*entry, blockBytes);
+        auto result = rawrxd::compression::resident_f16_matvec(
+            resident, x, rows, cols, stagingBudgetBytes);
+        if (rows) std::copy(result.begin(), result.end(), y);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_F16_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
+bool Deep2Engine::gemvROMQ8_0(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols) {
+    if (!initialized || !romMode || !x || !y || !cols || cols % 32) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::Q8_0 ||
+        entry->dims.size() != 2 || entry->dims[0] != cols ||
+        entry->dims[1] != rows || rows > SIZE_MAX / (cols / 32) ||
+        rows * (cols / 32) > SIZE_MAX / 34) return false;
+    // Bound staging to 64 KiB while amortizing pager calls across Q8 blocks.
+    // GGML block_q8_0: 2-byte little-endian FP16 scale + 32 int8 values.
+    constexpr std::size_t kBlocksPerChunk = 1024;
+    std::vector<std::uint8_t> staging(kBlocksPerChunk * 34);
+    const std::size_t blocksPerRow = cols / 32;
+    for (std::size_t row = 0; row < rows; ++row) {
+        double accum = 0.0;
+        for (std::size_t first = 0; first < blocksPerRow;) {
+            const std::size_t count = std::min(kBlocksPerChunk, blocksPerRow - first);
+            const std::size_t offset = (row * blocksPerRow + first) * 34;
+            if (!rom.readTensorRange(*entry, offset, count * 34, staging.data()))
+                return false;
+            for (std::size_t b = 0; b < count; ++b) {
+                const auto* block = staging.data() + b * 34;
+                const std::size_t activationOffset = (first + b) * 32;
+                try {
+                    accum += rawrxd::compression::q8_0_dot_block(
+                        block, x + activationOffset);
+                } catch (const std::exception&) {
+                    return false;
+                }
+            }
+            first += count;
+        }
+        y[row] = static_cast<float>(accum);
+    }
+    return true;
+}
+
+bool Deep2Engine::gemvROMCompressedF32(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols,
+    std::size_t blockBytes, std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::F32) return false;
+    if (entry->dims.size() != 2 ||
+        entry->dims[0] != cols || entry->dims[1] != rows) return false;
+    try {
+        // Keep the compressed payload resident between token evaluations.
+        // Lock also serializes first construction to avoid duplicate full stores.
+        std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor> resident;
+        {
+            std::lock_guard<std::mutex> lock(compressedWeightsMutex);
+            const auto key = tensorName + ":" + std::to_string(blockBytes);
+            auto it = compressedWeights.find(key);
+            if (it == compressedWeights.end()) {
+                auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
+                    rom.loadResidentCompressedTensor(*entry, blockBytes));
+                const auto bytes = loaded->compressed_bytes();
+                if (bytes <= compressedWeightsBudgetBytes) {
+                    while (compressedWeightsBytes > compressedWeightsBudgetBytes - bytes &&
+                           !compressedWeightsLru.empty()) {
+                        const auto victim = compressedWeightsLru.back();
+                        compressedWeightsLru.pop_back();
+                        auto found = compressedWeights.find(victim);
+                        if (found == compressedWeights.end()) continue;
+                        compressedWeightsBytes -= found->second->compressed_bytes();
+                        compressedWeights.erase(found);
+                    }
+                    compressedWeightsBytes += bytes;
+                    compressedWeightsLru.push_front(key);
+                    it = compressedWeights.emplace(key, std::move(loaded)).first;
+                    resident = it->second;
+                } else {
+                    resident = std::move(loaded);
+                }
+            } else {
+                compressedWeightsLru.remove(key);
+                compressedWeightsLru.push_front(key);
+                resident = it->second;
+            }
+        }
+        return gemvResidentF32(*resident, x, y, rows, cols, stagingBudgetBytes);
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
+bool Deep2Engine::gemvResidentF32(
+    const rawrxd::compression::ResidentCompressedTensor& weights,
+    const float* x, float* y, std::size_t rows, std::size_t cols,
+    std::size_t stagingBudgetBytes) {
+    if (rows && !y) return false;
+    try {
+        const auto result = rawrxd::compression::resident_f32_matvec(
+            weights, x, rows, cols, stagingBudgetBytes);
+        if (rows) std::copy(result.begin(), result.end(), y);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[COMPRESSED_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
 void Deep2Engine::Shutdown() {
+    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); compressedWeightsLru.clear(); compressedWeightsBytes = 0; }
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
@@ -412,12 +558,18 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
+    baselineLogits.clear();
     std::cout << "[Move 10] Starting Phi-3 ROM-path forward pass for " << inputTokens.size() << " tokens\n" << std::flush;
 
     const auto& geometry = rom.geometry();
     const size_t hiddenDim = geometry.hiddenDim;
     const size_t numLayers = geometry.numLayers;
     const size_t numHeads = geometry.numHeads;
+    if (!hiddenDim || !numHeads || hiddenDim % numHeads != 0 ||
+        !numLayers || !geometry.intermediateDim) {
+        fprintf(stderr, "[Move 10] Invalid or incomplete model geometry\n");
+        return false;
+    }
     const size_t headDim = hiddenDim / numHeads;
     size_t vocabSize = geometry.vocabSize;
     const size_t intermediateDim = geometry.intermediateDim;
@@ -441,24 +593,65 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
-    deep2::DequantizedTensor tokenEmbDq;
-    std::cout << "[Move 10] Dequantizing token_embd.weight...\n" << std::flush;
-    if (!dequantTensor(*tokenEmb, tokenEmbDq)) {
-        fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
-        return false;
-    }
-    std::cout << "[Move 10] token_embd.weight dequantized: " << tokenEmbDq.rows << "x" << tokenEmbDq.cols << "\n" << std::flush;
-
-    // Use first token's embedding as initial hidden state
     if (inputTokens.empty()) return false;
-    uint32_t firstToken = inputTokens[0];
-    if (firstToken >= tokenEmbDq.cols) firstToken = 0;
-    std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
-    std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
-
+    // Each token needs its own embedding. Previous code repeatedly reused
+    // inputTokens[0], producing invalid outputs for multi-token prompts.
     // Process each token position
     for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
         std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
+    // Read only the selected F32 embedding row, not the full vocabulary matrix.
+    // Quantized embeddings retain the legacy path until block-aligned decode exists.
+    uint32_t firstToken = inputTokens[tokenPos];
+    if (tokenEmb->type == deep2::TensorType::F32 && tokenEmb->dims.size() == 2 &&
+        tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0) {
+        if (firstToken >= tokenEmb->dims[1]) return false;
+        if (!hiddenDim || hiddenDim > SIZE_MAX / sizeof(float) ||
+            firstToken > SIZE_MAX / (hiddenDim * sizeof(float))) return false;
+        const auto byteOffset = static_cast<uint64_t>(firstToken) * hiddenDim * sizeof(float);
+        if (!rom.readTensorRange(*tokenEmb, byteOffset, hiddenDim * sizeof(float),
+                                 reinterpret_cast<uint8_t*>(hiddenStates.data()))) return false;
+    } else if (tokenEmb->type == deep2::TensorType::Q8_0 &&
+               tokenEmb->dims.size() == 2 && tokenEmb->dims[0] == hiddenDim &&
+               tokenEmb->dims[1] > 0 && hiddenDim % 32 == 0) {
+        if (firstToken >= tokenEmb->dims[1]) return false;
+        // GGML Q8_0 uses 34 bytes per 32 weights. Decode one embedding
+        // row only; no vocabulary-sized FP32 allocation.
+        if (hiddenDim / 32 > SIZE_MAX / 34) return false;
+        const size_t rowBytes = (hiddenDim / 32) * 34;
+        if (!rowBytes || uint64_t(firstToken) > UINT64_MAX / rowBytes ||
+            uint64_t(firstToken) * rowBytes > UINT64_MAX - rowBytes)
+            return false;
+        const uint64_t rowOffset = uint64_t(firstToken) * rowBytes;
+        std::uint8_t block[34];
+        for (size_t j = 0; j < hiddenDim; j += 32) {
+            if (!rom.readTensorRange(*tokenEmb, rowOffset + (j / 32) * 34,
+                                     sizeof(block), block)) return false;
+            const uint16_t h = uint16_t(block[0]) | (uint16_t(block[1]) << 8);
+            const uint32_t exponent = (h >> 10) & 31u, fraction = h & 1023u;
+            uint32_t bits = uint32_t(h & 0x8000u) << 16;
+            if (exponent == 31) bits |= 0x7f800000u | (fraction << 13);
+            else if (exponent) bits |= ((exponent + 112u) << 23) | (fraction << 13);
+            else if (fraction) {
+                uint32_t mantissa = fraction, shift = 0;
+                while ((mantissa & 1024u) == 0) { mantissa <<= 1; ++shift; }
+                bits |= ((113u - shift) << 23) | ((mantissa & 1023u) << 13);
+            }
+            float scale;
+            std::memcpy(&scale, &bits, sizeof(scale));
+            if (!std::isfinite(scale)) return false;
+            for (size_t k = 0; k < 32; ++k)
+                hiddenStates[j + k] = scale * static_cast<int8_t>(block[k + 2]);
+        }
+    } else {
+        deep2::DequantizedTensor tokenEmbDq;
+        if (!dequantTensor(*tokenEmb, tokenEmbDq)) return false;
+        if (firstToken >= tokenEmbDq.cols) return false;
+        if (hiddenDim && static_cast<size_t>(firstToken) + 1 > tokenEmbDq.data.size() / hiddenDim) return false;
+        std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
+                    hiddenDim * sizeof(float));
+    }
+
+
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
         deep2::DequantizedTensor qkvDq;
@@ -478,23 +671,43 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
-            if (!dequantTensor(*qkv, qkvDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
-                return false;
+            // F32 weights use persistent compressed residency; quantized GGUF
+            // formats retain the existing dequantization fallback.
+            const bool qkvCompressed = qkv->type == deep2::TensorType::F32 && qkv->dims.size() == 2;
+            const bool qkvF16 = qkv->type == deep2::TensorType::F16 && qkv->dims.size() == 2;
+            if (qkvCompressed || qkvF16) {
+                qkvCols = static_cast<size_t>(qkv->dims[0]);
+                qkvRows = static_cast<size_t>(qkv->dims[1]);
+            } else if (qkv->type == deep2::TensorType::Q8_0 && qkv->dims.size() == 2) {
+                qkvCols = static_cast<size_t>(qkv->dims[0]);
+                qkvRows = static_cast<size_t>(qkv->dims[1]);
+            } else {
+                if (!dequantTensor(*qkv, qkvDq)) return false;
+                qkvRows = qkvDq.rows;
+                qkvCols = qkvDq.cols;
             }
-            std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq.rows << "x" << qkvDq.cols << "\n" << std::flush;
-
-            qkvRows = qkvDq.rows;
-            qkvCols = qkvDq.cols;
 
             // --- ATTENTION COMPUTATION ---
             std::vector<float> hiddenStatesCopy(hiddenDim);
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
 
             std::vector<float> qkvOut(qkvRows, 0.0f);
-            gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
+            if (qkvCompressed) {
+                if (!gemvROMCompressedF32(qkvName, hiddenStatesCopy.data(),
+                                          qkvOut.data(), qkvRows, qkvCols)) return false;
+            } else if (qkvF16) {
+                if (!gemvROMCompressedF16(qkvName, hiddenStatesCopy.data(),
+                                           qkvOut.data(), qkvRows, qkvCols)) return false;
+            } else if (qkv->type == deep2::TensorType::Q8_0) {
+                if (!gemvROMQ8_0(qkvName, hiddenStatesCopy.data(), qkvOut.data(),
+                                  qkvRows, qkvCols)) return false;
+            } else if (!gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(),
+                                  qkvOut.data(), qkvRows, qkvCols)) return false;
 
+            // The current Phi-3 path assumes equal Q/K/V widths.
+            // Reject incompatible grouped-query layouts instead of reading past V.
+            if (hiddenDim > SIZE_MAX / 3 ||
+                qkvOut.size() != hiddenDim * 3) return false;
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
             std::vector<float> Q(qkvOut.begin(), qkvOut.begin() + qSize);
@@ -521,19 +734,28 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            if (!dequantTensor(*upEntry, upDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN up dequant failed\n", layer);
-                return false;
-            }
-
-            if (!dequantTensor(*downEntry, downDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN down dequant failed\n", layer);
-                return false;
-            }
+            const bool upCompressed = upEntry->type == deep2::TensorType::F32 &&
+                                      upEntry->dims.size() == 2;
+            const bool downCompressed = downEntry->type == deep2::TensorType::F32 &&
+                                        downEntry->dims.size() == 2;
+            if (!upCompressed && upEntry->type != deep2::TensorType::Q8_0 &&
+                upEntry->type != deep2::TensorType::F16 && !dequantTensor(*upEntry, upDq)) return false;
+            if (!downCompressed && downEntry->type != deep2::TensorType::Q8_0 &&
+                downEntry->type != deep2::TensorType::F16 && !dequantTensor(*downEntry, downDq)) return false;
 
             // FFN: hidden = down(gelu(up(hidden)))
             std::vector<float> upOut(intermediateDim, 0.0f);
-            gemvFloat(upDq.data.data(), hiddenStates.data(), upOut.data(), upDq.rows, upDq.cols);
+            if (upCompressed) {
+                if (!gemvROMCompressedF32(upName, hiddenStates.data(), upOut.data(),
+                                          intermediateDim, hiddenDim)) return false;
+            } else if (upEntry->type == deep2::TensorType::F16) {
+                if (!gemvROMCompressedF16(upName, hiddenStates.data(), upOut.data(),
+                                           intermediateDim, hiddenDim)) return false;
+            } else if (upEntry->type == deep2::TensorType::Q8_0) {
+                if (!gemvROMQ8_0(upName, hiddenStates.data(), upOut.data(),
+                                  intermediateDim, hiddenDim)) return false;
+            } else if (!gemvFloat(upDq.data.data(), hiddenStates.data(), upOut.data(),
+                                  upDq.rows, upDq.cols)) return false;
 
             // GELU activation (approximate)
             for (size_t i = 0; i < intermediateDim; ++i) {
@@ -542,10 +764,21 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 upOut[i] = gelu;
             }
 
-            static thread_local float downOutStatic[3072];
-            float* downOut = downOutStatic;
-            std::fill_n(downOut, hiddenDim, 0.0f);
-            gemvFloat(downDq.data.data(), upOut.data(), downOut, downDq.rows, downDq.cols);
+            // Geometry-sized output: the previous 3072-float TLS array
+            // overflowed for models with larger hidden dimensions.
+            std::vector<float> downOutStorage(hiddenDim, 0.0f);
+            float* downOut = downOutStorage.data();
+            if (downCompressed) {
+                if (!gemvROMCompressedF32(downName, upOut.data(), downOut,
+                                          hiddenDim, intermediateDim)) return false;
+            } else if (downEntry->type == deep2::TensorType::F16) {
+                if (!gemvROMCompressedF16(downName, upOut.data(), downOut,
+                                           hiddenDim, intermediateDim)) return false;
+            } else if (downEntry->type == deep2::TensorType::Q8_0) {
+                if (!gemvROMQ8_0(downName, upOut.data(), downOut,
+                                  hiddenDim, intermediateDim)) return false;
+            } else if (!gemvFloat(downDq.data.data(), upOut.data(), downOut,
+                                  downDq.rows, downDq.cols)) return false;
 
             // Residual connection
             for (size_t i = 0; i < hiddenDim; ++i) {
@@ -571,18 +804,26 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             return false;
         }
 
-        if (!dequantTensor(*outputEntry, outputDq)) {
-            fprintf(stderr, "[Move 10] Failed to dequantize output.weight\n");
-            return false;
-        }
-
+        const bool outputCompressed = outputEntry->type == deep2::TensorType::F32 &&
+                                      outputEntry->dims.size() == 2;
+        if (!outputCompressed && outputEntry->type != deep2::TensorType::Q8_0 &&
+            outputEntry->type != deep2::TensorType::F16 && !dequantTensor(*outputEntry, outputDq)) return false;
         outputLogits.resize(vocabSize, 0.0f);
-        gemvFloat(outputDq.data.data(), hiddenStates.data(), outputLogits.data(), outputDq.rows, outputDq.cols);
+        if (outputCompressed) {
+            if (!gemvROMCompressedF32("output.weight", hiddenStates.data(),
+                                      outputLogits.data(), vocabSize, hiddenDim)) return false;
+        } else if (outputEntry->type == deep2::TensorType::F16) {
+            if (!gemvROMCompressedF16("output.weight", hiddenStates.data(),
+                                      outputLogits.data(), vocabSize, hiddenDim)) return false;
+        } else if (outputEntry->type == deep2::TensorType::Q8_0) {
+            if (!gemvROMQ8_0("output.weight", hiddenStates.data(),
+                              outputLogits.data(), vocabSize, hiddenDim)) return false;
+        } else if (!gemvFloat(outputDq.data.data(), hiddenStates.data(),
+                              outputLogits.data(), outputDq.rows, outputDq.cols)) return false;
 
-        // Store baseline logits for first token (for parity check)
-        if (tokenPos == 0) {
-            baselineLogits = outputLogits;
-        }
+        // Do not fabricate an independent parity baseline by copying our
+        // own output. The caller must supply independently generated logits.
+        // This routine only produces candidate outputLogits.
     }
 
     std::cout << "[Move 10] Forward pass complete. Generated logits for " << inputTokens.size() << " tokens\n";
@@ -592,6 +833,17 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
 bool Deep2Engine::validateLogitsParity(const std::vector<float>& romLogits,
                                        const std::vector<float>& baselineLogits,
                                        float tolerance) {
+    if (romLogits.empty() || baselineLogits.empty() ||
+        !std::isfinite(tolerance) || tolerance < 0.0f) {
+        fprintf(stderr, "[Move 10] Parity requires independent nonempty logits and finite tolerance\n");
+        return false;
+    }
+    for (size_t i = 0; i < romLogits.size(); ++i) {
+        if (!std::isfinite(romLogits[i])) return false;
+    }
+    for (size_t i = 0; i < baselineLogits.size(); ++i) {
+        if (!std::isfinite(baselineLogits[i])) return false;
+    }
     if (romLogits.size() != baselineLogits.size()) {
         fprintf(stderr, "[Move 10] Logits size mismatch: %zu vs %zu\n", romLogits.size(), baselineLogits.size());
         return false;

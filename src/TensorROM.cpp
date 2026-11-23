@@ -342,25 +342,30 @@ uint64_t TensorROM::tensorStorageBytes(const TensorEntry& e) {
 }
 
 bool TensorROM::readTensor(const TensorEntry& entry, uint8_t* out) const {
-    if (!m_pager) return false;
-    const ShardManifest& m = m_shards[entry.shardIndex];
-    return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
-                              m.dataOffset + entry.offset, entry.byteSize(), out);
+    return readTensorRange(entry, 0, entry.byteSize(), out);
 }
 
 bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
                                 uint64_t size, uint8_t* out) const {
-    if (!m_pager) return false;
+    if (!m_pager || entry.shardIndex >= m_shards.size() ||
+        entry.shardIndex > UINT32_MAX || relOffset > entry.byteSize() ||
+        size > entry.byteSize() - relOffset || (size && !out)) return false;
     const ShardManifest& m = m_shards[entry.shardIndex];
-    uint64_t avail = entry.byteSize() - relOffset;
-    if (size > avail) size = avail;
+    if (entry.offset > m.dataSize ||
+        entry.byteSize() > m.dataSize - entry.offset ||
+        m.dataOffset > UINT64_MAX - entry.offset ||
+        m.dataOffset + entry.offset > UINT64_MAX - relOffset) return false;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
                               m.dataOffset + entry.offset + relOffset, size, out);
 }
 
 TensorLease TensorROM::leaseTensor(const TensorEntry& entry) const {
-    if (!m_pager) return TensorLease(*m_pager, 0, 0, 0); // empty
+    if (!m_pager || entry.shardIndex >= m_shards.size() ||
+        entry.shardIndex > UINT32_MAX) return {};
     const ShardManifest& m = m_shards[entry.shardIndex];
+    if (entry.offset > m.dataSize ||
+        entry.byteSize() > m.dataSize - entry.offset ||
+        m.dataOffset > UINT64_MAX - entry.offset) return {};
     return TensorLease(*m_pager, static_cast<uint32_t>(entry.shardIndex),
                        m.dataOffset + entry.offset, entry.byteSize());
 }
@@ -381,19 +386,27 @@ std::vector<TensorROM::ShardStatus> TensorROM::shardStatus() const {
 
 bool TensorROM::readShardRange(size_t shardIndex, uint64_t fileOffset,
                                uint8_t* buf, uint64_t size) const {
-    if (shardIndex >= m_shards.size()) return false;
+    if (shardIndex >= m_shards.size() || (size && !buf)) return false;
+    if (!size) return true;
     const ShardManifest& m = m_shards[shardIndex];
-    if (fileOffset >= m.dataOffset + m.dataSize) return false;
-    uint64_t avail = (m.dataOffset + m.dataSize) - fileOffset;
-    if (size > avail) size = avail;
-    auto& f = *m.file;
-    f.clear();
-    f.seekg(static_cast<std::streamoff>(fileOffset), std::ios::beg);
-    if (!f) return false;
-    f.read(reinterpret_cast<char*>(buf), static_cast<std::streamsize>(size));
-    std::streamsize got = f.gcount();
-    if (got < 0) return false;
-    if ((uint64_t)got < size) std::memset(buf + got, 0, size - (uint64_t)got);
+    if (m.dataOffset > UINT64_MAX - m.dataSize) return false;
+    const uint64_t end = m.dataOffset + m.dataSize;
+    // File pages are aligned to the file, not the GGUF data section. The first\n    // payload page may begin in the header, so permit offsets before dataOffset.\n    if (fileOffset >= end) return false;
+    const uint64_t available = end - fileOffset;
+    if (size > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max()) ||
+        fileOffset > static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    const auto requested = static_cast<std::streamsize>(std::min(size, available));
+    std::lock_guard<std::mutex> lock(m_shardReadMutex);
+    auto& file = *m.file;
+    file.clear();
+    file.seekg(static_cast<std::streamoff>(fileOffset), std::ios::beg);
+    if (!file) return false;
+    file.read(reinterpret_cast<char*>(buf), requested);
+    const auto got = file.gcount();
+    if (got != requested) return false;
+    if (size > static_cast<uint64_t>(got))
+        std::memset(buf + got, 0, static_cast<std::size_t>(size - got));
     return true;
 }
 
