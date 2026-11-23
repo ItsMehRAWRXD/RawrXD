@@ -36,6 +36,7 @@ inline bool StorageLayout(uint32_t type, uint64_t& block, uint64_t& bytes) {
     switch (type) {
         case 0: block=1; bytes=4; return true;  // F32
         case 1: block=1; bytes=2; return true;  // F16
+        case 28: block=1; bytes=8; return true; // GGML_TYPE_F64
         case 2: block=32; bytes=18; return true; // Q4_0
         case 3: block=32; bytes=20; return true; // Q4_1
         case 6: block=32; bytes=22; return true; // Q5_0
