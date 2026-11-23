@@ -7725,6 +7725,12 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
             }
             gpuDispatched = tryVulkanGEMV(gpuWeight, input, output, outDim);
         }
+        // A later tile may fail after earlier tiles have written output.
+        // Restore the original zeroed accumulator before the CPU fallback so
+        // accumulate-style CPU kernels cannot double-count partial GPU results.
+        if (!gpuDispatched && wtEffective.hasCompressedBacking() &&
+            allowCompressedGpuTiles && !allowFullCompressedGpuStaging)
+            std::memset(output, 0, outDim * sizeof(float));
         if (gpuDispatched)
         {
             ++plannedGpuGemvOps_;
