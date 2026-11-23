@@ -56,7 +56,13 @@ public:
         size_t buildBudget;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (entries_.find(key) != entries_.end()) return true;
+            if (auto existing = entries_.find(key); existing != entries_.end()) {
+                // A reused key with different tensor geometry must not alias
+                // stale compressed weights from a previous model binding.
+                if (existing->second.logicalBytes != byteCount) return false;
+                existing->second.lastUse = ++tick_;
+                return true;
+            }
             if (rawFallback_.find(key) != rawFallback_.end()) return false;
             buildBudget = budgetBytes_;
         }
