@@ -582,10 +582,15 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
+    if (inputTokens.empty()) return false;
+    // Each token needs its own embedding. Previous code repeatedly reused
+    // inputTokens[0], producing invalid outputs for multi-token prompts.
+    // Process each token position
+    for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
+        std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
     // Read only the selected F32 embedding row, not the full vocabulary matrix.
     // Quantized embeddings retain the legacy path until block-aligned decode exists.
-    if (inputTokens.empty()) return false;
-    uint32_t firstToken = inputTokens[0];
+    uint32_t firstToken = inputTokens[tokenPos];
     if (tokenEmb->type == deep2::TensorType::F32 && tokenEmb->dims.size() == 2 &&
         tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0) {
         if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
@@ -634,11 +639,8 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
                     hiddenDim * sizeof(float));
     }
-    std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
 
-    // Process each token position
-    for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
-        std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
+
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
         deep2::DequantizedTensor qkvDq;
