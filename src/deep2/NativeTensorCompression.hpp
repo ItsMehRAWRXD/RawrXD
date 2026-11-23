@@ -3,6 +3,7 @@
 // Lossless RLE/LZ4 byte codecs are private storage representations, not GGUF quantizations.
 // F32->F16/BF16 are lossy; callers opt in and supply a maximum absolute error.
 #include <cstdint>
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <vector>
