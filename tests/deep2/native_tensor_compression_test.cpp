@@ -258,8 +258,17 @@ int main() {
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
 
     // Direct packed row-window staging: no intermediate whole-tensor buffer.
-    // Use exactly representable half values to force uniform F16 chunks.
-    std::vector<float> packedSource(1024, 1.5f);
+    // Vary every value so RLE cannot beat packed F16. Generate a
+    // deterministic high-entropy sequence of exactly representable halves.
+    std::vector<float> packedSource(1024);
+    uint32_t packedSeed = 0x9e3779b9u;
+    for (size_t i = 0; i < packedSource.size(); ++i) {
+        packedSeed ^= packedSeed << 13;
+        packedSeed ^= packedSeed >> 17;
+        packedSeed ^= packedSeed << 5;
+        const int32_t signedValue = static_cast<int32_t>(packedSeed & 0x7ffu) - 1024;
+        packedSource[i] = static_cast<float>(signedValue) / 16.0f;
+    }
     auto packedStorage = ChunkedF32Storage::BuildFromReader(
         packedSource.size(), 0.0f,
         [&](size_t offset, size_t count, float* out) {
@@ -275,7 +284,7 @@ int main() {
     for (size_t i = 0; i < 129; ++i) {
         const uint16_t value = static_cast<uint16_t>(packedWindow[2*i]) |
                                (static_cast<uint16_t>(packedWindow[2*i+1]) << 8);
-        assert(FromHalf(value) == 1.5f);
+        assert(FromHalf(value) == packedSource[127 + i]);
     }
     assert(packedWindow[129 * 2] == 0xa5);
     assert(packedWindow[129 * 2 + 1] == 0xa5);
