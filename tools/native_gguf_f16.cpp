@@ -213,7 +213,7 @@ bool encodeQ51Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|bf16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     bool ownsTemporary=false;
@@ -227,12 +227,13 @@ int main(int argc,char** argv) {
             throw std::runtime_error("input and output refer to the same file");
         if(fs::exists(partialPath) && fs::equivalent(inputPath,partialPath))
             throw std::runtime_error("temporary output refers to the input file");
+        const bool bf16=argc==5 && std::string(argv[4])=="bf16";
         const bool q8=argc==5 && std::string(argv[4])=="q8_0";
         const bool q4=argc==5 && std::string(argv[4])=="q4_0";
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
         const bool quantized=q8||q4||q5||q41||q51;
@@ -312,6 +313,7 @@ int main(int argc,char** argv) {
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
         std::vector<bool> streamHalf(ts.size(),false);
+        std::vector<bool> streamBf16(ts.size(),false);
         std::vector<bool> streamQ8(ts.size(),false);
         std::vector<bool> streamQ4(ts.size(),false);
         std::vector<bool> streamQ5(ts.size(),false);
@@ -387,6 +389,25 @@ int main(int argc,char** argv) {
                     if(!encodeQ5Block(block,t.type,tolerance,encoded)){valid=false;break;}
                 }
                 if(valid){streamQ5[i]=true;outputTypes[i]=6;++changed;}
+                continue;
+            }
+            if(bf16 && t.type==0) {
+                seek(in,add(dataStart,t.offset));
+                bool valid=true;
+                uint8_t bytes[4];
+                for(U off=0;off<t.bytes;off+=4) {
+                    if(!in.read(reinterpret_cast<char*>(bytes),4))
+                        throw std::runtime_error("truncated BF16 preflight");
+                    uint32_t bits=uint32_t(bytes[0])|(uint32_t(bytes[1])<<8)|
+                                  (uint32_t(bytes[2])<<16)|(uint32_t(bytes[3])<<24);
+                    float original=Float(bits);
+                    // Round to nearest even, retaining the BF16 sign and exponent.
+                    uint32_t rounded=bits+0x7fffu+((bits>>16)&1u);
+                    float decoded=Float(rounded&0xffff0000u);
+                    if(!std::isfinite(original)||!std::isfinite(decoded)||
+                       !(std::fabs(decoded-original)<=tolerance)){valid=false;break;}
+                }
+                if(valid){streamBf16[i]=true;outputTypes[i]=30;++changed;}
                 continue;
             }
             if(t.type==0 && !quantized) {
@@ -567,7 +588,7 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size())))))));
+            cursor=add(cursor,streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size()))))))));
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
@@ -641,6 +662,19 @@ int main(int argc,char** argv) {
                         throw std::runtime_error("Q8 preflight mismatch");
                     out.write(reinterpret_cast<const char*>(encoded),34);
                     if(!out)throw std::runtime_error("Q8 streaming write failure");
+                }
+            } else if(streamBf16[i]) {
+                seek(in,add(dataStart,t.offset));
+                uint8_t bytes[4],packed[2];
+                for(U off=0;off<t.bytes;off+=4) {
+                    if(!in.read(reinterpret_cast<char*>(bytes),4))
+                        throw std::runtime_error("truncated BF16 streaming payload");
+                    uint32_t bits=uint32_t(bytes[0])|(uint32_t(bytes[1])<<8)|
+                                  (uint32_t(bytes[2])<<16)|(uint32_t(bytes[3])<<24);
+                    uint16_t h=uint16_t((bits+0x7fffu+((bits>>16)&1u))>>16);
+                    packed[0]=uint8_t(h);packed[1]=uint8_t(h>>8);
+                    out.write(reinterpret_cast<const char*>(packed),2);
+                    if(!out)throw std::runtime_error("BF16 streaming write failure");
                 }
             } else if(streamHalf[i]) {
                 seek(in,add(dataStart,t.offset));
