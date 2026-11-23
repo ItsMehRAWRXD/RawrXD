@@ -447,6 +447,11 @@ bool Deep2Engine::forwardLayerGpuResident(
                 if (rowBytes != VulkanCompute::QuantPackedRowBytes(wt.type, cols))
                     return false;
                 constexpr uint32_t kCompressedGpuTileRows = 128;
+                // A packed row must fit the Vulkan storage-buffer range.
+                // Reject unsupported geometry before allocating host scratch
+                // or issuing any partial GPU writes.
+                if (rowBytes == 0 || rowBytes > UINT32_MAX)
+                    return false;
                 // Reuse one bounded host decode buffer for every tile. This
                 // avoids per-dispatch allocations and keeps peak temporary
                 // host residency independent of the full matrix row count.
