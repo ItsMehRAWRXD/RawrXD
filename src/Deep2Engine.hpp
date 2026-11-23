@@ -111,6 +111,12 @@ struct Deep2Engine {
                                std::size_t rows, std::size_t cols,
                                std::size_t blockBytes = 64 * 1024,
                                std::size_t stagingBudgetBytes = 64 * 1024);
+    // Dispatch supported typed weights to compressed-resident CPU kernels.
+    bool gemvROMCompressed(const std::string& tensorName,
+                           const float* x, float* y,
+                           std::size_t rows, std::size_t cols,
+                           std::size_t blockBytes = 64 * 1024,
+                           std::size_t stagingBudgetBytes = 64 * 1024);
 
     // Direct GGUF Q8_0 block GEMV; never expands the full matrix.
     bool gemvROMQ8_0(const std::string& tensorName,
