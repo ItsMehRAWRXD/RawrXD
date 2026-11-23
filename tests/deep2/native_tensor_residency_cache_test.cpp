@@ -177,6 +177,47 @@ int main() {
     }
     assert(budgetRejected);
 
+    // Mixed codec tensors cannot be exported as one packed matrix. A
+    // bounded row tile can still be decoded and packed independently, which
+    // is the CPU-side preparation contract used by Vulkan row-tile dispatch.
+    std::vector<float> mixedTileSource(2048, 0.0f);
+    uint32_t mixedTileState = 0x9e3779b9u;
+    for (size_t i = 0; i < 512; ++i) {
+        mixedTileState ^= mixedTileState << 13;
+        mixedTileState ^= mixedTileState >> 17;
+        mixedTileState ^= mixedTileState << 5;
+        mixedTileSource[i] =
+            static_cast<float>(mixedTileState % 100000u) / 100003.0f;
+    }
+    auto mixedTileStorage =
+        RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
+            mixedTileSource.size(), 0.0f,
+            [&](size_t offset, size_t count, float* out) {
+                std::copy(mixedTileSource.begin() + offset,
+                          mixedTileSource.begin() + offset + count, out);
+                return true;
+            }, 512);
+    RawrXD::TensorCompression::Encoding mixedEncoding =
+        RawrXD::TensorCompression::Encoding::Raw;
+    std::vector<uint8_t> mixedPacked;
+    assert(!mixedTileStorage.ExportUniform16Bit(mixedEncoding, mixedPacked));
+    std::vector<float> mixedDecodedRows(512);
+    std::vector<uint8_t> mixedDecodeScratch;
+    mixedTileStorage.ReadRange(0, mixedDecodedRows.size(),
+                               mixedDecodedRows.data(), mixedDecodeScratch);
+    assert(RawrXD::TensorCompression::EncodeUniform16BitF32(
+        mixedDecodedRows.data(), mixedDecodedRows.size(), 0.01f,
+        mixedEncoding, mixedPacked));
+    assert(mixedPacked.size() == mixedDecodedRows.size() * sizeof(uint16_t));
+    mixedTileStorage.ReadRange(512, 512, mixedDecodedRows.data(),
+                               mixedDecodeScratch);
+    assert(RawrXD::TensorCompression::EncodeUniform16BitF32(
+        mixedDecodedRows.data(), mixedDecodedRows.size(), 0.0f,
+        mixedEncoding, mixedPacked));
+    assert(mixedEncoding == RawrXD::TensorCompression::Encoding::F16);
+    assert(std::all_of(mixedDecodedRows.begin(), mixedDecodedRows.end(),
+                       [](float value) { return value == 0.0f; }));
+
     // A failed streamed registration must not leave a partial cache entry.
     auto badReader=[](size_t,size_t,float*) { return false; };
     assert(!cache.RegisterF32FromReader("broken",512,0.0f,badReader,128));
