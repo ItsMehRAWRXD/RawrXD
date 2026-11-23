@@ -114,13 +114,15 @@ int main() {
     tensors.push_back(makeTensor("blk.0.ffn_down.weight", {H, H},
                                  std::vector<float>(H * H, 0.0f)));
 
-    // F16 output projection with a deliberately dominant final row.
-    // Its 512-byte mostly-zero payload must compress losslessly in residency.
-    std::vector<float> output(H * H, 0.0f);
+    // A 4096x16 F16 output projection spans two 64 KiB codec chunks.
+    // Each GEMV tile requests only 16 rows, so inference must range-decode
+    // compressed chunks rather than materializing the complete 128 KiB matrix.
+    constexpr size_t outputRows = 4096;
+    std::vector<float> output(H * outputRows, 0.0f);
     for (size_t i = 0; i < H - 1; ++i) output[i * H + i] = 1.0f;
-    output[(H - 1) * H + 0] = 2.0f;
-    output[(H - 1) * H + 1] = 2.0f;
-    Tensor packedOutput = makeTensor("output.weight", {H, H}, output);
+    output[(outputRows - 1) * H + 0] = 2.0f;
+    output[(outputRows - 1) * H + 1] = 2.0f;
+    Tensor packedOutput = makeTensor("output.weight", {H, outputRows}, output);
     packedOutput.ggmlType = 1; // Exercise the native packed-F16 inference dispatch.
     tensors.push_back(std::move(packedOutput));
 
@@ -148,18 +150,19 @@ int main() {
             if (!engine.executePhi3ROMForwardPass({1}, logits, baseline)) {
                 std::cerr << "Deep2Engine synthetic Phi-3 forward pass failed\n";
                 rc = 4;
-            } else if (logits.size() != H || baseline.size() != H) {
+            } else if (logits.size() != outputRows || baseline.size() != outputRows) {
                 std::cerr << "unexpected synthetic model logit shape\n";
                 rc = 5;
             } else {
                 const auto best = static_cast<size_t>(
                     std::max_element(logits.begin(), logits.end()) - logits.begin());
                 const auto stats = engine.GetTensorResidencySnapshot();
-                if (best != H - 1 || logits != baseline ||
+                if (best != outputRows - 1 || logits != baseline ||
                     stats.f32TensorCount == 0 ||
                     stats.f32CompressedBytes >= stats.f32LogicalBytes ||
                     stats.encodedTensorCount == 0 ||
                     stats.encodedCompressedBytes >= stats.encodedLogicalBytes ||
+                    stats.encodedCacheHits == 0 || stats.bytesDecoded == 0 ||
                     stats.f32ActiveReaders != 0 || stats.encodedActiveReaders != 0) {
                     std::cerr << "synthetic Deep2 inference/residency acceptance failed"
                               << " argmax=" << best
@@ -172,7 +175,7 @@ int main() {
                     std::cout << "DEEP2_COMPRESSED_MODEL_E2E_PASS"
                               << " argmax=" << best
                               << " logits[0..1]=" << logits[0] << "," << logits[1]
-                              << " final_logit=" << logits[H - 1]
+                              << " final_logit=" << logits[outputRows - 1]
                               << " f32_compressed=" << stats.f32CompressedBytes
                               << " f32_logical=" << stats.f32LogicalBytes
                               << " encoded_compressed=" << stats.encodedCompressedBytes
