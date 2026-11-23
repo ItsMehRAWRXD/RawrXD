@@ -119,11 +119,23 @@ elseif(APPLE)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
+# Dependency-free bounded tensor-range regression target.
+add_executable(test_quantized_tensor_range
+    tests/deep2/quantized_tensor_range_test.cpp
+    src/quant_kernels.cpp
+)
+target_include_directories(test_quantized_tensor_range PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_quantized_tensor_range PRIVATE cxx_std_17)
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
 # Enable testing
 enable_testing()
+add_test(NAME QuantizedTensorRange
+    COMMAND test_quantized_tensor_range
+)
+
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
