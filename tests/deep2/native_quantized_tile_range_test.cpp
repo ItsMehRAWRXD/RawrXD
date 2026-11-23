@@ -46,8 +46,8 @@ static void testFixedBlockRange(uint32_t type) {
         uint8_t* p=encoded.data()+size_t(b)*blockBytes;
         if(type==2) { put16(p,0x3c00); for(int i=0;i<16;++i)p[2+i]=0x98; }
         else if(type==3) { put16(p,0x3c00);put16(p+2,0x3800);for(int i=0;i<16;++i)p[4+i]=0x98; }
-        else if(type==6) { put16(p,0x3c00);for(int i=0;i<16;++i)p[6+i]=0x98; }
-        else if(type==7) { put16(p,0x3c00);put16(p+2,0x3800);for(int i=0;i<16;++i)p[8+i]=0x98; }
+        else if(type==6) { put16(p,0x3c00);const uint8_t h[4]={0xA5,0x3C,0xF0,0x0F};for(int i=0;i<4;++i)p[2+i]=h[i];for(int i=0;i<16;++i)p[6+i]=0x98; }
+        else if(type==7) { put16(p,0x3c00);put16(p+2,0x3800);const uint8_t h[4]={0xA5,0x3C,0xF0,0x0F};for(int i=0;i<4;++i)p[4+i]=h[i];for(int i=0;i<16;++i)p[8+i]=0x98; }
         else if(type==8) { put16(p,0x3c00);for(int i=0;i<32;++i)p[2+i]=uint8_t(int8_t(i-16)); }
         else if(type==9) { put16(p,0x3c00);put16(p+2,0);for(int i=0;i<32;++i)p[4+i]=uint8_t(int8_t(i-16)); }
     }
@@ -58,8 +58,12 @@ static void testFixedBlockRange(uint32_t type) {
         float expected=0.0f;
         if(type==2) expected=(lane<16?0.0f:1.0f);
         if(type==3) expected=(lane<16?8.5f:9.5f);
-        if(type==6) expected=(lane<16?-8.0f:-7.0f);
-        if(type==7) expected=(lane<16?8.5f:9.5f);
+        if(type==6||type==7) {
+            const uint8_t h[4]={0xA5,0x3C,0xF0,0x0F};
+            const int high=(h[lane>>3]>>(lane&7))&1;
+            const int q=(lane<16?8:9)+(high<<4);
+            expected=type==6?float(q-16):float(q)+0.5f;
+        }
         if(type==8||type==9) expected=float(lane-16);
         assert(std::fabs(tile[i]-expected)<1e-6f);
     }
