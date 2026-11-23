@@ -1309,9 +1309,14 @@ void VulkanCompute::destroyBuffer(DeviceBuf& b) {
 }
 
 void VulkanCompute::releaseTransientWeightBuffers() noexcept {
-    for (auto& buffer : transientWeightBuffers_)
+    for (auto& buffer : transientWeightBuffers_) {
+        const size_t bytes = static_cast<size_t>(buffer.size);
+        transientWeightBytes_ = bytes <= transientWeightBytes_
+            ? transientWeightBytes_ - bytes : 0;
         destroyBuffer(buffer);
+    }
     transientWeightBuffers_.clear();
+    transientWeightBytes_ = 0;
 }
 
 bool VulkanCompute::ensureMappedStaging(
@@ -4178,6 +4183,10 @@ bool VulkanCompute::DispatchGemvDevice(
         if (bytes > std::numeric_limits<size_t>::max() - 3u) return false;
         DeviceBuf temporary{};
         const size_t padded = (bytes + 3u) & ~size_t(3u);
+        if (weightBudgetBytes_ &&
+            (padded > weightBudgetBytes_ ||
+             weightCacheBytes_ + transientWeightBytes_ > weightBudgetBytes_ - padded))
+            return false;
         if (!createBuffer(padded,
                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT |
@@ -4196,6 +4205,7 @@ bool VulkanCompute::DispatchGemvDevice(
             return false;
         }
         temporary = {};
+        transientWeightBytes_ += padded;
         w = &transientWeightBuffers_.back();
     } else if (!ensureWeightF32(weights,key,count*sizeof(float),w)) {
         return false;
@@ -4204,6 +4214,9 @@ bool VulkanCompute::DispatchGemvDevice(
     bool ok=dispatchOps(*w,input,output,output,p,(rows+63u)/64u);
     if(ok) ++gemvSuccess_;
     if (oneShot && !fused_ && ok) {
+        const size_t bytes = static_cast<size_t>(transientWeightBuffers_.back().size);
+        transientWeightBytes_ = bytes <= transientWeightBytes_
+            ? transientWeightBytes_ - bytes : 0;
         destroyBuffer(transientWeightBuffers_.back());
         transientWeightBuffers_.pop_back();
     }
@@ -4273,6 +4286,10 @@ bool VulkanCompute::DispatchGemvQuant(
             return fail("WEIGHT_SIZE_OVERFLOW");
         DeviceBuf temporary{};
         const size_t padded = (weightBytes + 3u) & ~size_t(3u);
+        if (weightBudgetBytes_ &&
+            (padded > weightBudgetBytes_ ||
+             weightCacheBytes_ + transientWeightBytes_ > weightBudgetBytes_ - padded))
+            return fail("WEIGHT_BUDGET");
         if (!createBuffer(padded,
                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT |
@@ -4291,6 +4308,7 @@ bool VulkanCompute::DispatchGemvQuant(
             return fail("WEIGHT_ONESHOT_TRACK");
         }
         temporary = {};
+        transientWeightBytes_ += padded;
         w = &transientWeightBuffers_.back();
     } else if (!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) {
         return fail("WEIGHT_RESIDENCY");
@@ -4321,6 +4339,9 @@ bool VulkanCompute::DispatchGemvQuant(
     }
     if(ok) ++gemvSuccess_;
     if (oneShot && !fused_ && ok) {
+        const size_t bytes = static_cast<size_t>(transientWeightBuffers_.back().size);
+        transientWeightBytes_ = bytes <= transientWeightBytes_
+            ? transientWeightBytes_ - bytes : 0;
         destroyBuffer(transientWeightBuffers_.back());
         transientWeightBuffers_.pop_back();
     }
