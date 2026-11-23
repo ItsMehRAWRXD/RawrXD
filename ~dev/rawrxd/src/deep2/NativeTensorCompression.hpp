@@ -85,6 +85,12 @@ public:
     }
 
     std::size_t elements() const noexcept { return elements_; }
+    // Compatibility with Deep2 weight consumers.
+    std::size_t size() const noexcept { return elements_; }
+    void ReadRange(std::size_t first, std::size_t count, float* destination) const {
+        if (!DecodeRange(first, count, destination))
+            throw std::out_of_range("ChunkedF32Storage::ReadRange outside tensor");
+    }
     std::size_t storedBytes() const noexcept { return storedBytes_; }
     std::size_t originalBytes() const noexcept { return elements_ * sizeof(float); }
     std::size_t chunkCount() const noexcept { return chunks_.size(); }
