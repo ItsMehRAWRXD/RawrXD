@@ -163,6 +163,36 @@ struct WeightTensor {
         return backing->DecodeRange(first, count, destination);
     }
 
+    // Row-oriented access for CPU GEMV/GEMM kernels. Decode only the rows
+    // consumed by this invocation, never the entire matrix. The caller owns
+    // a rowCount*cols output buffer; no hidden full-tensor allocation occurs.
+    bool ReadCompressedF32Rows(size_t rowBegin, size_t rowCount,
+                               float* destination) const noexcept {
+        if (type != 0 || !rows || !cols || rowBegin > rows ||
+            rowCount > rows - rowBegin ||
+            cols > std::numeric_limits<size_t>::max() / rows ||
+            (!destination && rowCount))
+            return false;
+        return ReadCompressedF32(rowBegin * cols, rowCount * cols, destination);
+    }
+
+    // Quantized GGUF weights must be decoded on whole encoded block/row
+    // boundaries by the consuming kernel. This method supplies the exact
+    // encoded row bytes, leaving quantization semantics to that kernel.
+    bool ReadCompressedByteRows(size_t rowBegin, size_t rowCount,
+                                size_t encodedRowBytes, uint8_t* destination,
+                                std::vector<uint8_t>& scratch) const noexcept {
+        if (type == 0 || !encodedRowBytes || !rows || rowBegin > rows ||
+            rowCount > rows - rowBegin ||
+            encodedRowBytes > std::numeric_limits<size_t>::max() / rows ||
+            rows * encodedRowBytes != sizeBytes ||
+            (!destination && rowCount))
+            return false;
+        return ReadCompressedBytes(rowBegin * encodedRowBytes,
+                                   rowCount * encodedRowBytes,
+                                   destination, scratch);
+    }
+
     struct GpuCompressedF32Payload {
         // Retain the canonical chunked backing instead of copying it into a
         // second contiguous 16-bit host allocation.
