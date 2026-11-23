@@ -1519,9 +1519,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         std::fprintf(stderr,"LINEARW name=%s rows=%zu cols=%zu type=%d\n",
                      wtn, wt.rows, wt.cols, wt.type); std::fflush(stderr);
     }
-    const bool hasCompressedBacking = static_cast<bool>(wt.compressedF32) ||
-                                      static_cast<bool>(wt.compressedBytes);
-    if ((!wt.data && !hasCompressedBacking) || !input || !output || outDim == 0) {
+    if (!wt.hasBacking() || !input || !output || outDim == 0) {
         throw std::runtime_error("LinearW: null tensor/input/output");
     }
 
@@ -1686,8 +1684,9 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             const size_t tileRows = std::min(rows - rowBase, rowsPerTile);
             const size_t tileBytes = tileRows * rowBytes;
             encodedTile.resize(tileBytes);
-            wt.compressedBytes->ReadRange(
-                rowBase * rowBytes, tileBytes, encodedTile.data(), decodeScratch);
+            if (!wt.ReadCompressedByteRows(
+                    rowBase, tileRows, rowBytes, encodedTile.data(), decodeScratch))
+                throw std::runtime_error("LinearW: compressed quant tile decode failed");
             for (size_t localRow = 0; localRow < tileRows; ++localRow) {
                 const uint8_t* encodedRow = encodedTile.data() + localRow * rowBytes;
                 dequant(encodedRow, decodedRow.data(), cols);
@@ -1743,8 +1742,7 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
     const float invRms =
         1.0f / std::sqrt(static_cast<float>(ss / static_cast<double>(dim)) + eps);
 
-    if (!normWeight.data && !normWeight.compressedF32 &&
-        !normWeight.compressedBytes) {
+    if (!normWeight.hasBacking()) {
         for (size_t i = 0; i < dim; ++i) output[i] = input[i] * invRms;
     } else {
         const auto* desc = LookupQuantType(static_cast<uint32_t>(normWeight.type));
@@ -1759,12 +1757,11 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
         }
 
         std::vector<float> w(dim);
-        if (normWeight.compressedF32) {
+        if (normWeight.compressedF32 || normWeight.compressedF32Lease) {
             if (normWeight.type != static_cast<int>(GGMLType::GGML_TYPE_F32) ||
-                normWeight.compressedF32->size() < dim) {
+                !normWeight.ReadCompressedF32(0, dim, w.data())) {
                 throw std::runtime_error("RMSNormW: compressed norm geometry mismatch");
             }
-            normWeight.compressedF32->ReadRange(0,dim,w.data());
         } else {
             auto dequant = QuantKernelRegistry::Instance().GetDequant(normWeight.type);
             if (!dequant) {
@@ -1775,8 +1772,9 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
                     throw std::runtime_error("RMSNormW: compressed byte backing mismatch");
                 std::vector<uint8_t> encoded(normWeight.sizeBytes);
                 std::vector<uint8_t> decodeScratch;
-                normWeight.compressedBytes->ReadRange(
-                    0, encoded.size(), encoded.data(), decodeScratch);
+                if (!normWeight.ReadCompressedBytes(
+                        0, encoded.size(), encoded.data(), decodeScratch))
+                    throw std::runtime_error("RMSNormW: compressed byte decode failed");
                 dequant(encoded.data(), w.data(), dim);
             } else {
                 dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
