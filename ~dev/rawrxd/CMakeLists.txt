@@ -3277,11 +3277,10 @@ add_library(RawrXD_Compression STATIC ${RAWRXD_COMPRESSION_SOURCES})
 target_include_directories(RawrXD_Compression PUBLIC ${RAWRXD_COMPRESSION_DIR})
 
 # Link Windows libraries only (no ZLIB dependency)
-target_link_libraries(RawrXD_Compression PUBLIC
-    kernel32
-    user32
-    ${CMAKE_DL_LIBS}
-)
+if(WIN32)
+    target_link_libraries(RawrXD_Compression PUBLIC kernel32 user32 advapi32)
+endif()
+target_link_libraries(RawrXD_Compression PUBLIC ${CMAKE_DL_LIBS})
 
 # Also create the MASM compression if available
 set(RAWRXD_COMPRESSION_ASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
