@@ -16,8 +16,10 @@ int main() {
         WriteU64(out,256);WriteU32(out,9);WriteU64(out,0);
         PadTo(out,32);
         for(int block=0;block<8;++block) {
-            WriteU32(out,0x3f800000u);
-            WriteU32(out,0xc1800000u); // Q8_1 d*sum(qs) = -16, not a second scale
+            // GGML Q8_1 is 36 bytes: FP16 d, FP16 d*sum(qs), 32 int8.
+            // Sum of [-16, ..., 15] is -16.
+            WriteU16(out,0x3c00u); // FP16 1.0
+            WriteU16(out,0xcc00u); // FP16 -16.0
             for(int i=0;i<32;++i)out.put(static_cast<char>(i-16));
         }
     }
