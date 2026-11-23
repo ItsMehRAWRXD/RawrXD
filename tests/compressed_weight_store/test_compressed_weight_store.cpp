@@ -31,6 +31,8 @@ int main(){
  assert(half[0]==0x3C00u&&half[1]==0xC000u&&half[2]==0x7BFFu&&half[3]==0x0400u&&half[4]==0u&&half[5]==0x7C00u&&(half[6]&0x7E00u)==0x7E00u);
  assert(rawrxd::compression::floatToHalfRNE(1.00048828125f)==0x3C00u); // halfway rounds to even
  assert(rawrxd::compression::floatToHalfRNE(1.00146484375f)==0x3C02u); // odd halfway rounds up
+ assert(rawrxd::compression::floatToHalfRNE(0x1.0p-25f)==0x0000u); // exact subnormal midpoint rounds to even zero
+ assert(rawrxd::compression::floatToHalfRNE(0x1.8p-25f)==0x0001u); // above midpoint rounds to minimum subnormal
  assert(store.addTensor("empty",nullptr,0,&error));assert(store.tensorBlocks("empty")==0);assert(store.readRange("empty",0,nullptr,0,&error));
  const auto s=store.stats();assert(s.tensors==4&&s.raw_bytes==input.size()+random_data.size()+14);assert(s.compressed_bytes<s.raw_bytes);
  std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\n';
