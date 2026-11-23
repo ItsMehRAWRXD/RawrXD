@@ -1988,8 +1988,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     std::memset(kProj, 0, kvDim * sizeof(float));
     std::memset(vProj, 0, kvDim * sizeof(float));
 
-    if (lw.wq.data) {
-        if (!lw.wk.data || !lw.wv.data) {
+    if (lw.wq.hasBacking()) {
+        if (!lw.wk.hasBacking() || !lw.wv.hasBacking()) {
             throw std::runtime_error("attention: incomplete Q/K/V tensor set");
         }
         const float* bq = lw.bq.data
@@ -2017,7 +2017,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         parityEmitLayer(static_cast<int>(layer), "Q", qProj, H);
         parityEmitLayer(static_cast<int>(layer), "K", kProj, kvDim);
         parityEmitLayer(static_cast<int>(layer), "V", vProj, kvDim);
-    } else if (lw.wqkv.data) {
+    } else if (lw.wqkv.hasBacking()) {
         const size_t fusedDim = H + 2 * kvDim;
         std::vector<float> fused(fusedDim);
         LinearW(lw.wqkv, input, nullptr, fused.data(), fusedDim);
@@ -2028,7 +2028,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         throw std::runtime_error("attention: no Q or fused-QKV weight");
     }
 
-    if (lw.attnQNorm.data) {
+    if (lw.attnQNorm.hasBacking()) {
         for (size_t h = 0; h < numHeads; ++h) {
             RMSNormW(lw.attnQNorm,
                      qProj + h * headDim,
@@ -2037,7 +2037,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
                      modelWeights.normEps);
         }
     }
-    if (lw.attnKNorm.data) {
+    if (lw.attnKNorm.hasBacking()) {
         for (size_t h = 0; h < numKVHeads; ++h) {
             RMSNormW(lw.attnKNorm,
                      kProj + h * headDim,
@@ -2131,7 +2131,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     }
 
     const WeightTensor* outWeight =
-        lw.wo.data ? &lw.wo : (lw.attnO.data ? &lw.attnO : nullptr);
+        lw.wo.hasBacking() ? &lw.wo :
+        (lw.attnO.hasBacking() ? &lw.attnO : nullptr);
     if (outWeight) {
         std::vector<float> projected(H);
         LinearW(*outWeight, output, nullptr, projected.data(), H);
@@ -2151,7 +2152,8 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     size_t I = modelWeights.intermediateDim ? modelWeights.intermediateDim : H * 4;
 
     const LayerWeights& lw = modelWeights.layers[layer];
-    if (lw.wGate.data && lw.wUp.data && lw.wDown.data) {
+    if (lw.wGate.hasBacking() && lw.wUp.hasBacking() &&
+        lw.wDown.hasBacking()) {
         // Real SwiGLU: gate = Wg @ x, up = Wu @ x
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guY[2]={gateBuf,upBuf};
