@@ -18,6 +18,7 @@
 #include <memory>
 #include <unordered_map>
 #include <mutex>
+#include <list>
 #include <queue>
 #include <functional>
 
@@ -41,6 +42,10 @@ struct Deep2Engine {
     std::mutex compressedWeightsMutex;
     std::unordered_map<std::string,
         std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>> compressedWeights;
+    std::list<std::string> compressedWeightsLru;
+    std::size_t compressedWeightsBytes = 0;
+    std::size_t compressedWeightsBudgetBytes = 256ull * 1024 * 1024;
+    void SetCompressedWeightsBudget(std::size_t bytes);
 
 
     bool Initialize(const std::string& modelPath, const std::string& manifestPath = "", bool forceWholeLoader = false);
