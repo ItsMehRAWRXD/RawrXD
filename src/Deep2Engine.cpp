@@ -674,26 +674,40 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
         std::cout << "[VERIFY] blk.0.attn_qkv.weight not present in ROM\n";
         return;
     }
-    deep2::DequantizedTensor dq;
-    if (!engine.dequantTensor(*qkv, dq)) {
-        std::cout << "[VERIFY] dequant of blk.0.attn_qkv.weight failed\n";
+    if (qkv->dims.size() != 2 || qkv->dims[0] == 0 || qkv->dims[1] == 0) {
+        std::cout << "[VERIFY] invalid QKV tensor geometry\n";
         return;
     }
-    std::cout << "[VERIFY] dequantized blk.0.attn_qkv.weight -> " << dq.rows << "x" << dq.cols << " f32\n";
+    const uint64_t cols = qkv->dims[0];
+    const uint64_t rows = qkv->dims[1];
+    const uint64_t testRows = std::min<uint64_t>(16, rows);
+    if (cols > std::numeric_limits<size_t>::max() / sizeof(float) / testRows) {
+        std::cout << "[VERIFY] QKV smoke tile exceeds addressable memory\n";
+        return;
+    }
+    const size_t tileElements = static_cast<size_t>(testRows * cols);
+    std::vector<float> weightTile(tileElements);
+    const bool readOk = qkv->type == deep2::TensorType::F32
+        ? engine.readCompressedF32Tile(*qkv, 0, tileElements, weightTile.data())
+        : engine.readDequantizedTensorTile(*qkv, 0, tileElements, weightTile.data());
+    if (!readOk) {
+        std::cout << "[VERIFY] bounded QKV tile read failed\n";
+        return;
+    }
+    std::cout << "[VERIFY] bounded QKV tile -> " << testRows << "x" << cols << " f32\n";
 
-    uint64_t testRows = std::min<uint64_t>(16, dq.rows);
-    std::vector<float> x(dq.cols, 1.0f), y(testRows, 0.0f);
-    engine.gemvFloat(dq.data.data(), x.data(), y.data(), testRows, dq.cols);
+    std::vector<float> x(static_cast<size_t>(cols), 1.0f), y(static_cast<size_t>(testRows), 0.0f);
+    engine.gemvFloat(weightTile.data(), x.data(), y.data(), testRows, cols);
     float sum = 0.0f;
     for (float v : y) sum += v;
-    std::cout << "[VERIFY] GEMV(" << testRows << "x" << dq.cols << ") sum = " << sum << "\n";
+    std::cout << "[VERIFY] GEMV(" << testRows << "x" << cols << ") sum = " << sum << "\n";
 
     if (engine.vulkanReady) {
-        deep2::TensorView wSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(dq.data.data()),
-                           static_cast<size_t>(testRows * dq.cols * 4),
-                           { testRows, dq.cols }, true };
+        deep2::TensorView wSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(weightTile.data()),
+                           tileElements * sizeof(float),
+                           { testRows, cols }, true };
         deep2::TensorView xSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(x.data()),
-                           static_cast<size_t>(x.size() * 4), { dq.cols }, true };
+                           x.size() * sizeof(float), { cols }, true };
         for (size_t gi = 0; gi < engine.vulkan->gpuCount(); ++gi) {
             const auto* g = engine.vulkan->gpu(gi);
             std::vector<float> yVulkan;
