@@ -10,6 +10,8 @@
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <thread>
@@ -37,12 +39,12 @@ struct Deep2Engine {
         uint64_t encodedCacheHits = 0, encodedCacheMisses = 0;
         uint64_t bytesDecoded = 0, evictions = 0;
         size_t totalCompressedBytes() const noexcept {
-            return encodedCompressedBytes > SIZE_MAX - f32CompressedBytes
-                ? SIZE_MAX : f32CompressedBytes + encodedCompressedBytes;
+            return encodedCompressedBytes > static_cast<size_t>(-1) - f32CompressedBytes
+                ? static_cast<size_t>(-1) : f32CompressedBytes + encodedCompressedBytes;
         }
         size_t totalLogicalBytes() const noexcept {
-            return encodedLogicalBytes > SIZE_MAX - f32LogicalBytes
-                ? SIZE_MAX : f32LogicalBytes + encodedLogicalBytes;
+            return encodedLogicalBytes > static_cast<size_t>(-1) - f32LogicalBytes
+                ? static_cast<size_t>(-1) : f32LogicalBytes + encodedLogicalBytes;
         }
     };
 
