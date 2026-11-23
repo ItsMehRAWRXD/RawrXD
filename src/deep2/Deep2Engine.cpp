@@ -6908,9 +6908,9 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
             fprintf(traceFile, "[LR_ENTER] name=%s type=%s(%d) rows=%zu cols=%zu startRow=%zu endRow=%zu\n",
                     wt.name.c_str(), typeName, wt.type, rows, cols, startRow, endRow);
             bool valid = true;
-            if (!wt.data)
+            if (!wt.data && !wt.hasCompressedBacking())
             {
-                fprintf(traceFile, "[LR_VALIDATE_FAIL] wt.data is null\n");
+                fprintf(traceFile, "[LR_VALIDATE_FAIL] wt has no raw or compressed backing\n");
                 valid = false;
             }
             if (!input)
@@ -7048,6 +7048,29 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
     auto kernel = reg.GetGEMV(wt.type);
     auto geom = reg.GetGeometry(wt.type);
 
+    // Decode only this worker's output-row slice. The cache lease is internal
+    // to readBytes; this temporary remains alive for the complete row kernel.
+    std::vector<std::uint8_t> compressedRows;
+    const std::uint8_t* weightData = static_cast<const std::uint8_t*>(wt.data);
+    const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, cols);
+    if (!weightData && wt.hasCompressedBacking())
+    {
+        if (packedRowBytes == 0 ||
+            startRow > (std::numeric_limits<std::size_t>::max)() / packedRowBytes ||
+            rows > (std::numeric_limits<std::size_t>::max)() / packedRowBytes)
+            throw std::runtime_error("LinearW_Range: unsupported or overflowing compressed row layout: " + wt.name);
+        const std::size_t byteOffset = startRow * packedRowBytes;
+        const std::size_t byteCount = rows * packedRowBytes;
+        if (byteOffset > wt.sizeBytes || byteCount > wt.sizeBytes - byteOffset)
+            throw std::runtime_error("LinearW_Range: compressed row slice exceeds tensor bounds: " + wt.name);
+        compressedRows.resize(byteCount);
+        std::string decodeError;
+        if (!wt.readBytes(byteOffset, compressedRows.data(), byteCount, &decodeError))
+            throw std::runtime_error("LinearW_Range: compressed row decode failed for " +
+                                     wt.name + ": " + decodeError);
+        weightData = compressedRows.data();
+    }
+
     // NVFP4 is routed to the inline CPU path below (registry dispatch isolated separately)
     if (kernel && geom.blockSize > 0 && wt.type != (int)GGMLType::GGML_TYPE_NVFP4)
     {
@@ -7055,7 +7078,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
         reg.GetBatch21Counters().kernelInvocations.fetch_add(1, std::memory_order_relaxed);
         size_t blocksPerRow = (cols + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
         size_t rowBytes = blocksPerRow * geom.blockSize;
-        const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+        const uint8_t* rowWeights = weightData + (compressedRows.empty() ? startRow * rowBytes : 0);
         // ── VAL-051.7: Q4_0 dispatch telemetry (capped) ─────────────
         if (wt.type == (int)GGMLType::GGML_TYPE_Q4_0)
         {
@@ -7084,7 +7107,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
             float acc = 0.0f;
             for (size_t c = 0; c < cols; ++c)
             {
-                acc += ((const float*)wt.data)[r * cols + c] * input[c];
+                acc += ((const float*)weightData)[(compressedRows.empty() ? r : r - startRow) * cols + c] * input[c];
             }
             output[r] = acc;
         }
@@ -7110,7 +7133,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
         for (size_t r = startRow; r < endRow; ++r)
         {
             float acc = 0.0f;
-            const uint8_t* row_data = (const uint8_t*)wt.data + r * row_bytes;
+            const uint8_t* row_data = weightData + (compressedRows.empty() ? r : r - startRow) * row_bytes;
             for (size_t c = 0; c < cols; ++c)
             {
                 int block_idx = c / 64;
