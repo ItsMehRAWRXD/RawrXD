@@ -15,7 +15,44 @@
 #include <cstdlib>
 #include <windows.h>
 
+namespace {
+constexpr size_t kResidencyMiB = 1024ull * 1024ull;
+
+size_t readResidencyMiB(const char* name, size_t fallback) {
+    const char* text = std::getenv(name);
+    if (!text || !*text) return fallback;
+    char* end = nullptr;
+    const unsigned long long value = std::strtoull(text, &end, 10);
+    if (end == text || *end != '\\0' ||
+        value > std::numeric_limits<size_t>::max() / kResidencyMiB)
+        return fallback;
+    return static_cast<size_t>(value) * kResidencyMiB;
+}
+
+void configureTensorResidencyBudgets(Deep2Engine& engine) {
+    size_t f32Budget = 512ull * kResidencyMiB;
+    size_t encodedBudget = 128ull * kResidencyMiB;
+    MEMORYSTATUSEX memory{};
+    memory.dwLength = sizeof(memory);
+    if (GlobalMemoryStatusEx(&memory) && memory.ullAvailPhys) {
+        const size_t available = static_cast<size_t>(std::min<unsigned long long>(
+            memory.ullAvailPhys, std::numeric_limits<size_t>::max()));
+        f32Budget = std::min<size_t>(2ull * 1024ull * kResidencyMiB,
+            std::max<size_t>(16ull * kResidencyMiB, available / 8));
+        encodedBudget = std::min<size_t>(512ull * kResidencyMiB,
+            std::max<size_t>(8ull * kResidencyMiB, available / 32));
+    }
+    f32Budget = readResidencyMiB("DEEP2_F32_RESIDENCY_MB", f32Budget);
+    encodedBudget = readResidencyMiB("DEEP2_ENCODED_RESIDENCY_MB", encodedBudget);
+    engine.compressedF32Weights.SetBudget(f32Budget);
+    engine.compressedEncodedWeights.SetBudget(encodedBudget);
+    fprintf(stderr, "[TENSOR_RESIDENCY] f32_budget=%zu encoded_budget=%zu\\n",
+            f32Budget, encodedBudget);
+}
+} // namespace
+
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    configureTensorResidencyBudgets(*this);
     // Lossy F32->F16/BF16 residency is opt-in and bounded by a caller-supplied
     // absolute-error tolerance. The default remains bit-exact/lossless.
     if (const char* tolerance = std::getenv("DEEP2_F32_MAX_ABS_ERROR")) {
