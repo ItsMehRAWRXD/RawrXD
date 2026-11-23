@@ -1243,6 +1243,32 @@ inline RepackError RepackGGUF(const std::string& input,
             }
         }
     }
+    // A Q5_1 matrix that did not select Q4_0 may still be compressed
+    // without changing any reconstructed weight. Only convert when
+    // every block has a Q5_0-compatible affine offset and exact
+    // arithmetic; unlike the general matrix Q4 path, this is lossless.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(t.type!=7 || t.convert_q4_0 || t.convert_q5_0 ||
+               t.dims[0]%32)continue;
+            uint64_t count=1;
+            for(const auto dim:t.dims)
+                if(!CheckedMultiply(count,dim,count))
+                    return RepackError::Overflow;
+            uint64_t compact=0;
+            if(!CheckedMultiply(count/32,22,compact))
+                return RepackError::Overflow;
+            if(compact>=t.bytes)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)
+                return RepackError::Overflow;
+            if(IsExactQ5_1ToQ5_0(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q5_0=true;
+                t.q5_source_q5_1=true;
+                t.type=6;
+                t.bytes=compact;
+            }
+        }
+    }
     // Sensitive Q8_K tensors must never be silently requantized.
     // Their Q8_0 conversion is allowed only when every FP32 scale
     // survives the FP16 storage change bit-for-bit.
