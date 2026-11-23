@@ -44,7 +44,7 @@ inline bool DecodeBlock(uint32_t type,const uint8_t* b,double v[256]) {
             const int g=j/16;
             const unsigned sc=b[g]&15, mn=b[g]>>4;
             const int within=j%128, lane=within/32, col=within%32;
-            const unsigned q=(b[16+(j/128)*32+(within%2)*16+(j%16)]>>(2*((within%8)/2)))&3;
+            const unsigned q=(b[16+(g/8)*32+((g%8)%2)*16+(j%16)]>>(2*((g%8)/2)))&3;
             v[j]=d*sc*q-dm*mn;
         }
         return true;
@@ -143,7 +143,7 @@ inline bool EncodeBlock(uint32_t type,const double v[256],float tolerance,uint8_
                 const int j=g*16+k;
                 const int q=ds>0?RoundClamp((v[j]+ms)/ds,0,3):0;
                 const int within=j%128,lane=within/32,col=within%32;
-                out[16+(j/128)*32+(within%2)*16+(j%16)]|=uint8_t(q<<(2*((within%8)/2)));
+                out[16+(g/8)*32+((g%8)%2)*16+k]|=uint8_t(q<<(2*((g%8)/2)));
             }
         }
     } else if(type==11 || type==14) {
