@@ -6263,12 +6263,20 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         const bool bindingIsNormOrBias =
             bindingLabel.find("norm") != std::string::npos ||
             bindingLabel.find("bias") != std::string::npos;
+        const std::size_t normElementBytes =
+            dst.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+            dst.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+        const bool compressNormVector = compressedModeEnabled && bindingIsNormOrBias &&
+            bindingLabel.find("norm") != std::string::npos &&
+            ref->shape.size() == 1 && normElementBytes != 0 && dst.cols > 0 &&
+            dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+            dst.cols * normElementBytes == dst.sizeBytes;
         const bool compressMatrix = compressedModeEnabled && !bindingIsNormOrBias &&
             ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
             packedRowBytes > 0 &&
             packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
             packedRowBytes * dst.rows == dst.sizeBytes;
-        if (compressMatrix)
+        if (compressMatrix || compressNormVector)
         {
             constexpr std::size_t kDefaultCompressedModelBudget =
                 4ull * 1024ull * 1024ull * 1024ull;
