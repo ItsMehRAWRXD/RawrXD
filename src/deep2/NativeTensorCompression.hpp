@@ -200,6 +200,31 @@ public:
         }
         return result;
     }
+    // Stream source tiles into compressed storage. The reader is called once
+    // per chunk and must fill exactly count F32 values; the full source tensor
+    // is never materialized in an intermediate allocation.
+    template<class Reader>
+    static ChunkedF32Storage BuildFromReader(size_t count,float max_abs_error,
+                                             Reader&& reader,size_t chunk_elements=4096) {
+        if(!chunk_elements) throw std::invalid_argument("zero chunk size");
+        if(count>std::numeric_limits<size_t>::max()/sizeof(float))
+            throw std::length_error("F32 tensor size overflow");
+        if(!reader) throw std::invalid_argument("empty tensor reader");
+        ChunkedF32Storage result;
+        result.element_count_=count;
+        result.chunk_elements_=chunk_elements;
+        result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
+        std::vector<float> tile;
+        for(size_t offset=0;offset<count;) {
+            const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
+            tile.resize(n);
+            if(!reader(offset,n,tile.data()))
+                throw std::runtime_error("F32 tensor source read failed");
+            result.chunks_.push_back(EncodeAdaptiveF32(tile.data(),n,max_abs_error));
+            offset+=n;
+        }
+        return result;
+    }
     size_t size() const noexcept { return element_count_; }
     size_t chunkElements() const noexcept { return chunk_elements_; }
     size_t chunkCount() const noexcept { return chunks_.size(); }
