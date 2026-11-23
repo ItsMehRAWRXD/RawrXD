@@ -131,6 +131,8 @@ struct QueuedDot {
     CpuDot cpu;
 };
 bool g_batch_active = false;
+// Capture the batch device once; the active per-op scope may change later.
+int32_t g_batch_device = -1;
 std::vector<QueuedDot> g_queued;
 
 // Implementation of the public BeginBatch: opens a batch on the device fast
@@ -146,9 +148,18 @@ bool BeginBatchImpl()
     if (std::getenv("RR_GPU_CHECK")) return true;
     if (g_batch_active) return false;
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
-    const bool gpu_ok = Gpu().BeginQuantDotBatch();
+    const int32_t device = g_active_device;
+    bool gpu_ok = false;
+    try {
+        gpu_ok = (device >= 0 ? GpuFor(device) : Gpu()).BeginQuantDotBatch();
+    } catch (const std::exception& e) {
+        g_receipt.fallback_reason = "batch device initialization failed";
+        QDTRACE_DISPATCH("BeginBatch device error=" << e.what());
+        return false;
+    }
     QDTRACE_DISPATCH("BeginBatch gpu_ok=" << (int)gpu_ok << " batch_active_before=" << (int)g_batch_active);
     if (!gpu_ok) return false;
+    g_batch_device = device;
     g_batch_active = true;
     g_queued.clear();
     return true;
@@ -191,11 +202,24 @@ bool EndBatchImpl()
     if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
     if (!g_batch_active) return false;
     g_batch_active = false;
+    const int32_t device = g_batch_device;
+    g_batch_device = -1;
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);
     if (qs.empty()) return true;
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
+    // The same Vulkan context owns Begin, Queue, and End. Never mix queues
+    // from separate physical devices in a single batch.
+    VulkanCompute* batch_gpu = nullptr;
+    try {
+        batch_gpu = &(device >= 0 ? GpuFor(device) : Gpu());
+    } catch (const std::exception&) {
+        g_receipt = Receipt{};
+        g_receipt.fallback_reason = "batch device unavailable at submit";
+        ReplayQueuedOnCpu(qs);
+        return false;
+    }
     // RAWRXD_DEEP2_MOE_BATCH_CHUNK_001. One device batch holds BatchCapacity()
     // descriptor sets. A MoE block queues one dot per selected expert, so a
     // 199-expert model asks for 199 entries and entry 32 was rejected before any
@@ -212,7 +236,7 @@ bool EndBatchImpl()
     size_t chunks_ok = 0;
     for (size_t base = 0; base < qs.size() && ok; base += chunk) {
         const size_t end = (qs.size() - base) < chunk ? qs.size() : base + chunk;
-        if (base > 0 && !Gpu().BeginQuantDotBatch()) {
+        if (base > 0 && !batch_gpu->BeginQuantDotBatch()) {
             ok = false;
             fail_stage = "begin";
             fail_index = qs.size();
@@ -222,7 +246,7 @@ bool EndBatchImpl()
         for (size_t i = base; i < end; ++i) {
             const QueuedDot& e = qs[i];
             const bool queued_ok =
-                Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
+                batch_gpu->QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
                                     e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
             if (!queued_ok) {
                 ok = false;
@@ -235,7 +259,7 @@ bool EndBatchImpl()
         }
         if (!ok) break;
         QDTRACE_DISPATCH("EndBatch chunk base=" << base << " count=" << (end - base));
-        if (!Gpu().EndQuantDotBatch()) {
+        if (!batch_gpu->EndQuantDotBatch()) {
             ok = false;
             fail_stage = "end";
             fail_index = qs.size();
@@ -632,7 +656,8 @@ bool DotBlocked(int kind,
     // EndBatch has a chance to submit the work.
     const bool differential_check = std::getenv("RR_GPU_CHECK") != nullptr;
     if (std::getenv("DEEP2_SUBMIT_TRACE") &&
-        !(g_batch_active && !differential_check && g_active_device < 0 &&
+        !(g_batch_active && !differential_check &&
+          g_active_device == g_batch_device &&
           !force_cpu && !g_force_cpu)) {
         std::fprintf(stderr,
             "SUBMIT_TRACE kind=DotBlocked mode=SYNC n_out=%zu "
@@ -646,7 +671,8 @@ bool DotBlocked(int kind,
     // has independent upload/barrier/readback ownership and is numerically
     // verified. Do not return a queued result for Q4_K while its output is not
     // yet trustworthy.
-    if (g_batch_active && kind != 0 && !differential_check && g_active_device < 0 &&
+    if (g_batch_active && kind != 0 && !differential_check &&
+        g_active_device == g_batch_device &&
         !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
             g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
