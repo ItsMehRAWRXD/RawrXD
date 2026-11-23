@@ -17,6 +17,14 @@ int main() {
     const auto raw = encode(mixed.data(), mixed.size());
     CHECK(!raw.rle);
     CHECK(decode(raw) == mixed);
+    const std::vector<std::uint8_t> singleton{0xa5};
+    CHECK(decode(encode(singleton.data(), singleton.size())) == singleton);
+    std::vector<std::uint8_t> incompressible(65536);
+    for (std::size_t i = 0; i < incompressible.size(); ++i)
+        incompressible[i] = static_cast<std::uint8_t>(i & 255);
+    const auto packed_incompressible = encode(incompressible.data(), incompressible.size());
+    CHECK(!packed_incompressible.rle);
+    CHECK(decode(packed_incompressible) == incompressible);
     BoundedDecodeCache cache(16);
     CHECK(cache.get(1, raw) == mixed);
     CHECK(cache.resident_bytes() == 8);
