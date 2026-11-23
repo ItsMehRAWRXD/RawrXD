@@ -394,18 +394,22 @@ int main(int argc,char** argv) {
             if(bf16 && t.type==0) {
                 seek(in,add(dataStart,t.offset));
                 bool valid=true;
-                uint8_t bytes[4];
-                for(U off=0;off<t.bytes;off+=4) {
-                    if(!in.read(reinterpret_cast<char*>(bytes),4))
+                std::vector<uint8_t> chunk(65536);
+                for(U off=0;off<t.bytes && valid;) {
+                    size_t n=size_t(std::min<U>(t.bytes-off,chunk.size()));
+                    if(!in.read(reinterpret_cast<char*>(chunk.data()),std::streamsize(n)))
                         throw std::runtime_error("truncated BF16 preflight");
-                    uint32_t bits=uint32_t(bytes[0])|(uint32_t(bytes[1])<<8)|
-                                  (uint32_t(bytes[2])<<16)|(uint32_t(bytes[3])<<24);
-                    float original=Float(bits);
-                    // Round to nearest even, retaining the BF16 sign and exponent.
-                    uint32_t rounded=bits+0x7fffu+((bits>>16)&1u);
-                    float decoded=Float(rounded&0xffff0000u);
-                    if(!std::isfinite(original)||!std::isfinite(decoded)||
-                       !(std::fabs(decoded-original)<=tolerance)){valid=false;break;}
+                    for(size_t j=0;j<n;j+=4) {
+                        uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
+                                      (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
+                        float original=Float(bits);
+                        // Round to nearest even, retaining BF16 sign and exponent.
+                        uint32_t rounded=bits+0x7fffu+((bits>>16)&1u);
+                        float decoded=Float(rounded&0xffff0000u);
+                        if(!std::isfinite(original)||!std::isfinite(decoded)||
+                           !(std::fabs(decoded-original)<=tolerance)){valid=false;break;}
+                    }
+                    off+=n;
                 }
                 if(valid){streamBf16[i]=true;outputTypes[i]=30;++changed;}
                 continue;
