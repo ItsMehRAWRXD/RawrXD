@@ -355,7 +355,10 @@ public:
         ChunkedF32Storage result;
         result.element_count_=count;
         result.chunk_elements_=chunk_elements;
-        result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
+        const size_t chunkCount = count/chunk_elements+(count%chunk_elements!=0);
+        if (chunkCount > result.chunks_.max_size())
+            throw std::length_error("F32 chunk metadata overflow");
+        result.chunks_.reserve(chunkCount);
         for(size_t offset=0;offset<count;) {
             const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
             result.chunks_.push_back(EncodeAdaptiveF32(values+offset,n,max_abs_error));
