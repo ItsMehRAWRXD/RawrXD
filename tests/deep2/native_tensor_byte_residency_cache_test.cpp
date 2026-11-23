@@ -106,5 +106,20 @@ int main() {
     assert(!cache.IsRawFallback("noise"));
     const auto finalStats=cache.GetStats();
     assert(finalStats.compressedBytes==0&&finalStats.logicalBytes==0);
+
+    // Unexpected runtime/allocation-style exceptions are retryable, not a
+    // permanent "incompressible" verdict. A later source attempt must run.
+    size_t transientAttempts = 0;
+    for (int attempt = 0; attempt < 2; ++attempt) {
+        const bool admitted = cache.RegisterFromReader("transient", 4096,
+            [&](size_t, size_t, uint8_t*) -> bool {
+                ++transientAttempts;
+                throw std::runtime_error("simulated transient runtime failure");
+            }, 1024);
+        assert(!admitted);
+    }
+    assert(transientAttempts == 2);
+    assert(!cache.IsRawFallback("transient"));
+
     std::cout<<"lossless encoded-byte tensor residency cache PASS\n";
 }
