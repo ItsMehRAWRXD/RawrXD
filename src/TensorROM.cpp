@@ -434,7 +434,7 @@ bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
 }
 
 TensorLease TensorROM::leaseTensor(const TensorEntry& entry) const {
-    if (!m_pager) return TensorLease(*m_pager, 0, 0, 0); // empty
+    if (!m_pager || entry.shardIndex >= m_shards.size()) return TensorLease{};
     const ShardManifest& m = m_shards[entry.shardIndex];
     return TensorLease(*m_pager, static_cast<uint32_t>(entry.shardIndex),
                        m.dataOffset + entry.offset, entry.byteSize());
