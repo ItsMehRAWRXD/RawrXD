@@ -192,7 +192,7 @@ def run(binary):
         header+=S("blk.0.attn_k.weight")+U32(1)+U64(32)+U32(6)+U64(len(raw))
         header+=S("blk.0.attn_q.weight")+U32(1)+U64(len(values))+U32(0)+U64(0)
         swapped.write_bytes(pad(header)+raw+quant)
-        for fmt,typ,tolerance in (("f16",1,"0"),("q8_0",8,"300"),("q5_0",6,"500"),("q4_1",3,"10000"),("q4_0",2,"10000")):
+        for fmt,typ,tolerance in (("f16",1,"0"),("q8_0",8,"300"),("q5_0",6,"500"),("q5_1",7,"10000"),("q4_1",3,"10000"),("q4_0",2,"10000")):
             dest=root/("reordered-"+fmt+".gguf")
             subprocess.run([binary,str(swapped),str(dest),tolerance,fmt],check=True)
             data,ds,meta,desc=parse(dest)
@@ -202,6 +202,26 @@ def run(binary):
             assert desc["blk.0.attn_k.weight"][2]>0
             offset=desc["blk.0.attn_k.weight"][2]
             assert data[ds+offset:ds+offset+32]==quant
+        # Independent Q5_1 decoding for F32, FP16 and BF16 inputs.
+        for qsource in (source,target,bf):
+            dest=root/(qsource.stem+"-q51.gguf")
+            subprocess.run([binary,str(qsource),str(dest),"10000","q5_1"],check=True)
+            bb,bs,mm,tt=parse(dest)
+            assert mm==metadata
+            assert tt["blk.0.attn_q.weight"][0]==7
+            off=tt["blk.0.attn_q.weight"][2]
+            for block in range(len(values)//32):
+                p=bs+off+block*24
+                delta,minimum=struct.unpack_from("<ee",bb,p)
+                high=struct.unpack_from("<I",bb,p+4)[0]
+                packed=bb[p+8:p+24]
+                assert len(packed)==16
+                for j in range(32):
+                    low=(packed[j]&15) if j<16 else (packed[j-16]>>4)
+                    code=low|(((high>>j)&1)<<4)
+                    assert abs(minimum+delta*code-values[block*32+j])<=10000
+            offq=tt["blk.0.attn_k.weight"][2]
+            assert bb[bs+offq:bs+offq+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
