@@ -211,7 +211,7 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
 inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                            uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
     const uint64_t inputBlock=sourceType==0?128:sourceType==1?64:
-        sourceType==8?34:sourceType==9?40:
+        sourceType==8?34:sourceType==9?36:
         sourceType==6?22:sourceType==3?20:sourceType==7?24:0;
     if(!inputBlock || sourceBytes%inputBlock || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
@@ -239,11 +239,7 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
             }
         } else {
             float scale=0;
-            if(sourceType==9) {
-                const uint32_t bits=uint32_t(source[0])|(uint32_t(source[1])<<8)|
-                    (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
-                std::memcpy(&scale,&bits,4);
-            } else {
+            {
                 const uint16_t half=uint16_t(source[0])|(uint16_t(source[1])<<8);
                 const uint32_t bits=Float16ToFloat32Bits(half);
                 std::memcpy(&scale,&bits,4);
@@ -259,7 +255,7 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
             for(unsigned i=0;i<32;++i) {
                 int quantized=0;
                 if(sourceType==8)quantized=static_cast<int8_t>(source[2+i]);
-                else if(sourceType==9)quantized=static_cast<int8_t>(source[8+i]);
+                else if(sourceType==9)quantized=static_cast<int8_t>(source[4+i]);
                 else if(sourceType==6 || sourceType==7) {
                     const unsigned qs=sourceType==6?6:8;
                     const unsigned qh=sourceType==6?2:4;
@@ -520,53 +516,21 @@ inline bool ConvertQ5KToQ4_0(std::ifstream& in,std::ofstream& out,
 // The Q8_1 sum is derived metadata, not a second scaling factor.
 inline bool ConvertQ8_1ToQ8_0(std::ifstream& in,std::ofstream& out,
                                uint64_t from,uint64_t sourceBytes) {
-    if(sourceBytes%40 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+    if(sourceBytes%36 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
     in.clear();in.seekg(static_cast<std::streamoff>(from));
     if(!in)return false;
-    unsigned char source[40],encoded[34];
+    unsigned char source[36],encoded[34];
     while(sourceBytes) {
-        if(!in.read(reinterpret_cast<char*>(source),40))return false;
-        const uint32_t bits=uint32_t(source[0])|(uint32_t(source[1])<<8)|
-            (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
-        float scale=0;std::memcpy(&scale,&bits,4);
-        if(!std::isfinite(scale))return false;
-        // Exact fast path: Q8_1 and Q8_0 share the same signed 8-bit
-        // quantization payload. If the FP32 scale is exactly representable
-        // in FP16, preserve all 32 codes verbatim (including -128) instead
-        // of introducing a second lossy quantization step. The Q8_1 sum
-        // field is auxiliary and does not participate in reconstruction.
-        const uint16_t directHalf=Float32BitsToFloat16(bits);
-        if(Float16ToFloat32Bits(directHalf)==bits) {
-            encoded[0]=static_cast<unsigned char>(directHalf);
-            encoded[1]=static_cast<unsigned char>(directHalf>>8);
-            std::memcpy(encoded+2,source+8,32);
-            if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
-            sourceBytes-=40;
-            continue;
-        }
-        float values[32],maxAbs=0;
-        for(unsigned i=0;i<32;++i) {
-            values[i]=scale*static_cast<float>(static_cast<int8_t>(source[8+i]));
-            if(!std::isfinite(values[i]))return false;
-            maxAbs=std::max(maxAbs,std::abs(values[i]));
-        }
-        const float d=maxAbs/127.0f;
-        uint32_t dbits=0;std::memcpy(&dbits,&d,4);
-        const uint16_t half=Float32BitsToFloat16(dbits);
-        const uint32_t decoded=Float16ToFloat32Bits(half);
-        float actual=0;std::memcpy(&actual,&decoded,4);
-        if(maxAbs!=0 && (!std::isfinite(actual)||actual==0))return false;
-        encoded[0]=static_cast<unsigned char>(half);
-        encoded[1]=static_cast<unsigned char>(half>>8);
-        for(unsigned i=0;i<32;++i) {
-            const double normalized=actual==0?0.0:static_cast<double>(values[i])/actual;
-            const double q=std::round(normalized);
-            const int value=static_cast<int>(std::max(-127.0,std::min(127.0,q)));
-            encoded[2+i]=static_cast<unsigned char>(static_cast<int8_t>(value));
-        }
+        if(!in.read(reinterpret_cast<char*>(source),36))return false;
+        // Upstream GGML block_q8_1: fp16 d, fp16 s, int8 qs[32].
+        // The sum is auxiliary; the 32 codes and FP16 scale are
+        // directly reusable in Q8_0 without requantization.
+        encoded[0]=source[0];
+        encoded[1]=source[1];
+        std::memcpy(encoded+2,source+4,32);
         if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
-        sourceBytes-=40;
+        sourceBytes-=36;
     }
     return true;
 }
