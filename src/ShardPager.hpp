@@ -61,7 +61,7 @@ public:
 
     std::size_t capacityBytes() const { return m_capacityBytes; }
     std::size_t pageSize() const { return m_pageSize; }
-    std::size_t residentBytes() const { return m_residentBytes; }
+    std::size_t residentBytes() const { std::lock_guard<std::mutex> lock(m_mutex); return m_residentBytes; }
     std::size_t pageCount() const;
     std::size_t leaseCount() const;
 
