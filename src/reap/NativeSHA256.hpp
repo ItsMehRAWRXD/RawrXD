@@ -1,6 +1,8 @@
 #pragma once
 // Native SHA-256 for content-addressed model blobs. No external crypto library.
+#include <algorithm>
 #include <array>
+#include <cstring>
 #include <cstdint>
 #include <fstream>
 #include <iomanip>
@@ -53,9 +55,20 @@ public:
         if(n && !p)return false;
         if(n>((UINT64_MAX/8)-total_))return false;
         total_+=n;
-        for(size_t i=0;i<n;++i){
-            block_[used_++]=p[i];
+        size_t offset=0;
+        if(used_) {
+            const size_t take=std::min(n,size_t(64-used_));
+            std::memcpy(block_+used_,p,take);
+            used_+=take;offset+=take;
             if(used_==64){Transform(block_);used_=0;}
+        }
+        while(n-offset>=64){
+            Transform(p+offset);
+            offset+=64;
+        }
+        if(offset<n){
+            used_=n-offset;
+            std::memcpy(block_,p+offset,used_);
         }
         return true;
     }
