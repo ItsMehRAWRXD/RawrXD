@@ -2,33 +2,33 @@
 
 #include <cstring>
 #include <cmath>
+#include <limits>
 
 namespace deep2 {
 
 static inline float fp16ToF32(uint16_t v) {
-    uint32_t sign = (v & 0x8000u) << 16;
-    uint32_t exp  = (v & 0x7C00u) >> 10;
-    uint32_t frac = (v & 0x03FFu);
-    uint32_t f32  = 0;
-    if (exp == 31) {
-        f32 = sign | 0x7F800000u | (frac << 13);
-    } else if (exp == 0) {
-        if (frac != 0) {
-            while ((frac & 0x0400u) == 0) { frac <<= 1; exp--; }
-            exp++;
-            frac &= ~0x0400u;
-            f32 = sign | ((exp + (127 - 15)) << 23) | (frac << 13);
-        } else {
-            f32 = sign;
+    const uint32_t sign = uint32_t(v & 0x8000u) << 16;
+    const uint32_t exp = (v >> 10) & 0x1fu;
+    const uint32_t frac = v & 0x03ffu;
+    uint32_t bits = sign;
+    if (exp == 31u) {
+        bits |= 0x7f800000u | (frac << 13);
+    } else if (exp != 0u) {
+        bits |= ((exp + 112u) << 23) | (frac << 13);
+    } else if (frac != 0u) {
+        uint32_t mantissa = frac;
+        int unbiased = -14;
+        while ((mantissa & 0x400u) == 0u) {
+            mantissa <<= 1;
+            --unbiased;
         }
-    } else {
-        f32 = sign | ((exp + (127 - 15)) << 23) | (frac << 13);
+        bits |= (static_cast<uint32_t>(unbiased + 127) << 23) |
+                ((mantissa & 0x3ffu) << 13);
     }
-    float r;
-    std::memcpy(&r, &f32, 4);
-    return std::isnan(r) || std::isinf(r) ? 0.0f : r;
+    float result;
+    std::memcpy(&result, &bits, sizeof(result));
+    return std::isfinite(result) ? result : 0.0f;
 }
-
 static inline uint16_t readU16(const uint8_t* p) {
     uint16_t v;
     std::memcpy(&v, p, 2);
@@ -43,9 +43,12 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
 
     const uint64_t n = src.totalElements();
     if (n == 0) return true;
-    if (!src.data) return false;
+    if (!src.data || n > static_cast<uint64_t>(SIZE_MAX / sizeof(float))) return false;
+    const uint64_t requiredBytes = tensorStorageBytes(n, src.type);
+    if (requiredBytes == (std::numeric_limits<uint64_t>::max)() ||
+        src.byteSize < requiredBytes) return false;
 
-    dst.data.resize(n);
+    dst.data.resize(static_cast<std::size_t>(n));
     float* out = dst.data.data();
 
     // Logical shape = reverse of GGUF storage order.
@@ -69,16 +72,38 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q8_0: {
-        // Block: 32 x int8 + fp16 d (34 bytes).
+        // Standard GGML block_q8_0: fp16 delta first, then 32 signed bytes.
         const uint8_t* p = src.data;
         uint64_t v = 0;
         while (v < n) {
-            float d = fp16ToF32(readU16(p + 32));
-            const int8_t* qs = reinterpret_cast<const int8_t*>(p);
+            const float d = fp16ToF32(readU16(p));
             uint64_t take = n - v; if (take > 32) take = 32;
-            for (uint64_t k = 0; k < take; ++k) out[v + k] = static_cast<float>(qs[k]) * d;
+            for (uint64_t k = 0; k < take; ++k) {
+                int8_t q = 0;
+                std::memcpy(&q, p + 2 + k, sizeof(q));
+                out[v + k] = static_cast<float>(q) * d;
+            }
             v += take;
             p += 34;
+        }
+        return true;
+    }
+
+    case TensorType::Q4_0: {
+        // Standard GGML block_q4_0: fp16 delta then 16 bytes of low/high nibbles.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const uint8_t* qs = p + 2;
+            const uint64_t take = (n - v > 32) ? 32 : (n - v);
+            for (uint64_t k = 0; k < take; ++k) {
+                const uint8_t packed = qs[k & 15u];
+                const uint8_t q = (k < 16) ? (packed & 0x0fu) : (packed >> 4);
+                out[v + k] = (static_cast<float>(q) - 8.0f) * d;
+            }
+            v += take;
+            p += 18;
         }
         return true;
     }
@@ -211,7 +236,6 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q4_K_M:
-    case TensorType::Q4_0:
     case TensorType::Q4_1:
     case TensorType::Q5_K_S:
     case TensorType::Q5_K_M:
