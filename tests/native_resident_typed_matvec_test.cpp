@@ -196,6 +196,8 @@ int main() {
         auto tensor = load_bytes(bytes, path, 21);
         const auto y = resident_q2_k_matvec(tensor, ones256, 1, 256, 84);
         CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+        const auto row = resident_k_row<84, resident_k_detail::decode_q2>(tensor, 0, 1, 256, 21);
+        CHECK(row.size() == 256 && std::all_of(row.begin(), row.end(), [](float v) { return std::fabs(v - 1.0f) < 1e-5f; }));
     }
     {
         std::vector<std::uint8_t> bytes(110, 0);
@@ -207,6 +209,8 @@ int main() {
         auto tensor = load_bytes(bytes, path, 22);
         const auto y = resident_q3_k_matvec(tensor, ones256, 1, 256, 110);
         CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+        const auto row = resident_k_row<110, resident_k_detail::decode_q3>(tensor, 0, 1, 256, 22);
+        CHECK(row.size() == 256 && std::all_of(row.begin(), row.end(), [](float v) { return std::fabs(v - 1.0f) < 1e-5f; }));
     }
     {
         std::vector<std::uint8_t> bytes(144, 0);
@@ -217,6 +221,8 @@ int main() {
         auto tensor = load_bytes(bytes, path, 24);
         const auto y = resident_q4_k_matvec(tensor, ones256, 1, 256, 144);
         CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+        const auto row = resident_k_row<144, resident_k_detail::decode_q4>(tensor, 0, 1, 256, 24);
+        CHECK(row.size() == 256 && std::all_of(row.begin(), row.end(), [](float v) { return std::fabs(v - 1.0f) < 1e-5f; }));
     }
     {
         std::vector<std::uint8_t> bytes(176, 0);
@@ -227,6 +233,8 @@ int main() {
         auto tensor = load_bytes(bytes, path, 32);
         const auto y = resident_q5_k_matvec(tensor, ones256, 1, 256, 176);
         CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+        const auto row = resident_k_row<176, resident_k_detail::decode_q5>(tensor, 0, 1, 256, 32);
+        CHECK(row.size() == 256 && std::all_of(row.begin(), row.end(), [](float v) { return std::fabs(v - 1.0f) < 1e-5f; }));
     }
     {
         std::vector<std::uint8_t> bytes(210, 0);
@@ -237,6 +245,8 @@ int main() {
         auto tensor = load_bytes(bytes, path, 35);
         const auto y = resident_q6_k_matvec(tensor, ones256, 1, 256, 210);
         CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+        const auto row = resident_k_row<210, resident_k_detail::decode_q6>(tensor, 0, 1, 256, 35);
+        CHECK(row.size() == 256 && std::all_of(row.begin(), row.end(), [](float v) { return std::fabs(v - 1.0f) < 1e-5f; }));
     }
 
     CHECK(deep2::tensorStorageBytes(256, deep2::TensorType::Q8_K) == 292);
