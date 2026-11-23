@@ -1015,7 +1015,11 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             (outputEntry->type == deep2::TensorType::F32 ||
              outputEntry->type == deep2::TensorType::F16 ||
              outputEntry->type == deep2::TensorType::Q4_0 ||
-             outputEntry->type == deep2::TensorType::Q8_0);
+             outputEntry->type == deep2::TensorType::Q4_1 ||
+             outputEntry->type == deep2::TensorType::Q5_0 ||
+             outputEntry->type == deep2::TensorType::Q5_1 ||
+             outputEntry->type == deep2::TensorType::Q8_0 ||
+             outputEntry->type == deep2::TensorType::Q8_1);
         if (!outputResident && !dequantTensor(*outputEntry, outputDq)) return false;
         outputLogits.resize(vocabSize, 0.0f);
         if (outputResident) {
