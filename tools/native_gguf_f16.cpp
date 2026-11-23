@@ -403,7 +403,7 @@ int main(int argc,char** argv) {
                 const U rawBlockBytes=mul(256,stride);
                 if(t.bytes%rawBlockBytes==0) {
                     const uint32_t first=automatic?10u:(q2k?10u:q3k?11u:q4k?12u:q5k?13u:q6k?14u:15u);
-                    const uint32_t last=automatic?15u:first;
+                    const uint32_t last=automatic?14u:first; // Q8_0 is smaller than Q8_K and is tested by the later auto path.
                     for(uint32_t type=first;type<=last;++type) {
                         seek(in,add(dataStart,t.offset));
                         std::vector<uint8_t> raw(size_t(rawBlockBytes));
