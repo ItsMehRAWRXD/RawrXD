@@ -75,6 +75,10 @@ struct Deep2Engine {
     TensorHandle getTensor(const std::string& name);
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
+    // Dequantize only [firstElement, firstElement + elementCount) from compressed ROM pages.
+    // Quantized ranges must begin at a quantization-block boundary.
+    bool dequantTensorRange(const deep2::TensorEntry& entry, uint64_t firstElement,
+                            uint64_t elementCount, std::vector<float>& output);
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
