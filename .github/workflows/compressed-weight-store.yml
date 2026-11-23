@@ -7,6 +7,8 @@ on:
       - 'src/deep2/compression/**'
       - 'src/deep2/Deep2Engine.cpp'
       - 'src/deep2/Deep2Engine_GpuForward.cpp'
+      - 'src/deep2/vulkan_compute.cpp'
+      - 'src/deep2/vulkan_compute.h'
       - 'src/deep2/GGUFLoader.hpp'
       - 'src/Deep2Engine.h'
       - 'CMakeLists.txt'
