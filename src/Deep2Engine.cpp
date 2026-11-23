@@ -316,6 +316,8 @@ bool Deep2Engine::gemvROMCompressed(
             return runTyped(rawrxd::compression::resident_q5_k_matvec);
         case deep2::TensorType::Q6_K:
             return runTyped(rawrxd::compression::resident_q6_k_matvec);
+        case deep2::TensorType::Q8_K:
+            return runTyped(rawrxd::compression::resident_q8_k_matvec);
         default:
             return false;
     }
@@ -400,6 +402,11 @@ bool Deep2Engine::readROMCompressedRow(
                 (std::numeric_limits<std::size_t>::max)() / 210u) return false;
             rowBytes = (cols / 256u) * 210u;
             break;
+        case deep2::TensorType::Q8_K:
+            if (cols % 256u || cols / 256u >
+                (std::numeric_limits<std::size_t>::max)() / 292u) return false;
+            rowBytes = (cols / 256u) * 292u;
+            break;
         default:
             return false;
     }
@@ -466,6 +473,10 @@ bool Deep2Engine::readROMCompressedRow(
                 break;
             case deep2::TensorType::Q6_K:
                 next = rawrxd::compression::resident_k_row<210, rawrxd::compression::resident_k_detail::decode_q6>(
+                    *resident, 0, 1, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::Q8_K:
+                next = rawrxd::compression::resident_q8_k_row(
                     *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
             default:
