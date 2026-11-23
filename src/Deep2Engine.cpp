@@ -789,11 +789,22 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     if (!f32Weights && !f16Weights && !bf16Weights) return false;
     if (xView.byteSize < static_cast<size_t>(cols) * sizeof(float)) return false;
 
-    const size_t logicalWeightBytes = elements * (f32Weights ? sizeof(float) : sizeof(uint16_t));
+    const size_t bytesPerWeight = f32Weights ? sizeof(float) : sizeof(uint16_t);
+    if (elements > std::numeric_limits<size_t>::max() / bytesPerWeight)
+        return false;
+    const size_t logicalWeightBytes = elements * bytesPerWeight;
     if (wView.byteSize < logicalWeightBytes) return false;
-    const VkDeviceSize weightBufferBytes = f32Weights
-        ? static_cast<VkDeviceSize>(logicalWeightBytes)
-        : static_cast<VkDeviceSize>((logicalWeightBytes + 3u) & ~size_t(3u));
+    // Packed16 Vulkan storage buffers are padded to four bytes. Check the
+    // addition before rounding; overflow would otherwise underallocate Wbuf
+    // and make the subsequent memcpy unsafe.
+    if (!f32Weights && logicalWeightBytes > std::numeric_limits<size_t>::max() - 3u)
+        return false;
+    const size_t paddedWeightBytes = f32Weights
+        ? logicalWeightBytes : ((logicalWeightBytes + 3u) & ~size_t(3u));
+    if (static_cast<uint64_t>(paddedWeightBytes) >
+        static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()))
+        return false;
+    const VkDeviceSize weightBufferBytes = static_cast<VkDeviceSize>(paddedWeightBytes);
     const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
     const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
     y.assign(static_cast<size_t>(rows), 0.0f);
