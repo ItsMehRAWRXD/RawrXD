@@ -131,9 +131,10 @@ Result decompress(const std::uint8_t* data,
 
     // Start at 4x the compressed size (the legacy adapter's first guess) and
     // grow under the caller's ceiling.
-    std::size_t initial = size * 4;
-    if (initial == 0) initial = 4096;
-    initial = std::min(initial, maxOutputBytes);
+    // Clamp before multiplication: untrusted compressed input must not wrap
+    // size_t and accidentally bypass the caller's allocation ceiling.
+    const std::size_t initial =
+        size > maxOutputBytes / 4 ? maxOutputBytes : size * 4;
 
     GrowBuf buf(maxOutputBytes);
     try {
