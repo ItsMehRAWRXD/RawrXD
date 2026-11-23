@@ -210,10 +210,20 @@ bool encodeQ51Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out
     for(int j=0;j<4;++j)out[4+j]=uint8_t(highBits>>(8*j));
     return true;
 }
+bool encodeQ3K_F64(const uint8_t* raw,float tolerance,uint8_t out[110]) {
+    double v[256],sub[16],maxSub=0;
+    for(int i=0;i<256;++i) {uint64_t bits=0;for(int k=0;k<8;++k)bits|=uint64_t(raw[8*i+k])<<(8*k);std::memcpy(&v[i],&bits,8);if(!std::isfinite(v[i]))return false;}
+    for(int g=0;g<16;++g){double a=0;for(int j=0;j<16;++j)a=std::max(a,std::fabs(v[g*16+j]));sub[g]=a/4.0;maxSub=std::max(maxSub,sub[g]);}
+    const uint16_t hd=ToHalf(float(maxSub/31.0));const double d=FromHalf(hd);if(maxSub>0&&(!(d>0)||!std::isfinite(d)))return false;
+    std::memset(out,0,110);uint8_t scales[12]={},low[64]={},high[32]={};int ss[16]={};
+    for(int g=0;g<16;++g){ss[g]=d?std::max(0,std::min(31,int(std::round(sub[g]/d)))):0;const int p=ss[g]+32;if(g<8)scales[g]=uint8_t(p&15);else scales[g-8]|=uint8_t((p&15)<<4);scales[g%4+8]|=uint8_t(((p>>4)&3)<<(2*(g/4)));}
+    for(int i=0;i<256;++i){const int g=i/16;const double scale=d*ss[g];int code=scale?int(std::round(v[i]/scale))+4:4;code=std::max(0,std::min(7,code));if(!(std::fabs(scale*(code-4)-v[i])<=double(tolerance)))return false;const int within=i%128;low[(i/128)*32+within%32]|=uint8_t((code&3)<<((within/32)*2));if(code&4)high[i%32]|=uint8_t(1u<<(i/32));}
+    std::memcpy(out,high,32);std::memcpy(out+32,low,64);std::memcpy(out+96,scales,12);out[108]=uint8_t(hd);out[109]=uint8_t(hd>>8);return true;
+}
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|q2_k|f32|f16|bf16|q8_k|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|q2_k|q3_k|f32|f16|bf16|q8_k|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     bool ownsTemporary=false;
@@ -230,6 +240,7 @@ int main(int argc,char** argv) {
         const bool f32=argc==5 && std::string(argv[4])=="f32";
         const bool automatic=argc==5 && std::string(argv[4])=="auto";
         const bool bf16=argc==5 && std::string(argv[4])=="bf16";
+        const bool q3k=argc==5 && std::string(argv[4])=="q3_k";
         const bool q2k=argc==5 && std::string(argv[4])=="q2_k";
         const bool q8k=argc==5 && std::string(argv[4])=="q8_k";
         const bool q8=argc==5 && std::string(argv[4])=="q8_0";
@@ -237,10 +248,10 @@ int main(int argc,char** argv) {
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q3k && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
-        const bool quantized=q2k||q8k||q8||q4||q5||q41||q51;
+        const bool quantized=q3k||q2k||q8k||q8||q4||q5||q41||q51;
         // Require the complete argument to be a finite nonnegative number.
         // std::stof alone accepts trailing garbage (e.g. "0.1oops").
         const std::string toleranceArg(argv[3]);
@@ -346,6 +357,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamF64toQ51(ts.size(),false);
         std::vector<bool> streamF64toQ4(ts.size(),false);
         std::vector<bool> streamF64toQ5(ts.size(),false);
+        std::vector<bool> streamF64toQ3K(ts.size(),false);
         std::vector<bool> streamF64toQ2K(ts.size(),false);
         std::vector<bool> streamF64toQ8K(ts.size(),false);
         std::vector<bool> streamF64toQ8(ts.size(),false);
@@ -471,6 +483,11 @@ int main(int argc,char** argv) {
                 }
                 if(streamF64toQ4[i]||streamF64toQ5[i])continue;
                 if(q4||q5)continue;
+            }
+            if(t.type==28 && q3k && t.dims[0]%256==0 && t.bytes%2048==0) {
+                seek(in,add(dataStart,t.offset));bool valid=true;uint8_t raw[2048],encoded[110];
+                for(U off=0;off<t.bytes;off+=2048){if(!in.read(reinterpret_cast<char*>(raw),2048))throw std::runtime_error("truncated F64 Q3_K preflight");if(!encodeQ3K_F64(raw,tolerance,encoded)){valid=false;break;}}
+                if(valid){streamF64toQ3K[i]=true;outputTypes[i]=11;++changed;continue;}continue;
             }
             if(t.type==28 && q2k && t.dims[0]%256==0 &&
                t.bytes%2048==0) {
@@ -992,6 +1009,7 @@ int main(int argc,char** argv) {
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
             U encodedBytes=t.bytes;
+            if(streamF64toQ3K[i])encodedBytes=mul(t.bytes/2048,110);
             if(streamF64toQ41[i])encodedBytes=mul(t.bytes/256,20);
             else if(streamF64toQ51[i])encodedBytes=mul(t.bytes/256,24);
             else if(streamF64toQ4[i])encodedBytes=mul(t.bytes/256,18);
@@ -1020,7 +1038,10 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamF64toQ2K[i]) {
+            if(streamF64toQ3K[i]) {
+                seek(in,add(dataStart,t.offset));uint8_t raw[2048],encoded[110];
+                for(U off=0;off<t.bytes;off+=2048){if(!in.read(reinterpret_cast<char*>(raw),2048))throw std::runtime_error("truncated F64 Q3_K payload");if(!encodeQ3K_F64(raw,tolerance,encoded))throw std::runtime_error("Q3_K preflight/write mismatch");out.write(reinterpret_cast<const char*>(encoded),110);if(!out)throw std::runtime_error("F64 Q3_K write failure");}
+            } else if(streamF64toQ2K[i]) {
                 seek(in,add(dataStart,t.offset));
                 uint8_t raw[2048],encoded[84];
                 for(U off=0;off<t.bytes;off+=2048) {
