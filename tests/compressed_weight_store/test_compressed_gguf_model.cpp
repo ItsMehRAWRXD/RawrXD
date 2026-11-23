@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <thread>
+#include <atomic>
 #include <vector>
 
 using rawrxd::compression::CompressedGGUFModel;
@@ -65,6 +67,52 @@ int main() {
     std::fill(std::begin(output), std::end(output), -99.f);
     assert(model.matvec(tensor.name, input, output, 2, &error));
     assert(output[0] == -3.f && output[1] == 4.5f);
+
+    // Concurrent reload publishes whole immutable states. Every inference
+    // observes either the old tensor or the replacement, never a mixed store.
+    std::vector<std::uint8_t> alternate_weights = {
+        0x00, 0x40, 0x00, 0xc4,
+        0x00, 0x3c, 0x00, 0x44
+    }; // [[2,-4],[1,4]] in F16
+    auto alternate = make_f16(tensor.name, alternate_weights);
+    std::atomic<bool> inference_failed{false};
+    std::vector<std::thread> readers;
+    for (int worker = 0; worker < 3; ++worker) {
+        readers.emplace_back([&] {
+            for (int i = 0; i < 300; ++i) {
+                float observed[2] = {};
+                std::string read_error;
+                if (!model.matvec(tensor.name, input, observed, 2, &read_error)) {
+                    inference_failed.store(true, std::memory_order_relaxed);
+                    continue;
+                }
+                const bool old_state = observed[0] == -3.f && observed[1] == 4.5f;
+                const bool new_state = observed[0] == -6.f && observed[1] == 9.f;
+                if (!old_state && !new_state)
+                    inference_failed.store(true, std::memory_order_relaxed);
+            }
+        });
+    }
+    for (int i = 0; i < 40; ++i) {
+        const auto& next = (i & 1) ? tensor : alternate;
+        if (!model.loadMappedTensors({next}, &error, &failed))
+            inference_failed.store(true, std::memory_order_relaxed);
+    }
+    for (auto& reader : readers) reader.join();
+    assert(!inference_failed.load(std::memory_order_relaxed));
+    assert(model.loadMappedTensors({tensor}, &error, &failed));
+
+    // A store-wide encoded budget rejects a complete replacement atomically.
+    CompressedGGUFModel::Options bounded_options;
+    bounded_options.decoded_cache_bytes = 0;
+    bounded_options.block_bytes = 4;
+    bounded_options.encoded_residency_bytes = 8;
+    CompressedGGUFModel bounded_model(bounded_options);
+    assert(bounded_model.loadMappedTensors({tensor}, &error, &failed));
+    auto second_tensor = make_f16("blk.1.attn.weight", weights);
+    assert(!bounded_model.loadMappedTensors({tensor, second_tensor}, &error, &failed));
+    assert(failed == second_tensor.name);
+    assert(bounded_model.tensorCount() == 1 && bounded_model.contains(tensor.name));
 
     // Unsupported quantization is readable byte-for-byte but not silently
     // interpreted by a mismatched scalar kernel.
