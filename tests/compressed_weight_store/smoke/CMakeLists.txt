@@ -97,3 +97,23 @@ if(ZLIB_FOUND)
 endif()
 
 message(STATUS "RawrXD isolated compressed-residency and codec smoke suite configured")
+
+if(MSVC)
+    enable_language(ASM_MASM)
+    add_library(rawrxd_brutal_gzip STATIC
+        "${RAWRXD_ROOT}/kernels/deflate_brutal_masm.asm")
+    target_include_directories(rawrxd_brutal_gzip PUBLIC
+        "${RAWRXD_ROOT}/include")
+    target_compile_definitions(rawrxd_brutal_gzip PUBLIC
+        RAWRXD_HAVE_BRUTAL_GZIP_MASM=1)
+    if(ZLIB_FOUND)
+        add_executable(brutal_masm_gzip_contract_test
+            "${RAWRXD_ROOT}/tests/brutal_masm_gzip_contract_test.cpp")
+        target_link_libraries(brutal_masm_gzip_contract_test PRIVATE
+            rawrxd_brutal_gzip ZLIB::ZLIB)
+        target_include_directories(brutal_masm_gzip_contract_test PRIVATE
+            "${RAWRXD_ROOT}/include")
+        target_compile_features(brutal_masm_gzip_contract_test PRIVATE cxx_std_17)
+        add_test(NAME brutal_masm_gzip_contract COMMAND brutal_masm_gzip_contract_test)
+    endif()
+endif()
