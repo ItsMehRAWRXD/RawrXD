@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cmath>
+#include <filesystem>
 using namespace RawrXD::TensorCompression;
 namespace {
 using U=uint64_t;
@@ -62,6 +63,15 @@ int main(int argc,char** argv) {
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     try {
+        // String inequality is insufficient: aliases and symlinks can name
+        // the same inode. Never truncate or replace the input model.
+        namespace fs=std::filesystem;
+        const fs::path inputPath(argv[1]), outputPath(argv[2]), partialPath(tmp);
+        if(fs::exists(inputPath) && fs::exists(outputPath) &&
+           fs::equivalent(inputPath,outputPath))
+            throw std::runtime_error("input and output refer to the same file");
+        if(fs::exists(partialPath) && fs::equivalent(inputPath,partialPath))
+            throw std::runtime_error("temporary output refers to the input file");
         const bool q8=argc==5 && std::string(argv[4])=="q8_0";
         const bool q4=argc==5 && std::string(argv[4])=="q4_0";
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
