@@ -620,7 +620,9 @@ bool Deep2Engine::vulkanInt4Gemv(const float* W, const float* x, float* y,
 // packed tensors directly to the native GPU kernel (no F32 expansion).
 bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, size_t packedBytes,
                                      const float* x, float* y, uint32_t rows, uint32_t cols, uint32_t ggufType) {
-    if (!vulkanReady || !vulkan || !packed || !x || !y) return false;
+    // Note: packed may be nullptr for a warm (cache-hit) dispatch -- the cache
+    // branch below handles that. Only x/y/vulkan are required unconditionally.
+    if (!vulkanReady || !vulkan || !x || !y) return false;
     const auto* gpu = vulkan->primary();
     if (!gpu) return false;
     const auto fmt = rawrxd::gpu::DetectFormat(ggufType);

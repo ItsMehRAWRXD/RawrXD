@@ -85,13 +85,15 @@ int main(int argc, char** argv) {
         Deep2Engine engine;
         if (!engine.Initialize(model)) { std::fprintf(stderr, "Deep2Engine init failed\n"); return 1; }
         std::vector<float> y(rows), y2(rows);
+        // Direct gpuMatvecQ4 (cold + warm). The warm call passes packed=nullptr
+        // to exercise the cache-hit path (the !packed guard fix).
         bool ok1 = engine.gpuMatvecQ4(sub, raw.data(), raw.size(), x.data(), y.data(), rows, cols, type);
-        bool ok2 = engine.gpuMatvecQ4(sub, raw.data(), raw.size(), x.data(), y2.data(), rows, cols, type);
+        bool ok2 = engine.gpuMatvecQ4(sub, nullptr, 0, x.data(), y2.data(), rows, cols, type);
         double maxd=0; for(uint32_t r=0;r<rows;++r) maxd=std::max(maxd,(double)std::fabs(y[r]-yCpu[r]));
         double maxd2=0; for(uint32_t r=0;r<rows;++r) maxd2=std::max(maxd2,(double)std::fabs(y2[r]-yCpu[r]));
         bool pass = ok1 && ok2 && (maxd<1e-3) && (maxd2<1e-3);
         std::printf("  gpuMatvecQ4 call1=%d call2=%d maxDiff1=%g maxDiff2=%g %s\n",
-            ok1?1:0, ok2?1:0, maxd, maxd2, pass?"PASS (cold+warm)":"FAIL");
+            ok1?1:0, ok2?1:0, maxd, maxd2, pass?"PASS (cold+warm, nullptr cache-hit)":"FAIL");
         engine.Shutdown(); // release cached GPU buffers
         return pass ? 0 : 1;
     }
