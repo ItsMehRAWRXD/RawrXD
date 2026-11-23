@@ -309,6 +309,55 @@ inline bool ConvertF64RangeToF32(std::ifstream& in,std::ofstream& out,
     }
     return true;
 }
+// Auto F64 narrowing must not fail the whole GGUF merely because one
+// tensor contains nonfinite, overflowing, or underflowing values.
+inline bool CanConvertF64ToF32(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%8 || from>static_cast<uint64_t>(
+       std::numeric_limits<std::streamoff>::max()))return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char buffer[8192];
+    while(bytes) {
+        const auto n=static_cast<std::streamsize>(
+            std::min<uint64_t>(bytes,sizeof(buffer)));
+        if(!in.read(reinterpret_cast<char*>(buffer),n))return false;
+        for(std::streamsize i=0;i<n;i+=8) {
+            uint64_t bits=0;
+            for(unsigned j=0;j<8;++j)bits|=uint64_t(buffer[i+j])<<(8*j);
+            double value=0;std::memcpy(&value,&bits,8);
+            if(!std::isfinite(value))return false;
+            const float converted=static_cast<float>(value);
+            if(!std::isfinite(converted) ||
+               (value!=0.0 && converted==0.0f))return false;
+        }
+        bytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
+inline bool CanConvertF64ToF16(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%8 || from>static_cast<uint64_t>(
+       std::numeric_limits<std::streamoff>::max()))return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char buffer[8192];
+    while(bytes) {
+        const auto n=static_cast<std::streamsize>(
+            std::min<uint64_t>(bytes,sizeof(buffer)));
+        if(!in.read(reinterpret_cast<char*>(buffer),n))return false;
+        for(std::streamsize i=0;i<n;i+=8) {
+            uint64_t bits=0;
+            for(unsigned j=0;j<8;++j)bits|=uint64_t(buffer[i+j])<<(8*j);
+            double value=0;std::memcpy(&value,&bits,8);
+            // Conversion rejects values beyond the largest finite F16
+            // and any nonzero input closer to zero than a subnormal.
+            if(!std::isfinite(value) || std::abs(value)>65504.0 ||
+               (value!=0.0 && std::abs(value)<=0x1p-25))
+                return false;
+        }
+        bytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
 // Probe automatic FP32 narrowing before staging any output. One incompatible
 // tensor must not prevent independent eligible tensors from shrinking.
 inline bool CanConvertF32ToF16(std::ifstream& in,uint64_t from,uint64_t bytes) {
@@ -1420,6 +1469,26 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.q5_source_q5_1=true;
                 t.type=6;
                 t.bytes=compact;
+            }
+        }
+    }
+    // F64 automatic conversion is opportunistic, not a requirement.
+    // Retain the original F64 tensor if its selected destination would
+    // overflow, underflow to zero, or discard nonfinite payloads.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_f64_to_f16 && !t.convert_f64_to_f32)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)
+                return RepackError::Overflow;
+            const uint64_t from=dataStart+t.old_offset;
+            const bool valid=t.convert_f64_to_f16
+                ?CanConvertF64ToF16(in,from,t.source_bytes)
+                :CanConvertF64ToF32(in,from,t.source_bytes);
+            if(!valid) {
+                t.convert_f64_to_f16=false;
+                t.convert_f64_to_f32=false;
+                t.type=28;
+                t.bytes=t.source_bytes;
             }
         }
     }
