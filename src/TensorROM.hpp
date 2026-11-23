@@ -80,6 +80,10 @@ public:
     TensorROM(const TensorROM&) = delete;
     TensorROM& operator=(const TensorROM&) = delete;
 
+    // Release all shard handles, pager pages, indexes and model metadata.
+    // Call only after inference leases have been joined.
+    void Reset();
+
     // Open and index one GGUF shard (header + tensor directory only).
     bool addShard(const std::string& path);
 
