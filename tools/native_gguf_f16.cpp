@@ -289,7 +289,7 @@ int main(int argc,char** argv) {
             if(t.bytes && t.bytes>span)throw std::runtime_error("tensor exceeds span");
             if(!t.bytes)t.bytes=span; // Unknown quantized type: preserve complete storage span
             
-            // Large F32 tensors are handled by a bounded two-pass F16 stream.
+            // Floating tensor payload sizes are checked before streaming conversion.
         }
         // Never overwrite an unrelated or interrupted conversion's staging file.
         // This preflight protects existing files but is not atomic against races.
@@ -299,7 +299,7 @@ int main(int argc,char** argv) {
         ownsTemporary=true;
         if(!out)throw std::runtime_error("cannot create output");
         seek(in,0);copy(in,out,kvEnd); // preserve original header and all metadata bytes
-        // Preflight each F32 candidate before writing tensor table.
+        // Preflight candidate tensors before writing the tensor descriptor table.
         std::vector<std::vector<uint8_t>> converted(ts.size());
         std::vector<uint32_t> outputTypes(ts.size());
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
@@ -406,7 +406,7 @@ int main(int argc,char** argv) {
                 if(valid){streamHalf[i]=true;outputTypes[i]=1;++changed;}
                 continue;
             }
-            if(t.bytes>64u*1024u*1024u)continue; // Q4/Q5 large-tensor streaming pending
+            if(t.bytes>64u*1024u*1024u)continue; // Defensive cap for any remaining non-streamed format
             std::vector<uint8_t> raw(static_cast<size_t>(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
