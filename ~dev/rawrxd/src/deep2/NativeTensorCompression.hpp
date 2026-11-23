@@ -35,7 +35,7 @@ public:
         std::size_t elements, float maxAbsError, Reader&& reader,
         std::size_t chunkElements = 4096, bool /*reservedPolicy*/ = false,
         std::size_t maxStoredBytes = std::numeric_limits<std::size_t>::max()) {
-        if (!reader || !std::isfinite(maxAbsError) || maxAbsError < 0.0f ||
+        if (!std::isfinite(maxAbsError) || maxAbsError < 0.0f ||
             chunkElements == 0 ||
             elements > std::numeric_limits<std::size_t>::max() / sizeof(float))
             throw std::invalid_argument("invalid ChunkedF32Storage reader input");
