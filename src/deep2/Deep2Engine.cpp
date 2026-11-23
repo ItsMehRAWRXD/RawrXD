@@ -12393,9 +12393,10 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
 
-    if (!lw.hasSSM || !lw.ssmIn.data || !lw.ssmOut.data || !lw.ssmA.data ||
-        !lw.ssmD.data || !lw.ssmConv1d.data || !lw.ssmConv1dBias.data ||
-        !lw.ssmNorm.data)
+    if (!lw.hasSSM || !lw.ssmIn.hasBacking() || !lw.ssmOut.hasBacking() ||
+        !lw.ssmA.hasBacking() || !lw.ssmD.hasBacking() ||
+        !lw.ssmConv1d.hasBacking() || !lw.ssmConv1dBias.hasBacking() ||
+        !lw.ssmNorm.hasBacking())
     {
         fprintf(stderr,
                 "[SSM_FATAL] layer=%zu missing required Mamba-2 SSM tensors "
@@ -12542,8 +12543,40 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // ── Step 2: Causal conv1d on xBC (in-place) ──
     float* convStatePtr = ssmMambaConvState + layer * dConv * dConvDim;
 
-    const float* convW = (const float*)lw.ssmConv1d.data;
-    const float* convBias = (const float*)lw.ssmConv1dBias.data;
+    // SSM's custom scalar/vector consumers also support compressed backing.
+    // The store keeps the authoritative tensors compressed; only the vectors
+    // and convolution kernel needed by this selective-scan invocation are
+    // materialized in request-local scratch. LinearW handles ssm_in/ssm_out
+    // through its normal compressed row-range path.
+    std::vector<float> compressedConvWeights;
+    std::vector<float> compressedConvBias;
+    std::vector<float> compressedA;
+    std::vector<float> compressedD;
+    std::vector<float> compressedDtBias;
+    std::vector<float> compressedNorm;
+    const auto getF32 = [](const WeightTensor& weight, std::vector<float>& scratch,
+                           const char* role, bool required) -> const float* {
+        if (!weight.hasBacking()) {
+            if (required)
+                throw std::runtime_error(std::string("SSM missing ") + role);
+            return nullptr;
+        }
+        if (weight.type != (int)GGMLType::GGML_TYPE_F32 ||
+            weight.sizeBytes % sizeof(float) != 0)
+            throw std::runtime_error(std::string("SSM ") + role +
+                                     " must be a packed F32 tensor");
+        if (weight.hasCompressedBacking()) {
+            scratch.resize(weight.sizeBytes / sizeof(float));
+            std::string readError;
+            if (!weight.readBytes(0, scratch.data(), weight.sizeBytes, &readError))
+                throw std::runtime_error(std::string("SSM compressed ") + role +
+                                         " read failed: " + readError);
+            return scratch.data();
+        }
+        return static_cast<const float*>(weight.data);
+    };
+    const float* convW = getF32(lw.ssmConv1d, compressedConvWeights, "conv1d weights", true);
+    const float* convBias = getF32(lw.ssmConv1dBias, compressedConvBias, "conv1d bias", true);
     // Shift conv state: state[k] = state[k-1] for k=d_conv-1..1
     // Use memmove because source and destination ranges overlap.
     for (size_t k = dConv - 1; k > 0; --k)
@@ -12579,9 +12612,9 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float* C = convOut + dInner + groups * groupState;           // [groups * groupState]
 
     // ── Step 4: Selective scan (Mamba-2) ──
-    const float* aParam = (const float*)lw.ssmA.data;
-    const float* dParam = (const float*)lw.ssmD.data;
-    const float* dtBias = (const float*)lw.ssmDtBias.data;
+    const float* aParam = getF32(lw.ssmA, compressedA, "A vector", true);
+    const float* dParam = getF32(lw.ssmD, compressedD, "D vector", true);
+    const float* dtBias = getF32(lw.ssmDtBias, compressedDtBias, "dt bias", false);
     float* statePtr = ssmMambaState + layer * ssmMambaDInner * ssmMambaDState;      // [d_inner, d_state]
     float* yInner = ssmTemp;                                   // [d_inner]
 
@@ -12645,7 +12678,14 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // one RMS over all inner channels.  This mirrors the production reference
     // in runtime_graph_executor.cpp and avoids the previous double-gating /
     // per-group scale error that inflated the residual stream.
-    const float* normW = (const float*)lw.ssmNorm.data;
+    const float* normW = getF32(lw.ssmNorm, compressedNorm, "norm vector", true);
+    if (lw.ssmConv1d.sizeBytes < dConvDim * dConv * sizeof(float) ||
+        lw.ssmConv1dBias.sizeBytes < dConvDim * sizeof(float) ||
+        lw.ssmNorm.sizeBytes < dInner * sizeof(float) ||
+        lw.ssmA.sizeBytes < heads * sizeof(float) ||
+        lw.ssmD.sizeBytes < heads * sizeof(float) ||
+        (lw.ssmDtBias.hasBacking() && lw.ssmDtBias.sizeBytes < heads * sizeof(float)))
+        throw std::runtime_error("SSM vector or convolution tensor is smaller than its consumer geometry");
     double gatedSumSq = 0.0;
     for (size_t i = 0; i < dInner; ++i)
     {
