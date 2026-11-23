@@ -101,9 +101,13 @@ int main(int argc,char** argv) {
             auto& t=ts[order[j]];
             U next=j+1<order.size()?ts[order[j+1]].offset:fileSize-dataStart;
             if(t.offset>next || add(dataStart,next)>fileSize)throw std::runtime_error("invalid tensor offsets");
+            if(t.offset%alignment)throw std::runtime_error("unaligned tensor offset");
+            if(j && t.offset==ts[order[j-1]].offset)throw std::runtime_error("overlapping tensor offsets");
             U span=next-t.offset;
             if(t.bytes && t.bytes>span)throw std::runtime_error("tensor exceeds span");
             if(!t.bytes)t.bytes=span; // Unknown quantized type: preserve complete storage span
+            if(t.type==0 && t.bytes!=mul(mul(t.dims[0],t.dims.size()>1?t.dims[1]:1),4) && t.dims.size()<=2)
+                throw std::runtime_error("F32 tensor size mismatch");
             if(t.convert && t.bytes>64u*1024u*1024u) t.convert=false; // bounded allocation
         }
         std::ofstream out(tmp,std::ios::binary|std::ios::trunc);
@@ -116,6 +120,7 @@ int main(int argc,char** argv) {
         U changed=0;
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type==1 && !q8))continue;
+            if(t.bytes>64u*1024u*1024u)continue;
             std::vector<uint8_t> raw(size_t(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
@@ -141,6 +146,7 @@ int main(int argc,char** argv) {
                     uint16_t h=ToHalf(scale);
                     float actual=FromHalf(h);
                     if(maxAbs && (!std::isfinite(actual) || actual==0)) {valid=false;break;}
+                    if(maxAbs && maxAbs/actual>127.5f) {valid=false;break;}
                     blocks.push_back(uint8_t(h));blocks.push_back(uint8_t(h>>8));
                     for(float f:values) {
                         float qf=actual?std::round(f/actual):0.0f;
