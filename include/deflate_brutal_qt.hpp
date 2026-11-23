@@ -25,6 +25,10 @@
 
 namespace brutal {
 
+inline uint32_t gzipCrc32(const uint8_t* data, std::size_t len);
+inline std::size_t maxCompressedSize(std::size_t rawSize);
+inline Bytes compressStoredPortable(const uint8_t* data, std::size_t size);
+
 /**
  * @brief Raw byte buffer used by the Qt-free API.
  */
@@ -40,19 +44,19 @@ using Bytes = std::vector<uint8_t>;
  */
 inline Bytes compress(const Bytes& in)
 {
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_MASM)
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(
-        in.empty() ? nullptr : reinterpret_cast<const void*>(in.data()),
-        in.size(),
-        &packedSz
-    );
-
-    if (!p) return {};  // malloc failure
-
+        in.empty() ? nullptr : static_cast<const void*>(in.data()),
+        in.size(), &packedSz);
+    if (!p) return {};
     Bytes out(static_cast<const uint8_t*>(p),
               static_cast<const uint8_t*>(p) + packedSz);
     std::free(p);
     return out;
+#else
+    return compressStoredPortable(in.empty() ? nullptr : in.data(), in.size());
+#endif
 }
 
 /**
@@ -62,16 +66,17 @@ inline Bytes compress(const Bytes& in)
 inline Bytes compress(const void* data, std::size_t size)
 {
     if (!data && size != 0) return {};
-
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_MASM)
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(data, size, &packedSz);
-
     if (!p) return {};
-
     Bytes out(static_cast<const uint8_t*>(p),
               static_cast<const uint8_t*>(p) + packedSz);
     std::free(p);
     return out;
+#else
+    return compressStoredPortable(static_cast<const uint8_t*>(data), size);
+#endif
 }
 #endif
 
@@ -90,6 +95,58 @@ inline std::size_t maxCompressedSize(std::size_t rawSize)
     const std::size_t blockCount = (std::max)(std::size_t(1), rawSize / 65535 + (rawSize % 65535 != 0 ? 1 : 0));
     if (blockCount > (limit - overhead - rawSize) / 5) return limit;
     return rawSize + blockCount * 5 + overhead;
+}
+
+// Portable fallback used when the Windows x64 MASM provider is not linked.
+// It preserves the same deterministic gzip/stored-block wire format.
+inline Bytes compressStoredPortable(const uint8_t* data, std::size_t size)
+{
+    if (!data && size != 0) return {};
+    const std::size_t capacity = maxCompressedSize(size);
+    if (capacity == (std::numeric_limits<std::size_t>::max)()) return {};
+    Bytes out;
+    try {
+        out.resize(capacity);
+    } catch (...) {
+        return {};
+    }
+
+    std::size_t pos = 0;
+    out[pos++] = 0x1f; out[pos++] = 0x8b;
+    out[pos++] = 8;    out[pos++] = 0;
+    out[pos++] = 0; out[pos++] = 0; out[pos++] = 0; out[pos++] = 0;
+    out[pos++] = 0; out[pos++] = 0xff;
+
+    if (size == 0) {
+        out[pos++] = 1;
+        out[pos++] = 0; out[pos++] = 0;
+        out[pos++] = 0xff; out[pos++] = 0xff;
+    } else {
+        std::size_t offset = 0;
+        while (offset < size) {
+            const std::size_t count = (std::min)(size - offset, std::size_t(65535));
+            const bool finalBlock = count == size - offset;
+            out[pos++] = finalBlock ? 1 : 0;
+            const std::uint16_t length = static_cast<std::uint16_t>(count);
+            const std::uint16_t inverse = static_cast<std::uint16_t>(~length);
+            out[pos++] = static_cast<std::uint8_t>(length & 0xffu);
+            out[pos++] = static_cast<std::uint8_t>(length >> 8);
+            out[pos++] = static_cast<std::uint8_t>(inverse & 0xffu);
+            out[pos++] = static_cast<std::uint8_t>(inverse >> 8);
+            std::memcpy(out.data() + pos, data + offset, count);
+            pos += count;
+            offset += count;
+        }
+    }
+
+    const std::uint32_t crc = gzipCrc32(data, size);
+    const std::uint32_t isize = static_cast<std::uint32_t>(size);
+    for (unsigned i = 0; i < 4; ++i)
+        out[pos++] = static_cast<std::uint8_t>((crc >> (i * 8)) & 0xffu);
+    for (unsigned i = 0; i < 4; ++i)
+        out[pos++] = static_cast<std::uint8_t>((isize >> (i * 8)) & 0xffu);
+    out.resize(pos);
+    return out;
 }
 
 /**
@@ -230,22 +287,28 @@ inline Bytes decompress(const Bytes& compressed,
  */
 inline QByteArray compress(const QByteArray& in)
 {
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_MASM)
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(
         reinterpret_cast<const void*>(in.constData()),
-        static_cast<size_t>(in.size()),
-        &packedSz
-    );
-
-    if (!p) return {};  // malloc failure
+        static_cast<size_t>(in.size()), &packedSz);
+    if (!p) return {};
     if (packedSz > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
         std::free(p);
         return {};
     }
-
     QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
     std::free(p);
     return out;
+#else
+    const Bytes encoded = compressStoredPortable(
+        reinterpret_cast<const uint8_t*>(in.constData()),
+        static_cast<std::size_t>(in.size()));
+    if (encoded.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
+        return {};
+    return QByteArray(reinterpret_cast<const char*>(encoded.data()),
+                      static_cast<int>(encoded.size()));
+#endif
 }
 
 /**
@@ -255,15 +318,24 @@ inline QByteArray compress(const QByteArray& in)
 inline QByteArray compress(const void* data, std::size_t size)
 {
     if (!data && size != 0) return {};
-
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_MASM)
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(data, size, &packedSz);
-
     if (!p) return {};
-
+    if (packedSz > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+        std::free(p);
+        return {};
+    }
     QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
     std::free(p);
     return out;
+#else
+    const Bytes encoded = compressStoredPortable(static_cast<const uint8_t*>(data), size);
+    if (encoded.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
+        return {};
+    return QByteArray(reinterpret_cast<const char*>(encoded.data()),
+                      static_cast<int>(encoded.size()));
+#endif
 }
 #endif
 
