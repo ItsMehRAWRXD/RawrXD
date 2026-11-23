@@ -1724,6 +1724,7 @@ private:
     // One-shot GEMV weight buffers (cacheKey=0). They are retained through a
     // fused command buffer and reclaimed only after its fence completes.
     std::vector<DeviceBuf> transientWeightBuffers_;
+    size_t transientWeightBytes_ = 0;
     std::vector<PrefetchEntry> prefetch_;
 
     // ===== DEEP2_DIRECT_RESIDENT_DISPATCH_001 ============================
