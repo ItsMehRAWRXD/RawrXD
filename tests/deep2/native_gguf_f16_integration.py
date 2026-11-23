@@ -107,6 +107,9 @@ def run(binary):
             for block in range(len(values)//32):
                 start4=bs+off4+block*18
                 scale=struct.unpack_from("<e",bb,start4)[0]
+                # Largest absolute value in this fixture is positive;
+                # GGML Q4_0 represents it with a negative scale and code -8.
+                assert scale<0
                 packed=bb[start4+2:start4+18]
                 assert len(packed)==16
                 for j in range(32):
