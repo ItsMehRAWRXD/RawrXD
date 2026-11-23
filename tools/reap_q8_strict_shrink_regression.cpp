@@ -45,6 +45,9 @@ int main() {
         }
         ok=types[0]==8 && types[1]==8 &&
            offsets[0]==0 && offsets[1]==544;
+        std::ifstream before(src,std::ios::binary|std::ios::ate);
+        std::ifstream after(dst,std::ios::binary|std::ios::ate);
+        ok &= bool(before) && bool(after) && after.tellg()<before.tellg();
         const uint64_t start=(static_cast<uint64_t>(in.tellg())+31)&~uint64_t(31);
         in.seekg(static_cast<std::streamoff>(start));
         unsigned char q8[34]={};
