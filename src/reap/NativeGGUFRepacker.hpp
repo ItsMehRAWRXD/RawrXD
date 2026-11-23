@@ -287,6 +287,28 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
 }
 // GGML Q4_0 from existing Q8_0: 32 values, FP16 scale and 16 packed nibbles.
 // Nibble i is the low half; nibble i+16 is the high half of byte i.
+// Scan Q4_1 blocks before planning a sensitive-tensor conversion.
+// Only accept the affine representation when dropping the minimum leaves
+// every decoded weight unchanged. No speculative lossy conversion.
+inline bool IsExactQ4_1ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%20 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char header[4];
+    while(bytes) {
+        if(!in.read(reinterpret_cast<char*>(header),4))return false;
+        const uint16_t dh=uint16_t(header[0])|(uint16_t(header[1])<<8);
+        const uint16_t mh=uint16_t(header[2])|(uint16_t(header[3])<<8);
+        const uint32_t db=Float16ToFloat32Bits(dh),mb=Float16ToFloat32Bits(mh);
+        float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
+        if(!std::isfinite(d)||!std::isfinite(m)||m!=-8.0f*d)return false;
+        in.seekg(16,std::ios::cur);
+        if(!in)return false;
+        bytes-=20;
+    }
+    return true;
+}
 inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                            uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
     const uint64_t inputBlock=sourceType==0?128:sourceType==1?64:
@@ -996,6 +1018,30 @@ inline RepackError RepackGGUF(const std::string& input,
     for(const auto& t:tensors) {
         if(t.old_offset%alignment||t.old_offset>payload||
            t.source_bytes>payload-t.old_offset)return RepackError::Format;
+    }
+    // Quality-sensitive Q4_1 tensors are eligible only if EVERY block is
+    // provably reconstruction-exact in Q4_0. This second pass runs after
+    // directory parsing so dataStart and original offsets are trustworthy.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(t.type!=3 || !IsQualitySensitiveTensor(t.name) ||
+               t.convert_q4_0 || t.dims[0]%32)continue;
+            uint64_t compact=0;
+            uint64_t count=1;
+            bool valid=true;
+            for(const auto dim:t.dims)
+                if(!CheckedMultiply(count,dim,count)){valid=false;break;}
+            if(!valid || !CheckedMultiply(count/32,18,compact))
+                return RepackError::Overflow;
+            if(compact>=t.bytes)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(IsExactQ4_1ToQ4_0(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q4_0=true;
+                t.q4_source_type=3;
+                t.type=2;
+                t.bytes=compact;
+            }
+        }
     }
     std::vector<const RepackTensor*> offsets;
     for(const auto& t:tensors)offsets.push_back(&t);
