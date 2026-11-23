@@ -51,6 +51,7 @@ jobs:
           ./native_q5k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp -o quantized_tile_range_test
           ./quantized_tile_range_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc -c src/TensorROM.cpp -o tensor_rom.o
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_gguf_f16.cpp -o native_gguf_f16
           python3 tests/deep2/native_gguf_f16_integration.py ./native_gguf_f16
           python3 tests/deep2/native_gguf_k_integration.py ./native_gguf_f16
@@ -91,6 +92,8 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 /Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp /Fe:quantized_tile_range_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\quantized_tile_range_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 /Isrc /c src/TensorROM.cpp /Fotensor_rom.obj
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 tools/native_gguf_f16.cpp /Fe:native_gguf_f16.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
