@@ -11359,8 +11359,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             const size_t qNormElementBytes =
                 lw.attnQNorm.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
                 (lw.attnQNorm.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(uint16_t) : 0);
-            if (qNormElementBytes == 0)
-                throw std::runtime_error("unsupported Q norm tensor type");
+            if (qNormElementBytes == 0 ||
+                lw.attnQNorm.sizeBytes % qNormElementBytes != 0)
+                throw std::runtime_error("unsupported or mis-sized Q norm tensor");
             const size_t qNormElements = lw.attnQNorm.sizeBytes / qNormElementBytes;
             const bool qNormIsPerHead = qNormElements >= numHeads * headDim;
             if (qNormElements < headDim)
@@ -11445,8 +11446,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             const size_t kNormElementBytes =
                 lw.attnKNorm.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
                 (lw.attnKNorm.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(uint16_t) : 0);
-            if (kNormElementBytes == 0)
-                throw std::runtime_error("unsupported K norm tensor type");
+            if (kNormElementBytes == 0 ||
+                lw.attnKNorm.sizeBytes % kNormElementBytes != 0)
+                throw std::runtime_error("unsupported or mis-sized K norm tensor");
             const size_t kNormElements = lw.attnKNorm.sizeBytes / kNormElementBytes;
             const bool kNormIsPerHead = kNormElements >= numKVHeads * headDim;
             if (kNormElements < headDim)
