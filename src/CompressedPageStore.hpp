@@ -10,6 +10,7 @@
 #include <limits>
 #include <mutex>
 #include <vector>
+#include <utility>
 
 namespace deep2 {
 class CompressedPageStore {
