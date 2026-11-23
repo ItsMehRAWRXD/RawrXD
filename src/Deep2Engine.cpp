@@ -32,6 +32,11 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     if (!rom.addShard(modelPath)) return false;
     if (!rom.finalizeIndex()) return false;
 
+    // Stage 5: namespace residency keys by model identity so a different model
+    // with the same tensor names cannot reuse stale cached bytes.
+    modelId_ = modelPath;
+    compressedEncodedWeights.Clear();
+
     // Configure compressed-weight residency budgets (Stage 3). The compressed
     // caches are the bounded residency owners Deep2's tensor bindings read
     // through; budgets are derived from available physical memory and may be
@@ -251,15 +256,32 @@ Deep2Engine::TensorHandle Deep2Engine::getTensor(const std::string& name) {
         fprintf(stderr, "[ROM_EXEC_BRIDGE] tensor not found in ROM: %s\n", name.c_str());
         return h;
     }
+
+    // Stage 5: attempt compressed residency first. If the cache holds (or can
+    // build) a compressed representation of this tensor, decode it into
+    // ownedBytes and point the view there. The handle owns the bytes, so the
+    // view stays valid after cache eviction. Falls back to the ROM lease for
+    // non-compressible tensors or cache misses.
+    h.view.type = entry->type;
+    h.view.dims = entry->dims;
+    h.view.byteSize = entry->byteSize();
+    h.view.contiguous = true;
+
+    std::vector<uint8_t> residentBytes;
+    if (readTensorResident(*entry, residentBytes) &&
+        residentBytes.size() == entry->byteSize()) {
+        h.ownedBytes = std::make_shared<std::vector<uint8_t>>(std::move(residentBytes));
+        h.view.data = h.ownedBytes->data();
+        h.ok = true;
+        return h;
+    }
+
+    // Fallback: ROM pager lease (non-compressible tensor, or cache unavailable).
     h.lease = rom.leaseTensor(*entry);
     if (!h.lease) {
         fprintf(stderr, "[ROM_EXEC_BRIDGE] failed to lease tensor: %s\n", name.c_str());
         return h;
     }
-    h.view.type = entry->type;
-    h.view.dims = entry->dims;
-    h.view.byteSize = entry->byteSize();
-    h.view.contiguous = true;
     h.view.data = h.lease.direct(0, entry->byteSize());
     h.ok = true;
     return h;
@@ -283,11 +305,12 @@ bool Deep2Engine::readTensorResident(const deep2::TensorEntry& entry,
     const uint64_t size = entry.byteSize();
     if (size == 0) { out.clear(); return true; }
     out.assign(static_cast<size_t>(size), 0);
+    const std::string key = residencyKey(entry.name);
 
     // Fast path: if the cache already holds this tensor, bounded ReadRange.
     {
         std::vector<uint8_t> scratch;
-        if (compressedEncodedWeights.ReadRange(entry.name, 0, out.size(), out.data(), scratch))
+        if (compressedEncodedWeights.ReadRange(key, 0, out.size(), out.data(), scratch))
             return true;
         // fall through to registration/ROM on miss
     }
@@ -298,7 +321,7 @@ bool Deep2Engine::readTensorResident(const deep2::TensorEntry& entry,
     bool registered = false;
     try {
         registered = compressedEncodedWeights.RegisterFromReader(
-            entry.name, static_cast<size_t>(size),
+            key, static_cast<size_t>(size),
             [&entry, this](uint64_t offset, size_t n, uint8_t* dst) -> bool {
                 return this->rom.readTensorRange(entry, offset, n, dst);
             });
@@ -306,12 +329,19 @@ bool Deep2Engine::readTensorResident(const deep2::TensorEntry& entry,
 
     if (registered) {
         std::vector<uint8_t> scratch;
-        if (compressedEncodedWeights.ReadRange(entry.name, 0, out.size(), out.data(), scratch))
+        if (compressedEncodedWeights.ReadRange(key, 0, out.size(), out.data(), scratch))
             return true;
     }
 
     // Fallback: direct ROM read (cache miss, rejection, or decode failure).
     return rom.readTensor(entry, out.data());
+}
+
+std::string Deep2Engine::residencyKey(const std::string& tensorName) const {
+    // Namespace by model identity so tensors with the same name across different
+    // loaded models never collide in the residency cache.
+    if (modelId_.empty()) return tensorName;
+    return modelId_ + "\x1f" + tensorName;
 }
 
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,

@@ -43,6 +43,13 @@ struct Deep2Engine {
     // replacing raw mmap pointers with bounded, leased residency.
     Deep2::TensorResidencyCache compressedF32Weights{2ull * 1024ull * 1024ull * 1024ull};
     Deep2::TensorByteResidencyCache compressedEncodedWeights{512ull * 1024ull * 1024ull};
+    // Stage 5: model identity namespace. Residency cache keys are prefixed with
+    // this so loading a different model invalidates stale entries instead of
+    // reusing tensor bytes from a previous model with the same tensor names.
+    std::string modelId_;
+
+    // Stage 5: residency cache key namespaced by model identity.
+    std::string residencyKey(const std::string& tensorName) const;
 
     struct TensorResidencySnapshot {
         size_t f32Budget = 0;
@@ -87,9 +94,17 @@ struct Deep2Engine {
     struct TensorHandle {
         deep2::TensorLease lease;
         deep2::TensorView view;
+        // Stage 5: owned decoded bytes for residency-backed tensors. When set,
+        // view.data points into this buffer and remains valid for the handle's
+        // lifetime, independent of cache eviction. Non-compressible tensors
+        // leave this null and use `lease` (ROM pager) instead.
+        std::shared_ptr<std::vector<uint8_t>> ownedBytes;
         bool ok = false;
     };
     // Locate a tensor in the ROM, lease its resident pages, and expose a view.
+    // Stage 5: attempts compressed residency first (owned decoded bytes), then
+    // falls back to the ROM lease. The returned view.data is always valid for
+        // the handle's lifetime.
     TensorHandle getTensor(const std::string& name);
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
