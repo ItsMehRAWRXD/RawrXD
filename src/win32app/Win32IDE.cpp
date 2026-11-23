@@ -1,11 +1,3 @@
-Win32IDE::~Win32IDE() {
-    if (m_nativeEngine) {
-        delete static_cast<CPUInference::CPUInferenceEngine*>(m_nativeEngine);
-        m_nativeEngine = nullptr;
-    }
-    // Resource cleanup
-    Win32TerminalManager::cleanup();
-}
 #include "Win32IDE.h"
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
@@ -29,6 +21,17 @@ Win32IDE::~Win32IDE() {
 
 #pragma comment(lib, "comdlg32.lib")
 #pragma comment(lib, "comctl32.lib")
+
+// Keep the destructor after the declarations it uses: MSVC cannot parse
+// a qualified member definition before the class has been declared.
+Win32IDE::~Win32IDE() {
+    if (m_nativeEngine) {
+        delete static_cast<CPUInference::CPUInferenceEngine*>(m_nativeEngine);
+        m_nativeEngine = nullptr;
+    }
+    // Resource cleanup
+    Win32TerminalManager::cleanup();
+}
 
 #define IDC_EDITOR 1001
 #define IDC_TERMINAL 1002
