@@ -50,7 +50,7 @@ jobs:
       - name: Run Deep2 compressed synthetic-model E2E
         shell: pwsh
         run: |
-          ctest --test-dir build -C Release -R "^Deep2CompressedModelE2E$" --output-on-failure
+          ctest --test-dir build -C Release -R "^(Deep2CompressedModelE2E|ZlibAutoDetectSmoke)$" --output-on-failure
           if ($LASTEXITCODE -ne 0) { throw "Deep2 compressed model E2E failed" }
 
       - name: Set up Python
