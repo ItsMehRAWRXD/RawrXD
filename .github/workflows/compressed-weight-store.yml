@@ -5,6 +5,10 @@ on:
       - feat/native-compressed-weight-residency-20261123
     paths:
       - 'src/deep2/compression/**'
+      - 'src/deep2/Deep2Engine.cpp'
+      - 'src/deep2/GGUFLoader.hpp'
+      - 'src/Deep2Engine.h'
+      - 'CMakeLists.txt'
       - 'tests/compressed_weight_store/**'
       - '.github/workflows/compressed-weight-store.yml'
   pull_request:
