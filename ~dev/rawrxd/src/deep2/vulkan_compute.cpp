@@ -3121,7 +3121,7 @@ bool VulkanCompute::DispatchGemvQuantRows(
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
     uint32_t outputRowBase,uint64_t cacheKey)
 {
-    if(type!=1 && type!=8 && type!=10 && type!=12 && type!=14 && type!=30)
+    if(type!=0 && type!=1 && type!=8 && type!=10 && type!=12 && type!=14 && type!=30)
         return false;
     if(!weights||!weightBytes||!rows||!cols||
        outputRowBase > std::numeric_limits<uint32_t>::max() - rows ||
@@ -3132,6 +3132,10 @@ bool VulkanCompute::DispatchGemvQuantRows(
     if ((type == 1 || type == 30) &&
         (cols > std::numeric_limits<uint32_t>::max() / 2u ||
          weightBytes != static_cast<size_t>(rows) * static_cast<size_t>(cols) * 2u))
+        return false;
+    if (type == 0 &&
+        (cols > std::numeric_limits<uint32_t>::max() / 4u ||
+         weightBytes != static_cast<size_t>(rows) * static_cast<size_t>(cols) * 4u))
         return false;
 
     DeviceBuf* w=nullptr;
