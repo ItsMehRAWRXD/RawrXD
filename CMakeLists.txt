@@ -470,6 +470,13 @@ target_compile_features(rawrxd_compression_core PUBLIC cxx_std_17)
 if(ZLIB_FOUND AND TARGET ZLIB::ZLIB)
     target_link_libraries(rawrxd_compression_core PUBLIC ZLIB::ZLIB)
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+elseif(ZLIB_FOUND AND ZLIB_LIBRARIES AND ZLIB_INCLUDE_DIRS)
+    # Older FindZLIB providers can report FOUND without exporting an imported
+    # target. Honor their actual link/include results instead of silently
+    # compiling the unsupported codec branch.
+    target_link_libraries(rawrxd_compression_core PUBLIC ${ZLIB_LIBRARIES})
+    target_include_directories(rawrxd_compression_core PUBLIC ${ZLIB_INCLUDE_DIRS})
+    target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
 elseif(TARGET zlib)
     # FetchContent fallback (FETCHCONTENT_ZLIB=ON) defines a plain `zlib` target
     # that does not export include directories, so add them explicitly. Both the
