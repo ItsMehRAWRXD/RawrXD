@@ -86,7 +86,7 @@ inline std::size_t maxCompressedSize(std::size_t rawSize)
     constexpr std::size_t overhead = 18;
     const std::size_t limit = (std::numeric_limits<std::size_t>::max)();
     if (rawSize > limit - overhead) return limit;
-    const std::size_t blockCount = rawSize / 65535 + (rawSize % 65535 != 0 ? 1 : 0);
+    const std::size_t blockCount = (std::max)(std::size_t(1), rawSize / 65535 + (rawSize % 65535 != 0 ? 1 : 0));
     if (blockCount > (limit - overhead - rawSize) / 5) return limit;
     return rawSize + blockCount * 5 + overhead;
 }
@@ -278,6 +278,8 @@ inline QByteArray decompress(const QByteArray& compressed)
     const Bytes inflated = decompress(raw);
     if (inflated.empty()) return {};
 
+    if (inflated.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
+        return {};
     return QByteArray(reinterpret_cast<const char*>(inflated.data()),
                       static_cast<int>(inflated.size()));
 }
