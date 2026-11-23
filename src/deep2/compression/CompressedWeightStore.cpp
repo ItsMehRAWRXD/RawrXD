@@ -88,6 +88,36 @@ bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* valu
  for(std::size_t i=0;i<count;++i) converted[i]=floatToHalfRNE(values[i]);
  return addTensor(std::move(name),converted.data(),converted.size()*sizeof(std::uint16_t),error,GGML_TYPE_F16);
 }
+bool CompressedWeightStore::addTensorF32AsF16FromReader(
+    std::string name,const float* values,std::size_t count,std::string* error,
+    std::size_t max_encoded_bytes) {
+ if(!values&&count){if(error)*error="source values are required";return false;}
+ if(count>std::numeric_limits<std::size_t>::max()/sizeof(std::uint16_t)){
+  if(error)*error="F32-to-F16 tensor size overflow";return false;
+ }
+ struct Context { const float* values; std::size_t count; } context{values,count};
+ const std::size_t outputBytes=count*sizeof(std::uint16_t);
+ return addTensorFromReader(std::move(name),outputBytes,
+  [](void* opaque,std::size_t offset,void* destination,std::size_t length)->bool {
+   auto* ctx=static_cast<Context*>(opaque);
+   if(!ctx||(!destination&&length)||offset>ctx->count*2||length>ctx->count*2-offset)
+    return false;
+   auto* out=static_cast<std::uint8_t*>(destination);
+   const std::size_t end=offset+length;
+   for(std::size_t i=offset/2;i<(end+1)/2;++i){
+    const std::uint16_t half=floatToHalfRNE(ctx->values[i]);
+    const std::uint8_t encoded[2]={
+     static_cast<std::uint8_t>(half&0xffu),
+     static_cast<std::uint8_t>((half>>8)&0xffu)};
+    const std::size_t wordStart=i*2;
+    const std::size_t copyStart=(std::max)(offset,wordStart);
+    const std::size_t copyEnd=(std::min)(end,wordStart+2);
+    if(copyEnd>copyStart)
+     std::memcpy(out+(copyStart-offset),encoded+(copyStart-wordStart),copyEnd-copyStart);
+   }
+   return true;
+  },&context,error,GGML_TYPE_F16,false,max_encoded_bytes);
+}
 std::uint32_t CompressedWeightStore::tensorType(const std::string& n)const {
  std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?GGML_TYPE_OPAQUE:i->second.ggml_type;
 }
