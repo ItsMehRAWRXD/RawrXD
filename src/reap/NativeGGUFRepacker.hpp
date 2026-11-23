@@ -138,6 +138,36 @@ inline bool IsQualitySensitiveTensor(const std::string& name) {
 // Direct F64 -> F16 streaming conversion. No intermediate GGUF file or
 // unbounded allocation. Reject nonfinite input and values outside the
 // finite nonzero F16 range; the conversion is intentionally lossy.
+// Probe a complete F64 tensor for exact F16 representability before
+// selecting the smaller format. Uses fixed memory and checks signed zero.
+inline bool IsExactF64ToF16(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%8 || from>static_cast<uint64_t>(
+       std::numeric_limits<std::streamoff>::max()))return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char buffer[8192];
+    while(bytes) {
+        const auto n=static_cast<std::streamsize>(
+            std::min<uint64_t>(bytes,sizeof(buffer)));
+        if(!in.read(reinterpret_cast<char*>(buffer),n))return false;
+        for(std::streamsize i=0;i<n;i+=8) {
+            uint64_t bits=0;
+            for(unsigned j=0;j<8;++j)bits|=uint64_t(buffer[i+j])<<(8*j);
+            double value=0;std::memcpy(&value,&bits,8);
+            if(!std::isfinite(value) || std::abs(value)>65504.0)return false;
+            const float f=static_cast<float>(value);
+            uint32_t fb=0;std::memcpy(&fb,&f,4);
+            const uint16_t h=Float32BitsToFloat16(fb);
+            const uint32_t restoredBits=Float16ToFloat32Bits(h);
+            float restored=0;std::memcpy(&restored,&restoredBits,4);
+            if(static_cast<double>(restored)!=value ||
+               (value==0.0 && std::signbit(restored)!=std::signbit(value)))
+                return false;
+        }
+        bytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
 inline bool ConvertF64RangeToF16(std::ifstream& in,std::ofstream& out,
                                  uint64_t from,uint64_t sourceBytes) {
     if(sourceBytes%8 ||
@@ -1273,6 +1303,22 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.q5_source_q5_1=true;
                 t.type=6;
                 t.bytes=compact;
+            }
+        }
+    }
+    // Ordinary F64 matrices normally narrow to F32. If every original
+    // value is exactly representable in F16, use F16 instead without
+    // sacrificing any reconstructed precision.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_f64_to_f32)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)
+                return RepackError::Overflow;
+            if(IsExactF64ToF16(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_f64_to_f32=false;
+                t.convert_f64_to_f16=true;
+                t.type=1;
+                t.bytes=t.source_bytes/4;
             }
         }
     }
