@@ -11,7 +11,7 @@ int main() {
     {
         std::ofstream out(src,std::ios::binary);
         for(unsigned block=0;block<3;++block) {
-            WriteU32(out,scales[block]);WriteU32(out,0x7fc00000u);
+            WriteU16(out,Float32BitsToFloat16(scales[block]));WriteU16(out,0x7e00u);
             for(unsigned i=0;i<32;++i)
                 out.put(static_cast<char>(static_cast<int>(i)-128));
         }
@@ -20,7 +20,7 @@ int main() {
     {
         std::ifstream in(src,std::ios::binary);
         std::ofstream out(dst,std::ios::binary);
-        ok=ConvertQ8_1ToQ8_0(in,out,0,120);
+        ok=ConvertQ8_1ToQ8_0(in,out,0,108);
     }
     if(ok) {
         std::ifstream in(dst,std::ios::binary);
