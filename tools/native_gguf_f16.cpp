@@ -1140,7 +1140,7 @@ int main(int argc,char** argv) {
                 for(U off=0;off<t.bytes;off+=rawBlockBytes) {
                     if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))
                         throw std::runtime_error("truncated native K-quant payload");
-                    double values[256];uint8_t encoded[210];
+                    double values[256];uint8_t encoded[292];
                     if(!RawrXD::NativeKQuant::ReadFloatingBlock(raw.data(),t.type,values) ||
                        !RawrXD::NativeKQuant::EncodeBlock(streamNativeK[i],values,tolerance,encoded))
                         throw std::runtime_error("native K-quant preflight/write mismatch");
