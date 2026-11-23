@@ -266,7 +266,7 @@ int main(int argc,char** argv) {
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q6k && !q5k && !q4k && !q3k && !q5k && !q6k && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q6k && !q5k && !q4k && !q3k && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
         const bool quantized=q6k||q5k||q4k||q3k||q2k||q8k||q8||q4||q5||q41||q51;
