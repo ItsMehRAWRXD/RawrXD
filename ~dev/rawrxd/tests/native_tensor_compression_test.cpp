@@ -170,17 +170,17 @@ int main() {
     // Bit-exact mode must preserve signed zero and NaN payload bits, not merely
     // compare decoded floating-point values (NaN != NaN and +0 == -0).
     std::uint32_t specialBits[] = {0x80000000u, 0x7fc12345u, 0xffc54321u};
-    float specialValues[3]{};
-    std::memcpy(specialValues, specialBits, sizeof(specialBits));
-    auto special = ChunkedF32Storage::Build(specialValues, 3, 0.0f, 3);
+    float payloadValues[3]{};
+    std::memcpy(payloadValues, specialBits, sizeof(specialBits));
+    auto exactSpecial = ChunkedF32Storage::Build(payloadValues, 3, 0.0f, 3);
     float specialDecoded[3]{};
-    CHECK(special.DecodeRange(0, 3, specialDecoded));
-    CHECK(std::memcmp(specialValues, specialDecoded, sizeof(specialValues)) == 0);
-    CHECK(special.chunks()[0].encoding == RawrXD::TensorCompression::Encoding::F32);
+    CHECK(exactSpecial.DecodeRange(0, 3, specialDecoded));
+    CHECK(std::memcmp(payloadValues, specialDecoded, sizeof(payloadValues)) == 0);
+    CHECK(exactSpecial.chunks()[0].encoding == RawrXD::TensorCompression::Encoding::F32);
 
     // A permissive finite-value tolerance must not silently canonicalize
     // NaN signs or payloads: NaN has no defined numerical error metric.
-    auto specialLossy = ChunkedF32Storage::Build(specialValues, 3, 1.0f, 3);
+    auto specialLossy = ChunkedF32Storage::Build(payloadValues, 3, 1.0f, 3);
     float specialLossyDecoded[3]{};
     CHECK(specialLossy.DecodeRange(0, 3, specialLossyDecoded));
     std::uint32_t lossyNaNBits[3]{};
