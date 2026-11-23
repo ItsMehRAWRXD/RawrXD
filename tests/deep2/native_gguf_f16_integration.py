@@ -400,6 +400,21 @@ def run(binary):
                     assert abs(minimum+delta*code-values[block*32+j])<=10000
             offq=tt["blk.0.attn_k.weight"][2]
             assert bb[bs+offq:bs+offq+32]==quant
+        # Duplicate tensor names are ambiguous to GGUF consumers and must
+        # be rejected before a compressed output can be published.
+        duplicate=root/"duplicate-tensor-names.gguf"
+        kv=S("general.architecture")+U32(8)+S("llama")
+        kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+        raw=struct.pack("<"+"f"*len(values),*values)
+        header=b"GGUF"+U32(3)+U64(2)+U64(2)+kv
+        header+=S("same.weight")+U32(1)+U64(len(values))+U32(0)+U64(0)
+        header+=S("same.weight")+U32(1)+U64(len(values))+U32(0)+U64(len(raw))
+        duplicate.write_bytes(pad(header)+raw+raw)
+        duplicate_dest=root/"duplicate-rewritten.gguf"
+        rejected=subprocess.run([binary,str(duplicate),str(duplicate_dest),"1","auto"],
+                                capture_output=True)
+        assert rejected.returncode!=0
+        assert not duplicate_dest.exists()
         # Descriptor order intentionally differs from physical tensor order.
         # GGUF permits this; rewriting must keep offsets and payloads consistent.
         swapped=root/"reordered.gguf"
