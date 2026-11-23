@@ -19,6 +19,7 @@ layout(push_constant) uniform Push {
     uint rows;
     uint cols;
     uint weightBytes;
+    uint outputRowBase;
 } pc;
 
 // AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
@@ -200,13 +201,13 @@ void main() {
         blocksPerRow = (pc.cols + 255u) / 256u;
         rowBytes = blocksPerRow * 210u;
     } else {
-        y[row] = uintBitsToFloat(0x7fc00000u);
+        y[pc.outputRowBase + row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
 
     uint rb = row * rowBytes;
     if (rb + rowBytes > pc.weightBytes) {
-        if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
+        if (lane == 0u) y[pc.outputRowBase + row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
 
@@ -240,7 +241,7 @@ void main() {
             : 0.0;
         float total = subgroupAdd(v);
         if (subgroupElect())
-            y[row] = total;
+            y[pc.outputRowBase + row] = total;
     }
 
 }
