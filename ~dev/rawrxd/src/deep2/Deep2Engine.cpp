@@ -525,6 +525,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     residencyCache_ = std::make_unique<Deep2::TensorResidencyCache>(
         f32CompressionBudgetInitial);
     size_t f32CompressedBytes = 0;
+    size_t f32CompressedSourceBytes = 0;
     size_t f32CompressedTensors = 0;
     auto compressF32Tensor = [&](WeightTensor& wt) {
         if (!compressF32OnLoad ||
@@ -563,6 +564,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
         f32CompressionBudget -= stored;
         f32CompressedBytes += stored;
+        f32CompressedSourceBytes = wt.sizeBytes >
+            std::numeric_limits<size_t>::max() - f32CompressedSourceBytes
+            ? std::numeric_limits<size_t>::max()
+            : f32CompressedSourceBytes + wt.sizeBytes;
         ++f32CompressedTensors;
         if (deep2ForwardTraceEnabled()) {
             std::fprintf(stderr,
@@ -579,6 +584,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             compressQuantizedBytesOnLoad = false;
     }
     size_t quantizedCompressedBytes = 0;
+    size_t quantizedCompressedSourceBytes = 0;
     size_t quantizedCompressedTensors = 0;
     auto compressQuantizedBytes = [&](WeightTensor& wt) {
         if (!compressQuantizedBytesOnLoad ||
@@ -600,6 +606,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
         f32CompressionBudget -= stored;
         quantizedCompressedBytes += stored;
+        quantizedCompressedSourceBytes = wt.sizeBytes >
+            std::numeric_limits<size_t>::max() - quantizedCompressedSourceBytes
+            ? std::numeric_limits<size_t>::max()
+            : quantizedCompressedSourceBytes + wt.sizeBytes;
         ++quantizedCompressedTensors;
         if (deep2ForwardTraceEnabled()) {
             std::fprintf(stderr,
@@ -1184,10 +1194,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     modelWeights.loaded = true;
     if (compressF32OnLoad) {
         std::fprintf(stderr,
-            "[Deep2Engine] TENSOR_RESIDENCY f32_tensors=%zu f32_bytes=%zu quantized_tensors=%zu quantized_bytes=%zu budget_bytes=%zu f32_tolerance=%.9g\n",
-            f32CompressedTensors, f32CompressedBytes,
-            quantizedCompressedTensors, quantizedCompressedBytes,
-            f32CompressionBudgetInitial, f32CompressionTolerance);
+            "[Deep2Engine] TENSOR_RESIDENCY "
+            "f32_tensors=%zu f32_source_bytes=%zu f32_resident_bytes=%zu "
+            "quantized_tensors=%zu quantized_source_bytes=%zu "
+            "quantized_resident_bytes=%zu budget_bytes=%zu "
+            "f32_tolerance=%.9g\\n",
+            f32CompressedTensors, f32CompressedSourceBytes, f32CompressedBytes,
+            quantizedCompressedTensors, quantizedCompressedSourceBytes,
+            quantizedCompressedBytes, f32CompressionBudgetInitial,
+            f32CompressionTolerance);
     }
 
     // Runtime may be entered through loadModel-only clients.
