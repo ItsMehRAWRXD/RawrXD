@@ -4421,8 +4421,18 @@ if(MSVC)
     endif()
 
     # Brutal MASM benchmark
-    if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
-        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
+# Assemble the MASM source with ml64 directly. Listing the .asm in
+# add_executable made the VS generator emit it as <None> (and feed C++ flags
+# to ml64), leaving deflate_brutal_masm unresolved at link time.
+set(_brutal_obj ${CMAKE_CURRENT_BINARY_DIR}/deflate_brutal_masm.obj)
+add_custom_command(
+    OUTPUT ${_brutal_obj}
+    COMMAND ${CMAKE_ASM_MASM_COMPILER} /nologo /c /Fo${_brutal_obj} ${CMAKE_SOURCE_DIR}/kernels/deflate_brutal_masm.asm
+    DEPENDS ${CMAKE_SOURCE_DIR}/kernels/deflate_brutal_masm.asm
+    COMMENT "Assembling deflate_brutal_masm.asm with ml64"
+)
+add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp ${_brutal_obj})
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
