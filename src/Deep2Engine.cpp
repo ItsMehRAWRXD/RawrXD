@@ -51,6 +51,19 @@ void configureTensorResidencyBudgets(Deep2Engine& engine) {
 }
 } // namespace
 
+bool Deep2Engine::ConfigureTensorCompression(size_t f32BudgetBytes,
+                                                   size_t encodedBudgetBytes,
+                                                   float f32MaxAbsError) {
+    if (!std::isfinite(f32MaxAbsError) || f32MaxAbsError < 0.0f)
+        return false;
+    // Cache SetBudget operations are synchronized with active reads/builds.
+    // The tolerance is atomic so concurrent inference observes a valid value.
+    compressedF32Weights.SetBudget(f32BudgetBytes);
+    compressedEncodedWeights.SetBudget(encodedBudgetBytes);
+    compressedF32MaxAbsError.store(f32MaxAbsError, std::memory_order_relaxed);
+    return true;
+}
+
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
     // Reinitialization is a full lifecycle boundary; discard prior model state.
     Shutdown();
@@ -348,7 +361,7 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
                                        reinterpret_cast<uint8_t*>(out));
         };
         if (!compressedF32Weights.RegisterF32FromReader(
-                cacheKey, count, compressedF32MaxAbsError, reader, 4096)) {
+                cacheKey, count, compressedF32MaxAbsError.load(std::memory_order_relaxed), reader, 4096)) {
             // No safe/smaller encoding or no cache capacity: memoize the
             // decision and fetch only requested raw tiles on future calls.
             compressedF32Weights.MarkRawFallback(cacheKey);
