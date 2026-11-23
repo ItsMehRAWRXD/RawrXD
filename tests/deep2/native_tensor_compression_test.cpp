@@ -19,7 +19,8 @@ int main() {
     for(size_t i=0;i<patterned.size();++i)
         patterned[i]=static_cast<uint8_t>((i % 251) ^ ((i / 251) & 7));
     auto lz=Encode(patterned.data(),patterned.size());
-    assert(lz.encoding==Encoding::LZ4);
+    // Adaptive selection may prefer a shuffle or predictor over plain LZ4.
+    assert(lz.encoding != Encoding::Raw);
     assert(lz.payload.size()<patterned.size());
     assert(Decode(lz)==patterned);
     std::vector<uint8_t> lzDirect(patterned.size(),0);
