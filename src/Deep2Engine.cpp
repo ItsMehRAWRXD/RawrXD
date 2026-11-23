@@ -556,6 +556,7 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
                        countRows, cols)) return false;
         firstRow += countRows;
     }
+    std::copy(completed.begin(), completed.end(), output);
     return true;
 }
 
