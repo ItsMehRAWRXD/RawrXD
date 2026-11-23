@@ -257,6 +257,24 @@ int main() {
     assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
 
+    // Correlated, non-identical 32-bit patterns. XOR prediction must be
+    // lossless, including signed zero and NaN payload bits.
+    std::vector<uint32_t> correlated(4096);
+    uint32_t state = 0x3f800000u;
+    for (size_t i = 0; i < correlated.size(); ++i) {
+        state ^= (uint32_t(i % 7u) << (i % 5u));
+        correlated[i] = state ^ uint32_t(i & 0xffu);
+    }
+    correlated[13] = 0x80000000u;
+    correlated[14] = 0x7fc12345u;
+    const auto correlatedEncoded = Encode(correlated.data(),
+                                          correlated.size() * sizeof(uint32_t));
+    const auto correlatedDecoded = Decode(correlatedEncoded);
+    assert(correlatedDecoded.size() == correlated.size() * sizeof(uint32_t));
+    assert(std::memcmp(correlatedDecoded.data(), correlated.data(),
+                       correlatedDecoded.size()) == 0);
+    assert(correlatedEncoded.payload.size() <= correlatedDecoded.size());
+
     // Distinct FP16/BF16-like values with a shared exponent byte. The
     // low byte varies, so whole 16-bit words are not a repetitive byte run.
     std::vector<uint16_t> varied16(4096);
