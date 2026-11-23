@@ -323,10 +323,25 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
     if (rowsOut) *rowsOut = rows;
     if (colsOut) *colsOut = cols;
     if (entry.type != deep2::TensorType::F32) {
-        deep2::DequantizedTensor decoded;
-        if (!dequantTensor(entry, decoded)) return false;
-        if (decoded.rows != rows || decoded.cols != cols) return false;
-        return gemvFloat(decoded.data.data(), input, output, rows, cols);
+        if (cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+            rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
+            return false;
+        const size_t colsSize = static_cast<size_t>(cols);
+        std::fill(output, output + static_cast<size_t>(rows), 0.0f);
+        std::vector<float> tile;
+        for (uint64_t firstRow = 0; firstRow < rows;) {
+            const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
+            if (countRows > std::numeric_limits<size_t>::max() / colsSize)
+                return false;
+            const size_t elements = static_cast<size_t>(countRows) * colsSize;
+            tile.resize(elements);
+            if (!readDequantizedTensorTile(entry, firstRow * cols, elements, tile.data()) ||
+                !gemvFloat(tile.data(), input, output + static_cast<size_t>(firstRow),
+                           countRows, cols))
+                return false;
+            firstRow += countRows;
+        }
+        return true;
     }
     if (cols == 0 || rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
         return false;
