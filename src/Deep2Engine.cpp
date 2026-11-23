@@ -623,6 +623,10 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
     std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
     std::vector<uint8_t> encodedScratch;
     std::vector<uint8_t> decodeScratch;
+    // Reuse one bounded packed-weight staging allocation across GEMV row
+    // tiles. Avoid repeated heap allocations and never retain a full-tensor
+    // packed duplicate alongside the compressed cache.
+    std::vector<uint8_t> packedWeightTile;
 
     for (uint64_t firstRow = 0; firstRow < rows;) {
         const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
@@ -664,15 +668,15 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 // Stage exactly this GEMV row tile, not a whole tensor.
                 // vulkanGemv waits for dispatch completion before returning,
                 // so the caller-owned packed buffer remains live through use.
-                std::vector<uint8_t> packedWeights(elements * sizeof(uint16_t));
+                packedWeightTile.resize(elements * sizeof(uint16_t));
                 if (compressedF32Weights.CopyUniform16BitRange(
                         cacheKey, static_cast<size_t>(firstElement), elements,
-                        encoding, packedWeights.data(), packedWeights.size())) {
+                        encoding, packedWeightTile.data(), packedWeightTile.size())) {
                     const deep2::TensorType packedType =
                         encoding == RawrXD::TensorCompression::Encoding::F16
                             ? deep2::TensorType::F16 : deep2::TensorType::BF16;
                     deep2::TensorView packedView{
-                        packedType, packedWeights.data(), packedWeights.size(),
+                        packedType, packedWeightTile.data(), packedWeightTile.size(),
                         { countRows, cols }, true
                     };
                     if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
