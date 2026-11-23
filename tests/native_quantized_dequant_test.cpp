@@ -84,6 +84,73 @@ int main() {
         for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
     }
 
+    // Standard GGML K-quant block layouts, each encoded as all-one values.
+    {
+        std::vector<std::uint8_t> bytes(84, 0);
+        std::fill(bytes.begin(), bytes.begin() + 16, 0x01);
+        std::fill(bytes.begin() + 16, bytes.begin() + 80, 0x55);
+        bytes[80] = 0x00; bytes[81] = 0x3c;
+        TensorView view{TensorType::Q2_K, bytes.data(), bytes.size(), {256}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(110, 0);
+        std::fill(bytes.begin(), bytes.begin() + 32, 0xff);
+        std::fill(bytes.begin() + 32, bytes.begin() + 96, 0x55);
+        std::fill(bytes.begin() + 96, bytes.begin() + 104, 0x11);
+        std::fill(bytes.begin() + 104, bytes.begin() + 108, 0xaa);
+        bytes[108] = 0x00; bytes[109] = 0x3c;
+        TensorView view{TensorType::Q3_K, bytes.data(), bytes.size(), {256}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(144, 0);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        for (std::size_t i = 0; i < 4; ++i) bytes[4 + i] = 1;
+        for (std::size_t i = 8; i < 12; ++i) bytes[4 + i] = 1;
+        std::fill(bytes.begin() + 16, bytes.end(), 0x11);
+        TensorView view{TensorType::Q4_K, bytes.data(), bytes.size(), {256}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(176, 0);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        for (std::size_t i = 0; i < 4; ++i) bytes[4 + i] = 1;
+        for (std::size_t i = 8; i < 12; ++i) bytes[4 + i] = 1;
+        std::fill(bytes.begin() + 48, bytes.end(), 0x11);
+        TensorView view{TensorType::Q5_K, bytes.data(), bytes.size(), {256}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(210, 0);
+        std::fill(bytes.begin(), bytes.begin() + 128, 0x11);
+        std::fill(bytes.begin() + 128, bytes.begin() + 192, 0xaa);
+        std::fill(bytes.begin() + 192, bytes.begin() + 208, 1);
+        bytes[208] = 0x00; bytes[209] = 0x3c;
+        TensorView view{TensorType::Q6_K, bytes.data(), bytes.size(), {256}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(292, 0);
+        const float scale = 1.0f;
+        std::memcpy(bytes.data(), &scale, sizeof(scale));
+        std::fill(bytes.begin() + 4, bytes.begin() + 260, 1);
+        TensorView view{TensorType::Q8_K, bytes.data(), bytes.size(), {256}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
+    }
+
     // Smallest positive binary16 subnormal is 2^-24, not zero or a wrapped exponent.
     const std::uint8_t subnormal[] = {0x01, 0x00};
     TensorView f16View;
