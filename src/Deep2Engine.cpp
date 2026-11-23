@@ -694,15 +694,11 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             // BF16 bytes and send those bytes directly to the Vulkan shader.
             const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
                 std::to_string(entry.offset) + ":" + entry.name;
-            bool haveF32Tile = false;
-            if (!compressedF32Weights.Contains(cacheKey) &&
-                !compressedF32Weights.IsRawFallback(cacheKey)) {
-                tile.resize(elements);
-                if (!readCompressedF32Tile(entry, firstElement, elements,
-                                           tile.data(), decodeScratch))
-                    return false;
-                haveF32Tile = true;
-            }
+            // Admit the complete tensor into compressed residency without
+            // materializing this inference tile as F32 first. The previous
+            // first-touch path decoded the tile and then exported the same
+            // values as F16/BF16, creating avoidable transient duplicate memory.
+            if (!ensureCompressedF32Tensor(entry)) return false;
 
             if (compressedF32Weights.Contains(cacheKey)) {
                 RawrXD::TensorCompression::Encoding encoding =
@@ -744,12 +740,12 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             }
 
             if (!dispatched) {
-                if (!haveF32Tile) {
-                    tile.resize(elements);
-                    if (!readCompressedF32Tile(entry, firstElement, elements,
-                                               tile.data(), decodeScratch))
-                        return false;
-                }
+                // Mixed/raw chunks and shader fallback expand only the requested
+                // tile; no first-touch F32 copy is retained alongside packed bytes.
+                tile.resize(elements);
+                if (!readCompressedF32Tile(entry, firstElement, elements,
+                                           tile.data(), decodeScratch))
+                    return false;
                 deep2::TensorView weightTile{
                     deep2::TensorType::F32,
                     reinterpret_cast<const uint8_t*>(tile.data()),
