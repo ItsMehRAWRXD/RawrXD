@@ -674,6 +674,17 @@ int main(int argc, char** argv) {
         const bool retry_opened = BeginBatch();
         const bool retry_closed = retry_opened && EndBatch();
         Check(retry_opened && retry_closed, "E: ownership is reusable after close");
+
+        SetActiveDevice(-1);
+        std::atomic<int32_t> child_device{-2};
+        std::thread device_scope([&]() {
+            SetActiveDevice(17);
+            child_device.store(ActiveDevice(), std::memory_order_release);
+        });
+        device_scope.join();
+        Check(child_device.load(std::memory_order_acquire) == 17 &&
+                  ActiveDevice() == -1,
+              "E: active-device override is isolated per executor thread");
     }
 
     std::printf("\n--- F. injected device-close failure recovery ---\n");
