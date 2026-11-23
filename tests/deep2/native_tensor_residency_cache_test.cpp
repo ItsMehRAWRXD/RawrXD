@@ -28,6 +28,26 @@ int main() {
     assert(before.compressedBytes<=before.logicalBytes/2);
     assert(before.compressedBytes<=before.budgetBytes);
 
+    // Device-facing export: complete F16 chunks are exposed in their compact
+    // representation without materializing an intermediate F32 tile.
+    RawrXD::TensorCompression::Encoding compactEncoding =
+        RawrXD::TensorCompression::Encoding::Raw;
+    std::vector<uint8_t> compactTile;
+    assert(cache.ExportUniform16BitRange("layer.0.weight", 0, 2048,
+                                         compactEncoding, compactTile));
+    assert(compactEncoding == RawrXD::TensorCompression::Encoding::F16);
+    assert(compactTile.size() == 2048 * sizeof(uint16_t));
+    for (size_t i = 0; i < 2048; ++i) {
+        const uint16_t h = static_cast<uint16_t>(compactTile[2*i]) |
+                           (static_cast<uint16_t>(compactTile[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromHalf(h) == source[i]);
+    }
+    // Partial chunks and mixed/unsupported encodings must fail closed.
+    assert(!cache.ExportUniform16BitRange("layer.0.weight", 1, 1024,
+                                          compactEncoding, compactTile));
+    assert(compactTile.empty());
+    assert(cache.GetStats().activeReaders == 0);
+
     std::vector<float> tile(1537,-999.0f);
     assert(cache.ReadRange("layer.0.weight",900,tile.size(),tile.data()));
     for(size_t i=0;i<tile.size();++i) assert(tile[i]==source[900+i]);
