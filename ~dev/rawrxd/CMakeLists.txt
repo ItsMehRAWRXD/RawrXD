@@ -5313,6 +5313,8 @@ target_compile_definitions(RawrXD-InferenceEngine PRIVATE
 
 target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    # Shared native compression primitives live in the repository-level src tree.
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
