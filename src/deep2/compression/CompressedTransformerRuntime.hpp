@@ -240,7 +240,7 @@ private:
         std::vector<float> hidden(config_.hidden);
         const auto embeddingType = model_.tensorType("token_embd.weight");
         const std::size_t scalar =
-            (embeddingType == GGML_TYPE_F16 || embeddingType == 30u) ? 2u : 4u;
+            (embeddingType == GGML_TYPE_F16 || embeddingType == GGML_TYPE_BF16) ? 2u : 4u;
         if (config_.hidden > std::numeric_limits<std::size_t>::max() / scalar)
             throw std::overflow_error("compressed embedding row size overflow");
         std::vector<std::uint8_t> row(config_.hidden * scalar);
@@ -253,7 +253,7 @@ private:
                 static_cast<std::size_t>(token) * rowBytes, row.data(), rowBytes, &error))
             throw std::runtime_error("compressed embedding read failed: " + error);
         for (std::size_t i = 0; i < config_.hidden; ++i) {
-            if (embeddingType == GGML_TYPE_F16 || embeddingType == 30u) {
+            if (embeddingType == GGML_TYPE_F16 || embeddingType == GGML_TYPE_BF16) {
                 const std::uint16_t h = std::uint16_t(row[2*i]) |
                                         (std::uint16_t(row[2*i+1]) << 8);
                 hidden[i] = embeddingType == GGML_TYPE_F16
