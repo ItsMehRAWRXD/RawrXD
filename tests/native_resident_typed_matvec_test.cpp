@@ -45,6 +45,17 @@ int main() {
                                     deep2::TensorType::F32) ==
           (std::numeric_limits<std::uint64_t>::max)());
 
+    // Row-only reads return the selected F32 row from compressed backing.
+    {
+        const float matrix[] = {1.f,2.f,3.f,4.f,5.f,6.f,7.f,8.f};
+        std::vector<std::uint8_t> bytes(sizeof(matrix));
+        std::memcpy(bytes.data(), matrix, sizeof(matrix));
+        auto tensor = load_bytes(bytes, path, 12);
+        const auto row = resident_f32_row(tensor, 1, 2, 4, 8);
+        CHECK(row.size() == 4);
+        CHECK(row[0] == 5.f && row[1] == 6.f && row[2] == 7.f && row[3] == 8.f);
+    }
+
     // F16 values: [1,2,3,4] and [2,3,4,5].
     {
         const std::vector<std::uint8_t> bytes = {
@@ -56,6 +67,9 @@ int main() {
         CHECK(y.size() == 2);
         CHECK(std::fabs(y[0] - 30.f) < 1e-6f);
         CHECK(std::fabs(y[1] - 40.f) < 1e-6f);
+        const auto row = resident_f16_row(tensor, 1, 2, 4, 4);
+        CHECK(row.size() == 4 && row[0] == 2.f && row[1] == 3.f &&
+              row[2] == 4.f && row[3] == 5.f);
     }
 
     const float ones[32] = {
@@ -76,6 +90,9 @@ int main() {
         CHECK(y.size() == 2);
         CHECK(std::fabs(y[0] - 32.f) < 1e-6f);
         CHECK(std::fabs(y[1] + 32.f) < 1e-6f);
+        const auto row = resident_q8_0_row(tensor, 1, 2, 32, 34);
+        CHECK(row.size() == 32);
+        for (float value : row) CHECK(value == -1.f);
     }
 
     // Q4_0: scale=1, packed low/high nibbles encode +1 and +2 respectively.
@@ -91,6 +108,9 @@ int main() {
         CHECK(y.size() == 2);
         CHECK(std::fabs(y[0] - 32.f) < 1e-6f);
         CHECK(std::fabs(y[1] - 64.f) < 1e-6f);
+        const auto row = resident_q4_0_row(tensor, 1, 2, 32, 18);
+        CHECK(row.size() == 32);
+        for (float value : row) CHECK(value == 2.f);
     }
 
     bool rejected = false;
