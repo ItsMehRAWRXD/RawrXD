@@ -1381,6 +1381,22 @@ inline RepackError RepackGGUF(const std::string& input,
             }
         }
     }
+    // An ordinary F32 vector may have been planned for lossy Q8_0.
+    // Prefer bit-exact F16 when all values permit it. This preserves
+    // the original reconstructed values while still halving F32 storage.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_q8_0 || t.q8_source_f16 ||
+               t.q8_source_k || t.q8_source_q8_1)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(IsExactF32ToF16(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q8_0=false;
+                t.convert_f16=true;
+                t.type=1;
+                t.bytes=t.source_bytes/2;
+            }
+        }
+    }
     // The general Q4_0 planner also selects ordinary Q4_1 vectors.
     // Unlike matrix weights, vectors must not silently lose precision.
     // Undo any such plan unless every source block is bit-exact.
