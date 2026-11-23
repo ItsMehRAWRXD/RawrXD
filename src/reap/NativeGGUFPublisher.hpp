@@ -23,7 +23,8 @@ inline PublishResult PublishRepackedGGUF(const std::string& source,
                                          uint64_t max_bytes=UINT64_MAX,
                                          bool convert_f32_to_f16=false,
                                          bool convert_f32_to_q8_0=false,
-                                         bool convert_q8_0_to_q4_0=false) {
+                                         bool convert_q8_0_to_q4_0=false,
+                                         bool convert_q6_k_to_q5_0=false) {
     namespace fs=std::filesystem;
     PublishResult result;
     std::error_code ec;
@@ -65,7 +66,8 @@ inline PublishResult PublishRepackedGGUF(const std::string& source,
     } cleanup{stageDirectory};
     const fs::path stage=stageDirectory/"artifact.gguf";
     result.repack_error=RepackGGUF(source,stage.string(),max_bytes,convert_f32_to_f16,
-                                    convert_f32_to_q8_0,convert_q8_0_to_q4_0);
+                                    convert_f32_to_q8_0,convert_q8_0_to_q4_0,
+                                    convert_q6_k_to_q5_0);
     if(result.repack_error!=RepackError::None) {
         result.error=PublishError::RepackFailed;return result;
     }
