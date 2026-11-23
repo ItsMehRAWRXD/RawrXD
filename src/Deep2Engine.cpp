@@ -593,7 +593,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     uint32_t firstToken = inputTokens[tokenPos];
     if (tokenEmb->type == deep2::TensorType::F32 && tokenEmb->dims.size() == 2 &&
         tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0) {
-        if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
+        if (firstToken >= tokenEmb->dims[1]) return false;
         if (!hiddenDim || hiddenDim > SIZE_MAX / sizeof(float) ||
             firstToken > SIZE_MAX / (hiddenDim * sizeof(float))) return false;
         const auto byteOffset = static_cast<uint64_t>(firstToken) * hiddenDim * sizeof(float);
@@ -602,7 +602,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     } else if (tokenEmb->type == deep2::TensorType::Q8_0 &&
                tokenEmb->dims.size() == 2 && tokenEmb->dims[0] == hiddenDim &&
                tokenEmb->dims[1] > 0 && hiddenDim % 32 == 0) {
-        if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
+        if (firstToken >= tokenEmb->dims[1]) return false;
         // GGML Q8_0 uses 34 bytes per 32 weights. Decode one embedding
         // row only; no vocabulary-sized FP32 allocation.
         if (hiddenDim / 32 > SIZE_MAX / 34) return false;
@@ -634,7 +634,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     } else {
         deep2::DequantizedTensor tokenEmbDq;
         if (!dequantTensor(*tokenEmb, tokenEmbDq)) return false;
-        if (firstToken >= tokenEmbDq.cols) firstToken = 0;
+        if (firstToken >= tokenEmbDq.cols) return false;
         if (hiddenDim && static_cast<size_t>(firstToken) + 1 > tokenEmbDq.data.size() / hiddenDim) return false;
         std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
                     hiddenDim * sizeof(float));
