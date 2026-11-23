@@ -1337,21 +1337,22 @@ bool Deep2RunDualGpuRowSplitBatch4PrimaryAssembled(
         uint32_t rows;
         uint32_t cols;
         uint32_t batch;
+        uint64_t stableKey;
         bool ok;
     };
     auto runFn=[](void* p) noexcept -> bool {
         auto* c=static_cast<AssembledCtx*>(p);
         c->ok=c->g->DispatchGemvQ4KBatch(
             c->wdata,c->wbytes,c->input,c->output,
-            c->rows,c->cols,c->batch);
+            c->rows,c->cols,c->batch,c->stableKey);
         return c->ok;
     };
     AssembledCtx c0{&primary,w0.data,w0.bytes,
         primary.ResidentBatchInput(),y0,
-        w0.rows,w0.cols,batch,false};
+        w0.rows,w0.cols,batch,w0.key,false};
     AssembledCtx c1{&secondary,w1.data,w1.bytes,
         secondary.ResidentBatchInput(),y1,
-        w1.rows,w1.cols,batch,false};
+        w1.rows,w1.cols,batch,w1.key,false};
 
     const bool both=rowExecutor().run(
         DualRowJob{runFn,&c0},
