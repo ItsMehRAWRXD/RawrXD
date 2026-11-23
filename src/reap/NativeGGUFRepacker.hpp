@@ -750,6 +750,11 @@ inline RepackError RepackGGUF(const std::string& input,
     if(cursor>UINT64_MAX-newData||newData+cursor>max_output_bytes||
        newData+cursor>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return RepackError::Overflow;
+    // Auto mode promises a smaller artifact, not merely smaller selected
+    // tensor payloads. Directory alignment can erase small savings.
+    // Reject the plan before opening the destination if it cannot shrink.
+    if(auto_compress && newData+cursor>=static_cast<uint64_t>(fileEnd))
+        return RepackError::Unsupported;
     std::ofstream out(output,std::ios::binary|std::ios::trunc);
     if(!out)return RepackError::Output;
     if(!CopyRange(in,out,0,static_cast<uint64_t>(metadataEnd)))
