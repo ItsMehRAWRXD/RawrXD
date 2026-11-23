@@ -131,6 +131,33 @@ struct WeightTensor {
             return false;
         }
     }
+    // Decode only the requested byte range from the canonical compressed
+    // GGUF payload. Callers own the output and reusable bounded scratch;
+    // no full-tensor materialization is performed by this method.
+    bool ReadCompressedBytes(size_t offset, size_t count, uint8_t* destination,
+                             std::vector<uint8_t>& scratch) const noexcept {
+        if (!compressedBytes || (!destination && count) ||
+            offset > sizeBytes || count > sizeBytes - offset)
+            return false;
+        try {
+            compressedBytes->ReadRange(offset, count, destination, scratch);
+            return true;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    // Decode a requested F32 element range without allocating an entire
+    // decompressed weight tensor. The GGUF source remains untouched.
+    bool ReadCompressedF32(size_t first, size_t count,
+                           float* destination) const noexcept {
+        if (!compressedF32 || (!destination && count) ||
+            first > compressedF32->elements() ||
+            count > compressedF32->elements() - first)
+            return false;
+        return compressedF32->DecodeRange(first, count, destination);
+    }
+
     struct GpuCompressedF32Payload {
         // Retain the canonical chunked backing instead of copying it into a
         // second contiguous 16-bit host allocation.
