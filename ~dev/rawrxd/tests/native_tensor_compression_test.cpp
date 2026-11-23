@@ -155,6 +155,17 @@ int main() {
     CHECK(exact.DecodeRange(0,4,exactOut));
     for (int i=0;i<4;++i) CHECK(exactOut[i]==difficult[i]);
 
+    // Bit-exact mode must preserve signed zero and NaN payload bits, not merely
+    // compare decoded floating-point values (NaN != NaN and +0 == -0).
+    std::uint32_t specialBits[] = {0x80000000u, 0x7fc12345u, 0xffc54321u};
+    float specialValues[3]{};
+    std::memcpy(specialValues, specialBits, sizeof(specialBits));
+    auto special = ChunkedF32Storage::Build(specialValues, 3, 0.0f, 3);
+    float specialDecoded[3]{};
+    CHECK(special.DecodeRange(0, 3, specialDecoded));
+    CHECK(std::memcmp(specialValues, specialDecoded, sizeof(specialValues)) == 0);
+    CHECK(special.chunks()[0].encoding == RawrXD::TensorCompression::Encoding::F32);
+
     // Mixed chunks retain exact F32 only where the configured bound requires it.
     const float mixedValues[] = {1.0f, 1.5f, 1.0001234f, 2.345678f};
     auto mixed=ChunkedF32Storage::Build(mixedValues,4,0.0f,2);
