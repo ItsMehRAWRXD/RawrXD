@@ -81,7 +81,9 @@ public:
             max_new_tokens > config_.max_context - prompt.size())
             throw std::out_of_range("prompt plus generation exceeds transformer context");
         if (max_new_tokens == 0) return {};
-        const std::size_t totalTokens = prompt.size() + max_new_tokens;
+        // The last emitted token is never forwarded. Reserve KV memory only
+        // for prompt tokens and the preceding generated tokens.
+        const std::size_t totalTokens = prompt.size() + max_new_tokens - 1u;
         constexpr std::size_t bytesPerScalar = sizeof(float);
         const std::size_t kvHeads = config_.kv_heads;
         const std::size_t kvDim = kvHeads * config_.head_dim;
