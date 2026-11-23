@@ -90,7 +90,7 @@ static void testF8E4M3Range() {
     encoded[126 + 1] = 0x7F; // reserved NaN encoding must fail closed
     float sentinel[1] = { 77.0f };
     assert(!deep2::dequantizeTensorRange(deep2::TensorType::F8_E4M3,
-        256, 126, 1, encoded.data(), encoded.size(), sentinel));
+        256, 126, 1, encoded.data(), 129, sentinel));
     assert(sentinel[0] == 77.0f);
 }
 
