@@ -3,6 +3,7 @@
 #include "native_resident_compressed_tensor.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <list>
@@ -32,6 +33,7 @@ public:
         if (key.empty() || !loader)
             throw std::invalid_argument("compressed tensor cache requires key and loader");
 
+        std::uint64_t loadEpoch = 0;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             const auto found = entries_.find(key);
@@ -39,6 +41,7 @@ public:
                 touch(found->second);
                 return found->second.tensor;
             }
+            loadEpoch = epoch_;
         }
 
         // File IO and compression are intentionally outside the cache mutex.
@@ -49,6 +52,10 @@ public:
         const std::size_t bytes = loaded->resident_bytes();
 
         std::lock_guard<std::mutex> lock(mutex_);
+        // A model reload may have cleared the cache while this file read was
+        // in flight. Never repopulate the new model generation with old bytes.
+        if (loadEpoch != epoch_)
+            return loaded;
         const auto raced = entries_.find(key);
         if (raced != entries_.end()) {
             touch(raced->second);
@@ -78,6 +85,7 @@ public:
     // Pinned entries remain visible and accounted until their last lease ends.
     void Clear() {
         std::lock_guard<std::mutex> lock(mutex_);
+        ++epoch_;
         trimLocked(0);
     }
 
@@ -134,6 +142,7 @@ private:
     mutable std::mutex mutex_;
     std::size_t budgetBytes_;
     std::size_t usedBytes_ = 0;
+    std::uint64_t epoch_ = 0;
     std::list<std::string> order_;
     std::unordered_map<std::string, Entry> entries_;
 };
