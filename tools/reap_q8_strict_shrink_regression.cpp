@@ -18,15 +18,17 @@ int main() {
         WriteU32(out,15);WriteU64(out,0);
         WriteName(out,"blk.0.attn_k.weight");WriteU32(out,2);
         WriteU64(out,32);WriteU64(out,2);
-        WriteU32(out,8);WriteU64(out,320);
+        WriteU32(out,8);WriteU64(out,608);
         PadTo(out,32);
         // Q8_K: FP32 scale, 256 signed quantized values, 16 int16 sums.
         // Nonzero data catches accidental header/scale/offset confusion.
-        WriteU32(out,0x3f800000); // d = 1.0
-        for(unsigned i=0;i<256;++i)
-            out.put(static_cast<char>(static_cast<int>(i%32)-16));
-        for(unsigned i=0;i<32;++i)out.put(0);
-        for(unsigned i=292;i<320;++i)out.put(0);
+        for(unsigned block=0;block<2;++block) {
+            WriteU32(out,0x3f800000); // d = 1.0
+            for(unsigned i=0;i<256;++i)
+                out.put(static_cast<char>(static_cast<int>(i%32)-16));
+            for(unsigned i=0;i<32;++i)out.put(0);
+        }
+        for(unsigned i=584;i<608;++i)out.put(0);
         for(unsigned i=0;i<68;++i)out.put(0);
     }
     const bool repacked=RepackGGUF(src,dst,UINT64_MAX,false,true)==RepackError::None;
@@ -42,7 +44,7 @@ int main() {
             ReadU32(in,types[i]);ReadU64(in,offsets[i]);
         }
         ok=types[0]==8 && types[1]==8 &&
-           offsets[0]==0 && offsets[1]==288;
+           offsets[0]==0 && offsets[1]==544;
         const uint64_t start=(static_cast<uint64_t>(in.tellg())+31)&~uint64_t(31);
         in.seekg(static_cast<std::streamoff>(start));
         unsigned char q8[34]={};
