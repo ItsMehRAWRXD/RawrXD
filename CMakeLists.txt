@@ -127,11 +127,28 @@ add_executable(test_quantized_tensor_range
 target_include_directories(test_quantized_tensor_range PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_features(test_quantized_tensor_range PRIVATE cxx_std_17)
 
+# Native compressed-residency tests: standalone C++17, no Vulkan/Qt/codec dependency.
+add_executable(test_native_tensor_compression tests/deep2/native_tensor_compression_test.cpp)
+target_include_directories(test_native_tensor_compression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_native_tensor_compression PRIVATE cxx_std_17)
+
+add_executable(test_native_tensor_residency_cache tests/deep2/native_tensor_residency_cache_test.cpp)
+target_include_directories(test_native_tensor_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_native_tensor_residency_cache PRIVATE cxx_std_17)
+
+add_executable(test_native_tensor_byte_residency_cache tests/deep2/native_tensor_byte_residency_cache_test.cpp)
+target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_native_tensor_byte_residency_cache PRIVATE cxx_std_17)
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
 # Enable testing
 enable_testing()
+add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
+add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
+add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
+
 add_test(NAME QuantizedTensorRange
     COMMAND test_quantized_tensor_range
 )
