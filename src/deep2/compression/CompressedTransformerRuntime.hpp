@@ -204,6 +204,8 @@ private:
     std::vector<float> readVector(const std::string& name,
                                   std::size_t count) const {
         const auto type = model_.tensorType(name);
+        if (type == GGML_TYPE_Q8_0)
+            throw std::invalid_argument("Q8_0 normalization vectors require block decoding: " + name);
         const std::size_t scalar =
             (type == GGML_TYPE_F16 || type == GGML_TYPE_BF16) ? 2u : 4u;
         if (count > std::numeric_limits<std::size_t>::max() / scalar)
@@ -267,6 +269,8 @@ private:
         std::vector<std::vector<std::vector<float>>>& values) const {
         std::vector<float> hidden(config_.hidden);
         const auto embeddingType = model_.tensorType("token_embd.weight");
+        if (embeddingType == GGML_TYPE_Q8_0)
+            throw std::invalid_argument("Q8_0 embeddings require block decoding");
         const std::size_t scalar =
             (embeddingType == GGML_TYPE_F16 || embeddingType == GGML_TYPE_BF16) ? 2u : 4u;
         if (config_.hidden > std::numeric_limits<std::size_t>::max() / scalar)
