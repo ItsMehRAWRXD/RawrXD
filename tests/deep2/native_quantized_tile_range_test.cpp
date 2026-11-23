@@ -100,8 +100,36 @@ static void testLosslessByteResidency() {
     assert(cache.IsRawFallback("dense"));
 }
 
+static void testScalarRange(uint32_t type, size_t width) {
+    const auto tt = static_cast<deep2::TensorType>(type);
+    std::vector<uint8_t> encoded(10 * width, 0);
+    for (int i = 0; i < 10; ++i) {
+        const uint64_t bits = static_cast<uint64_t>(int64_t(i) - 5);
+        for (size_t b = 0; b < width; ++b)
+            encoded[size_t(i) * width + b] = static_cast<uint8_t>(bits >> (8 * b));
+    }
+    float tile[4]{};
+    assert(deep2::dequantizeTensorRange(tt, 10, 3, 4,
+        encoded.data() + 3 * width, 4 * width, tile));
+    for (int i = 0; i < 4; ++i)
+        assert(tile[i] == static_cast<float>(i - 2));
+}
+
+static void testF32Range() {
+    const float values[8] = {0.25f, -1.0f, 2.0f, 3.5f, -4.0f, 8.0f, 16.0f, 32.0f};
+    float tile[3]{};
+    assert(deep2::dequantizeTensorRange(deep2::TensorType::F32, 8, 2, 3,
+        reinterpret_cast<const uint8_t*>(values + 2), sizeof(tile), tile));
+    assert(tile[0] == 2.0f && tile[1] == 3.5f && tile[2] == -4.0f);
+}
+
 int main() {
     testLosslessByteResidency();
+    testF32Range();
+    testScalarRange(24, sizeof(int8_t));
+    testScalarRange(25, sizeof(int16_t));
+    testScalarRange(26, sizeof(int32_t));
+    testScalarRange(27, sizeof(int64_t));
     for(uint32_t type=10;type<=15;++type) testKBlockRange(type);
     for(uint32_t type:{2u,3u,6u,7u,8u,9u}) testFixedBlockRange(type);
     std::cout<<"canonical GGML fixed/K quantized range dequantization PASS\n";
