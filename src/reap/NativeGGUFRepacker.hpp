@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <fstream>
 #include <limits>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -68,6 +69,7 @@ inline bool SkipMetadata(std::istream& in, uint32_t type) {
 inline bool CopyRange(std::ifstream& in, std::ofstream& out,
                       uint64_t from, uint64_t count) {
     if(from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))return false;
+    in.clear();
     in.seekg(static_cast<std::streamoff>(from),std::ios::beg);
     if(!in)return false;
     char buffer[1<<16];
@@ -99,10 +101,15 @@ inline RepackError RepackGGUF(const std::string& input,
        magic!=0x46554747 || (version!=2&&version!=3) ||
        tensorCount>(1ULL<<20)||kvCount>(1ULL<<20))return RepackError::Format;
     uint64_t alignment=32;
+    bool alignmentSeen=false;
+    std::set<std::string> metadataKeys;
     for(uint64_t i=0;i<kvCount;++i) {
         std::string key;uint32_t type=0;
-        if(!ReadName(in,key)||!ReadU32(in,type))return RepackError::Format;
+        if(!ReadName(in,key)||key.empty()||!metadataKeys.insert(key).second||
+           !ReadU32(in,type))return RepackError::Format;
         if(key=="general.alignment") {
+            if(alignmentSeen)return RepackError::Format;
+            alignmentSeen=true;
             uint32_t value=0;
             if(type!=4||!ReadU32(in,value)||value<8||value>4096||
                (value&(value-1)))return RepackError::Format;
@@ -113,9 +120,11 @@ inline RepackError RepackGGUF(const std::string& input,
     if(metadataEnd<0)return RepackError::Format;
     std::vector<RepackTensor> tensors;
     tensors.reserve(static_cast<size_t>(tensorCount));
+    std::set<std::string> tensorNames;
     for(uint64_t i=0;i<tensorCount;++i) {
         RepackTensor t;uint32_t nd=0;
-        if(!ReadName(in,t.name)||t.name.empty()||!ReadU32(in,nd)||
+        if(!ReadName(in,t.name)||t.name.empty()||
+           !tensorNames.insert(t.name).second||!ReadU32(in,nd)||
            nd==0||nd>8)return RepackError::Format;
         t.dims.resize(nd);
         uint64_t count=1;
