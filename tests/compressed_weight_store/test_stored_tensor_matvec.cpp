@@ -158,6 +158,33 @@ int main() {
     assert(admissionAfter.compressed_bytes == admissionBefore.compressed_bytes);
     assert(!budgetError.empty());
 
+    // Reader-backed ingestion compresses one bounded block at a time; it never
+    // asks the source to materialize the complete tensor.
+    struct ReaderFixture { const std::vector<std::uint8_t>* bytes; std::size_t calls=0; };
+    ReaderFixture readerFixture{&weights};
+    CompressedWeightStore readerStore(0, 64);
+    assert(readerStore.addTensorFromReader("reader", weights.size(),
+        [](void* opaque, std::size_t offset, void* destination, std::size_t length) -> bool {
+            auto* fixture = static_cast<ReaderFixture*>(opaque);
+            ++fixture->calls;
+            if (offset > fixture->bytes->size() || length > fixture->bytes->size() - offset) return false;
+            std::memcpy(destination, fixture->bytes->data() + offset, length);
+            return true;
+        }, &readerFixture, &error, GGML_TYPE_F16, true));
+    assert(readerFixture.calls == (weights.size() + 63) / 64);
+    std::vector<std::uint8_t> readerRoundtrip(weights.size());
+    assert(readerStore.readRange("reader", 0, readerRoundtrip.data(), readerRoundtrip.size(), &error));
+    assert(readerRoundtrip == weights);
+    ReaderFixture failingFixture{&weights};
+    assert(!readerStore.addTensorFromReader("failed_reader", weights.size(),
+        [](void* opaque, std::size_t offset, void* destination, std::size_t length) -> bool {
+            auto* fixture = static_cast<ReaderFixture*>(opaque);
+            if (offset >= 128) return false;
+            std::memcpy(destination, fixture->bytes->data() + offset, length);
+            return true;
+        }, &failingFixture, &error, GGML_TYPE_F16, false));
+    assert(!readerStore.contains("failed_reader"));
+
     // The store-wide encoded residency cap is shared across tensors and
     // enforced under the same lock as publication, including concurrent
     // admission attempts.
