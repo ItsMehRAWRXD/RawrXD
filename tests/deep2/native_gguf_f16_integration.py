@@ -197,6 +197,34 @@ def run(binary):
                                   capture_output=True)
             assert result.returncode!=0, ("accepted invalid tolerance",bad)
             assert not bad_output.exists(), ("published invalid conversion",bad)
+        # GGML type 28 F64: auto narrows to F32 only when the entire tensor
+        # meets the requested absolute-error bound, with exact GGUF offsets.
+        f64=root/"f64-source.gguf"
+        doubles=[1.0,-2.0,0.5,65504.0]*16
+        f64raw=struct.pack("<"+"d"*len(doubles),*doubles)
+        kv=S("general.architecture")+U32(8)+S("llama")
+        kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+        header=b"GGUF"+U32(3)+U64(1)+U64(2)+kv
+        header+=S("blk.0.attn_q.weight")+U32(1)+U64(len(doubles))+U32(28)+U64(0)
+        f64.write_bytes(pad(header)+f64raw)
+        f64_out=root/"f64-auto.gguf"
+        subprocess.run([binary,str(f64),str(f64_out),"0","auto"],check=True)
+        fd,fs,fm,ft=parse(f64_out)
+        assert ft["blk.0.attn_q.weight"][:2]==(0,(len(doubles),))
+        assert len(fd)-fs==len(doubles)*4
+        assert struct.unpack_from("<"+"f"*len(doubles),fd,fs)==tuple(doubles)
+        # A single F64 value not exactly representable in F32 must prevent
+        # conversion under a strict zero-error budget.
+        f64_inexact=root/"f64-inexact.gguf"
+        altered=bytearray(f64.read_bytes())
+        _,f64start,_,_=parse(f64)
+        struct.pack_into("<d",altered,f64start,1.0+2**-40)
+        f64_inexact.write_bytes(altered)
+        f64_preserved=root/"f64-preserved.gguf"
+        subprocess.run([binary,str(f64_inexact),str(f64_preserved),"0","auto"],check=True)
+        pd,ps,pm,pt=parse(f64_preserved)
+        assert pt["blk.0.attn_q.weight"][0]==28
+        assert pd[ps:ps+len(f64raw)]==altered[f64start:f64start+len(f64raw)]
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
