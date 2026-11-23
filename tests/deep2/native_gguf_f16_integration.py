@@ -291,12 +291,17 @@ def run(binary):
             strict=root/("f64-"+mode+"-strict.gguf")
             subprocess.run([binary,str(f64),str(strict),"0",mode],check=True)
             assert strict.read_bytes()==f64.read_bytes()
-        # Other explicit quantizers preserve F64 until their native F64
-        # paths have independent decoder validation.
-        for mode in ("q4_1","q5_1"):
-            dest=root/("f64-preserve-"+mode+".gguf")
+        # Affine Q4_1/Q5_1: check encoded GGML block sizes and fail-closed
+        # behavior when a zero-error conversion is not possible.
+        for mode,typ,block_bytes in (("q4_1",3,20),("q5_1",7,24)):
+            dest=root/("f64-"+mode+".gguf")
             subprocess.run([binary,str(f64),str(dest),"10000",mode],check=True)
-            assert dest.read_bytes()==f64.read_bytes()
+            data,start,meta,tensors=parse(dest)
+            assert tensors["blk.0.attn_q.weight"][0]==typ
+            assert len(data)-start==(len(doubles)//32)*block_bytes
+            strict=root/("f64-"+mode+"-strict.gguf")
+            subprocess.run([binary,str(f64),str(strict),"0",mode],check=True)
+            assert strict.read_bytes()==f64.read_bytes()
         # The same rule applies to F16/BF16 under explicit f16 mode.
         for source16 in (target,bf):
             dest=root/(source16.stem+"-explicit-f16-preserved.gguf")
