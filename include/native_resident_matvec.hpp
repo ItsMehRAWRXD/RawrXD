@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace rawrxd::compression {
-enum class ResidentWeightType { F32, F16, Q8_0 };
+enum class ResidentWeightType { F32, F16, Q4_0, Q8_0 };
 
 inline float DecodeHalfLE(const std::uint8_t* p) {
     const std::uint32_t h = std::uint32_t(p[0]) | (std::uint32_t(p[1]) << 8);
@@ -34,11 +34,12 @@ inline float DecodeHalfLE(const std::uint8_t* p) {
 
 inline std::size_t ResidentRowBytes(ResidentWeightType type, std::size_t cols) {
     if (!cols) throw std::invalid_argument("zero matrix width");
-    if (type == ResidentWeightType::Q8_0) {
-        if (cols % 32) throw std::invalid_argument("Q8_0 requires 32-column blocks");
-        if (cols / 32 > std::numeric_limits<std::size_t>::max() / 34)
-            throw std::overflow_error("Q8_0 row overflow");
-        return (cols / 32) * 34;
+    if (type == ResidentWeightType::Q8_0 || type == ResidentWeightType::Q4_0) {
+        if (cols % 32) throw std::invalid_argument("Q4_0/Q8_0 require 32-column blocks");
+        const std::size_t blockBytes = type == ResidentWeightType::Q4_0 ? 18 : 34;
+        if (cols / 32 > std::numeric_limits<std::size_t>::max() / blockBytes)
+            throw std::overflow_error("quantized row overflow");
+        return (cols / 32) * blockBytes;
     }
     const std::size_t stride = type == ResidentWeightType::F16 ? 2 : 4;
     if (cols > std::numeric_limits<std::size_t>::max() / stride)
@@ -63,9 +64,12 @@ void ResidentMatvec(const Reader& weights, ResidentWeightType type,
     for (std::size_t i = 0; i < cols; ++i)
         if (!std::isfinite(x[i]))
             throw std::domain_error("nonfinite matvec activation");
-    const std::size_t elementBytes = type == ResidentWeightType::Q8_0 ? 34 :
-                                     type == ResidentWeightType::F16 ? 2 : 4;
-    const std::size_t valuesPerElement = type == ResidentWeightType::Q8_0 ? 32 : 1;
+    const std::size_t elementBytes =
+        type == ResidentWeightType::Q8_0 ? 34 :
+        type == ResidentWeightType::Q4_0 ? 18 :
+        type == ResidentWeightType::F16 ? 2 : 4;
+    const std::size_t valuesPerElement =
+        (type == ResidentWeightType::Q8_0 || type == ResidentWeightType::Q4_0) ? 32 : 1;
     const std::size_t tile = std::max(elementBytes, (stagingBytes / elementBytes) * elementBytes);
     std::vector<std::uint8_t> scratch(std::min(tile, rowBytes));
     for (std::size_t row = 0; row < rows; ++row) {
@@ -82,6 +86,18 @@ void ResidentMatvec(const Reader& weights, ResidentWeightType type,
                         const unsigned byte = scratch[j + 2 + k];
                         const int q = byte < 128 ? int(byte) : int(byte) - 256;
                         sum += double(scale) * q * x[col + k];
+                    }
+                } else if (type == ResidentWeightType::Q4_0) {
+                    // GGML block_q4_0: fp16 d followed by 16 bytes. Each byte
+                    // stores q[0..15] in its low nibble and q[16..31] high.
+                    const float scale = DecodeHalfLE(scratch.data() + j);
+                    if (!std::isfinite(scale)) throw std::domain_error("nonfinite Q4_0 scale");
+                    for (std::size_t k = 0; k < 16; ++k) {
+                        const unsigned packed = scratch[j + 2 + k];
+                        const int q0 = int(packed & 0x0fu) - 8;
+                        const int q1 = int(packed >> 4) - 8;
+                        sum += double(scale) * q0 * x[col + k];
+                        sum += double(scale) * q1 * x[col + 16 + k];
                     }
                 } else {
                     float weight = 0;
