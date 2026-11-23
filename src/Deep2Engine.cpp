@@ -47,7 +47,7 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 }
 
 void Deep2Engine::Shutdown() {
-    { std::lock_guard<std::mutex> lock(compressedWeightViewsMutex); compressedWeightViews.clear(); }
+    { std::lock_guard<std::mutex> lock(compressedWeightViewsMutex); compressedWeightViews.clear(); compressedWeightViewLru.clear(); }
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
@@ -195,16 +195,24 @@ bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::Dequanti
     const uint64_t size = entry.byteSize();
     if (size > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) return false;
     std::vector<uint8_t> staged(static_cast<size_t>(size));
-    deep2::TensorROMCompressedView* compressed = nullptr;
+    std::shared_ptr<deep2::TensorROMCompressedView> compressed;
     {
         std::lock_guard<std::mutex> lock(compressedWeightViewsMutex);
         auto it = compressedWeightViews.find(&entry);
         if (it == compressedWeightViews.end()) {
-            auto view = std::make_unique<deep2::TensorROMCompressedView>(
-                rom, entry, 256 * 1024, 64 * 1024 * 1024);
+            // Eight views x 8 MiB = a strict 64 MiB encoded-page budget.
+            auto view = std::make_shared<deep2::TensorROMCompressedView>(
+                rom, entry, 256 * 1024, 8 * 1024 * 1024);
             it = compressedWeightViews.emplace(&entry, std::move(view)).first;
         }
-        compressed = it->second.get();
+        compressedWeightViewLru.remove(&entry);
+        compressedWeightViewLru.push_front(&entry);
+        while (compressedWeightViewLru.size() > 8) {
+            const auto* victim = compressedWeightViewLru.back();
+            compressedWeightViewLru.pop_back();
+            compressedWeightViews.erase(victim);
+        }
+        compressed = it->second; // keeps the view alive across concurrent LRU eviction
     }
     // The compressed view fetches exact shard ranges directly, bypassing the
     // raw PageCache. Only this tensor's requested bytes are expanded here.
