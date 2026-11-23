@@ -506,10 +506,10 @@ public:
             packed.insert(packed.end(), chunk.payload.begin(), chunk.payload.end());
         return packed.size() == total;
     }
-    // Export any logical range whose intersecting chunks all use the same
-    // native F16/BF16 representation. Chunk boundaries are an implementation
-    // detail: slicing is performed directly on the compact payload, without
-    // decoding an intermediate F32 tile. Mixed codecs fail closed.
+    // Export a logical range as one uniform F16/BF16 representation.
+    // Already-uniform chunks are sliced directly; mixed raw/RLE/LZ4/16-bit
+    // chunks are decoded only for the requested range and repacked under the
+    // caller's explicit absolute-error budget.
     bool ExportUniform16BitRange(size_t first, size_t count, Encoding& encoding,
                                  std::vector<uint8_t>& packed,
                                  float maxAbsError = 0.0f) const {
