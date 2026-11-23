@@ -838,8 +838,19 @@ int main(int argc,char** argv) {
         }
         out.flush();if(!out)throw std::runtime_error("output write failure");
         out.close();in.close();
+        // Report actual on-disk savings, including GGUF headers, tensor
+        // descriptors and alignment padding. Never estimate from dtype alone.
+        std::error_code sizeError;
+        const auto outputBytes=std::filesystem::file_size(tmp,sizeError);
+        if(sizeError)throw std::runtime_error("cannot measure compressed output");
         if(std::rename(tmp.c_str(),argv[2]))throw std::runtime_error("rename failed");
-        std::cout<<"converted tensors: "<<changed<<"/"<<ts.size()<<"\n";
+        std::cout<<"converted tensors: "<<changed<<"/"<<ts.size()<<"\\n";
+        std::cout<<"file bytes: "<<fileSize<<" -> "<<outputBytes
+                 <<" (saved "<<(fileSize>outputBytes?fileSize-outputBytes:0)
+                 <<", ratio "<<(outputBytes?double(fileSize)/double(outputBytes):0.0)
+                 <<"x)\\n";
+        if(outputBytes>fileSize)
+            std::cerr<<"warning: output file is larger than input due to layout/alignment\\n";
         return 0;
     } catch(const std::exception& e) {
         // Cleanup must not unlink an input aliased by the temporary path.
