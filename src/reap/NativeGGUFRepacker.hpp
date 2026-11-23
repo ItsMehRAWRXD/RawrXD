@@ -855,7 +855,11 @@ inline RepackError RepackGGUF(const std::string& input,
         // sensitive matrices must not be aggressively requantized.
         // Repack both to Q8_0 only when the serialized payload shrinks.
         // Ordinary multi-row matrices remain candidates for Q4_0.
-        if(auto_compress && (sensitive || !matrix) &&
+        // Q8_1 -> Q8_0 is reconstruction-exact: both store the same
+        // FP16 scale and 32 signed codes; Q8_1's extra FP16 sum is
+        // auxiliary metadata, not part of reconstructed tensor values.
+        // Apply this reduction to matrices too, without Q4 precision loss.
+        if(auto_compress && (t.type==9 || sensitive || !matrix) &&
            !t.convert_f64_to_f32 &&
            (t.type==9 || t.type==15 ||
             ((t.type==0 || t.type==1) && !sensitive && !matrix)) &&
