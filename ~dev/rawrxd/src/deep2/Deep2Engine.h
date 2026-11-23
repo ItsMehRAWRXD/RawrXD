@@ -96,8 +96,12 @@ struct WeightTensor {
     // source remain unchanged; CPU inference may opt into row-streamed reads.
     std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> compressedF32;
     struct GpuCompressedF32Payload {
-        std::vector<uint8_t> bytes;
-        int ggmlType = -1; // 1=F16, 30=BF16; payload remains compressed on device
+        // Retain the canonical chunked backing instead of copying it into a
+        // second contiguous 16-bit host allocation.
+        std::shared_ptr<const RawrXD::TensorCompression::ChunkedF32Storage> owner;
+        const uint8_t* data = nullptr;
+        size_t bytes = 0;
+        int ggmlType = -1; // 1=F16, 30=BF16; payload remains packed for GPU upload
     };
     mutable std::shared_ptr<const GpuCompressedF32Payload> gpuF16Payload;
 
@@ -150,12 +154,16 @@ struct WeightTensor {
         if (!payload) {
             if (!compressedF32) return false;
             RawrXD::TensorCompression::Encoding encoding{};
-            std::vector<uint8_t> bytes;
-            if (!compressedF32->ExportUniform16Bit(encoding, bytes) ||
-                bytes.size() != rows * cols * 2)
+            const uint8_t* packedData = nullptr;
+            size_t packedBytes = 0;
+            if (!compressedF32->GetUniform16BitView(
+                    encoding, packedData, packedBytes) ||
+                packedBytes != rows * cols * 2 || !packedData)
                 return false;
             auto candidate = std::make_shared<GpuCompressedF32Payload>();
-            candidate->bytes = std::move(bytes);
+            candidate->owner = compressedF32;
+            candidate->data = packedData;
+            candidate->bytes = packedBytes;
             candidate->ggmlType = encoding ==
                 RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
             std::shared_ptr<const GpuCompressedF32Payload> desired = candidate;
@@ -167,22 +175,22 @@ struct WeightTensor {
             else
                 payload = std::move(expected);
         }
-        if (!payload || (payload->ggmlType != 1 && payload->ggmlType != 30) ||
-            payload->bytes.size() != rows * cols * 2)
+        if (!payload || !payload->owner || !payload->data ||
+            (payload->ggmlType != 1 && payload->ggmlType != 30) ||
+            payload->bytes != rows * cols * 2)
             return false;
         const size_t rowBytes = cols * 2;
         const size_t offset = static_cast<size_t>(rowBegin) * rowBytes;
         const size_t bytes = static_cast<size_t>(rowCount) * rowBytes;
-        if (offset > payload->bytes.size() ||
-            bytes > payload->bytes.size() - offset)
+        if (offset > payload->bytes || bytes > payload->bytes - offset)
             return false;
-        out.data = payload->bytes.data() + offset;
+        out.data = payload->data + offset;
         out.bytes = bytes;
         out.type = payload->ggmlType;
         out.rows = rowCount;
         out.cols = static_cast<uint32_t>(cols);
         out.key = static_cast<uint64_t>(
-            reinterpret_cast<uintptr_t>(payload->bytes.data())) ^
+            reinterpret_cast<uintptr_t>(payload->data)) ^
             (static_cast<uint64_t>(rowBegin) << 32) ^ rowCount ^
             (static_cast<uint64_t>(payload->ggmlType) << 56);
         return true;
