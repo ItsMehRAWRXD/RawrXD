@@ -121,32 +121,41 @@ inline bool ConvertF32RangeToF16(std::ifstream& in, std::ofstream& out,
 }
 // GGML Q8_0: 32 signed 8-bit weights with a little-endian FP16 scale.
 // A complete 32-element block is mandatory; do not quantize nonfinite weights.
-inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
-                                   uint64_t from,uint64_t sourceBytes) {
-    if(sourceBytes%128 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
+                                    uint64_t from,uint64_t sourceBytes,
+                                    bool sourceF16) {
+    const uint64_t inputBlock=sourceF16?64:128;
+    if(sourceBytes%inputBlock || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
     in.clear();in.seekg(static_cast<std::streamoff>(from));
     if(!in)return false;
     unsigned char source[128],encoded[34];
     while(sourceBytes) {
-        if(!in.read(reinterpret_cast<char*>(source),128))return false;
+        if(!in.read(reinterpret_cast<char*>(source),static_cast<std::streamsize>(inputBlock)))return false;
         float values[32];
         float maxAbs=0.0f;
         for(unsigned i=0;i<32;++i) {
-            const unsigned j=i*4;
-            const uint32_t bits=uint32_t(source[j])|(uint32_t(source[j+1])<<8)|
-                (uint32_t(source[j+2])<<16)|(uint32_t(source[j+3])<<24);
+            uint32_t bits=0;
+            if(sourceF16) {
+                const unsigned j=i*2;
+                const uint16_t half=uint16_t(source[j])|(uint16_t(source[j+1])<<8);
+                bits=Float16ToFloat32Bits(half);
+            } else {
+                const unsigned j=i*4;
+                bits=uint32_t(source[j])|(uint32_t(source[j+1])<<8)|
+                    (uint32_t(source[j+2])<<16)|(uint32_t(source[j+3])<<24);
+            }
             std::memcpy(&values[i],&bits,4);
             if(!std::isfinite(values[i]))return false;
             maxAbs=std::max(maxAbs,std::abs(values[i]));
         }
         const float scale=maxAbs/127.0f;
-        const uint32_t scaleBits=[&](){uint32_t bits=0;std::memcpy(&bits,&scale,4);return bits;}();
+        uint32_t scaleBits=0;std::memcpy(&scaleBits,&scale,4);
         const uint16_t half=Float32BitsToFloat16(scaleBits);
         const uint32_t decoded=Float16ToFloat32Bits(half);
         float actualScale=0.0f;std::memcpy(&actualScale,&decoded,4);
         if(maxAbs!=0.0f && (!std::isfinite(actualScale)||actualScale==0.0f))
-            return false; // Half-scale underflow/overflow is not valid Q8_0.
+            return false;
         encoded[0]=static_cast<unsigned char>(half);
         encoded[1]=static_cast<unsigned char>(half>>8);
         for(unsigned i=0;i<32;++i) {
@@ -157,9 +166,13 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
             encoded[2+i]=static_cast<unsigned char>(static_cast<int8_t>(q));
         }
         if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
-        sourceBytes-=128;
+        sourceBytes-=inputBlock;
     }
     return true;
+}
+inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
+                                   uint64_t from,uint64_t sourceBytes) {
+    return ConvertFloatRangeToQ8_0(in,out,from,sourceBytes,false);
 }
 inline RepackError RepackGGUF(const std::string& input,
                              const std::string& output,
@@ -224,7 +237,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
         }
-        if(convert_f32_to_q8_0 && t.type==0 && count%32==0) {
+        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1) && count%32==0) {
             t.convert_q8_0=true;
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
@@ -311,7 +324,8 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         if(t.old_offset>UINT64_MAX-dataStart)return RepackError::Overflow;
         if(t.convert_q8_0) {
-            if(!ConvertF32RangeToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes))
+            if(!ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
+                                        t.source_bytes,t.source_bytes==t.bytes*2))
                 return RepackError::Output;
         } else if(t.convert_f16) {
             if(!ConvertF32RangeToF16(in,out,dataStart+t.old_offset,t.source_bytes))
