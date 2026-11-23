@@ -70,7 +70,7 @@ inline void StoredTensorMatvec(CompressedWeightStore& store,
     const std::uint32_t expected =
         type == ResidentWeightType::F32 ? GGML_TYPE_F32 :
         type == ResidentWeightType::F16 ? GGML_TYPE_F16 :
-        type == ResidentWeightType::BF16 ? 30u : 8u;
+        type == ResidentWeightType::BF16 ? GGML_TYPE_BF16 : 8u;
     if (store.tensorType(tensorName) != expected)
         throw std::invalid_argument("resident tensor GGML type does not match kernel");
     StoredTensorReader reader(store, tensorName);
