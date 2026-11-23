@@ -15,7 +15,7 @@ int main() {
         PadTo(out,32);
         WriteU32(out,0x3f800000u); // Q8_K FP32 scale 1.0
         for(int i=0;i<256;++i)out.put(static_cast<char>((i%32)-16));
-        for(int i=0;i<16;++i) {out.put(0);out.put(0);} // 16 int16 sums
+        for(int i=0;i<16;++i) {out.put(static_cast<char>(0xf0));out.put(static_cast<char>(0xff));} // 16 signed int16 sums: each group sums to -16
     }
     if(RepackGGUF(src,dst,UINT64_MAX,false,false,false,false,true)!=RepackError::None) {
         std::cerr<<"FAIL auto Q8_K conversion\n";++failures;
