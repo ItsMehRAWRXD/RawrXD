@@ -487,22 +487,30 @@ elseif(TARGET zlib)
         "${CMAKE_BINARY_DIR}/_deps/zlib-src"
         "${CMAKE_BINARY_DIR}/_deps/zlib-build")
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
-    elseif(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h" OR
-           EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zconf.h")
-        # Local zlib-src fallback. zconf.h is generated beside zlib.h, so a tree
-        # holding zlib.h without zconf.h cannot compile; requiring BOTH stops the
-        # branch from claiming a zlib provider it cannot build. One resolved
-        # directory then feeds the include path, the sources and the headers.
-        if(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h")
+    elseif((EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zlib.h" AND
+             EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h") OR
+           (EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zlib.h" AND
+             EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zconf.h"))
+        # Local zlib-src fallback. zconf.h is generated beside zlib.h; require
+        # both in the same source tree before advertising a usable provider.
+        if(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zlib.h" AND
+           EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h")
             set(_rawrxd_zlib_src "${CMAKE_BINARY_DIR}/_deps/zlib-src")
         else()
             set(_rawrxd_zlib_src "${CMAKE_SOURCE_DIR}/_deps/zlib-src")
         endif()
         target_include_directories(rawrxd_compression_core PUBLIC "${_rawrxd_zlib_src}")
         file(GLOB ZLIB_SOURCES "${_rawrxd_zlib_src}/*.c")
+        if(NOT ZLIB_SOURCES)
+            message(FATAL_ERROR "Local zlib tree found but contains no C sources: ${_rawrxd_zlib_src}")
+        endif()
         target_sources(rawrxd_compression_core PUBLIC ${ZLIB_SOURCES})
         file(GLOB ZLIB_HDRS "${_rawrxd_zlib_src}/*.h")
         target_sources(rawrxd_compression_core PUBLIC ${ZLIB_HDRS})
+        target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+        set(HAVE_ZLIB 1)
+        set(HAVE_COMPRESSION 1)
+        message(STATUS "rawrxd_compression_core: using local zlib source tree ${_rawrxd_zlib_src}")
         target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
 else()
     # No zlib provider. compression_core.cpp compiles to an explicit Unsupported
