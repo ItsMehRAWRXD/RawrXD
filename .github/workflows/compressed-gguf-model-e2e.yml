@@ -1,0 +1,91 @@
+name: Compressed GGUF model end-to-end
+
+on:
+  push:
+    branches:
+      - codex/compressed-gguf-model-runtime-20261123
+  pull_request:
+    branches:
+      - codex/full-compressed-residency-integration-20261123
+    paths:
+      - 'src/deep2/compression/**'
+      - 'src/deep2/GGUFLoader.hpp'
+      - 'include/native_resident_matvec.hpp'
+      - 'tests/compressed_weight_store/**'
+      - '.github/workflows/compressed-gguf-model-e2e.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compressed-gguf-model-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-gguf-e2e:
+    name: Synthetic GGUF -> compressed residency -> inference (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          clean: false
+
+      - name: Build and run Linux compressed model tests
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          CXX="${CXX:-c++}"
+          COMMON=(-std=c++20 -O2 -Wall -Wextra -Werror -pthread -Isrc)
+          STORE="src/deep2/compression/CompressedWeightStore.cpp"
+
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_compressed_gguf_file_e2e.cpp -o compressed_gguf_file_e2e
+          ./compressed_gguf_file_e2e
+
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_compressed_gguf_model.cpp -o compressed_gguf_model_lifecycle
+          ./compressed_gguf_model_lifecycle
+
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_compressed_model_e2e.cpp -o compressed_model_e2e
+          ./compressed_model_e2e
+
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_compressed_transformer_generation.cpp -o compressed_transformer_generation
+          ./compressed_transformer_generation
+
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_stored_tensor_matvec.cpp -o stored_tensor_matvec
+          ./stored_tensor_matvec
+
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_gguf_compressed_residency.cpp -o gguf_compressed_residency
+          ./gguf_compressed_residency
+
+      - name: Configure MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build and run Windows compressed model tests
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $store = 'src/deep2/compression/CompressedWeightStore.cpp'
+          $common = @('/nologo', '/std:c++20', '/EHsc', '/W4', '/O2', '/Isrc')
+          $cases = @(
+            @{ Name = 'compressed_gguf_file_e2e'; Source = 'tests/compressed_weight_store/test_compressed_gguf_file_e2e.cpp' },
+            @{ Name = 'compressed_gguf_model_lifecycle'; Source = 'tests/compressed_weight_store/test_compressed_gguf_model.cpp' },
+            @{ Name = 'compressed_model_e2e'; Source = 'tests/compressed_weight_store/test_compressed_model_e2e.cpp' },
+            @{ Name = 'compressed_transformer_generation'; Source = 'tests/compressed_weight_store/test_compressed_transformer_generation.cpp' },
+            @{ Name = 'stored_tensor_matvec'; Source = 'tests/compressed_weight_store/test_stored_tensor_matvec.cpp' },
+            @{ Name = 'gguf_compressed_residency'; Source = 'tests/compressed_weight_store/test_gguf_compressed_residency.cpp' }
+          )
+          foreach ($case in $cases) {
+            & cl.exe @common $store $case.Source ("/Fe:" + $case.Name + ".exe")
+            if ($LASTEXITCODE -ne 0) { throw "compile failed: $($case.Name)" }
+            & (".\" + $case.Name + ".exe")
+            if ($LASTEXITCODE -ne 0) { throw "test failed: $($case.Name)" }
+          }
