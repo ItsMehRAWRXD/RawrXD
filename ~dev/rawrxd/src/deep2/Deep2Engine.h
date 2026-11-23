@@ -91,6 +91,12 @@ struct WeightTensor {
 
     // BP16 / external mapping support
     bool        mapped    = false;    // true if data is externally owned (do not free)
+
+    // Optional compressed CPU residency. The mapped pointer remains the
+    // authoritative GPU/fallback source until the full detach gate is proven.
+    TensorResidencyCache* residencyCache = nullptr;
+    std::string residencyKey;
+    int residencyType = -1; // GGML type of cached representation (F16 for opt-in F32 reduction)
 };
 
 // ============================================================================
@@ -974,6 +980,11 @@ private:
     bool toroidalKVEnabled_ = false;
     bool plasmaGovernorEnabled_ = false;
     bool sovereignRuntimeEnabled_ = false;
+
+    // Bounded native compressed tensor cache; mapped GGUF backing remains
+    // authoritative until all direct-pointer consumers are migrated.
+    TensorResidencyCache tensorResidencyCache_{512ull * 1024ull * 1024ull,
+                                                64ull * 1024ull};
 
     // Vulkan GPU backend (slot 0 = primary; extras for MULTI contiguous plan)
     std::unique_ptr<CPUInference::VulkanCompute> vulkanCompute_;
