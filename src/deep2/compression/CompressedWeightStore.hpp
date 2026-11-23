@@ -70,6 +70,7 @@ public:
     bool contains(const std::string& name) const;
     std::size_t tensorBytes(const std::string& name) const;
     std::size_t tensorBlocks(const std::string& name) const;
+    std::size_t blockBytes() const noexcept { return block_bytes_; }
     BlockLease acquireBlock(const std::string& name,std::size_t block_index,std::string* error=nullptr);
     bool readRange(const std::string& name,std::size_t offset,void* destination,std::size_t length,std::string* error=nullptr);
     StoreStats stats() const;
