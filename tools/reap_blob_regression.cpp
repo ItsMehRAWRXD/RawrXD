@@ -29,6 +29,16 @@ int main(){
     const auto second=StoreRepackedGGUFBlob(src.string(),root.string(),1024);
     check(second.error==BlobError::None&&second.already_present &&
           second.digest==first.digest,"identical_blob_deduplicated");
+    const auto tooSmall=StoreRepackedGGUFBlob(src.string(),root.string(),16);
+    check(tooSmall.error==BlobError::RepackFailure &&
+          tooSmall.repack_error==RepackError::Overflow,
+          "blob_budget_rejection");
+    unsigned temporaryDirectories=0;
+    for(const auto& entry:fs::directory_iterator(root/"blobs")) {
+        if(entry.path().filename().string().find(".reap-blob-")==0)
+            ++temporaryDirectories;
+    }
+    check(temporaryDirectories==0,"blob_staging_cleanup");
     if(fs::exists(first.blob_path)){
         std::ofstream corrupt(first.blob_path,std::ios::binary|std::ios::trunc);
         corrupt<<"corrupt";
