@@ -34,7 +34,7 @@ int main() {
     out = deflate_brutal_masm(src.data(), len, &out_len);
     auto t1 = high_resolution_clock::now();
     if (!out) {
-        printf("Compression allocation failed!\\n");
+        printf("Compression allocation failed!\n");
         return 1;
     }
     const size_t expected_len = len + 5 * ((len + 65534) / 65535) + 18;
