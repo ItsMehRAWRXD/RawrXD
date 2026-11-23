@@ -13,7 +13,7 @@
 #include <utility>
 
 namespace RawrXD { namespace TensorCompression {
-enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4, ShuffleLZ4 = 5, Shuffle16LZ4 = 6 };
+enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4, ShuffleLZ4 = 5, Shuffle16LZ4 = 6, XorDeltaLZ4 = 7 };
 struct Result {
     Encoding encoding = Encoding::Raw;
     uint64_t original_bytes = 0;
@@ -174,6 +174,26 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
             best.payload = std::move(lz4);
         }
     }
+    // Bit-exact XOR predictor on consecutive 32-bit words. Unlike
+    // arithmetic float prediction, this preserves NaN payloads and signed
+    // zero. Correlated words can produce zero-heavy XOR residuals.
+    if (bytes >= 64 && bytes % 4 == 0) {
+        std::vector<uint8_t> residual(bytes);
+        uint32_t previous = 0;
+        for (size_t i = 0; i < bytes; i += 4) {
+            uint32_t word;
+            std::memcpy(&word, p + i, sizeof(word));
+            const uint32_t delta = word ^ previous;
+            std::memcpy(residual.data() + i, &delta, sizeof(delta));
+            previous = word;
+        }
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(residual.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::XorDeltaLZ4;
+            best.payload = std::move(packed);
+        }
+    }
     // Shuffle 16-bit lanes: BF16/FP16 weights often have high-byte exponent
     // correlations even when no complete two-byte values repeat.
     if (bytes >= 64 && bytes % 2 == 0) {
@@ -258,6 +278,21 @@ inline void DecodeInto(const Result& r, void* destination, size_t destination_by
     if (destination_bytes!=n) throw std::invalid_argument("destination size mismatch");
     if (n && !destination) throw std::invalid_argument("null decode destination");
     auto* out=static_cast<uint8_t*>(destination);
+    if (r.encoding==Encoding::XorDeltaLZ4) {
+        if (n % 4 != 0) throw std::invalid_argument("XOR delta alignment");
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> residual(n);
+        DecodeInto(inner, residual.data(), residual.size());
+        uint32_t previous = 0;
+        for (size_t i = 0; i < n; i += 4) {
+            uint32_t delta;
+            std::memcpy(&delta, residual.data() + i, sizeof(delta));
+            previous ^= delta;
+            std::memcpy(out + i, &previous, sizeof(previous));
+        }
+        return;
+    }
     if (r.encoding==Encoding::Shuffle16LZ4) {
         if (n % 2 != 0) throw std::invalid_argument("shuffled16 LZ4 alignment");
         Result inner = r;
