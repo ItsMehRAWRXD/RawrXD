@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <utility>
 #include <vector>
