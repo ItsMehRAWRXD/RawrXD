@@ -1399,6 +1399,8 @@ bool Deep2Engine::embedTokensBatch(
        modelWeights.hiddenDim==0)
         return false;
     const size_t H=modelWeights.hiddenDim;
+    if (count > std::numeric_limits<size_t>::max() / H)
+        return false;
     for(size_t b=0;b<count;++b) {
         if(!embedToken(tokenIds[b],outputBatch+b*H))
             return false;
