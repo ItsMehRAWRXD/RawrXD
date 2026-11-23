@@ -6198,7 +6198,11 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         const bool compressedModeEnabled =
             compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
         const std::size_t packedRowBytes = LinearW_RowBytes(dst.type, dst.cols);
-        const bool compressMatrix = compressedModeEnabled &&
+        const std::string bindingLabel = label ? label : "";
+        const bool bindingIsNormOrBias =
+            bindingLabel.find("norm") != std::string::npos ||
+            bindingLabel.find("bias") != std::string::npos;
+        const bool compressMatrix = compressedModeEnabled && !bindingIsNormOrBias &&
             ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
             packedRowBytes > 0 &&
             packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
