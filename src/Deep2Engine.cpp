@@ -364,9 +364,9 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         };
         if (!compressedF32Weights.RegisterF32FromReader(
                 cacheKey, count, compressedF32MaxAbsError.load(std::memory_order_relaxed), reader, 4096)) {
-            // No safe/smaller encoding or no cache capacity: memoize the
-            // decision and fetch only requested raw tiles on future calls.
-            compressedF32Weights.MarkRawFallback(cacheKey);
+            // Deterministic no-win/budget rejections are memoized atomically
+            // inside RegisterF32FromReader. A source-read failure is not
+            // memoized, so a later request can retry transient I/O failures.
             const uint64_t byteOffset = firstElement * sizeof(float);
             const uint64_t byteCount = elementCount * sizeof(float);
             return rom.readTensorRange(entry, byteOffset, byteCount,
@@ -507,9 +507,9 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
                     rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
                         shard.dataOffset + entry.offset, tensorBytes64);
             }
-        } else {
-            compressedEncodedWeights.MarkRawFallback(cacheKey);
         }
+        // Deterministic admission rejections are memoized inside the cache;
+        // source I/O failures remain retryable on the next inference request.
     }
 
     encodedScratch.resize(static_cast<size_t>(byteCount));
