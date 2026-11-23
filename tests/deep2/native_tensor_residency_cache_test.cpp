@@ -48,12 +48,32 @@ int main() {
         },1024));
     assert(cache.Contains("layer.0.weight"));
 
+    // With a zero error budget, arbitrary F32 values must not be stored as a
+    // same-size raw duplicate. The engine then reads raw pager tiles directly.
+    const std::vector<float> arbitrary={1.0001f,2.0001f,3.0001f,4.0001f};
+    assert(!cache.RegisterF32FromReader("not.compressible",arbitrary.size(),0.0f,
+        [&](size_t o,size_t n,float* out) {
+            std::copy(arbitrary.begin()+o,arbitrary.begin()+o+n,out); return true;
+        },2));
+    assert(!cache.Contains("not.compressible"));
+
+    // A fitting insertion evicts the least-recently-used compressed tensor.
+    std::vector<float> second(512,3.0f);
+    cache.SetBudget(21000);
+    assert(cache.RegisterF32FromReader("layer.1.weight",second.size(),0.0f,
+        [&](size_t o,size_t n,float* out) {
+            std::copy(second.begin()+o,second.begin()+o+n,out); return true;
+        },128));
+    assert(!cache.Contains("layer.0.weight"));
+    assert(cache.Contains("layer.1.weight"));
+    assert(cache.GetStats().evictions>=1);
+
     // Explicit eviction releases the compressed representation.
     assert(cache.Evict("layer.0.weight"));
     assert(!cache.Contains("layer.0.weight"));
     auto finalStats=cache.GetStats();
     assert(finalStats.compressedBytes==0 && finalStats.logicalBytes==0);
-    assert(finalStats.evictions==1);
+    assert(finalStats.evictions>=2);
 
     // Bounds are fail-closed and never write beyond the requested output.
     Deep2::TensorResidencyCache bounded(4096);
