@@ -59,50 +59,98 @@ bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::si
    return true;
   },const_cast<void*>(bytes),error,ggml_type,require_savings,max_encoded_bytes);
 }
-bool CompressedWeightStore::addTensorFromReader(std::string name,std::size_t size,TensorReadCallback reader,void* context,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
- if(name.empty()||!reader){if(error)*error="name and tensor reader are required";return false;}
- if(size && size > std::numeric_limits<std::size_t>::max() - (block_bytes_ - 1)){if(error)*error="tensor size cannot be safely partitioned";return false;}
- std::lock_guard<std::mutex> lock(mutex_);
- if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
- const auto resident=static_cast<std::size_t>(counters_.compressed_bytes);
- if(resident>encoded_residency_budget_){if(error)*error="encoded residency accounting exceeds budget";return false;}
- const auto admission_limit=std::min(max_encoded_bytes,encoded_residency_budget_-resident);
- Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
- std::size_t encoded_size=0;
- try {
-  std::vector<std::uint8_t> scratch(block_bytes_);
-  for(std::size_t off=0;off<size;){
-   const auto take=std::min(block_bytes_,size-off);
-   if(!reader(context,off,scratch.data(),take)){if(error)*error="tensor reader failed before completing requested range";return false;}
-   EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(scratch.data(),take);
-   b.payload=encode(scratch.data(),take,b.stored_raw);
-   if(encoded_size>admission_limit||b.payload.size()>admission_limit-encoded_size){if(error)*error="encoded tensor exceeds residency budget";return false;}
-   encoded_size+=b.payload.size();tensor.blocks.emplace_back(std::move(b));off+=take;
-  }
-  if(require_savings&&encoded_size>=size){if(error)*error="compression did not reduce tensor size";return false;}
-  if(encoded_size>std::numeric_limits<std::uint64_t>::max()-counters_.compressed_bytes ||
-     size>std::numeric_limits<std::uint64_t>::max()-counters_.raw_bytes ||
-     tensor.blocks.size()>std::numeric_limits<std::uint64_t>::max()-counters_.blocks){
-   if(error)*error="compressed residency counters would overflow";return false;
-  }
-  const std::size_t block_count=tensor.blocks.size();
-  const auto inserted=tensors_.emplace(std::move(name),std::move(tensor));
-  if(!inserted.second){if(error)*error="tensor publication conflict";return false;}
-  counters_.raw_bytes+=size;
-  counters_.compressed_bytes+=encoded_size;
-  counters_.blocks+=block_count;
-  ++counters_.tensors;
-  return true;
- } catch(const std::bad_alloc&) {
-  if(error)*error="allocation failed while admitting compressed tensor";
-  return false;
- } catch(const std::exception& ex) {
-  if(error)*error=std::string("tensor reader/codec failed: ")+ex.what();
-  return false;
- } catch(...) {
-  if(error)*error="unknown failure while admitting compressed tensor";
-  return false;
- }
+bool CompressedWeightStore::addTensorFromReader(std::string name,
+    std::size_t size, TensorReadCallback reader, void* context,
+    std::string* error, std::uint32_t ggml_type, bool require_savings,
+    std::size_t max_encoded_bytes) {
+    if (name.empty() || !reader) {
+        if (error) *error = "name and tensor reader are required";
+        return false;
+    }
+    if (size && size > std::numeric_limits<std::size_t>::max() - (block_bytes_ - 1)) {
+        if (error) *error = "tensor size cannot be safely partitioned";
+        return false;
+    }
+
+    // Build the immutable candidate without holding the store mutex. Reader
+    // callbacks can touch mapped GGUF pages and encoding can be CPU-expensive;
+    // neither operation should block inference reads or unrelated admissions.
+    Tensor tensor;
+    tensor.raw_size = size;
+    tensor.ggml_type = ggml_type;
+    std::size_t encoded_size = 0;
+    try {
+        std::vector<std::uint8_t> scratch(block_bytes_);
+        for (std::size_t off = 0; off < size;) {
+            const auto take = std::min(block_bytes_, size - off);
+            if (!reader(context, off, scratch.data(), take)) {
+                if (error) *error = "tensor reader failed before completing requested range";
+                return false;
+            }
+
+            EncodedBlock block;
+            block.raw_size = static_cast<std::uint32_t>(take);
+            block.checksum = crc32(scratch.data(), take);
+            block.payload = encode(scratch.data(), take, block.stored_raw);
+
+            if (encoded_size > max_encoded_bytes ||
+                block.payload.size() > max_encoded_bytes - encoded_size) {
+                if (error) *error = "encoded tensor exceeds per-tensor admission limit";
+                return false;
+            }
+            encoded_size += block.payload.size();
+            tensor.blocks.emplace_back(std::move(block));
+            off += take;
+        }
+
+        if (require_savings && encoded_size >= size) {
+            if (error) *error = "compression did not reduce tensor size";
+            return false;
+        }
+
+        // Publication is the only critical section. Recheck duplicate names
+        // and the shared encoded budget because other candidates may have
+        // completed while this one was being built.
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (tensors_.find(name) != tensors_.end()) {
+            if (error) *error = "tensor already exists";
+            return false;
+        }
+        const auto resident = static_cast<std::size_t>(counters_.compressed_bytes);
+        if (resident > encoded_residency_budget_ ||
+            encoded_size > encoded_residency_budget_ - resident) {
+            if (error) *error = "encoded tensor exceeds shared residency budget";
+            return false;
+        }
+        if (encoded_size > std::numeric_limits<std::uint64_t>::max() - counters_.compressed_bytes ||
+            size > std::numeric_limits<std::uint64_t>::max() - counters_.raw_bytes ||
+            tensor.blocks.size() > std::numeric_limits<std::uint64_t>::max() - counters_.blocks ||
+            counters_.tensors == std::numeric_limits<std::uint64_t>::max()) {
+            if (error) *error = "compressed residency counters would overflow";
+            return false;
+        }
+
+        const std::size_t block_count = tensor.blocks.size();
+        const auto inserted = tensors_.emplace(std::move(name), std::move(tensor));
+        if (!inserted.second) {
+            if (error) *error = "tensor publication conflict";
+            return false;
+        }
+        counters_.raw_bytes += size;
+        counters_.compressed_bytes += encoded_size;
+        counters_.blocks += block_count;
+        ++counters_.tensors;
+        return true;
+    } catch (const std::bad_alloc&) {
+        if (error) *error = "allocation failed while admitting compressed tensor";
+        return false;
+    } catch (const std::exception& ex) {
+        if (error) *error = std::string("tensor reader/codec failed: ") + ex.what();
+        return false;
+    } catch (...) {
+        if (error) *error = "unknown failure while admitting compressed tensor";
+        return false;
+    }
 }
 bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error) {
  if(!values&&count){if(error)*error="source values are required";return false;}
