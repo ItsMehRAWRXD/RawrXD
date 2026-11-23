@@ -1,0 +1,57 @@
+name: Compressed Residency Smoke
+
+on:
+  push:
+    branches:
+      - codex/gpt6-compressed-residency-followthrough-20261123
+  pull_request:
+    paths:
+      - 'src/deep2/compression/**'
+      - 'src/deep2/GGUFLoader.hpp'
+      - 'include/native_resident_matvec.hpp'
+      - 'tests/compressed_weight_store/**'
+      - '.github/workflows/compressed-residency-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compressed-residency-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: ${{ matrix.os }} compressed-residency tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure isolated native smoke suite
+        shell: pwsh
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure isolated native smoke suite
+        if: runner.os != 'Windows'
+        run: cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build all compressed-residency smoke targets
+        run: cmake --build build/compressed-smoke --config Release --parallel 2
+
+      - name: Run codec-store, quantized-kernel, GGUF and GPU-tile tests
+        run: ctest --test-dir build/compressed-smoke -C Release --output-on-failure
+
+      - name: Upload CTest results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compressed-residency-ctest-${{ matrix.os }}
+          path: build/compressed-smoke/Testing/
+          if-no-files-found: warn
