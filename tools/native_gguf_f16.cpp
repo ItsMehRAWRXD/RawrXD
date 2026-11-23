@@ -102,6 +102,10 @@ int main(int argc,char** argv) {
             auto& t=ts[order[j]];
             U next=j+1<order.size()?ts[order[j+1]].offset:fileSize-dataStart;
             if(t.offset>next || add(dataStart,next)>fileSize)throw std::runtime_error("invalid tensor offsets");
+            if(j && ts[order[j-1]].type==0 && ts[order[j-1]].bytes>t.offset-ts[order[j-1]].offset)
+                throw std::runtime_error("overlapping F32 tensor payloads");
+            if(j && (ts[order[j-1]].type==1 || ts[order[j-1]].type==30) && ts[order[j-1]].bytes>t.offset-ts[order[j-1]].offset)
+                throw std::runtime_error("overlapping 16-bit tensor payloads");
             if(t.offset%alignment)throw std::runtime_error("unaligned tensor offset");
             if(t.type==0 || t.type==1 || t.type==30) {
                 U expected=1;
