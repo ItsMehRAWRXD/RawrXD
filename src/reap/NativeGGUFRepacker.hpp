@@ -154,7 +154,10 @@ inline bool ConvertF64RangeToF16(std::ifstream& in,std::ofstream& out,
             uint64_t bits=0;
             for(unsigned j=0;j<8;++j)bits|=uint64_t(src[i+j])<<(8*j);
             double value=0;std::memcpy(&value,&bits,8);
-            if(!std::isfinite(value))return false;
+            // Never saturate an out-of-range finite F64 to the largest
+            // finite F16. Such a conversion would silently clip weights.
+            if(!std::isfinite(value) || std::abs(value)>65504.0)
+                return false;
             const float intermediate=static_cast<float>(value);
             if(!std::isfinite(intermediate))return false;
             uint32_t fbits=0;std::memcpy(&fbits,&intermediate,4);
