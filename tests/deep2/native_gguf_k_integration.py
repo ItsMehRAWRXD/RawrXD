@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+"""Independent GGML Q5_K / Q6_K wire decoder and loss-gated GGUF integration."""
+import pathlib
+import struct
+import subprocess
+import sys
+import tempfile
+from native_gguf_f16_integration import U32,U64,S,pad,parse,ALIGN
+
+def make_source(path,typ,values):
+    kv=S("general.architecture")+U32(8)+S("llama")
+    kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+    hdr=b"GGUF"+U32(3)+U64(1)+U64(2)+kv
+    hdr+=S("blk.0.attn_q.weight")+U32(1)+U64(len(values))+U32(typ)+U64(0)
+    if typ==28: raw=struct.pack("<256d",*values)
+    elif typ==0: raw=struct.pack("<256f",*values)
+    elif typ==1: raw=struct.pack("<256e",*values)
+    else:
+        raw=b"".join(struct.pack("<H",struct.unpack("<I",struct.pack("<f",v))[0]>>16) for v in values)
+    path.write_bytes(pad(hdr)+raw)
+    return raw
+
+def independent_decode(typ, block):
+    assert len(block)==(176 if typ==13 else 210)
+    out=[]
+    if typ==13:
+        d,m=struct.unpack_from("<ee",block)
+        scales=block[4:16];hi=block[16:48];qs=block[48:176]
+        for j in range(256):
+            g=j//32
+            if g<4:
+                sc=scales[g]&63
+                mn=scales[g+4]&63
+            else:
+                sc=(scales[g+4]&15)|((scales[g-4]>>6)<<4)
+                mn=(scales[g+4]>>4)|((scales[g]>>6)<<4)
+            nib=(qs[(g//2)*32+(j%32)]>>(4*(g%2)))&15
+            top=(hi[j%32]>>(2*(g//2)+g%2))&1
+            out.append(d*sc*(nib|top<<4)-m*mn)
+    else:
+        d=struct.unpack_from("<e",block,208)[0]
+        scales=struct.unpack_from("<16b",block,192)
+        for j in range(256):
+            chunk=j//128;lane=(j%128)//32;col=j%32
+            lo=(block[chunk*64+(lane%2)*32+col]>>(4*(lane//2)))&15
+            high=(block[128+chunk*32+col]>>(2*lane))&3
+            out.append(d*scales[j//16]*((lo|(high<<4))-32))
+    return out
+
+def run(binary):
+    values=[((i*13)%29-14)/8.0 for i in range(256)]
+    with tempfile.TemporaryDirectory() as d:
+        root=pathlib.Path(d)
+        for source_type in (28,0,1,30):
+            inp=root/("source-%d.gguf"%source_type)
+            raw=make_source(inp,source_type,values)
+            for out_type,name,tol,size in ((13,"q5_k",0.5,176),(14,"q6_k",0.15,210)):
+                dst=root/("%d-%s.gguf"%(source_type,name))
+                subprocess.run([binary,str(inp),str(dst),str(tol),name],check=True)
+                data,start,meta,tensors=parse(dst)
+                kind,dims,offset=tensors["blk.0.attn_q.weight"]
+                assert kind==out_type and dims==(256,), (name,source_type,kind)
+                assert len(data)-start==size
+                decoded=independent_decode(out_type,data[start+offset:start+offset+size])
+                assert max(abs(x-y) for x,y in zip(values,decoded))<=tol
+                assert len(data)<len(inp.read_bytes())
+            if source_type==28:
+                strict_values=values.copy()
+                strict_values[0]=1.0+2**-40
+                strict=root/"strict-source.gguf"
+                raw_strict=make_source(strict,28,strict_values)
+                for fmt in ("q5_k","q6_k"):
+                    dst=root/("strict-"+fmt+".gguf")
+                    subprocess.run([binary,str(strict),str(dst),"0",fmt],check=True)
+                    data,start,meta,tensors=parse(dst)
+                    kind,dims,offset=tensors["blk.0.attn_q.weight"]
+                    assert kind==28 and data[start+offset:start+offset+len(raw_strict)]==raw_strict
+                nonfinite=strict_values.copy();nonfinite[0]=float("nan")
+                bad=root/"nonfinite-source.gguf"
+                badbytes=make_source(bad,28,nonfinite)
+                for fmt in ("q5_k","q6_k"):
+                    dst=root/("nonfinite-"+fmt+".gguf")
+                    subprocess.run([binary,str(bad),str(dst),"1",fmt],check=True)
+                    data,start,_,tensors=parse(dst)
+                    kind,_,offset=tensors["blk.0.attn_q.weight"]
+                    assert kind==28 and data[start+offset:start+offset+len(badbytes)]==badbytes
+    print("GGUF Q5_K/Q6_K F64 F32 F16 BF16 + strict fallback tests PASS")
+
+if __name__=="__main__":
+    run(sys.argv[1])
