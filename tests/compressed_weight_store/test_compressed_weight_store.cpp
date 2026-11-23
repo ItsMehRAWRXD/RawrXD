@@ -29,7 +29,7 @@ int main(){
  assert(store.tensorType("quant.q4_0")==2u); // GGML_TYPE_Q4_0
  std::uint8_t q4_roundtrip[sizeof(q4_payload)]={};
  assert(store.readRange("quant.q4_0",0,q4_roundtrip,sizeof(q4_roundtrip),&error));
- assert(std::equal(std::begin(q4_payload),std::end(q4_payload),std::begin(q4_roundtrip)));
+ assert(std::equal(q4_payload,q4_payload+sizeof(q4_payload),q4_roundtrip));
  assert(store.addTensorF32AsF16("fp16.weights",f32,7,&error));
  assert(store.tensorType("fp16.weights")==rawrxd::compression::GGML_TYPE_F16);
  assert(store.tensorBytes("fp16.weights")==14);
