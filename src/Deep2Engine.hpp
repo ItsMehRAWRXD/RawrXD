@@ -117,6 +117,11 @@ struct Deep2Engine {
                            std::size_t rows, std::size_t cols,
                            std::size_t blockBytes = 64 * 1024,
                            std::size_t stagingBudgetBytes = 64 * 1024);
+    // Read a single logical embedding row from compressed backing.
+    bool readROMCompressedRow(const std::string& tensorName,
+                              std::size_t rowIndex, std::vector<float>& output,
+                              std::size_t blockBytes = 64 * 1024,
+                              std::size_t stagingBudgetBytes = 64 * 1024);
 
     // Direct GGUF Q8_0 block GEMV; never expands the full matrix.
     bool gemvROMQ8_0(const std::string& tensorName,
