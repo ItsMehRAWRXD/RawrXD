@@ -1564,9 +1564,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     }
 
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
-    // A compressed-only tensor has no source mapping to pin or raw pointer to
-    // upload. Keep it on the bounded CPU range-decode path until the GPU
-    // compressed-tile uploader can consume an owner-backed view directly.
+    // Compressed F32/quantized backing is preferred over the still-mapped GGUF
+    // pointer and is uploaded as bounded row tiles by tryVulkanHostGEMV().
     if ((wt.data || wt.compressedF32 || wt.compressedBytes) && vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
         if (deep2ForwardTraceEnabled()) {
@@ -1584,10 +1583,13 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         // pinned, skip the probe entirely; the frozen-split gate re-pins
         // only if DEEP2_SPLIT_FREEZE is disabled.
         const bool isLmHead = (&wt == &modelWeights.lmHead);
+        const bool compressedPreferred = static_cast<bool>(wt.compressedF32) ||
+                                         static_cast<bool>(wt.compressedBytes);
         const bool lmHeadPinFastPath =
-            isLmHead && lmHeadPinned_[0] && lmHeadPinned_[1] &&
+            isLmHead && !compressedPreferred &&
+            lmHeadPinned_[0] && lmHeadPinned_[1] &&
             !lmHeadGeometryProbeEnabled();
-        if (isLmHead && !lmHeadPinFastPath &&
+        if (isLmHead && !compressedPreferred && !lmHeadPinFastPath &&
             vulkanDevices_.size() >= 2 && wt.rows >= 2) {
             GpuWeightView w0v{}, w1v{};
             if (Deep2ProbeRowSplitViews(wt, *vulkanDevices_[0],
