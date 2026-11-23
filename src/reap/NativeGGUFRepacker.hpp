@@ -1002,12 +1002,12 @@ inline bool ConvertQ5KToQ4_0(std::ifstream& in,std::ofstream& out,
             }
             const float d=extreme/-8.0f;
             uint32_t bits=0;std::memcpy(&bits,&d,4);
-            const uint16_t half=Float32BitsToFloat16(bits);
-            const uint32_t decoded=Float16ToFloat32Bits(half);
+            const uint16_t halfBits=Float32BitsToFloat16(bits);
+            const uint32_t decoded=Float16ToFloat32Bits(halfBits);
             float actual=0;std::memcpy(&actual,&decoded,4);
             if(extreme!=0 && (!std::isfinite(actual)||actual==0))return false;
-            encoded[0]=static_cast<unsigned char>(half);
-            encoded[1]=static_cast<unsigned char>(half>>8);
+            encoded[0]=static_cast<unsigned char>(halfBits);
+            encoded[1]=static_cast<unsigned char>(halfBits>>8);
             unsigned char codes[32];
             for(unsigned i=0;i<32;++i) {
                 const double normalized=actual==0?0.0:static_cast<double>(values[i])/actual;
