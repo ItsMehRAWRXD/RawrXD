@@ -90,10 +90,14 @@ Result compress(const std::uint8_t* data, std::size_t size, int level) {
         return {Status::AllocationFailure, {}};
     }
 
+    // Some zlib providers do not accept a null source pointer even when
+    // sourceLen is zero. Supply a valid address without changing the payload.
+    const std::uint8_t emptyByte = 0;
+    const std::uint8_t* source = size == 0 ? &emptyByte : data;
     const int rc = compress2(
         reinterpret_cast<Bytef*>(out.bytes.data()),
         &bound,
-        reinterpret_cast<const Bytef*>(data),
+        reinterpret_cast<const Bytef*>(source),
         static_cast<uLong>(size),
         level);
 
