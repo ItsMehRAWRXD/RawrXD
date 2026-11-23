@@ -27,6 +27,27 @@ add_executable(Deep2Engine_Benchmark
     src/VulkanStagingPipeline.cpp
 )
 
+# Stage 6K: engine-level GPU INT4/Q4_0/Q4_K dispatch test (real GGUF tensor).
+add_executable(gpu_q4_engine_test
+    tools/gpu_q4_engine_test.cpp
+    src/Deep2Engine.cpp
+    src/GGUFLoader.cpp
+    src/TensorROM.cpp
+    src/ShardPager.cpp
+    src/quant_kernels.cpp
+    src/MasmCoreKernels.cpp
+    src/VulkanDevice.cpp
+    src/VulkanDeviceAllocator.cpp
+    src/VulkanStagingPipeline.cpp
+)
+# Link Vulkan (vulkan-1) directly -- the engine's VulkanDevice uses raw Vulkan.
+find_library(VULKAN_LIB NAMES vulkan-1 vulkan)
+if(VULKAN_LIB)
+    target_link_libraries(gpu_q4_engine_test PRIVATE ${VULKAN_LIB})
+elseif(TARGET Vulkan::Vulkan)
+    target_link_libraries(gpu_q4_engine_test PRIVATE Vulkan::Vulkan)
+endif()
+
 add_executable(gguf2rom
     src/gguf2rom.cpp
 )
@@ -48,6 +69,7 @@ target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_
 target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
+target_include_directories(gpu_q4_engine_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
 # Deploy GLSL compute shaders (SPIR-V) next to the executable for the Vulkan path.
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
@@ -98,12 +120,37 @@ endif()
 find_package(Vulkan REQUIRED)
 if(Vulkan_FOUND)
     target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_include_directories(gpu_q4_engine_test PRIVATE ${Vulkan_INCLUDE_DIRS})
     message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
+endif()
+
+# AVX flags for gpu_q4_engine_test (mirror Deep2Engine_Benchmark).
+if(MSVC)
+    target_compile_options(gpu_q4_engine_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/O2 /EHsc /arch:AVX2>)
+else()
+    target_compile_options(gpu_q4_engine_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-O3 -ffast-math>)
+    target_compile_options(gpu_q4_engine_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mavx512bw -mavx512dq>)
+endif()
+
+# Deploy shaders next to gpu_q4_engine_test.
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
+    file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
+    foreach(shader ${SHADER_FILES})
+        get_filename_component(shaderName "${shader}" NAME)
+        add_custom_command(TARGET gpu_q4_engine_test POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${shader}"
+                     $<TARGET_FILE_DIR:gpu_q4_engine_test>/shaders/${shaderName}
+            COMMENT "Deploying shader ${shaderName}")
+    endforeach()
 endif()
 
 # Link libraries
 if(MSVC)
     target_link_libraries(Deep2Engine_Benchmark 
+        PRIVATE Vulkan::Vulkan
+        kernel32.lib user32.lib advapi32.lib
+    )
+    target_link_libraries(gpu_q4_engine_test
         PRIVATE Vulkan::Vulkan
         kernel32.lib user32.lib advapi32.lib
     )
@@ -113,10 +160,18 @@ if(MSVC)
     )
 elseif(UNIX AND NOT APPLE)
     target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(gpu_q4_engine_test pthread dl Vulkan::Vulkan)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 elseif(APPLE)
     target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(gpu_q4_engine_test pthread dl Vulkan::Vulkan)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+else()
+    # Windows + MinGW/clang (no MSVC, no UNIX): link Vulkan directly.
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(gpu_q4_engine_test PRIVATE Vulkan::Vulkan)
+        target_link_libraries(Deep2Engine_Benchmark PRIVATE Vulkan::Vulkan)
+    endif()
 endif()
 
 # Install target
