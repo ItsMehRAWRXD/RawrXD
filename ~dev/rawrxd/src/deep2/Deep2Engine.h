@@ -816,7 +816,8 @@ public:
     // Batch10: host-bound heavy GPU path. These methods are physically GPU-backed
     // but deliberately do not claim fully resident no-host authority.
     bool tryVulkanHostGEMV(const WeightTensor& wt, const float* input,
-                           float* output, size_t outDim);
+                           float* output, size_t outDim,
+                           bool* usedDualGpu = nullptr);
     bool tryVulkanHostGEMVBatch4(const WeightTensor& wt,
                                  const float* inputBatch, size_t count,
                                  float* outputBatch, size_t outDim);

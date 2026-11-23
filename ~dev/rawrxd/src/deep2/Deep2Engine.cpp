@@ -1621,35 +1621,16 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             }
         }
 
-        // Attempt 1: dual-GPU row split
-        bool triedDual = false, dualOk = false;
-        if (vulkanDevices_.size() >= 2 && wt.rows >= 2) {
-            triedDual = true;
-            if (tryVulkanHostGEMV(wt, input, output, outDim)) {
-                dualOk = true;
-            }
-        }
-        if (dualOk) {
+        // tryVulkanHostGEMV owns route selection: it attempts a genuine
+        // dual-row split when eligible, then one single-device fallback. The
+        // explicit receipt prevents compressed single-GPU tiles from being
+        // mislabeled as dual-GPU execution.
+        bool usedDualGpu = false;
+        if (tryVulkanHostGEMV(wt, input, output, outDim, &usedDualGpu)) {
             if (deep2ForwardTraceEnabled()) {
-                std::fprintf(stderr,"LINEARW_RESULT=DUAL_GPU name=%s\n",wtn); std::fflush(stderr);
-            }
-            if (bias) {
-                for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
-            }
-            if (!finiteVector(output, outDim))
-                throw std::runtime_error("LinearW: non-finite GPU output");
-            return;
-        }
-        if (triedDual) {
-            if (deep2ForwardTraceEnabled()) {
-                std::fprintf(stderr,"LINEARW_DUAL_ROW_FAIL name=%s\n",wtn); std::fflush(stderr);
-            }
-        }
-
-        // Attempt 2: single-GPU fallback
-        if (tryVulkanHostGEMV(wt, input, output, outDim)) {
-            if (deep2ForwardTraceEnabled()) {
-                std::fprintf(stderr,"LINEARW_RESULT=SINGLE_GPU name=%s\n",wtn); std::fflush(stderr);
+                std::fprintf(stderr,"LINEARW_RESULT=%s name=%s\n",
+                    usedDualGpu ? "DUAL_GPU" : "SINGLE_GPU",wtn);
+                std::fflush(stderr);
             }
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];

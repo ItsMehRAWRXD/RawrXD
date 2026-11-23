@@ -66,8 +66,10 @@ void applyMlaRope(float* qFull,float* kPe,
 } // namespace
 
 bool Deep2Engine::tryVulkanHostGEMV(
-    const WeightTensor& wt,const float* input,float* output,size_t outDim)
+    const WeightTensor& wt,const float* input,float* output,size_t outDim,
+    bool* usedDualGpu)
 {
+    if (usedDualGpu) *usedDualGpu = false;
     const bool compressedF32Path = static_cast<bool>(wt.compressedF32);
     const bool compressedBytesPath = !compressedF32Path &&
         static_cast<bool>(wt.compressedBytes);
@@ -86,6 +88,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
         if(Deep2RunDualGpuRowSplit(
                 *vulkanDevices_[0],*vulkanDevices_[1],
                 wt,input,output,epoch,&r)){
+            if (usedDualGpu) *usedDualGpu = true;
             ++gpuFwd_.dualRowSplitOps;
             ++gpuFwd_.dualRowSlot[0];
             ++gpuFwd_.dualRowSlot[1];
