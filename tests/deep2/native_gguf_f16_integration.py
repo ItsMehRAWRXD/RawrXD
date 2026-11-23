@@ -140,6 +140,26 @@ def run(binary):
         assert tt["blk.0.attn_q.weight"][0]==30
         actual=struct.unpack_from("<32H",tb,ts+tt["blk.0.attn_q.weight"][2])
         assert actual==(0x3f80,0x3f82,0xbf80,0xbf82)*8
+        # Auto chooses the smallest precision-valid format per tensor, while
+        # preserving existing quantized payloads and GGUF metadata.
+        auto_loose=root/"auto-loose.gguf"
+        subprocess.run([binary,str(source),str(auto_loose),"300","auto"],check=True)
+        ab,ast,am,at=parse(auto_loose)
+        assert am==metadata
+        assert at["blk.0.attn_q.weight"][0]==2  # Q4_0 is the smallest candidate
+        assert at["blk.0.attn_k.weight"][0]==6
+        assert ab[ast+at["blk.0.attn_k.weight"][2]:ast+at["blk.0.attn_k.weight"][2]+32]==quant
+        auto_strict=root/"auto-strict.gguf"
+        subprocess.run([binary,str(source),str(auto_strict),"0","auto"],check=True)
+        sb,ss,sm,st=parse(auto_strict)
+        assert sm==metadata
+        assert st["blk.0.attn_q.weight"][0]==1  # lossless F16 fallback
+        assert st["blk.0.attn_k.weight"][0]==6
+        auto_inexact=root/"auto-inexact.gguf"
+        subprocess.run([binary,str(inexact),str(auto_inexact),"0","auto"],check=True)
+        ib,ins,im,it=parse(auto_inexact)
+        assert it["blk.0.attn_q.weight"][0]==0  # no lossy encoding permitted
+        assert ib[ins+it["blk.0.attn_q.weight"][2]:ins+it["blk.0.attn_q.weight"][2]+len(original_raw)]!=original_raw
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
