@@ -360,7 +360,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ41(ts.size(),false);
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
             if(t.type==28 && (automatic || q41 || q51) &&
                t.dims[0]%32==0 && t.bytes%256==0) {
                 for(int candidate=0;candidate<2;++candidate) {
