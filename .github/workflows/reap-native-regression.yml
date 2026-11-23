@@ -30,6 +30,18 @@ jobs:
               "./reap-test-bin/$name"
             fi
           done
+          echo "Compiling native REAP repack CLI (all compression modes)"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            g++ -std=c++17 -O2 -Wall -Wextra -pthread -I src tools/reap_repack_cli.cpp -o reap-test-bin/reap_repack_cli.exe
+            if ./reap-test-bin/reap_repack_cli.exe >/dev/null 2>&1; then
+              echo "FAIL: missing CLI arguments accepted"; exit 1
+            fi
+          else
+            g++ -std=c++17 -O2 -Wall -Wextra -pthread -I src tools/reap_repack_cli.cpp -o reap-test-bin/reap_repack_cli
+            if ./reap-test-bin/reap_repack_cli >/dev/null 2>&1; then
+              echo "FAIL: missing CLI arguments accepted"; exit 1
+            fi
+          fi
           echo "Compiling gguf_parser_regression"
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             g++ -std=c++17 -O2 -Wall -Wextra -pthread -I src "tools/gguf_parser_regression.cpp" src/GGUFLoader.cpp -o "reap-test-bin/gguf_parser_regression.exe"
