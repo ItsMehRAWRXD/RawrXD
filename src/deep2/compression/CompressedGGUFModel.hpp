@@ -6,6 +6,7 @@
 #include "GGUFCompressedResidency.hpp"
 #include "StoredTensorMatvec.hpp"
 #include "../GGUFLoader.hpp"
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -204,10 +205,19 @@ public:
                 if (error) *error = "no resident matvec kernel for this GGML type";
                 return false;
         }
+        if (!input || !output) {
+            if (error) *error = "resident matvec input/output pointer is null";
+            return false;
+        }
         try {
-            StoredTensorMatvec(*state->store, name, type, input, output,
+            // Publish only after every compressed block has decoded and every
+            // row has completed. A corrupt/truncated block must not leave a
+            // caller with a partially overwritten activation vector.
+            std::vector<float> staged(static_cast<std::size_t>(rows));
+            StoredTensorMatvec(*state->store, name, type, input, staged.data(),
                                 static_cast<std::size_t>(rows),
                                 static_cast<std::size_t>(cols), staging_bytes);
+            std::copy(staged.begin(), staged.end(), output);
             if (error) error->clear();
             return true;
         } catch (const std::exception& ex) {
