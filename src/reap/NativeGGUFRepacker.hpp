@@ -100,7 +100,7 @@ inline RepackError RepackGGUF(const std::string& input,
     if(!ReadU32(in,magic)||!ReadU32(in,version)||
        !ReadU64(in,tensorCount)||!ReadU64(in,kvCount)||
        magic!=0x46554747 || (version!=2&&version!=3) ||
-       tensorCount>(1ULL<<20)||kvCount>(1ULL<<20))return RepackError::Format;
+       tensorCount==0||tensorCount>(1ULL<<20)||kvCount>(1ULL<<20))return RepackError::Format;
     uint64_t alignment=32;
     bool alignmentSeen=false;
     std::set<std::string> metadataKeys;
@@ -186,7 +186,8 @@ inline RepackError RepackGGUF(const std::string& input,
     }
     if(newDir>UINT64_MAX-(alignment-1))return RepackError::Overflow;
     const uint64_t newData=(newDir+alignment-1)&~(alignment-1);
-    if(cursor>UINT64_MAX-newData||newData+cursor>max_output_bytes)
+    if(cursor>UINT64_MAX-newData||newData+cursor>max_output_bytes||
+       newData+cursor>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return RepackError::Overflow;
     std::ofstream out(output,std::ios::binary|std::ios::trunc);
     if(!out)return RepackError::Output;
@@ -222,6 +223,11 @@ inline RepackError RepackGGUF(const std::string& input,
             return RepackError::Output;
     }
     out.flush();
+    if(!out)return RepackError::Output;
+    const auto finalPosition=out.tellp();
+    if(finalPosition<0||static_cast<uint64_t>(finalPosition)!=newData+cursor)
+        return RepackError::Output;
+    out.close();
     return out?RepackError::None:RepackError::Output;
 }
 }} // namespace RawrXD::REAP
