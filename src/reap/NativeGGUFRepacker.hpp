@@ -26,6 +26,7 @@ struct RepackTensor {
     bool convert_q8_0 = false;
     bool q8_source_f16 = false;
     bool convert_q4_0 = false;
+    uint32_t q4_source_type = 0;
 };
 inline bool ReadU32(std::istream& in, uint32_t& v) {
     return static_cast<bool>(in.read(reinterpret_cast<char*>(&v),4));
@@ -178,22 +179,30 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
 }
 // GGML Q4_0 from existing Q8_0: 32 values, FP16 scale and 16 packed nibbles.
 // Nibble i is the low half; nibble i+16 is the high half of byte i.
-inline bool ConvertQ8_0RangeToQ4_0(std::ifstream& in,std::ofstream& out,
-                                    uint64_t from,uint64_t sourceBytes) {
-    if(sourceBytes%34 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
+                           uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
+    const uint64_t inputBlock=sourceType==8?34:sourceType==6?22:0;
+    if(!inputBlock || sourceBytes%inputBlock || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
     in.clear();in.seekg(static_cast<std::streamoff>(from));
     if(!in)return false;
     unsigned char source[34],encoded[18];
     while(sourceBytes) {
-        if(!in.read(reinterpret_cast<char*>(source),34))return false;
+        if(!in.read(reinterpret_cast<char*>(source),static_cast<std::streamsize>(inputBlock)))return false;
         const uint16_t h=uint16_t(source[0])|(uint16_t(source[1])<<8);
         const uint32_t scaleBits=Float16ToFloat32Bits(h);
         float scale=0;std::memcpy(&scale,&scaleBits,4);
         if(!std::isfinite(scale))return false;
         float values[32],extreme=0;
         for(unsigned i=0;i<32;++i) {
-            values[i]=static_cast<float>(static_cast<int8_t>(source[2+i]))*scale;
+            int quantized=0;
+            if(sourceType==8)quantized=static_cast<int8_t>(source[2+i]);
+            else {
+                const unsigned nibble=i<16?(source[6+i]&15):(source[6+i-16]>>4);
+                const unsigned high=(source[2+i/8]>>(i%8))&1;
+                quantized=static_cast<int>(nibble|(high<<4))-16;
+            }
+            values[i]=static_cast<float>(quantized)*scale;
             if(!std::isfinite(values[i]))return false;
             if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
         }
@@ -213,7 +222,7 @@ inline bool ConvertQ8_0RangeToQ4_0(std::ifstream& in,std::ofstream& out,
         }
         for(unsigned i=0;i<16;++i)encoded[2+i]=static_cast<unsigned char>(codes[i]|(codes[i+16]<<4));
         if(!out.write(reinterpret_cast<const char*>(encoded),18))return false;
-        sourceBytes-=34;
+        sourceBytes-=inputBlock;
     }
     return true;
 }
@@ -288,7 +297,8 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
-        if(convert_q8_0_to_q4_0 && t.type==8) {
+        if(convert_q8_0_to_q4_0 && (t.type==8 || t.type==6)) {
+            t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
             t.bytes=(count/32)*18;
@@ -375,7 +385,8 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         if(t.old_offset>UINT64_MAX-dataStart)return RepackError::Overflow;
         if(t.convert_q4_0) {
-            if(!ConvertQ8_0RangeToQ4_0(in,out,dataStart+t.old_offset,t.source_bytes))
+            if(!ConvertToQ4_0(in,out,dataStart+t.old_offset,
+                              t.source_bytes,t.q4_source_type))
                 return RepackError::Output;
         } else if(t.convert_q8_0) {
             if(!ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
