@@ -580,6 +580,29 @@ inline bool ConvertQ6KToQ5_0(std::ifstream& in,std::ofstream& out,
 // GGML Q5_1 -> Q5_0: both use 32 weights, but Q5_1 carries a
 // separate minimum. Decode the original values before requantizing.
 // This is lossy unless the original affine offset matches Q5_0.
+// A sensitive Q5_1 tensor may only drop its affine minimum when all
+// blocks are reconstruction-exact. Ordinary tensors retain the existing
+// lossy fallback, but sensitive tensors never silently requantize.
+inline bool IsExactQ5_1ToQ5_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%24 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char header[4];
+    while(bytes) {
+        if(!in.read(reinterpret_cast<char*>(header),4))return false;
+        const uint16_t dh=uint16_t(header[0])|(uint16_t(header[1])<<8);
+        const uint16_t mh=uint16_t(header[2])|(uint16_t(header[3])<<8);
+        const uint32_t db=Float16ToFloat32Bits(dh),mb=Float16ToFloat32Bits(mh);
+        float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
+        if(!std::isfinite(d)||!std::isfinite(m)||m!=-16.0f*d||
+           !AffineCodesBitExact(d,m,16,32))return false;
+        in.seekg(20,std::ios::cur);
+        if(!in)return false;
+        bytes-=24;
+    }
+    return true;
+}
 inline bool ConvertQ5_1ToQ5_0(std::ifstream& in,std::ofstream& out,
                                uint64_t from,uint64_t sourceBytes) {
     if(sourceBytes%24 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -1066,6 +1089,18 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.q4_source_type=3;
                 t.type=2;
                 t.bytes=compact;
+            }
+        }
+    }
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.q5_source_q5_1 || !IsQualitySensitiveTensor(t.name))continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(!IsExactQ5_1ToQ5_0(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q5_0=false;
+                t.q5_source_q5_1=false;
+                t.type=7;
+                t.bytes=t.source_bytes;
             }
         }
     }
