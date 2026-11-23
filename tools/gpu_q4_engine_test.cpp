@@ -26,11 +26,17 @@ static bool ReadTensor(const std::string& path, const std::string& want,
         case 8:{std::string s;return rdus(s);}case 9:{uint32_t at=0;uint64_t al=0;if(!rds(at)||!rds(al))return false;if(at==8){for(uint64_t i=0;i<al;++i){std::string s;if(!rdus(s))return false;}return true;}
           uint64_t e=0;switch(at){case 0:case 1:case 7:e=1;break;case 2:case 3:e=2;break;case 4:case 5:case 6:e=4;break;case 10:case 11:case 12:e=8;break;default:return false;}return sk(al*e);}
         default:return false;}};
-    for(uint64_t i=0;i<nkv;++i){std::string k;uint32_t vt=0;if(!rdus(k)||!rds(vt)||!skip(vt))return false;}
+    uint32_t alignment = 32; // GGUF default; overridden by general.alignment
+    for(uint64_t i=0;i<nkv;++i){
+        std::string k; uint32_t vt=0;
+        if(!rdus(k)||!rds(vt)) return false;
+        if(k=="general.alignment" && vt==4){ uint32_t a=0; if(!rds(a)) return false; if(a>0) alignment=a; continue; }
+        if(!skip(vt)) return false;
+    }
     struct TI{std::string name;uint64_t dim[4];uint32_t nd;uint32_t type;uint64_t off;};
     std::vector<TI> infos(nt);
-    for(uint64_t i=0;i<nt;++i){auto&t=infos[i];if(!rdus(t.name)||!rds(t.nd)||t.nd>4)return false;for(uint32_t d=0;d<t.nd;++d)if(!rds(t.dim[d]))return 1; if(!rds(t.type)||!rds(t.off))return 1;}
-    uint64_t ds=((uint64_t)f.tellg()+31)&~31ull;
+    for(uint64_t i=0;i<nt;++i){auto&t=infos[i];if(!rdus(t.name)||!rds(t.nd)||t.nd>4)return false;for(uint32_t d=0;d<t.nd;++d)if(!rds(t.dim[d]))return false;if(!rds(t.type)||!rds(t.off))return false;}
+    uint64_t ds=((uint64_t)f.tellg()+alignment-1)&~((uint64_t)alignment-1);
     auto tb=[](uint32_t t,uint64_t ne)->uint64_t{switch(t){case 0:return ne*4;case 1:return ne*2;case 2:return(ne/32)*18;case 3:return(ne/32)*20;case 6:return(ne/32)*22;case 7:return(ne/32)*24;case 8:return(ne/32)*34;case 9:return(ne/32)*36;case 10:return(ne/256)*84;case 11:return(ne/256)*110;case 12:return(ne/256)*144;case 13:return(ne/256)*176;case 14:return(ne/256)*210;case 15:return(ne/256)*292;default:return 0;}};
     for(auto&t:infos){
         if(t.name.find(want)==std::string::npos) continue;
@@ -41,7 +47,11 @@ static bool ReadTensor(const std::string& path, const std::string& want,
         out.resize((size_t)bytes);
         f.seekg((std::streamoff)(ds+t.off),std::ios::beg);
         if(!f.read((char*)out.data(),bytes)) return false;
-        outType=t.type; outRows=(uint32_t)t.dim[t.nd-2]; outCols=(uint32_t)t.dim[t.nd-1];
+        outType=t.type;
+        // GGUF stores dim[0]=fastest (in_features), dim[1]=out_features.
+        // For a row-major [out][in] matvec: rows=out=dim[1], cols=in=dim[0].
+        outCols=(uint32_t)t.dim[t.nd-2]; // in_features (fastest)
+        outRows=(uint32_t)t.dim[t.nd-1]; // out_features
         return true;
     }
     return false;
