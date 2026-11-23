@@ -3428,29 +3428,55 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
             const bool compressedModeEnabled =
                 compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
+            const bool linearProjectionName =
+                name == "output.weight" || name == "lm_head.weight" ||
+                (layerIdx >= 0 &&
+                 (name.find("attn_") != std::string::npos ||
+                  name.find("ffn_") != std::string::npos ||
+                  name.find("q_proj.") != std::string::npos ||
+                  name.find("k_proj.") != std::string::npos ||
+                  name.find("v_proj.") != std::string::npos ||
+                  name.find("o_proj.") != std::string::npos ||
+                  name.find("gate_proj.") != std::string::npos ||
+                  name.find("up_proj.") != std::string::npos ||
+                  name.find("down_proj.") != std::string::npos ||
+                  name.find(".wq.") != std::string::npos ||
+                  name.find(".wk.") != std::string::npos ||
+                  name.find(".wv.") != std::string::npos ||
+                  name.find(".wo.") != std::string::npos));
             const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
             const bool eligibleLinearMatrix =
-                compressedModeEnabled && t.dimensions.size() == 2 &&
-                wt.rows > 1 && wt.cols > 1 &&
-                name != "token_embd.weight" && name != "token_embeddings.weight" &&
+                compressedModeEnabled && linearProjectionName &&
+                t.dimensions.size() == 2 && wt.rows > 1 && wt.cols > 1 &&
                 packedRowBytes > 0 &&
                 packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
                 packedRowBytes * wt.rows == wt.sizeBytes;
 
             if (eligibleLinearMatrix && t.data)
             {
-                constexpr std::size_t kCompressedModelBudget = 4ull * 1024ull * 1024ull * 1024ull;
+                constexpr std::size_t kDefaultCompressedModelBudget =
+                    4ull * 1024ull * 1024ull * 1024ull;
+                std::size_t compressedModelBudget = kDefaultCompressedModelBudget;
+                if (const char* budgetEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_BUDGET_MB"))
+                {
+                    char* end = nullptr;
+                    const unsigned long long budgetMb = std::strtoull(budgetEnv, &end, 10);
+                    constexpr unsigned long long kBytesPerMiB = 1024ull * 1024ull;
+                    if (end != budgetEnv && *end == '\0' && budgetMb > 0 &&
+                        budgetMb <= (std::numeric_limits<std::size_t>::max)() / kBytesPerMiB)
+                        compressedModelBudget = static_cast<std::size_t>(budgetMb * kBytesPerMiB);
+                }
                 if (!compressedWeightStore_)
                     compressedWeightStore_ =
                         std::make_shared<rawrxd::compression::CompressedWeightStore>(
                             256u * 1024u * 1024u,
                             rawrxd::compression::CompressedWeightStore::DefaultBlockBytes,
-                            kCompressedModelBudget);
+                            compressedModelBudget);
 
                 const auto before = compressedWeightStore_->stats();
                 const std::size_t encoded = static_cast<std::size_t>(before.compressed_bytes);
                 const std::size_t remaining =
-                    encoded < kCompressedModelBudget ? kCompressedModelBudget - encoded : 0;
+                    encoded < compressedModelBudget ? compressedModelBudget - encoded : 0;
                 std::string compressionError;
                 const bool stored = remaining > 0 &&
                     compressedWeightStore_->addTensorFromReader(
