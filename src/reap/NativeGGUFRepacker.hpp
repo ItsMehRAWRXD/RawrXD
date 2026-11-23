@@ -678,12 +678,17 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
+        // Automatic requantization must not touch vector-like parameters,
+        // nor expand a tensor that is already more compact than Q4_0.
+        // A two-dimensional GGUF tensor with a singleton second axis is
+        // still a vector; require at least two logical rows.
+        const bool matrix = t.dims.size()>=2 && t.dims[1]>1;
+        const uint64_t q4Bytes = (count/32)*18;
         if((convert_q8_0_to_q4_0 || auto_compress) && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
             t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) &&
             t.dims[0]%32==0 &&
-            (!auto_compress || (t.dims.size()>=2 &&
-              t.bytes>(count/32)*18))) {
+            (!auto_compress || (matrix && t.bytes>q4Bytes))) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
