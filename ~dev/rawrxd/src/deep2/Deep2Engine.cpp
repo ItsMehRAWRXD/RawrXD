@@ -1639,17 +1639,27 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             rows * rowBytes != wt.sizeBytes ||
             wt.compressedBytes->size() != wt.sizeBytes)
             throw std::runtime_error("LinearW: compressed quant backing geometry mismatch");
-        std::vector<uint8_t> encodedRow(rowBytes);
+        constexpr size_t kMaxCompressedCpuTileBytes = 256u * 1024u;
+        const size_t rowsPerTile = std::max<size_t>(
+            1, kMaxCompressedCpuTileBytes / rowBytes);
+        std::vector<uint8_t> encodedTile;
         std::vector<uint8_t> decodeScratch;
         std::vector<float> decodedRow(cols);
-        for (size_t row = 0; row < rows; ++row) {
+        for (size_t rowBase = 0; rowBase < rows;) {
+            const size_t tileRows = std::min(rows - rowBase, rowsPerTile);
+            const size_t tileBytes = tileRows * rowBytes;
+            encodedTile.resize(tileBytes);
             wt.compressedBytes->ReadRange(
-                row * rowBytes, rowBytes, encodedRow.data(), decodeScratch);
-            dequant(encodedRow.data(), decodedRow.data(), cols);
-            float sum = 0.0f;
-            for (size_t col = 0; col < cols; ++col)
-                sum += decodedRow[col] * input[col];
-            output[row] = sum;
+                rowBase * rowBytes, tileBytes, encodedTile.data(), decodeScratch);
+            for (size_t localRow = 0; localRow < tileRows; ++localRow) {
+                const uint8_t* encodedRow = encodedTile.data() + localRow * rowBytes;
+                dequant(encodedRow, decodedRow.data(), cols);
+                float sum = 0.0f;
+                for (size_t col = 0; col < cols; ++col)
+                    sum += decodedRow[col] * input[col];
+                output[rowBase + localRow] = sum;
+            }
+            rowBase += tileRows;
         }
         if (bias) for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
         if (!finiteVector(output, outDim))
