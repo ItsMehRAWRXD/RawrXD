@@ -9,7 +9,7 @@ int main() {
  const char* src="reap_q51_mixed_src.gguf",*dst="reap_q51_mixed_dst.gguf";int failures=0;
  {std::ofstream o(src,std::ios::binary);
  WriteU32(o,0x46554747);WriteU32(o,3);WriteU64(o,1);WriteU64(o,0);
- WriteName(o,"blk.0.attn_norm.weight");WriteU32(o,1);WriteU64(o,64);WriteU32(o,7);WriteU64(o,0);
+ WriteName(o,"custom.vector");WriteU32(o,1);WriteU64(o,64);WriteU32(o,7);WriteU64(o,0);
  PadTo(o,32);
  // First block is exactly compatible with Q5_0; second must requantize.
  for(int b=0;b<2;++b){WriteU16(o,0x3800);WriteU16(o,b==0?0xc800:0x0000);
