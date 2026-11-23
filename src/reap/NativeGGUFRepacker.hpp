@@ -690,7 +690,8 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8;
             t.bytes=(count/32)*34;
         }
-        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
+        if(convert_f32_to_q8_0 && !t.convert_f16 && !t.convert_q8_0 &&
+           (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
            t.dims[0]%32==0 && q8Bytes<t.bytes) {
             t.convert_q8_0=true;
             t.q8_source_f16=(t.type==1);
@@ -704,7 +705,8 @@ inline RepackError RepackGGUF(const std::string& input,
         // A two-dimensional GGUF tensor with a singleton second axis is
         // still a vector; require at least two logical rows.
         const uint64_t q4Bytes = (count/32)*18;
-        if((convert_q8_0_to_q4_0 || auto_compress) && !sensitive &&
+        if((convert_q8_0_to_q4_0 || auto_compress) &&
+           !t.convert_f16 && !t.convert_q8_0 && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
             t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) &&
             t.dims[0]%32==0 &&
