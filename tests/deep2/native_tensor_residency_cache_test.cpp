@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <thread>
+#include <atomic>
 #include <stdexcept>
 #include <vector>
 
@@ -248,5 +250,41 @@ int main() {
     float sentinel[2]={-7.0f,-8.0f};
     assert(!bounded.ReadRange("small",127,2,sentinel));
     assert(sentinel[0]==-7.0f && sentinel[1]==-8.0f);
+    // Six-agent style concurrent shared-cache read stress. Each worker owns
+    // its decode/output scratch while the compressed tensor remains immutable.
+    std::vector<float> sharedWeights(8192);
+    for (size_t i = 0; i < sharedWeights.size(); ++i)
+        sharedWeights[i] = static_cast<float>((i % 16) - 8) * 0.125f;
+    Deep2::TensorResidencyCache sharedCache(256 * 1024);
+    assert(sharedCache.RegisterF32FromReader("shared.concurrent", sharedWeights.size(),
+        0.0f, [&](size_t offset, size_t count, float* out) {
+            std::copy(sharedWeights.begin() + offset,
+                      sharedWeights.begin() + offset + count, out);
+            return true;
+        }, 512));
+    std::atomic<bool> concurrentOk{true};
+    std::vector<std::thread> workers;
+    for (size_t worker = 0; worker < 6; ++worker) {
+        workers.emplace_back([&, worker] {
+            std::vector<float> tile(256);
+            for (size_t iteration = 0; iteration < 128; ++iteration) {
+                const size_t first = (worker * 97 + iteration * 31) %
+                    (sharedWeights.size() - tile.size());
+                if (!sharedCache.ReadRange("shared.concurrent", first,
+                                           tile.size(), tile.data()) ||
+                    !std::equal(tile.begin(), tile.end(),
+                                sharedWeights.begin() + first)) {
+                    concurrentOk.store(false, std::memory_order_relaxed);
+                    return;
+                }
+            }
+        });
+    }
+    for (auto& worker : workers) worker.join();
+    const auto sharedStats = sharedCache.GetStats();
+    assert(concurrentOk.load(std::memory_order_relaxed));
+    assert(sharedStats.activeReaders == 0);
+    assert(sharedStats.cacheHits >= 6 * 128);
+
     std::cout<<"compressed F32 residency cache PASS\n";
 }
