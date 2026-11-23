@@ -219,7 +219,9 @@ CompressedWeightStore::BlockLease CompressedWeightStore::acquireBlock(const std:
  std::lock_guard<std::mutex>lock(mutex_);auto t=tensors_.find(name);if(t==tensors_.end()||index>=t->second.blocks.size()){if(error)*error="unknown tensor or block index out of range";return{};}
  const auto key=cacheKey(name,index);auto hit=cache_.find(key);if(hit!=cache_.end()){++counters_.cache_hits;lru_.splice(lru_.begin(),lru_,hit->second.lru);return hit->second.data;}
  ++counters_.cache_misses;std::vector<std::uint8_t>decoded;if(!decode(t->second.blocks[index],decoded)){if(error)*error="compressed block corrupt or checksum mismatch";return{};}
- auto lease=std::make_shared<const std::vector<std::uint8_t>>(std::move(decoded));const auto bytes=lease->size();
+ auto lease=std::make_shared<const std::vector<std::uint8_t>>(std::move(decoded));
+ // The cache budget tracks allocated vector capacity, not just logical size.
+ const auto bytes=lease->capacity();
  if(bytes<=cache_budget_){lru_.push_front(key);cache_.emplace(key,CacheEntry{lease,bytes,lru_.begin()});cache_bytes_+=bytes;evictToBudgetLocked();}
  return lease;
 }
@@ -231,7 +233,43 @@ bool CompressedWeightStore::readRange(const std::string& name,std::size_t offset
 void CompressedWeightStore::evictToBudgetLocked(){
  while(cache_bytes_>cache_budget_&&!lru_.empty()){bool removed=false;for(auto it=lru_.rbegin();it!=lru_.rend();++it){auto e=cache_.find(*it);if(e!=cache_.end()&&e->second.data.use_count()==1){cache_bytes_-=e->second.bytes;auto erase_it=std::next(it).base();cache_.erase(e);lru_.erase(erase_it);++counters_.evictions;removed=true;break;}}if(!removed)break;}
 }
-StoreStats CompressedWeightStore::stats()const{std::lock_guard<std::mutex>l(mutex_);auto s=counters_;s.cached_decoded_bytes=cache_bytes_;return s;}
+StoreStats CompressedWeightStore::stats()const {
+ std::lock_guard<std::mutex> lock(mutex_);
+ auto s=counters_;
+ s.cached_decoded_bytes=cache_bytes_;
+ const auto add=[](std::uint64_t& total,std::size_t amount) {
+  const auto value=static_cast<std::uint64_t>(amount);
+  if(value>(std::numeric_limits<std::uint64_t>::max)()-total)
+   total=(std::numeric_limits<std::uint64_t>::max)();
+  else total+=value;
+ };
+ // Payload size is useful for compression ratios; vector capacity is the
+ // allocated backing storage and can be larger after codec growth/reallocation.
+ for(const auto& item:tensors_) {
+  const auto& name=item.first;
+  const auto& tensor=item.second;
+  add(s.encoded_capacity_bytes,0);
+  add(s.metadata_bytes_estimate,sizeof(Tensor));
+  add(s.metadata_bytes_estimate,name.capacity()+1);
+  add(s.metadata_bytes_estimate,tensor.blocks.capacity()*sizeof(EncodedBlock));
+  for(const auto& block:tensor.blocks)
+   add(s.encoded_capacity_bytes,block.payload.capacity());
+ }
+ // Include container objects, bucket arrays, approximate node links, cache
+ // key copies, and LRU list nodes. This is an estimate, not allocator RSS.
+ add(s.metadata_bytes_estimate,sizeof(*this));
+ add(s.metadata_bytes_estimate,tensors_.bucket_count()*sizeof(void*));
+ add(s.metadata_bytes_estimate,tensors_.size()*(sizeof(void*)*2));
+ add(s.metadata_bytes_estimate,cache_.bucket_count()*sizeof(void*));
+ add(s.metadata_bytes_estimate,cache_.size()*(sizeof(CacheEntry)+sizeof(void*)*2));
+ for(const auto& item:cache_) add(s.metadata_bytes_estimate,item.first.capacity()+1);
+ add(s.metadata_bytes_estimate,lru_.size()*(sizeof(std::string)+sizeof(void*)*2));
+ for(const auto& key:lru_) add(s.metadata_bytes_estimate,key.capacity()+1);
+ s.resident_bytes_estimate=s.encoded_capacity_bytes;
+ add(s.resident_bytes_estimate,static_cast<std::size_t>(s.metadata_bytes_estimate));
+ add(s.resident_bytes_estimate,static_cast<std::size_t>(s.cached_decoded_bytes));
+ return s;
+}
 void CompressedWeightStore::setDecodedCacheBudget(std::size_t n){std::lock_guard<std::mutex>l(mutex_);cache_budget_=n;evictToBudgetLocked();}
 void CompressedWeightStore::clearDecodedCache(){std::lock_guard<std::mutex>l(mutex_);for(auto it=lru_.begin();it!=lru_.end();){auto e=cache_.find(*it);if(e!=cache_.end()&&e->second.data.use_count()==1){cache_bytes_-=e->second.bytes;cache_.erase(e);it=lru_.erase(it);++counters_.evictions;}else ++it;}}
 } // namespace rawrxd::compression
