@@ -604,9 +604,11 @@ inline RepackError RepackGGUF(const std::string& input,
                              bool convert_f32_to_f16=false,
                              bool convert_f32_to_q8_0=false,
                              bool convert_q8_0_to_q4_0=false,
-                             bool convert_q6_k_to_q5_0=false) {
+                             bool convert_q6_k_to_q5_0=false,
+                             bool auto_compress=false) {
     if(unsigned(convert_f32_to_f16)+unsigned(convert_f32_to_q8_0)+
-       unsigned(convert_q8_0_to_q4_0)+unsigned(convert_q6_k_to_q5_0)>1)return RepackError::Unsupported;
+       unsigned(convert_q8_0_to_q4_0)+unsigned(convert_q6_k_to_q5_0)+
+        unsigned(auto_compress)>1)return RepackError::Unsupported;
     if(input==output)return RepackError::Output;
     // A different spelling of the same file must not truncate the source.
     // This also catches hard links and relative/absolute path aliases.
@@ -659,7 +661,10 @@ inline RepackError RepackGGUF(const std::string& input,
            !CheckedMultiply(count/block,blockBytes,t.bytes))
             return RepackError::Unsupported;
         t.source_bytes=t.bytes;
-        if(convert_f32_to_f16 && t.type==0) {
+        // Auto mode uses FP16 for sensitive F32 tensors rather than aggressively
+        // quantizing normalization, embeddings, or output projection weights.
+        const bool sensitive=IsQualitySensitiveTensor(t.name);
+        if((convert_f32_to_f16 || (auto_compress && sensitive)) && t.type==0) {
             t.convert_f16=true;
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
@@ -673,9 +678,10 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
-        if(convert_q8_0_to_q4_0 && !IsQualitySensitiveTensor(t.name) &&
+        if((convert_q8_0_to_q4_0 || auto_compress) && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
-            t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) && t.dims[0]%32==0) {
+            t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) &&
+            t.dims[0]%32==0 && (!auto_compress || t.bytes>(count/32)*18)) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
