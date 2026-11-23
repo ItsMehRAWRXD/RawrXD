@@ -489,7 +489,30 @@ int main(int argc,char** argv) {
                     }
                     off+=n;
                 }
-                if(valid){streamHalf[i]=true;outputTypes[i]=1;++changed;}
+                if(valid){streamHalf[i]=true;outputTypes[i]=1;++changed;continue;}
+                if(automatic) {
+                    // F16 may overflow while BF16 remains representable.
+                    // Both occupy two bytes per F32 value. Prefer F16 when
+                    // valid; use BF16 only when its full-tensor error passes.
+                    seek(in,add(dataStart,t.offset));
+                    bool bfValid=true;
+                    for(U off=0;off<t.bytes && bfValid;) {
+                        size_t n=size_t(std::min<U>(t.bytes-off,chunk.size()));
+                        if(!in.read(reinterpret_cast<char*>(chunk.data()),std::streamsize(n)))
+                            throw std::runtime_error("truncated auto BF16 preflight");
+                        for(size_t j=0;j<n;j+=4) {
+                            uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
+                                          (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
+                            float original=Float(bits);
+                            uint32_t rounded=bits+0x7fffu+((bits>>16)&1u);
+                            float decoded=Float(rounded&0xffff0000u);
+                            if(!std::isfinite(original)||!std::isfinite(decoded)||
+                               !(std::fabs(decoded-original)<=tolerance)){bfValid=false;break;}
+                        }
+                        off+=n;
+                    }
+                    if(bfValid){streamBf16[i]=true;outputTypes[i]=30;++changed;}
+                }
                 continue;
             }
             if(t.bytes>64u*1024u*1024u)continue; // Defensive cap for any remaining non-streamed format
