@@ -114,7 +114,8 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
             storedBytes >= budgetBytes)
             return;
         const size_t remaining = budgetBytes - storedBytes;
-        if (!tensor.sizeBytes || tensor.sizeBytes % sizeof(float) != 0 ||
+        if (!tensor.rows || !tensor.cols || !tensor.sizeBytes ||
+            tensor.sizeBytes % sizeof(float) != 0 ||
             tensor.cols > std::numeric_limits<size_t>::max() / tensor.rows ||
             tensor.rows * tensor.cols != tensor.sizeBytes / sizeof(float)) {
             ++rejectedTensors;
