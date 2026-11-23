@@ -51,6 +51,11 @@ inline std::uint16_t floatToHalfRNE(float value) noexcept {
 
 struct StoreStats {
     std::uint64_t tensors=0, blocks=0, raw_bytes=0, compressed_bytes=0;
+    // Payload size is the encoded byte count. Capacity and metadata estimates
+    // expose the actual resident footprint more honestly than payload alone.
+    std::uint64_t encoded_capacity_bytes=0;
+    std::uint64_t metadata_bytes_estimate=0;
+    std::uint64_t resident_bytes_estimate=0;
     std::uint64_t cached_decoded_bytes=0, cache_hits=0, cache_misses=0, evictions=0;
 };
 class CompressedWeightStore {
