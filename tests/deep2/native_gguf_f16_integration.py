@@ -316,6 +316,32 @@ def run(binary):
         assert "file bytes: " in report.stdout
         assert "saved " in report.stdout
         assert "\\n" not in report.stdout
+        # Q8_K uses 256-value blocks: float scale + 256 int8 values +
+        # sixteen int16 subgroup sums (292 bytes total).
+        kvalues=[((i%31)-15)/8.0 for i in range(256)]
+        kraw=struct.pack("<"+"d"*256,*kvalues)
+        kh=bytearray(header if False else b"")
+        kmeta=S("general.architecture")+U32(8)+S("llama")
+        kmeta+=S("general.alignment")+U32(4)+U32(ALIGN)
+        khdr=b"GGUF"+U32(3)+U64(1)+U64(2)+kmeta
+        khdr+=S("blk.0.attn_q.weight")+U32(1)+U64(256)+U32(28)+U64(0)
+        ksrc=root/"f64-q8k-source.gguf"
+        ksrc.write_bytes(pad(khdr)+kraw)
+        kout=root/"f64-q8k-output.gguf"
+        subprocess.run([binary,str(ksrc),str(kout),"1","q8_k"],check=True)
+        kd,ks,km,kt=parse(kout)
+        assert kt["blk.0.attn_q.weight"][0]==15
+        assert len(kd)-ks==292
+        d=struct.unpack_from("<f",kd,ks)[0]
+        qs=struct.unpack_from("<256b",kd,ks+4)
+        sums=struct.unpack_from("<16h",kd,ks+260)
+        for j,q in enumerate(qs):
+            assert abs(d*q-kvalues[j])<=1
+        for group in range(16):
+            assert sums[group]==sum(qs[group*16:(group+1)*16])
+        strict=root/"f64-q8k-strict.gguf"
+        subprocess.run([binary,str(ksrc),str(strict),"0","q8_k"],check=True)
+        assert strict.read_bytes()==ksrc.read_bytes()
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
