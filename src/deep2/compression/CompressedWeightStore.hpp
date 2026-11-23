@@ -97,6 +97,9 @@ public:
     void setDecodedCacheBudget(std::size_t bytes);
     void clearDecodedCache();
 private:
+    // Narrow test seam for validating malformed codec control streams without
+    // exposing the encoder/decoder as part of the runtime API.
+    friend struct CompressedWeightStoreTestAccess;
     struct EncodedBlock { std::vector<std::uint8_t> payload; std::uint32_t checksum=0,raw_size=0; bool stored_raw=false; };
     struct Tensor { std::size_t raw_size=0; std::uint32_t ggml_type=GGML_TYPE_OPAQUE; std::vector<EncodedBlock> blocks; };
     struct CacheEntry { BlockLease data; std::size_t bytes=0; std::list<std::string>::iterator lru; };
