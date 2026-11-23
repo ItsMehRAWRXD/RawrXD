@@ -30,19 +30,21 @@ static void testValid(uint32_t type,const std::vector<uint64_t>& dims,size_t byt
     const auto path=std::filesystem::temp_directory_path()/
         ("rawrxd-rom-geometry-"+std::to_string(type)+".gguf");
     assert(writeMini(path,type,dims,bytes));
-    deep2::TensorROM rom;
-    assert(rom.addShard(path.string()));
-    assert(rom.finalizeIndex());
-    const auto* entry=rom.findTensor("tensor");
-    assert(entry&&static_cast<uint32_t>(entry->type)==type);
-    assert(entry->byteSize()==bytes);
-    std::vector<uint8_t> payload(bytes);
-    assert(rom.readTensorRange(*entry,0,bytes,payload.data()));
-    assert(payload.front()==0x5A&&payload.back()==0x5A);
-    uint8_t sentinel=0xCC;
-    assert(!rom.readTensorRange(*entry,bytes-1,2,&sentinel));
-    assert(sentinel==0xCC);
-    assert(rom.readTensorRange(*entry,bytes,0,nullptr));
+    {
+        deep2::TensorROM rom;
+        assert(rom.addShard(path.string()));
+        assert(rom.finalizeIndex());
+        const auto* entry=rom.findTensor("tensor");
+        assert(entry&&static_cast<uint32_t>(entry->type)==type);
+        assert(entry->byteSize()==bytes);
+        std::vector<uint8_t> payload(bytes);
+        assert(rom.readTensorRange(*entry,0,bytes,payload.data()));
+        assert(payload.front()==0x5A&&payload.back()==0x5A);
+        uint8_t sentinel=0xCC;
+        assert(!rom.readTensorRange(*entry,bytes-1,2,&sentinel));
+        assert(sentinel==0xCC);
+        assert(rom.readTensorRange(*entry,bytes,0,nullptr));
+    }
     std::filesystem::remove(path);
 }
 
@@ -50,8 +52,10 @@ static void testRejected(uint32_t type,const std::vector<uint64_t>& dims) {
     const auto path=std::filesystem::temp_directory_path()/
         ("rawrxd-rom-reject-"+std::to_string(type)+".gguf");
     assert(writeMini(path,type,dims,0));
-    deep2::TensorROM rom;
-    assert(!rom.addShard(path.string()));
+    {
+        deep2::TensorROM rom;
+        assert(!rom.addShard(path.string()));
+    }
     std::filesystem::remove(path);
 }
 
