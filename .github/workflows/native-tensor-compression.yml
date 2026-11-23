@@ -56,6 +56,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install required Vulkan shader validation tools
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y glslc spirv-tools
       - name: Compile and test on Linux
         if: runner.os == 'Linux'
         shell: bash
@@ -74,12 +80,10 @@ jobs:
           ./native_q5k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc tests/deep2/native_packed_q8_0_shader_decode_test.cpp src/quant_kernels.cpp -o packed_q8_shader_decode_test
           ./packed_q8_shader_decode_test
-          if command -v glslc >/dev/null 2>&1; then
-            glslc --target-env=vulkan1.2 -O shaders/gemv_packed16.comp -o gemv_packed16.spv
-            glslc --target-env=vulkan1.2 -O '~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp' -o deep2_qgemv.spv
-          else
-            echo "glslc unavailable; packed Vulkan shader compilation is covered by SDK-equipped native builds"
-          fi
+          glslc --target-env=vulkan1.2 -O shaders/gemv_packed16.comp -o gemv_packed16.spv
+          spirv-val --target-env vulkan1.2 gemv_packed16.spv
+          glslc --target-env=vulkan1.2 -O '~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp' -o deep2_qgemv.spv
+          spirv-val --target-env vulkan1.2 deep2_qgemv.spv
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp -o quantized_tile_range_test
           ./quantized_tile_range_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc -c src/TensorROM.cpp -o tensor_rom.o
