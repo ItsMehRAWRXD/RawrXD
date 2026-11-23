@@ -1444,8 +1444,19 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         throw std::runtime_error("LinearW: tensor backing smaller than geometry");
     }
 
+    // FP32-to-FP16 residency is intentionally CPU-only until Vulkan has a
+    // numerically validated F16 weight kernel. Lossless same-type cache
+    // entries can use compressed-range Vulkan staging.
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    const bool gpuResidencyCompatible =
+        !compressedAvailable || wt.residencyType == wt.type;
+
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
-    if (vulkanInitialized_ && !vulkanDevices_.empty()) {
+    if (vulkanInitialized_ && !vulkanDevices_.empty() &&
+        gpuResidencyCompatible) {
         std::memset(output, 0, outDim * sizeof(float));
         if (deep2ForwardTraceEnabled()) {
             std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
