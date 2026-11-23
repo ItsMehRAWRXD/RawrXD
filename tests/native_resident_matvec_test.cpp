@@ -1,4 +1,7 @@
 #include "native_resident_matvec.hpp"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <cmath>
 #include <cstdint>
