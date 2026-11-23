@@ -73,6 +73,20 @@ static void testFixedBlockRange(uint32_t type) {
     }
 }
 
+static void testIQ4XSRange() {
+    assert(deep2::tensorStorageBytes(256, deep2::TensorType::IQ4_XS) == 136);
+    std::vector<uint8_t> encoded(2 * 136, 0);
+    for (int block = 0; block < 2; ++block) {
+        put16(encoded.data() + block * 136, 0x3c00); // d = 1
+        put16(encoded.data() + block * 136 + 2, 0xAAAA); // each 6-bit scale = 32 -> zero
+    }
+    float tile[20];
+    for (float& value : tile) value = 123.0f;
+    assert(deep2::dequantizeTensorRange(deep2::TensorType::IQ4_XS,
+        512, 250, 20, encoded.data(), encoded.size(), tile));
+    for (float value : tile) assert(value == 0.0f);
+}
+
 static void testLosslessByteResidency() {
     Deep2::TensorByteResidencyCache cache(4096);
     std::vector<uint8_t> sparse(512, 0);
@@ -142,6 +156,7 @@ static void testF32Range() {
 }
 
 int main() {
+    testIQ4XSRange();
     testLosslessByteResidency();
     testF32Range();
     testScalarRange(24, sizeof(int8_t));
