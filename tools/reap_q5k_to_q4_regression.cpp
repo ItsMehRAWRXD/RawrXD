@@ -19,10 +19,10 @@ int main() {
         const float one=1.0f;uint32_t bits=0;std::memcpy(&bits,&one,4);
         const uint16_t h=Float32BitsToFloat16(bits);
         out.put(static_cast<char>(h));out.put(static_cast<char>(h>>8));
-        out.put(0);out.put(0); // zero minimum multiplier
+        out.put(static_cast<char>(h));out.put(static_cast<char>(h>>8)); // dmin=1
         unsigned char scales[12]={};
-        for(unsigned i=0;i<4;++i)scales[i]=1;
-        for(unsigned i=8;i<12;++i)scales[i]=1;
+        for(unsigned i=0;i<4;++i){scales[i]=1;scales[i+4]=1;}
+        for(unsigned i=8;i<12;++i)scales[i]=0x11; // scale=1, minimum=1
         out.write(reinterpret_cast<const char*>(scales),12);
         unsigned char qh[32]={},qs[128]={};
         for(unsigned group=0;group<8;++group) {
@@ -57,7 +57,7 @@ int main() {
             for(unsigned i=0;i<32;++i) {
                 const unsigned code=i<16?(bytes[2+i]&15):(bytes[2+i-16]>>4);
                 const float recovered=(static_cast<int>(code)-8)*d;
-                correct &= std::abs(recovered-static_cast<float>(i))<2.1f;
+                correct &= std::abs(recovered-static_cast<float>(static_cast<int>(i)-1))<2.1f;
             }
         }
     }
