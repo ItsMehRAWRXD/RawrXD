@@ -115,6 +115,28 @@ int main() {
     }
     check(RepackGGUF(source,dest,1024)==RepackError::Format,
           "duplicate_tensor_names_rejected");
+    // A GGUF with no tensors is not a useful publishable model artifact.
+    {
+        std::ofstream out(source,std::ios::binary|std::ios::trunc);
+        WriteU32(out,0x46554747);WriteU32(out,3);
+        WriteU64(out,0);WriteU64(out,0);
+    }
+    check(RepackGGUF(source,dest,1024)==RepackError::Format,
+          "empty_tensor_directory_rejected");
+    // A valid tensor whose complete output exceeds the requested budget
+    // must be rejected without opening/truncating the existing destination.
+    {
+        std::ofstream out(source,std::ios::binary|std::ios::trunc);
+        WriteU32(out,0x46554747);WriteU32(out,3);
+        WriteU64(out,1);WriteU64(out,0);
+        WriteName(out,"budget.weight");WriteU32(out,1);WriteU64(out,4);
+        WriteU32(out,0);WriteU64(out,0);
+        PadTo(out,32);
+        for(int i=0;i<16;++i)out.put(static_cast<char>(i));
+    }
+    const auto budgetResult=RepackGGUF(source,dest,64);
+    check(budgetResult==RepackError::Overflow,
+          "full_artifact_budget_enforced");
     std::remove(source);std::remove(dest);
     std::cout<<"REAP_REPACK_RESULT="<<(fails?"FAIL":"PASS")
              <<" failures="<<fails<<"\n";
