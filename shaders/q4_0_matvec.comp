@@ -1,0 +1,67 @@
+#version 450
+// ============================================================================
+// q4_0_matvec.comp -- native GGUF Q4_0 matvec (Stage 6H). Consumes Q4_0
+// blocks DIRECTLY in their native layout: {fp16 d, uint8 qs[16]} per 32 values,
+// w = d*(q-8), block-interleaved (y[j]=low, y[j+16]=high). No F32 intermediate.
+// Bindings: 0=Q4_0 blocks (uint), 1=input x, 2=output y, 3=dims (rows, cols,
+// blocks_per_row where blocks_per_row = cols/32).
+// ============================================================================
+layout(local_size_x = 32) in;
+
+layout(set = 0, binding = 0) readonly  buffer Q4 { uint q4[]; };   // 18-byte blocks
+layout(set = 0, binding = 1) readonly  buffer InputX  { float x[]; };
+layout(set = 0, binding = 2) writeonly buffer OutputY { float y[]; };
+layout(set = 0, binding = 3) uniform  Dims { uint rows; uint cols; uint bpr; };
+
+shared float s_partial[32];
+
+// IEEE fp16 -> f32 (no extensions; intBitsToFloat is core).
+float half_to_float(uint h) {
+    uint sign = (h & 0x8000u) << 16;
+    uint exp  = (h >> 10) & 0x1fu;
+    uint man  = h & 0x3ffu;
+    int bits;
+    if (exp == 0) {
+        if (man == 0) { bits = int(sign); }
+        else { int e = -14; while ((man & 0x400u) == 0u) { man <<= 1; e--; } man &= 0x3ffu; bits = int(sign | (uint(e + 127) << 23) | (man << 13)); }
+    } else if (exp == 31) { bits = int(sign | 0x7f800000u | (man << 13)); }
+    else { bits = int(sign | ((exp + 112u) << 23) | (man << 13)); }
+    return intBitsToFloat(bits);
+}
+
+// Byte reader: read one byte from the uint buffer at byte `offset`.
+uint read_byte(uint offset) {
+    uint word = q4[offset >> 2u];
+    return (word >> ((offset & 3u) * 8u)) & 0xffu;
+}
+
+void main() {
+    uint row = gl_WorkGroupID.x;
+    if (row >= rows) return;
+    uint tid = gl_LocalInvocationID.x;
+
+    float acc = 0.0;
+    // Stream every 32-value block of this row.
+    for (uint cb = 0; cb < bpr; ++cb) {
+        uint blk = row * bpr + cb;          // global block index
+        uint base = blk * 18u;              // 18 bytes per Q4_0 block
+        // fp16 d at bytes 0-1 (little-endian).
+        uint dBits = read_byte(base) | (read_byte(base + 1u) << 8u);
+        float d = half_to_float(dBits);
+        // Element tid (0..31): block-interleaved (tid<16 -> qs[tid] low, else qs[tid-16] high).
+        uint qsIdx = (tid < 16u) ? tid : (tid - 16u);
+        uint qbyte = read_byte(base + 2u + qsIdx);
+        uint nib = (tid < 16u) ? (qbyte & 0x0fu) : ((qbyte >> 4) & 0x0fu);
+        float w = (float(int(nib) - 8)) * d;
+        acc += w * x[cb * 32u + tid];
+    }
+    s_partial[tid] = acc;
+    barrier();
+
+    // Reduce the 32 partial sums -> y[row].
+    for (uint stride = 16; stride > 0; stride >>= 1) {
+        if (tid < stride) s_partial[tid] += s_partial[tid + stride];
+        barrier();
+    }
+    if (tid == 0) y[row] = s_partial[0];
+}
