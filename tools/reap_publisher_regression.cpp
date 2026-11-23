@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <thread>
 using namespace RawrXD::REAP;
 int main() {
     namespace fs=std::filesystem;
@@ -34,6 +35,21 @@ int main() {
     const auto repeat=PublishRepackedGGUF(src.string(),dst.string(),1024);
     check(repeat.error==PublishError::DestinationExists &&
           fs::file_size(dst,ec)==before,"existing_artifact_never_replaced");
+    // Two publishers targeting the same destination must never both commit.
+    fs::remove(dst,ec);
+    PublishResult concurrentA,concurrentB;
+    std::thread writerA([&] {
+        concurrentA=PublishRepackedGGUF(src.string(),dst.string(),1024);
+    });
+    std::thread writerB([&] {
+        concurrentB=PublishRepackedGGUF(src.string(),dst.string(),1024);
+    });
+    writerA.join();writerB.join();
+    const int successes=
+        (concurrentA.error==PublishError::None?1:0)+
+        (concurrentB.error==PublishError::None?1:0);
+    check(successes==1 && fs::exists(dst),
+          "concurrent_publish_single_winner");
     fs::remove(dst,ec);
     const auto denied=PublishRepackedGGUF(src.string(),dst.string(),16);
     check(denied.error==PublishError::RepackFailed &&
