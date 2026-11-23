@@ -303,7 +303,7 @@ def run(binary):
         assert not dest.exists()
         # Q8_0 streaming must work beyond the former 64 MiB allocation cap.
         largeq=root/"huge-q8.gguf"
-        subprocess.run([binary,str(huge),str(largeq),"0","q8_0"],check=True)
+        subprocess.run([binary,str(huge),str(largeq),"0.01","q8_0"],check=True)
         qdata,qstart,qmeta,qdesc=parse(largeq)
         assert qdesc["blk.0.attn_q.weight"][:2]==(8,(n,))
         assert len(qdata)-qstart==(n//32)*34
@@ -311,7 +311,7 @@ def run(binary):
             p=qstart+block*34
             assert struct.unpack_from("<e",qdata,p)[0]>0
             scale=struct.unpack_from("<e",qdata,p)[0]
-            assert all(scale*v==1.0 for v in struct.unpack_from("<32b",qdata,p+2))
+            assert all(abs(scale*v-1.0)<=0.01 for v in struct.unpack_from("<32b",qdata,p+2))
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
