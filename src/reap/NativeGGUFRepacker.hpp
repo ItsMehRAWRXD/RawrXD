@@ -181,7 +181,8 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
 // Nibble i is the low half; nibble i+16 is the high half of byte i.
 inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                            uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
-    const uint64_t inputBlock=sourceType==8?34:sourceType==6?22:\n        sourceType==3?20:sourceType==7?24:0;
+    const uint64_t inputBlock=sourceType==8?34:sourceType==6?22:
+        sourceType==3?20:sourceType==7?24:0;
     if(!inputBlock || sourceBytes%inputBlock || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
     in.clear();in.seekg(static_cast<std::streamoff>(from));
@@ -193,7 +194,14 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
         const uint32_t scaleBits=Float16ToFloat32Bits(h);
         float scale=0;std::memcpy(&scale,&scaleBits,4);
         if(!std::isfinite(scale))return false;
-        float minimum=0;\n        if(sourceType==3 || sourceType==7) {\n            const uint16_t mh=uint16_t(source[2])|(uint16_t(source[3])<<8);\n            const uint32_t mbits=Float16ToFloat32Bits(mh);\n            std::memcpy(&minimum,&mbits,4);\n            if(!std::isfinite(minimum))return false;\n        }\n        float values[32],extreme=0;
+        float minimum=0;
+        if(sourceType==3 || sourceType==7) {
+            const uint16_t mh=uint16_t(source[2])|(uint16_t(source[3])<<8);
+            const uint32_t mbits=Float16ToFloat32Bits(mh);
+            std::memcpy(&minimum,&mbits,4);
+            if(!std::isfinite(minimum))return false;
+        }
+        float values[32],extreme=0;
         for(unsigned i=0;i<32;++i) {
             int quantized=0;
             if(sourceType==8)quantized=static_cast<int8_t>(source[2+i]);
@@ -297,7 +305,8 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
-        if(convert_q8_0_to_q4_0 &&\n           (t.type==8 || t.type==6 || t.type==3 || t.type==7)) {
+        if(convert_q8_0_to_q4_0 &&
+           (t.type==8 || t.type==6 || t.type==3 || t.type==7)) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
