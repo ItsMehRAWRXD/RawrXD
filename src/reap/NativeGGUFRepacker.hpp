@@ -1147,6 +1147,15 @@ inline RepackError RepackGGUF(const std::string& input,
         if(t.old_offset%alignment||t.old_offset>payload||
            t.source_bytes>payload-t.old_offset)return RepackError::Format;
     }
+    std::vector<const RepackTensor*> offsets;
+    for(const auto& t:tensors)offsets.push_back(&t);
+    std::sort(offsets.begin(),offsets.end(),
+              [](const RepackTensor* a,const RepackTensor* b){return a->old_offset<b->old_offset;});
+    uint64_t prev=0;
+    for(const auto* t:offsets) {
+        if(t->old_offset<prev)return RepackError::Format;
+        prev=t->old_offset+t->source_bytes;
+    }
     // Quality-sensitive Q4_1 tensors and non-matrix vectors can
     // shrink without requantization when EVERY Q4_1 block has an
     // affine offset of exactly -8*d. Ordinary matrices are already
@@ -1205,15 +1214,6 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.bytes=t.source_bytes;
             }
         }
-    }
-    std::vector<const RepackTensor*> offsets;
-    for(const auto& t:tensors)offsets.push_back(&t);
-    std::sort(offsets.begin(),offsets.end(),
-              [](const RepackTensor* a,const RepackTensor* b){return a->old_offset<b->old_offset;});
-    uint64_t prev=0;
-    for(const auto* t:offsets) {
-        if(t->old_offset<prev)return RepackError::Format;
-        prev=t->old_offset+t->source_bytes;
     }
     // A smaller GGUF alone is not evidence of compression: the input can
     // contain unused padding or trailing bytes. Require at least one actual
