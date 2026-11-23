@@ -47,3 +47,93 @@ ctest --test-dir build -C Release -R "NativeTensor|NativeCompressedGGUF|Deep2Com
 The standalone synthetic GGUF test covers TensorROM, the shard pager, F32/encoded-byte caches, partial reads, and deterministic toy projection. The Windows `Deep2CompressedModelE2E` test additionally calls the existing Deep2 Phi-3 ROM forward method using a tiny generated model, a 4096x16 F16 output projection spanning two 64 KiB encoded chunks, and the CPU tiled GEMV path. This verifies F16 bytes enter the lossless encoded cache while the F32 layers use the F32 cache; each 16-row output tile requests only its encoded byte interval and the test checks encoded-cache hits, decode accounting, and every output logit against an independent analytic oracle for the synthetic attention/FFN/LayerNorm/output graph. The Vulkan packed-F16 path shares the same encoded-range helper but still requires target-GPU validation.
 
 The current Phi-3 ROM forward method retains its existing simplified V-path attention behavior. Passing the synthetic test is evidence of compressed-residency plumbing through that method, not evidence of complete transformer architecture fidelity, production-model parity, Vulkan numerical parity, or release certification. Those gates require independent reference logits and target-hardware validation.
+
+
+## Residency accounting boundary
+
+The cache's retained-byte budget counts the reserved per-chunk directory
+(`vector<Result>::capacity() * sizeof(Result)`) and each encoded payload's
+actual `vector<uint8_t>::capacity()`, not merely the payload's logical size.
+Admission checks the directory estimate before reserving it, then checks each
+payload allocation before retaining the chunk. This prevents tiny chunk sizes
+from creating an unbounded metadata allocation outside the configured cache
+budget.
+
+The reported compressed-byte total is the cache-owned chunk directory plus
+payload allocation capacity. It is not process RSS or total host/device
+residency: allocator bookkeeping, map nodes, caller-owned decode scratch,
+temporary admission buffers, pager pages, Vulkan staging, and GPU allocations
+are separate measurements and must be reported independently.
+
+If a budget reduction occurs while readers hold leases, those pinned entries
+remain alive until the readers finish. The cache may temporarily report an
+over-budget state during that lease window, but it rejects new admissions
+without unsigned-size underflow and retries them after leases drain. A
+temporary capacity miss is not memoized as an intrinsically uncompressible
+tensor. The same guarded admission rule is applied to both the F32
+`TensorResidencyCache` and the byte-preserving
+`TensorByteResidencyCache`. Once active leases have drained, the configured
+budget is enforced against the cache's accounted retained storage; it is not
+a cap on total process memory.
+
+## Bounded packed GPU staging primitive
+
+`ChunkedF32Storage::CopyUniform16BitRange(first, count, encoding, destination, destinationBytes)` copies only the requested F16/BF16 range into a caller-owned staging allocation. It validates the complete intersecting chunk span and destination capacity before writing. The destination remains unchanged on invalid ranges, mixed codecs, insufficient capacity, or missing storage. It supports windows crossing chunk boundaries without allocating or concatenating a whole-tensor packed buffer. The caller owns staging lifetime and must retain it through the GPU fence; this method alone does not dispatch a Vulkan kernel or prove GPU numerical parity.
+
+## Release-mode test integrity
+
+The three native codec and residency-cache test executables contain 225
+assertion-based checks, including registration and range-read calls inside
+assert expressions. Defining `NDEBUG` would otherwise remove both the checks
+and those calls, allowing a false-green test. Each test translation unit now
+undefines `NDEBUG` before including `<cassert>`; the standalone Linux and
+MSVC CI compilation explicitly defines `NDEBUG` to exercise this Release
+configuration. The synthetic GGUF and Deep2 model E2E executables use
+explicit runtime checks instead. A green CI run after this change verifies
+that the assertions were actually executed; it does not by itself establish
+production-model or GPU parity.
+
+### Cache key identity and model rebinding
+
+Both the F32 and byte-preserving compressed residency caches now reject a repeated key when the new tensor's logical byte count differs from the resident entry. This prevents a differently shaped tensor from silently aliasing the prior model's weights, without reading or modifying the new source. **Equal-sized but different tensors cannot be distinguished by byte count alone**: callers must namespace cache keys by stable model/shard identity and clear or evict old entries when rebinding models. This guard is not a content hash or a substitute for model lifecycle isolation. Deterministic collision tests run in the native cache test executables, including Release-mode CI.
+
+### F32 cache tolerance identity (2026-11-23)
+
+A resident F32 tensor records the maximum absolute reconstruction error
+accepted when it was built. Re-registering the same key with a stricter
+error budget now fails closed without reading the replacement source. A
+relaxed request can reuse a stricter resident entry. Tensor keys must still
+include model identity: equal-size, equal-tolerance weights from distinct
+models cannot safely share a key. Regression coverage exercises both strict
+rejection and relaxed reuse. This does not certify model-level numerical parity.
+
+
+### Model identity and cache lifecycle
+
+Both compressed caches expose `SetModelIdentity(identity)`. An unchanged
+identity retains resident tensors and raw-fallback memoization. A changed
+identity serializes against first-touch builders, waits for existing reader
+leases, invalidates all encoded entries and fallback decisions, and resets
+resident-byte accounting. Deep2 `Initialize` binds both caches to the model
+path after `Shutdown` has drained the previous model. Callers must stop
+starting reads against the old model before switching identities. The path
+is a lifecycle label, not a content fingerprint: replacing a GGUF at the same
+path still requires a full `Shutdown` / `Initialize` boundary. This does
+not authorize sharing a cache across concurrently active different models.
+
+Deterministic tests cover equal-sized, same-key F32 and byte tensors whose
+values differ across model scopes, including fallback invalidation and
+unchanged-scope retention. Test execution remains a separate CI gate.
+
+
+### Same-path GGUF replacement safety (2026-11-23)
+
+Deep2 ROM initialization calls Shutdown and then explicitly clears both F32 and
+encoded-byte compressed residency caches before binding the new model identity.
+A path is not a content fingerprint: an in-place GGUF replacement may preserve
+both path and tensor dimensions while changing weight values. Calling
+SetModelIdentity with an unchanged path is intentionally a no-op, so the
+mandatory Clear step invalidates old compressed entries and memoized raw
+fallbacks. Both cache regression suites cover same-identity invalidation and
+re-admission of different, equal-sized payloads. These are committed tests;
+CI execution and full model parity are separate verification gates.

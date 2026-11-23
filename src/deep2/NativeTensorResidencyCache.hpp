@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <utility>
@@ -38,6 +39,31 @@ public:
     TensorResidencyCache(const TensorResidencyCache&) = delete;
     TensorResidencyCache& operator=(const TensorResidencyCache&) = delete;
 
+    // Explicit model boundary: equal-sized keys are not proof of identical
+    // weights. A new identity invalidates both encoded entries and fallback
+    // decisions, after all in-flight readers release their leases.
+    // The caller must stop starting reads for the old model before switching.
+    void SetModelIdentity(const std::string& identity) {
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (modelIdentity_ == identity) return;
+        readersDrained_.wait(lock, [this] {
+            for (const auto& item : entries_)
+                if (item.second.activeReaders != 0) return false;
+            return true;
+        });
+        evictions_ += entries_.size();
+        entries_.clear();
+        rawFallback_.clear();
+        compressedBytes_ = logicalBytes_ = 0;
+        modelIdentity_ = identity;
+    }
+
+    std::string ModelIdentity() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return modelIdentity_;
+    }
+
     void SetBudget(size_t bytes) {
         // Serialize budget changes with first-touch builds. Otherwise a build
         // can hold a candidate sized for the old budget while the new smaller
@@ -53,7 +79,12 @@ public:
     bool RegisterF32FromReader(const std::string& key,size_t elementCount,
                                float maxAbsError,Reader&& reader,
                                size_t chunkElements = 4096) {
-        if(key.empty()) return false;
+        // NaN, infinities and negative tolerances must not bypass the
+        // stricter-cache-reuse check or enter the compression encoder.
+        // Invalid requests are not a property of the tensor: never memoize
+        // them as raw fallback or invoke the source reader.
+        if (key.empty() || !std::isfinite(maxAbsError) || maxAbsError < 0.0f)
+            return false;
         // Serialize first-touch construction. Concurrent inference agents must
         // not create duplicate temporary compressed copies of one tensor.
         std::lock_guard<std::mutex> buildLock(buildMutex_);
@@ -67,6 +98,13 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto existing = entries_.find(key);
             if (existing != entries_.end()) {
+                // Reject a key reused for a differently sized model tensor.
+                // Callers must also namespace keys by model identity, since
+                // equal-sized tensors can contain different values.
+                if (elementCount > std::numeric_limits<size_t>::max() / sizeof(float) ||
+                    existing->second.logicalBytes != elementCount * sizeof(float) ||
+                    existing->second.maxAbsError > maxAbsError)
+                    return false;
                 existing->second.lastUse = ++tick_;
                 return true;
             }
@@ -109,14 +147,19 @@ public:
             return true;
         }
         EvictToFitLocked(stored,key);
-        if(stored > budgetBytes_ - compressedBytes_) {
-            rawFallback_.insert(key);
+        // A concurrent reader may temporarily pin enough old entries that
+        // the cache remains above a newly lowered budget. Do not subtract in
+        // that state (size_t would underflow), and do not memoize this as a
+        // deterministic raw fallback: once leases drain, admission can retry.
+        if(compressedBytes_ > budgetBytes_ ||
+           stored > budgetBytes_ - compressedBytes_) {
             return false;
         }
         Entry e;
         e.storage=std::move(built);
         e.compressedBytes=stored;
         e.logicalBytes=elementCount*sizeof(float);
+        e.maxAbsError=maxAbsError;
         e.lastUse=++tick_;
         compressedBytes_+=e.compressedBytes;
         logicalBytes_+=e.logicalBytes;
@@ -156,9 +199,17 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it=entries_.find(key);
             if(it==entries_.end()) { ++cacheMisses_; return false; }
+            // F32 callers supply element offsets, while the entry tracks
+            // logical bytes. Validate without overflowing either unit.
+            // Invalid requests must not acquire a lease or mutate output.
+            const size_t elements = it->second.logicalBytes / sizeof(float);
+            if (first > elements || count > elements - first ||
+                (count != 0 && destination == nullptr)) {
+                ++cacheMisses_;
+                return false;
+            }
             it->second.lastUse=++tick_;
             ++it->second.activeReaders;
-            ++cacheHits_;
             storage=it->second.storage;
         }
         bool decoded = false;
@@ -173,9 +224,12 @@ public:
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
             if (decoded) {
+                ++cacheHits_;
                 const uint64_t bytes=static_cast<uint64_t>(count)*sizeof(float);
                 bytesDecoded_ = bytes > std::numeric_limits<uint64_t>::max()-bytesDecoded_
                     ? std::numeric_limits<uint64_t>::max() : bytesDecoded_+bytes;
+            } else {
+                ++cacheMisses_;
             }
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
@@ -194,9 +248,12 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = entries_.find(key);
             if (it == entries_.end()) { ++cacheMisses_; packed.clear(); return false; }
+            if (first > it->second.logicalBytes / sizeof(float) ||
+                count > it->second.logicalBytes / sizeof(float) - first) {
+                ++cacheMisses_; packed.clear(); return false;
+            }
             it->second.lastUse = ++tick_;
             ++it->second.activeReaders;
-            ++cacheHits_;
             storage = it->second.storage;
         }
         bool exported = false;
@@ -210,11 +267,51 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
+            if (exported) ++cacheHits_; else ++cacheMisses_;
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
         }
         if (!exported) packed.clear();
         return exported;
+    }
+
+    // Fill caller-owned GPU upload staging directly. The shared storage
+    // reference keeps chunks alive while the copy is in progress.
+    bool CopyUniform16BitRange(const std::string& key, size_t first, size_t count,
+                               RawrXD::TensorCompression::Encoding& encoding,
+                               void* destination, size_t destinationBytes) {
+        std::shared_ptr<const RawrXD::TensorCompression::ChunkedF32Storage> storage;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = entries_.find(key);
+            if (it == entries_.end()) { ++cacheMisses_; return false; }
+            if (first > it->second.logicalBytes / sizeof(float) ||
+                count > it->second.logicalBytes / sizeof(float) - first ||
+                (count != 0 && (destination == nullptr ||
+                 count > destinationBytes / sizeof(uint16_t)))) {
+                ++cacheMisses_; return false;
+            }
+            it->second.lastUse = ++tick_;
+            ++it->second.activeReaders;
+            storage = it->second.storage;
+        }
+        bool copied = false;
+        try {
+            copied = storage->CopyUniform16BitRange(
+                first, count, encoding, destination, destinationBytes);
+        } catch (...) {
+            copied = false;
+        }
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = entries_.find(key);
+            if (it != entries_.end() && it->second.activeReaders)
+                --it->second.activeReaders;
+            if (copied) ++cacheHits_; else ++cacheMisses_;
+            EvictToFitLocked(0, std::string());
+            readersDrained_.notify_all();
+        }
+        return copied;
     }
 
     bool Evict(const std::string& key) {
@@ -259,10 +356,13 @@ public:
     }
 
 private:
+    std::string modelIdentity_;
+
     struct Entry {
         std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> storage;
         size_t compressedBytes=0;
         size_t logicalBytes=0;
+        float maxAbsError=0.0f;
         uint64_t lastUse=0;
         size_t activeReaders=0;
     };

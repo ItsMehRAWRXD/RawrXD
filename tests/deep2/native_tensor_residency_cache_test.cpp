@@ -1,8 +1,16 @@
+// These checks are executable test operations, not debug-only diagnostics.
+// Release/RelWithDebInfo define NDEBUG; preserve the assertions and their
+// side effects so CI exercises admission, decoding and reference comparisons.
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include "../../src/deep2/NativeTensorResidencyCache.hpp"
 #include <cassert>
+#include <limits>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <thread>
 #include <atomic>
@@ -23,11 +31,42 @@ int main() {
     };
     assert(cache.RegisterF32FromReader("layer.0.weight",source.size(),0.0f,reader,1024));
     assert(sourceReads==10); // source was consumed in bounded chunks, not one tensor read
+    // A second model's differently sized tensor must never silently reuse
+    // an existing compressed entry merely because its key is identical.
+    size_t collisionReads = 0;
+    assert(!cache.RegisterF32FromReader("layer.0.weight",source.size()+1,0.0f,
+        [&](size_t,size_t,float*) { ++collisionReads; return false; },1024));
+    assert(collisionReads == 0);
+    // A cached lossy representation must not satisfy a later stricter
+    // numerical tolerance for the same tensor key. A relaxed request may
+    // reuse an entry built with stricter bounds, but never the reverse.
+    Deep2::TensorResidencyCache toleranceCache(8192);
+    std::vector<float> toleranceSource(1024, 1.0001f);
+    size_t toleranceReads = 0;
+    auto toleranceReader = [&](size_t offset, size_t count, float* out) {
+        ++toleranceReads;
+        std::copy(toleranceSource.begin() + offset,
+                  toleranceSource.begin() + offset + count, out);
+        return true;
+    };
+    assert(toleranceCache.RegisterF32FromReader(
+        "tolerance.weight", toleranceSource.size(), 0.01f, toleranceReader, 256));
+    const size_t toleranceBuiltReads = toleranceReads;
+    assert(!toleranceCache.RegisterF32FromReader(
+        "tolerance.weight", toleranceSource.size(), 0.0f, toleranceReader, 256));
+    assert(toleranceReads == toleranceBuiltReads);
+    assert(toleranceCache.RegisterF32FromReader(
+        "tolerance.weight", toleranceSource.size(), 0.02f, toleranceReader, 256));
+    assert(toleranceReads == toleranceBuiltReads);
+    assert(toleranceCache.GetStats().tensorCount == 1);
+    assert(cache.Contains("layer.0.weight"));
+    assert(cache.GetStats().tensorCount == 1);
+
     assert(cache.Contains("layer.0.weight"));
     auto before=cache.GetStats();
     assert(before.tensorCount==1);
     assert(before.logicalBytes==source.size()*sizeof(float));
-    assert(before.compressedBytes<=before.logicalBytes/2);
+    assert(before.compressedBytes < before.logicalBytes); // retained metadata/capacity is included
     assert(before.compressedBytes<=before.budgetBytes);
 
     // Device-facing export: complete F16 chunks are exposed in their compact
@@ -71,8 +110,17 @@ int main() {
     // BF16 fallback: values outside the finite F16 range but exactly
     // representable in BF16 must remain packed and round-trip exactly.
     std::vector<float> bf16Source(2048);
-    for (size_t i = 0; i < bf16Source.size(); ++i)
-        bf16Source[i] = (i & 1u) ? 131072.0f : 65536.0f;
+    uint32_t bf16Seed = 0x85ebca6bu;
+    for (size_t i = 0; i < bf16Source.size(); ++i) {
+        bf16Seed ^= bf16Seed << 13;
+        bf16Seed ^= bf16Seed >> 17;
+        bf16Seed ^= bf16Seed << 5;
+        // BF16-exact values with exponent outside finite F16 range.
+        // Vary both exponent and mantissa to prevent LZ4 from beating BF16.
+        const uint32_t bits = ((uint32_t(143u + (bf16Seed % 12u))) << 23) |
+                              ((bf16Seed >> 12) & 0x7fu) << 16;
+        std::memcpy(&bf16Source[i], &bits, sizeof(float));
+    }
     Deep2::TensorResidencyCache bf16Cache(8192);
     assert(bf16Cache.RegisterF32FromReader("bf16.exact", bf16Source.size(), 0.0f,
         [&](size_t offset, size_t count, float* out) {
@@ -102,6 +150,24 @@ int main() {
         assert(RawrXD::TensorCompression::FromBFloat16(h) == bf16Source[i + 7]);
     }
 
+    // BF16 direct staging must preserve the original packed encoding and
+    // leave guard bytes untouched, even for a cross-chunk window.
+    std::vector<uint8_t> bf16Staging(39 * sizeof(uint16_t) + 3, 0x6b);
+    assert(bf16Cache.CopyUniform16BitRange(
+        "bf16.exact", 1008, 39, bf16Encoding,
+        bf16Staging.data(), bf16Staging.size()));
+    assert(bf16Encoding == RawrXD::TensorCompression::Encoding::BF16);
+    for (size_t i = 0; i < 39; ++i) {
+        const uint16_t bits = static_cast<uint16_t>(bf16Staging[2*i]) |
+            (static_cast<uint16_t>(bf16Staging[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromBFloat16(bits) == bf16Source[1008+i]);
+    }
+    assert(bf16Staging[78] == 0x6b &&
+           bf16Staging[79] == 0x6b &&
+           bf16Staging[80] == 0x6b);
+    assert(bf16Cache.GetStats().activeReaders == 0);
+
+    const auto beforeF32Reads = cache.GetStats();
     std::vector<float> tile(1537,-999.0f);
     assert(cache.ReadRange("layer.0.weight",900,tile.size(),tile.data()));
     for(size_t i=0;i<tile.size();++i) assert(tile[i]==source[900+i]);
@@ -111,9 +177,90 @@ int main() {
     for(size_t i=0;i<tile2.size();++i) assert(tile2[i]==source[2048+i]);
 
     auto after=cache.GetStats();
-    assert(after.cacheHits==2);
+    assert(after.cacheHits == beforeF32Reads.cacheHits + 2);
     assert(after.activeReaders==0);
-    assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
+    assert(after.bytesDecoded == beforeF32Reads.bytesDecoded +
+           (tile.size()+tile2.size())*sizeof(float));
+
+    // F32 range validation must match the encoded-byte cache: an invalid
+    // tile must not acquire a lease, change the caller buffer, or increment
+    // successful decode telemetry. Compare the valid tail against the
+    // original independent F32 source, including the final element.
+    const auto beforeInvalid = cache.GetStats();
+    std::vector<float> sentinel(16, -789.25f);
+    assert(!cache.ReadRange("layer.0.weight", source.size()-4,
+                            sentinel.size(), sentinel.data(), reusableScratch));
+    assert(!cache.ReadRange("layer.0.weight", SIZE_MAX,
+                            1, sentinel.data(), reusableScratch));
+    assert(!cache.ReadRange("layer.0.weight", 0,
+                            1, nullptr, reusableScratch));
+    assert(std::all_of(sentinel.begin(), sentinel.end(),
+                       [](float value) { return value == -789.25f; }));
+    const auto afterInvalid = cache.GetStats();
+    assert(afterInvalid.cacheHits == beforeInvalid.cacheHits);
+    assert(afterInvalid.cacheMisses == beforeInvalid.cacheMisses + 3);
+    assert(afterInvalid.activeReaders == 0);
+    assert(afterInvalid.bytesDecoded == beforeInvalid.bytesDecoded);
+    assert(cache.ReadRange("layer.0.weight", source.size()-sentinel.size(),
+                           sentinel.size(), sentinel.data(), reusableScratch));
+    assert(std::equal(sentinel.begin(), sentinel.end(),
+                      source.end()-sentinel.size()));
+
+    // Production GPU staging API: copy only requested packed rows, preserving
+    // the guard bytes and releasing the cache reader lease after each call.
+    std::vector<uint8_t> gpuTile(257 * sizeof(uint16_t) + 2, 0xa5);
+    RawrXD::TensorCompression::Encoding gpuEncoding =
+        RawrXD::TensorCompression::Encoding::Raw;
+    assert(cache.CopyUniform16BitRange("layer.0.weight", 1023, 257,
+        gpuEncoding, gpuTile.data(), gpuTile.size()));
+    assert(gpuEncoding == RawrXD::TensorCompression::Encoding::F16);
+    for (size_t i = 0; i < 257; ++i) {
+        const uint16_t bits = static_cast<uint16_t>(gpuTile[2*i]) |
+            (static_cast<uint16_t>(gpuTile[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromHalf(bits) == source[1023+i]);
+    }
+    assert(gpuTile[514] == 0xa5 && gpuTile[515] == 0xa5);
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", 1023, 257,
+        gpuEncoding, gpuTile.data(), 2));
+    assert(!cache.CopyUniform16BitRange("missing", 0, 1,
+        gpuEncoding, gpuTile.data(), gpuTile.size()));
+    assert(cache.GetStats().activeReaders == 0);
+
+    // Packed GPU staging must reject malformed windows before leasing the
+    // tensor, and count only completed copies as successful cache hits.
+    const auto beforePackedInvalid = cache.GetStats();
+    std::vector<uint8_t> packedGuard(32, 0x5d);
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", SIZE_MAX, 1,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", source.size()-1, 2,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", 0, 1,
+        gpuEncoding, nullptr, packedGuard.size()));
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", 0, 17,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(!cache.ExportUniform16BitRange("layer.0.weight", SIZE_MAX, 1,
+        compactEncoding, compactTile));
+    assert(compactTile.empty());
+    assert(std::all_of(packedGuard.begin(), packedGuard.end(),
+                       [](uint8_t v) { return v == 0x5d; }));
+    const auto afterPackedInvalid = cache.GetStats();
+    assert(afterPackedInvalid.cacheHits == beforePackedInvalid.cacheHits);
+    assert(afterPackedInvalid.cacheMisses == beforePackedInvalid.cacheMisses + 5);
+    assert(afterPackedInvalid.activeReaders == 0);
+    assert(afterPackedInvalid.bytesDecoded == beforePackedInvalid.bytesDecoded);
+    assert(cache.CopyUniform16BitRange("layer.0.weight", source.size()-8, 8,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(gpuEncoding == RawrXD::TensorCompression::Encoding::F16);
+    for (size_t i = 0; i < 8; ++i) {
+        const uint16_t bits = static_cast<uint16_t>(packedGuard[2*i]) |
+            (static_cast<uint16_t>(packedGuard[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromHalf(bits) ==
+               source[source.size()-8+i]);
+    }
+    assert(std::all_of(packedGuard.begin()+16, packedGuard.end(),
+                       [](uint8_t v) { return v == 0x5d; }));
+    assert(cache.GetStats().cacheHits == afterPackedInvalid.cacheHits + 1);
+    assert(cache.GetStats().activeReaders == 0);
 
     // A failed streamed registration must not leave a partial cache entry.
     auto badReader=[](size_t,size_t,float*) { return false; };
@@ -285,6 +432,98 @@ int main() {
     assert(concurrentOk.load(std::memory_order_relaxed));
     assert(sharedStats.activeReaders == 0);
     assert(sharedStats.cacheHits >= 6 * 128);
+
+
+    // Equal-sized weights with the same key must not cross model boundaries.
+    Deep2::TensorResidencyCache scoped(65536);
+    std::vector<float> modelA(8192, 1.0f), modelB(8192, -3.0f);
+    scoped.SetModelIdentity("model-A");
+    assert(scoped.RegisterF32FromReader("shared.key", modelA.size(), 0.0f,
+        [&](size_t o, size_t n, float* out) {
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    float scopeTile[64] = {};
+    assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
+    assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == 1.0f; }));
+    scoped.MarkRawFallback("old.fallback");
+    scoped.SetModelIdentity("model-A"); // no-op
+    assert(scoped.Contains("shared.key") && scoped.IsRawFallback("old.fallback"));
+    scoped.SetModelIdentity("model-B");
+    assert(scoped.ModelIdentity() == "model-B");
+    assert(!scoped.Contains("shared.key") && !scoped.IsRawFallback("old.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t reboundReads = 0;
+    assert(scoped.RegisterF32FromReader("shared.key", modelB.size(), 0.0f,
+        [&](size_t o, size_t n, float* out) {
+            ++reboundReads;
+            std::copy(modelB.begin()+o, modelB.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(reboundReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
+    assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == -3.0f; }));
+
+    // Invalid numerical tolerances must fail closed for both first admission
+    // and an already-cached key, without touching the source reader or
+    // poisoning a future valid admission. This also guards NaN comparisons,
+    // which otherwise make a stricter reuse check silently evaluate false.
+    Deep2::TensorResidencyCache invalidToleranceCache(65536);
+    std::vector<float> invalidToleranceSource(4096, 1.0f);
+    size_t invalidToleranceReads = 0;
+    auto invalidToleranceReader = [&](size_t o, size_t n, float* out) {
+        ++invalidToleranceReads;
+        std::copy(invalidToleranceSource.begin()+o, invalidToleranceSource.begin()+o+n, out);
+        return true;
+    };
+    const float invalidTolerances[] = {
+        -0.01f, -std::numeric_limits<float>::infinity(),
+        std::numeric_limits<float>::infinity(),
+        std::numeric_limits<float>::quiet_NaN()
+    };
+    for (float invalid : invalidTolerances) {
+        assert(!invalidToleranceCache.RegisterF32FromReader(
+            "tolerance.weight", invalidToleranceSource.size(), invalid,
+            invalidToleranceReader, 1024));
+        assert(invalidToleranceReads == 0);
+        assert(!invalidToleranceCache.IsRawFallback("tolerance.weight"));
+        assert(!invalidToleranceCache.Contains("tolerance.weight"));
+    }
+    assert(invalidToleranceCache.RegisterF32FromReader(
+        "tolerance.weight", invalidToleranceSource.size(), 0.0f,
+        invalidToleranceReader, 1024));
+    const size_t validReads = invalidToleranceReads;
+    assert(validReads == 4);
+    for (float invalid : invalidTolerances) {
+        assert(!invalidToleranceCache.RegisterF32FromReader(
+            "tolerance.weight", invalidToleranceSource.size(), invalid,
+            invalidToleranceReader, 1024));
+        assert(invalidToleranceReads == validReads);
+    }
+    float toleranceOutput[16] = {};
+    assert(invalidToleranceCache.ReadRange("tolerance.weight", 0, 16, toleranceOutput));
+    assert(std::all_of(toleranceOutput, toleranceOutput+16,
+                       [](float value) { return value == 1.0f; }));
+
+    // Reopening the same model path can load different bytes (atomic GGUF
+    // replacement). Deep2 must clear the cache even when identity is unchanged.
+    scoped.MarkRawFallback("stale.fallback");
+    scoped.Clear();
+    scoped.SetModelIdentity("model-B");
+    assert(!scoped.Contains("shared.key"));
+    assert(!scoped.IsRawFallback("stale.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t samePathReads = 0;
+    assert(scoped.RegisterF32FromReader("shared.key", modelA.size(), 0.0f,
+        [&](size_t o, size_t n, float* out) {
+            ++samePathReads;
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(samePathReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
+    assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == 1.0f; }));
+
 
     std::cout<<"compressed F32 residency cache PASS\n";
 }

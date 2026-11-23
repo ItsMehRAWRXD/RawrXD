@@ -1,3 +1,9 @@
+// These checks are executable test operations, not debug-only diagnostics.
+// Release/RelWithDebInfo define NDEBUG; preserve the assertions and their
+// side effects so CI exercises admission, decoding and reference comparisons.
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include "../../src/deep2/NativeTensorByteResidencyCache.hpp"
 #include <algorithm>
 #include <cassert>
@@ -20,6 +26,15 @@ int main() {
     };
     assert(cache.RegisterFromReader("shard0:weight0",source.size(),reader,4096));
     assert(reads==(source.size()+4095)/4096);
+    // Rebinding the same cache key to a different tensor size must fail
+    // without invoking the new source or corrupting the original resident.
+    size_t collisionReads = 0;
+    assert(!cache.RegisterFromReader("shard0:weight0", source.size() + 4096,
+        [&](size_t,size_t,uint8_t*) { ++collisionReads; return false; },4096));
+    assert(collisionReads == 0);
+    assert(cache.Contains("shard0:weight0"));
+    assert(cache.GetStats().tensorCount == 1);
+
     auto stats=cache.GetStats();
     assert(stats.tensorCount==1);
     assert(stats.logicalBytes==source.size());
@@ -38,6 +53,49 @@ int main() {
     assert(stats.hits==1);
     assert(stats.activeReaders==0);
     assert(stats.bytesDecoded==decoded.size());
+    // Independent source-byte reference and malformed-window checks.
+    // Failed reads must not modify output, acquire a lease, or count as hits.
+    const auto beforeInvalid = cache.GetStats();
+    std::vector<uint8_t> untouched(32, 0x5C);
+    assert(!cache.ReadRange("shard0:weight0", source.size()-8, 32,
+                            untouched.data(), scratch));
+    assert(!cache.ReadRange("shard0:weight0", SIZE_MAX, 1,
+                            untouched.data(), scratch));
+    assert(!cache.ReadRange("shard0:weight0", 0, 1, nullptr, scratch));
+    assert(std::all_of(untouched.begin(), untouched.end(),
+                       [](uint8_t b) { return b == 0x5C; }));
+    const auto afterInvalid = cache.GetStats();
+    assert(afterInvalid.hits == beforeInvalid.hits);
+    assert(afterInvalid.misses == beforeInvalid.misses + 3);
+    assert(afterInvalid.activeReaders == 0);
+    assert(afterInvalid.bytesDecoded == beforeInvalid.bytesDecoded);
+    assert(cache.ReadRange("shard0:weight0", source.size()-untouched.size(),
+                           untouched.size(), untouched.data(), scratch));
+    assert(std::equal(untouched.begin(), untouched.end(),
+                      source.end()-untouched.size()));
+    // Boundary-spanning decode is compared byte-for-byte against an independent
+    // source window. Successful zero-byte reads are hits but decode no bytes;
+    // missing keys are misses and must leave the destination untouched.
+    std::vector<uint8_t> crossChunk(8200, 0);
+    const auto beforeBoundary = cache.GetStats();
+    assert(cache.ReadRange("shard0:weight0", 4093, crossChunk.size(),
+                           crossChunk.data(), scratch));
+    assert(std::equal(crossChunk.begin(), crossChunk.end(),
+                      source.begin() + 4093));
+    assert(cache.ReadRange("shard0:weight0", source.size(), 0,
+                           nullptr, scratch));
+    const auto afterBoundary = cache.GetStats();
+    assert(afterBoundary.hits == beforeBoundary.hits + 2);
+    assert(afterBoundary.misses == beforeBoundary.misses);
+    assert(afterBoundary.bytesDecoded ==
+           beforeBoundary.bytesDecoded + crossChunk.size());
+    std::vector<uint8_t> missingDestination(32, 0xC3);
+    assert(!cache.ReadRange("missing.tensor", 0, missingDestination.size(),
+                            missingDestination.data(), scratch));
+    assert(std::all_of(missingDestination.begin(), missingDestination.end(),
+                       [](uint8_t b) { return b == 0xC3; }));
+    assert(cache.GetStats().misses == afterBoundary.misses + 1);
+
     std::vector<uint8_t> patterned(96*1024);
     for(size_t i=0;i<patterned.size();++i)
         patterned[i]=static_cast<uint8_t>((i%251)^((i/251)&7));
@@ -186,6 +244,62 @@ int main() {
     assert(concurrentOk.load(std::memory_order_relaxed));
     assert(sharedStats.activeReaders == 0);
     assert(sharedStats.hits >= 6 * 128);
+
+
+    // Model rebinding must not reuse an equal-sized but different payload.
+    Deep2::TensorByteResidencyCache scoped(65536);
+    std::vector<uint8_t> modelA(8192, 0x11), modelB(8192, 0xE7);
+    scoped.SetModelIdentity("model-A");
+    assert(scoped.RegisterFromReader("shared.key", modelA.size(),
+        [&](size_t o, size_t n, uint8_t* out) {
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    std::vector<uint8_t> scopeTile(64), scopeScratch;
+    assert(scoped.ReadRange("shared.key", 0, scopeTile.size(),
+                            scopeTile.data(), scopeScratch));
+    assert(std::all_of(scopeTile.begin(), scopeTile.end(),
+                       [](uint8_t b) { return b == 0x11; }));
+    scoped.MarkRawFallback("old.fallback");
+    scoped.SetModelIdentity("model-A"); // no-op: preserve existing cache
+    assert(scoped.Contains("shared.key") && scoped.IsRawFallback("old.fallback"));
+    scoped.SetModelIdentity("model-B");
+    assert(scoped.ModelIdentity() == "model-B");
+    assert(!scoped.Contains("shared.key") && !scoped.IsRawFallback("old.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t reboundReads = 0;
+    assert(scoped.RegisterFromReader("shared.key", modelB.size(),
+        [&](size_t o, size_t n, uint8_t* out) {
+            ++reboundReads;
+            std::copy(modelB.begin()+o, modelB.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(reboundReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, scopeTile.size(),
+                            scopeTile.data(), scopeScratch));
+    assert(std::all_of(scopeTile.begin(), scopeTile.end(),
+                       [](uint8_t b) { return b == 0xE7; }));
+ 
+    // Reopening the same model path must not reuse old equal-sized payloads.
+    scoped.MarkRawFallback("stale.fallback");
+    scoped.Clear();
+    scoped.SetModelIdentity("model-B");
+    assert(!scoped.Contains("shared.key"));
+    assert(!scoped.IsRawFallback("stale.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t samePathReads = 0;
+    assert(scoped.RegisterFromReader("shared.key", modelA.size(),
+        [&](size_t o, size_t n, uint8_t* out) {
+            ++samePathReads;
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(samePathReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, scopeTile.size(),
+                            scopeTile.data(), scopeScratch));
+    assert(std::all_of(scopeTile.begin(), scopeTile.end(),
+                       [](uint8_t b) { return b == 0x11; }));
+
 
     std::cout<<"lossless encoded-byte tensor residency cache PASS\n";
 }

@@ -68,6 +68,15 @@ bool Deep2Engine::ConfigureTensorCompression(size_t f32BudgetBytes,
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
     // Reinitialization is a full lifecycle boundary; discard prior model state.
     Shutdown();
+    // Always invalidate after Shutdown, including when reopening the same
+    // path: a GGUF may have been replaced in place with equal-sized tensors.
+    // SetModelIdentity alone intentionally preserves same-identity entries.
+    // Clear waits for active leases and discards both resident data and
+    // raw-fallback decisions before the new loader can read model bytes.
+    compressedF32Weights.Clear();
+    compressedEncodedWeights.Clear();
+    compressedF32Weights.SetModelIdentity(modelPath);
+    compressedEncodedWeights.SetModelIdentity(modelPath);
     configureTensorResidencyBudgets(*this);
     // Lossy F32->F16/BF16 residency is opt-in and bounded by a caller-supplied
     // absolute-error tolerance. The default remains bit-exact/lossless.
@@ -623,6 +632,10 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
     std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
     std::vector<uint8_t> encodedScratch;
     std::vector<uint8_t> decodeScratch;
+    // Reuse one bounded packed-weight staging allocation across GEMV row
+    // tiles. Avoid repeated heap allocations and never retain a full-tensor
+    // packed duplicate alongside the compressed cache.
+    std::vector<uint8_t> packedWeightTile;
 
     for (uint64_t firstRow = 0; firstRow < rows;) {
         const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
@@ -661,15 +674,20 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             if (compressedF32Weights.Contains(cacheKey)) {
                 RawrXD::TensorCompression::Encoding encoding =
                     RawrXD::TensorCompression::Encoding::Raw;
-                std::vector<uint8_t> packedWeights;
-                if (compressedF32Weights.ExportUniform16BitRange(
+                // Stage exactly this GEMV row tile, not a whole tensor.
+                // vulkanGemv waits for dispatch completion before returning,
+                // so the caller-owned packed buffer remains live through use.
+                if (elements > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+                    return false;
+                packedWeightTile.resize(elements * sizeof(uint16_t));
+                if (compressedF32Weights.CopyUniform16BitRange(
                         cacheKey, static_cast<size_t>(firstElement), elements,
-                        encoding, packedWeights)) {
+                        encoding, packedWeightTile.data(), packedWeightTile.size())) {
                     const deep2::TensorType packedType =
                         encoding == RawrXD::TensorCompression::Encoding::F16
                             ? deep2::TensorType::F16 : deep2::TensorType::BF16;
                     deep2::TensorView packedView{
-                        packedType, packedWeights.data(), packedWeights.size(),
+                        packedType, packedWeightTile.data(), packedWeightTile.size(),
                         { countRows, cols }, true
                     };
                     if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
@@ -786,11 +804,22 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     if (!f32Weights && !f16Weights && !bf16Weights) return false;
     if (xView.byteSize < static_cast<size_t>(cols) * sizeof(float)) return false;
 
-    const size_t logicalWeightBytes = elements * (f32Weights ? sizeof(float) : sizeof(uint16_t));
+    const size_t bytesPerWeight = f32Weights ? sizeof(float) : sizeof(uint16_t);
+    if (elements > std::numeric_limits<size_t>::max() / bytesPerWeight)
+        return false;
+    const size_t logicalWeightBytes = elements * bytesPerWeight;
     if (wView.byteSize < logicalWeightBytes) return false;
-    const VkDeviceSize weightBufferBytes = f32Weights
-        ? static_cast<VkDeviceSize>(logicalWeightBytes)
-        : static_cast<VkDeviceSize>((logicalWeightBytes + 3u) & ~size_t(3u));
+    // Packed16 Vulkan storage buffers are padded to four bytes. Check the
+    // addition before rounding; overflow would otherwise underallocate Wbuf
+    // and make the subsequent memcpy unsafe.
+    if (!f32Weights && logicalWeightBytes > std::numeric_limits<size_t>::max() - 3u)
+        return false;
+    const size_t paddedWeightBytes = f32Weights
+        ? logicalWeightBytes : ((logicalWeightBytes + 3u) & ~size_t(3u));
+    if (static_cast<uint64_t>(paddedWeightBytes) >
+        static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()))
+        return false;
+    const VkDeviceSize weightBufferBytes = static_cast<VkDeviceSize>(paddedWeightBytes);
     const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
     const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
     y.assign(static_cast<size_t>(rows), 0.0f);

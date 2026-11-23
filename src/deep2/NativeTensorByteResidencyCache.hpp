@@ -35,6 +35,31 @@ public:
     TensorByteResidencyCache(const TensorByteResidencyCache&) = delete;
     TensorByteResidencyCache& operator=(const TensorByteResidencyCache&) = delete;
 
+    // Explicit model boundary: equal-sized keys are not proof of identical
+    // weights. A new identity invalidates both encoded entries and fallback
+    // decisions, after all in-flight readers release their leases.
+    // The caller must stop starting reads for the old model before switching.
+    void SetModelIdentity(const std::string& identity) {
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (modelIdentity_ == identity) return;
+        readersDrained_.wait(lock, [this] {
+            for (const auto& item : entries_)
+                if (item.second.activeReaders != 0) return false;
+            return true;
+        });
+        evictions_ += entries_.size();
+        entries_.clear();
+        rawFallback_.clear();
+        compressedBytes_ = logicalBytes_ = 0;
+        modelIdentity_ = identity;
+    }
+
+    std::string ModelIdentity() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return modelIdentity_;
+    }
+
     void SetBudget(size_t bytes) {
         std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
@@ -56,7 +81,13 @@ public:
         size_t buildBudget;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (entries_.find(key) != entries_.end()) return true;
+            if (auto existing = entries_.find(key); existing != entries_.end()) {
+                // A reused key with different tensor geometry must not alias
+                // stale compressed weights from a previous model binding.
+                if (existing->second.logicalBytes != byteCount) return false;
+                existing->second.lastUse = ++tick_;
+                return true;
+            }
             if (rawFallback_.find(key) != rawFallback_.end()) return false;
             buildBudget = budgetBytes_;
         }
@@ -82,8 +113,11 @@ public:
         auto existing = entries_.find(key);
         if (existing != entries_.end()) { existing->second.lastUse = ++tick_; return true; }
         EvictToFitLocked(stored, key);
-        if (stored > budgetBytes_ - compressedBytes_) {
-            rawFallback_.insert(key);
+        // A reader can pin old entries while SetBudget lowers the limit.
+        // Guard subtraction against size_t underflow and keep this temporary
+        // capacity miss retryable after those leases have drained.
+        if (compressedBytes_ > budgetBytes_ ||
+            stored > budgetBytes_ - compressedBytes_) {
             return false;
         }
         Entry e;
@@ -119,9 +153,17 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = entries_.find(key);
             if (it == entries_.end()) { ++misses_; return false; }
+            // Reject malformed windows before acquiring a lease or recording a
+            // successful cache hit. Subtraction avoids first+count overflow.
+            // In particular, a null destination must never reach a decoder.
+            if (first > it->second.logicalBytes ||
+                count > it->second.logicalBytes - first ||
+                (count != 0 && destination == nullptr)) {
+                ++misses_;
+                return false;
+            }
             it->second.lastUse = ++tick_;
             ++it->second.activeReaders;
-            ++hits_;
             storage = it->second.storage;
         }
         bool decoded = false;
@@ -132,8 +174,11 @@ public:
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
             if (decoded) {
+                ++hits_;
                 const uint64_t n = static_cast<uint64_t>(count);
                 bytesDecoded_ = n > UINT64_MAX - bytesDecoded_ ? UINT64_MAX : bytesDecoded_ + n;
+            } else {
+                ++misses_;
             }
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
@@ -171,6 +216,8 @@ public:
         return stats;
     }
 private:
+    std::string modelIdentity_;
+
     struct Entry {
         std::shared_ptr<RawrXD::TensorCompression::ChunkedByteStorage> storage;
         size_t compressedBytes = 0;

@@ -355,7 +355,10 @@ public:
         ChunkedF32Storage result;
         result.element_count_=count;
         result.chunk_elements_=chunk_elements;
-        result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
+        const size_t chunkCount = count/chunk_elements+(count%chunk_elements!=0);
+        if (chunkCount > result.chunks_.max_size())
+            throw std::length_error("F32 chunk metadata overflow");
+        result.chunks_.reserve(chunkCount);
         for(size_t offset=0;offset<count;) {
             const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
             result.chunks_.push_back(EncodeAdaptiveF32(values+offset,n,max_abs_error));
@@ -377,9 +380,18 @@ public:
         ChunkedF32Storage result;
         result.element_count_=count;
         result.chunk_elements_=chunk_elements;
-        result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
+        const size_t chunkCount = count/chunk_elements+(count%chunk_elements!=0);
+        if (chunkCount > result.chunks_.max_size())
+            throw std::length_error("F32 chunk metadata overflow");
+        // The chunk directory itself is retained for the lifetime of the
+        // tensor. Include it in the hard residency budget before allocating it.
+        if (chunkCount > max_stored_bytes / sizeof(Result))
+            throw StorageAdmissionRejected("F32 chunk metadata exceeds residency budget");
+        result.chunks_.reserve(chunkCount);
+        size_t storedBytes = result.chunks_.capacity() * sizeof(Result);
+        if (storedBytes > max_stored_bytes)
+            throw StorageAdmissionRejected("F32 chunk metadata exceeds residency budget");
         std::vector<float> tile;
-        size_t storedBytes=0;
         for(size_t offset=0;offset<count;) {
             const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
             tile.resize(n);
@@ -392,9 +404,12 @@ public:
             if(require_first_chunk_savings && offset==0 &&
                encoded.payload.size()>=n*sizeof(float))
                 throw StorageAdmissionRejected("first F32 chunk has no smaller safe encoding");
-            if(encoded.payload.size()>max_stored_bytes-storedBytes)
+            // std::vector capacity, not just logical size, is retained
+            // between inference calls and therefore consumes the budget.
+            const size_t payloadCapacity = encoded.payload.capacity();
+            if(payloadCapacity>max_stored_bytes-storedBytes)
                 throw StorageAdmissionRejected("compressed F32 tensor exceeds residency budget");
-            storedBytes+=encoded.payload.size();
+            storedBytes+=payloadCapacity;
             result.chunks_.push_back(std::move(encoded));
             offset+=n;
         }
@@ -404,11 +419,17 @@ public:
     size_t chunkElements() const noexcept { return chunk_elements_; }
     size_t chunkCount() const noexcept { return chunks_.size(); }
     size_t storedBytes() const noexcept {
-        size_t total=0;
-        for(const auto& c:chunks_) {
-            if(c.payload.size()>std::numeric_limits<size_t>::max()-total)
+        // Account for the retained chunk directory and each payload's actual
+        // allocation. payload.size() alone systematically undercounts memory.
+        if (chunks_.capacity() >
+            std::numeric_limits<size_t>::max() / sizeof(Result))
+            return std::numeric_limits<size_t>::max();
+        size_t total = chunks_.capacity() * sizeof(Result);
+        for (const auto& chunk : chunks_) {
+            if (chunk.payload.capacity() >
+                std::numeric_limits<size_t>::max() - total)
                 return std::numeric_limits<size_t>::max();
-            total+=c.payload.size();
+            total += chunk.payload.capacity();
         }
         return total;
     }
@@ -440,6 +461,59 @@ public:
         for (const auto& chunk : chunks_)
             packed.insert(packed.end(), chunk.payload.begin(), chunk.payload.end());
         return packed.size() == total;
+    }
+    // Copy a bounded packed F16/BF16 row window directly into caller-owned
+    // staging memory. No whole-tensor or intermediate packed allocation.
+    // Validate all intersecting chunks before writing to destination.
+    bool CopyUniform16BitRange(size_t first, size_t count, Encoding& encoding,
+                               void* destination, size_t destinationBytes) const {
+        if (first > element_count_ || count > element_count_ - first) return false;
+        if (count > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+            return false;
+        const size_t required = count * sizeof(uint16_t);
+        if (destinationBytes < required || (required && !destination)) return false;
+        if (!count) { encoding = Encoding::Raw; return true; }
+        if (!chunk_elements_) return false;
+        const size_t end = first + count;
+        const size_t firstChunk = first / chunk_elements_;
+        const size_t lastChunk = (end - 1) / chunk_elements_;
+        if (lastChunk >= chunks_.size()) return false;
+        const Encoding selected = chunks_[firstChunk].encoding;
+        if (selected != Encoding::F16 && selected != Encoding::BF16) return false;
+        size_t validated = 0;
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const Result& chunk = chunks_[i];
+            if (chunk.encoding != selected ||
+                chunk.original_bytes % sizeof(float) != 0 ||
+                chunk.payload.size() != chunk.original_bytes / 2)
+                return false;
+            if (i > std::numeric_limits<size_t>::max() / chunk_elements_)
+                return false;
+            const size_t chunkFirst = i * chunk_elements_;
+            if (chunkFirst > element_count_) return false;
+            const size_t elements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            if (elements > element_count_ - chunkFirst) return false;
+            const size_t from = std::max(first, chunkFirst);
+            const size_t to = std::min(end, chunkFirst + elements);
+            if (to < from || to - from > count - validated) return false;
+            validated += to - from;
+        }
+        if (validated != count) return false;
+        auto* out = static_cast<uint8_t*>(destination);
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const Result& chunk = chunks_[i];
+            const size_t chunkFirst = i * chunk_elements_;
+            const size_t elements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            const size_t from = std::max(first, chunkFirst);
+            const size_t to = std::min(end, chunkFirst + elements);
+            const size_t offset = (from - chunkFirst) * sizeof(uint16_t);
+            const size_t bytes = (to - from) * sizeof(uint16_t);
+            if (bytes)
+                std::memcpy(out + (from - first) * sizeof(uint16_t),
+                            chunk.payload.data() + offset, bytes);
+        }
+        encoding = selected;
+        return true;
     }
     // Export any logical range whose intersecting chunks all use the same
     // native F16/BF16 representation. Chunk boundaries are an implementation
@@ -503,9 +577,34 @@ public:
             throw std::out_of_range("compressed tensor range");
         if(count && !destination) throw std::invalid_argument("null range destination");
         if(!count) return;
+        if (!chunk_elements_) throw std::runtime_error("zero stored F32 chunk size");
         const size_t end=first+count;
         const size_t first_chunk=first/chunk_elements_;
         const size_t last_chunk=(end-1)/chunk_elements_;
+        if (last_chunk >= chunks_.size())
+            throw std::runtime_error("truncated compressed F32 chunk directory");
+        // Validate the entire directory span before touching destination.
+        // This also prevents overflow when a stored chunk length is corrupt.
+        size_t covered = 0;
+        for(size_t ci=first_chunk;ci<=last_chunk;++ci) {
+            const Result& encoded=chunks_[ci];
+            if (ci > std::numeric_limits<size_t>::max()/chunk_elements_)
+                throw std::runtime_error("compressed F32 chunk offset overflow");
+            const size_t chunk_first=ci*chunk_elements_;
+            if (chunk_first>element_count_ ||
+                encoded.original_bytes%sizeof(float)!=0 ||
+                encoded.original_bytes/sizeof(float)>chunk_elements_ ||
+                encoded.original_bytes/sizeof(float)>element_count_-chunk_first)
+                throw std::runtime_error("invalid compressed F32 chunk length");
+            const size_t chunk_end=chunk_first+static_cast<size_t>(encoded.original_bytes/sizeof(float));
+            const size_t from=std::max(first,chunk_first);
+            const size_t to=std::min(end,chunk_end);
+            if (to<from || to-from>count-covered)
+                throw std::runtime_error("compressed F32 chunk coverage gap");
+            covered+=to-from;
+        }
+        if (covered!=count)
+            throw std::runtime_error("incomplete compressed F32 range");
         for(size_t ci=first_chunk;ci<=last_chunk;++ci) {
             const Result& encoded=chunks_[ci];
             const size_t chunk_first=ci*chunk_elements_;
@@ -551,9 +650,18 @@ private:
          ChunkedByteStorage result;
          result.byte_count_ = byteCount;
          result.chunk_bytes_ = chunkBytes;
-         result.chunks_.reserve(byteCount / chunkBytes + (byteCount % chunkBytes != 0));
+         const size_t chunkCount = byteCount / chunkBytes + (byteCount % chunkBytes != 0);
+         if (chunkCount > result.chunks_.max_size())
+             throw std::length_error("byte chunk metadata overflow");
+         // Bound retained per-chunk metadata before reserve; otherwise tiny
+         // chunks could allocate a huge directory outside the residency cap.
+         if (chunkCount > maxStoredBytes / sizeof(Result))
+             throw StorageAdmissionRejected("byte chunk metadata exceeds residency budget");
+         result.chunks_.reserve(chunkCount);
+         size_t stored = result.chunks_.capacity() * sizeof(Result);
+         if (stored > maxStoredBytes)
+             throw StorageAdmissionRejected("byte chunk metadata exceeds residency budget");
          std::vector<uint8_t> tile;
-         size_t stored = 0;
          for (size_t offset = 0; offset < byteCount;) {
              const size_t n = std::min(chunkBytes, byteCount - offset);
              tile.resize(n);
@@ -562,13 +670,14 @@ private:
              Result encoded = Encode(tile.data(), n, false, 0.0f, false);
              if (requireFirstChunkSavings && offset == 0 && encoded.payload.size() >= n)
                  throw StorageAdmissionRejected("first byte chunk has no lossless compression win");
-             if (encoded.payload.size() > maxStoredBytes - stored)
+             const size_t payloadCapacity = encoded.payload.capacity();
+             if (payloadCapacity > maxStoredBytes - stored)
                  throw StorageAdmissionRejected("compressed byte tensor exceeds residency budget");
-             stored += encoded.payload.size();
+             stored += payloadCapacity;
              result.chunks_.push_back(std::move(encoded));
              offset += n;
          }
-         result.stored_bytes_ = stored;
+         result.stored_bytes_ = stored; // directory + retained payload capacities
          if (byteCount && stored >= byteCount)
              throw StorageAdmissionRejected("byte tensor has no net compression win");
          return result;
@@ -583,9 +692,33 @@ private:
              throw std::out_of_range("compressed byte tensor range");
          if (count && !destination) throw std::invalid_argument("null byte range destination");
          if (!count) return;
+         if (!chunk_bytes_) throw std::runtime_error("zero stored byte chunk size");
          const size_t end = first + count;
          const size_t firstChunk = first / chunk_bytes_;
          const size_t lastChunk = (end - 1) / chunk_bytes_;
+         if (lastChunk >= chunks_.size())
+             throw std::runtime_error("truncated compressed byte chunk directory");
+         // Preflight every intersecting chunk before modifying the caller's
+         // output. A damaged directory must not cause an out-of-bounds access.
+         size_t covered = 0;
+         for (size_t ci = firstChunk; ci <= lastChunk; ++ci) {
+             const Result& encoded = chunks_[ci];
+             if (ci > std::numeric_limits<size_t>::max() / chunk_bytes_)
+                 throw std::runtime_error("compressed byte chunk offset overflow");
+             const size_t chunkFirst = ci * chunk_bytes_;
+             if (chunkFirst > byte_count_ ||
+                 encoded.original_bytes > byte_count_ - chunkFirst ||
+                 encoded.original_bytes > chunk_bytes_)
+                 throw std::runtime_error("invalid compressed byte chunk length");
+             const size_t chunkEnd = chunkFirst + static_cast<size_t>(encoded.original_bytes);
+             const size_t copyFirst = std::max(first, chunkFirst);
+             const size_t copyEnd = std::min(end, chunkEnd);
+             if (copyEnd < copyFirst || copyEnd - copyFirst > count - covered)
+                 throw std::runtime_error("compressed byte chunk coverage gap");
+             covered += copyEnd - copyFirst;
+         }
+         if (covered != count)
+             throw std::runtime_error("incomplete compressed byte range");
          for (size_t ci = firstChunk; ci <= lastChunk; ++ci) {
              const Result& encoded = chunks_[ci];
              const size_t chunkFirst = ci * chunk_bytes_;

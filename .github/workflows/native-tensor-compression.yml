@@ -36,13 +36,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
+          c++ -std=c++17 -O2 -DNDEBUG -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
           ./tensor_test
-          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread tests/deep2/native_tensor_residency_cache_test.cpp -o residency_cache_test
+          c++ -std=c++17 -O2 -DNDEBUG -Wall -Wextra -Werror -pthread tests/deep2/native_tensor_residency_cache_test.cpp -o residency_cache_test
           ./residency_cache_test
-          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread tests/deep2/native_tensor_byte_residency_cache_test.cpp -o byte_residency_cache_test
+          c++ -std=c++17 -O2 -DNDEBUG -Wall -Wextra -Werror -pthread tests/deep2/native_tensor_byte_residency_cache_test.cpp -o byte_residency_cache_test
           ./byte_residency_cache_test
-          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Isrc tests/deep2/native_compressed_gguf_e2e_test.cpp src/TensorROM.cpp src/ShardPager.cpp -o compressed_gguf_e2e_test
+          c++ -std=c++17 -O2 -DNDEBUG -Wall -Wextra -Werror -pthread -Isrc tests/deep2/native_compressed_gguf_e2e_test.cpp src/TensorROM.cpp src/ShardPager.cpp -o compressed_gguf_e2e_test
           ./compressed_gguf_e2e_test
       - name: Enable MSVC environment
         if: runner.os == 'Windows'
@@ -51,19 +51,19 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_compression_test.cpp /Fe:tensor_test.exe
+          cl /nologo /EHsc /std:c++17 /O2 /DNDEBUG tests/deep2/native_tensor_compression_test.cpp /Fe:tensor_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\tensor_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_residency_cache_test.cpp /Fe:residency_cache_test.exe
+          cl /nologo /EHsc /std:c++17 /O2 /DNDEBUG tests/deep2/native_tensor_residency_cache_test.cpp /Fe:residency_cache_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\residency_cache_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_byte_residency_cache_test.cpp /Fe:byte_residency_cache_test.exe
+          cl /nologo /EHsc /std:c++17 /O2 /DNDEBUG tests/deep2/native_tensor_byte_residency_cache_test.cpp /Fe:byte_residency_cache_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\byte_residency_cache_test.exe
-          cl /nologo /EHsc /std:c++17 /O2 /Isrc tests/deep2/native_compressed_gguf_e2e_test.cpp src/TensorROM.cpp src/ShardPager.cpp /Fe:compressed_gguf_e2e_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 /DNDEBUG /Isrc tests/deep2/native_compressed_gguf_e2e_test.cpp src/TensorROM.cpp src/ShardPager.cpp /Fe:compressed_gguf_e2e_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\compressed_gguf_e2e_test.exe
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

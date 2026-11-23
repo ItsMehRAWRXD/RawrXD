@@ -1,3 +1,9 @@
+// These checks are executable test operations, not debug-only diagnostics.
+// Release/RelWithDebInfo define NDEBUG; preserve the assertions and their
+// side effects so CI exercises admission, decoding and reference comparisons.
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include "../../src/deep2/NativeTensorCompression.hpp"
 #include <cassert>
 #include <cstring>
@@ -232,5 +238,144 @@ int main() {
     bool rejected=false;
     try { auto bad=r; bad.payload[0]=0; (void)Decode(bad); } catch(const std::invalid_argument&) {rejected=true;}
     assert(rejected);
+
+    // storedBytes() includes the retained chunk directory, not only payload
+    // lengths. Four small chunks must account for at least four Result slots.
+    std::vector<float> accountingF32(1024, 0.0f);
+    auto accountingF32Storage = ChunkedF32Storage::BuildFromReader(
+        accountingF32.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            std::copy(accountingF32.begin() + offset,
+                      accountingF32.begin() + offset + count, out);
+            return true;
+        }, 256);
+    assert(accountingF32Storage.storedBytes() >= 4 * sizeof(Result));
+    assert(accountingF32Storage.storedBytes() < accountingF32.size() * sizeof(float));
+
+    std::vector<uint8_t> accountingBytes(1024, 0x6b);
+    auto accountingByteStorage = ChunkedByteStorage::BuildFromReader(
+        accountingBytes.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(accountingBytes.begin() + offset,
+                      accountingBytes.begin() + offset + count, out);
+            return true;
+        }, 256, false);
+    assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
+    assert(accountingByteStorage.storedBytes() < accountingBytes.size());
+
+    // Direct packed row-window staging: no intermediate whole-tensor buffer.
+    // Vary every value so RLE cannot beat packed F16. Generate a
+    // deterministic high-entropy sequence of exactly representable halves.
+    std::vector<float> packedSource(1024);
+    uint32_t packedSeed = 0x9e3779b9u;
+    for (size_t i = 0; i < packedSource.size(); ++i) {
+        packedSeed ^= packedSeed << 13;
+        packedSeed ^= packedSeed >> 17;
+        packedSeed ^= packedSeed << 5;
+        const int32_t signedValue = static_cast<int32_t>(packedSeed & 0x7ffu) - 1024;
+        packedSource[i] = static_cast<float>(signedValue) / 16.0f;
+    }
+    auto packedStorage = ChunkedF32Storage::BuildFromReader(
+        packedSource.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            std::copy(packedSource.begin() + offset,
+                      packedSource.begin() + offset + count, out);
+            return true;
+        }, 128);
+    Encoding packedEncoding = Encoding::Raw;
+    std::vector<uint8_t> packedWindow(130 * sizeof(uint16_t), 0xa5);
+    assert(packedStorage.CopyUniform16BitRange(
+        127, 129, packedEncoding, packedWindow.data(), packedWindow.size()));
+    assert(packedEncoding == Encoding::F16);
+    for (size_t i = 0; i < 129; ++i) {
+        const uint16_t value = static_cast<uint16_t>(packedWindow[2*i]) |
+                               (static_cast<uint16_t>(packedWindow[2*i+1]) << 8);
+        assert(FromHalf(value) == packedSource[127 + i]);
+    }
+    assert(packedWindow[129 * 2] == 0xa5);
+    assert(packedWindow[129 * 2 + 1] == 0xa5);
+    std::vector<uint8_t> shortWindow(8, 0x5a);
+    packedEncoding = Encoding::Raw;
+    assert(!packedStorage.CopyUniform16BitRange(
+        127, 129, packedEncoding, shortWindow.data(), shortWindow.size()));
+    assert(std::all_of(shortWindow.begin(), shortWindow.end(),
+                       [](uint8_t value) { return value == 0x5a; }));
+    assert(!packedStorage.CopyUniform16BitRange(
+        1023, 2, packedEncoding, packedWindow.data(), packedWindow.size()));
+    assert(!packedStorage.CopyUniform16BitRange(
+        127, 129, packedEncoding, nullptr, packedWindow.size()));
+
+    // Cross-chunk lossless byte reads, including the final partial chunk.
+    std::vector<uint8_t> byteSource(1000, 0x3c);
+    auto byteStorage = ChunkedByteStorage::BuildFromReader(
+        byteSource.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(byteSource.begin() + offset,
+                      byteSource.begin() + offset + count, out);
+            return true;
+        }, 128);
+    std::vector<uint8_t> byteWindow(200, 0x7f), byteScratch;
+    byteStorage.ReadRange(125, 200, byteWindow.data(), byteScratch);
+    assert(std::all_of(byteWindow.begin(), byteWindow.end(),
+                       [](uint8_t v) { return v == 0x3c; }));
+    std::vector<uint8_t> byteTail(20, 0);
+    byteStorage.ReadRange(980, 20, byteTail.data(), byteScratch);
+    assert(std::all_of(byteTail.begin(), byteTail.end(),
+                       [](uint8_t v) { return v == 0x3c; }));
+    bool byteOutOfRange = false;
+    try { byteStorage.ReadRange(999, 2, byteTail.data(), byteScratch); }
+    catch (const std::out_of_range&) { byteOutOfRange = true; }
+    assert(byteOutOfRange);
+    assert(byteStorage.storedBytes() < byteSource.size());
+
+    // F32 bounded decode: unaligned cross-chunk and final partial chunk.
+    std::vector<float> f32Source(1000, 2.0f);
+    auto f32Storage = ChunkedF32Storage::BuildFromReader(
+        f32Source.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            std::copy(f32Source.begin() + offset,
+                      f32Source.begin() + offset + count, out);
+            return true;
+        }, 128);
+    std::vector<float> f32Window(200, -1.0f);
+    std::vector<uint8_t> f32Scratch;
+    f32Storage.ReadRange(125, f32Window.size(), f32Window.data(), f32Scratch);
+    assert(std::all_of(f32Window.begin(), f32Window.end(),
+                       [](float value) { return value == 2.0f; }));
+    std::vector<float> f32Tail(20, 0.0f);
+    f32Storage.ReadRange(980, 20, f32Tail.data(), f32Scratch);
+    assert(std::all_of(f32Tail.begin(), f32Tail.end(),
+                       [](float value) { return value == 2.0f; }));
+    bool f32OutOfRange = false;
+    try { f32Storage.ReadRange(999, 2, f32Tail.data(), f32Scratch); }
+    catch (const std::out_of_range&) { f32OutOfRange = true; }
+    assert(f32OutOfRange);
+
+    // Count the retained per-chunk directory against the hard budget before
+    // source I/O. Tiny chunks cannot create unbounded metadata outside the cap.
+    size_t f32MetadataReads = 0;
+    bool f32MetadataRejected = false;
+    try {
+        (void)ChunkedF32Storage::BuildFromReader(
+            1024, 0.0f,
+            [&](size_t, size_t, float*) { ++f32MetadataReads; return true; },
+            1, false, 512);
+    } catch (const StorageAdmissionRejected&) {
+        f32MetadataRejected = true;
+    }
+    assert(f32MetadataRejected && f32MetadataReads == 0);
+
+    size_t byteMetadataReads = 0;
+    bool byteMetadataRejected = false;
+    try {
+        (void)ChunkedByteStorage::BuildFromReader(
+            1024,
+            [&](size_t, size_t, uint8_t*) { ++byteMetadataReads; return true; },
+            1, false, 512);
+    } catch (const StorageAdmissionRejected&) {
+        byteMetadataRejected = true;
+    }
+    assert(byteMetadataRejected && byteMetadataReads == 0);
+
     std::cout<<"native tensor compression tests PASS\n";
 }
