@@ -20,10 +20,16 @@ int main() {
     const std::vector<std::uint8_t> singleton{0xa5};
     CHECK(decode(encode(singleton.data(), singleton.size())) == singleton);
     std::vector<std::uint8_t> incompressible(65536);
-    for (std::size_t i = 0; i < incompressible.size(); ++i)
-        incompressible[i] = static_cast<std::uint8_t>(i & 255);
+    std::uint32_t randomState = 0x9e3779b9u;
+    for (auto& value : incompressible) {
+        randomState ^= randomState << 13;
+        randomState ^= randomState >> 17;
+        randomState ^= randomState << 5;
+        value = static_cast<std::uint8_t>(randomState >> 24);
+    }
     const auto packed_incompressible = encode(incompressible.data(), incompressible.size());
-    CHECK(!packed_incompressible.rle || packed_incompressible.lz4);
+    CHECK(!packed_incompressible.rle && !packed_incompressible.lz4);
+    CHECK(packed_incompressible.payload.size() == incompressible.size());
     CHECK(decode(packed_incompressible) == incompressible);
 
     // Repeated non-run structure must use the general LZ4-style codec.
