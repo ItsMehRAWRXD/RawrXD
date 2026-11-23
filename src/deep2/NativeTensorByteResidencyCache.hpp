@@ -1,6 +1,6 @@
 #pragma once
 // Bounded, lossless compressed residency for arbitrary encoded tensor payloads.
-// GGUF quantization bytes are preserved exactly; only RLE-profitable chunks
+// GGUF quantization bytes are preserved exactly; only RLE/LZ4-profitable chunks
 // enter this cache. Non-profitable tensors remain on the ROM pager path.
 #include "NativeTensorCompression.hpp"
 #include <algorithm>
