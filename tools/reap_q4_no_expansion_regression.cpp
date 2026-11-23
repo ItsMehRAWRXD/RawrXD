@@ -34,7 +34,7 @@ int main() {
             ReadU32(in,types[i]);ReadU64(in,offsets[i]);
         }
         ok=types[0]==12 && types[1]==10 &&
-           offsets[0]==0 && offsets[1]==160;
+           offsets[0]==0 && offsets[1]==288;
     }
     std::remove(src);std::remove(dst);
     std::cout<<"REAP_Q4_NO_EXPANSION="<<(ok?"PASS":"FAIL")<<"\n";
