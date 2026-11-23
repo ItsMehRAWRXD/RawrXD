@@ -24,6 +24,12 @@ int main(){
  std::vector<std::uint8_t> random_out(random_data.size());
  assert(store.readRange("random",0,random_out.data(),random_out.size(),&error));assert(random_data==random_out);
  const float f32[]={1.0f,-2.0f,65504.0f,0.00006103515625f,0.0f,std::numeric_limits<float>::infinity(),std::numeric_limits<float>::quiet_NaN()};
+ const std::uint8_t q4_payload[]={0x21,0x43,0x65,0x87,0x21,0x43,0x65,0x87};
+ assert(store.addTensor("quant.q4_0",q4_payload,sizeof(q4_payload),&error,2u));
+ assert(store.tensorType("quant.q4_0")==2u); // GGML_TYPE_Q4_0
+ std::uint8_t q4_roundtrip[sizeof(q4_payload)]={};
+ assert(store.readRange("quant.q4_0",0,q4_roundtrip,sizeof(q4_roundtrip),&error));
+ assert(std::equal(std::begin(q4_payload),std::end(q4_payload),std::begin(q4_roundtrip)));
  assert(store.addTensorF32AsF16("fp16.weights",f32,7,&error));
  assert(store.tensorType("fp16.weights")==rawrxd::compression::GGML_TYPE_F16);
  assert(store.tensorBytes("fp16.weights")==14);
@@ -34,6 +40,6 @@ int main(){
  assert(rawrxd::compression::floatToHalfRNE(0x1.0p-25f)==0x0000u); // exact subnormal midpoint rounds to even zero
  assert(rawrxd::compression::floatToHalfRNE(0x1.8p-25f)==0x0001u); // above midpoint rounds to minimum subnormal
  assert(store.addTensor("empty",nullptr,0,&error));assert(store.tensorBlocks("empty")==0);assert(store.readRange("empty",0,nullptr,0,&error));
- const auto s=store.stats();assert(s.tensors==4&&s.raw_bytes==input.size()+random_data.size()+14);assert(s.compressed_bytes<s.raw_bytes);
+ const auto s=store.stats();assert(s.tensors==5&&s.raw_bytes==input.size()+random_data.size()+sizeof(q4_payload)+14);assert(s.compressed_bytes<s.raw_bytes);
  std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\n';
 }
