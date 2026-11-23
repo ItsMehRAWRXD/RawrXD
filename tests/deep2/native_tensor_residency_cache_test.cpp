@@ -179,6 +179,30 @@ int main() {
     assert(after.activeReaders==0);
     assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
 
+    // F32 range validation must match the encoded-byte cache: an invalid
+    // tile must not acquire a lease, change the caller buffer, or increment
+    // successful decode telemetry. Compare the valid tail against the
+    // original independent F32 source, including the final element.
+    const auto beforeInvalid = cache.GetStats();
+    std::vector<float> sentinel(16, -789.25f);
+    assert(!cache.ReadRange("layer.0.weight", source.size()-4,
+                            sentinel.size(), sentinel.data(), reusableScratch));
+    assert(!cache.ReadRange("layer.0.weight", SIZE_MAX,
+                            1, sentinel.data(), reusableScratch));
+    assert(!cache.ReadRange("layer.0.weight", 0,
+                            1, nullptr, reusableScratch));
+    assert(std::all_of(sentinel.begin(), sentinel.end(),
+                       [](float value) { return value == -789.25f; }));
+    const auto afterInvalid = cache.GetStats();
+    assert(afterInvalid.cacheHits == beforeInvalid.cacheHits);
+    assert(afterInvalid.cacheMisses == beforeInvalid.cacheMisses + 3);
+    assert(afterInvalid.activeReaders == 0);
+    assert(afterInvalid.bytesDecoded == beforeInvalid.bytesDecoded);
+    assert(cache.ReadRange("layer.0.weight", source.size()-sentinel.size(),
+                           sentinel.size(), sentinel.data(), reusableScratch));
+    assert(std::equal(sentinel.begin(), sentinel.end(),
+                      source.end()-sentinel.size()));
+
     // Production GPU staging API: copy only requested packed rows, preserving
     // the guard bytes and releasing the cache reader lease after each call.
     std::vector<uint8_t> gpuTile(257 * sizeof(uint16_t) + 2, 0xa5);
