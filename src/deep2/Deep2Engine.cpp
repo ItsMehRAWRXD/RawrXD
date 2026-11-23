@@ -5366,16 +5366,19 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
         return false;
     }
 
+    const bool compressedEmbedding = modelWeights.tokenEmbed.hasCompressedBacking();
+
     // For multi-shard models, token_embd.weight data is not eagerly loaded into
     // modelWeights.tokenEmbed.data (options.loadTensors = false). Fall back to
     // reading the single token row from the GGUF shard via GlobalTensorIndex +
-    // TensorResidencyCache.
-    if (!modelWeights.tokenEmbed.data && isMultiShard_ && globalIndex_ && residencyCache_)
+    // TensorResidencyCache unless a compressed single-shard view is attached.
+    if (!modelWeights.tokenEmbed.data && !compressedEmbedding &&
+        isMultiShard_ && globalIndex_ && residencyCache_)
     {
         return embedTokenFromShard(tokenId, output);
     }
 
-    if (!modelWeights.tokenEmbed.data)
+    if (!modelWeights.tokenEmbed.data && !compressedEmbedding)
     {
         if (output && config.hiddenDim > 0)
         {
@@ -5404,9 +5407,43 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
         printedEmbedInfo = true;
     }
 
-    // --- VAL-051.7+: Elastic residency for token embeddings ---
+    // A compressed embedding keeps only the selected token row decoded.
+    // LinearW_RowBytes uses the same GGML block geometry as the projection
+    // kernels, so quantized rows are copied byte-exactly without dequantizing
+    // the complete vocabulary table.
+    std::vector<std::uint8_t> compressedEmbedRow;
+    const std::size_t embedRowIndex = compressedEmbedding ? 0u : static_cast<std::size_t>(tokenId);
     const void* embedDataPtr = modelWeights.tokenEmbed.data;
-    if (elasticResidencyEnabled_ && elasticResidency_ && !modelWeights.tokenEmbed.name.empty())
+    if (compressedEmbedding)
+    {
+        const std::size_t rowBytes =
+            LinearW_RowBytes(modelWeights.tokenEmbed.type, modelWeights.hiddenDim);
+        if (rowBytes == 0 || modelWeights.vocabSize == 0 ||
+            rowBytes > (std::numeric_limits<std::size_t>::max)() / modelWeights.vocabSize ||
+            rowBytes * modelWeights.vocabSize != modelWeights.tokenEmbed.sizeBytes ||
+            static_cast<std::size_t>(tokenId) >
+                (std::numeric_limits<std::size_t>::max)() / rowBytes)
+        {
+            std::memset(output, 0, config.hiddenDim * sizeof(float));
+            return false;
+        }
+        const std::size_t byteOffset = static_cast<std::size_t>(tokenId) * rowBytes;
+        compressedEmbedRow.resize(rowBytes);
+        std::string decodeError;
+        if (!modelWeights.tokenEmbed.readBytes(byteOffset, compressedEmbedRow.data(),
+                                               compressedEmbedRow.size(), &decodeError))
+        {
+            std::fprintf(stderr, "[COMPRESSED_EMBED] token=%d decode failed: %s\n",
+                         tokenId, decodeError.c_str());
+            std::memset(output, 0, config.hiddenDim * sizeof(float));
+            return false;
+        }
+        embedDataPtr = compressedEmbedRow.data();
+    }
+
+    // --- VAL-051.7+: Elastic residency for token embeddings ---
+    if (!compressedEmbedding && elasticResidencyEnabled_ && elasticResidency_ &&
+        !modelWeights.tokenEmbed.name.empty())
     {
         Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
         auto status = elasticResidency_->AcquireTensor(modelWeights.tokenEmbed.name, 0, 0, resHandle);
@@ -5424,7 +5461,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
         size_t hiddenDim = modelWeights.hiddenDim;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize)
         {
-            memcpy(output, embedTable + tokenId * hiddenDim, hiddenDim * sizeof(float));
+            memcpy(output, embedTable + embedRowIndex * hiddenDim, hiddenDim * sizeof(float));
         }
         else
         {
@@ -5476,7 +5513,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
         const uint8_t* embedData = (const uint8_t*)embedDataPtr;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize)
         {
-            const uint8_t* row = embedData + tokenId * rowBytes;
+            const uint8_t* row = embedData + embedRowIndex * rowBytes;
             // Use the registry dequantizer for correctness
             auto& reg = Deep2::QuantKernelRegistry::Instance();
             auto dequant = reg.GetDequant((int)GGMLType::GGML_TYPE_Q4_K);
@@ -5510,7 +5547,11 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
             // Compute rowBytes from block geometry, not sizeBytes/vocabSize
             // sizeBytes may store element count rather than byte count for some loaders
             size_t rowBytes = 0;
-            if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K)
+            if (compressedEmbedding)
+            {
+                rowBytes = compressedEmbedRow.size();
+            }
+            else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K)
             {
                 size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(Q4_K_Block);  // 24 * 144 = 3456
@@ -5836,7 +5877,8 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
     }
 
     // --- Release Elastic residency for token embeddings ---
-    if (elasticResidencyEnabled_ && elasticResidency_ && !modelWeights.tokenEmbed.name.empty())
+    if (!compressedEmbedding && elasticResidencyEnabled_ && elasticResidency_ &&
+        !modelWeights.tokenEmbed.name.empty())
     {
         elasticResidency_->ReleaseTensor(modelWeights.tokenEmbed.name);
     }
