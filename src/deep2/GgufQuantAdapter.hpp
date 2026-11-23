@@ -52,69 +52,62 @@ inline uint16_t ReadF16(const uint8_t* p) {
 }
 
 // Q4_0: 32 values, 18 bytes: {fp16 d, uint8 qs[16]}. w = d*(q-8).
+// Layout is BLOCK-INTERLEAVED: y[j] = (qs[j]&0xF - 8)*d for j=0..15, then
+// y[j+16] = (qs[j]>>4 - 8)*d. (Matches ggml dequantize_row_q4_0.)
 inline void DequantizeQ4_0(const uint8_t* blocks, size_t n_blocks, std::vector<float>& out) {
     out.resize(n_blocks * 32);
     for (size_t b = 0; b < n_blocks; ++b) {
         const uint8_t* blk = blocks + b * 18;
         const float d = HalfToFloat(ReadF16(blk));
         const uint8_t* qs = blk + 2;
+        float* y = out.data() + b * 32;
         for (int j = 0; j < 16; ++j) {
-            uint8_t byte = qs[j];
-            int q0 = byte & 0x0f;
-            int q1 = byte >> 4;
-            out[b * 32 + j * 2]     = d * (float)(q0 - 8);
-            out[b * 32 + j * 2 + 1] = d * (float)(q1 - 8);
+            const int x0 = (int)(qs[j] & 0x0F) - 8;
+            const int x1 = (int)(qs[j] >> 4) - 8;
+            y[j]      = (float)x0 * d;   // first half (low nibbles)
+            y[j + 16] = (float)x1 * d;   // second half (high nibbles)
         }
     }
 }
 
+// get_scale_min_k4: exact ggml packed 6-bit scale/min extraction.
+static inline void GetScaleMinK4(int j, const uint8_t* q, int* d, int* m) {
+    if (j < 4) {
+        *d = q[j] & 63;
+        *m = q[j + 4] & 63;
+    } else {
+        *d = (q[j + 4] & 0x0F) | ((q[j - 4] >> 6) << 4);
+        *m = (q[j + 4] >> 4) | ((q[j] >> 6) << 4);
+    }
+}
+
 // Q4_K: 256 values, 144 bytes. Layout (ggml block_q4_K):
-//   ggml_half d;       // super-block scale (fp16)
-//   ggml_half dmin;    // super-block min (fp16)
-//   uint8_t scales[12];// 6-bit packed sub-block scales + mins (8 sub-blocks)
-//   uint8_t qs[128];   // 4-bit packed values
-// Dequant: w = d * scale[j] * q - dmin * min[j], j = sub-block (0..7).
+//   fp16 d; fp16 dmin; uint8 scales[12]; uint8 qs[128].
+// Dequant: 4 groups of 64 values, each using TWO 6-bit scales:
+//   y[..] = d*sc(is)*(q&0xF) - min*m(is)   (32 low nibbles)
+//   y[..] = d*sc(is+1)*(q>>4) - min*m(is+1) (32 high nibbles)
+// (Matches ggml dequantize_row_q4_K exactly.)
 inline void DequantizeQ4_K(const uint8_t* blocks, size_t n_super, std::vector<float>& out) {
     out.resize(n_super * 256);
     for (size_t b = 0; b < n_super; ++b) {
         const uint8_t* blk = blocks + b * 144;
         const float d = HalfToFloat(ReadF16(blk));
-        const float dmin = HalfToFloat(ReadF16(blk + 2));
-        const uint8_t* scales = blk + 4;   // 12 bytes
-        const uint8_t* qs = blk + 16;      // 128 bytes
-        // Unpack 8 sub-block scales (6-bit) and mins (6-bit) from scales[12].
-        // ggml packs: scales[0..5] = 8 6-bit scales, scales[6..11] = 8 6-bit mins.
-        int subScale[8], subMin[8];
-        for (int j = 0; j < 8; ++j) {
-            // 6-bit extraction from the 12-byte packed stream.
-            int bitPos = j * 6;
-            int byteIdx = bitPos / 8;
-            int bitOff = bitPos % 8;
-            uint32_t v = scales[byteIdx];
-            if (bitOff + 6 > 8 && byteIdx + 1 < 12) v |= (uint32_t)scales[byteIdx + 1] << 8;
-            subScale[j] = (v >> bitOff) & 0x3f;
-        }
-        for (int j = 0; j < 8; ++j) {
-            int bitPos = j * 6;
-            int byteIdx = bitPos / 8 + 6; // mins start at scales[6]
-            int bitOff = bitPos % 8;
-            uint32_t v = scales[byteIdx];
-            if (bitOff + 6 > 8 && byteIdx + 1 < 12) v |= (uint32_t)scales[byteIdx + 1] << 8;
-            subMin[j] = (v >> bitOff) & 0x3f;
-        }
-        // 128 bytes = 256 4-bit values, grouped 32 per sub-block.
-        for (int j = 0; j < 8; ++j) {
-            float sc = d * (float)subScale[j];
-            float mn = dmin * (float)subMin[j];
-            const uint8_t* q = qs + j * 32; // 32 bytes = 64 values per sub-block? No: 16 bytes per sub-block
-            // Each sub-block has 32 values = 16 bytes of 4-bit.
-            for (int k = 0; k < 16; ++k) {
-                uint8_t byte = qs[j * 16 + k];
-                int q0 = byte & 0x0f;
-                int q1 = byte >> 4;
-                out[b * 256 + j * 32 + k * 2]     = sc * (float)q0 - mn;
-                out[b * 256 + j * 32 + k * 2 + 1] = sc * (float)q1 - mn;
-            }
+        const float mn = HalfToFloat(ReadF16(blk + 2));
+        const uint8_t* scales = blk + 4;
+        const uint8_t* q = blk + 16;
+        float* y = out.data() + b * 256;
+        int is = 0;
+        size_t qi = 0; // byte cursor into qs
+        for (int j = 0; j < 256; j += 64) {
+            int sc, m;
+            GetScaleMinK4(is + 0, scales, &sc, &m);
+            const float d1 = d * (float)sc; const float m1 = mn * (float)m;
+            GetScaleMinK4(is + 1, scales, &sc, &m);
+            const float d2 = d * (float)sc; const float m2 = mn * (float)m;
+            for (int l = 0; l < 32; ++l) y[j + l]      = d1 * (float)(q[qi + l] & 0x0F) - m1;
+            for (int l = 0; l < 32; ++l) y[j + 32 + l] = d2 * (float)(q[qi + l] >> 4) - m2;
+            qi += 32;
+            is += 2;
         }
     }
 }
