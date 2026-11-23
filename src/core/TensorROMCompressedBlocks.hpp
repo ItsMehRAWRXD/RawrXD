@@ -25,6 +25,20 @@ public:
         CompressedResidencyCache::Decoder decoder) {
         if (!decoder || !encodedSize || !decodedSize)
             throw std::invalid_argument("invalid tensor block request");
+        // Only formats with verified fixed storage-block geometry are enabled.
+        // Other quantized formats require a format-specific block table; silently
+        // slicing them would corrupt scales and produce invalid inference.
+        std::size_t storageBlock = 0;
+        switch (tensor.type) {
+            case deep2::TensorType::F32: storageBlock = 4; break;
+            case deep2::TensorType::F16: storageBlock = 2; break;
+            case deep2::TensorType::Q8_0: storageBlock = 34; break;
+            default:
+                throw std::invalid_argument(
+                    "tensor format requires verified quantization block layout");
+        }
+        if (encodedOffset % storageBlock || encodedSize % storageBlock)
+            throw std::invalid_argument("tensor range splits an encoded storage block");
         const auto total = deep2::TensorROM::tensorStorageBytes(tensor);
         if (encodedOffset > total || encodedSize > total - encodedOffset)
             throw std::out_of_range("encoded block exceeds tensor storage");
