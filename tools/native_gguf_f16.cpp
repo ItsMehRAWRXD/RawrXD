@@ -1,4 +1,4 @@
-// Native GGUF v2/v3 F32->F16 rewriter. All other tensor payloads copied byte-for-byte.
+// Native GGUF v2/v3 floating tensor rewriter: F16 and GGML Q8/Q5/Q4 formats.
 // No dependencies; writes to a temporary file and only publishes on success.
 // Build: c++ -std=c++17 -O2 tools/native_gguf_f16.cpp -o native_gguf_f16
 #include "../src/deep2/NativeTensorCompression.hpp"
@@ -68,6 +68,9 @@ int main(int argc,char** argv) {
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
         if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        // A quantized GGUF tensor's innermost dimension must be divisible
+        // by the 32-element block size. No flattened cross-row packing.
+        const bool quantized=q8||q4||q5||q41||q51;
         float tolerance=std::stof(argv[3]);if(!std::isfinite(tolerance)||tolerance<0)throw std::runtime_error("invalid tolerance");
         std::ifstream in(argv[1],std::ios::binary|std::ios::ate);
         if(!in)throw std::runtime_error("cannot open input");
@@ -139,7 +142,7 @@ int main(int argc,char** argv) {
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
             Result r;
             if(!q8 && !q4 && !q5 && !q41 && !q51 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
-            if((q8 || q4 || q5 || q41 || q51) && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
+            if(quantized && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
                 std::vector<uint8_t> blocks;
                 blocks.reserve(raw.size()/(t.type==0?128:64)*(q4?18:(q5?22:(q41?20:(q51?24:34)))));
                 bool valid=true;
