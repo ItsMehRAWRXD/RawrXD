@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <limits>
 
 namespace deep2 {
 
@@ -76,7 +77,12 @@ inline double tensorTypeBytesPerValue(TensorType t) {
 // Quantized block size (values per quant block) for K-quants and Q8_0.
 inline std::size_t quantBlockSize(TensorType t) {
     switch (t) {
-        case TensorType::Q8_0: return 32;
+        case TensorType::Q4_0:
+        case TensorType::Q4_1:
+        case TensorType::Q5_0:
+        case TensorType::Q5_1:
+        case TensorType::Q8_0:
+        case TensorType::Q8_1: return 32;
         case TensorType::Q2_K:
         case TensorType::Q3_K_S:
         case TensorType::Q3_K_M:
@@ -96,27 +102,36 @@ inline bool isQuantized(TensorType t) {
 
 // Storage bytes required for a tensor of `numValues` values of type `t` (block-aligned).
 inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
-    if (!isQuantized(t)) {
-        return numValues * static_cast<std::uint64_t>(tensorTypeBytesPerValue(t));
-    }
-    const std::size_t bsz = quantBlockSize(t);
-    const std::uint64_t blocks = (numValues + bsz - 1) / bsz;
-    // storage bytes per block (includes scales/super-scale; block-aligned in GGUF)
+    const auto max = (std::numeric_limits<std::uint64_t>::max)();
+    if (t == TensorType::F32) return numValues > max / 4u ? max : numValues * 4u;
+    if (t == TensorType::F16) return numValues > max / 2u ? max : numValues * 2u;
+
+    const std::size_t valuesPerBlock = quantBlockSize(t);
+    if (!valuesPerBlock || numValues > max - (valuesPerBlock - 1u)) return max;
+    const std::uint64_t blocks =
+        (numValues + static_cast<std::uint64_t>(valuesPerBlock) - 1u) /
+        static_cast<std::uint64_t>(valuesPerBlock);
+    std::uint64_t bytesPerBlock = 0;
     switch (t) {
-        case TensorType::Q8_0:   return blocks * 34;   // 32 x int8 + fp16 d
-        case TensorType::Q2_K:   return blocks * 82;   // 64 qs + 16 scales + fp16 d
+        case TensorType::Q4_0:   bytesPerBlock = 18;  break;
+        case TensorType::Q4_1:   bytesPerBlock = 20;  break;
+        case TensorType::Q5_0:   bytesPerBlock = 22;  break;
+        case TensorType::Q5_1:   bytesPerBlock = 24;  break;
+        case TensorType::Q8_0:   bytesPerBlock = 34;  break;
+        case TensorType::Q8_1:   bytesPerBlock = 40;  break;
+        case TensorType::Q2_K:   bytesPerBlock = 82;  break;
         case TensorType::Q3_K_S:
         case TensorType::Q3_K_M:
-        case TensorType::Q3_K_L: return blocks * 114;  // 96 qs + 16 scales + fp16 d
+        case TensorType::Q3_K_L: bytesPerBlock = 114; break;
         case TensorType::Q4_K_S:
-        case TensorType::Q4_K_M: return blocks * 146;  // 128 qs + 16 scales + fp16 d
+        case TensorType::Q4_K_M: bytesPerBlock = 146; break;
         case TensorType::Q5_K_S:
-        case TensorType::Q5_K_M: return blocks * 178;  // 160 qs + 16 scales + fp16 d
-        case TensorType::Q6_K:   return blocks * 210;  // 192 qs + 16 scales + fp16 d
+        case TensorType::Q5_K_M: bytesPerBlock = 178; break;
+        case TensorType::Q6_K:   bytesPerBlock = 210; break;
         default: return numValues;
     }
+    return blocks > max / bytesPerBlock ? max : blocks * bytesPerBlock;
 }
-
 // Non-owning view over raw tensor storage (quantized, f16 or f32). The backing memory
 // is owned by the ROM pager; a TensorView is only valid while its TensorLease is alive.
 struct TensorView {
