@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <thread>
+#include <limits>
 
 namespace deep2 {
 
@@ -116,8 +117,14 @@ void PageCache::release(Page* page) {
 
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
     if (size == 0) return true;
-    std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
-    std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
+    if (!out || offset > UINT64_MAX - (size - 1)) return false;
+    const uint64_t firstPage64 = offset / m_pageSize;
+    const uint64_t lastPage64 = (offset + size - 1) / m_pageSize;
+    if (lastPage64 < firstPage64 ||
+        lastPage64 - firstPage64 >= std::numeric_limits<size_t>::max())
+        return false;
+    const size_t firstPage = static_cast<size_t>(firstPage64);
+    const size_t lastPage = static_cast<size_t>(lastPage64);
     std::vector<Page*> held;
     held.reserve(lastPage - firstPage + 1);
     for (std::size_t p = firstPage; p <= lastPage; ++p) {
@@ -143,9 +150,13 @@ bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, s
 }
 
 void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
-    if (size == 0 || !m_reader) return;
-    std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
-    std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
+    if (size == 0 || !m_reader || offset > UINT64_MAX - (size - 1)) return;
+    const uint64_t firstPage64 = offset / m_pageSize;
+    const uint64_t lastPage64 = (offset + size - 1) / m_pageSize;
+    if (lastPage64 < firstPage64 ||
+        lastPage64 - firstPage64 >= std::numeric_limits<size_t>::max()) return;
+    const size_t firstPage = static_cast<size_t>(firstPage64);
+    const size_t lastPage = static_cast<size_t>(lastPage64);
 
     auto work = [this, shard, firstPage, lastPage]() {
         // Throttle concurrency by joining the oldest futures opportunistically.
