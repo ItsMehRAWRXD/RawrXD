@@ -4270,6 +4270,13 @@ bool VulkanCompute::DispatchGemvQuantTile(
     if (descriptorAlignment &&
         (static_cast<VkDeviceSize>(outputOffset) % descriptorAlignment) != 0)
         return false;
+    // The output descriptor covers this tile, not the rest of the model's
+    // output allocation. This also enforces maxStorageBufferRange for devices
+    // with small storage-buffer descriptor limits.
+    if (outputBytes > deviceProperties.limits.maxStorageBufferRange ||
+        packedBytes > deviceProperties.limits.maxStorageBufferRange ||
+        inputBytes > deviceProperties.limits.maxStorageBufferRange)
+        return false;
     const size_t rowBytes = QuantPackedRowBytes(type, cols);
     if (!rowBytes || rowCount > SIZE_MAX / rowBytes ||
         packedBytes != rowBytes * static_cast<size_t>(rowCount))
@@ -4320,8 +4327,9 @@ bool VulkanCompute::DispatchGemvQuantTile(
         bi[i].buffer = bufs[i]->buffer;
         bi[i].offset = i == 2 ? static_cast<VkDeviceSize>(outputOffset) : 0;
         bi[i].range = i == 2
-            ? static_cast<VkDeviceSize>(output.size - outputOffset)
-            : static_cast<VkDeviceSize>(bufs[i]->size);
+            ? static_cast<VkDeviceSize>(outputBytes)
+            : (i == 1 ? static_cast<VkDeviceSize>(inputBytes)
+                      : static_cast<VkDeviceSize>(packedBytes));
         wr[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         wr[i].dstSet = set;
         wr[i].dstBinding = i;
