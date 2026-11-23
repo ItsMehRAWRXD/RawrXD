@@ -66,9 +66,11 @@ inline void StoredTensorMatvec(CompressedWeightStore& store,
                                std::size_t rows, std::size_t cols,
                                std::size_t stagingBytes = 64 * 1024) {
     // Never reinterpret compressed GGML bytes using a different kernel type.
-    // F32 and F16 are GGML scalar IDs 0 and 1; Q8_0 is GGML ID 8.
-    const std::uint32_t expected = type == ResidentWeightType::F32 ? GGML_TYPE_F32 :
-                                   type == ResidentWeightType::F16 ? GGML_TYPE_F16 : 8u;
+    // F32/F16/BF16 are scalar IDs 0/1/30; Q8_0 is GGML ID 8.
+    const std::uint32_t expected =
+        type == ResidentWeightType::F32 ? GGML_TYPE_F32 :
+        type == ResidentWeightType::F16 ? GGML_TYPE_F16 :
+        type == ResidentWeightType::BF16 ? GGML_TYPE_BF16 : 8u;
     if (store.tensorType(tensorName) != expected)
         throw std::invalid_argument("resident tensor GGML type does not match kernel");
     StoredTensorReader reader(store, tensorName);

@@ -15,6 +15,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          submodules: false
+          clean: false
       - name: Check tracked files and dependency indicators
         run: |
           python3 tools/rawrxd_per_file_source_audit.py --strict-missing
@@ -28,6 +30,14 @@ jobs:
           name: source-audit-results
           path: evidence/rawrxd_*audit*.json
           if-no-files-found: warn
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlinks
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          git config --file .gitmodules submodule.ci-orphaned-irc.path "evidence/_irc_orphan_git"
+          git config --file .gitmodules submodule.ci-orphaned-irc.url "file:///dev/null"
 
   native-elf64-smoke:
     runs-on: ubuntu-24.04
@@ -35,6 +45,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          submodules: false
+          clean: false
       - name: Build native ELF64 emitter and execute emitted binary
         shell: bash
         run: |
@@ -51,6 +63,14 @@ jobs:
             exit 1
           fi
           file /tmp/rawrxd_native_elf64
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlinks
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          git config --file .gitmodules submodule.ci-orphaned-irc.path "evidence/_irc_orphan_git"
+          git config --file .gitmodules submodule.ci-orphaned-irc.url "file:///dev/null"
 
   dual-row-executor-stress:
     runs-on: ubuntu-24.04
@@ -59,6 +79,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          submodules: false
+          clean: false
       - name: Compile and stress permanent dual-GPU worker executor
         shell: bash
         run: |
@@ -75,6 +97,14 @@ jobs:
           timeout 30 /tmp/top25_parity_matrix_smoke
           g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/deep2_utf8_streaming_smoke.cpp -o /tmp/deep2_utf8_streaming_smoke
           timeout 30 /tmp/deep2_utf8_streaming_smoke
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlinks
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          git config --file .gitmodules submodule.ci-orphaned-irc.path "evidence/_irc_orphan_git"
+          git config --file .gitmodules submodule.ci-orphaned-irc.url "file:///dev/null"
 
   windows-native:
     runs-on: windows-2022
@@ -84,6 +114,8 @@ jobs:
         with:
           persist-credentials: false
 
+          submodules: false
+          clean: false
       - name: Compile standalone C++20 GPU concurrency and cache regressions (MSVC)
         shell: pwsh
         run: |
@@ -170,3 +202,11 @@ jobs:
             build_cert/**/RawrXD-Win32IDE-Native.exe
             build_cert/Testing/**
           if-no-files-found: warn
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlinks
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          git config --file .gitmodules submodule.ci-orphaned-irc.path "evidence/_irc_orphan_git"
+          git config --file .gitmodules submodule.ci-orphaned-irc.url "file:///dev/null"

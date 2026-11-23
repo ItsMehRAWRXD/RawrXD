@@ -1,12 +1,12 @@
 ; deflate_brutal_masm.asm
 ; ml64 /c /Fo deflate_brutal_masm.obj deflate_brutal_masm.asm
 OPTION casemap:none
-PUBLIC deflate_brutal_masm
+PUBLIC deflate_brutal_masm_raw
 EXTERN malloc:PROC
 EXTERN memcpy:PROC
 
 .code
-deflate_brutal_masm PROC
+deflate_brutal_masm_raw PROC
     ; Prologue
     push    rbx
     push    rsi
@@ -116,5 +116,5 @@ _exit:
     pop     rsi
     pop     rbx
     ret
-deflate_brutal_masm ENDP
+deflate_brutal_masm_raw ENDP
 END

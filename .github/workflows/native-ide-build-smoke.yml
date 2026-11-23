@@ -23,7 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: false
+          clean: false
       - name: Configure native IDE with MSVC (no Vulkan requirement)
         shell: pwsh
         run: |
@@ -84,3 +85,11 @@ jobs:
           name: native-ide-build-smoke-NOT-GUI-CERTIFIED
           path: native-build-receipt.txt
           if-no-files-found: ignore
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlinks
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          git config --file .gitmodules submodule.ci-orphaned-irc.path "evidence/_irc_orphan_git"
+          git config --file .gitmodules submodule.ci-orphaned-irc.url "file:///dev/null"

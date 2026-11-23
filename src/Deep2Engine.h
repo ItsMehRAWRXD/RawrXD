@@ -642,7 +642,8 @@ namespace Deep2
         uint64_t vulkanSlotWeightUploads(unsigned slot) const;
         uint64_t vulkanSlotWeightHits(unsigned slot) const;
         // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
-        bool tryVulkanGEMV(const WeightTensor &wt, const float *input, float *output, size_t outDim);
+        bool tryVulkanGEMV(const WeightTensor &wt, const float *input, float *output,
+                            size_t outDim, bool bypassWeightCache = false);
 
         // VAL-000 Phase 3: Advanced feature control
         void enableMedusa(bool enable);

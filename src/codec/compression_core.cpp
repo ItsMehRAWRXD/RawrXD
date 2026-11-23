@@ -47,7 +47,8 @@ public:
 
     bool grow() {
         if (buf_.size() >= cap_) return false;
-        std::size_t next = buf_.empty() ? 4096 : buf_.size() * 2;
+        std::size_t next = buf_.empty() ? 4096 :
+            (buf_.size() > cap_ / 2 ? cap_ : buf_.size() * 2);
         next = std::min(next, cap_);
         try {
             buf_.resize(next);
@@ -76,6 +77,11 @@ Result compress(const std::uint8_t* data, std::size_t size, int level) {
         return {Status::InvalidInput, {}};
     }
 
+    // Reject invalid levels explicitly instead of reporting a provider fault.
+    if (level < Z_DEFAULT_COMPRESSION || level > Z_BEST_COMPRESSION) {
+        return {Status::InvalidInput, {}};
+    }
+
     uLongf bound = compressBound(static_cast<uLong>(size));
     if (bound == 0) {
         return {Status::BackendError, {}};
@@ -89,10 +95,14 @@ Result compress(const std::uint8_t* data, std::size_t size, int level) {
         return {Status::AllocationFailure, {}};
     }
 
+    // Some zlib providers do not accept a null source pointer even when
+    // sourceLen is zero. Supply a valid address without changing the payload.
+    const std::uint8_t emptyByte = 0;
+    const std::uint8_t* source = size == 0 ? &emptyByte : data;
     const int rc = compress2(
         reinterpret_cast<Bytef*>(out.bytes.data()),
         &bound,
-        reinterpret_cast<const Bytef*>(data),
+        reinterpret_cast<const Bytef*>(source),
         static_cast<uLong>(size),
         level);
 
@@ -131,7 +141,8 @@ Result decompress(const std::uint8_t* data,
 
     // Start at 4x the compressed size (the legacy adapter's first guess) and
     // grow under the caller's ceiling.
-    std::size_t initial = size * 4;
+    std::size_t initial = size > maxOutputBytes / 4
+        ? maxOutputBytes : size * 4;
     if (initial == 0) initial = 4096;
     initial = std::min(initial, maxOutputBytes);
 

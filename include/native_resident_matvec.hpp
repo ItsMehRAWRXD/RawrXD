@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace rawrxd::compression {
-enum class ResidentWeightType { F32, F16, Q8_0 };
+enum class ResidentWeightType { F32, F16, BF16, Q8_0 };
 
 inline float DecodeHalfLE(const std::uint8_t* p) {
     const std::uint32_t h = std::uint32_t(p[0]) | (std::uint32_t(p[1]) << 8);
@@ -32,6 +32,14 @@ inline float DecodeHalfLE(const std::uint8_t* p) {
     return f;
 }
 
+inline float DecodeBFloat16LE(const std::uint8_t* p) {
+    const std::uint32_t bits =
+        (std::uint32_t(p[0]) | (std::uint32_t(p[1]) << 8)) << 16;
+    float value;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+
 inline std::size_t ResidentRowBytes(ResidentWeightType type, std::size_t cols) {
     if (!cols) throw std::invalid_argument("zero matrix width");
     if (type == ResidentWeightType::Q8_0) {
@@ -40,7 +48,8 @@ inline std::size_t ResidentRowBytes(ResidentWeightType type, std::size_t cols) {
             throw std::overflow_error("Q8_0 row overflow");
         return (cols / 32) * 34;
     }
-    const std::size_t stride = type == ResidentWeightType::F16 ? 2 : 4;
+    const std::size_t stride =
+        (type == ResidentWeightType::F16 || type == ResidentWeightType::BF16) ? 2 : 4;
     if (cols > std::numeric_limits<std::size_t>::max() / stride)
         throw std::overflow_error("matrix row overflow");
     return cols * stride;
@@ -64,7 +73,8 @@ void ResidentMatvec(const Reader& weights, ResidentWeightType type,
         if (!std::isfinite(x[i]))
             throw std::domain_error("nonfinite matvec activation");
     const std::size_t elementBytes = type == ResidentWeightType::Q8_0 ? 34 :
-                                     type == ResidentWeightType::F16 ? 2 : 4;
+                                     (type == ResidentWeightType::F16 ||
+                                      type == ResidentWeightType::BF16) ? 2 : 4;
     const std::size_t valuesPerElement = type == ResidentWeightType::Q8_0 ? 32 : 1;
     const std::size_t tile = std::max(elementBytes, (stagingBytes / elementBytes) * elementBytes);
     std::vector<std::uint8_t> scratch(std::min(tile, rowBytes));
@@ -87,6 +97,8 @@ void ResidentMatvec(const Reader& weights, ResidentWeightType type,
                     float weight = 0;
                     if (type == ResidentWeightType::F16) {
                         weight = DecodeHalfLE(scratch.data() + j);
+                    } else if (type == ResidentWeightType::BF16) {
+                        weight = DecodeBFloat16LE(scratch.data() + j);
                     } else {
                         std::memcpy(&weight, scratch.data() + j, 4);
                     }

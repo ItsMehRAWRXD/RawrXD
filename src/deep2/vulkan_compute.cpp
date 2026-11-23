@@ -1308,6 +1308,17 @@ void VulkanCompute::destroyBuffer(DeviceBuf& b) {
     b = {};
 }
 
+void VulkanCompute::releaseTransientWeightBuffers() noexcept {
+    for (auto& buffer : transientWeightBuffers_) {
+        const size_t bytes = static_cast<size_t>(buffer.size);
+        transientWeightBytes_ = bytes <= transientWeightBytes_
+            ? transientWeightBytes_ - bytes : 0;
+        destroyBuffer(buffer);
+    }
+    transientWeightBuffers_.clear();
+    transientWeightBytes_ = 0;
+}
+
 bool VulkanCompute::ensureMappedStaging(
     bool upload, size_t bytes, DeviceBuf*& buffer, void*& mapped)
 {
@@ -1579,6 +1590,7 @@ bool VulkanCompute::endSubmitWait(
     if (!oneShot_.MarkSubmitted(oneShotTicket)) {
         std::fprintf(stderr, "[GPU] submission ownership acknowledgement failed\n");
         if (globalSerial) g_gpuInFlight.fetch_sub(1);
+        releaseTransientWeightBuffers(); // queue rejected the submission
         return false;
     }
     ++queueSubmitCount_;
@@ -2759,6 +2771,18 @@ void VulkanCompute::accumulateQ4kParitySamples() noexcept {
 bool VulkanCompute::BeginFusedLayer() {
 
     if (fused_ || !initialized_ || !opsPipeline_) return false;
+    // A prior timed-out/failed one-shot submission may have left temporary
+    // buffers quarantined. Reclaim them only after an explicit idle proof.
+    if (!transientWeightBuffers_.empty()) {
+        if (device_ && !lostSeq_.lost) {
+            const VkResult idle = vkDeviceWaitIdle(device_);
+            if (idle != VK_SUCCESS && idle != VK_ERROR_DEVICE_LOST)
+                return false;
+            if (idle == VK_ERROR_DEVICE_LOST)
+                (void)NoteVkResult(static_cast<int>(idle), "transient-weight-drain");
+        }
+        releaseTransientWeightBuffers();
+    }
     if(!ensureReusableFusedSubmitObjects()) return false;
 
     // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: invalidate the stale
@@ -2836,7 +2860,10 @@ bool VulkanCompute::EndFusedLayer() {
                      (int)endRes);
         std::fflush(stderr);
     }
-    if(endRes!=VK_SUCCESS) return false;
+    if(endRes!=VK_SUCCESS) {
+        releaseTransientWeightBuffers(); // command buffer was never submitted
+        return false;
+    }
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END fence_reset_begin\n");
         std::fflush(stderr);
@@ -2847,8 +2874,10 @@ bool VulkanCompute::EndFusedLayer() {
                      (int)resetRes);
         std::fflush(stderr);
     }
-    if(resetRes!=VK_SUCCESS)
+    if(resetRes!=VK_SUCCESS) {
+        releaseTransientWeightBuffers(); // command buffer was never submitted
         return false;
+    }
 
     VkSubmitInfo si{};
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -2979,6 +3008,9 @@ bool VulkanCompute::EndFusedLayer() {
                      (unsigned long long)globalSeq);
         std::fflush(stderr);
     }
+    // The fused fence has completed: all commands that referenced one-shot
+    // compressed tiles are finished, so their device-local buffers can retire.
+    releaseTransientWeightBuffers();
     return true;
 }
 
@@ -4145,10 +4177,52 @@ bool VulkanCompute::DispatchGemvDevice(
        count>std::numeric_limits<size_t>::max()/sizeof(float)) return false;
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightF32(weights,key,count*sizeof(float),w)) return false;
+    const bool oneShot = key == 0;
+    if (oneShot) {
+        const size_t bytes = count * sizeof(float);
+        if (bytes > std::numeric_limits<size_t>::max() - 3u) return false;
+        DeviceBuf temporary{};
+        const size_t padded = (bytes + 3u) & ~size_t(3u);
+        if (padded > std::numeric_limits<size_t>::max() - transientWeightBytes_)
+            return false;
+        if (weightBudgetBytes_ &&
+            (weightCacheBytes_ > weightBudgetBytes_ ||
+             transientWeightBytes_ > weightBudgetBytes_ - weightCacheBytes_ ||
+             padded > weightBudgetBytes_ - weightCacheBytes_ - transientWeightBytes_))
+            return false;
+        if (!createBuffer(padded,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, temporary))
+            return false;
+        if (!uploadToBuffer(temporary, weights, bytes)) {
+            destroyBuffer(temporary);
+            return false;
+        }
+        ++weightUploads_;
+        try {
+            transientWeightBuffers_.push_back(temporary);
+        } catch (...) {
+            destroyBuffer(temporary);
+            return false;
+        }
+        temporary = {};
+        transientWeightBytes_ += padded;
+        w = &transientWeightBuffers_.back();
+    } else if (!ensureWeightF32(weights,key,count*sizeof(float),w)) {
+        return false;
+    }
     OpsPush p{}; p.op=OP_GEMV_F32; p.n=rows; p.p0=cols;
     bool ok=dispatchOps(*w,input,output,output,p,(rows+63u)/64u);
     if(ok) ++gemvSuccess_;
+    if (oneShot && !fused_ && ok) {
+        const size_t bytes = static_cast<size_t>(transientWeightBuffers_.back().size);
+        transientWeightBytes_ = bytes <= transientWeightBytes_
+            ? transientWeightBytes_ - bytes : 0;
+        destroyBuffer(transientWeightBuffers_.back());
+        transientWeightBuffers_.pop_back();
+    }
     return ok;
 }
 
@@ -4197,6 +4271,9 @@ bool VulkanCompute::DispatchGemvQuant(
         inputBytes > input.size || outputBytes > output.size)
         return fail("ARGS_OR_ARENA");
 
+    if (weightBytes > std::numeric_limits<uint32_t>::max())
+        return fail("WEIGHT_SIZE_U32");
+
     if (std::getenv("DEEP2_MOE_PLACE_TRACE")) {
         std::fprintf(stderr,
                      "[MOE_GEMV_GEOMETRY] type=%d rows=%u cols=%u "
@@ -4209,8 +4286,42 @@ bool VulkanCompute::DispatchGemvQuant(
     }
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey))
+    const bool oneShot = cacheKey == 0;
+    if (oneShot) {
+        if (weightBytes > std::numeric_limits<size_t>::max() - 3u)
+            return fail("WEIGHT_SIZE_OVERFLOW");
+        DeviceBuf temporary{};
+        const size_t padded = (weightBytes + 3u) & ~size_t(3u);
+        if (padded > std::numeric_limits<size_t>::max() - transientWeightBytes_)
+            return fail("WEIGHT_SIZE_OVERFLOW");
+        if (weightBudgetBytes_ &&
+            (weightCacheBytes_ > weightBudgetBytes_ ||
+             transientWeightBytes_ > weightBudgetBytes_ - weightCacheBytes_ ||
+             padded > weightBudgetBytes_ - weightCacheBytes_ - transientWeightBytes_))
+            return fail("WEIGHT_BUDGET");
+        if (!createBuffer(padded,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, temporary))
+            return fail("WEIGHT_ONESHOT_ALLOC");
+        if (!uploadToBuffer(temporary, weights, weightBytes)) {
+            destroyBuffer(temporary);
+            return fail("WEIGHT_ONESHOT_UPLOAD");
+        }
+        ++weightUploads_;
+        try {
+            transientWeightBuffers_.push_back(temporary);
+        } catch (...) {
+            destroyBuffer(temporary);
+            return fail("WEIGHT_ONESHOT_TRACK");
+        }
+        temporary = {};
+        transientWeightBytes_ += padded;
+        w = &transientWeightBuffers_.back();
+    } else if (!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) {
         return fail("WEIGHT_RESIDENCY");
+    }
     if (!w || w->size < weightBytes)
         return fail("WEIGHT_BUFFER_RANGE");
     if (traceLargeQ) {
@@ -4223,7 +4334,6 @@ bool VulkanCompute::DispatchGemvQuant(
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
-    if(weightBytes>std::numeric_limits<uint32_t>::max()) return fail("WEIGHT_SIZE_U32");
     p.weightBytes=static_cast<uint32_t>(weightBytes);
     bool ok;
         if(type==2) {
@@ -4236,6 +4346,13 @@ bool VulkanCompute::DispatchGemvQuant(
         ok=dispatchQuant(*w,input,output,p);
     }
     if(ok) ++gemvSuccess_;
+    if (oneShot && !fused_ && ok) {
+        const size_t bytes = static_cast<size_t>(transientWeightBuffers_.back().size);
+        transientWeightBytes_ = bytes <= transientWeightBytes_
+            ? transientWeightBytes_ - bytes : 0;
+        destroyBuffer(transientWeightBuffers_.back());
+        transientWeightBuffers_.pop_back();
+    }
     return ok;
 }
 
@@ -7438,6 +7555,7 @@ void VulkanCompute::cleanup() {
     }
     // Device idle or confirmed terminal loss above authorizes these drains.
     if (!resetDownloadRing(true) || !resetAsyncCmdRing(true)) return;
+    releaseTransientWeightBuffers();
 
     clearRecordedQ4K();
     clearRecordedGroups();

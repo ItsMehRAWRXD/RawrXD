@@ -14,6 +14,7 @@ namespace rawrxd::compression {
 // GGML-compatible IDs for common scalar formats. Other GGML IDs are retained verbatim.
 constexpr std::uint32_t GGML_TYPE_F32 = 0;
 constexpr std::uint32_t GGML_TYPE_F16 = 1;
+constexpr std::uint32_t GGML_TYPE_BF16 = 30;
 constexpr std::uint32_t GGML_TYPE_OPAQUE = 0xFFFFFFFFu;
 
 inline std::uint16_t floatToHalfRNE(float value) noexcept {
@@ -51,6 +52,12 @@ inline std::uint16_t floatToHalfRNE(float value) noexcept {
 
 struct StoreStats {
     std::uint64_t tensors=0, blocks=0, raw_bytes=0, compressed_bytes=0;
+    // Payload size is the encoded byte count. Capacity and metadata estimates
+    // expose the actual resident footprint more honestly than payload alone.
+    std::uint64_t encoded_capacity_bytes=0;
+    std::uint64_t metadata_bytes_estimate=0;
+    std::uint64_t resident_bytes_estimate=0;
+    std::uint64_t f32_to_f16_tensors=0, f32_source_bytes=0;
     std::uint64_t cached_decoded_bytes=0, cache_hits=0, cache_misses=0, evictions=0;
 };
 class CompressedWeightStore {
@@ -73,9 +80,12 @@ public:
                    bool require_savings=false,
                    std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     bool addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error=nullptr);
-    bool addTensorF32AsF16FromReader(std::string name,const float* values,
+    bool addTensorF32AsF16FromReader(std::string name,const void* source_bytes,
                    std::size_t count,std::string* error=nullptr,
-                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
+                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)(),
+                   float max_abs_error=(std::numeric_limits<float>::infinity)(),
+                   bool reject_non_finite=false,
+                   bool* precision_rejected=nullptr);
     std::uint32_t tensorType(const std::string& name) const;
     bool contains(const std::string& name) const;
     std::size_t tensorBytes(const std::string& name) const;
@@ -87,6 +97,9 @@ public:
     void setDecodedCacheBudget(std::size_t bytes);
     void clearDecodedCache();
 private:
+    // Narrow test seam for validating malformed codec control streams without
+    // exposing the encoder/decoder as part of the runtime API.
+    friend struct CompressedWeightStoreTestAccess;
     struct EncodedBlock { std::vector<std::uint8_t> payload; std::uint32_t checksum=0,raw_size=0; bool stored_raw=false; };
     struct Tensor { std::size_t raw_size=0; std::uint32_t ggml_type=GGML_TYPE_OPAQUE; std::vector<EncodedBlock> blocks; };
     struct CacheEntry { BlockLease data; std::size_t bytes=0; std::list<std::string>::iterator lru; };

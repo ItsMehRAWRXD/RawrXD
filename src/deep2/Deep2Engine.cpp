@@ -10,6 +10,7 @@
 
 #include "deep2/ReapCapturePolicy.hpp"
 #include "Deep2Engine.h"
+#include "deep2/compression/CompressedWeightTile.hpp"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
 #include "../sampling/advanced_sampler.hpp"
@@ -1893,6 +1894,21 @@ static void fp16GEMV(const uint16_t* weights, const float* input, float* output,
 // Deep2Engine Implementation
 // ============================================================================
 
+static float ReadCompressedF32ToF16MaxAbsError(bool& valid) {
+    valid = true;
+    const char* value = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_MAX_ABS_ERROR");
+    if (!value || !*value)
+        return (std::numeric_limits<float>::infinity)();
+
+    char* end = nullptr;
+    const float parsed = std::strtof(value, &end);
+    if (end == value || *end != '\0' || !std::isfinite(parsed) || parsed < 0.0f) {
+        valid = false;
+        return (std::numeric_limits<float>::infinity)();
+    }
+    return parsed;
+}
+
 Deep2Engine::Deep2Engine() = default;
 
 bool Deep2Engine::configureReapRuntimeInjection(
@@ -3417,10 +3433,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = name;
-            // Owned by ggufResult's mapped GGUF loader. Keep vectors/norms
-            // mapped because legacy scalar consumers still read their data
-            // pointer directly. Matrix projections that use LinearW can instead
-            // retain native GGML bytes in bounded compressed blocks.
+            // Owned by ggufResult's mapped GGUF loader until admitted to the
+            // compressed store. Matrix projections use bounded row reads;
+            // supported F32/F16 norm vectors use operation-sized reads.
             wt.mapped = true;
             wt.hasFileBacking = true;
             wt.fileOffset = t.dataOffset;
@@ -3449,12 +3464,27 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
             const bool embeddingMatrixName =
                 name == "token_embd.weight" || name == "token_embeddings.weight";
+            // RMSNorm consumes a complete one-dimensional scale vector for
+            // this operation, so retaining that small vector in compressed
+            // backing is safe: RMSNormW requests exactly the required byte span.
+            const bool normVectorName =
+                name.find("norm") != std::string::npos &&
+                t.dimensions.size() == 1 && wt.cols > 1 &&
+                (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+                 wt.type == static_cast<int>(GGMLType::GGML_TYPE_F16)) &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() /
+                    (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                        ? sizeof(float) : sizeof(std::uint16_t)) &&
+                wt.cols * (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                    ? sizeof(float) : sizeof(std::uint16_t)) == wt.sizeBytes;
             const bool eligibleCompressedMatrix =
-                compressedModeEnabled && (linearProjectionName || embeddingMatrixName) &&
-                t.dimensions.size() == 2 && wt.rows > 1 && wt.cols > 1 &&
-                packedRowBytes > 0 &&
-                packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
-                packedRowBytes * wt.rows == wt.sizeBytes;
+                compressedModeEnabled &&
+                (((linearProjectionName || embeddingMatrixName) &&
+                  t.dimensions.size() == 2 && wt.rows > 1 && wt.cols > 1 &&
+                  packedRowBytes > 0 &&
+                  packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
+                  packedRowBytes * wt.rows == wt.sizeBytes) ||
+                 normVectorName);
 
             if (eligibleCompressedMatrix && t.data)
             {
@@ -3485,13 +3515,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 const char* f32ToF16Env = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16");
                 const bool allowF32ToF16 =
                     f32ToF16Env && f32ToF16Env[0] == '1' && f32ToF16Env[1] == '\0';
+                bool validF32Tolerance = true;
+                const float maxF32ToF16AbsError =
+                    ReadCompressedF32ToF16MaxAbsError(validF32Tolerance);
                 const std::size_t originalType = static_cast<std::size_t>(wt.type);
                 const std::size_t originalBytes = wt.sizeBytes;
+                bool precisionRejected = false;
                 bool convertedF32ToF16 = false;
                 bool stored = false;
 
-                if (remaining > 0 && allowF32ToF16 &&
+                if (remaining > 0 && allowF32ToF16 && validF32Tolerance &&
                     wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                    wt.cols != 0 &&
                     wt.rows <= (std::numeric_limits<std::size_t>::max)() / wt.cols)
                 {
                     const std::size_t elements = wt.rows * wt.cols;
@@ -3501,7 +3536,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     {
                         stored = compressedWeightStore_->addTensorF32AsF16FromReader(
                             name, static_cast<const float*>(t.data), elements,
-                            &compressionError, remaining);
+                            &compressionError, remaining, maxF32ToF16AbsError,
+                            true, &precisionRejected);
                         if (stored)
                         {
                             wt.type = (int)GGMLType::GGML_TYPE_F16;
@@ -6238,21 +6274,38 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         dst.hasFileBacking = true;
         dst.fileOffset = ref->fileOffset;
 
-        // Opt-in native compressed residency for matrix weights. Keep norms
-        // and vectors mapped because their current consumers read direct pointers.
+        // Matrix projections use bounded row reads. F32/F16 normalization
+        // vectors are also eligible because RMSNormW reads their exact span;
+        // biases and other vectors stay mapped until every consumer supports
+        // range-backed access.
         const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
         const bool compressedModeEnabled =
             compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
         const std::size_t packedRowBytes = LinearW_RowBytes(dst.type, dst.cols);
         const std::string bindingLabel = label ? label : "";
-        const bool bindingIsNormOrBias =
+        const bool bindingIsNorm =
             bindingLabel.find("norm") != std::string::npos ||
-            bindingLabel.find("bias") != std::string::npos;
-        const bool compressMatrix = compressedModeEnabled && !bindingIsNormOrBias &&
-            ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
-            packedRowBytes > 0 &&
-            packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
-            packedRowBytes * dst.rows == dst.sizeBytes;
+            ref->name.find("norm") != std::string::npos;
+        const bool bindingIsBias =
+            bindingLabel.find("bias") != std::string::npos ||
+            ref->name.find("bias") != std::string::npos;
+        const bool normVector =
+            bindingIsNorm && !bindingIsBias && ref->shape.size() == 1 &&
+            dst.cols > 1 &&
+            (dst.type == static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+             dst.type == static_cast<int>(GGMLType::GGML_TYPE_F16)) &&
+            dst.cols <= (std::numeric_limits<std::size_t>::max)() /
+                (dst.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                    ? sizeof(float) : sizeof(std::uint16_t)) &&
+            dst.cols * (dst.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                ? sizeof(float) : sizeof(std::uint16_t)) == dst.sizeBytes;
+        const bool compressMatrix = compressedModeEnabled && !bindingIsBias &&
+            ((ref->shape.size() == 2 && !bindingIsNorm &&
+              dst.rows > 1 && dst.cols > 1 &&
+              packedRowBytes > 0 &&
+              packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
+              packedRowBytes * dst.rows == dst.sizeBytes) ||
+             normVector);
         if (compressMatrix)
         {
             constexpr std::size_t kDefaultCompressedModelBudget =
@@ -6279,11 +6332,16 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
             const char* f32ToF16Env = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16");
             const bool allowF32ToF16 =
                 f32ToF16Env && f32ToF16Env[0] == '1' && f32ToF16Env[1] == '\0';
+            bool validF32Tolerance = true;
+            const float maxF32ToF16AbsError =
+                ReadCompressedF32ToF16MaxAbsError(validF32Tolerance);
+            bool precisionRejected = false;
             bool stored = false;
             bool convertedF32ToF16 = false;
 
-            if (remainingBudget > 0 && allowF32ToF16 &&
+            if (remainingBudget > 0 && allowF32ToF16 && validF32Tolerance &&
                 originalType == static_cast<int>(GGMLType::GGML_TYPE_F32) &&
+                dst.cols != 0 &&
                 dst.rows <= (std::numeric_limits<std::size_t>::max)() / dst.cols)
             {
                 const std::size_t elements = dst.rows * dst.cols;
@@ -6293,7 +6351,8 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
                 {
                     stored = compressedWeightStore_->addTensorF32AsF16FromReader(
                         ref->name, static_cast<const float*>(mapping->data),
-                        elements, &compressionError, remainingBudget);
+                        elements, &compressionError, remainingBudget,
+                        maxF32ToF16AbsError, true, &precisionRejected);
                     if (stored)
                     {
                         dst.type = static_cast<int>(GGMLType::GGML_TYPE_F16);
@@ -6472,11 +6531,14 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         const auto compressionStats = compressedWeightStore_->stats();
         std::fprintf(stderr,
                      "[COMPRESSED_RESIDENCY] tensors=%llu raw_bytes=%llu encoded_bytes=%llu "
-                     "decoded_cache_bytes=%llu budget_bytes=%u\n",
+                     "decoded_cache_bytes=%llu f32_to_f16_tensors=%llu f32_source_bytes=%llu "
+                     "budget_bytes=%u\n",
                      static_cast<unsigned long long>(compressionStats.tensors),
                      static_cast<unsigned long long>(compressionStats.raw_bytes),
                      static_cast<unsigned long long>(compressionStats.compressed_bytes),
                      static_cast<unsigned long long>(compressionStats.cached_decoded_bytes),
+                     static_cast<unsigned long long>(compressionStats.f32_to_f16_tensors),
+                     static_cast<unsigned long long>(compressionStats.f32_source_bytes),
                      512u * 1024u * 1024u);
     }
     standardMultiShardWeightsBound_ = true;
@@ -6518,19 +6580,47 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     if (dim == 0)
         return;
 
+    // A compressed norm vector is expanded only for this operation's exact
+    // dimension. The backing store remains authoritative after this call.
+    WeightTensor effectiveWeight = normWeight;
+    std::vector<std::uint8_t> compressedNormBytes;
+    if (!effectiveWeight.data && effectiveWeight.hasCompressedBacking())
+    {
+        if (effectiveWeight.type != (int)GGMLType::GGML_TYPE_F32 &&
+            effectiveWeight.type != (int)GGMLType::GGML_TYPE_F16)
+            throw std::runtime_error("RMSNormW: unsupported compressed norm type: " +
+                                     effectiveWeight.name);
+        const size_t elementBytes =
+            effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32
+                ? sizeof(float) : sizeof(uint16_t);
+        if (dim > effectiveWeight.sizeBytes / elementBytes)
+            throw std::runtime_error("RMSNormW: compressed weight tensor is smaller than requested dimension: " +
+                                     effectiveWeight.name);
+        const size_t requiredBytes = dim * elementBytes;
+        std::string decodeError;
+        auto normTile = rawrxd::compression::ReadCompressedWeightTile(
+            effectiveWeight.sizeBytes, 1, requiredBytes, 0, 1,
+            [&](std::size_t offset, std::uint8_t* destination, std::size_t length) {
+                return effectiveWeight.readBytes(offset, destination, length, &decodeError);
+            });
+        compressedNormBytes = std::move(normTile.bytes);
+        effectiveWeight.data = compressedNormBytes.data();
+        effectiveWeight.sizeBytes = requiredBytes;
+    }
+
     // Refuse short F32/F16 norm views before the SIMD loop can read past the
-    // mapped tensor. Q/K norms may be stored as either one shared head or a
-    // complete [headCount * headDim] table.
-    if (normWeight.data &&
-        (normWeight.type == (int)GGMLType::GGML_TYPE_F32 ||
-         normWeight.type == (int)GGMLType::GGML_TYPE_F16))
+    // mapped or decoded tensor. Q/K norms may be stored as either one shared
+    // head or a complete [headCount * headDim] table.
+    if (effectiveWeight.data &&
+        (effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32 ||
+         effectiveWeight.type == (int)GGMLType::GGML_TYPE_F16))
     {
         const size_t elementBytes =
-            normWeight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t);
-        if (dim > normWeight.sizeBytes / elementBytes)
+            effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t);
+        if (dim > effectiveWeight.sizeBytes / elementBytes)
         {
             throw std::runtime_error("RMSNormW: weight tensor is smaller than requested dimension: " +
-                                     normWeight.name);
+                                     effectiveWeight.name);
         }
     }
 
@@ -6569,11 +6659,11 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     }
 
     // Apply normalization + weight with AVX2
-    if (normWeight.data)
+    if (effectiveWeight.data)
     {
-        if (normWeight.type == (int)GGMLType::GGML_TYPE_F32)
+        if (effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32)
         {
-            const float* w = (const float*)normWeight.data;
+            const float* w = (const float*)effectiveWeight.data;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
@@ -6592,9 +6682,9 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
                 output[i] = ww * input[i] * invRms;
             }
         }
-        else if (normWeight.type == (int)GGMLType::GGML_TYPE_F16)
+        else if (effectiveWeight.type == (int)GGMLType::GGML_TYPE_F16)
         {
-            const uint16_t* w = (const uint16_t*)normWeight.data;
+            const uint16_t* w = (const uint16_t*)effectiveWeight.data;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
@@ -7529,9 +7619,8 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
 // ============================================================================
 void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const float* bias, float* output, size_t outDim)
 {
-    // Keep compressed weights authoritative on CPU: LinearW_Range decodes
-    // only each worker's packed output-row slice. Vulkan currently stages one
-    // complete tensor because its existing upload interface accepts a base pointer.
+    // Keep compressed weights authoritative: CPU workers decode only their
+    // packed output-row slices, while Vulkan stages bounded one-shot row tiles.
     WeightTensor wtEffective = wt;
     std::vector<std::uint8_t> compressedGpuBytes;
 
@@ -7635,50 +7724,100 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     const char* compressedGpuEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_STAGING");
     const bool allowFullCompressedGpuStaging =
         compressedGpuEnv && compressedGpuEnv[0] == '1' && compressedGpuEnv[1] == '\0';
-    // Default to bounded CPU row slices for compressed weights. The existing
-    // Vulkan upload ABI requires a full contiguous tensor; opt into that
-    // temporary expansion explicitly rather than silently defeating residency.
-    if ((!wtEffective.hasCompressedBacking() || allowFullCompressedGpuStaging) &&
-        !plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
+    const bool gpuEligible = !plannedCpu && !p2lwForceCpu &&
+        vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty();
+    if (gpuEligible)
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
-        WeightTensor gpuWeight = wtEffective;
-        if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+        bool gpuDispatched = false;
+
+        if (wtEffective.hasCompressedBacking() && !allowFullCompressedGpuStaging)
         {
-            compressedGpuBytes.resize(gpuWeight.sizeBytes);
-            std::string decodeError;
-            if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
-                                     compressedGpuBytes.size(), &decodeError))
-                throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
-                                         wt.name + ": " + decodeError);
-            gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            // Expand only bounded output-row tiles for the Vulkan dispatch.
+            // Each tile is a one-shot GPU weight window (cacheKey=0), so the
+            // backend cannot retain a full model's worth of expanded weights.
+            const std::size_t packedRowBytes = LinearW_RowBytes(wtEffective.type, cols);
+            if (packedRowBytes != 0 &&
+                rows <= (std::numeric_limits<std::size_t>::max)() / packedRowBytes &&
+                rows * packedRowBytes <= wtEffective.sizeBytes)
+            {
+                constexpr std::size_t kCompressedGpuTileRows = 32;
+                std::vector<float> tiledOutput(rows, 0.0f);
+                gpuDispatched = true;
+                for (std::size_t firstRow = 0; firstRow < rows;
+                     firstRow += kCompressedGpuTileRows)
+                {
+                    const std::size_t tileRows =
+                        (std::min)(kCompressedGpuTileRows, rows - firstRow);
+                    std::string decodeError;
+                    auto tile = rawrxd::compression::ReadCompressedWeightTile(
+                        wtEffective.sizeBytes, wtEffective.rows, packedRowBytes,
+                        firstRow, tileRows,
+                        [&](std::size_t offset, std::uint8_t* destination,
+                            std::size_t length) {
+                            return wtEffective.readBytes(offset, destination,
+                                                         length, &decodeError);
+                        });
+                    WeightTensor gpuTile = wtEffective;
+                    gpuTile.data = tile.bytes.data();
+                    gpuTile.sizeBytes = tile.bytes.size();
+                    gpuTile.rows = tile.row_count;
+                    // A zero cache key is essential: every temporary tile is
+                    // expanded for this dispatch only and must not pin VRAM.
+                    if (!tryVulkanGEMV(gpuTile, input,
+                                       tiledOutput.data() + firstRow,
+                                       tileRows, true))
+                    {
+                        gpuDispatched = false;
+                        break;
+                    }
+                }
+                if (gpuDispatched)
+                    std::copy(tiledOutput.begin(), tiledOutput.end(), output);
+            }
         }
-        if (tryVulkanGEMV(gpuWeight, input, output, outDim))
+        else
+        {
+            WeightTensor gpuWeight = wtEffective;
+            if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+            {
+                compressedGpuBytes.resize(gpuWeight.sizeBytes);
+                std::string decodeError;
+                if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
+                                         compressedGpuBytes.size(), &decodeError))
+                    throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
+                                             wt.name + ": " + decodeError);
+                gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            }
+            gpuDispatched = tryVulkanGEMV(gpuWeight, input, output, outDim);
+        }
+
+        if (gpuDispatched)
         {
             ++plannedGpuGemvOps_;
-if (bias)
-    {
-        for (size_t i = 0; i < outDim; ++i)
-        {
-            output[i] += bias[i];
-        }
-    }
-    // S07 diagnostic: dump LinearW output AFTER bias for layer-0 wq.
-    if (wt.name.find("blk.0.attn_q") != std::string::npos)
-    {
-        static bool s_postBiasDump = false;
-        if (!s_postBiasDump)
-        {
-            s_postBiasDump = true;
-            std::fprintf(stderr, "[POSTBIAS_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e bias0=%.6e\n",
-                         wt.name.c_str(), output[0], output[1], output[2], output[3], output[4],
-                         output[5], bias ? bias[0] : 0.0f);
-            std::fflush(stderr);
-        }
-    }
+            if (bias)
+            {
+                for (size_t i = 0; i < outDim; ++i)
+                    output[i] += bias[i];
+            }
+            if (wt.name.find("blk.0.attn_q") != std::string::npos)
+            {
+                static bool s_postBiasDump = false;
+                if (!s_postBiasDump)
+                {
+                    s_postBiasDump = true;
+                    std::fprintf(stderr,
+                        "[POSTBIAS_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e bias0=%.6e\n",
+                        wt.name.c_str(), output[0], output[1], output[2], output[3],
+                        output[4], output[5], bias ? bias[0] : 0.0f);
+                    std::fflush(stderr);
+                }
+            }
+
             auto tLinearW1 = std::chrono::high_resolution_clock::now();
-            double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
-            int typeIdx = wtEffective.type & 0x1F;
+            const double linearwMs =
+                std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
+            const int typeIdx = wtEffective.type & 0x1F;
             if (typeIdx >= 0 && typeIdx < 32)
             {
                 g_linearwByType[typeIdx].calls++;
@@ -7687,30 +7826,29 @@ if (bias)
             }
             if (telemetryControllerEnabled_ && telemetryController_)
             {
-                auto tGpuDispatch1 = std::chrono::high_resolution_clock::now();
-                auto gpuDispatchNs =
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(tGpuDispatch1 - tGpuDispatch0).count();
-                telemetryController_->record_gpu_dispatch(static_cast<uint64_t>(gpuDispatchNs));
+                const auto tGpuDispatch1 = std::chrono::high_resolution_clock::now();
+                const auto gpuDispatchNs =
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        tGpuDispatch1 - tGpuDispatch0).count();
+                telemetryController_->record_gpu_dispatch(
+                    static_cast<uint64_t>(gpuDispatchNs));
             }
             if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty())
-            {
                 elasticResidency_->ReleaseTensor(wt.name);
-            }
             return;
         }
+
         // Gate-killing: never silently substitute CPU while GPU slot is claimed.
         if (vulkanStrictNoCpuFallback_)
         {
             vulkanStrictViolation_ = true;
-            fprintf(stderr,
-                    "[LAYER_EXEC] FATAL: GPU LinearW failed for '%s' "
-                    "(type=%d rows=%zu cols=%zu) — CPU fallback forbidden\n",
-                    wt.name.c_str(), wtEffective.type, rows, cols);
-            fflush(stderr);
+            std::fprintf(stderr,
+                "[LAYER_EXEC] FATAL: GPU LinearW failed for '%s' "
+                "(type=%d rows=%zu cols=%zu) — CPU fallback forbidden\n",
+                wt.name.c_str(), wtEffective.type, rows, cols);
+            std::fflush(stderr);
             if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty())
-            {
                 elasticResidency_->ReleaseTensor(wt.name);
-            }
             throw std::runtime_error(
                 "LinearW: GPU dispatch failed and CPU fallback forbidden: " + wt.name);
         }
@@ -14804,7 +14942,8 @@ void Deep2Engine::enableVulkan(bool enable)
     }
 }
 
-bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim)
+bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output,
+                                  size_t outDim, bool bypassWeightCache)
 {
     // Diagnostic-only: one line per distinct early-return reason so a zero
     // dispatch count can be attributed to a specific branch.
@@ -14883,6 +15022,11 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
     {
         cacheKey = (uint64_t)(uintptr_t)wt.data ^ ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols;
     }
+
+    // A streamed row tile is a one-shot window. Passing key zero prevents
+    // the Vulkan weight cache from retaining each expanded tile in VRAM.
+    if (bypassWeightCache)
+        cacheKey = 0;
 
     // Q4_K GPU parity is intentionally diagnosable at the dispatch boundary.
     // The current shader uses direct dequantized FP32 dots while the CPU

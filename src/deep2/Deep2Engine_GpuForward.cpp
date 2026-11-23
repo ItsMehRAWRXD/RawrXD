@@ -13,12 +13,14 @@
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "GpuTransferCounters.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "deep2/compression/CompressedWeightTile.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <limits>
 #include <string>
 #include <unordered_map>
@@ -125,6 +127,8 @@ const float* ensureF32(
     auto inserted = cache.emplace(std::move(key), std::move(decoded));
     return inserted.first->second.data();
 }
+
+
 
 bool denseLayerReady(const LayerWeights& lw) noexcept {
     const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
@@ -437,21 +441,143 @@ bool Deep2Engine::forwardLayerGpuResident(
                     DeviceBuf& output, uint32_t rows, uint32_t cols) -> bool {
         if (!supportedDenseWeight(wt)) return false;
         const bool packed = gpuPackedType(wt.type);
-        bool ok = false;
-        if (packed) {
-            std::vector<uint8_t> compressedPacked;
-            const void* packedData = wt.data;
-            if (!packedData && wt.hasCompressedBacking()) {
-                compressedPacked.resize(wt.sizeBytes);
-                std::string decodeError;
-                if (!wt.readBytes(0, compressedPacked.data(), compressedPacked.size(), &decodeError)) {
-                    gpuForwardTrace("reject: compressed packed-weight read failed");
+        const bool compressedOnly = !wt.data && wt.hasCompressedBacking();
+
+        // A compressed tensor must never be expanded into a whole host or
+        // device allocation on this canonical path. Finish the current fused
+        // command buffer at the projection boundary so the producer of 'input'
+        // is ready, execute bounded one-shot row tiles, then reopen fusion for
+        // the caller. This also works when an outer multi-layer path owns the
+        // recording: its later EndFusedLayer closes the reopened command buffer.
+        if (compressedOnly) {
+            if (!rows || !cols || !gpu->EndFusedLayer())
+                return false;
+            const auto resumeFused = [&]() -> bool {
+                return gpu->BeginFusedLayer();
+            };
+
+            constexpr std::size_t kCompressedGpuTileRows = 32;
+            if (!gpu->EnsureScratch(172, kCompressedGpuTileRows) ||
+                !gpu->EnsureScratch(173, rows)) {
+                (void)resumeFused();
+                return false;
+            }
+            DeviceBuf& tileOutput = gpu->Scratch(172);
+            DeviceBuf& stagedOutput = gpu->Scratch(173);
+            std::size_t rowBytes = 0;
+            if (packed) {
+                rowBytes = Gpu::QuantPackedRowBytes(wt.type, cols);
+            } else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(float)) {
+                    (void)resumeFused();
                     return false;
                 }
-                packedData = compressedPacked.data();
+                rowBytes = static_cast<std::size_t>(cols) * sizeof(float);
+            } else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F16)) {
+                if (cols > std::numeric_limits<std::size_t>::max() / sizeof(uint16_t)) {
+                    (void)resumeFused();
+                    return false;
+                }
+                rowBytes = static_cast<std::size_t>(cols) * sizeof(uint16_t);
+            } else {
+                (void)resumeFused();
+                return false;
             }
-            if (!packedData) return false;
-            ok = gpu->DispatchGemvQuant(wt.type, packedData, wt.sizeBytes,
+            if (!rowBytes || wt.rows != rows || wt.cols != cols ||
+                rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
+                wt.sizeBytes < static_cast<std::size_t>(rows) * rowBytes) {
+                (void)resumeFused();
+                return false;
+            }
+
+            bool tiledOk = true;
+            for (std::size_t firstRow = 0; firstRow < rows;
+                 firstRow += kCompressedGpuTileRows) {
+                const std::size_t tileRows =
+                    (std::min)(kCompressedGpuTileRows,
+                               static_cast<std::size_t>(rows) - firstRow);
+                try {
+                    std::string decodeError;
+                    auto tile = rawrxd::compression::ReadCompressedWeightTile(
+                        wt.sizeBytes, rows, rowBytes, firstRow, tileRows,
+                        [&](std::size_t offset, std::uint8_t* destination,
+                            std::size_t length) {
+                            return wt.readBytes(offset, destination, length,
+                                                &decodeError);
+                        });
+
+                    if (cols > std::numeric_limits<std::size_t>::max() / tileRows)
+                        throw std::overflow_error("compressed GPU tile element count overflow");
+                    bool dispatched = false;
+                    if (packed) {
+                        dispatched = gpu->DispatchGemvQuant(
+                            wt.type, tile.bytes.data(), tile.bytes.size(),
+                            input, tileOutput, static_cast<uint32_t>(tileRows),
+                            cols, 0);
+                    } else {
+                        std::vector<float> f32Tile(
+                            tileRows * static_cast<std::size_t>(cols));
+                        if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+                            std::memcpy(f32Tile.data(), tile.bytes.data(),
+                                        f32Tile.size() * sizeof(float));
+                        } else {
+                            for (std::size_t i = 0; i < f32Tile.size(); ++i) {
+                                const std::size_t byteOffset = i * sizeof(uint16_t);
+                                const uint16_t half = static_cast<uint16_t>(
+                                    tile.bytes[byteOffset] |
+                                    (static_cast<uint16_t>(tile.bytes[byteOffset + 1]) << 8));
+                                f32Tile[i] = rawrxd::compression::DecodeHalfToFloat(half);
+                            }
+                        }
+                        dispatched = gpu->DispatchGemvDevice(
+                            f32Tile.data(), 0, input, tileOutput,
+                            static_cast<uint32_t>(tileRows), cols);
+                    }
+                    if (!dispatched) {
+                        tiledOk = false;
+                        break;
+                    }
+                    ++counters.opSubmits;
+                    if (packed) {
+                        if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K))
+                            ++counters.q4kPackedOps;
+                        else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K))
+                            ++counters.q6kPackedOps;
+                        else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q2_K))
+                            ++counters.q2kPackedOps;
+                    }
+                    if (!gpu->CopyVector(tileOutput, stagedOutput, tileRows,
+                                         0, firstRow)) {
+                        tiledOk = false;
+                        break;
+                    }
+                } catch (const std::exception& ex) {
+                    if (gpuForwardTraceEnabled()) {
+                        std::fprintf(stderr,
+                            "[GPU_FORWARD_TRACE] compressed tile failed tensor=%s row=%zu: %s\n",
+                            wt.name.c_str(), firstRow, ex.what());
+                        std::fflush(stderr);
+                    }
+                    tiledOk = false;
+                    break;
+                }
+            }
+
+            if (tiledOk)
+                tiledOk = gpu->CopyVector(stagedOutput, output, rows);
+            // Reopen the current fused recording even after a tile failure so
+            // the outer layer/range owner retains its established cleanup path.
+            if (!resumeFused())
+                return false;
+            if (!tiledOk) return false;
+
+            return true;
+        }
+
+        bool ok = false;
+        if (packed) {
+            if (!wt.data) return false;
+            ok = gpu->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes,
                                         input, output, rows, cols,
                                         weightKey(wt));
             if (ok) {
@@ -463,34 +589,10 @@ bool Deep2Engine::forwardLayerGpuResident(
                     ++counters.q2kPackedOps;
             }
         } else {
-            std::vector<float> compressedF32;
-            const float* f32 = nullptr;
-            if (!wt.data && wt.hasCompressedBacking()) {
-                if (wt.rows > std::numeric_limits<size_t>::max() / wt.cols)
-                    return false;
-                const size_t elements = wt.rows * wt.cols;
-                if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
-                    return false;
-                compressedF32.resize(elements);
-                if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
-                    if (!wt.readBytes(0, compressedF32.data(), elements * sizeof(float)))
-                        return false;
-                } else {
-                    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
-                    if (!dequant) return false;
-                    std::vector<uint8_t> packedBytes(wt.sizeBytes);
-                    if (!wt.readBytes(0, packedBytes.data(), packedBytes.size()))
-                        return false;
-                    dequant(packedBytes.data(), compressedF32.data(), elements);
-                    ++counters.cpuF32Expands;
-                }
-                f32 = compressedF32.data();
-            } else {
-                f32 = ensureF32(wt, vulkanWeightF32_);
-                if (!f32) return false;
-                if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
-                    ++counters.cpuF32Expands;
-            }
+            const float* f32 = ensureF32(wt, vulkanWeightF32_);
+            if (!f32) return false;
+            if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
+                ++counters.cpuF32Expands;
             ok = gpu->DispatchGemvDevice(f32, weightKey(wt), input, output,
                                          rows, cols);
         }

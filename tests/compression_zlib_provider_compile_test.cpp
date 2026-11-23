@@ -1,0 +1,113 @@
+#include "codec/compression_core.h"
+
+#ifndef RAWRXD_HAVE_ZLIB
+#error "zlib provider test must only be built when a zlib provider was detected"
+#endif
+#if !RAWRXD_HAVE_ZLIB
+#error "RAWRXD_HAVE_ZLIB must be enabled for this target"
+#endif
+
+#include <zlib.h>
+#include <array>
+#include <cstdint>
+#include <cstring>
+#include <vector>
+
+namespace {
+using rawrxd::compression::Result;
+using rawrxd::compression::Status;
+
+bool roundTrip(const std::uint8_t* data, std::size_t size) {
+    const Result encoded = rawrxd::compression::compress(data, size);
+    if (encoded.status != Status::Ok || encoded.bytes.empty()) return false;
+    const Result decoded = rawrxd::compression::decompress(
+        encoded.bytes.data(), encoded.bytes.size(), size == 0 ? 1 : size);
+    return decoded.status == Status::Ok &&
+           decoded.bytes.size() == size &&
+           (size == 0 || std::memcmp(decoded.bytes.data(), data, size) == 0);
+}
+} // namespace
+
+int main() {
+    if (zlibVersion() == nullptr) return 1;
+
+    // Compile/link and exercise the actual zlib-backed provider, not merely
+    // the no-zlib Unsupported implementation.
+    const std::array<std::uint8_t, 32> input = {
+        'R','a','w','r','X','D',' ','z','l','i','b',' ','p','r','o','v',
+        'i','d','e','r',' ','s','m','o','k','e',' ','t','e','s','t','!'
+    };
+    if (!roundTrip(input.data(), input.size())) return 2;
+
+    // Empty input is a valid zlib stream and must survive the same adapter
+    // path as non-empty binary data.
+    if (!roundTrip(nullptr, 0)) return 3;
+
+    // Invalid pointer/length pairs must be rejected before entering zlib.
+    if (rawrxd::compression::compress(nullptr, 1).status != Status::InvalidInput)
+        return 4;
+    if (rawrxd::compression::decompress(nullptr, 1, 64).status != Status::InvalidInput)
+        return 5;
+
+    // A caller-supplied ceiling is a hard bound, including a zero-byte cap.
+    const Result encoded = rawrxd::compression::compress(input.data(), input.size());
+    if (encoded.status != Status::Ok) return 6;
+    if (rawrxd::compression::decompress(
+            encoded.bytes.data(), encoded.bytes.size(), input.size() - 1).status !=
+        Status::OutputLimitExceeded) return 7;
+    if (rawrxd::compression::decompress(
+            encoded.bytes.data(), encoded.bytes.size(), 0).status !=
+        Status::OutputLimitExceeded) return 8;
+
+    // Truncation must be reported as corrupt data, never as a successful
+    // partial decode.
+    if (encoded.bytes.size() < 2) return 9;
+    const Result truncated = rawrxd::compression::decompress(
+        encoded.bytes.data(), encoded.bytes.size() - 1, input.size());
+    if (truncated.status != Status::CorruptData) return 10;
+
+    // Exercise embedded NULs, high-bit bytes and incompressible content.
+    std::vector<std::uint8_t> binary(65536);
+    std::uint32_t state = 0xC0FFEE42u;
+    for (auto& byte : binary) {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        byte = static_cast<std::uint8_t>(state);
+    }
+    binary[0] = 0;
+    binary[1] = 0xff;
+    binary[2] = 0x80;
+    if (!roundTrip(binary.data(), binary.size())) return 12;
+
+    // Corrupt the Adler-32 trailer to test checksum enforcement.
+    std::vector<std::uint8_t> damaged = encoded.bytes;
+    damaged.back() ^= 0x01;
+    if (rawrxd::compression::decompress(
+            damaged.data(), damaged.size(), input.size()).status !=
+        Status::CorruptData) return 13;
+
+    // Invalid zlib levels are caller errors, not backend failures. Both
+    // supported boundary levels must still produce decodable streams.
+    if (rawrxd::compression::compress(input.data(), input.size(), -2).status !=
+        Status::InvalidInput) return 14;
+    if (rawrxd::compression::compress(input.data(), input.size(), 10).status !=
+        Status::InvalidInput) return 15;
+    for (const int level : {Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION,
+                            Z_BEST_COMPRESSION}) {
+        const Result bounded = rawrxd::compression::compress(
+            input.data(), input.size(), level);
+        if (bounded.status != Status::Ok || bounded.bytes.empty()) return 16;
+        const Result restored = rawrxd::compression::decompress(
+            bounded.bytes.data(), bounded.bytes.size(), input.size());
+        if (restored.status != Status::Ok || restored.bytes.size() != input.size() ||
+            std::memcmp(restored.bytes.data(), input.data(), input.size()) != 0)
+            return 17;
+    }
+
+    // Empty compressed input preserves the documented legacy contract.
+    const Result empty = rawrxd::compression::decompress(nullptr, 0, 0);
+    if (empty.status != Status::Ok || !empty.bytes.empty()) return 11;
+
+    return 0;
+}

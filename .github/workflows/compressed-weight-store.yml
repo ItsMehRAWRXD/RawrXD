@@ -3,19 +3,32 @@ on:
   push:
     branches:
       - feat/native-compressed-weight-residency-20261123
+      - codex/compressed-gguf-model-runtime-20261123
     paths:
       - 'src/deep2/compression/**'
       - 'src/deep2/Deep2Engine.cpp'
       - 'src/deep2/Deep2Engine_GpuForward.cpp'
+      - 'src/deep2/vulkan_compute.cpp'
+      - 'src/deep2/vulkan_compute.h'
+      - 'include/vulkan_compute_cpu_ns.hpp'
+      - 'src/deep2/vulkan_compute_engine_adapter.cpp'
       - 'src/deep2/GGUFLoader.hpp'
       - 'src/Deep2Engine.h'
       - 'CMakeLists.txt'
       - 'tests/compressed_weight_store/**'
+      - 'tests/compression_zlib_smoke/**'
+      - 'tests/compression_zlib_provider_compile_test.cpp'
+      - 'src/codec/compression_core.cpp'
+      - 'include/codec/compression_core.h'
       - '.github/workflows/compressed-weight-store.yml'
   pull_request:
     paths:
       - 'src/deep2/compression/**'
       - 'src/deep2/Deep2Engine.cpp'
+      - 'src/deep2/vulkan_compute.cpp'
+      - 'src/deep2/vulkan_compute.h'
+      - 'include/vulkan_compute_cpu_ns.hpp'
+      - 'src/deep2/vulkan_compute_engine_adapter.cpp'
       - 'src/deep2/GGUFLoader.hpp'
       - 'src/Deep2Engine.h'
       - 'CMakeLists.txt'
@@ -30,10 +43,48 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      # This repository carries a legacy evidence gitlink without a .gitmodules
+      # URL. The runner is fresh, so skip the redundant git clean/submodule pass
+      # that otherwise aborts before CMake can run.
       - uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: false
       - name: Configure
         run: cmake -S src/deep2/compression -B build/compressed-weight-store -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build/compressed-weight-store --config Release --parallel
       - name: Test
         run: ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlinks
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          git config --file .gitmodules submodule.ci-orphaned-irc.path "evidence/_irc_orphan_git"
+          git config --file .gitmodules submodule.ci-orphaned-irc.url "file:///dev/null"
+
+  zlib-provider:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: false
+      - name: Install zlib development headers
+        run: sudo apt-get update && sudo apt-get install -y zlib1g-dev
+      - name: Configure provider-detection smoke
+        run: cmake -S tests/compression_zlib_smoke -B build/zlib-provider -DCMAKE_BUILD_TYPE=Release
+      - name: Build production compression core
+        run: cmake --build build/zlib-provider --config Release --parallel
+      - name: Test zlib public API roundtrip
+        run: ctest --test-dir build/zlib-provider -C Release --output-on-failure
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlinks
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
+          git config --file .gitmodules submodule.ci-orphaned-irc.path "evidence/_irc_orphan_git"
+          git config --file .gitmodules submodule.ci-orphaned-irc.url "file:///dev/null"
