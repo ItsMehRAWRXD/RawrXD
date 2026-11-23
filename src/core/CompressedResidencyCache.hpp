@@ -19,9 +19,9 @@ public:
     using Bytes = std::vector<std::uint8_t>;
     using Decoder = std::function<Bytes(const Bytes&, std::size_t)>;
     struct Key {
-        std::uint64_t tensor, block, shard = 0;
+        std::uint64_t tensor, block, shard = 0, encodedSize = 0;
         bool operator==(const Key& b) const noexcept {
-            return tensor == b.tensor && block == b.block && shard == b.shard;
+            return tensor == b.tensor && block == b.block && shard == b.shard && encodedSize == b.encodedSize;
         }
     };
     struct Hash {
@@ -30,7 +30,9 @@ public:
             auto b = std::hash<std::uint64_t>{}(k.block);
             auto h = a ^ (b + std::size_t(0x9e3779b9) + (a << 6) + (a >> 2));
             auto s = std::hash<std::uint64_t>{}(k.shard);
-            return h ^ (s + std::size_t(0x9e3779b9) + (h << 6) + (h >> 2));
+            h ^= (s + std::size_t(0x9e3779b9) + (h << 6) + (h >> 2));
+            auto z = std::hash<std::uint64_t>{}(k.encodedSize);
+            return h ^ (z + std::size_t(0x9e3779b9) + (h << 6) + (h >> 2));
         }
     };
     // Shared ownership pins decoded data across eviction and concurrent readers.
@@ -51,8 +53,13 @@ public:
             entries_.erase(it);
         }
         lru_.push_front(key);
-        entries_.emplace(key, Entry{std::move(encoded), decoded_size,
-                                    std::move(decoder), {}, lru_.begin()});
+        try {
+            entries_.emplace(key, Entry{std::move(encoded), decoded_size,
+                                        std::move(decoder), {}, lru_.begin()});
+        } catch (...) {
+            lru_.pop_front();
+            throw;
+        }
     }
 
     // Atomic lookup/load under one mutex: prevents duplicate encoded reads
