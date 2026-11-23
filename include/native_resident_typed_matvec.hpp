@@ -158,8 +158,8 @@ inline std::vector<float> resident_q4_0_matvec(
                             const auto packed = data[b + 2 + j];
                             const float low = static_cast<float>(packed & 0x0fu) - 8.0f;
                             const float high = static_cast<float>(packed >> 4) - 8.0f;
-                            sum += static_cast<double>(scale * low) * input[first + j];
-                            sum += static_cast<double>(scale * high) * input[first + j + 16];
+                            sum += static_cast<double>(scale) * static_cast<double>(low) * input[first + j];
+                            sum += static_cast<double>(scale) * static_cast<double>(high) * input[first + j + 16];
                         }
                     }
                 });
