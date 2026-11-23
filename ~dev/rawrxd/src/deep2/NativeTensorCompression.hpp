@@ -75,9 +75,11 @@ public:
                     halfValid = halfValid && (h == value);
                     bfloatValid = bfloatValid && (b == value);
                 }
-                // A zero-error policy is bit-exact, including signed zero and
-                // NaN payloads. Floating-point comparisons alone cannot enforce it.
-                if (maxAbsError == 0.0f) {
+                // NaN payloads and signs are never subject to numeric error
+                // tolerance: NaN has no meaningful absolute or relative error.
+                // In zero-error mode, all values (including signed zero) are
+                // bit-exact. Otherwise finite values use the configured bound.
+                if (maxAbsError == 0.0f || std::isnan(value)) {
                     std::uint32_t sourceBits = 0, halfDecodedBits = 0, bfloatDecodedBits = 0;
                     std::memcpy(&sourceBits, &value, sizeof(sourceBits));
                     std::memcpy(&halfDecodedBits, &h, sizeof(halfDecodedBits));
