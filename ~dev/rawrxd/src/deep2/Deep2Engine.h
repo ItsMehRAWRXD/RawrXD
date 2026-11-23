@@ -95,6 +95,8 @@ struct WeightTensor {
     // Optional private compressed F32 backing. GGUF wire type and mapped
     // source remain unchanged; CPU inference may opt into row-streamed reads.
     std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> compressedF32;
+    // Cache lease pins the canonical compressed payload for this tensor's lifetime.
+    Deep2::TensorResidencyCache::Lease compressedF32Lease;
     // Losslessly compressed wire bytes for already-quantized GGUF tensors.
     // Their GGML type and logical geometry remain authoritative.
     std::shared_ptr<RawrXD::TensorCompression::ChunkedByteStorage> compressedBytes;
