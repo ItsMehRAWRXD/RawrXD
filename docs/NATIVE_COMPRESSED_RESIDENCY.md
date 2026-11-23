@@ -9,7 +9,7 @@ This change adds a dependency-free C++17 compressed-weight storage path. It is a
 3. `ResidentCompressedTensor` retains encoded blocks and releases each temporary source block after admission. It does not retain a full uncompressed tensor.
 4. `read(offset, destination, length)` reconstructs only the requested range. RLE ranges are expanded directly into the destination without materializing a full block.
 5. `BoundedWeightStager` limits each kernel-facing decode to a caller-selected scratch budget.
-6. `resident_f32_matvec` consumes an F32 matrix row-by-row using bounded staging; accumulation is in double and the output is F32.
+6. Typed resident GEMV consumes F32, F16, Q4_0, or Q8_0 matrices row-by-row using bounded staging; quantized blocks are decoded directly into the accumulator and never expanded into a full F32 matrix.
 
 ## Correctness and safety contracts
 
@@ -23,26 +23,27 @@ This change adds a dependency-free C++17 compressed-weight storage path. It is a
 
 ## Scope boundary
 
-This first integration batch supplies file-backed compressed residency, bounded range reconstruction, and a CPU F32 matvec reference path. It does **not** claim that every Deep2 operator, attention path, embedding lookup, MoE expert route, or Vulkan shader has been switched to this storage representation. The existing GGUF mapping and inference paths remain authoritative until each operator is integrated and parity-tested.
+The ROM forward path now routes 2-D QKV, FFN up/down, and output projections of type F32, F16, Q4_0, and Q8_0 through the shared compressed-resident store and bounded CPU GEMV. F32/F16 decode only the requested row fragments; Q4_0/Q8_0 decode only packed quant blocks. Unsupported types retain the explicit dequantization fallback. This is not universal operator coverage: attention/state vectors, embeddings, MoE expert routing, other quantized types, and Vulkan shaders still need typed integration and independent parity tests.
 
 It also does not claim a fixed memory reduction ratio. Incompressible data remains raw, metadata and vector capacity count toward residency, and the source file mapping may still occupy the OS page cache. Measure compressed payload, retained allocation, process working set, and GPU allocations separately.
 
 ## Build and test
 
-The root CMake project now registers six dependency-free regression targets:
+The root CMake project now registers seven dependency-free regression targets:
 - `native_compressed_residency_test`
 - `native_compressed_tensor_test`
 - `native_file_tensor_reader_test`
 - `native_resident_compressed_tensor_test`
 - `native_bounded_weight_stager_test`
 - `native_resident_f32_matvec_test`
+- `native_resident_typed_matvec_test` (F16/Q4_0/Q8_0 plus GGUF byte-geometry checks)
 
 They compile as C++17 and do not require Vulkan, Qt, or model downloads. The dedicated GitHub Actions workflow compiles and runs them directly on Linux and Windows.
 
 ## Next integration gates
 
 1. Wire `ResidentCompressedTensor` into the real GGUF tensor owner with stable shard/tensor identity and lifetime control.
-2. Replace F32 full-tensor materialization in CPU projection/embedding paths with bounded range reads.
-3. Add typed quantized block readers; never reinterpret GGUF quantized bytes as F32.
-4. Add Vulkan upload ownership with completion-backed staging and device-local cache eviction.
+2. Extend typed quantized readers to Q4_1/Q5_0/Q5_1, K-quants and other GGML types, each with independent known-answer fixtures.
+3. Migrate embeddings, norms, attention/state vectors, and MoE expert consumers to bounded typed range reads.
+4. Add Vulkan upload ownership with completion-backed staging and device-local cache eviction for each supported quant type.
 5. Add independent teacher-forced logits parity, multi-agent concurrency, cancellation, corruption, and measured host/VRAM tests before promoting the path.
