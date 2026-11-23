@@ -102,7 +102,7 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
     size_t rejectedTensors = 0;
     auto prepare = [&](WeightTensor& tensor) {
         if (tensor.type != 0 || !tensor.data || tensor.compressedF32 ||
-            storedBytes >= budgetBytes)
+            tensor.gpuF16Payload || storedBytes >= budgetBytes)
             return;
         const size_t remaining = budgetBytes - storedBytes;
         // Avoid a candidate whose temporary raw-source bound is far beyond
