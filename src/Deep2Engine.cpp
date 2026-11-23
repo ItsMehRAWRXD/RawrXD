@@ -7,6 +7,7 @@
 #include "MasmCoreKernels.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <fstream>
