@@ -1,0 +1,38 @@
+name: Native REAP compression regressions
+on:
+  push:
+    branches:
+      - codex/reap-native-r01-gguf-parser
+    paths:
+      - 'src/reap/**'
+      - 'tools/reap_*regression.cpp'
+      - '.github/workflows/reap-native-regressions.yml'
+  pull_request:
+    paths:
+      - 'src/reap/**'
+      - 'tools/reap_*regression.cpp'
+      - '.github/workflows/reap-native-regressions.yml'
+jobs:
+  native-reap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute standalone native REAP regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/rawrxd-reap-regressions
+          shopt -s nullglob
+          tests=(tools/reap_*regression.cpp)
+          if (( ${#tests[@]} == 0 )); then
+            echo 'No REAP regression tests found' >&2
+            exit 1
+          fi
+          for source in "${tests[@]}"; do
+            name="$(basename "${source}" .cpp)"
+            echo "::group::${name}"
+            g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Isrc "${source}" -o "/tmp/rawrxd-reap-regressions/${name}"
+            (cd /tmp/rawrxd-reap-regressions && "./${name}")
+            echo "::endgroup::"
+          done
