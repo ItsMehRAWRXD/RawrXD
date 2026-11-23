@@ -1489,10 +1489,15 @@ inline RepackError RepackGGUF(const std::string& input,
                 ?CanConvertF64ToF16(in,from,t.source_bytes)
                 :CanConvertF64ToF32(in,from,t.source_bytes);
             if(!valid) {
+                // A value may exceed F16's finite range yet remain
+                // representable in F32. Preserve the available 50%
+                // reduction rather than reverting straight to F64.
+                const bool canUseF32=CanConvertF64ToF32(
+                    in,from,t.source_bytes);
                 t.convert_f64_to_f16=false;
-                t.convert_f64_to_f32=false;
-                t.type=28;
-                t.bytes=t.source_bytes;
+                t.convert_f64_to_f32=canUseF32;
+                t.type=canUseF32?0u:28u;
+                t.bytes=canUseF32?t.source_bytes/2:t.source_bytes;
             }
         }
     }
