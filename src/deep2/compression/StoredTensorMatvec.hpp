@@ -13,6 +13,19 @@
 #include <utility>
 
 namespace rawrxd::compression {
+
+inline std::uint32_t ResidentGGMLTypeForKernel(ResidentWeightType type) {
+    switch (type) {
+        case ResidentWeightType::F32: return GGML_TYPE_F32;
+        case ResidentWeightType::F16: return GGML_TYPE_F16;
+        case ResidentWeightType::Q4_0: return 2u;
+        case ResidentWeightType::Q4_1: return 3u;
+        case ResidentWeightType::Q5_0: return 6u;
+        case ResidentWeightType::Q5_1: return 7u;
+        case ResidentWeightType::Q8_0: return 8u;
+    }
+    throw std::invalid_argument("unsupported resident weight kernel type");
+}
 class StoredTensorReader {
 public:
     StoredTensorReader(CompressedWeightStore& store, std::string name)
@@ -67,13 +80,7 @@ inline void StoredTensorMatvec(CompressedWeightStore& store,
                                std::size_t stagingBytes = 64 * 1024) {
     // Never reinterpret compressed GGML bytes using a different kernel type.
     // F32 and F16 are GGML scalar IDs 0 and 1; Q8_0 is GGML ID 8.
-    const std::uint32_t expected =
-        type == ResidentWeightType::F32 ? GGML_TYPE_F32 :
-        type == ResidentWeightType::F16 ? GGML_TYPE_F16 :
-        type == ResidentWeightType::Q4_0 ? 2u :
-        type == ResidentWeightType::Q4_1 ? 3u :
-        type == ResidentWeightType::Q5_0 ? 6u :
-        type == ResidentWeightType::Q5_1 ? 7u : 8u;
+    const std::uint32_t expected = ResidentGGMLTypeForKernel(type);
     if (store.tensorType(tensorName) != expected)
         throw std::invalid_argument("resident tensor GGML type does not match kernel");
     StoredTensorReader reader(store, tensorName);
@@ -88,13 +95,7 @@ inline void StoredTensorReadRow(CompressedWeightStore& store,
                                 std::size_t cols) {
     if (!output || cols == 0)
         throw std::invalid_argument("invalid resident row arguments");
-    const std::uint32_t expected =
-        type == ResidentWeightType::F32 ? GGML_TYPE_F32 :
-        type == ResidentWeightType::F16 ? GGML_TYPE_F16 :
-        type == ResidentWeightType::Q4_0 ? 2u :
-        type == ResidentWeightType::Q4_1 ? 3u :
-        type == ResidentWeightType::Q5_0 ? 6u :
-        type == ResidentWeightType::Q5_1 ? 7u : 8u;
+    const std::uint32_t expected = ResidentGGMLTypeForKernel(type);
     if (store.tensorType(tensorName) != expected)
         throw std::invalid_argument("resident row GGML type does not match decoder");
     const std::size_t rowBytes = ResidentRowBytes(type, cols);
