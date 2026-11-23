@@ -317,7 +317,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     VkPushConstantRange pcr{};
     pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     pcr.offset = 0;
-    pcr.size = 8; // uint rows, uint cols
+    pcr.size = 12; // uint rows, uint cols, uint weightEncoding
 
     VkPipelineLayoutCreateInfo plci{};
     plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -368,7 +368,7 @@ void VulkanProgram::destroy(VkDevice device) {
 }
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                             uint32_t rows, uint32_t cols) {
+                             uint32_t rows, uint32_t cols, uint32_t weightEncoding) {
     if (m_device == VK_NULL_HANDLE) return false;
     m_queue = gpu.queue;
 
@@ -406,8 +406,8 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
-    uint32_t pc[2] = {rows, cols};
-    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
+    const uint32_t pc[3] = {rows, cols, weightEncoding};
+    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 12, pc);
     const uint32_t groups = (rows + 255) / 256;
     vkCmdDispatch(cmd, groups, 1, 1);
 
