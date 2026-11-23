@@ -1181,6 +1181,23 @@ inline RepackError RepackGGUF(const std::string& input,
         if(t->old_offset<prev)return RepackError::Format;
         prev=t->old_offset+t->source_bytes;
     }
+    // The general Q4_0 planner also selects ordinary Q4_1 vectors.
+    // Unlike matrix weights, vectors must not silently lose precision.
+    // Undo any such plan unless every source block is bit-exact.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            const bool matrix=t.dims.size()>=2 && t.dims[1]>1;
+            if(!t.convert_q4_0 || t.q4_source_type!=3 ||
+               (matrix && !IsQualitySensitiveTensor(t.name)))continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(!IsExactQ4_1ToQ4_0(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q4_0=false;
+                t.q4_source_type=0;
+                t.type=3;
+                t.bytes=t.source_bytes;
+            }
+        }
+    }
     // Quality-sensitive Q4_1 tensors and non-matrix vectors can
     // shrink without requantization when EVERY Q4_1 block has an
     // affine offset of exactly -8*d. Ordinary matrices are already
