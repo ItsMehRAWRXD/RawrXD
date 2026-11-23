@@ -2321,7 +2321,7 @@ void Deep2Engine::LinearWBatch4(
 
     // Q4_K is the target amortized path. Other types retain exactness by
     // using the already GPU-backed single-vector LinearW path.
-    if(wt.type==(int)GGMLType::GGML_TYPE_Q4_K &&
+    if(wt.data && wt.type==(int)GGMLType::GGML_TYPE_Q4_K &&
        vulkanInitialized_&&vulkanDevices_.size()>=2) {
         std::fprintf(stderr,
             "Q4K_OPROJ_TRACE LinearWBatch4 wt=%p type=%d rows=%zu cols=%zu count=%zu outDim=%zu input=%p output=%p strict=%d\n",
@@ -2365,7 +2365,7 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
     const WeightTensor& up   = *handle.up;
     const WeightTensor& down = *handle.down;
 
-    if (!gate.data || !up.data || !down.data ||
+    if (!gate.hasBacking() || !up.hasBacking() || !down.hasBacking() ||
         gate.rows != expertDim || gate.cols != hiddenDim ||
         up.rows != expertDim || up.cols != hiddenDim ||
         down.rows != hiddenDim || down.cols != expertDim)
@@ -2399,15 +2399,16 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer,
     const size_t H = modelWeights.hiddenDim;
 
     const bool any =
-        lw.moeSharedGate.data || lw.moeSharedUp.data || lw.moeSharedDown.data;
+        lw.moeSharedGate.hasBacking() || lw.moeSharedUp.hasBacking() ||
+        lw.moeSharedDown.hasBacking();
     if (!any) {
         std::fill(output, output + H, 0.0f);
         return;
     }
 
-    if (!lw.moeSharedGate.data ||
-        !lw.moeSharedUp.data ||
-        !lw.moeSharedDown.data)
+    if (!lw.moeSharedGate.hasBacking() ||
+        !lw.moeSharedUp.hasBacking() ||
+        !lw.moeSharedDown.hasBacking())
         throw std::runtime_error("MoE shared: incomplete shared expert");
 
     const size_t I = lw.moeSharedGate.rows;
