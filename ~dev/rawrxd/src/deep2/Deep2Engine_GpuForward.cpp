@@ -252,10 +252,15 @@ bool Deep2Engine::forwardLayerGpuResident(
     const uint32_t kvDim = nKv * headDim;
     const uint32_t inter = (uint32_t)(lw.wGate.rows ? lw.wGate.rows
                                                     : modelWeights.intermediateDim);
-    if (!lw.wq.data || !lw.wk.data || !lw.wv.data ||
-        !(lw.wo.data || lw.attnO.data) ||
-        !lw.wGate.data || !lw.wUp.data || !lw.wDown.data)
-        return false;
+    // This fused Vulkan path still uploads from raw host pointers. A
+    // compressed-only tensor must fall back to the bounded CPU range-decode
+    // path until every fused upload supports owner-backed compressed views.
+    // Never treat hasBacking() as proof that a raw pointer can be dereferenced.
+    const bool allRawMapped =
+        lw.wq.data && lw.wk.data && lw.wv.data &&
+        (lw.wo.data || lw.attnO.data) &&
+        lw.wGate.data && lw.wUp.data && lw.wDown.data;
+    if (!allRawMapped) return false;
 
     auto& c = gpuFwd_;
     if (uploadEntry) {
