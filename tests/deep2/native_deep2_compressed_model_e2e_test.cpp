@@ -53,11 +53,11 @@ bool writeFixture(const std::filesystem::path& path, std::vector<Tensor>& tensor
     put<uint32_t>(out, 3);
     put<uint64_t>(out, tensors.size());
     put<uint64_t>(out, 7);
-    putU64KV(out, "phi3.embedding_length", 4);
+    putU64KV(out, "phi3.embedding_length", 16);
     putU64KV(out, "phi3.block_count", 1);
     putU64KV(out, "phi3.attention.head_count", 1);
     putU64KV(out, "phi3.attention.head_count_kv", 1);
-    putU64KV(out, "phi3.feed_forward_length", 4);
+    putU64KV(out, "phi3.feed_forward_length", 16);
     putU64KV(out, "phi3.context_length", 16);
     putU64KV(out, "general.alignment", alignment);
     for (const auto& t : tensors) putTensorInfo(out, t);
@@ -92,14 +92,14 @@ int main() {
     constexpr size_t H = 16;
     std::vector<Tensor> tensors;
 
-    // Token 1 -> [1, 2, 0, 0]. GGUF matrix dimensions are [columns, rows].
+    // Token 1 -> [1, 2, 0, ...]. GGUF matrix dimensions are [columns, rows].
     std::vector<float> embedding(H * H, 0.0f);
     embedding[H + 0] = 1.0f;
     embedding[H + 1] = 2.0f;
     tensors.push_back(makeTensor("token_embd.weight", {H, H}, embedding));
 
     // One QKV projection: Q=0, K=0, V maps x0 -> [x0,x0] and
-    // x1 -> [x1,x1], yielding [1,1,2,2] at the attention output.
+    // x1 -> [x1,x1], preserving a small deterministic active subspace.
     std::vector<float> qkv(3 * H * H, 0.0f);
     qkv[(2 * H + 0) * H + 0] = 1.0f;
     qkv[(2 * H + 1) * H + 0] = 1.0f;
