@@ -21,7 +21,7 @@ def make_source(path,typ,values):
     return raw
 
 def independent_decode(typ, block):
-    sizes={10:84,11:110,12:144,13:176,14:210}
+    sizes={10:84,11:110,12:144,13:176,14:210,15:292}
     assert len(block)==sizes[typ]
     out=[]
     if typ==10:
@@ -67,7 +67,7 @@ def independent_decode(typ, block):
             nib=(qs[(g//2)*32+j%32]>>(4*(g%2)))&15
             top=(hi[j%32]>>(2*(g//2)+g%2))&1
             out.append(d*sc*(nib|(top<<4))-m*mn)
-    else:
+    elif typ==14:
         d=struct.unpack_from("<e",block,208)[0]
         scales=struct.unpack_from("<16b",block,192)
         for j in range(256):
@@ -75,6 +75,13 @@ def independent_decode(typ, block):
             lo=(block[chunk*64+(lane//2)*32+col]>>(4*(lane%2)))&15
             high=(block[128+chunk*32+col]>>(2*lane))&3
             out.append(d*scales[j//16]*((lo|(high<<4))-32))
+    else:
+        d=struct.unpack_from("<f",block,0)[0]
+        qs=struct.unpack_from("<256b",block,4)
+        sums=struct.unpack_from("<16h",block,260)
+        for group in range(16):
+            assert sums[group]==sum(qs[group*16:(group+1)*16])
+        out.extend(d*q for q in qs)
     return out
 
 def run(binary):
@@ -90,7 +97,7 @@ def run(binary):
         for source_type in (28,0,1,30):
             inp=root/("source-%d.gguf"%source_type)
             raw=make_source(inp,source_type,values)
-            for out_type,name,tol,size in ((10,"q2_k",2.0,84),(11,"q3_k",1.0,110),(12,"q4_k",0.8,144),(13,"q5_k",0.5,176),(14,"q6_k",0.15,210)):
+            for out_type,name,tol,size in ((10,"q2_k",2.0,84),(11,"q3_k",1.0,110),(12,"q4_k",0.8,144),(13,"q5_k",0.5,176),(14,"q6_k",0.15,210),(15,"q8_k",0.05,292)):
                 dst=root/("%d-%s.gguf"%(source_type,name))
                 subprocess.run([binary,str(inp),str(dst),str(tol),name],check=True)
                 data,start,meta,tensors=parse(dst)
@@ -106,8 +113,8 @@ def run(binary):
             subprocess.run([binary,str(inp),str(auto_dst),"0.02","auto"],check=True)
             auto_data,auto_start,auto_meta,auto_tensors=parse(auto_dst)
             auto_type,auto_dims,auto_offset=auto_tensors["blk.0.attn_q.weight"]
-            assert auto_type in (10,11,12,13,14), (source_type,auto_type)
-            auto_size={10:84,11:110,12:144,13:176,14:210}[auto_type]
+            assert auto_type in (10,11,12,13,14,15), (source_type,auto_type)
+            auto_size={10:84,11:110,12:144,13:176,14:210,15:292}[auto_type]
             auto_decoded=independent_decode(auto_type,auto_data[auto_start+auto_offset:auto_start+auto_offset+auto_size])
             assert max(abs(x-y) for x,y in zip(values,auto_decoded))<=0.02
             assert len(auto_data)<len(inp.read_bytes())
@@ -116,7 +123,7 @@ def run(binary):
                 strict_values[0]=1.0+2**-40
                 strict=root/"strict-source.gguf"
                 raw_strict=make_source(strict,28,strict_values)
-                for fmt in ("q2_k","q3_k","q4_k","q5_k","q6_k"):
+                for fmt in ("q2_k","q3_k","q4_k","q5_k","q6_k","q8_k"):
                     dst=root/("strict-"+fmt+".gguf")
                     subprocess.run([binary,str(strict),str(dst),"0",fmt],check=True)
                     data,start,meta,tensors=parse(dst)
@@ -131,7 +138,7 @@ def run(binary):
                     data,start,_,tensors=parse(dst)
                     kind,_,offset=tensors["blk.0.attn_q.weight"]
                     assert kind==28 and data[start+offset:start+offset+len(badbytes)]==badbytes
-    print("GGUF Q2_K-Q6_K F64 F32 F16 BF16 + independent decode + strict fallback tests PASS")
+    print("GGUF Q2_K-Q6_K/Q8_K F64 F32 F16 BF16 + independent decode + strict fallback tests PASS")
 
 if __name__=="__main__":
     run(sys.argv[1])
