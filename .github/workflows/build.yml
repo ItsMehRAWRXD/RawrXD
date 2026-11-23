@@ -348,14 +348,11 @@ jobs:
           
           | Platform | Config | Status |
           |----------|--------|--------|
-          | Windows (MSVC) x64 | Debug | ${{ needs.build-windows-msvc.result }} |
-          | Windows (MSVC) x64 | Release | ${{ needs.build-windows-msvc.result }} |
-          | Windows (MSVC) x86 | Debug | ${{ needs.build-windows-msvc.result }} |
-          | Windows (MSVC) x86 | Release | ${{ needs.build-windows-msvc.result }} |
+          | Windows (MSVC) matrix (x64/Win32, Debug/Release) | Aggregate only | ${{ needs.build-windows-msvc.result }} |
           | Linux (GCC) | Release | ${{ needs.build-linux-gcc.result }} |
           | Windows (ARM64) | Release | ${{ needs.build-arm64.result }} |
           
-          This is a job-result report, not an unconditional build certification.
+          The Windows matrix result is aggregate, not evidence that each configuration passed.\n          Inspect individual matrix jobs and their artifact hashes for per-configuration evidence.\n          This is a job-result report, not an unconditional build certification.
           A skipped, cancelled, or failed job is not a passing build.
           Artifacts are available only for jobs that actually uploaded them.
           "@
