@@ -385,6 +385,10 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
             buffer = existing->second.buffer;
             return true;
         }
+        // An oversized replacement cannot enter the cache. Preserve the old
+        // resident tile rather than destroying it before falling back to an
+        // uncached allocation for this request.
+        if (size > budgetBytes) return false;
         // Do not replace an allocation still held by another CPU dispatch.
         if (existing->second.activeLeases != 0) return false;
         // Replacement also invalidates the old VkBuffer handle. Drain
