@@ -17,7 +17,11 @@ int main(){
  auto lease=store.acquireBlock("layer.0.weight",0,&error);assert(lease&&lease->size()==1024);store.setDecodedCacheBudget(0);assert((*lease)[0]==input[0]);
  assert(!store.readRange("layer.0.weight",input.size(),output.data(),1,&error));
  std::vector<std::uint8_t> random_data(4096);std::mt19937 rng(7);for(auto& b:random_data)b=static_cast<std::uint8_t>(rng());
- assert(store.addTensor("random",random_data.data(),random_data.size(),&error));std::vector<std::uint8_t> random_out(random_data.size());
+ assert(store.addTensor("random",random_data.data(),random_data.size(),&error));
+ assert(!store.addTensor("random.no_gain",random_data.data(),random_data.size(),&error,
+                        rawrxd::compression::GGML_TYPE_OPAQUE,true,random_data.size()));
+ assert(!store.contains("random.no_gain"));
+ std::vector<std::uint8_t> random_out(random_data.size());
  assert(store.readRange("random",0,random_out.data(),random_out.size(),&error));assert(random_data==random_out);
  const float f32[]={1.0f,-2.0f,65504.0f,0.00006103515625f,0.0f,std::numeric_limits<float>::infinity(),std::numeric_limits<float>::quiet_NaN()};
  assert(store.addTensorF32AsF16("fp16.weights",f32,7,&error));
