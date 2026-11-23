@@ -23,6 +23,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: false
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
