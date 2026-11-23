@@ -1381,7 +1381,7 @@ private:
     bool ensureWeightF32(const float* weights, uint64_t key,
                          size_t bytes, DeviceBuf*& out);
     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
-                           DeviceBuf*& out);
+                           DeviceBuf*& out, uint64_t stableKey = 0);
     void clearWeightCache();
 
     // B5.2 probe state
