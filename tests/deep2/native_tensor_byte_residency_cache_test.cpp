@@ -23,6 +23,10 @@ int main() {
     assert(stats.compressedBytes<stats.logicalBytes);
     assert(stats.compressedBytes<=stats.budgetBytes);
 
+    assert(!cache.RegisterFromReader("transient-read-failure",4096,
+        [](size_t,size_t,uint8_t*) { return false; },1024));
+    assert(!cache.IsRawFallback("transient-read-failure"));
+
     std::vector<uint8_t> decoded(9000,0);
     std::vector<uint8_t> scratch;
     assert(cache.ReadRange("shard0:weight0",4000,decoded.size(),decoded.data(),scratch));
