@@ -62,8 +62,8 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 /DNDEBUG tests/deep2/native_tensor_byte_residency_cache_test.cpp /Fe:byte_residency_cache_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\byte_residency_cache_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 /DNDEBUG /Isrc tests/deep2/native_compressed_gguf_e2e_test.cpp src/TensorROM.cpp src/ShardPager.cpp /Fe:compressed_gguf_e2e_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\compressed_gguf_e2e_test.exe
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
