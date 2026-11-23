@@ -4,6 +4,7 @@
 #include <iostream>
 using namespace RawrXD::REAP;
 int main(){
+ // Ordinary multi-row matrices intentionally take the smaller Q4_0 path.
  const char* src="reap_q51_matrix_src.gguf",*dst="reap_q51_matrix_dst.gguf";
  {std::ofstream o(src,std::ios::binary);
  WriteU32(o,0x46554747);WriteU32(o,3);WriteU64(o,1);WriteU64(o,0);
@@ -19,7 +20,7 @@ int main(){
   std::ifstream in(dst,std::ios::binary);uint32_t u=0,nd=0,type=0;uint64_t n=0,off=0;std::string name;
   ReadU32(in,u);ReadU32(in,u);ReadU64(in,n);ReadU64(in,n);
   ReadName(in,name);ReadU32(in,nd);for(uint32_t i=0;i<nd;++i)ReadU64(in,n);
-  ReadU32(in,type);ReadU64(in,off);ok=bool(in)&&type==6&&off==0;
+  ReadU32(in,type);ReadU64(in,off);ok=bool(in)&&type==2&&off==0;
   std::ifstream a(src,std::ios::binary|std::ios::ate),d(dst,std::ios::binary|std::ios::ate);
   ok=ok&&bool(a)&&bool(d)&&d.tellg()<a.tellg();
  }
