@@ -43,6 +43,10 @@ struct Deep2Engine {
     // dispatch. Lazily initialized on first use.
     std::unique_ptr<rawrxd::gpu::GpuProgram> q4_0Prog_;
     std::unique_ptr<rawrxd::gpu::GpuProgram> q4_kProg_;
+    // Stage 6L: persistent GPU-resident packed Q4_0/Q4_K weights (upload once,
+    // reuse across tokens). Keyed by tensor name.
+    struct GpuQ4Tensor { VkBuffer wbuf = VK_NULL_HANDLE; VkDeviceMemory wmem = VK_NULL_HANDLE; size_t bytes = 0; };
+    std::unordered_map<std::string, GpuQ4Tensor> gpuQ4Cache_;
     // Stage 6D: quantize-once INT4 weight cache (packed INT4 + scales reused
     // across tokens/requests; bounded LRU residency).
     rawrxd::avwm::Int4WeightCache int4Cache_;

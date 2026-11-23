@@ -635,16 +635,30 @@ bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, si
         }
     }
 
-    // Upload packed weights + x; create y + dims (host-visible for smoke test).
-    VkBuffer wb, xb, yb, db; VkDeviceMemory wm, xm, ym, dm;
-    void *wp, *xp, *yp;
+    // Stage 6L: persistent packed-weight buffer (upload once, reuse across
+    // tokens). Only x/y/dims are per-call.
+    VkBuffer wb = VK_NULL_HANDLE, xb, yb, db;
+    VkDeviceMemory wm = VK_NULL_HANDLE, xm, ym, dm;
+    void *xp, *yp;
     const VkDeviceSize wsz = packedBytes, xsz = cols * sizeof(float), ysz = rows * sizeof(float), dsz = 12;
     auto mk = [&](VkDeviceSize sz, VkBuffer& b, VkDeviceMemory& m, void*& p) {
         return vulkan->createBuffer(*gpu, sz, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, b, m, &p);
     };
-    if (!mk(wsz, wb, wm, wp) || !mk(xsz, xb, xm, xp) || !mk(ysz, yb, ym, yp)) return false;
-    std::memcpy(wp, packed, (size_t)wsz);
+    // Weights: reuse cached buffer if present, else create + upload.
+    auto it = gpuQ4Cache_.find(name);
+    if (it != gpuQ4Cache_.end() && it->second.bytes == packedBytes) {
+        wb = it->second.wbuf; wm = it->second.wmem; // persistent, do not destroy
+    } else {
+        void* wp = nullptr;
+        if (!mk(wsz, wb, wm, wp)) return false;
+        std::memcpy(wp, packed, (size_t)wsz);
+        gpuQ4Cache_[name] = {wb, wm, packedBytes}; // retain for reuse
+    }
+    if (!mk(xsz, xb, xm, xp) || !mk(ysz, yb, ym, yp)) {
+        if (it == gpuQ4Cache_.end()) vulkan->destroyBuffer(*gpu, wb, wm);
+        return false;
+    }
     std::memcpy(xp, x, (size_t)xsz);
     VkBufferCreateInfo dbi{}; dbi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; dbi.size = dsz;
     dbi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT; dbi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -663,8 +677,11 @@ bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, si
         void* p; vkMapMemory(gpu->device, ym, 0, ysz, 0, &p);
         std::memcpy(y, p, (size_t)ysz); vkUnmapMemory(gpu->device, ym);
     }
-    vulkan->destroyBuffer(*gpu, wb, wm); vulkan->destroyBuffer(*gpu, xb, xm);
-    vulkan->destroyBuffer(*gpu, yb, ym); vulkan->destroyBuffer(*gpu, db, dm);
+    // Cleanup: x/y/dims always; weights only if newly created (not cached).
+    if (it == gpuQ4Cache_.end()) vulkan->destroyBuffer(*gpu, wb, wm);
+    vulkan->destroyBuffer(*gpu, xb, xm);
+    vulkan->destroyBuffer(*gpu, yb, ym);
+    vulkan->destroyBuffer(*gpu, db, dm);
     std::fprintf(stderr, "[GPU_Q4] %s rows=%u cols=%u type=%u -> %s\n",
         name.c_str(), rows, cols, ggufType, ok ? "PASS" : "FAIL");
     return ok;
