@@ -9,10 +9,6 @@
 namespace codec {
 namespace {
 
-void SetFailure(bool* success) {
-    if (success) *success = false;
-}
-
 QByteArray CompressWithLevel(const QByteArray& data, int level, bool* success) {
     if (success) *success = false;
     if (data.isEmpty()) {

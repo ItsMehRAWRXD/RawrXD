@@ -48,6 +48,16 @@ on:
       - 'tests/deep2/native_gguf_f16_integration.py'
       - 'tests/deep2/native_gguf_k_integration.py'
       - 'tools/native_gguf_f16.cpp'
+      - 'src/codec/compression.cpp'
+      - 'include/codec/compression.h'
+      - 'tests/codec_zlib_smoke.cpp'
+      - '~dev/rawrxd/src/deep2/NativeTensorCompression.hpp'
+      - '~dev/rawrxd/src/deep2/Deep2Engine.h'
+      - '~dev/rawrxd/src/deep2/Deep2Engine.cpp'
+      - '~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp'
+      - '~dev/rawrxd/src/deep2/QuantKernelRegistry.hpp'
+      - '~dev/rawrxd/tests/native_tensor_compression_test.cpp'
+      - '~dev/rawrxd/docs/NATIVE_UNIVERSAL_COMPRESSION.md'
       - '.github/workflows/native-tensor-compression.yml'
 jobs:
   test:
@@ -62,13 +72,15 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y glslc spirv-tools
+          sudo apt-get install -y glslc spirv-tools qt6-base-dev zlib1g-dev pkg-config
       - name: Compile and test on Linux
         if: runner.os == 'Linux'
         shell: bash
         run: |
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
           ./tensor_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror $(pkg-config --cflags Qt6Core) -Iinclude src/codec/compression.cpp tests/codec_zlib_smoke.cpp $(pkg-config --libs Qt6Core zlib) -o codec_zlib_smoke
+          ./codec_zlib_smoke
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_residency_cache_test.cpp -o residency_cache_test
           ./residency_cache_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_byte_residency_cache_test.cpp -o byte_residency_cache_test
