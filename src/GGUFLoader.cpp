@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <limits>
 #include <utility>
+#include <new>
 
 static const std::vector<std::string> ARCH_PREFIXES = {
     "llama", "qwen2", "gemma2", "phi3", "nemotron", "granite", "starcoder2", "glm"
@@ -190,7 +191,10 @@ void ParseUniversalGGUFMetadata(const std::string& key, uint32_t type,
     const bool isGeometry = suffix("embedding_length") || suffix("block_count") ||
         suffix("feed_forward_length") || suffix("attention.head_count") ||
         suffix("attention.head_count_kv") || suffix("context_length");
-    if (isGeometry && (type == 4 || type == 10)) {
+    if (isGeometry && type != 4 && type != 10) {
+        file.setstate(std::ios::failbit); return;
+    }
+    if (isGeometry) {
         uint64_t value = 0;
         if (type == 4) {
             uint32_t v = 0;
@@ -210,7 +214,10 @@ void ParseUniversalGGUFMetadata(const std::string& key, uint32_t type,
         else if (suffix("context_length")) ctx->cfg.maxSeqLen = static_cast<size_t>(value);
         return;
     }
-    if (key == "tokenizer.ggml.tokens" && type == 9) {
+    if (key == "tokenizer.ggml.tokens" && type != 9) {
+        file.setstate(std::ios::failbit); return;
+    }
+    if (key == "tokenizer.ggml.tokens") {
         const auto pos = file.tellg();
         uint32_t elementType = 0;
         uint64_t count = 0;
@@ -222,7 +229,10 @@ void ParseUniversalGGUFMetadata(const std::string& key, uint32_t type,
         ctx->cfg.vocabSize = static_cast<size_t>(count);
         file.seekg(pos);
     }
-    if (suffix("rope.freq_base") && type == 6) {
+    if (suffix("rope.freq_base") && type != 6) {
+        file.setstate(std::ios::failbit); return;
+    }
+    if (suffix("rope.freq_base")) {
         float theta = 0;
         file.read(reinterpret_cast<char*>(&theta), 4);
         if (!file || !std::isfinite(theta) || theta <= 0) {
@@ -245,6 +255,7 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
 
     f.read(reinterpret_cast<char*>(&parsed.cfg.magic), 4);
     f.read(reinterpret_cast<char*>(&parsed.cfg.version), 4);
+    if (!f) return false;
     if (parsed.cfg.magic != 0x46554747) {  // "GGUF"
         fprintf(stderr, "[ERROR] Invalid GGUF magic: 0x%08X\n", parsed.cfg.magic);
         return false;
@@ -288,7 +299,8 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
     if (currentPos > UINT64_MAX - (alignment - 1)) return false;
     uint64_t pad = (currentPos + alignment - 1) & ~(alignment - 1);
     f.seekg(pad, std::ios::beg);
-    uint64_t alignedDataStart = f.tellg();
+    if (!f || f.tellg() < 0) return false;
+    uint64_t alignedDataStart = static_cast<uint64_t>(f.tellg());
 
     // Read physical weight arrays straight into aligned heap storage
     f.seekg(0, std::ios::end);
@@ -298,7 +310,11 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
         totalBytes > parsed.tensorWeightsPool.max_size()) return false;
     f.seekg(alignedDataStart, std::ios::beg);
 
-    parsed.tensorWeightsPool.resize(totalBytes);
+    try {
+        parsed.tensorWeightsPool.resize(static_cast<size_t>(totalBytes));
+    } catch (const std::bad_alloc&) {
+        return false;
+    }
     if (totalBytes) f.read(reinterpret_cast<char*>(parsed.tensorWeightsPool.data()), static_cast<std::streamsize>(totalBytes));
     if (!f) return false;
 
