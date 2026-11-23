@@ -244,7 +244,8 @@ bool EndBatchImpl()
             break;
         }
         for (size_t i = base; i < end; ++i) {
-            const QueuedDot& e = qs[i];
+            QueuedDot& e = qs[i];
+            e.q8 = e.q8_storage.data();
             const bool queued_ok =
                 batch_gpu->QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
                                     e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
@@ -671,6 +672,14 @@ bool DotBlocked(int kind,
     // has independent upload/barrier/readback ownership and is numerically
     // verified. Do not return a queued result for Q4_K while its output is not
     // yet trustworthy.
+    // A scope transition must not send a dot to a different GPU while a
+    // command buffer is already open on the batch's captured device.
+    if (g_batch_active && !differential_check &&
+        g_active_device != g_batch_device && !force_cpu && !g_force_cpu) {
+        g_receipt.used_gpu = false;
+        g_receipt.fallback_reason = "batch device scope mismatch";
+        return false;
+    }
     if (g_batch_active && kind != 0 && !differential_check &&
         g_active_device == g_batch_device &&
         !force_cpu && !g_force_cpu) {
@@ -689,9 +698,15 @@ bool DotBlocked(int kind,
             g_receipt.fallback_reason = "batch queue with a misaligned activation buffer";
             return false;
         }
+        if (q8_bytes == 0) {
+            g_receipt.fallback_reason = "batch queue with empty activation buffer";
+            return false;
+        }
         qd.q8_storage.resize(q8_bytes / sizeof(float));
         std::memcpy(qd.q8_storage.data(), q8_interleaved, q8_bytes);
-        qd.q8 = qd.q8_storage.data();
+        // q8_storage is moved into the vector below; resolve the pointer
+        // after all vector reallocations, immediately before device queueing.
+        qd.q8 = nullptr;
         qd.q8_bytes = q8_bytes;
         qd.out = y;
         qd.out_bytes = n_out * sizeof(float);
