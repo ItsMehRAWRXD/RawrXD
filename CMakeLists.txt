@@ -133,3 +133,64 @@ add_test(NAME MetadataParity_Phi3
     COMMAND test_metadata_parity "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+
+# Native compressed-residency primitives: independent C++17 regression targets.
+# These tests do not require Vulkan, Qt, or a model download.
+find_package(Threads REQUIRED)
+function(rawrxd_add_compression_test target source)
+    add_executable(${target} ${source})
+    target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(${target} PRIVATE Threads::Threads)
+    add_test(NAME ${target} COMMAND ${target})
+endfunction()
+
+rawrxd_add_compression_test(native_compressed_residency_test tests/native_compressed_residency_test.cpp)
+rawrxd_add_compression_test(native_compressed_tensor_test tests/native_compressed_tensor_test.cpp)
+rawrxd_add_compression_test(native_file_tensor_reader_test tests/native_file_tensor_reader_test.cpp)
+rawrxd_add_compression_test(native_resident_compressed_tensor_test tests/native_resident_compressed_tensor_test.cpp)
+rawrxd_add_compression_test(native_bounded_weight_stager_test tests/native_bounded_weight_stager_test.cpp)
+rawrxd_add_compression_test(native_resident_f32_matvec_test tests/native_resident_f32_matvec_test.cpp)
+
+rawrxd_add_compression_test(native_resident_typed_matvec_test tests/native_resident_typed_matvec_test.cpp)
+rawrxd_add_compression_test(native_resident_tensor_cache_test tests/native_resident_tensor_cache_test.cpp)
+
+add_executable(native_quantized_dequant_test
+    tests/native_quantized_dequant_test.cpp
+    src/quant_kernels.cpp)
+target_include_directories(native_quantized_dequant_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(native_quantized_dequant_test PRIVATE cxx_std_17)
+add_test(NAME native_quantized_dequant_test COMMAND native_quantized_dequant_test)
+
+# Synthetic model inference smoke test: compressed storage -> embedding row ->
+# F16 projection -> Q4_0 logits, plus concurrent request validation.
+find_package(Threads REQUIRED)
+add_executable(native_compressed_inference_e2e_test
+    tests/native_compressed_inference_e2e_test.cpp)
+target_include_directories(native_compressed_inference_e2e_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_features(native_compressed_inference_e2e_test PRIVATE cxx_std_17)
+target_link_libraries(native_compressed_inference_e2e_test PRIVATE Threads::Threads)
+add_test(NAME native_compressed_inference_e2e_test
+         COMMAND native_compressed_inference_e2e_test)
+
+# Optional Qt/zlib codec integration. Keep the core engine build independent
+# of Qt and zlib, but compile and test the adapter whenever both are detected.
+find_package(ZLIB QUIET)
+find_package(Qt6 COMPONENTS Core QUIET)
+if(ZLIB_FOUND AND Qt6_FOUND)
+    add_library(rawrxd_qt_zlib_codec STATIC src/codec/compression.cpp)
+    target_include_directories(rawrxd_qt_zlib_codec PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_compile_features(rawrxd_qt_zlib_codec PUBLIC cxx_std_17)
+    target_link_libraries(rawrxd_qt_zlib_codec PUBLIC Qt6::Core ZLIB::ZLIB)
+
+    add_executable(qt_zlib_codec_test tests/qt_zlib_codec_test.cpp)
+    target_link_libraries(qt_zlib_codec_test PRIVATE rawrxd_qt_zlib_codec)
+    add_test(NAME qt_zlib_codec_test COMMAND qt_zlib_codec_test)
+    message(STATUS "[CODEC] Qt6 Core and ZLIB detected; zlib adapter test enabled")
+else()
+    message(STATUS "[CODEC] Qt6 Core or ZLIB not found; optional Qt zlib adapter test skipped")
+endif()

@@ -1,0 +1,113 @@
+name: Native compressed residency
+
+# Keep only the newest validation for each branch/PR ref; rapid fix batches
+# should not leave obsolete test matrices queued behind the latest source.
+concurrency:
+  group: native-compressed-residency-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main, "codex/native-compressed-residency-integration-20261123"]
+    paths:
+      - "include/native_*.hpp"
+      - "src/Deep2Engine.cpp"
+      - "src/Deep2Engine.hpp"
+      - "src/TensorROM.cpp"
+      - "src/TensorROM.hpp"
+      - "src/TensorView.hpp"
+      - "src/quant_kernels.cpp"
+      - "src/codec/compression.cpp"
+      - "include/codec/compression.h"
+      - "tests/native_*_test.cpp"
+      - "tests/native_file_tensor_reader_test.cpp"
+      - "tests/native_resident_*_test.cpp"
+      - "tests/native_bounded_weight_stager_test.cpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/native-compressed-residency.yml"
+  pull_request:
+    paths:
+      - "include/native_*.hpp"
+      - "src/Deep2Engine.cpp"
+      - "src/Deep2Engine.hpp"
+      - "src/TensorROM.cpp"
+      - "src/TensorROM.hpp"
+      - "src/TensorView.hpp"
+      - "src/quant_kernels.cpp"
+      - "src/codec/compression.cpp"
+      - "include/codec/compression.h"
+      - "tests/native_*_test.cpp"
+      - "tests/native_file_tensor_reader_test.cpp"
+      - "tests/native_resident_*_test.cpp"
+      - "tests/native_bounded_weight_stager_test.cpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/native-compressed-residency.yml"
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run native residency tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/native-compression
+          for source in \
+            tests/native_compressed_residency_test.cpp \
+            tests/native_compressed_tensor_test.cpp \
+            tests/native_file_tensor_reader_test.cpp \
+            tests/native_resident_compressed_tensor_test.cpp \
+            tests/native_bounded_weight_stager_test.cpp \
+            tests/native_resident_f32_matvec_test.cpp \
+            tests/native_resident_typed_matvec_test.cpp \
+            tests/native_resident_tensor_cache_test.cpp; do
+            name="$(basename "$source" .cpp)"
+            c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include "$source" -o "build/native-compression/$name"
+            "build/native-compression/$name"
+          done
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include -I src tests/native_quantized_dequant_test.cpp src/quant_kernels.cpp -o build/native-compression/native_quantized_dequant_test
+          build/native-compression/native_quantized_dequant_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include tests/native_compressed_inference_e2e_test.cpp -o build/native-compression/native_compressed_inference_e2e_test
+          build/native-compression/native_compressed_inference_e2e_test
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libvulkan-dev qt6-base-dev zlib1g-dev
+          cmake -S . -B build/codec -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/codec --target qt_zlib_codec_test --parallel 2
+          ctest --test-dir build/codec -R qt_zlib_codec_test --output-on-failure
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run native residency tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force build/native-compression | Out-Null
+          $sources = @(
+            "native_compressed_residency_test",
+            "native_compressed_tensor_test",
+            "native_file_tensor_reader_test",
+            "native_resident_compressed_tensor_test",
+            "native_bounded_weight_stager_test",
+            "native_resident_f32_matvec_test",
+            "native_resident_typed_matvec_test",
+            "native_resident_tensor_cache_test"
+          )
+          foreach ($name in $sources) {
+            cl /nologo /std:c++17 /EHsc /W4 /WX /I include "tests/$name.cpp" "/Fe:build/native-compression/$name.exe"
+            if ($LASTEXITCODE -ne 0) { throw "Compile failed: $name" }
+            & "build/native-compression/$name.exe"
+            if ($LASTEXITCODE -ne 0) { throw "Test failed: $name" }
+          }
+          cl /nologo /std:c++17 /EHsc /W4 /WX /I include /I src tests/native_quantized_dequant_test.cpp src/quant_kernels.cpp /Fe:build/native-compression/native_quantized_dequant_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Compile failed: native_quantized_dequant_test" }
+          & "build/native-compression/native_quantized_dequant_test.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Test failed: native_quantized_dequant_test" }
+          cl /nologo /std:c++17 /EHsc /W4 /WX /I include tests/native_compressed_inference_e2e_test.cpp /Fe:build/native-compression/native_compressed_inference_e2e_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Compile failed: native_compressed_inference_e2e_test" }
+          & "build/native-compression/native_compressed_inference_e2e_test.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Test failed: native_compressed_inference_e2e_test" }
+

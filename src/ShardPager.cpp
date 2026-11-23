@@ -11,6 +11,10 @@ PageCache::PageCache(std::size_t capacityBytes, std::size_t pageSize)
     , m_capacityBytes(capacityBytes) {}
 
 PageCache::~PageCache() {
+    // Join all outstanding prefetches before deleting pages or reader state.
+    { std::lock_guard<std::mutex> lock(m_prefetchMutex);
+      for (auto& task : m_prefetchFutures) if (task.valid()) task.wait();
+      m_prefetchFutures.clear(); }
     evictUnleasedAll();
 }
 
@@ -30,12 +34,11 @@ bool PageCache::loadPage(Page* page) {
         page->data.clear();
         return false;
     }
-    m_residentBytes += m_pageSize;
     return true;
 }
 
 void PageCache::evictToFit(std::size_t neededBytes) {
-    while (m_residentBytes + neededBytes > m_capacityBytes && !m_lru.empty()) {
+    while (neededBytes <= m_capacityBytes && m_residentBytes > m_capacityBytes - neededBytes && !m_lru.empty()) {
         Page* victim = m_lru.back();
         if (victim->leaseCount.load(std::memory_order_acquire) > 0) {
             // Leased pages cannot be evicted: rotate them to the front so we make
@@ -70,33 +73,23 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
         return page;
     }
 
-    // We need to compute fileOffset here: pageNo is relative to shard data section,
-    // but the reader callback receives absolute file offsets. The caller (TensorROM)
-    // passes pageNo relative to data section... To keep this layer generic, the reader
-    // callback is responsible for translating; here pageNo is stored and fileOffset
-    // is filled by loadPage through the reader? We need fileOffset before reading.
-    // Simplest: caller computes absolute file offset and stores it... Page.fileOffset
-    // is set by TensorROM when creating pages via a custom path. Instead, compute here
-    // requires dataOffset knowledge. Store dataOffset per shard outside? Keep simple:
-    // pageNo IS the absolute page index into the file for the reader when reader uses
-    // TensorROM's helper (fileOffset = shardDataOffset + pageNo*pageSize). To honor that,
-    // TensorROM wraps acquire with absolute offset computation. But PageCache.acquire
-    // signature only takes pageNo. Set fileOffset = pageNo * pageSize here and let the
-    // reader callback add the shard data base (closure captures ROM). Convention:
-    // PageCache.pageNo is an opaque page index; fileOffset = pageNo * pageSize is the
-    // default mapping, overridden by readers that need shard bases.
+    // Page numbers are absolute file page indices; reject multiplication overflow.
+    if (pageNo > UINT64_MAX / m_pageSize) return nullptr;
     Page* page = new Page();
     page->shard = shard;
     page->pageNo = pageNo;
     page->fileOffset = pageNo * m_pageSize;
     page->leaseCount.store(1, std::memory_order_release);
 
+    if (m_capacityBytes < m_pageSize) { delete page; return nullptr; }
+    evictToFit(m_pageSize);
+    if (m_residentBytes > m_capacityBytes - m_pageSize) { delete page; return nullptr; }
     if (!loadPage(page)) {
         delete page;
         return nullptr;
     }
 
-    evictToFit(m_pageSize);  // make room for the page we just loaded (overshoot ok)
+    m_residentBytes += page->data.size();
 
     m_lru.push_front(page);
     page->lruIt = m_lru.begin();
@@ -106,53 +99,46 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
 
 void PageCache::release(Page* page) {
     if (!page) return;
-    uint32_t prev = page->leaseCount.fetch_sub(1, std::memory_order_acq_rel);
-    if (prev <= 1) {
-        // Last lease dropped: page remains resident (cached) but is now evictable.
-        std::lock_guard<std::mutex> lock(m_mutex);
-        touch(page);
-    }
+    // Hold the cache mutex across decrement and LRU update. Otherwise
+    // eviction can delete the page between fetch_sub and touch().
+    std::lock_guard<std::mutex> lock(m_mutex);
+    const uint32_t leases = page->leaseCount.load(std::memory_order_relaxed);
+    if (!leases) return;
+    page->leaseCount.store(leases - 1, std::memory_order_release);
+    if (leases == 1) touch(page);
 }
 
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
     if (size == 0) return true;
-    std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
-    std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
-    std::vector<Page*> held;
-    held.reserve(lastPage - firstPage + 1);
-    for (std::size_t p = firstPage; p <= lastPage; ++p) {
-        Page* pg = acquire(shard, static_cast<uint64_t>(p));
-        if (!pg) {
-            for (Page* rel : held) release(rel);
-            return false;
-        }
-        held.push_back(pg);
-    }
+    if (!out || offset > UINT64_MAX - (size - 1)) return false;
+    // Read and release each page independently: large tensors must not pin the whole range.
     std::uint64_t copied = 0;
     while (copied < size) {
-        std::size_t p = static_cast<std::size_t>((offset + copied) / m_pageSize);
-        Page* pg = held[p - firstPage];
-        std::size_t pageRel = static_cast<std::size_t>((offset + copied) % m_pageSize);
-        std::size_t avail = m_pageSize - pageRel;
-        std::size_t chunk = (std::size_t)(size - copied) < avail ? (std::size_t)(size - copied) : avail;
-        std::memcpy(out + copied, pg->data.data() + pageRel, chunk);
-        copied += chunk;
+        const auto absolute = offset + copied;
+        Page* page = acquire(shard, absolute / m_pageSize);
+        if (!page) return false;
+        const std::size_t within = static_cast<std::size_t>(absolute % m_pageSize);
+        const auto count = static_cast<std::size_t>(
+            std::min<std::uint64_t>(size - copied, m_pageSize - within));
+        std::memcpy(out + copied, page->data.data() + within, count);
+        release(page);
+        copied += count;
     }
-    for (Page* rel : held) release(rel);
     return true;
 }
 
 void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
-    if (size == 0 || !m_reader) return;
-    std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
-    std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
+    if (size == 0 || !m_reader || offset > UINT64_MAX - (size - 1)) return;
+    uint64_t firstPage = offset / m_pageSize;
+    uint64_t lastPage = (offset + size - 1) / m_pageSize;
 
     auto work = [this, shard, firstPage, lastPage]() {
         // Throttle concurrency by joining the oldest futures opportunistically.
-        for (std::size_t p = firstPage; p <= lastPage; ++p) {
+        for (uint64_t p = firstPage;; ++p) {
             Page tmp; // not inserted; just issue the read into a scratch page
             tmp.shard = shard;
             tmp.pageNo = static_cast<uint64_t>(p);
+            if (tmp.pageNo > UINT64_MAX / m_pageSize) break;
             tmp.fileOffset = tmp.pageNo * m_pageSize;
             tmp.data.assign(m_pageSize, 0);
             if (m_reader(shard, tmp.pageNo, tmp.data.data(), m_pageSize)) {
@@ -168,13 +154,15 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
                     page->pageNo = tmp.pageNo;
                     page->fileOffset = tmp.fileOffset;
                     page->data = std::move(tmp.data);
-                    m_residentBytes += m_pageSize;
+                    evictToFit(m_pageSize);
+                    if (m_capacityBytes < m_pageSize || m_residentBytes > m_capacityBytes - m_pageSize) { delete page; break; }
+                    m_residentBytes += page->data.size();
                     m_lru.push_front(page);
                     page->lruIt = m_lru.begin();
                     m_index[key] = page;
-                    evictToFit(0);
                 }
             }
+            if (p == lastPage) break;
         }
     };
 
@@ -211,12 +199,16 @@ std::size_t PageCache::leaseCount() const {
 
 void PageCache::evictUnleasedAll() {
     std::lock_guard<std::mutex> lock(m_mutex);
-    while (!m_lru.empty()) {
-        Page* victim = m_lru.back();
-        if (victim->leaseCount.load(std::memory_order_acquire) > 0) break;
-        m_lru.pop_back();
+    for (auto it = m_lru.begin(); it != m_lru.end();) {
+        Page* victim = *it;
+        if (victim->leaseCount.load(std::memory_order_acquire) != 0) {
+            ++it;
+            continue;
+        }
+        it = m_lru.erase(it);
         m_index.erase(makeKey(victim->shard, victim->pageNo));
         m_residentBytes -= victim->data.size();
+        victim->inCache = false;
         delete victim;
     }
 }
@@ -226,9 +218,10 @@ void PageCache::evictUnleasedAll() {
 TensorLease::TensorLease(PageCache& cache, uint32_t shard, uint64_t offset, uint64_t size)
     : m_cache(&cache), m_shard(shard), m_offset(offset), m_size(size) {
     if (size == 0) { m_ok = true; return; }
+    if (offset > UINT64_MAX - (size - 1)) return;
     uint64_t firstPage = offset / m_cache->pageSize();
     uint64_t lastPage = (offset + size - 1) / m_cache->pageSize();
-    for (uint64_t p = firstPage; p <= lastPage; ++p) {
+    for (uint64_t p = firstPage;; ++p) {
         Page* pg = m_cache->acquire(shard, p);
         if (!pg) {
             for (Page* rel : m_pages) m_cache->release(rel);
@@ -236,29 +229,50 @@ TensorLease::TensorLease(PageCache& cache, uint32_t shard, uint64_t offset, uint
             return;
         }
         m_pages.push_back(pg);
+        if (p == lastPage) break;
     }
     m_ok = true;
 }
 
+TensorLease::TensorLease(TensorLease&& other) noexcept
+    : m_cache(std::exchange(other.m_cache, nullptr)),
+      m_shard(other.m_shard), m_offset(other.m_offset), m_size(other.m_size),
+      m_pages(std::move(other.m_pages)), m_ok(std::exchange(other.m_ok, false)) {
+    other.m_pages.clear();
+}
+
+TensorLease& TensorLease::operator=(TensorLease&& other) noexcept {
+    if (this == &other) return *this;
+    if (m_cache) for (Page* pg : m_pages) m_cache->release(pg);
+    m_cache = std::exchange(other.m_cache, nullptr);
+    m_shard = other.m_shard;
+    m_offset = other.m_offset;
+    m_size = other.m_size;
+    m_pages = std::move(other.m_pages);
+    m_ok = std::exchange(other.m_ok, false);
+    other.m_pages.clear();
+    return *this;
+}
+
 TensorLease::~TensorLease() {
-    for (Page* pg : m_pages) m_cache->release(pg);
+    if (m_cache) for (Page* pg : m_pages) m_cache->release(pg);
 }
 
 bool TensorLease::read(uint64_t relOffset, std::uint64_t size, std::uint8_t* out) const {
-    if (!m_ok || size == 0) return true;
-    if (relOffset + size > m_size) return false;
+    if (!m_ok || relOffset > m_size || size > m_size - relOffset || (size && !out)) return false;
+    if (size == 0) return true;
     uint64_t absOffset = m_offset + relOffset;
     return m_cache->readRange(m_shard, absOffset, size, out);
 }
 
 const std::uint8_t* TensorLease::direct(uint64_t relOffset, std::uint64_t size) const {
-    if (!m_ok || size == 0 || relOffset + size > m_size) return nullptr;
+    if (!m_ok || size == 0 || relOffset > m_size || size > m_size - relOffset) return nullptr;
     if (m_pages.size() != 1) return nullptr;
     Page* pg = m_pages[0];
     uint64_t pageBase = m_offset + relOffset;
     uint64_t pageStart = pg->pageNo * m_cache->pageSize();
     uint64_t pageEnd = pageStart + pg->data.size();
-    if (pageBase < pageStart || pageBase + size > pageEnd) return nullptr;
+    if (pageBase < pageStart || size > pageEnd - pageBase) return nullptr;
     return pg->data.data() + (pageBase - pageStart);
 }
 
