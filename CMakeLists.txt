@@ -6641,3 +6641,6 @@ foreach(_rawrxd_quantdot_consumer IN ITEMS
         src/deep2/quant_dot_dispatch.cpp)
   endif()
 endforeach()
+
+# Native compressed tensor-block residency (byte-exact; lazy decode).
+add_subdirectory(src/deep2/compression)
