@@ -209,13 +209,28 @@ static std::string json_quote(const std::string& s) {
 
 static int capabilities(const std::string& input) {
     fs::path p(input); std::error_code ec;
-    fs::path candidate = p;
-    if (fs::is_directory(p, ec)) {
+    const auto hasGgufMagic = [](const fs::path& path) {
+        std::ifstream file(path, std::ios::binary);
+        std::array<char, 4> magic{};
+        file.read(magic.data(), static_cast<std::streamsize>(magic.size()));
+        return file.gcount() == static_cast<std::streamsize>(magic.size()) &&
+               magic[0] == 'G' && magic[1] == 'G' &&
+               magic[2] == 'U' && magic[3] == 'F';
+    };
+
+    fs::path candidate;
+    if (fs::is_regular_file(p, ec)) {
+        candidate = p;
+    } else if (fs::is_directory(p, ec)) {
         for (auto& e : fs::directory_iterator(p, ec)) {
-            if (!ec && e.is_regular_file() && e.path().extension() == ".gguf") { candidate = e.path(); break; }
+            if (!ec && e.is_regular_file() &&
+                (e.path().extension() == ".gguf" || hasGgufMagic(e.path()))) {
+                candidate = e.path();
+                break;
+            }
         }
     }
-    const bool recognized = candidate.extension() == ".gguf";
+    const bool recognized = !candidate.empty() && hasGgufMagic(candidate);
     if (!recognized) {
         std::cout << "{\"source\":" << json_quote(input)
                   << ",\"format\":\"unknown\",\"inspectable\":false,\"calibratable\":false,\"transformable\":false,\"reason\":\"unsupported_format_or_missing_metadata\"}\n";
