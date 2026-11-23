@@ -6533,19 +6533,37 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     if (dim == 0)
         return;
 
-    // Refuse short F32/F16 norm views before the SIMD loop can read past the
-    // mapped tensor. Q/K norms may be stored as either one shared head or a
-    // complete [headCount * headDim] table.
-    if (normWeight.data &&
-        (normWeight.type == (int)GGMLType::GGML_TYPE_F32 ||
-         normWeight.type == (int)GGMLType::GGML_TYPE_F16))
+    // RMSNorm supports F32/F16 vectors. Compressed-backed norm vectors are
+    // decoded into one request-local activation-sized buffer; the full model
+    // tensor remains compressed in the resident store.
+    const bool compressedNorm = normWeight.hasCompressedBacking();
+    std::vector<std::uint8_t> compressedNormBytes;
+    const void* normDataPtr = normWeight.data;
+    if (compressedNorm && normDataPtr)
+        throw std::runtime_error("RMSNormW: ambiguous raw and compressed weight backing: " +
+                                 normWeight.name);
+    if (normWeight.data || compressedNorm)
     {
+        if (normWeight.type != (int)GGMLType::GGML_TYPE_F32 &&
+            normWeight.type != (int)GGMLType::GGML_TYPE_F16)
+            throw std::runtime_error("RMSNormW: unsupported compressed norm type: " +
+                                     normWeight.name);
         const size_t elementBytes =
             normWeight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t);
         if (dim > normWeight.sizeBytes / elementBytes)
-        {
             throw std::runtime_error("RMSNormW: weight tensor is smaller than requested dimension: " +
                                      normWeight.name);
+        if (compressedNorm)
+        {
+            if (dim > (std::numeric_limits<size_t>::max)() / elementBytes)
+                throw std::overflow_error("RMSNormW: compressed norm byte count overflow");
+            compressedNormBytes.resize(dim * elementBytes);
+            std::string decodeError;
+            if (!normWeight.readBytes(0, compressedNormBytes.data(),
+                                      compressedNormBytes.size(), &decodeError))
+                throw std::runtime_error("RMSNormW: compressed norm read failed for " +
+                                         normWeight.name + ": " + decodeError);
+            normDataPtr = compressedNormBytes.data();
         }
     }
 
@@ -6584,11 +6602,11 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     }
 
     // Apply normalization + weight with AVX2
-    if (normWeight.data)
+    if (normDataPtr)
     {
         if (normWeight.type == (int)GGMLType::GGML_TYPE_F32)
         {
-            const float* w = (const float*)normWeight.data;
+            const float* w = (const float*)normDataPtr;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
@@ -6609,7 +6627,7 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
         }
         else if (normWeight.type == (int)GGMLType::GGML_TYPE_F16)
         {
-            const uint16_t* w = (const uint16_t*)normWeight.data;
+            const uint16_t* w = (const uint16_t*)normDataPtr;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
