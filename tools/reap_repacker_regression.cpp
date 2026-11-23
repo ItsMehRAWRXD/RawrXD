@@ -63,7 +63,7 @@ int main() {
         WriteU32(out,0);WriteU64(out,0);
         PadTo(out,32);
         for(int i=0;i<16;++i)out.put(static_cast<char>(0x11));
-        for(int i=0;i<16;++i)out.put('\\0');
+        for(int i=0;i<16;++i)out.put('\0');
         for(int i=0;i<16;++i)out.put(static_cast<char>(0x22));
     }
     check(RepackGGUF(source,dest,1024)==RepackError::None,
