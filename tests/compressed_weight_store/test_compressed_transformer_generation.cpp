@@ -139,6 +139,52 @@ int main() {
     const auto repeated=runtime.generate(prompt,6);
     assert(repeated==generated);
 
+    // Grouped-query attention: two query heads share one compact KV head.
+    // K/V tensors therefore contain kv_heads * head_dim rows rather than
+    // heads * head_dim rows, and the request cache must use the smaller shape.
+    auto gqaOwned = owned;
+    for (auto& tensor : gqaOwned) {
+        if (tensor.name.size() >= 13 &&
+            (tensor.name.compare(tensor.name.size() - 13, 13, "attn_k.weight") == 0 ||
+             tensor.name.compare(tensor.name.size() - 13, 13, "attn_v.weight") == 0)) {
+            tensor.shape = {static_cast<std::int64_t>(hidden), 2};
+            tensor.bytes.clear();
+            const std::vector<float> values =
+                tensor.name.compare(tensor.name.size() - 13, 13, "attn_k.weight") == 0
+                    ? std::vector<float>{0.5f,0.1f,-0.1f,0.0f,-0.2f,0.4f,0.1f,0.3f}
+                    : std::vector<float>{1.0f,0.1f,0.0f,0.2f,-0.1f,0.8f,0.3f,-0.2f};
+            for (float value : values) appendF16(tensor, value);
+        }
+    }
+    auto gqaTensors = descriptors(gqaOwned);
+    rawrxd::compression::CompressedGGUFModel gqaModel(storeOptions);
+    assert(gqaModel.loadMappedTensors(gqaTensors, &error, &failed));
+    auto gqaConfig = config;
+    gqaConfig.kv_heads = 1;
+    // 2 layers * 4 cached positions * 2 KV values * K+V * sizeof(float).
+    gqaConfig.max_kv_cache_bytes = 128;
+    rawrxd::compression::CompressedTransformerRuntime gqaRuntime(gqaModel, gqaConfig);
+    const auto gqaGenerated = gqaRuntime.generate(prompt, 2);
+    assert(gqaGenerated.size() == 2);
+    for (auto token : gqaGenerated)
+        assert(token >= 0 && token < static_cast<int32_t>(vocab));
+    assert(gqaRuntime.generate(prompt, 2) == gqaGenerated);
+
+    auto tooSmallGqaCache = gqaConfig;
+    tooSmallGqaCache.max_kv_cache_bytes = 127;
+    rawrxd::compression::CompressedTransformerRuntime tooSmallGqa(gqaModel, tooSmallGqaCache);
+    bool rejectedGqaCache = false;
+    try { (void)tooSmallGqa.generate(prompt, 2); }
+    catch (const std::length_error&) { rejectedGqaCache = true; }
+    assert(rejectedGqaCache);
+
+    auto invalidKvHeads = config;
+    invalidKvHeads.kv_heads = 3;
+    bool rejectedKvHeads = false;
+    try { rawrxd::compression::CompressedTransformerRuntime badKvHeads(model, invalidKvHeads); }
+    catch (const std::invalid_argument&) { rejectedKvHeads = true; }
+    assert(rejectedKvHeads);
+
     // Reject invalid prompts and inconsistent attention geometry before doing
     // any weight reads or allocating a request KV cache.
     bool rejectedPrompt=false;
