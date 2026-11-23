@@ -11,6 +11,8 @@
 #include "ThreadPool.h"
 #include "KVCache.h"
 #include "GGUFLoader.hpp"
+#include "NativeTensorCompression.hpp"
+#include <memory>
 #include "lavapath/GgufDynamicGeometry.hpp"
 #include "lavapath/LocalModelAuthority_Bundle.hpp"
 #include "BP16Streamer.hpp"
@@ -88,6 +90,30 @@ struct WeightTensor {
     uint32_t    shardId        = 0;
     uint64_t    fileOffset     = 0;
     bool        hasFileBacking = false;
+
+    // Optional private compressed F32 backing. GGUF wire type and mapped
+    // source remain unchanged; CPU inference may opt into row-streamed reads.
+    std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> compressedF32;
+
+    bool EnableCompressedF32(float maxAbsError, size_t chunkElements=4096) {
+        if (type != 0 || !data || rows == 0 || cols == 0 ||
+            cols > std::numeric_limits<size_t>::max()/rows)
+            return false;
+        const size_t elements=rows*cols;
+        if (elements > std::numeric_limits<size_t>::max()/sizeof(float) ||
+            sizeBytes != elements*sizeof(float))
+            return false;
+        try {
+            auto candidate=RawrXD::TensorCompression::ChunkedF32Storage::Build(
+                static_cast<const float*>(data),elements,maxAbsError,chunkElements);
+            if (candidate.storedBytes() >= sizeBytes) return false;
+            compressedF32=std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
+                std::move(candidate));
+            return true;
+        } catch (...) {
+            return false;
+        }
+    }
 
     // BP16 / external mapping support
     bool        mapped    = false;    // true if data is externally owned (do not free)
