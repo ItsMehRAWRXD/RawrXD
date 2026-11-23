@@ -6,6 +6,7 @@
 #include "Deep2GpuOverlapWitness.hpp"
 #include "Deep2PeerDeviceGroup.hpp"
 #include "vulkan_compute.h"
+#include "QuantKernelRegistry.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -68,8 +69,10 @@ bool Deep2Engine::tryVulkanHostGEMV(
     const WeightTensor& wt,const float* input,float* output,size_t outDim)
 {
     const bool compressedF32Path = static_cast<bool>(wt.compressedF32);
+    const bool compressedBytesPath = !compressedF32Path &&
+        static_cast<bool>(wt.compressedBytes);
     if(!vulkanInitialized_||vulkanDevices_.empty()||
-       !input||!output||(!wt.data && !compressedF32Path)||wt.rows!=outDim||
+       !input||!output||(!wt.data && !compressedF32Path && !compressedBytesPath)||wt.rows!=outDim||
        wt.rows==0||wt.cols==0||
        wt.rows>std::numeric_limits<uint32_t>::max()||
        wt.cols>std::numeric_limits<uint32_t>::max())
@@ -78,7 +81,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
 
     // First preference: true simultaneous independent row partitions.
-    if(wt.data && !compressedF32Path && vulkanDevices_.size()>=2 && wt.rows>=2){
+    if(wt.data && !compressedF32Path && !compressedBytesPath && vulkanDevices_.size()>=2 && wt.rows>=2){
         RowSplitReceipt r{};
         if(Deep2RunDualGpuRowSplit(
                 *vulkanDevices_[0],*vulkanDevices_[1],
@@ -104,7 +107,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
     }
     const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
     GpuWeightView view{};
-    if (!compressedF32Path && !fullView(wt,view)) {
+    if (!compressedF32Path && !compressedBytesPath && !fullView(wt,view)) {
         std::fprintf(stderr,"GEMV_SINGLE fullView failed name=%s\\n",wtn); std::fflush(stderr);
         return false;
     }
@@ -168,6 +171,76 @@ bool Deep2Engine::tryVulkanHostGEMV(
             else if (tileType == 30) ++gpuFwd_.compressedBF16GemvOps;
             gpuFwd_.compressedWeightBytesSubmitted += packedTile.size();
             rowBase += actualTileRows;
+        }
+    } else if (compressedBytesPath) {
+        // Losslessly compressed GGUF quantized bytes stay packed in host
+        // residency. Expand only bounded row tiles, then let the existing
+        // Vulkan shader decode the original GGML block representation.
+        size_t rowBytes = 0;
+        if (wt.type == 1 || wt.type == 30) {
+            if (wt.cols > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+                return false;
+            rowBytes = wt.cols * sizeof(uint16_t);
+        } else {
+            const BlockGeometry geometry =
+                QuantKernelRegistry::Instance().GetGeometry(wt.type);
+            if (!geometry.blockBytes || !geometry.blockElements ||
+                wt.cols > std::numeric_limits<size_t>::max() -
+                              (geometry.blockElements - 1u))
+                return false;
+            const size_t blocks =
+                (wt.cols + geometry.blockElements - 1u) / geometry.blockElements;
+            if (blocks > std::numeric_limits<size_t>::max() / geometry.blockBytes)
+                return false;
+            rowBytes = blocks * geometry.blockBytes;
+        }
+        if (!rowBytes || wt.rows > std::numeric_limits<size_t>::max() / rowBytes ||
+            wt.rows * rowBytes != wt.sizeBytes ||
+            wt.compressedBytes->size() != wt.sizeBytes)
+            return false;
+
+        constexpr size_t kMaxCompressedGpuTileBytes = 256u * 1024u;
+        const size_t rowsPerTile = std::max<size_t>(
+            1, kMaxCompressedGpuTileBytes / rowBytes);
+        std::vector<uint8_t> packedTile;
+        std::vector<uint8_t> decodeScratch;
+        for (size_t rowBase = 0; rowBase < wt.rows;) {
+            const size_t tileRows = std::min(wt.rows - rowBase, rowsPerTile);
+            if (tileRows > std::numeric_limits<uint32_t>::max() ||
+                tileRows > std::numeric_limits<size_t>::max() / rowBytes)
+                return false;
+            const size_t tileBytes = tileRows * rowBytes;
+            packedTile.resize(tileBytes);
+            try {
+                wt.compressedBytes->ReadRange(
+                    rowBase * rowBytes, tileBytes, packedTile.data(), decodeScratch);
+            } catch (...) {
+                return false;
+            }
+
+            uint64_t cacheKey = 1469598103934665603ull;
+            for (unsigned char ch : wt.name) {
+                cacheKey ^= ch;
+                cacheKey *= 1099511628211ull;
+            }
+            cacheKey ^= wt.fileOffset +
+                (static_cast<uint64_t>(wt.shardId) << 32);
+            cacheKey *= 1099511628211ull;
+            cacheKey ^= (static_cast<uint64_t>(rowBase) << 16) ^
+                        (static_cast<uint64_t>(wt.type) << 48);
+            if (!cacheKey) cacheKey = 1;
+            if (!g->DispatchGemvQuantRows(
+                    wt.type, packedTile.data(), tileBytes,
+                    x, y, static_cast<uint32_t>(tileRows),
+                    static_cast<uint32_t>(wt.cols),
+                    static_cast<uint32_t>(rowBase), cacheKey)) {
+                std::fprintf(stderr,
+                    "GEMV_COMPRESSED_QUANT_TILE dispatch failed name=%s type=%d row=%zu count=%zu bytes=%zu\\n",
+                    wtn,wt.type,rowBase,tileRows,tileBytes);
+                return false;
+            }
+            gpuFwd_.compressedWeightBytesSubmitted += tileBytes;
+            rowBase += tileRows;
         }
     } else if (!g->DispatchWeight(view,x,y)) {
         std::fprintf(stderr,"GEMV_SINGLE DispatchWeight failed name=%s type=%d rows=%u cols=%u bytes=%zu\\n",wtn,view.type,view.rows,view.cols,view.bytes); std::fflush(stderr);

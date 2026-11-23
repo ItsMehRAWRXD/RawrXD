@@ -1567,7 +1567,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     // A compressed-only tensor has no source mapping to pin or raw pointer to
     // upload. Keep it on the bounded CPU range-decode path until the GPU
     // compressed-tile uploader can consume an owner-backed view directly.
-    if ((wt.data || wt.compressedF32) && vulkanInitialized_ && !vulkanDevices_.empty()) {
+    if ((wt.data || wt.compressedF32 || wt.compressedBytes) && vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
         if (deep2ForwardTraceEnabled()) {
             std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
