@@ -8,7 +8,7 @@
 #include <cstring>
 #include <vector>
 int main() {
-    constexpr std::size_t rows = 64, cols = 256;
+    constexpr std::size_t rows = 64, cols = 2305;
     std::vector<float> matrix(rows * cols);
     std::vector<float> input(cols);
     for (std::size_t c = 0; c < cols; ++c) input[c] = float(int(c % 7) - 3) / 7.0f;
@@ -22,6 +22,8 @@ int main() {
 #endif
     assert(status == rawrxd::compression::Status::Ok);
     assert(resident.compressedBytes() < matrix.size() * sizeof(float));
+    // Width exceeds the 1024-F32 tile: tests multiple decoded tiles per row.
+    assert(cols > 1024);
     std::vector<float> actual(rows), reference(rows);
     assert(rawrxd::compression::residentF32Matvec(resident, rows, cols,
                                                    input.data(), actual.data()) ==
