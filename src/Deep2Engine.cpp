@@ -14,6 +14,7 @@
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    std::unique_lock<std::shared_mutex> lifecycleLock(lifecycleMutex);
     compressedWeightsGeneration.fetch_add(1, std::memory_order_acq_rel);
     compressedWeights.Clear();
     if (!manifestPath.empty()) {
@@ -459,9 +460,17 @@ bool Deep2Engine::gemvResidentF32(
 }
 
 void Deep2Engine::Shutdown() {
-    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); compressedWeightsLru.clear(); compressedWeightsBytes = 0; }
-    if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
+    // Wait for the active ROM forward pass to release its shared lifecycle
+    // lease before tearing down Vulkan or invalidating the current model.
+    std::unique_lock<std::shared_mutex> lifecycleLock(lifecycleMutex);
     initialized = false;
+    compressedWeightsGeneration.fetch_add(1, std::memory_order_acq_rel);
+    compressedWeights.Clear();
+    if (vulkan) {
+        vulkan->shutdown();
+        vulkan.reset();
+    }
+    vulkanReady = false;
 }
 
 void MatrixWorkerStub(size_t index, void* args) {
@@ -820,6 +829,7 @@ __declspec(align(64)) thread_local float tls_dequant_scratchpad[16384];
 bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTokens,
                                             std::vector<float>& outputLogits,
                                             std::vector<float>& baselineLogits) {
+    std::shared_lock<std::shared_mutex> lifecycleLock(lifecycleMutex);
     if (!initialized || !romMode) {
         fprintf(stderr, "[Move 10] Engine not initialized or not in ROM mode\n");
         return false;
