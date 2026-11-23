@@ -90,12 +90,12 @@ QByteArray deflate(const QByteArray& data, bool* success) {
 QByteArray inflate(const QByteArray& data, bool* success,
                    qint64 maxOutputBytes) {
     if (success) *success = false;
-    if (data.isEmpty()) {
-        if (success) *success = true;
-        return QByteArray();
-    }
     if (maxOutputBytes < 0) {
         qWarning() << "[codec] negative inflate output ceiling";
+        return QByteArray();
+    }
+    if (data.isEmpty()) {
+        if (success) *success = true;
         return QByteArray();
     }
 
