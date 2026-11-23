@@ -707,6 +707,24 @@ bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, si
     return ok;
 }
 
+// Stage 6M: forward-path dispatch helper. Reads packed bytes from ROM and
+// dispatches the GPU kernel directly (no full dequant). Falls back to CPU on
+// unsupported format / no Vulkan / bad geometry.
+bool Deep2Engine::matvecQ4FromRom(const std::string& name, const float* x, float* y,
+                                         uint32_t rows, uint32_t cols) {
+    if (!vulkanReady || !vulkan || !x || !y) return false;
+    const auto* entry = rom.findTensor(name);
+    if (!entry) return false;
+    const auto fmt = rawrxd::gpu::DetectFormat(static_cast<uint32_t>(entry->type));
+    if (fmt != rawrxd::gpu::GpuWeightFormat::Q4_0 && fmt != rawrxd::gpu::GpuWeightFormat::Q4_K) return false;
+    const uint32_t vpb = rawrxd::gpu::ValuesPerBlock(fmt);
+    if (vpb == 0 || (cols % vpb) != 0) return false;
+    // Read packed bytes from ROM (bounded read of this tensor only).
+    std::vector<uint8_t> raw(static_cast<size_t>(entry->byteSize()));
+    if (!rom.readTensor(*entry, raw.data())) return false;
+    return gpuMatvecQ4(name, raw.data(), raw.size(), x, y, rows, cols, static_cast<uint32_t>(entry->type));
+}
+
 void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
     if (!engine.initialized) {
         fprintf(stderr, "[ERROR] Engine not initialized\n");
@@ -910,22 +928,29 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
-            if (!dequantTensor(*qkv, qkvDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
-                return false;
+            std::cout << "[Move 10] Layer " << layer << ": QKV projection " << qkvName << "...\n" << std::flush;
+            // Stage 6M: try the compressed GPU path first (no full dequant).
+            // Falls back to CPU dequant + gemv if unsupported.
+            const uint32_t qRows = (uint32_t)(qkv->dims.size() >= 2 ? qkv->dims[qkv->dims.size()-2] : 1);
+            const uint32_t qCols = (uint32_t)(qkv->dims.size() >= 2 ? qkv->dims[qkv->dims.size()-1] : 1);
+            std::vector<float> qkvOut(qRows, 0.0f);
+            bool usedGpuQ4 = matvecQ4FromRom(qkvName, hiddenStates.data(), qkvOut.data(), qRows, qCols);
+            if (!usedGpuQ4) {
+                if (!dequantTensor(*qkv, qkvDq)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
+                    return false;
+                }
+                std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq.rows << "x" << qkvDq.cols << "\n" << std::flush;
+                qkvRows = qkvDq.rows;
+                qkvCols = qkvDq.cols;
+                std::vector<float> hiddenStatesCopy(hiddenDim);
+                std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
+                gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
+            } else {
+                qkvRows = qRows;
+                qkvCols = qCols;
+                std::cout << "[Move 10] Layer " << layer << ": QKV via compressed GPU (no dequant)\n" << std::flush;
             }
-            std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq.rows << "x" << qkvDq.cols << "\n" << std::flush;
-
-            qkvRows = qkvDq.rows;
-            qkvCols = qkvDq.cols;
-
-            // --- ATTENTION COMPUTATION ---
-            std::vector<float> hiddenStatesCopy(hiddenDim);
-            std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
-
-            std::vector<float> qkvOut(qkvRows, 0.0f);
-            gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
 
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;

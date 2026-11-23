@@ -170,6 +170,13 @@ struct Deep2Engine {
     bool gpuMatvecQ4(const std::string& name, const uint8_t* packed, size_t packedBytes,
                      const float* x, float* y, uint32_t rows, uint32_t cols, uint32_t ggufType);
 
+    // Stage 6M: forward-path dispatch helper. Reads the packed tensor bytes from
+    // the ROM and dispatches the GPU kernel directly (no full dequant). Returns
+    // false if the tensor is not Q4_0/Q4_K, Vulkan is unavailable, or geometry is
+    // unsupported -- the caller falls back to the CPU path.
+    bool matvecQ4FromRom(const std::string& name, const float* x, float* y,
+                         uint32_t rows, uint32_t cols);
+
     // Vulkan GEMV consuming TensorViews (dequant on CPU, real compute on GPU).
     bool vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
                     const deep2::TensorView& xView, std::vector<float>& y);
