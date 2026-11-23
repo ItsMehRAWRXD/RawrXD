@@ -308,6 +308,17 @@ int main() {
     assert(mixedF32Tile[0] == 0.0f);
     assert(mixedF32Cache.GetStats().bytesDecoded == 1024u * sizeof(float));
 
+    // A uniform 16-bit range can be exported directly for packed GPU upload;
+    // this must not materialize an intermediate F32 tile on the host.
+    Encoding packedEncoding = Encoding::Raw;
+    std::vector<uint8_t> packedRange;
+    const auto beforePackedExport = mixedF32Cache.GetStats().bytesDecoded;
+    assert(mixedF32Cache.ExportUniform16BitRange(
+        "mixed.f32", 2048, 1, packedEncoding, packedRange));
+    assert(packedEncoding == Encoding::F16);
+    assert(packedRange.size() == sizeof(uint16_t));
+    assert(mixedF32Cache.GetStats().bytesDecoded == beforePackedExport);
+
     // A fitting insertion evicts the least-recently-used compressed tensor.
     std::vector<float> second(10003);
     for(size_t i=0;i<second.size();++i) second[i]=float(i%100);
