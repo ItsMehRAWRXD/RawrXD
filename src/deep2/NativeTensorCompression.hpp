@@ -730,6 +730,13 @@ private:
                  }
                  continue;
              }
+             // A complete compressed chunk can be decoded directly into the
+             // caller-owned output buffer. This avoids an additional full-size
+             // scratch allocation and copy for aligned inference tile reads.
+             if (n == chunkCount) {
+                 DecodeInto(encoded, destination + (copyFirst - first), chunkCount);
+                 continue;
+             }
              scratch.resize(chunkCount);
              DecodeInto(encoded, scratch.data(), scratch.size());
              std::memcpy(destination + (copyFirst - first),
