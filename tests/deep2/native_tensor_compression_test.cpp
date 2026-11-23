@@ -13,6 +13,34 @@ int main() {
     auto r=Encode(repeated.data(),repeated.size());
     assert(r.encoding==Encoding::RLE && r.payload.size()<repeated.size());
     assert(Decode(r)==repeated);
+    // Repeated non-identical byte sequences exercise the general-purpose
+    // lossless LZ path used for arbitrary encoded GGUF tensor blocks.
+    std::vector<uint8_t> lzSource(8192);
+    for(size_t i=0;i<lzSource.size();++i) lzSource[i]=uint8_t(i%251);
+    auto lz=Encode(lzSource.data(),lzSource.size());
+    assert(lz.encoding==Encoding::LZ && lz.payload.size()<lzSource.size());
+    assert(Decode(lz)==lzSource);
+    std::vector<uint8_t> lzRange(2048,0);
+    ChunkedByteStorage lzChunks=ChunkedByteStorage::BuildFromReader(
+        lzSource.size(),
+        [&](size_t offset,size_t count,uint8_t* out) {
+            std::memcpy(out,lzSource.data()+offset,count);
+            return true;
+        },1024,true,lzSource.size());
+    std::vector<uint8_t> lzScratch;
+    lzChunks.ReadRange(997,lzRange.size(),lzRange.data(),lzScratch);
+    assert(std::equal(lzRange.begin(),lzRange.end(),lzSource.begin()+997));
+    Result malformedLz;
+    malformedLz.encoding=Encoding::LZ;
+    malformedLz.original_bytes=4;
+    malformedLz.payload={0x80,0x01}; // truncated match distance
+    uint8_t untouchedLz[4]={0xa5,0xa5,0xa5,0xa5};
+    bool malformedLzRejected=false;
+    try { DecodeInto(malformedLz,untouchedLz,sizeof(untouchedLz)); }
+    catch(const std::invalid_argument&) { malformedLzRejected=true; }
+    assert(malformedLzRejected);
+    assert(std::all_of(std::begin(untouchedLz),std::end(untouchedLz),
+                       [](uint8_t x){return x==0xa5;}));
     std::vector<uint8_t> direct(repeated.size(),0);
     DecodeInto(r,direct.data(),direct.size());
     assert(direct==repeated);
