@@ -146,6 +146,18 @@ int main() {
     assert(missAfter - missBefore == leaseStore.tensorBlocks("lease"));
     assert(leaseStore.stats().cached_decoded_bytes == 0);
 
+    // Failed admission must not partially publish a tensor or alter counters.
+    const auto admissionBefore = leaseStore.stats();
+    std::string budgetError;
+    assert(!leaseStore.addTensor("over_budget", weights.data(), weights.size(),
+                                 &budgetError, GGML_TYPE_F16, false, 1));
+    assert(!leaseStore.contains("over_budget"));
+    const auto admissionAfter = leaseStore.stats();
+    assert(admissionAfter.tensors == admissionBefore.tensors);
+    assert(admissionAfter.blocks == admissionBefore.blocks);
+    assert(admissionAfter.compressed_bytes == admissionBefore.compressed_bytes);
+    assert(!budgetError.empty());
+
     const auto finalStats = store.stats();
     assert(finalStats.compressed_bytes < finalStats.raw_bytes);
     assert(finalStats.cached_decoded_bytes == 0);
