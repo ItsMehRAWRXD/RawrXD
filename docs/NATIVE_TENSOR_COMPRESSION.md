@@ -91,6 +91,8 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   and rejects a non-compressible tensor immediately rather than scanning the
   entire model before falling back to raw tile reads.
 - `TensorByteResidencyCache` independently stores losslessly RLE/LZ4-compressed
+  blocks. RLE handles repeated bytes; the bounded native LZ4-block codec also
+  captures repeated multi-byte patterns. Neither changes GGUF wire encoding.
   chunks of already-encoded GGUF payloads when they are smaller. Deep2 uses it
   for F16/BF16, fixed-block quantized and K-quant tensor bytes. Once a complete
   compressed representation is admitted, the corresponding unleased raw
@@ -138,8 +140,9 @@ negative or non-finite values are rejected. The default error budget is zero.
 This is an in-memory runtime cache, not a change to GGUF wire types. Existing
 quantized weights remain encoded in the TensorROM pager; only the requested
 blocks are expanded into the row tile consumed by the CPU or Vulkan GEMV.
-Unsupported GGUF types (including IQ formats not yet implemented in this
-decoder) fail closed rather than being interpreted with guessed geometry.
+Unsupported GGUF types (including IQ, TQ, MXFP4 and other formats not yet
+implemented in this decoder) fail closed rather than being interpreted with
+guessed geometry.
 
 ## Verification gates
 
