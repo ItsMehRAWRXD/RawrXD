@@ -80,18 +80,30 @@ public:
         }
 
         for (const auto& tensor : tensors) {
-            if (!StoreMappedGGUFTensor(*candidate->store, tensor, error,
-                                       options_.require_savings,
-                                       options_.encoded_residency_bytes -
-                                           candidate->store->stats().compressed_bytes)) {
+            try {
+                const auto admitted = candidate->store->stats().compressed_bytes;
+                if (admitted > options_.encoded_residency_bytes) {
+                    if (error) *error = "encoded residency accounting exceeds model budget";
+                    if (failed_tensor) *failed_tensor = tensor.name;
+                    return false;
+                }
+                if (!StoreMappedGGUFTensor(*candidate->store, tensor, error,
+                                           options_.require_savings,
+                                           options_.encoded_residency_bytes -
+                                               static_cast<std::size_t>(admitted))) {
+                    if (failed_tensor) *failed_tensor = tensor.name;
+                    return false;
+                }
+                TensorInfo info;
+                info.type = static_cast<std::uint32_t>(tensor.type);
+                info.shape = tensor.shape;
+                info.bytes = tensor.sizeBytes;
+                candidate->tensors.emplace(tensor.name, std::move(info));
+            } catch (const std::exception& ex) {
+                if (error) *error = ex.what();
                 if (failed_tensor) *failed_tensor = tensor.name;
                 return false;
             }
-            TensorInfo info;
-            info.type = static_cast<std::uint32_t>(tensor.type);
-            info.shape = tensor.shape;
-            info.bytes = tensor.sizeBytes;
-            candidate->tensors.emplace(tensor.name, std::move(info));
         }
 
         // Publish one immutable model-state pointer. Existing requests holding
