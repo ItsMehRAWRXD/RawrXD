@@ -48,6 +48,31 @@ int main() {
     assert(compactTile.empty());
     assert(cache.GetStats().activeReaders == 0);
 
+    // BF16 fallback: values outside the finite F16 range but exactly
+    // representable in BF16 must remain packed and round-trip exactly.
+    std::vector<float> bf16Source(2048);
+    for (size_t i = 0; i < bf16Source.size(); ++i)
+        bf16Source[i] = (i & 1u) ? 131072.0f : 65536.0f;
+    Deep2::TensorResidencyCache bf16Cache(8192);
+    assert(bf16Cache.RegisterF32FromReader("bf16.exact", bf16Source.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            std::copy(bf16Source.begin() + offset,
+                      bf16Source.begin() + offset + count, out);
+            return true;
+        }, 1024));
+    RawrXD::TensorCompression::Encoding bf16Encoding =
+        RawrXD::TensorCompression::Encoding::Raw;
+    std::vector<uint8_t> bf16Packed;
+    assert(bf16Cache.ExportUniform16BitRange(
+        "bf16.exact", 0, bf16Source.size(), bf16Encoding, bf16Packed));
+    assert(bf16Encoding == RawrXD::TensorCompression::Encoding::BF16);
+    assert(bf16Packed.size() == bf16Source.size() * sizeof(uint16_t));
+    for (size_t i = 0; i < bf16Source.size(); ++i) {
+        const uint16_t h = static_cast<uint16_t>(bf16Packed[2*i]) |
+                           (static_cast<uint16_t>(bf16Packed[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromBFloat16(h) == bf16Source[i]);
+    }
+
     std::vector<float> tile(1537,-999.0f);
     assert(cache.ReadRange("layer.0.weight",900,tile.size(),tile.data()));
     for(size_t i=0;i<tile.size();++i) assert(tile[i]==source[900+i]);
