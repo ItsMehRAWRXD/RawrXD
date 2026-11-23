@@ -52,7 +52,6 @@ inline bool DecodeBlock(uint32_t type,const uint8_t* b,double v[256]) {
         for(int j=0;j<256;++j) {
             const int g=j/16;
             const unsigned sc=b[g]&15, mn=b[g]>>4;
-            const int within=j%128, lane=within/32, col=within%32;
             const unsigned q=(b[16+(g/8)*32+((g%8)%2)*16+(j%16)]>>(2*((g%8)/2)))&3;
             v[j]=d*sc*q-dm*mn;
         }
@@ -170,7 +169,6 @@ inline bool EncodeBlock(uint32_t type,const double v[256],float tolerance,uint8_
             for(int k=0;k<16;++k) {
                 const int j=g*16+k;
                 const int q=ds>0?RoundClamp((v[j]+ms)/ds,0,3):0;
-                const int within=j%128,lane=within/32,col=within%32;
                 out[16+(g/8)*32+((g%8)%2)*16+k]|=uint8_t(q<<(2*((g%8)/2)));
             }
         }
