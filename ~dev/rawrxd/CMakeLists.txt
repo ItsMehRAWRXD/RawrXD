@@ -16699,3 +16699,18 @@ if(TARGET InferenceEngine)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME ev512_ide_restore_reload_fault_smoke)
 endif()
+
+
+# Native chunked compressed tensor residency cache self-test (dependency-free).
+if(BUILD_TESTING)
+    add_executable(tensor_residency_cache_selftest
+        src/deep2/TensorResidencyCache_SELFTEST.cpp)
+    target_include_directories(tensor_residency_cache_selftest PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_link_libraries(tensor_residency_cache_selftest PRIVATE Threads::Threads)
+    if(MSVC)
+        target_compile_options(tensor_residency_cache_selftest PRIVATE /EHsc /W4 /std:c++17)
+    endif()
+    add_test(NAME tensor_residency_cache_selftest
+             COMMAND tensor_residency_cache_selftest)
+endif()
