@@ -157,8 +157,8 @@ int main() {
     CHECK(mixedOut[2]==mixedValues[3]);
 
     // Bounded cache: active leases prevent eviction; releasing permits trimming.
-    Deep2::TensorResidencyCache cache(compact.storedBytes());
-    const std::size_t residentBytes=compact.storedBytes();
+    Deep2::TensorResidencyCache cache(compact.residentBytes());
+    const std::size_t residentBytes=compact.residentBytes();
     auto payload=std::make_shared<const ChunkedF32Storage>(std::move(compact));
     CHECK(cache.Insert("layer0.weight",payload));
     payload.reset();
