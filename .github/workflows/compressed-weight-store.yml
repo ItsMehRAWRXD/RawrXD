@@ -1,0 +1,30 @@
+name: compressed-weight-store
+on:
+  push:
+    branches:
+      - feat/native-compressed-weight-residency-20261123
+    paths:
+      - 'src/deep2/compression/**'
+      - 'tests/compressed_weight_store/**'
+      - '.github/workflows/compressed-weight-store.yml'
+  pull_request:
+    paths:
+      - 'src/deep2/compression/**'
+      - 'tests/compressed_weight_store/**'
+      - '.github/workflows/compressed-weight-store.yml'
+  workflow_dispatch:
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S src/deep2/compression -B build/compressed-weight-store -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/compressed-weight-store --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
