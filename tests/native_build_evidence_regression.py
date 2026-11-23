@@ -25,5 +25,13 @@ class NativeBuildEvidenceRegression(unittest.TestCase):
         self.assertNotIn("All builds** compiled successfully", self.summary)
         self.assertNotIn("## ✅ Build Verification Complete", self.summary)
 
+    def test_matrix_status_is_not_misattributed_to_individual_legs(self):
+        self.assertIn("Windows (MSVC) matrix (x64/Win32, Debug/Release)", self.summary)
+        self.assertIn("Aggregate only", self.summary)
+        self.assertIn("Inspect individual matrix jobs", self.summary)
+        for leg in ("Windows (MSVC) x64 | Debug", "Windows (MSVC) x64 | Release",
+                    "Windows (MSVC) x86 | Debug", "Windows (MSVC) x86 | Release"):
+            self.assertNotIn(leg, self.summary)
+
 if __name__ == "__main__":
     unittest.main()
