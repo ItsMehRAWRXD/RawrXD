@@ -6039,6 +6039,34 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         dst.mapped = true;
         dst.hasFileBacking = true;
         dst.fileOffset = ref->fileOffset;
+
+        // Opt-in native compressed residency for matrix weights. Keep norms
+        // and vectors mapped because their current consumers read direct pointers.
+        const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
+        const bool compressMatrix = compressedMode && compressedMode[0] == '1' &&
+                                    dst.rows > 1 && dst.cols > 1;
+        if (compressMatrix)
+        {
+            if (!compressedWeightStore_)
+                compressedWeightStore_ = std::make_shared<rawrxd::compression::CompressedWeightStore>();
+            std::string compressionError;
+            if (compressedWeightStore_->addTensor(
+                    ref->name, mapping->data, dst.sizeBytes, &compressionError,
+                    static_cast<std::uint32_t>(dst.type)) &&
+                dst.attachCompressedBacking(compressedWeightStore_, ref->name))
+            {
+                // The compressed store now owns the authoritative bytes.
+                // Drop this cache pin immediately; inference reads packed row ranges.
+                dst.data = nullptr;
+                dst.mapped = false;
+                dst.hasFileBacking = false;
+                residencyCache_->release(mapping);
+                return true;
+            }
+            fprintf(stderr, "[COMPRESSED_RESIDENCY] tensor=%s fallback=mapped reason=%s\n",
+                    ref->name.c_str(), compressionError.c_str());
+        }
+
         standardMultiShardMappingKeys_.emplace_back(ref->shardId, ref->fileOffset);
         return true;
     };
@@ -6186,6 +6214,7 @@ void Deep2Engine::releaseStandardMultiShardWeights()
         layer = LayerWeights{};
     modelWeights.finalNorm = WeightTensor{};
     modelWeights.lmHead = WeightTensor{};
+    compressedWeightStore_.reset();
 }
 
 // ============================================================================
