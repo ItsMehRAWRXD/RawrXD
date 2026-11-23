@@ -7658,7 +7658,9 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         WeightTensor gpuWeight = wtEffective;
         bool gpuDispatched = false;
-        std::vector<std::vector<std::uint8_t>> compressedGpuTileBuffers;
+        // DispatchGEMVQuant/DispatchGEMV complete their fence wait before return;
+        // one reusable buffer therefore bounds host staging to one tile.
+        std::vector<std::uint8_t> compressedGpuTileBuffer;
         if (!gpuWeight.data && gpuWeight.hasCompressedBacking() &&
             allowCompressedGpuTiles && !allowFullCompressedGpuStaging)
         {
@@ -7670,12 +7672,11 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
                 {
                     const auto tiles = rawrxd::compression::PlanCompressedGpuTiles(
                         gpuWeight.rows, outDim, packedRowBytes, compressedGpuTileBudget);
-                    compressedGpuTileBuffers.reserve(tiles.size());
                     gpuDispatched = true;
                     for (const auto& tile : tiles)
                     {
-                        compressedGpuTileBuffers.emplace_back(tile.byte_count);
-                        auto& tileBytes = compressedGpuTileBuffers.back();
+                        compressedGpuTileBuffer.resize(tile.byte_count);
+                        auto& tileBytes = compressedGpuTileBuffer;
                         std::string decodeError;
                         if (!gpuWeight.readBytes(tile.byte_offset, tileBytes.data(),
                                                  tileBytes.size(), &decodeError))
