@@ -1646,6 +1646,33 @@ inline RepackError RepackGGUF(const std::string& input,
             }
         }
     }
+    // Q8_0 -> Q4_0 is lossless when every signed code fits [-8,7].
+    // Include vectors and sensitive matrices, which the ordinary
+    // lossy Q4 planner deliberately leaves untouched.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(t.type!=8 || t.convert_q4_0 || t.convert_q8_0 ||
+               t.convert_f16 || t.convert_q5_0 ||
+               t.convert_f64_to_f32 || t.convert_f64_to_f16 ||
+               t.dims[0]%32)continue;
+            uint64_t count=1;
+            for(const auto dim:t.dims)
+                if(!CheckedMultiply(count,dim,count))
+                    return RepackError::Overflow;
+            uint64_t compact=0;
+            if(!CheckedMultiply(count/32,18,compact))
+                return RepackError::Overflow;
+            if(compact>=t.source_bytes)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)
+                return RepackError::Overflow;
+            if(IsExactQ8_0ToQ4_0(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q4_0=true;
+                t.q4_source_type=8;
+                t.type=2;
+                t.bytes=compact;
+            }
+        }
+    }
     // Prefer exact F16 narrowing over lossy Q4_0 when a F32 matrix
     // consists entirely of values exactly representable in F16.
     if(auto_compress) {
