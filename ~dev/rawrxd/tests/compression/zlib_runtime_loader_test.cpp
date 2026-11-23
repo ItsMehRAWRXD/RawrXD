@@ -12,6 +12,10 @@ int main() {
         std::puts("SKIP: no compatible system zlib runtime found");
         return 77;
     }
+    if (!zlib.IsLoaded()) {
+        std::puts("FAIL: loader reports unloaded after successful Load");
+        return 5;
+    }
 
     std::vector<std::uint8_t> source(256 * 1024);
     for (std::size_t i = 0; i < source.size(); ++i)
@@ -41,6 +45,25 @@ int main() {
     if (decodedBytes != source.size() || decoded != source) {
         std::puts("FAIL: zlib round trip mismatch");
         return 4;
+    }
+
+    // The adapter must fail closed on corrupt streams and undersized outputs.
+    std::vector<std::uint8_t> corrupted = compressed;
+    corrupted.back() ^= 0x80u;
+    std::fill(decoded.begin(), decoded.end(), 0);
+    decodedBytes = static_cast<std::uint32_t>(decoded.size());
+    if (zlib.Decompress(decoded.data(), &decodedBytes,
+                        corrupted.data(), static_cast<std::uint32_t>(corrupted.size()))) {
+        std::puts("FAIL: corrupted zlib stream was accepted");
+        return 6;
+    }
+
+    std::uint8_t tinyOutput[1] = {};
+    std::uint32_t tinyCapacity = sizeof(tinyOutput);
+    if (zlib.Compress(tinyOutput, &tinyCapacity, source.data(),
+                      static_cast<std::uint32_t>(source.size()), 6)) {
+        std::puts("FAIL: undersized compression output was accepted");
+        return 7;
     }
 
     std::puts("PASS: runtime zlib discovery, compression, and decompression");
