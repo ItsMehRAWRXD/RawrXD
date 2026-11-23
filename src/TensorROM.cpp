@@ -354,7 +354,18 @@ bool TensorROM::finalizeIndex() {
     // Default pager: a few GiB bounded budget, overridable via env.
     if (!m_pager) {
         const char* env = std::getenv("DEEP2_ROM_CACHE_BYTES");
-        uint64_t capacity = env ? static_cast<uint64_t>(std::stoull(env)) : (4ull << 30);
+        size_t capacity = static_cast<size_t>(4ull << 30);
+        if (env) {
+            if (!*env || *env == '-') return false;
+            char* end = nullptr;
+            const unsigned long long parsed = std::strtoull(env, &end, 10);
+            if (end == env || *end != '\0' ||
+                parsed > static_cast<unsigned long long>(std::numeric_limits<size_t>::max())) {
+                fprintf(stderr, "[ROM] invalid DEEP2_ROM_CACHE_BYTES value\\n");
+                return false;
+            }
+            capacity = static_cast<size_t>(parsed);
+        }
         m_pager = std::make_unique<PageCache>(capacity, 256 * 1024);
         // Reader: pageNo is an absolute file page number (readRange passes
         // offset / pageSize), so the absolute file offset is pageNo * pageSize.
