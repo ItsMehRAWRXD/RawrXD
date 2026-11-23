@@ -153,13 +153,21 @@ int main(int argc,char** argv) {
                 // The second pass emits the same half values using fixed memory.
                 seek(in,add(dataStart,t.offset));
                 bool valid=true;
-                for(U off=0;off<t.bytes;off+=4) {
-                    uint32_t bits=uint32_t(read(in,4));
-                    float value=Float(bits);
-                    if(!std::isfinite(value)){valid=false;break;}
-                    float reconstructed=FromHalf(ToHalf(value));
-                    if(!std::isfinite(reconstructed) ||
-                       !(std::fabs(reconstructed-value)<=tolerance)){valid=false;break;}
+                std::vector<uint8_t> chunk(65536);
+                for(U off=0;off<t.bytes && valid;) {
+                    size_t n=size_t(std::min<U>(t.bytes-off,chunk.size()));
+                    if(!in.read(reinterpret_cast<char*>(chunk.data()),std::streamsize(n)))
+                        throw std::runtime_error("truncated F32 streaming preflight");
+                    for(size_t j=0;j<n;j+=4) {
+                        uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
+                                      (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
+                        float value=Float(bits);
+                        if(!std::isfinite(value)){valid=false;break;}
+                        float reconstructed=FromHalf(ToHalf(value));
+                        if(!std::isfinite(reconstructed) ||
+                           !(std::fabs(reconstructed-value)<=tolerance)){valid=false;break;}
+                    }
+                    off+=n;
                 }
                 if(valid){streamHalf[i]=true;outputTypes[i]=1;++changed;}
                 continue;
@@ -334,9 +342,21 @@ int main(int argc,char** argv) {
             while(U(out.tellp())<destination)out.put(0);
             if(streamHalf[i]) {
                 seek(in,add(dataStart,t.offset));
-                for(U off=0;off<t.bytes;off+=4) {
-                    float value=Float(uint32_t(read(in,4)));
-                    write(out,ToHalf(value),2);
+                std::vector<uint8_t> chunk(65536);
+                std::vector<uint8_t> half(chunk.size()/2);
+                for(U off=0;off<t.bytes;) {
+                    size_t n=size_t(std::min<U>(t.bytes-off,chunk.size()));
+                    if(!in.read(reinterpret_cast<char*>(chunk.data()),std::streamsize(n)))
+                        throw std::runtime_error("truncated F32 streaming conversion");
+                    for(size_t j=0;j<n;j+=4) {
+                        uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
+                                      (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
+                        uint16_t h=ToHalf(Float(bits));
+                        half[j/2]=uint8_t(h);half[j/2+1]=uint8_t(h>>8);
+                    }
+                    out.write(reinterpret_cast<const char*>(half.data()),std::streamsize(n/2));
+                    if(!out)throw std::runtime_error("F16 streaming write failed");
+                    off+=n;
                 }
             } else if(!converted[i].empty())
                 out.write(reinterpret_cast<const char*>(converted[i].data()),std::streamsize(converted[i].size()));
