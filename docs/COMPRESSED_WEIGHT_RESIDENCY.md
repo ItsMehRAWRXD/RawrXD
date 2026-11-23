@@ -33,6 +33,8 @@ The synthetic CompressedTransformerRuntime executes a complete decoder-only toke
 
 The runtime now supports grouped-query attention (GQA) as well as ordinary multi-head attention. Config::kv_heads == 0 preserves the multi-head default; otherwise the KV-head count must evenly divide the query-head count. K/V projection geometry is kv_heads * head_dim, while Q and attention output remain heads * head_dim. Query heads map to a KV head by their contiguous group index. RoPE is applied to Q and K using their respective head counts.
 
+The synthetic generation regression also runs two autoregressive requests concurrently against the same immutable compressed model and asserts identical outputs, exercising request-local KV state and per-call scratch readers under shared block-cache access.
+
 The KV-cache budget is calculated from the actual K/V width (layers * tokens * kv_heads * head_dim * 2 * sizeof(float)), rather than charging GQA as if every query head had a separate K/V state. The synthetic regression exercises two query heads sharing one KV head, validates compact-cache admission at the exact byte budget, rejects a one-byte-under budget, and rejects a KV-head count that does not divide the query-head count.
 
 This is a deterministic architectural execution contract, not proof that every production GGUF architecture has been mapped correctly. Architecture-specific tensor names, RoPE variants/scaling, sliding-window policies, MLA, MoE, quantized K/V caches, and the production Vulkan lane remain separate integration and parity gates.
