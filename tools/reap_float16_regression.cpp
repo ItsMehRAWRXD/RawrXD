@@ -25,6 +25,21 @@ int main(){
     check(0x3f801000u,0x3c00u,"normal_halfway_ties_even_down");
     check(0x3f803000u,0x3c02u,"normal_halfway_ties_even_up");
     check(0x3f802000u,0x3c01u,"normal_exact_next");
+    // Exhaustively verify all 65,536 half bit patterns. NaN payloads are
+    // intentionally quieted by the F32->F16 encoder; all non-NaNs must
+    // round-trip bit-exactly, including signed zero and subnormals.
+    unsigned roundtripFailures=0;
+    for(uint32_t half=0;half<=0xffffu;++half) {
+        const uint16_t h=static_cast<uint16_t>(half);
+        const uint32_t exp=(half>>10)&31u;
+        const uint32_t frac=half&1023u;
+        const uint16_t roundtrip=Float32BitsToFloat16(Float16ToFloat32Bits(h));
+        const uint16_t expected=(exp==31u&&frac!=0u)?
+            static_cast<uint16_t>(h|0x0200u):h;
+        if(roundtrip!=expected)++roundtripFailures;
+    }
+    std::cout<<"HALF_ROUNDTRIP_MISMATCHES="<<roundtripFailures<<"\n";
+    if(roundtripFailures)++fails;
     std::cout<<"REAP_F16_RESULT="<<(fails?"FAIL":"PASS")
              <<" failures="<<fails<<"\n";
     return fails?1:0;
