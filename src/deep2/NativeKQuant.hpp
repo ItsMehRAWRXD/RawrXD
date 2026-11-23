@@ -21,6 +21,7 @@ inline size_t BlockBytes(uint32_t type) {
         case 12: return 144;  // Q4_K: d2, dmin2, scales12, qs128
         case 13: return 176;  // Q5_K: d2, dmin2, scales12, qh32, qs128
         case 14: return 210;  // Q6_K: ql128, qh64, scales16, d2
+        case 15: return 292;  // Q8_K: d4, qs256, bsums[16]
         default: return 0;
     }
 }
@@ -38,6 +39,14 @@ inline int RoundClamp(double x,int lo,int hi) {
 // Decode using GGML's actual byte ordering. No guessed bitstream packing.
 inline bool DecodeBlock(uint32_t type,const uint8_t* b,double v[256]) {
     if(!b || !v || !BlockBytes(type))return false;
+    if(type==15) {
+        uint32_t bits=uint32_t(b[0])|(uint32_t(b[1])<<8)|
+                      (uint32_t(b[2])<<16)|(uint32_t(b[3])<<24);
+        const double d=double(Float(bits));
+        if(!std::isfinite(d))return false;
+        for(int j=0;j<256;++j)v[j]=d*int8_t(b[4+j]);
+        return true;
+    }
     if(type==10) {
         const double d=FromHalf(Half(b+80)), dm=FromHalf(Half(b+82));
         for(int j=0;j<256;++j) {
@@ -116,7 +125,26 @@ inline bool EncodeBlock(uint32_t type,const double v[256],float tolerance,uint8_
     if(!bytes || !out || !v || !std::isfinite(tolerance) || tolerance<0)return false;
     for(int j=0;j<256;++j)if(!std::isfinite(v[j]))return false;
     std::memset(out,0,bytes);
-    if(type==10) {
+    if(type==15) {
+        double maxAbs=0;
+        for(int j=0;j<256;++j)maxAbs=std::max(maxAbs,std::fabs(v[j]));
+        const float d=float(maxAbs/127.0);
+        if(!std::isfinite(d)||(maxAbs>0&&d<=0))return false;
+        uint32_t bits=0;std::memcpy(&bits,&d,4);
+        for(int k=0;k<4;++k)out[k]=uint8_t(bits>>(8*k));
+        int16_t sums[16]={};
+        for(int j=0;j<256;++j) {
+            const int q=d?RoundClamp(v[j]/double(d),-127,127):0;
+            out[4+j]=uint8_t(int8_t(q));
+            sums[j/16]=int16_t(sums[j/16]+q);
+            if(!(std::fabs(double(d)*q-v[j])<=double(tolerance)))return false;
+        }
+        for(int j=0;j<16;++j) {
+            const uint16_t sum=uint16_t(sums[j]);
+            out[260+2*j]=uint8_t(sum);
+            out[261+2*j]=uint8_t(sum>>8);
+        }
+    } else if(type==10) {
         double scale[16]={},minimum[16]={},maxScale=0,maxMinimum=0;
         for(int g=0;g<16;++g) {
             double lo=v[g*16],hi=lo;
