@@ -1,10 +1,12 @@
 #include "CompressedWeightStore.hpp"
 #include <algorithm>
+#include <atomic>
 #include <cstring>
 #include <cstdint>
 #include <iostream>
 #include <limits>
 #include <random>
+#include <thread>
 #include <vector>
 using rawrxd::compression::CompressedWeightStore;
 
@@ -51,6 +53,25 @@ int main(){
  REQUIRE(std::equal(input.begin()+range_offset,
                     input.begin()+range_offset+range_length,
                     output.begin()+range_offset));
+
+ // Independent readers decode/cache blocks concurrently. Each result must
+ // remain byte-exact while cache eviction and LRU promotion race.
+ std::atomic<int> concurrentFailures{0};
+ std::vector<std::thread> workers;
+ for(int worker=0;worker<8;++worker) {
+  workers.emplace_back([&,worker] {
+   std::vector<std::uint8_t> local(777);
+   const std::size_t offset=static_cast<std::size_t>(worker)*911;
+   for(int repeat=0;repeat<12;++repeat) {
+    if(!store.readRange("layer.0.weight",offset,local.data(),local.size(),nullptr)||
+       !std::equal(local.begin(),local.end(),input.begin()+offset)) {
+     ++concurrentFailures;break;
+    }
+   }
+  });
+ }
+ for(auto& worker:workers) worker.join();
+ REQUIRE(concurrentFailures.load()==0);
  auto lease=store.acquireBlock("layer.0.weight",0,&error);REQUIRE(lease&&lease->size()==1024);store.setDecodedCacheBudget(0);REQUIRE((*lease)[0]==input[0]);
  REQUIRE(!store.readRange("layer.0.weight",input.size(),output.data(),1,&error));
  std::vector<std::uint8_t> random_data(4096);std::mt19937 rng(7);for(auto& b:random_data)b=static_cast<std::uint8_t>(rng());
@@ -86,6 +107,21 @@ int main(){
       ? static_cast<std::uint16_t>(h|0x0200u) : h;
   REQUIRE(roundTrip==expected);
  }
+ // zlib is an alternate per-store codec. It uses the same block directory,
+ // CRC validation, lazy block leases and decoded-cache budget as native LZ.
+ CompressedWeightStore zlibStore(4096,1024,
+     (std::numeric_limits<std::size_t>::max)(),rawrxd::compression::BlockCodec::Zlib);
+#if defined(RAWRXD_HAVE_ZLIB) && RAWRXD_HAVE_ZLIB
+ REQUIRE(zlibStore.addTensor("zlib.weight",input.data(),input.size(),&error));
+ std::vector<std::uint8_t> zlibRange(range_length);
+ REQUIRE(zlibStore.readRange("zlib.weight",range_offset,zlibRange.data(),zlibRange.size(),&error));
+ REQUIRE(std::equal(input.begin()+range_offset,input.begin()+range_offset+range_length,zlibRange.begin()));
+ REQUIRE(zlibStore.stats().compressed_bytes<zlibStore.stats().raw_bytes);
+#else
+ REQUIRE(!zlibStore.addTensor("zlib.weight",input.data(),input.size(),&error));
+ REQUIRE(!zlibStore.contains("zlib.weight"));
+ REQUIRE(!error.empty());
+#endif
  REQUIRE(store.addTensor("empty",nullptr,0,&error));REQUIRE(store.tensorBlocks("empty")==0);REQUIRE(store.readRange("empty",0,nullptr,0,&error));
  const auto s=store.stats();REQUIRE(s.tensors==5&&s.raw_bytes==input.size()+random_data.size()+sizeof(q4_payload)+14);REQUIRE(s.compressed_bytes<s.raw_bytes);
  std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\n';
