@@ -225,6 +225,32 @@ bool Deep2Engine::gemvROMCompressedQ8_0(
     }
 }
 
+bool Deep2Engine::gemvROMCompressed(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols,
+    std::size_t blockBytes, std::size_t stagingBudgetBytes) {
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->dims.size() != 2 ||
+        entry->dims[0] != cols || entry->dims[1] != rows)
+        return false;
+    switch (entry->type) {
+        case deep2::TensorType::F32:
+            return gemvROMCompressedF32(tensorName, x, y, rows, cols,
+                                        blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::F16:
+            return gemvROMCompressedF16(tensorName, x, y, rows, cols,
+                                        blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::Q4_0:
+            return gemvROMCompressedQ4_0(tensorName, x, y, rows, cols,
+                                         blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::Q8_0:
+            return gemvROMCompressedQ8_0(tensorName, x, y, rows, cols,
+                                         blockBytes, stagingBudgetBytes);
+        default:
+            return false;
+    }
+}
+
 bool Deep2Engine::gemvResidentF32(
     const rawrxd::compression::ResidentCompressedTensor& weights,
     const float* x, float* y, std::size_t rows, std::size_t cols,
