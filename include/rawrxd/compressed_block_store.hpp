@@ -78,20 +78,41 @@ private:
             throw std::invalid_argument("block directory does not cover tensor");
     }
     std::shared_ptr<const std::vector<std::uint8_t>> acquire(std::size_t i)const{
-        std::lock_guard<std::mutex> l(mutex_);
-        auto f=cache_.find(i);
-        if(f!=cache_.end()){lru_.splice(lru_.begin(),lru_,f->second.lru);return f->second.bytes;}
-        const auto& b=blocks_[i];auto out=std::make_shared<std::vector<std::uint8_t>>(b.raw_size);
-        if(!decoder_(compressed_.data()+b.compressed_offset,b.compressed_size,out->data(),out->size()))return {};
-        if(crc32_bytes(out->data(),out->size())!=b.raw_crc32)return {};
-        if(out->size()<=cache_budget_){
-            while(cached_bytes_>cache_budget_-out->size()&&!lru_.empty()){
-                auto victim=lru_.back();lru_.pop_back();auto e=cache_.find(victim);
-                if(e!=cache_.end()){cached_bytes_-=e->second.bytes->size();cache_.erase(e);}
+        {
+            std::lock_guard<std::mutex> l(mutex_);
+            auto hit=cache_.find(i);
+            if(hit!=cache_.end()){
+                lru_.splice(lru_.begin(),lru_,hit->second.lru);
+                return hit->second.bytes;
             }
-            lru_.push_front(i);cached_bytes_+=out->size();cache_.emplace(i,Entry{out,lru_.begin()});
         }
-        return out;
+        const auto& block=blocks_[i];
+        std::shared_ptr<std::vector<std::uint8_t>> decoded;
+        try { decoded=std::make_shared<std::vector<std::uint8_t>>(block.raw_size); }
+        catch (...) { return {}; }
+        // Codec work and CRC verification must not serialize unrelated readers.
+        if(!decoder_(compressed_.data()+block.compressed_offset,block.compressed_size,
+                     decoded->data(),decoded->size())) return {};
+        if(crc32_bytes(decoded->data(),decoded->size())!=block.raw_crc32) return {};
+
+        std::lock_guard<std::mutex> l(mutex_);
+        auto existing=cache_.find(i);
+        if(existing!=cache_.end()){
+            lru_.splice(lru_.begin(),lru_,existing->second.lru);
+            return existing->second.bytes;
+        }
+        if(decoded->size()<=cache_budget_){
+            while(cached_bytes_>cache_budget_-decoded->size()&&!lru_.empty()){
+                auto victim=lru_.back();lru_.pop_back();auto e=cache_.find(victim);
+                if(e!=cache_.end()){
+                    cached_bytes_-=e->second.bytes->size();
+                    cache_.erase(e); // active shared leases remain valid
+                }
+            }
+            lru_.push_front(i);cached_bytes_+=decoded->size();
+            cache_.emplace(i,Entry{decoded,lru_.begin()});
+        }
+        return decoded;
     }
     void evict()const{
         while(cached_bytes_>cache_budget_&&!lru_.empty()){
