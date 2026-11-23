@@ -12,11 +12,18 @@
 #include <cstring>
 #include <fstream>
 #include <limits>
+#include <mutex>
 #include <cstdlib>
 #include <windows.h>
 
 namespace {
 constexpr size_t kResidencyMiB = 1024ull * 1024ull;
+
+// Pipeline handles are process-shared across engine instances, but must be
+// explicitly destroyed before the owning VkDevice is torn down.
+std::mutex g_vulkanProgramMutex;
+std::unordered_map<VkDevice, std::unique_ptr<deep2::VulkanProgram>> g_f32VulkanPrograms;
+std::unordered_map<VkDevice, std::unique_ptr<deep2::VulkanProgram>> g_packed16VulkanPrograms;
 
 size_t readResidencyMiB(const char* name, size_t fallback) {
     const char* text = std::getenv(name);
@@ -141,6 +148,10 @@ Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() c
     TensorResidencySnapshot snapshot;
     snapshot.f32BudgetBytes = f32.budgetBytes;
     snapshot.encodedBudgetBytes = encoded.budgetBytes;
+    if (vulkan) {
+        snapshot.gpuWeightBudgetBytes = vulkan->weightCacheBudgetBytes();
+        snapshot.gpuCachedWeightBytes = vulkan->cachedWeightBytes();
+    }
     if (const auto* pager = rom.pager()) {
         snapshot.sourcePagerBudgetBytes = pager->capacityBytes();
         snapshot.sourcePagerResidentBytes = pager->residentBytes();
@@ -152,6 +163,8 @@ Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() c
     snapshot.encodedLogicalBytes = encoded.logicalBytes;
     snapshot.f32TensorCount = f32.tensorCount;
     snapshot.encodedTensorCount = encoded.tensorCount;
+    snapshot.f32ActiveReaders = f32.activeReaders;
+    snapshot.encodedActiveReaders = encoded.activeReaders;
     snapshot.f32CacheHits = f32.cacheHits;
     snapshot.f32CacheMisses = f32.cacheMisses;
     snapshot.encodedCacheHits = encoded.hits;
@@ -170,7 +183,25 @@ void Deep2Engine::Shutdown() {
     // compressed-cache leases remain live.
     compressedF32Weights.Clear();
     compressedEncodedWeights.Clear();
-    if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
+    if (vulkan) {
+        std::lock_guard<std::mutex> programLock(g_vulkanProgramMutex);
+        for (size_t i = 0; i < vulkan->gpuCount(); ++i) {
+            const auto* gpu = vulkan->gpu(i);
+            if (!gpu) continue;
+            auto f32Program = g_f32VulkanPrograms.find(gpu->device);
+            if (f32Program != g_f32VulkanPrograms.end()) {
+                f32Program->second->destroy(gpu->device);
+                g_f32VulkanPrograms.erase(f32Program);
+            }
+            auto packedProgram = g_packed16VulkanPrograms.find(gpu->device);
+            if (packedProgram != g_packed16VulkanPrograms.end()) {
+                packedProgram->second->destroy(gpu->device);
+                g_packed16VulkanPrograms.erase(packedProgram);
+            }
+        }
+        vulkan->shutdown();
+        vulkan.reset();
+    }
     rom.Reset();
     vulkanReady = false;
     initialized = false;
@@ -362,9 +393,9 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         };
         if (!compressedF32Weights.RegisterF32FromReader(
                 cacheKey, count, compressedF32MaxAbsError.load(std::memory_order_relaxed), reader, 4096)) {
-            // No safe/smaller encoding or no cache capacity: memoize the
-            // decision and fetch only requested raw tiles on future calls.
-            compressedF32Weights.MarkRawFallback(cacheKey);
+            // Deterministic no-win/budget rejections are memoized atomically
+            // inside RegisterF32FromReader. A source-read failure is not
+            // memoized, so a later request can retry transient I/O failures.
             const uint64_t byteOffset = firstElement * sizeof(float);
             const uint64_t byteCount = elementCount * sizeof(float);
             return rom.readTensorRange(entry, byteOffset, byteCount,
@@ -514,9 +545,9 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
                     rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
                         shard.dataOffset + entry.offset, tensorBytes64);
             }
-        } else {
-            compressedEncodedWeights.MarkRawFallback(cacheKey);
         }
+        // Deterministic admission rejections are memoized inside the cache;
+        // source I/O failures remain retryable on the next inference request.
     }
 
     encodedScratch.resize(static_cast<size_t>(byteCount));
@@ -620,22 +651,12 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
         if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
             return false;
 
-        tile.resize(elements);
         const uint64_t firstElement = firstRow * cols;
-        const bool tileRead = entry.type == deep2::TensorType::F32
-            ? readCompressedF32Tile(entry, firstElement, elements,
-                                    tile.data(), decodeScratch)
-            : readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
-                                        encodedScratch, decodeScratch);
-        if (!tileRead) return false;
-
-        deep2::TensorView weightTile{
-            deep2::TensorType::F32,
-            reinterpret_cast<const uint8_t*>(tile.data()),
-            elements * sizeof(float),
-            { countRows, cols },
-            true
-        };
+        const std::string tensorIdentity = std::to_string(entry.shardIndex) + ":" +
+            std::to_string(entry.offset) + ":" + entry.name;
+        const std::string gpuTileKey = tensorIdentity + ":tile:" +
+            std::to_string(firstElement) + ":" + std::to_string(elements) +
+            ":source-type:" + std::to_string(static_cast<unsigned>(entry.type));
         deep2::TensorView inputView{
             deep2::TensorType::F32,
             reinterpret_cast<const uint8_t*>(input),
@@ -643,8 +664,151 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             { cols },
             true
         };
-        if (!vulkanGemv(gpu, weightTile, inputView, tileOutput) ||
-            tileOutput.size() != static_cast<size_t>(countRows))
+        bool dispatched = false;
+
+        if (entry.type == deep2::TensorType::F32) {
+            // First touch streams the F32 source into the bounded compressed
+            // cache. Once admitted, export only the intersecting compact F16/
+            // BF16 bytes and send those bytes directly to the Vulkan shader.
+            const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+                std::to_string(entry.offset) + ":" + entry.name;
+            bool haveF32Tile = false;
+            if (!compressedF32Weights.Contains(cacheKey) &&
+                !compressedF32Weights.IsRawFallback(cacheKey)) {
+                tile.resize(elements);
+                if (!readCompressedF32Tile(entry, firstElement, elements,
+                                           tile.data(), decodeScratch))
+                    return false;
+                haveF32Tile = true;
+            }
+
+            if (compressedF32Weights.Contains(cacheKey)) {
+                RawrXD::TensorCompression::Encoding encoding =
+                    RawrXD::TensorCompression::Encoding::Raw;
+                std::vector<uint8_t> packedWeights;
+                if (compressedF32Weights.ExportUniform16BitRange(
+                        cacheKey, static_cast<size_t>(firstElement), elements,
+                        encoding, packedWeights)) {
+                    const deep2::TensorType packedType =
+                        encoding == RawrXD::TensorCompression::Encoding::F16
+                            ? deep2::TensorType::F16 : deep2::TensorType::BF16;
+                    deep2::TensorView packedView{
+                        packedType, packedWeights.data(), packedWeights.size(),
+                        { countRows, cols }, true
+                    };
+                    const std::string packedGpuKey = gpuTileKey + ":encoding:" +
+                        std::to_string(static_cast<unsigned>(encoding));
+                    if (vulkanGemv(gpu, packedView, inputView, tileOutput, packedGpuKey)) {
+                        dispatched = true;
+                    } else {
+                        // Missing/unsupported packed shader: preserve correctness
+                        // by expanding only this requested tile and using F32 GEMV.
+                        tile.resize(elements);
+                        if (!compressedF32Weights.ReadRange(
+                                cacheKey, static_cast<size_t>(firstElement), elements,
+                                tile.data(), decodeScratch))
+                            return false;
+                        deep2::TensorView fallbackView{
+                            deep2::TensorType::F32,
+                            reinterpret_cast<const uint8_t*>(tile.data()),
+                            elements * sizeof(float),
+                            { countRows, cols }, true
+                        };
+                        if (!vulkanGemv(gpu, fallbackView, inputView, tileOutput))
+                            return false;
+                        dispatched = true;
+                    }
+                }
+            }
+
+            if (!dispatched) {
+                if (!haveF32Tile) {
+                    tile.resize(elements);
+                    if (!readCompressedF32Tile(entry, firstElement, elements,
+                                               tile.data(), decodeScratch))
+                        return false;
+                }
+                deep2::TensorView weightTile{
+                    deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(tile.data()),
+                    elements * sizeof(float),
+                    { countRows, cols },
+                    true
+                };
+                if (!vulkanGemv(gpu, weightTile, inputView, tileOutput))
+                    return false;
+                dispatched = true;
+            }
+        } else if (entry.type == deep2::TensorType::F16 ||
+                   entry.type == deep2::TensorType::BF16 ||
+                   entry.type == deep2::TensorType::Q8_0) {
+            // F16/BF16 and Q8_0 are already compact in GGUF. Read the exact
+            // requested encoded range and keep it packed through GPU dispatch.
+            uint64_t byteOffset = 0;
+            uint64_t byteCount = 0;
+            if (entry.type == deep2::TensorType::Q8_0) {
+                if ((cols % 32u) != 0u || (firstElement % 32u) != 0u ||
+                    (elements % 32u) != 0u ||
+                    firstElement / 32u > UINT64_MAX / 34u ||
+                    elements / 32u > UINT64_MAX / 34u)
+                    return false;
+                byteOffset = (firstElement / 32u) * 34u;
+                byteCount = (static_cast<uint64_t>(elements) / 32u) * 34u;
+            } else {
+                if (firstElement > UINT64_MAX / sizeof(uint16_t) ||
+                    elements > UINT64_MAX / sizeof(uint16_t))
+                    return false;
+                byteOffset = firstElement * sizeof(uint16_t);
+                byteCount = static_cast<uint64_t>(elements) * sizeof(uint16_t);
+            }
+            if (byteOffset > entry.byteSize() ||
+                byteCount > entry.byteSize() - byteOffset ||
+                byteCount > std::numeric_limits<size_t>::max())
+                return false;
+            encodedScratch.resize(static_cast<size_t>(byteCount));
+            if (!rom.readTensorRange(entry, byteOffset, byteCount, encodedScratch.data()))
+                return false;
+            deep2::TensorView packedView{
+                entry.type, encodedScratch.data(), encodedScratch.size(),
+                { countRows, cols }, true
+            };
+            if (vulkanGemv(gpu, packedView, inputView, tileOutput, gpuTileKey)) {
+                dispatched = true;
+            } else {
+                // F32 fallback expands only this requested tile when packed
+                // shader loading or device storage limits prevent dispatch.
+                tile.resize(elements);
+                if (!readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
+                                               encodedScratch, decodeScratch))
+                    return false;
+                deep2::TensorView fallbackView{
+                    deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(tile.data()),
+                    elements * sizeof(float),
+                    { countRows, cols }, true
+                };
+                if (!vulkanGemv(gpu, fallbackView, inputView, tileOutput))
+                    return false;
+                dispatched = true;
+            }
+        } else {
+            tile.resize(elements);
+            if (!readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
+                                           encodedScratch, decodeScratch))
+                return false;
+            deep2::TensorView weightTile{
+                deep2::TensorType::F32,
+                reinterpret_cast<const uint8_t*>(tile.data()),
+                elements * sizeof(float),
+                { countRows, cols },
+                true
+            };
+            if (!vulkanGemv(gpu, weightTile, inputView, tileOutput))
+                return false;
+            dispatched = true;
+        }
+
+        if (!dispatched || tileOutput.size() != static_cast<size_t>(countRows))
             return false;
 
         std::copy(tileOutput.begin(), tileOutput.end(),
@@ -671,61 +835,157 @@ static std::string exeDir() {
 }
 
 bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
-                             const deep2::TensorView& xView, std::vector<float>& y) {
-    if (!vulkanReady || !vulkan) return false;
-
-    if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
-        !wView.data || !xView.data) {
-        fprintf(stderr, "[VULKAN_GEMV] requires contiguous f32 views\n");
+                             const deep2::TensorView& xView, std::vector<float>& y,
+                             const std::string& weightCacheKey) {
+    // VulkanProgram owns one descriptor set, fence, and command pool binding.
+    // Serialize reuse across inference agents and GPU selection.
+    std::lock_guard<std::mutex> dispatchLock(g_vulkanProgramMutex);
+    if (!vulkanReady || !vulkan || !wView.data || !xView.data ||
+        xView.type != deep2::TensorType::F32 || !xView.contiguous || !wView.contiguous ||
+        wView.dims.size() < 2 || xView.dims.empty())
         return false;
-    }
 
-    if (wView.dims.size() < 2) return false;
-    uint64_t rows = wView.dims[0];
-    uint64_t cols = wView.dims[1];
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+    if (!rows || !cols || rows > UINT32_MAX || cols > UINT32_MAX ||
+        rows > std::numeric_limits<size_t>::max() / cols ||
+        rows > std::numeric_limits<size_t>::max() / sizeof(float))
+        return false;
+    const size_t elements = static_cast<size_t>(rows * cols);
+    // The shader uses 32-bit element indices and a single packed uint word
+    // array. Reject unaddressable dispatches before allocating GPU resources.
+    if (elements > UINT32_MAX) return false;
+    const bool f32Weights = wView.type == deep2::TensorType::F32;
+    const bool f16Weights = wView.type == deep2::TensorType::F16;
+    const bool bf16Weights = wView.type == deep2::TensorType::BF16;
+    const bool q8Weights = wView.type == deep2::TensorType::Q8_0;
+    if (!f32Weights && !f16Weights && !bf16Weights && !q8Weights) return false;
+    if (cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        xView.byteSize < static_cast<size_t>(cols) * sizeof(float))
+        return false;
+
+    size_t logicalWeightBytes = 0;
+    if (f32Weights) {
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(float)) return false;
+        logicalWeightBytes = elements * sizeof(float);
+    } else if (q8Weights) {
+        // Q8_0 stores 32 values in 34 bytes; rows/tiles must preserve block geometry.
+        if ((cols % 32u) != 0u || (elements % 32u) != 0u ||
+            elements / 32u > std::numeric_limits<size_t>::max() / 34u)
+            return false;
+        logicalWeightBytes = (elements / 32u) * 34u;
+    } else {
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(uint16_t)) return false;
+        logicalWeightBytes = elements * sizeof(uint16_t);
+    }
+    if (wView.byteSize < logicalWeightBytes ||
+        logicalWeightBytes > std::numeric_limits<size_t>::max() - 3u)
+        return false;
+    const VkDeviceSize weightBufferBytes =
+        static_cast<VkDeviceSize>((logicalWeightBytes + 3u) & ~size_t(3u));
+    const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
+    const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
+    if (weightBufferBytes > gpu.props.limits.maxStorageBufferRange ||
+        xsize > gpu.props.limits.maxStorageBufferRange ||
+        ysize > gpu.props.limits.maxStorageBufferRange)
+        return false;
     y.assign(static_cast<size_t>(rows), 0.0f);
 
-    static deep2::VulkanProgram program;
-    static VkDevice boundDevice = VK_NULL_HANDLE;
-    if (boundDevice != gpu.device) {
-        if (boundDevice != VK_NULL_HANDLE) {
-            program.destroy(boundDevice);
+    deep2::VulkanProgram* selectedProgram = nullptr;
+    uint32_t weightEncoding = 0;
+    if (f32Weights) {
+        auto it = g_f32VulkanPrograms.find(gpu.device);
+        if (it == g_f32VulkanPrograms.end()) {
+            auto program = std::make_unique<deep2::VulkanProgram>();
+            const std::string spv = exeDir() + "shaders\\gemv_f32.spv";
+            if (!program->init(gpu.device, spv)) {
+                program->destroy(gpu.device);
+                fprintf(stderr, "[VULKAN_GEMV] F32 program init failed for %s\n", spv.c_str());
+                return false;
+            }
+            it = g_f32VulkanPrograms.emplace(gpu.device, std::move(program)).first;
         }
-        std::string spv = exeDir() + "shaders\\gemv_f32.spv";
-        if (!program.init(gpu.device, spv)) {
-            fprintf(stderr, "[VULKAN_GEMV] program init failed for %s\n", spv.c_str());
-            boundDevice = VK_NULL_HANDLE;
-            return false;
+        selectedProgram = it->second.get();
+    } else {
+        auto it = g_packed16VulkanPrograms.find(gpu.device);
+        if (it == g_packed16VulkanPrograms.end()) {
+            auto program = std::make_unique<deep2::VulkanProgram>();
+            const std::string spv = exeDir() + "shaders\\gemv_packed16.spv";
+            if (!program->init(gpu.device, spv)) {
+                program->destroy(gpu.device);
+                fprintf(stderr, "[VULKAN_GEMV] packed16 program init failed for %s\n", spv.c_str());
+                return false;
+            }
+            it = g_packed16VulkanPrograms.emplace(gpu.device, std::move(program)).first;
         }
-        boundDevice = gpu.device;
+        selectedProgram = it->second.get();
+        weightEncoding = f16Weights ? 1u : (bf16Weights ? 2u : 3u);
     }
 
     VkBuffer Wbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
     VkDeviceMemory Wmem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
     void* Wmapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
-
-    VkDeviceSize Wsize = (VkDeviceSize)rows * cols * 4;
-    VkDeviceSize xsize = (VkDeviceSize)cols * 4;
-    VkDeviceSize ysize = (VkDeviceSize)rows * 4;
-
+    bool cachedWeightBuffer = false;
     auto cleanup = [&]() {
-        vulkan->destroyBuffer(gpu, Wbuf, Wmem);
+        if (Wmapped && Wmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, Wmem); Wmapped = nullptr; }
+        if (xmapped && xmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, xmem); xmapped = nullptr; }
+        if (ymapped && ymem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, ymem); ymapped = nullptr; }
+        if (!cachedWeightBuffer) vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
+        if (!cachedWeightBuffer) { Wbuf = VK_NULL_HANDLE; Wmem = VK_NULL_HANDLE; }
+        xbuf = ybuf = VK_NULL_HANDLE;
+        xmem = ymem = VK_NULL_HANDLE;
     };
 
-    VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags memProps =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    // Weight payloads are uploaded in their compact representation into
+    // device-local storage. Only the requested tile is resident on the GPU;
+    // the full tensor remains in compressed host residency / the ROM pager.
+    // Vulkan buffer-copy sizes/offsets are 4-byte aligned. Pad the final
+    // compact word without changing the logical element count seen by the shader.
+    std::vector<uint8_t> alignedWeights(static_cast<size_t>(weightBufferBytes), 0);
+    std::memcpy(alignedWeights.data(), wView.data, logicalWeightBytes);
+    size_t defaultGpuBudget = 512ull * kResidencyMiB;
+    if (gpu.vramBytes) {
+        const uint64_t deviceBudget = std::max<uint64_t>(64ull * kResidencyMiB,
+                                                         gpu.vramBytes / 8u);
+        defaultGpuBudget = static_cast<size_t>(std::min<uint64_t>(
+            512ull * kResidencyMiB, deviceBudget));
+    }
+    const size_t gpuBudget = readResidencyMiB("DEEP2_GPU_WEIGHT_RESIDENCY_MB",
+                                               defaultGpuBudget);
+    if (!weightCacheKey.empty()) {
+        cachedWeightBuffer = vulkan->getOrCreateCachedWeightBuffer(
+            gpu, weightCacheKey, alignedWeights.data(), weightBufferBytes,
+            gpuBudget, Wbuf);
+    }
+    if (!cachedWeightBuffer) {
+        const VkBufferUsageFlags weightUsage =
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        if (!vulkan->createBuffer(gpu, weightBufferBytes, weightUsage,
+                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Wbuf, Wmem, nullptr)) {
+            cleanup(); return false;
+        }
+        if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, alignedWeights.data(), weightBufferBytes)) {
+            cleanup(); return false;
+        }
+    }
+    if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) {
+        cleanup(); return false;
+    }
+    if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) {
+        cleanup(); return false;
+    }
 
-    if (!vulkan->createBuffer(gpu, Wsize, usage, memProps, Wbuf, Wmem, &Wmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) { cleanup(); return false; }
-
-    std::memcpy(Wmapped, wView.data, static_cast<size_t>(Wsize));
     std::memcpy(xmapped, xView.data, static_cast<size_t>(xsize));
     std::memset(ymapped, 0, static_cast<size_t>(ysize));
 
-    if (!program.dispatch(gpu, Wbuf, xbuf, ybuf, (uint32_t)rows, (uint32_t)cols)) {
+    if (!selectedProgram->dispatch(gpu, Wbuf, xbuf, ybuf,
+                                   static_cast<uint32_t>(rows), static_cast<uint32_t>(cols),
+                                   weightEncoding)) {
         cleanup(); return false;
     }
 

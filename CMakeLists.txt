@@ -101,6 +101,25 @@ if(Vulkan_FOUND)
     message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
 endif()
 
+# Compile the packed-weight GEMV shader when the Vulkan SDK shader compiler is
+# available. The runtime keeps the established F32 shader fallback when it is
+# not, so CPU-only/test configurations do not acquire a new hard dependency.
+find_program(RAWRXD_GLSLC NAMES glslc
+    HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin")
+if(RAWRXD_GLSLC)
+    add_custom_target(RawrXD_PackedWeightShader ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders"
+        COMMAND ${RAWRXD_GLSLC} --target-env=vulkan1.2 -O
+                "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
+                -o "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/gemv_packed16.spv"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
+        COMMENT "Compiling native packed F16/BF16 Vulkan GEMV shader")
+    add_dependencies(Deep2Engine_Benchmark RawrXD_PackedWeightShader)
+else()
+    message(WARNING "[BUILD] glslc not found; packed F16/BF16 Vulkan dispatch will be unavailable")
+endif()
+
 # Link libraries
 if(MSVC)
     target_link_libraries(Deep2Engine_Benchmark 
@@ -127,11 +146,28 @@ add_executable(test_quantized_tensor_range
 target_include_directories(test_quantized_tensor_range PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_features(test_quantized_tensor_range PRIVATE cxx_std_17)
 
+# Native compressed-residency tests: standalone C++17, no Vulkan/Qt/codec dependency.
+add_executable(test_native_tensor_compression tests/deep2/native_tensor_compression_test.cpp)
+target_include_directories(test_native_tensor_compression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_native_tensor_compression PRIVATE cxx_std_17)
+
+add_executable(test_native_tensor_residency_cache tests/deep2/native_tensor_residency_cache_test.cpp)
+target_include_directories(test_native_tensor_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_native_tensor_residency_cache PRIVATE cxx_std_17)
+
+add_executable(test_native_tensor_byte_residency_cache tests/deep2/native_tensor_byte_residency_cache_test.cpp)
+target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_native_tensor_byte_residency_cache PRIVATE cxx_std_17)
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
 # Enable testing
 enable_testing()
+add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
+add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
+add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
+
 add_test(NAME QuantizedTensorRange
     COMMAND test_quantized_tensor_range
 )

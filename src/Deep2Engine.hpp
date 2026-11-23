@@ -34,9 +34,11 @@ struct Deep2Engine {
         size_t f32BudgetBytes = 0, encodedBudgetBytes = 0;
         size_t sourcePagerBudgetBytes = 0, sourcePagerResidentBytes = 0;
         size_t sourcePagerPageCount = 0;
+        size_t gpuWeightBudgetBytes = 0, gpuCachedWeightBytes = 0;
         size_t f32CompressedBytes = 0, encodedCompressedBytes = 0;
         size_t f32LogicalBytes = 0, encodedLogicalBytes = 0;
         size_t f32TensorCount = 0, encodedTensorCount = 0;
+        size_t f32ActiveReaders = 0, encodedActiveReaders = 0;
         uint64_t f32CacheHits = 0, f32CacheMisses = 0;
         uint64_t encodedCacheHits = 0, encodedCacheMisses = 0;
         uint64_t bytesDecoded = 0, evictions = 0;
@@ -50,8 +52,11 @@ struct Deep2Engine {
         }
         size_t totalResidentBytes() const noexcept {
             const size_t compressed = totalCompressedBytes();
-            return sourcePagerResidentBytes > static_cast<size_t>(-1) - compressed
-                ? static_cast<size_t>(-1) : compressed + sourcePagerResidentBytes;
+            const size_t hostResident =
+                sourcePagerResidentBytes > static_cast<size_t>(-1) - compressed
+                    ? static_cast<size_t>(-1) : compressed + sourcePagerResidentBytes;
+            return gpuCachedWeightBytes > static_cast<size_t>(-1) - hostResident
+                ? static_cast<size_t>(-1) : hostResident + gpuCachedWeightBytes;
         }
         size_t totalTrackedWeightResidentBytes() const noexcept {
             return totalResidentBytes();
@@ -148,7 +153,8 @@ struct Deep2Engine {
 
     // Vulkan GEMV consuming TensorViews (dequant on CPU, real compute on GPU).
     bool vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
-                    const deep2::TensorView& xView, std::vector<float>& y);
+                    const deep2::TensorView& xView, std::vector<float>& y,
+                    const std::string& weightCacheKey = {});
 
     // ---- Move 10: Full Phi-3 ROM-Path Forward Pass ----
     // Execute complete 32-layer Phi-3 forward pass through virtual ROM path

@@ -5200,6 +5200,40 @@ list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
 )
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
+
+# Build the production Deep2 packed-weight QGEMV shader with the same glslc
+# tool supplied by the Vulkan SDK. The Vulkan runtime loads this exact output
+# through DEEP2_SHADER_DIR; the shader consumes F16/BF16 weight bytes directly.
+if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
+    find_program(RAWRXD_DEEP2_GLSLC
+        NAMES glslc glslc.exe
+        HINTS
+            "${RAWR_VULKAN_SDK_ROOT}/Bin"
+            "$ENV{VULKAN_SDK}/Bin"
+            "$ENV{VULKAN_SDK}/bin"
+        REQUIRED)
+    set(RAWRXD_DEEP2_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/shaders")
+    set(RAWRXD_DEEP2_QGEMV_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.comp")
+    set(RAWRXD_DEEP2_QGEMV_SPV
+        "${RAWRXD_DEEP2_SHADER_OUTPUT_DIR}/deep2_qgemv.spv")
+    add_custom_command(
+        OUTPUT "${RAWRXD_DEEP2_QGEMV_SPV}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${RAWRXD_DEEP2_SHADER_OUTPUT_DIR}"
+        COMMAND "${RAWRXD_DEEP2_GLSLC}" -fshader-stage=compute
+                --target-env=vulkan1.2 -O "${RAWRXD_DEEP2_QGEMV_SRC}"
+                -o "${RAWRXD_DEEP2_QGEMV_SPV}"
+        DEPENDS "${RAWRXD_DEEP2_QGEMV_SRC}"
+        COMMENT "Compiling Deep2 packed F16/BF16 QGEMV shader"
+        VERBATIM
+    )
+    add_custom_target(rawrxd-deep2-qgemv-spv
+        DEPENDS "${RAWRXD_DEEP2_QGEMV_SPV}")
+    add_dependencies(InferenceEngine rawrxd-deep2-qgemv-spv)
+    target_compile_definitions(InferenceEngine PRIVATE
+        DEEP2_SHADER_DIR="${RAWRXD_DEEP2_SHADER_OUTPUT_DIR}")
+endif()
+
 # Link precompiled MASM objects (tracer + quantKB)
 target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/ResidencyTrace.obj")
 target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.obj")
@@ -5279,6 +5313,8 @@ target_compile_definitions(RawrXD-InferenceEngine PRIVATE
 
 target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    # Shared native compression primitives live in the repository-level src tree.
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
@@ -14835,6 +14871,15 @@ add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
 set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# Native compressed F32 storage / range decode / residency lease regression.
+add_executable(rawrxd-native-tensor-compression-test
+    tests/native_tensor_compression_test.cpp)
+target_compile_features(rawrxd-native-tensor-compression-test PRIVATE cxx_std_17)
+target_include_directories(rawrxd-native-tensor-compression-test PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/deep2")
+add_test(NAME rawrxd_native_tensor_compression
+         COMMAND rawrxd-native-tensor-compression-test)
 
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp

@@ -47,6 +47,9 @@ struct GpuForwardCounters {
     uint64_t q4kPackedOps = 0;
     uint64_t q6kPackedOps = 0;
     uint64_t q2kPackedOps = 0;
+    uint64_t compressedF16GemvOps = 0;
+    uint64_t compressedBF16GemvOps = 0;
+    uint64_t compressedWeightBytesSubmitted = 0;
     uint64_t cpuF32Expands = 0;
     uint64_t dualRowSplitOps = 0;
     uint64_t dualArithmeticOverlapNs = 0;
@@ -174,6 +177,12 @@ inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t 
                 (unsigned long long)c.q6kPackedOps);
         fprintf(o, "DEEP2_GPU_Q2K_PACKED_OPS=%llu\n",
                 (unsigned long long)c.q2kPackedOps);
+        fprintf(o, "DEEP2_GPU_COMPRESSED_F16_GEMV_OPS=%llu\n",
+                (unsigned long long)c.compressedF16GemvOps);
+        fprintf(o, "DEEP2_GPU_COMPRESSED_BF16_GEMV_OPS=%llu\n",
+                (unsigned long long)c.compressedBF16GemvOps);
+        fprintf(o, "DEEP2_GPU_COMPRESSED_WEIGHT_BYTES_SUBMITTED=%llu\n",
+                (unsigned long long)c.compressedWeightBytesSubmitted);
         fprintf(o, "DEEP2_GPU_CPU_F32_EXPANDS=%llu\n",
                 (unsigned long long)c.cpuF32Expands);
         fprintf(o, "DEEP2_GPU_DUAL_ROW_SPLIT_OPS=%llu\n",

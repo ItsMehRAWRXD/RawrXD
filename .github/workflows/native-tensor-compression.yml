@@ -1,7 +1,10 @@
 name: Native tensor compression
 on:
   push:
-    branches: [feat/native-tensor-compression-20261122]
+    branches:
+      - feat/native-tensor-compression-20261122
+      - feat/native-universal-compression-expansion-20261123
+      - feat/native-universal-compression-expansion-20261123-v2
   pull_request:
     paths:
       - 'src/deep2/NativeTensorCompression.hpp'
@@ -9,6 +12,11 @@ on:
       - 'src/deep2/NativeTensorByteResidencyCache.hpp'
       - 'tests/deep2/native_tensor_byte_residency_cache_test.cpp'
       - 'tests/deep2/native_tensor_residency_cache_test.cpp'
+      - 'tests/deep2/native_packed_q8_0_shader_decode_test.cpp'
+      - 'shaders/gemv_packed16.comp'
+      - 'src/VulkanDevice.cpp'
+      - 'src/Deep2Engine.cpp'
+      - 'tests/deep2/native_tensor_compression_test.cpp'
       - 'src/Deep2Engine.hpp'
       - 'src/Deep2Engine.cpp'
       - 'src/TensorView.hpp'
@@ -22,15 +30,20 @@ on:
       - 'src/quant_kernels.cpp'
       - 'src/deep2/NativeKQuant.hpp'
       - 'tests/deep2/native_k_quant_test.cpp'
-      - 'tests/deep2/native_gguf_k_integration.py'
       - 'tests/deep2/native_loader_k_geometry_test.cpp'
       - 'tests/deep2/native_q5k_runtime_layout_test.cpp'
       - '~dev/rawrxd/src/deep2/NativeQ5KDecode.hpp'
+      - '~dev/rawrxd/src/deep2/Deep2Engine.h'
+      - '~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp'
+      - '~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp'
+      - '~dev/rawrxd/src/deep2/vulkan_compute.cpp'
+      - '~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp'
+      - '~dev/rawrxd/CMakeLists.txt'
       - '~dev/rawrxd/src/deep2/QuantKernelRegistry.cpp'
       - '~dev/rawrxd/src/deep2/GGUFLoader.hpp'
       - 'tools/native_tensor_pack.cpp'
-      - 'tests/deep2/native_tensor_compression_test.cpp'
       - 'tests/deep2/native_gguf_f16_integration.py'
+      - 'tests/deep2/native_gguf_k_integration.py'
       - 'tools/native_gguf_f16.cpp'
       - '.github/workflows/native-tensor-compression.yml'
 concurrency:
@@ -60,6 +73,13 @@ jobs:
           ./native_loader_k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_q5k_runtime_layout_test.cpp -o native_q5k_test
           ./native_q5k_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc tests/deep2/native_packed_q8_0_shader_decode_test.cpp src/quant_kernels.cpp -o packed_q8_shader_decode_test
+          ./packed_q8_shader_decode_test
+          if command -v glslc >/dev/null 2>&1; then
+            glslc --target-env=vulkan1.2 -O shaders/gemv_packed16.comp -o gemv_packed16.spv
+          else
+            echo "glslc unavailable; packed Vulkan shader compilation is covered by SDK-equipped native builds"
+          fi
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp -o quantized_tile_range_test
           ./quantized_tile_range_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc -c src/TensorROM.cpp -o tensor_rom.o
@@ -106,6 +126,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\native_q5k_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 /Isrc tests/deep2/native_packed_q8_0_shader_decode_test.cpp src/quant_kernels.cpp /Fe:packed_q8_shader_decode_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\packed_q8_shader_decode_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (Get-Command glslc -ErrorAction SilentlyContinue) {
+            glslc --target-env=vulkan1.2 -O shaders/gemv_packed16.comp -o gemv_packed16.spv
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
           cl /nologo /EHsc /std:c++17 /O2 /Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp /Fe:quantized_tile_range_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\quantized_tile_range_test.exe
@@ -133,5 +161,5 @@ jobs:
           if ((Get-FileHash input.bin).Hash -ne (Get-FileHash restored.bin).Hash) { exit 1 }
           python -c "from pathlib import Path; p=Path('compressed.rxtc'); b=bytearray(p.read_bytes()); b[35]^=1; Path('corrupt.rxtc').write_bytes(b)"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          .\\tensor_pack.exe unpack corrupt.rxtc corrupt.out
+          .\tensor_pack.exe unpack corrupt.rxtc corrupt.out
           if ($LASTEXITCODE -eq 0) { throw 'corrupt archive was accepted' }

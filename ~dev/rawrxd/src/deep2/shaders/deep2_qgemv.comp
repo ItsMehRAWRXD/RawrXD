@@ -19,6 +19,7 @@ layout(push_constant) uniform Push {
     uint rows;
     uint cols;
     uint weightBytes;
+    uint outputRowBase;
 } pc;
 
 // AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
@@ -35,6 +36,10 @@ int gets8(uint byteIndex) {
 float geth(uint byteIndex) {
     uint h = getb(byteIndex) | (getb(byteIndex + 1u) << 8u);
     return unpackHalf2x16(h).x;
+}
+float getbf16(uint byteIndex) {
+    uint h = getb(byteIndex) | (getb(byteIndex + 1u) << 8u);
+    return uintBitsToFloat(h << 16u);
 }
 
 void q4kScaleMin(uint base, uint sb, out uint sc, out uint mn) {
@@ -181,7 +186,9 @@ void main() {
 
     uint blocksPerRow = 0u;
     uint rowBytes = 0u;
-    if (pc.type == 8u) {
+    if (pc.type == 1u || pc.type == 30u) {
+        rowBytes = pc.cols * 2u;
+    } else if (pc.type == 8u) {
         blocksPerRow = (pc.cols + 31u) / 32u;
         rowBytes = blocksPerRow * 34u;
     } else if (pc.type == 10u) {
@@ -194,13 +201,13 @@ void main() {
         blocksPerRow = (pc.cols + 255u) / 256u;
         rowBytes = blocksPerRow * 210u;
     } else {
-        y[row] = uintBitsToFloat(0x7fc00000u);
+        y[pc.outputRowBase + row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
 
     uint rb = row * rowBytes;
     if (rb + rowBytes > pc.weightBytes) {
-        if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
+        if (lane == 0u) y[pc.outputRowBase + row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
 
@@ -212,7 +219,9 @@ void main() {
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
-            if (pc.type == 8u) ww = q8_0_weight(rb, j);
+            if (pc.type == 1u) ww = geth(rb + j * 2u);
+            else if (pc.type == 30u) ww = getbf16(rb + j * 2u);
+            else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
             else if (pc.type == 14u) ww = q6k_weight(rb, j);
             acc += ww * x[j];
@@ -232,7 +241,7 @@ void main() {
             : 0.0;
         float total = subgroupAdd(v);
         if (subgroupElect())
-            y[row] = total;
+            y[pc.outputRowBase + row] = total;
     }
 
 }

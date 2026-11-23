@@ -19,6 +19,14 @@ struct Result {
     uint64_t original_bytes = 0;
     std::vector<uint8_t> payload;
 };
+// Distinguish transient source I/O failure from a deterministic decision not
+// to retain this tensor in compressed residency.
+class SourceReadFailure : public std::runtime_error {
+public: using std::runtime_error::runtime_error;
+};
+class StorageAdmissionRejected : public std::runtime_error {
+public: using std::runtime_error::runtime_error;
+};
 inline uint32_t Bits(float x) { uint32_t u; std::memcpy(&u, &x, 4); return u; }
 inline float Float(uint32_t u) { float f; std::memcpy(&f, &u, 4); return f; }
 // IEEE-754 binary32 -> binary16, round-to-nearest ties-to-even; preserve NaN.
@@ -209,6 +217,43 @@ inline Result EncodeAdaptiveF32(const float* values,size_t count,float max_abs_e
         throw std::length_error("F32 tensor size overflow");
     return Encode(values,count*sizeof(float),true,max_abs_error,true);
 }
+
+// Build a uniform device-consumable 16-bit F32 representation directly from
+// the mapped source. Unlike EncodeAdaptiveF32 this intentionally does not
+// select RLE/LZ4: the Vulkan QGEMV shader needs a fixed two-byte stride for
+// every element. F16 is preferred; BF16 is the wider-exponent fallback.
+inline bool EncodeUniform16BitF32(const float* values, size_t count,
+                                  float max_abs_error, Encoding& encoding,
+                                  std::vector<uint8_t>& packed) {
+    packed.clear();
+    if ((count && !values) || !std::isfinite(max_abs_error) ||
+        max_abs_error < 0.0f ||
+        count > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+        return false;
+    auto tryEncoding = [&](Encoding candidate) {
+        std::vector<uint8_t> bytes(count * sizeof(uint16_t));
+        for (size_t i = 0; i < count; ++i) {
+            const float value = values[i];
+            const uint32_t bits = Bits(value);
+            if ((bits & 0x7f800000u) == 0x7f800000u) return false;
+            const uint16_t h = candidate == Encoding::F16
+                ? ToHalf(value) : ToBFloat16(value);
+            const float reconstructed = candidate == Encoding::F16
+                ? FromHalf(h) : FromBFloat16(h);
+            if (!std::isfinite(reconstructed) ||
+                std::fabs(reconstructed - value) > max_abs_error)
+                return false;
+            bytes[i * 2] = static_cast<uint8_t>(h);
+            bytes[i * 2 + 1] = static_cast<uint8_t>(h >> 8);
+        }
+        packed.swap(bytes);
+        encoding = candidate;
+        return true;
+    };
+    if (tryEncoding(Encoding::F16)) return true;
+    packed.clear();
+    return tryEncoding(Encoding::BF16);
+}
 // Decode directly into caller-owned storage. This avoids an intermediate
 // allocation when a runtime must materialize one tile/row into an existing
 // scratch buffer. The destination is unchanged on all preflight failures.
@@ -376,16 +421,16 @@ public:
             const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
             tile.resize(n);
             if(!reader(offset,n,tile.data()))
-                throw std::runtime_error("F32 tensor source read failed");
+                throw SourceReadFailure("F32 tensor source read failed");
             Result encoded = EncodeAdaptiveF32(tile.data(),n,max_abs_error);
             // The residency cache can reject obviously non-compressible tensors
             // after the first bounded read, avoiding a full-model scan before
             // falling back to direct raw tile reads.
             if(require_first_chunk_savings && offset==0 &&
                encoded.payload.size()>=n*sizeof(float))
-                throw std::runtime_error("first F32 chunk has no smaller safe encoding");
+                throw StorageAdmissionRejected("first F32 chunk has no smaller safe encoding");
             if(encoded.payload.size()>max_stored_bytes-storedBytes)
-                throw std::runtime_error("compressed F32 tensor exceeds residency budget");
+                throw StorageAdmissionRejected("compressed F32 tensor exceeds residency budget");
             storedBytes+=encoded.payload.size();
             result.chunks_.push_back(std::move(encoded));
             offset+=n;
@@ -409,6 +454,85 @@ public:
     void ReadRange(size_t first,size_t count,float* destination) const {
         std::vector<uint8_t> scratch;
         ReadRange(first,count,destination,scratch);
+    }
+    // Export only when every independently stored chunk is the same native
+    // 16-bit representation. Mixed/RLE/LZ4/raw chunks stay on the CPU path;
+    // callers never reinterpret an unknown per-chunk codec as packed FP16.
+    bool ExportUniform16Bit(Encoding& encoding,
+                            std::vector<uint8_t>& packed) const {
+        packed.clear();
+        if (chunks_.empty()) return false;
+        encoding = chunks_.front().encoding;
+        if (encoding != Encoding::F16 && encoding != Encoding::BF16) return false;
+        size_t total = 0;
+        for (const auto& chunk : chunks_) {
+            if (chunk.encoding != encoding ||
+                chunk.original_bytes % sizeof(float) != 0 ||
+                chunk.payload.size() != chunk.original_bytes / 2 ||
+                chunk.payload.size() > std::numeric_limits<size_t>::max() - total)
+                return false;
+            total += chunk.payload.size();
+        }
+        packed.reserve(total);
+        for (const auto& chunk : chunks_)
+            packed.insert(packed.end(), chunk.payload.begin(), chunk.payload.end());
+        return packed.size() == total;
+    }
+    // Export any logical range whose intersecting chunks all use the same
+    // native F16/BF16 representation. Chunk boundaries are an implementation
+    // detail: slicing is performed directly on the compact payload, without
+    // decoding an intermediate F32 tile. Mixed codecs fail closed.
+    bool ExportUniform16BitRange(size_t first, size_t count, Encoding& encoding,
+                                 std::vector<uint8_t>& packed) const {
+        packed.clear();
+        if (first > element_count_ || count > element_count_ - first) return false;
+        if (!count) {
+            encoding = Encoding::Raw;
+            return true;
+        }
+        if (!chunk_elements_) return false;
+        const size_t end = first + count; // bounded by element_count_ above
+        const size_t firstChunk = first / chunk_elements_;
+        const size_t lastChunk = (end - 1) / chunk_elements_;
+        if (lastChunk >= chunks_.size()) return false;
+        const Encoding selected = chunks_[firstChunk].encoding;
+        if (selected != Encoding::F16 && selected != Encoding::BF16) return false;
+
+        size_t totalBytes = 0;
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const auto& chunk = chunks_[i];
+            if (chunk.encoding != selected ||
+                chunk.original_bytes % sizeof(float) != 0 ||
+                chunk.payload.size() != chunk.original_bytes / 2)
+                return false;
+            const size_t chunkFirst = i * chunk_elements_;
+            const size_t chunkElements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            if (chunkElements > element_count_ - chunkFirst) return false;
+            const size_t copyFirst = std::max(first, chunkFirst);
+            const size_t copyEnd = std::min(end, chunkFirst + chunkElements);
+            const size_t copyBytes = (copyEnd - copyFirst) * sizeof(uint16_t);
+            if (copyBytes > std::numeric_limits<size_t>::max() - totalBytes) return false;
+            totalBytes += copyBytes;
+        }
+
+        packed.reserve(totalBytes);
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const auto& chunk = chunks_[i];
+            const size_t chunkFirst = i * chunk_elements_;
+            const size_t chunkElements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            const size_t copyFirst = std::max(first, chunkFirst);
+            const size_t copyEnd = std::min(end, chunkFirst + chunkElements);
+            const size_t sourceOffset = (copyFirst - chunkFirst) * sizeof(uint16_t);
+            const size_t copyBytes = (copyEnd - copyFirst) * sizeof(uint16_t);
+            packed.insert(packed.end(), chunk.payload.begin() + sourceOffset,
+                          chunk.payload.begin() + sourceOffset + copyBytes);
+        }
+        if (packed.size() != totalBytes || totalBytes != count * sizeof(uint16_t)) {
+            packed.clear();
+            return false;
+        }
+        encoding = selected;
+        return true;
     }
     void ReadRange(size_t first,size_t count,float* destination,
                    std::vector<uint8_t>& scratch) const {
@@ -463,19 +587,19 @@ private:
              const size_t n = std::min(chunkBytes, byteCount - offset);
              tile.resize(n);
              if (!reader(offset, n, tile.data()))
-                 throw std::runtime_error("byte tensor source read failed");
+                 throw SourceReadFailure("byte tensor source read failed");
              Result encoded = Encode(tile.data(), n, false, 0.0f, false);
              if (requireFirstChunkSavings && offset == 0 && encoded.payload.size() >= n)
-                 throw std::runtime_error("first byte chunk has no lossless compression win");
+                 throw StorageAdmissionRejected("first byte chunk has no lossless compression win");
              if (encoded.payload.size() > maxStoredBytes - stored)
-                 throw std::runtime_error("compressed byte tensor exceeds residency budget");
+                 throw StorageAdmissionRejected("compressed byte tensor exceeds residency budget");
              stored += encoded.payload.size();
              result.chunks_.push_back(std::move(encoded));
              offset += n;
          }
          result.stored_bytes_ = stored;
          if (byteCount && stored >= byteCount)
-             throw std::runtime_error("byte tensor has no net compression win");
+             throw StorageAdmissionRejected("byte tensor has no net compression win");
          return result;
      }
 

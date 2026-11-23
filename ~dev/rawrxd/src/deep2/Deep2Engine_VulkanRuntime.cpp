@@ -10,6 +10,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cmath>
+#include <limits>
+#include <memory>
 #include <vector>
 #ifdef _WIN32
 #include <malloc.h>
@@ -37,6 +40,13 @@ bool isDeep2RequiredNativeGpu(const VulkanPhysicalInfo& d) {
 
 uint64_t tensorResidentBytes(const WeightTensor& w) {
     if (!w.data) return 0;
+    // Device residency planning must charge the actual packed representation
+    // when a uniform F16/BF16 GPU payload is active, not the original F32
+    // source size. The raw host source remains the CPU fallback.
+    const auto packed = std::atomic_load_explicit(
+        &w.gpuF16Payload, std::memory_order_acquire);
+    if (packed && !packed->bytes.empty())
+        return static_cast<uint64_t>(packed->bytes.size());
     if (w.sizeBytes) return static_cast<uint64_t>(w.sizeBytes);
     const uint64_t n = static_cast<uint64_t>(w.numElements());
     return n > UINT64_MAX / sizeof(float) ? 0 : n * sizeof(float);
@@ -62,6 +72,106 @@ double envPositiveDouble(const char* name, double fallback) {
     char* end = nullptr;
     const double v = std::strtod(s, &end);
     return end != s && v > 0.0 ? v : fallback;
+}
+
+// Explicit opt-in: prepare only F32 tensors that produce a smaller, uniform
+// F16/BF16 representation. The Vulkan quant GEMV shader consumes those packed
+// bytes directly. Default tolerance is zero (bit-exact conversion only).
+bool prepareF32GpuCompression(ModelWeights& weights) {
+    // Safe-by-default: zero tolerance means only bit-exact F16/BF16
+    // conversions are admitted. Set DEEP2_F32_GPU_COMPRESSION=0 to opt out.
+    const char* enabled = std::getenv("DEEP2_F32_GPU_COMPRESSION");
+    if (enabled && *enabled == '0') return true;
+
+    float tolerance = 0.0f;
+    if (const char* value = std::getenv("DEEP2_F32_MAX_ABS_ERROR")) {
+        char* end = nullptr;
+        tolerance = std::strtof(value, &end);
+        if (end == value || *end != '\0' || !std::isfinite(tolerance) ||
+            tolerance < 0.0f) {
+            std::fprintf(stderr,
+                "[F32_GPU_COMPRESSION] HOLD invalid DEEP2_F32_MAX_ABS_ERROR\n");
+            return false;
+        }
+    }
+
+    size_t budgetBytes = 512ull * 1024ull * 1024ull;
+    if (const char* value = std::getenv("DEEP2_F32_GPU_COMPRESSED_BUDGET_MB")) {
+        if (!*value || *value == '-') return false;
+        char* end = nullptr;
+        const unsigned long long mb = std::strtoull(value, &end, 10);
+        if (end == value || *end != '\0' ||
+            mb > std::numeric_limits<size_t>::max() / (1024ull * 1024ull))
+            return false;
+        budgetBytes = static_cast<size_t>(mb) * 1024ull * 1024ull;
+    }
+
+    size_t storedBytes = 0;
+    size_t compressedTensors = 0;
+    size_t rejectedTensors = 0;
+    auto prepare = [&](WeightTensor& tensor) {
+        if (tensor.type != 0 || !tensor.data || tensor.gpuF16Payload ||
+            storedBytes >= budgetBytes)
+            return;
+        const size_t remaining = budgetBytes - storedBytes;
+        if (!tensor.rows || !tensor.cols || !tensor.sizeBytes ||
+            tensor.sizeBytes % sizeof(float) != 0 ||
+            tensor.cols > std::numeric_limits<size_t>::max() / tensor.rows ||
+            tensor.rows * tensor.cols != tensor.sizeBytes / sizeof(float)) {
+            ++rejectedTensors;
+            return;
+        }
+        const size_t expectedBytes = tensor.sizeBytes / 2u;
+        if (expectedBytes > remaining) return;
+        // This encoder intentionally bypasses RLE/LZ4 selection. The Vulkan
+        // QGEMV descriptor requires a fixed 16-bit stride, so every source
+        // element must satisfy the configured F16/BF16 error bound.
+        RawrXD::TensorCompression::Encoding encoding{};
+        std::vector<uint8_t> packed;
+        if (!RawrXD::TensorCompression::EncodeUniform16BitF32(
+                static_cast<const float*>(tensor.data),
+                tensor.sizeBytes / sizeof(float), tolerance, encoding, packed) ||
+            packed.size() != expectedBytes || packed.size() > remaining) {
+            ++rejectedTensors;
+            return;
+        }
+        auto payload = std::make_shared<WeightTensor::GpuCompressedF32Payload>();
+        payload->bytes = std::move(packed);
+        payload->ggmlType = encoding ==
+            RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
+        std::shared_ptr<const WeightTensor::GpuCompressedF32Payload> immutable = payload;
+        std::atomic_store_explicit(&tensor.gpuF16Payload, immutable,
+            std::memory_order_release);
+        // The raw source remains the CPU fallback. Release the chunk-object
+        // duplicate now that its packed GPU representation owns the payload.
+        tensor.compressedF32.reset();
+        storedBytes += immutable->bytes.size();
+        ++compressedTensors;
+    };
+
+    // Only compress tensors consumed as matrix weights by the packed QGEMV
+    // path. Norm vectors, biases, embeddings and convolution/state vectors
+    // retain their existing upload/lookup paths and residency accounting.
+    prepare(weights.lmHead);
+    for (auto& layer : weights.layers) {
+        WeightTensor* dense[] = {
+            &layer.wq, &layer.wk, &layer.wv, &layer.wo, &layer.wqkv,
+            &layer.attnQ_a, &layer.attnQ_b, &layer.attnKV_a_mqa,
+            &layer.attnK_b, &layer.attnV_b, &layer.attnO,
+            &layer.wGate, &layer.wUp, &layer.wDown, &layer.moeRouter,
+            &layer.moeSharedGate, &layer.moeSharedUp, &layer.moeSharedDown
+        };
+        for (WeightTensor* tensor : dense) prepare(*tensor);
+        for (auto& tensor : layer.moeGate) prepare(tensor);
+        for (auto& tensor : layer.moeUp) prepare(tensor);
+        for (auto& tensor : layer.moeDown) prepare(tensor);
+    }
+
+    std::fprintf(stderr,
+        "[F32_GPU_COMPRESSION] enabled=1 tolerance=%.9g tensors=%zu "
+        "rejected=%zu packed_host_bytes=%zu budget_bytes=%zu\n",
+        tolerance, compressedTensors, rejectedTensors, storedBytes, budgetBytes);
+    return true;
 }
 
 } // namespace
@@ -150,6 +260,15 @@ void Deep2Engine::enableVulkan(bool enable) {
         vulkanStrictViolation_ = vulkanStrictNoCpuFallback_;
         std::fprintf(stderr,
             "BATCH9_VULKAN_INIT=HOLD no_compute_device_initialized\n");
+        return;
+    }
+
+    if (modelWeights.loaded && !prepareF32GpuCompression(modelWeights)) {
+        vulkanStrictViolation_ = true;
+        vulkanInitialized_ = false;
+        vulkanDevices_.clear();
+        std::fprintf(stderr,
+            "BATCH9_VULKAN_INIT=HOLD invalid compressed-F32 GPU configuration\n");
         return;
     }
 

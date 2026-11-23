@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <set>
+#include <limits>
 
 namespace deep2 {
 
@@ -125,8 +126,10 @@ bool VulkanDevice::init() {
 }
 
 void VulkanDevice::shutdown() {
+    // Weight-cache buffers must be released while their owning VkDevice lives.
+    for (auto& g : m_gpus) vkDeviceWaitIdle(g.device);
+    clearCachedWeights();
     for (auto& g : m_gpus) {
-        vkDeviceWaitIdle(g.device);
         vkDestroyCommandPool(g.device, g.pool, nullptr);
         vkDestroyDevice(g.device, nullptr);
     }
@@ -152,7 +155,9 @@ bool VulkanDevice::pickMemoryType(const Gpu& gpu, uint32_t typeBits,
 bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsageFlags usage,
                                 VkMemoryPropertyFlags memProps, VkBuffer& buf,
                                 VkDeviceMemory& mem, void** mapped) {
-    buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
+    buf = VK_NULL_HANDLE;
+    mem = VK_NULL_HANDLE;
+    if (mapped) *mapped = nullptr;
     if (size == 0) return true;
 
     VkBufferCreateInfo bci{};
@@ -179,10 +184,23 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
         vkDestroyBuffer(gpu.device, buf, nullptr);
         return false;
     }
-    vkBindBufferMemory(gpu.device, buf, mem, 0);
+    if (vkBindBufferMemory(gpu.device, buf, mem, 0) != VK_SUCCESS) {
+        vkFreeMemory(gpu.device, mem, nullptr);
+        vkDestroyBuffer(gpu.device, buf, nullptr);
+        buf = VK_NULL_HANDLE;
+        mem = VK_NULL_HANDLE;
+        return false;
+    }
 
     if (mapped && (memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
-        vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped);
+        if (vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped) != VK_SUCCESS) {
+            vkDestroyBuffer(gpu.device, buf, nullptr);
+            vkFreeMemory(gpu.device, mem, nullptr);
+            buf = VK_NULL_HANDLE;
+            mem = VK_NULL_HANDLE;
+            *mapped = nullptr;
+            return false;
+        }
     }
     return true;
 }
@@ -195,48 +213,211 @@ void VulkanDevice::destroyBuffer(const Gpu& gpu, VkBuffer buf, VkDeviceMemory me
 bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dstOffset,
                                   const void* data, VkDeviceSize size) {
     if (size == 0) return true;
+    if (dst == VK_NULL_HANDLE || !data ||
+        size > static_cast<VkDeviceSize>(std::numeric_limits<size_t>::max()))
+        return false;
+
     VkBuffer staging = VK_NULL_HANDLE;
-    VkDeviceMemory smem = VK_NULL_HANDLE;
+    VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
     void* mapped = nullptr;
+    VkCommandBuffer command = VK_NULL_HANDLE;
+    VkFence fence = VK_NULL_HANDLE;
+    auto cleanup = [&]() {
+        if (fence != VK_NULL_HANDLE) vkDestroyFence(gpu.device, fence, nullptr);
+        if (command != VK_NULL_HANDLE)
+            vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &command);
+        if (mapped && stagingMemory != VK_NULL_HANDLE)
+            vkUnmapMemory(gpu.device, stagingMemory);
+        destroyBuffer(gpu, staging, stagingMemory);
+        staging = VK_NULL_HANDLE;
+        stagingMemory = VK_NULL_HANDLE;
+        mapped = nullptr;
+        command = VK_NULL_HANDLE;
+        fence = VK_NULL_HANDLE;
+    };
+
     if (!createBuffer(gpu, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                      staging, smem, &mapped)) {
+                      staging, stagingMemory, &mapped))
         return false;
-    }
     std::memcpy(mapped, data, static_cast<size_t>(size));
-    vkUnmapMemory(gpu.device, smem);
+    vkUnmapMemory(gpu.device, stagingMemory);
+    mapped = nullptr;
 
     VkCommandBufferAllocateInfo cbai{};
     cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     cbai.commandPool = gpu.pool;
     cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cbai.commandBufferCount = 1;
-    VkCommandBuffer cmd = VK_NULL_HANDLE;
-    vkAllocateCommandBuffers(gpu.device, &cbai, &cmd);
+    if (vkAllocateCommandBuffers(gpu.device, &cbai, &command) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
 
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &cbi);
+    if (vkBeginCommandBuffer(command, &cbi) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
 
     VkBufferCopy region{};
-    region.srcOffset = 0; region.dstOffset = dstOffset; region.size = size;
-    vkCmdCopyBuffer(cmd, staging, dst, 1, &region);
+    region.srcOffset = 0;
+    region.dstOffset = dstOffset;
+    region.size = size;
+    vkCmdCopyBuffer(command, staging, dst, 1, &region);
+    VkBufferMemoryBarrier uploadBarrier{};
+    uploadBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    uploadBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    uploadBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    uploadBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uploadBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uploadBarrier.buffer = dst;
+    uploadBarrier.offset = dstOffset;
+    uploadBarrier.size = size;
+    vkCmdPipelineBarrier(command, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+                         0, nullptr, 1, &uploadBarrier, 0, nullptr);
+    if (vkEndCommandBuffer(command) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
 
-    vkEndCommandBuffer(cmd);
-    VkFence fence = VK_NULL_HANDLE;
-    VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(gpu.device, &fci, nullptr, &fence);
-    VkSubmitInfo si{};
-    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    si.commandBufferCount = 1;
-    si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, fence);
-    vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
-    vkDestroyFence(gpu.device, fence, nullptr);
-    vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
-    destroyBuffer(gpu, staging, smem);
+    VkFenceCreateInfo fci{};
+    fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    if (vkCreateFence(gpu.device, &fci, nullptr, &fence) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
+
+    VkSubmitInfo submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit.commandBufferCount = 1;
+    submit.pCommandBuffers = &command;
+    if (vkQueueSubmit(gpu.queue, 1, &submit, fence) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
+
+    const VkResult waitResult =
+        vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
+    if (waitResult != VK_SUCCESS) {
+        const VkResult idleResult = vkDeviceWaitIdle(gpu.device);
+        if (idleResult == VK_SUCCESS || idleResult == VK_ERROR_DEVICE_LOST) {
+            cleanup();
+        } else {
+            // Do not destroy staging resources while the queue may still read them.
+        }
+        return false;
+    }
+
+    cleanup();
     return true;
+}
+
+
+void VulkanDevice::evictCachedWeightsLocked(size_t requiredBytes) {
+    while (m_weightCacheBytes > m_weightCacheBudgetBytes ||
+           requiredBytes > m_weightCacheBudgetBytes - m_weightCacheBytes) {
+        auto victim = m_weightBuffers.end();
+        for (auto it = m_weightBuffers.begin(); it != m_weightBuffers.end(); ++it) {
+            if (victim == m_weightBuffers.end() ||
+                it->second.lastUse < victim->second.lastUse)
+                victim = it;
+        }
+        if (victim == m_weightBuffers.end()) break;
+        if (victim->second.buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(victim->second.owner, victim->second.buffer, nullptr);
+        if (victim->second.memory != VK_NULL_HANDLE)
+            vkFreeMemory(victim->second.owner, victim->second.memory, nullptr);
+        const size_t bytes = static_cast<size_t>(victim->second.size);
+        m_weightCacheBytes = bytes > m_weightCacheBytes ? 0 : m_weightCacheBytes - bytes;
+        m_weightBuffers.erase(victim);
+    }
+}
+
+bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::string& key,
+                                                  const void* data, VkDeviceSize size,
+                                                  size_t budgetBytes, VkBuffer& buffer) {
+    buffer = VK_NULL_HANDLE;
+    if (key.empty() || !data || !size || (size & 3u) != 0u ||
+        size > static_cast<VkDeviceSize>(std::numeric_limits<size_t>::max()))
+        return false;
+
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    m_weightCacheBudgetBytes = budgetBytes;
+    evictCachedWeightsLocked(0);
+
+    const std::string cacheKey =
+        std::to_string(reinterpret_cast<uintptr_t>(gpu.device)) + ":" + key;
+    auto existing = m_weightBuffers.find(cacheKey);
+    if (existing != m_weightBuffers.end()) {
+        if (existing->second.size == size && existing->second.owner == gpu.device) {
+            existing->second.lastUse = ++m_weightCacheTick;
+            buffer = existing->second.buffer;
+            return true;
+        }
+        if (existing->second.buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(existing->second.owner, existing->second.buffer, nullptr);
+        if (existing->second.memory != VK_NULL_HANDLE)
+            vkFreeMemory(existing->second.owner, existing->second.memory, nullptr);
+        const size_t oldBytes = static_cast<size_t>(existing->second.size);
+        m_weightCacheBytes = oldBytes > m_weightCacheBytes ? 0 : m_weightCacheBytes - oldBytes;
+        m_weightBuffers.erase(existing);
+    }
+
+    if (size > budgetBytes) return false;
+    evictCachedWeightsLocked(static_cast<size_t>(size));
+    if (m_weightCacheBytes > budgetBytes ||
+        static_cast<size_t>(size) > budgetBytes - m_weightCacheBytes)
+        return false;
+
+    VkBuffer created = VK_NULL_HANDLE;
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+    const VkBufferUsageFlags usage =
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    if (!createBuffer(gpu, size, usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                      created, memory, nullptr))
+        return false;
+    if (!uploadToBuffer(gpu, created, 0, data, size)) {
+        destroyBuffer(gpu, created, memory);
+        return false;
+    }
+
+    CachedWeightBuffer entry;
+    entry.owner = gpu.device;
+    entry.buffer = created;
+    entry.memory = memory;
+    entry.size = size;
+    entry.lastUse = ++m_weightCacheTick;
+    m_weightBuffers.emplace(cacheKey, entry);
+    m_weightCacheBytes += static_cast<size_t>(size);
+    buffer = created;
+    return true;
+}
+
+size_t VulkanDevice::cachedWeightBytes() const {
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    return m_weightCacheBytes;
+}
+
+size_t VulkanDevice::weightCacheBudgetBytes() const {
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    return m_weightCacheBudgetBytes;
+}
+
+void VulkanDevice::clearCachedWeights() {
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    for (auto& item : m_weightBuffers) {
+        auto& entry = item.second;
+        if (entry.buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(entry.owner, entry.buffer, nullptr);
+        if (entry.memory != VK_NULL_HANDLE)
+            vkFreeMemory(entry.owner, entry.memory, nullptr);
+    }
+    m_weightBuffers.clear();
+    m_weightCacheBytes = 0;
 }
 
 bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize offset,
@@ -302,7 +483,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     VkPushConstantRange pcr{};
     pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     pcr.offset = 0;
-    pcr.size = 8; // uint rows, uint cols
+    pcr.size = 12; // uint rows, uint cols, uint weightEncoding
 
     VkPipelineLayoutCreateInfo plci{};
     plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -339,7 +520,10 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     if (vkAllocateDescriptorSets(device, &dsai, &m_set) != VK_SUCCESS) return false;
 
     VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(device, &fci, nullptr, &m_fence);
+    if (vkCreateFence(device, &fci, nullptr, &m_fence) != VK_SUCCESS) {
+        destroy(device);
+        return false;
+    }
     return true;
 }
 
@@ -350,10 +534,20 @@ void VulkanProgram::destroy(VkDevice device) {
     if (m_pipeline) vkDestroyPipeline(device, m_pipeline, nullptr);
     if (m_layout) vkDestroyPipelineLayout(device, m_layout, nullptr);
     if (m_shader) vkDestroyShaderModule(device, m_shader, nullptr);
+    m_fence = VK_NULL_HANDLE;
+    m_pool = VK_NULL_HANDLE;
+    m_set = VK_NULL_HANDLE;
+    m_dsl = VK_NULL_HANDLE;
+    m_pipeline = VK_NULL_HANDLE;
+    m_layout = VK_NULL_HANDLE;
+    m_shader = VK_NULL_HANDLE;
+    m_cmd = VK_NULL_HANDLE;
+    m_queue = VK_NULL_HANDLE;
+    m_device = VK_NULL_HANDLE;
 }
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                             uint32_t rows, uint32_t cols) {
+                             uint32_t rows, uint32_t cols, uint32_t weightEncoding) {
     if (m_device == VK_NULL_HANDLE) return false;
     m_queue = gpu.queue;
 
@@ -380,27 +574,67 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     VkCommandBuffer cmd = VK_NULL_HANDLE;
     if (vkAllocateCommandBuffers(m_device, &cbai, &cmd) != VK_SUCCESS) return false;
 
+    // Every failure before submission is safe to unwind immediately.
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &cbi);
+    if (vkBeginCommandBuffer(cmd, &cbi) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
-    uint32_t pc[2] = {rows, cols};
-    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
-    uint32_t groups = (rows + 255) / 256;
+    const uint32_t pc[3] = {rows, cols, weightEncoding};
+    const uint32_t pushBytes = weightEncoding == 0u ? 8u : 12u;
+    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, pushBytes, pc);
+    const uint32_t groups = rows / 256u + ((rows % 256u) != 0u ? 1u : 0u);
     vkCmdDispatch(cmd, groups, 1, 1);
+    VkBufferMemoryBarrier outputBarrier{};
+    outputBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    outputBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    outputBarrier.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
+    outputBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    outputBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    outputBarrier.buffer = y;
+    outputBarrier.offset = 0;
+    outputBarrier.size = VK_WHOLE_SIZE;
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                         VK_PIPELINE_STAGE_HOST_BIT, 0,
+                         0, nullptr, 1, &outputBarrier, 0, nullptr);
 
-    vkEndCommandBuffer(cmd);
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
+    if (vkResetFences(m_device, 1, &m_fence) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
 
-    vkResetFences(m_device, 1, &m_fence);
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, m_fence);
-    vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+    const VkResult submitResult = vkQueueSubmit(gpu.queue, 1, &si, m_fence);
+    if (submitResult != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
+
+    // This API is synchronous: callers may release the expanded tile and its
+    // VkBuffers only after the fence proves the GPU is finished. Never report
+    // success when a wait failed. On a non-success wait, attempt an idle wait
+    // before releasing the command buffer; VK_ERROR_DEVICE_LOST is terminal
+    // and is propagated as failure to the caller.
+    const VkResult waitResult = vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+    if (waitResult != VK_SUCCESS) {
+        const VkResult idleResult = vkDeviceWaitIdle(m_device);
+        if (idleResult == VK_SUCCESS || idleResult == VK_ERROR_DEVICE_LOST)
+            vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
+
     vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
     return true;
 }

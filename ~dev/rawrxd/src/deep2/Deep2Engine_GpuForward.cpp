@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -25,6 +26,9 @@ uint64_t WeightKey(const WeightTensor& wt) {
     uint64_t h = 14695981039346656037ull;
     for (unsigned char c : wt.name) { h ^= c; h *= 1099511628211ull; }
     h ^= ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols ^ (uint64_t)(uint32_t)wt.type;
+    h *= 1099511628211ull;
+    h ^= static_cast<uint64_t>(reinterpret_cast<uintptr_t>(wt.data));
+    h *= 1099511628211ull;
     return h;
 }
 
@@ -41,7 +45,17 @@ bool PackedQuant(const WeightTensor& wt) {
 
 size_t StreamBytes(const WeightTensor& wt) {
     if (!wt.data || !wt.rows || !wt.cols) return 0;
-    return PackedQuant(wt) ? wt.sizeBytes : wt.rows * wt.cols * sizeof(float);
+    if (PackedQuant(wt)) return wt.sizeBytes;
+    if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+        const auto packed = std::atomic_load_explicit(
+            &wt.gpuF16Payload, std::memory_order_acquire);
+        if (packed && !packed->bytes.empty()) return packed->bytes.size();
+    }
+    if (wt.cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        wt.rows > std::numeric_limits<size_t>::max() /
+                      (wt.cols * sizeof(float)))
+        return 0;
+    return wt.rows * wt.cols * sizeof(float);
 }
 
 const float* EnsureF32(Deep2Engine& e, const WeightTensor& wt,
@@ -272,6 +286,71 @@ bool Deep2Engine::forwardLayerGpuResident(
     auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
                     CPUInference::VulkanCompute::DeviceBuf& out,
                     uint32_t rows, uint32_t cols) -> bool {
+        // Losslessly compressed GGUF quantized bytes are streamed to
+        // Vulkan in independently addressable row tiles. The original GGML
+        // quant block format is reconstructed only for the rows consumed by
+        // this dispatch; no full quantized tensor copy is created.
+        if (wt.compressedBytes && !vc->FusedRecording() &&
+            (wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
+             wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
+             wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
+             wt.type == (int)GGMLType::GGML_TYPE_Q6_K)) {
+            if (prefetch && vc->WeightStreamActive() &&
+                !vc->FlushWeightComputes())
+                return false;
+            uint64_t blocksPerRow = 0;
+            uint64_t bytesPerBlock = 0;
+            if (wt.type == (int)GGMLType::GGML_TYPE_Q8_0) {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 31u) / 32u;
+                bytesPerBlock = 34u;
+            } else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 255u) / 256u;
+                bytesPerBlock = 84u;
+            } else if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 255u) / 256u;
+                bytesPerBlock = 144u;
+            } else {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 255u) / 256u;
+                bytesPerBlock = 210u;
+            }
+            if (!blocksPerRow || !bytesPerBlock ||
+                blocksPerRow > std::numeric_limits<size_t>::max() / bytesPerBlock)
+                return false;
+            const size_t rowBytes = static_cast<size_t>(blocksPerRow * bytesPerBlock);
+            if (rows != wt.rows || cols != wt.cols ||
+                rows > std::numeric_limits<size_t>::max() / rowBytes ||
+                rows * rowBytes != wt.sizeBytes ||
+                wt.compressedBytes->size() != wt.sizeBytes)
+                return false;
+
+            constexpr size_t kMaxQuantTileBytes = 256u * 1024u;
+            const size_t rowsPerTile = std::max<size_t>(
+                1, kMaxQuantTileBytes / rowBytes);
+            std::vector<uint8_t> quantizedTile;
+            std::vector<uint8_t> decodeScratch;
+            for (uint32_t rowBase = 0; rowBase < rows;) {
+                const uint32_t tileRows = static_cast<uint32_t>(
+                    std::min<size_t>(rows - rowBase, rowsPerTile));
+                const size_t tileBytes = static_cast<size_t>(tileRows) * rowBytes;
+                quantizedTile.resize(tileBytes);
+                wt.compressedBytes->ReadRange(
+                    static_cast<size_t>(rowBase) * rowBytes, tileBytes,
+                    quantizedTile.data(), decodeScratch);
+                uint64_t tileKey = WeightKey(wt) ^
+                    (static_cast<uint64_t>(rowBase) * 0x9E3779B185EBCA87ull) ^
+                    (static_cast<uint64_t>(tileRows) << 21) ^
+                    (static_cast<uint64_t>(wt.type) << 57) ^
+                    0xd6e8feb86659fd93ull;
+                if (!tileKey) tileKey = 1;
+                if (!vc->DispatchGemvQuantRows(
+                        wt.type, quantizedTile.data(), tileBytes,
+                        in, out, tileRows, cols, rowBase, tileKey))
+                    return false;
+                rowBase += tileRows;
+            }
+            return true;
+        }
+
         if (PackedQuant(wt)) {
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
@@ -288,6 +367,114 @@ bool Deep2Engine::forwardLayerGpuResident(
             /* DualStick armed: prefer in-process 84-byte packed Q2_K (never 72-byte MASM). */
             return vc->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes, in, out, rows, cols);
         }
+        // Uniform F16/BF16-compressed F32 weights stay packed through
+        // the resident forward path. The QGEMV shader expands each 16-bit
+        // element in registers and accumulates in F32; do not materialize a
+        // host F32 matrix or upload a duplicate 4-byte-per-weight buffer.
+        if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+            GpuWeightView packed{};
+            if (wt.BuildCompressedF32GpuView(0, rows, packed)) {
+                if (packed.cols != cols || packed.rows != rows ||
+                    (packed.type != 1 && packed.type != 30) ||
+                    packed.bytes != static_cast<size_t>(rows) *
+                                    static_cast<size_t>(cols) * 2u)
+                    return false;
+                bool submitted = false;
+                if (prefetch && vc->WeightStreamActive()) {
+                    if (!vc->FlushWeightComputes()) return false;
+                    uint32_t sl = 0;
+                    if (!vc->PrefetchWeight(packed.data, packed.bytes, sl)) return false;
+                    submitted = vc->SubmitGemvPrefetch(
+                        sl, in, out, rows, cols, packed.bytes, packed.type);
+                } else {
+                    submitted = vc->DispatchGemvQuant(
+                        packed.type, packed.data, packed.bytes, in, out, rows, cols);
+                }
+                if (submitted) {
+                    if (packed.type == 1) ++c.compressedF16GemvOps;
+                    else ++c.compressedBF16GemvOps;
+                    const uint64_t bytes = static_cast<uint64_t>(packed.bytes);
+                    c.compressedWeightBytesSubmitted =
+                        bytes > std::numeric_limits<uint64_t>::max() - c.compressedWeightBytesSubmitted
+                            ? UINT64_MAX
+                            : c.compressedWeightBytesSubmitted + bytes;
+                }
+                return submitted;
+            }
+        }
+        // Mixed-codec F32 storage cannot be exported as one uniform
+        // 16-bit matrix. Decode only a bounded row tile, repack that tile to
+        // fixed-stride F16/BF16, and dispatch it into the corresponding output
+        // window. This keeps RLE/LZ4/raw chunks compressed between kernel calls
+        // and never materializes the full F32 weight matrix.
+        if (wt.type == (int)GGMLType::GGML_TYPE_F32 && wt.compressedF32 &&
+            !vc->FusedRecording()) {
+            if (prefetch && vc->WeightStreamActive() &&
+                !vc->FlushWeightComputes())
+                return false;
+            float maxAbsError = 0.0f;
+            if (const char* setting =
+                    std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR")) {
+                char* end = nullptr;
+                maxAbsError = std::strtof(setting, &end);
+                if (end == setting || *end != '\0' ||
+                    !std::isfinite(maxAbsError) || maxAbsError < 0.0f)
+                    return false;
+            }
+            constexpr size_t kMaxDecodedTileBytes = 256u * 1024u;
+            if (!cols || cols > std::numeric_limits<size_t>::max() /
+                                  sizeof(float))
+                return false;
+            const size_t rowBytes = static_cast<size_t>(cols) * sizeof(float);
+            const size_t rowsPerTile = std::max<size_t>(
+                1, kMaxDecodedTileBytes / std::max<size_t>(1, rowBytes));
+            std::vector<float> decodedTile;
+            std::vector<uint8_t> decodeScratch;
+            std::vector<uint8_t> packedTile;
+            for (uint32_t rowBase = 0; rowBase < rows;) {
+                const uint32_t tileRows = static_cast<uint32_t>(
+                    std::min<size_t>(rows - rowBase, rowsPerTile));
+                const size_t tileElements =
+                    static_cast<size_t>(tileRows) * static_cast<size_t>(cols);
+                decodedTile.resize(tileElements);
+                wt.compressedF32->ReadRange(
+                    static_cast<size_t>(rowBase) * cols, tileElements,
+                    decodedTile.data(), decodeScratch);
+
+                RawrXD::TensorCompression::Encoding encoding{};
+                if (!RawrXD::TensorCompression::EncodeUniform16BitF32(
+                        decodedTile.data(), tileElements, maxAbsError,
+                        encoding, packedTile))
+                    return false;
+                const int packedType = encoding ==
+                    RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
+                if (packedTile.size() != tileElements * sizeof(uint16_t))
+                    return false;
+
+                uint64_t tileKey = WeightKey(wt);
+                tileKey ^= (static_cast<uint64_t>(rowBase) *
+                            0x9E3779B185EBCA87ull);
+                tileKey ^= (static_cast<uint64_t>(tileRows) << 17);
+                tileKey ^= (static_cast<uint64_t>(packedType) << 57);
+                if (!tileKey) tileKey = 1;
+                if (!vc->DispatchGemvQuantRows(
+                        packedType, packedTile.data(), packedTile.size(),
+                        in, out, tileRows, cols, rowBase, tileKey))
+                    return false;
+
+                if (packedType == 1) ++c.compressedF16GemvOps;
+                else ++c.compressedBF16GemvOps;
+                const uint64_t bytes = static_cast<uint64_t>(packedTile.size());
+                c.compressedWeightBytesSubmitted =
+                    bytes > std::numeric_limits<uint64_t>::max() -
+                                c.compressedWeightBytesSubmitted
+                        ? UINT64_MAX
+                        : c.compressedWeightBytesSubmitted + bytes;
+                rowBase += tileRows;
+            }
+            return true;
+        }
+
         /* Product decode: Q2_K must not host-Expand F32 / 72-byte MASM. */
         if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
             const char* pd = std::getenv("RAWRXD_Q2K_PRODUCT_DECODE");
@@ -626,20 +813,29 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
                 wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
                 wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
                 wt.type == (int)GGMLType::GGML_TYPE_Q6_K;
-            if (wt.data && (gpuPacked ||
+            GpuWeightView packedF32{};
+            const bool gpuCompressedF32 =
+                wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                wt.rows > 0 && wt.rows <= UINT32_MAX &&
+                wt.BuildCompressedF32GpuView(
+                    0, static_cast<uint32_t>(wt.rows), packedF32);
+            if (wt.data && (gpuPacked || gpuCompressedF32 ||
                 wt.type == (int)GGMLType::GGML_TYPE_F32)) {
-                const size_t bytes = gpuPacked
-                    ? wt.sizeBytes
-                    : wt.rows * wt.cols * sizeof(float);
-                batch9PrimeType = gpuPacked ? wt.type : 0;
+                const void* primeData = gpuPacked ? wt.data
+                    : (gpuCompressedF32 ? packedF32.data : wt.data);
+                const size_t bytes = gpuPacked ? wt.sizeBytes
+                    : (gpuCompressedF32 ? packedF32.bytes
+                        : wt.rows * wt.cols * sizeof(float));
+                batch9PrimeType = gpuPacked ? wt.type
+                    : (gpuCompressedF32 ? packedF32.type : 0);
                 batch9PrimeKey = gpuPacked
                     ? (uint64_t)(uintptr_t)wt.data
-                    : WeightKey(wt);
+                    : (gpuCompressedF32 ? packedF32.key : WeightKey(wt));
                 const uint64_t epoch =
                     kvCache ? kvCache->currentLength() : 0;
                 next->SetWorkEpoch(epoch);
                 batch9PrimeLive = next->SubmitWeightPrimeAsync(
-                    wt.data, bytes, batch9PrimeType,
+                    primeData, bytes, batch9PrimeType,
                     batch9PrimeKey, epoch, batch9Prime);
             }
         }

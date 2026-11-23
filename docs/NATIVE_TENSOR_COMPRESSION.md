@@ -98,9 +98,15 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   compressed representation is admitted, the corresponding unleased raw
   TensorROM pages are evicted so the pager and compressed cache do not retain
   duplicate full payloads.
-- `TensorResidencyCache` retains only encodings that actually reduce bytes,
-  enforces a configurable memory budget, tracks hits/misses/decoded bytes and
-  evicts least-recently-used entries.
+- `TensorResidencyCache` and `TensorByteResidencyCache` retain only
+  encodings that actually reduce bytes, enforce configurable memory budgets,
+  track hits/misses/decoded bytes and evict least-recently-used entries.
+  In-flight range reads pin their entries: eviction skips pinned storage,
+  budget reductions are completed when the final read releases its pin, and
+  model-clear waits for active readers before releasing representations.
+  A changed budget invalidates raw-only admission memoization so tensors can
+  be reconsidered under the new capacity; setting the same budget preserves
+  the memoized decision.
 - Range reads decompress only the chunks intersecting the requested range
   into caller-owned output memory. A caller can reuse a scratch buffer; the
   cache does not retain an expanded F32 copy.
@@ -121,6 +127,11 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
 - `gemvTensorROMVulkan` shares the same tile readers and submits one bounded
   F32 weight tile at a time; it publishes output only after all tile calls
   succeed.
+- The native Deep2 Vulkan QGEMV path can retain uniform F16/BF16 compressed
+  F32 weights in device-local storage. Its shader reads packed 16-bit values
+  directly and accumulates in F32; mixed-codec chunks fail closed to the
+  existing F32 path. This is opt-in through compressed-F32 preparation and
+  its numerical-error budget; weights are never silently quantized.
 - F16/BF16 conversion remains opt-in through
   `compressedF32MaxAbsError`; its default is zero, so lossy conversion is
   never silently enabled. Exact F16/BF16 representations and lossless RLE/LZ4
@@ -128,7 +139,9 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
 
 Deep2 exposes `GetTensorResidencySnapshot()` with per-cache logical bytes,
 compressed bytes, budgets, tensor counts, hit/miss counts, decoded bytes,
-evictions and the live TensorROM pager resident-byte count. The snapshot also
+evictions, active compressed-range readers and the live TensorROM pager
+resident-byte count. Active-reader counts make pinned storage visible during
+concurrent inference and return to zero after each range operation. The snapshot also
 reports total tracked weight residency (compressed caches plus resident pager
 pages), so savings can be measured rather than inferred from file size.
 
@@ -143,6 +156,27 @@ blocks are expanded into the row tile consumed by the CPU or Vulkan GEMV.
 Unsupported GGUF types (including IQ, TQ, MXFP4 and other formats not yet
 implemented in this decoder) fail closed rather than being interpreted with
 guessed geometry.
+
+### Direct packed-F32 Vulkan GEMV
+
+The separate native Deep2 Vulkan QGEMV path supports packed F16 and BF16 weight
+views. To opt in to compressing eligible F32 model weights before the GPU
+residency pass, set:
+
+- `DEEP2_F32_GPU_COMPRESSION=1`
+- `DEEP2_F32_MAX_ABS_ERROR=0` (default; only exact F16/BF16 conversions qualify)
+- `DEEP2_F32_GPU_COMPRESSED_BUDGET_MB=512` (bounded host-side packed payload)
+
+A positive finite absolute-error tolerance explicitly permits lossy F16/BF16
+conversion. The runtime considers only transformer matrix weights consumed by the
+packed QGEMV path (dense attention/FFN, MLA, MoE and SSM projections). Norm
+vectors, biases, embeddings and convolution/state vectors retain their
+existing upload and residency accounting. A matrix is admitted only when its
+complete chunk set uses one uniform 16-bit encoding and its packed payload
+fits the configured budget. Mixed codecs, unsupported encodings, invalid
+settings and failed admissions stay on the original F32 route. The Vulkan
+QGEMV shader reads the packed bytes directly and performs F32 accumulation;
+it does not allocate a full F32 weight matrix on the device.
 
 ## Verification gates
 

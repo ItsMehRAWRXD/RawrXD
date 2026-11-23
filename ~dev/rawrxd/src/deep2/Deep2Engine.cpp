@@ -476,6 +476,117 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return loader->getMetaFloat(arch + "." + suffix, def);
     };
 
+    // Native F32 residency is enabled by default with a zero-error budget:
+    // exact F16/BF16 chunks and lossless RLE/LZ4 chunks are retained; chunks
+    // that do not shrink stay mapped and untouched. A bounded per-model budget
+    // prevents compression from consuming unbounded extra host memory.
+    bool compressF32OnLoad = true;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32")) {
+        if (setting[0] == '0' && setting[1] == '\0') compressF32OnLoad = false;
+        else if (!(setting[0] == '1' && setting[1] == '\0')) {
+            std::fprintf(stderr,
+                "[Deep2Engine] invalid RAWRXD_COMPRESS_F32; compression disabled\n");
+            compressF32OnLoad = false;
+        }
+    }
+    float f32CompressionTolerance = 0.0f;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR")) {
+        char* end = nullptr;
+        const float value = std::strtof(setting, &end);
+        if (end == setting || *end != '\0' || !std::isfinite(value) || value < 0.0f) {
+            std::fprintf(stderr,
+                "[Deep2Engine] invalid F32 compression tolerance; compression disabled\n");
+            compressF32OnLoad = false;
+        } else {
+            f32CompressionTolerance = value;
+        }
+    }
+    size_t f32CompressionBudget = 512ull * 1024ull * 1024ull;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_BUDGET_MB")) {
+        if (!*setting || *setting == '-') {
+            compressF32OnLoad = false;
+        } else {
+            char* end = nullptr;
+            const unsigned long long mb = std::strtoull(setting, &end, 10);
+            if (end == setting || *end != '\0' ||
+                mb > std::numeric_limits<size_t>::max() / (1024ull * 1024ull)) {
+                compressF32OnLoad = false;
+            } else {
+                f32CompressionBudget = static_cast<size_t>(mb) * 1024ull * 1024ull;
+            }
+        }
+    }
+    const size_t f32CompressionBudgetInitial = f32CompressionBudget;
+    size_t f32CompressedBytes = 0;
+    size_t f32CompressedTensors = 0;
+    auto compressF32Tensor = [&](WeightTensor& wt) {
+        if (!compressF32OnLoad ||
+            wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+            !wt.data || !wt.rows || !wt.cols || !f32CompressionBudget)
+            return;
+        const size_t remaining = f32CompressionBudget;
+        // Bound peak scratch and retained payload independently. Row-sized
+        // chunks make GEMV decompression reuse one row tile; vectors use 4K.
+        const size_t chunkElements = wt.cols > 1 ? wt.cols : 4096u;
+        if (wt.sizeBytes > remaining &&
+            remaining <= std::numeric_limits<size_t>::max() / 8u &&
+            wt.sizeBytes > remaining * 8u)
+            return;
+        if (!wt.EnableCompressedF32(f32CompressionTolerance,
+                                   chunkElements, remaining))
+            return;
+        const size_t stored = wt.compressedF32->storedBytes();
+        if (!stored || stored > remaining) {
+            wt.compressedF32.reset();
+            return;
+        }
+        f32CompressionBudget -= stored;
+        f32CompressedBytes += stored;
+        ++f32CompressedTensors;
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,
+                "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu remaining=%zu\n",
+                wt.name.c_str(), wt.sizeBytes, stored, f32CompressionBudget);
+        }
+    };
+
+    bool compressQuantizedBytesOnLoad = true;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_QUANTIZED_BYTES")) {
+        if (setting[0] == '0' && setting[1] == '\0')
+            compressQuantizedBytesOnLoad = false;
+        else if (!(setting[0] == '1' && setting[1] == '\0'))
+            compressQuantizedBytesOnLoad = false;
+    }
+    size_t quantizedCompressedBytes = 0;
+    size_t quantizedCompressedTensors = 0;
+    auto compressQuantizedBytes = [&](WeightTensor& wt) {
+        if (!compressQuantizedBytesOnLoad ||
+            wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+            !wt.data || wt.sizeBytes < 64u * 1024u ||
+            !f32CompressionBudget)
+            return;
+        const size_t remaining = f32CompressionBudget;
+        if (wt.sizeBytes > remaining &&
+            remaining <= std::numeric_limits<size_t>::max() / 8u &&
+            wt.sizeBytes > remaining * 8u)
+            return;
+        if (!wt.EnableCompressedBytes(64u * 1024u, remaining))
+            return;
+        const size_t stored = wt.compressedBytes->storedBytes();
+        if (!stored || stored > remaining) {
+            wt.compressedBytes.reset();
+            return;
+        }
+        f32CompressionBudget -= stored;
+        quantizedCompressedBytes += stored;
+        ++quantizedCompressedTensors;
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,
+                "[Deep2Engine] compressed quant bytes tensor=%s source=%zu stored=%zu remaining=%zu\n",
+                wt.name.c_str(), wt.sizeBytes, stored, f32CompressionBudget);
+        }
+    };
+
     auto tensor = [&](const char* name) -> const GGUFTensor* {
         return loader->getTensor(name);
     };
@@ -512,23 +623,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             return false;
         }
 
-        // Opt-in model-load compression. The mapped GGUF remains authoritative;
-        // only F32 matrices that actually shrink under the requested absolute
-        // error budget gain a private chunked backing used by LinearW.
-        if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
-            const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
-            if (setting && *setting) {
-                char* end=nullptr;
-                const float tolerance=std::strtof(setting,&end);
-                if (end && *end=='\0' && std::isfinite(tolerance) && tolerance>=0.0f) {
-                    if (wt.EnableCompressedF32(tolerance, wt.cols) && deep2ForwardTraceEnabled()) {
-                        std::fprintf(stderr,
-                            "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu\n",
-                            wt.name.c_str(),wt.sizeBytes,wt.compressedF32->storedBytes());
-                    }
-                }
-            }
-        }
+        compressF32Tensor(wt);
+        compressQuantizedBytes(wt);
         return true;
     };
 
@@ -1065,6 +1161,13 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                   ggufPath.c_str());
 
     modelWeights.loaded = true;
+    if (compressF32OnLoad) {
+        std::fprintf(stderr,
+            "[Deep2Engine] TENSOR_RESIDENCY f32_tensors=%zu f32_bytes=%zu quantized_tensors=%zu quantized_bytes=%zu budget_bytes=%zu f32_tolerance=%.9g\n",
+            f32CompressedTensors, f32CompressedBytes,
+            quantizedCompressedTensors, quantizedCompressedBytes,
+            f32CompressionBudgetInitial, f32CompressionTolerance);
+    }
 
     // Runtime may be entered through loadModel-only clients.
     if (!initialized) {
@@ -1401,20 +1504,6 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         throw std::runtime_error("LinearW: tensor backing smaller than geometry");
     }
 
-    // Compressed F32 tensors stay chunked between invocations. The CPU kernel
-    // expands one row at a time into reusable scratch rather than materializing
-    // a second full-size F32 matrix. GPU dispatch remains on the mapped path
-    // until a native compressed-weight Vulkan descriptor/kernel is available.
-    if (wt.compressedF32) {
-        if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
-            throw std::runtime_error("LinearW: compressed backing requires F32 wire type");
-        GEMVChunkedF32(*wt.compressedF32,input,output,rows,cols);
-        if (bias) for (size_t i=0;i<outDim;++i) output[i]+=bias[i];
-        if (!finiteVector(output,outDim))
-            throw std::runtime_error("LinearW: non-finite compressed output");
-        return;
-    }
-
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
     if (vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
@@ -1513,6 +1602,59 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         }
         if (vulkanStrictNoCpuFallback_)
             throw std::runtime_error("LinearW: GPU path failed under strict mode");
+    }
+
+    // Compressed F32 tensors remain available for CPU execution after GPU
+    // attempts. This ordering lets eligible exact F16/BF16 representations use
+    // Vulkan QGEMV first, while RLE/LZ4/mixed chunks decode only the rows needed
+    // by the CPU GEMV when no packed GPU view is available.
+    if (wt.compressedF32) {
+        if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
+            throw std::runtime_error("LinearW: compressed backing requires F32 wire type");
+        GEMVChunkedF32(*wt.compressedF32,input,output,rows,cols);
+        if (bias) for (size_t i=0;i<outDim;++i) output[i]+=bias[i];
+        if (!finiteVector(output,outDim))
+            throw std::runtime_error("LinearW: non-finite compressed output");
+        return;
+    }
+
+    // Losslessly compressed quantized wire bytes are expanded one row at
+    // a time for CPU GEMV. The original quantized matrix is never copied into
+    // a second full-size buffer, and the registered GGML dequantizer remains
+    // the single source of truth for each row's numerical interpretation.
+    if (wt.compressedBytes) {
+        auto& registry = QuantKernelRegistry::Instance();
+        const BlockGeometry geometry = registry.GetGeometry(wt.type);
+        auto dequant = registry.GetDequant(wt.type);
+        if (!geometry.blockBytes || !geometry.blockElements || !dequant ||
+            cols > std::numeric_limits<size_t>::max() -
+                       (geometry.blockElements - 1u))
+            throw std::runtime_error("LinearW: unsupported compressed quant geometry");
+        const size_t blocks =
+            (cols + geometry.blockElements - 1u) / geometry.blockElements;
+        if (blocks > std::numeric_limits<size_t>::max() / geometry.blockBytes)
+            throw std::runtime_error("LinearW: compressed quant row size overflow");
+        const size_t rowBytes = blocks * geometry.blockBytes;
+        if (!rowBytes || rows > std::numeric_limits<size_t>::max() / rowBytes ||
+            rows * rowBytes != wt.sizeBytes ||
+            wt.compressedBytes->size() != wt.sizeBytes)
+            throw std::runtime_error("LinearW: compressed quant backing geometry mismatch");
+        std::vector<uint8_t> encodedRow(rowBytes);
+        std::vector<uint8_t> decodeScratch;
+        std::vector<float> decodedRow(cols);
+        for (size_t row = 0; row < rows; ++row) {
+            wt.compressedBytes->ReadRange(
+                row * rowBytes, rowBytes, encodedRow.data(), decodeScratch);
+            dequant(encodedRow.data(), decodedRow.data(), cols);
+            float sum = 0.0f;
+            for (size_t col = 0; col < cols; ++col)
+                sum += decodedRow[col] * input[col];
+            output[row] = sum;
+        }
+        if (bias) for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+        if (!finiteVector(output, outDim))
+            throw std::runtime_error("LinearW: non-finite compressed quant output");
+        return;
     }
 
     // CPU fallback
@@ -2710,25 +2852,44 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
     if (t->shape.size() == 1) {
         wt.rows = static_cast<size_t>(t->shape[0]);
         wt.cols = 1;
-        return true;
+    } else if (t->shape.size() >= 2) {
+        wt.cols = static_cast<size_t>(t->shape[0]);
+        size_t rows = 1;
+        for (size_t i = 1; i < t->shape.size(); ++i) {
+            const size_t d = static_cast<size_t>(t->shape[i]);
+            if (d != 0 && rows > std::numeric_limits<size_t>::max() / d)
+                return false;
+            rows *= d;
+        }
+        wt.rows = rows;
+    } else {
+        return false;
     }
 
-    wt.cols = static_cast<size_t>(t->shape[0]);
-    size_t rows = 1;
-    for (size_t i = 1; i < t->shape.size(); ++i) {
-        const size_t d = static_cast<size_t>(t->shape[i]);
-        if (d != 0 && rows > std::numeric_limits<size_t>::max() / d)
-            return false;
-        rows *= d;
-    }
-    wt.rows = rows;
     if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
-        const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
-        if (setting && *setting) {
-            char* end=nullptr;
-            const float tolerance=std::strtof(setting,&end);
-            if (end && *end=='\\0' && std::isfinite(tolerance) && tolerance>=0.0f)
-                wt.EnableCompressedF32(tolerance,wt.cols);
+        const char* enabled = std::getenv("RAWRXD_COMPRESS_F32");
+        const bool compress = !enabled ||
+            (enabled[0] == '1' && enabled[1] == '\0');
+        float tolerance = 0.0f;
+        bool valid = compress;
+        if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR")) {
+            char* end = nullptr;
+            tolerance = std::strtof(setting, &end);
+            valid = valid && end != setting && *end == '\0' &&
+                    std::isfinite(tolerance) && tolerance >= 0.0f;
+        }
+        size_t budget = 512ull * 1024ull * 1024ull;
+        if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_BUDGET_MB")) {
+            char* end = nullptr;
+            const unsigned long long mb = std::strtoull(setting, &end, 10);
+            valid = valid && *setting && *setting != '-' &&
+                    end != setting && *end == '\0' &&
+                    mb <= std::numeric_limits<size_t>::max() / (1024ull * 1024ull);
+            if (valid) budget = static_cast<size_t>(mb) * 1024ull * 1024ull;
+        }
+        if (valid && budget && wt.rows && wt.cols) {
+            const size_t chunk = wt.cols > 1 ? wt.cols : 4096u;
+            (void)wt.EnableCompressedF32(tolerance, chunk, budget);
         }
     }
     return true;

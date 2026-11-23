@@ -1,0 +1,51 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0, std430) readonly buffer WeightWords { uint words[]; } weights;
+layout(set = 0, binding = 1, std430) readonly buffer InputValues { float values[]; } inputData;
+layout(set = 0, binding = 2, std430) writeonly buffer OutputValues { float values[]; } outputData;
+
+layout(push_constant) uniform Parameters {
+    uint rows;
+    uint cols;
+    uint weightEncoding; // 0=F32, 1=IEEE F16, 2=BF16, 3=GGUF Q8_0
+} params;
+
+uint loadByte(uint byteOffset) {
+    uint word = weights.words[byteOffset >> 2u];
+    return (word >> ((byteOffset & 3u) * 8u)) & 0xffu;
+}
+
+float loadWeight(uint index) {
+    if (params.weightEncoding == 0u) {
+        return uintBitsToFloat(weights.words[index]);
+    }
+    if (params.weightEncoding == 3u) {
+        // GGUF Q8_0: 32 signed int8 values plus one IEEE F16 scale (34 bytes).
+        // Rows are block-aligned by GGUF's quantized tensor geometry.
+        uint blockOffset = (index >> 5u) * 34u;
+        uint scaleBits = loadByte(blockOffset) | (loadByte(blockOffset + 1u) << 8u);
+        float scale = unpackHalf2x16(scaleBits).x;
+        uint qByte = loadByte(blockOffset + 2u + (index & 31u));
+        int q = (qByte >= 128u) ? int(qByte) - 256 : int(qByte);
+        return scale * float(q);
+    }
+    uint packed = weights.words[index >> 1u];
+    uint halfBits = ((index & 1u) == 0u) ? (packed & 0xffffu) : (packed >> 16u);
+    if (params.weightEncoding == 1u) {
+        return unpackHalf2x16(packed)[index & 1u];
+    }
+    return uintBitsToFloat(halfBits << 16u);
+}
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= params.rows) return;
+    float sum = 0.0;
+    uint base = row * params.cols;
+    for (uint col = 0u; col < params.cols; ++col) {
+        sum += loadWeight(base + col) * inputData.values[col];
+    }
+    outputData.values[row] = sum;
+}

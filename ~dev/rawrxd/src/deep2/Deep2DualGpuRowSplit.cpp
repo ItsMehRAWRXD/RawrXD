@@ -625,7 +625,7 @@ RowSplitPlan chooseThroughputSplit(
 }
 
 bool supportedGpuType(int t) noexcept {
-    return t==0 || t==8 || t==10 || t==12 || t==14;
+    return t==0 || t==1 || t==8 || t==10 || t==12 || t==14 || t==30;
 }
 
 uint64_t sliceKey(const WeightTensor& wt,uint32_t begin,uint32_t count) noexcept {
@@ -642,11 +642,18 @@ bool Deep2BuildGpuWeightView(
     GpuWeightView& out) noexcept
 {
     out={};
-    if(!wt.data || !rowCount || rowBegin>=wt.rows ||
-       rowCount>wt.rows-rowBegin || !wt.cols ||
-       !supportedGpuType(wt.type))
+    if(!rowCount || rowBegin>=wt.rows ||
+       rowCount>wt.rows-rowBegin || !wt.cols)
         return false;
 
+    // F32 weights with a uniform F16/BF16 compressed representation travel
+    // to the GPU in packed 16-bit form. QGEMV consumes those bytes directly
+    // and accumulates in F32; no host F32 expansion is performed.
+    if (wt.type == 0 && (wt.gpuF16Payload || wt.compressedF32) &&
+        wt.BuildCompressedF32GpuView(rowBegin, rowCount, out))
+        return true;
+
+    if (!wt.data || !supportedGpuType(wt.type)) return false;
     size_t rowBytes=0;
     if(wt.type==0){
         if(wt.cols>std::numeric_limits<size_t>::max()/sizeof(float))
