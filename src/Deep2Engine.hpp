@@ -122,6 +122,12 @@ struct Deep2Engine {
     bool readCompressedF32Tile(const deep2::TensorEntry& entry, uint64_t firstElement,
                                uint64_t elementCount, float* destination,
                                std::vector<uint8_t>& decodeScratch);
+    // Read a byte range from bounded lossless encoded residency, falling
+    // back to the ROM pager when the source payload is not profitable.
+    bool readCompressedEncodedRange(const deep2::TensorEntry& entry,
+                                    uint64_t byteOffset, uint64_t byteCount,
+                                    uint8_t* destination,
+                                    std::vector<uint8_t>& decodeScratch);
     // Read and dequantize only the encoded blocks intersecting a logical tile.
     bool readDequantizedTensorTile(const deep2::TensorEntry& entry,
                                    uint64_t firstElement, uint64_t elementCount,
