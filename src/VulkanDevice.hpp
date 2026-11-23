@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <mutex>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 
 namespace deep2 {
@@ -56,7 +58,32 @@ public:
     bool writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize offset,
                      const void* data, VkDeviceSize size);
 
+    // Keep compact immutable weight tiles resident in device-local memory.
+    // The caller supplies a stable model/tensor/tile/encoding identity. An
+    // empty key is deliberately not cacheable.
+    bool getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::string& key,
+                                       const void* data, VkDeviceSize size,
+                                       size_t budgetBytes, VkBuffer& buffer);
+    size_t cachedWeightBytes() const;
+
 private:
+    struct CachedWeightBuffer {
+        VkDevice owner = VK_NULL_HANDLE;
+        VkBuffer buffer = VK_NULL_HANDLE;
+        VkDeviceMemory memory = VK_NULL_HANDLE;
+        VkDeviceSize size = 0;
+        uint64_t lastUse = 0;
+    };
+    void evictCachedWeightsLocked(size_t requiredBytes);
+    void clearCachedWeights();
+
+    mutable std::mutex m_weightCacheMutex;
+    std::unordered_map<std::string, CachedWeightBuffer> m_weightBuffers;
+    size_t m_weightCacheBudgetBytes = 512ull * 1024ull * 1024ull;
+    size_t m_weightCacheBytes = 0;
+    uint64_t m_weightCacheTick = 0;
+
+
     bool pickMemoryType(const Gpu& gpu, uint32_t typeBits, VkMemoryPropertyFlags props,
                         uint32_t& index) const;
 
