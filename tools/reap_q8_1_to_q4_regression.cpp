@@ -19,10 +19,10 @@ int main() {
         WriteName(out,"weight");WriteU32(out,2);
         WriteU64(out,32);WriteU64(out,1);
         WriteU32(out,9);WriteU64(out,0);PadTo(out,32);
-        WriteFloat(out,1.0f);
-        WriteFloat(out,-16.0f); // Q8_1 sum metadata, not the scale
+        WriteU16(out,0x3c00u);
+        WriteU16(out,0xcc00u); // Q8_1 sum metadata, not the scale
         for(int i=0;i<32;++i)out.put(static_cast<char>(i-16));
-        // 40-byte block: 8 bytes of FP32 metadata plus 32 signed weights.
+        // 36-byte block: 4 bytes of FP16 metadata plus 32 signed weights.
     }
     const bool success=RepackGGUF(source,target,UINT64_MAX,false,false,true)==RepackError::None;
     if(!success){std::cerr<<"FAIL q8_1_conversion\n";++failures;}
