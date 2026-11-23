@@ -1319,7 +1319,8 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     const size_t V = modelWeights.vocabSize;
     const size_t row = static_cast<size_t>(tokenId);
 
-    if (!wt.data || wt.rows != V || wt.cols != H || H == 0)
+    if ((!wt.data && !wt.compressedF32 && !wt.compressedBytes) ||
+        wt.rows != V || wt.cols != H || H == 0)
         return false;
 
     // Compressed F32 embedding: request only the selected vocabulary row.
@@ -1405,8 +1406,12 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
     const size_t V = modelWeights.vocabSize;
 
     if (H == 0 || V == 0 ||
-        !modelWeights.finalNorm.data ||
-        !modelWeights.lmHead.data ||
+        (!modelWeights.finalNorm.data &&
+         !modelWeights.finalNorm.compressedF32 &&
+         !modelWeights.finalNorm.compressedBytes) ||
+        (!modelWeights.lmHead.data &&
+         !modelWeights.lmHead.compressedF32 &&
+         !modelWeights.lmHead.compressedBytes) ||
         !layerTemp) {
         throw std::runtime_error(
             "computeLogits: final norm / LM head not bound");
@@ -1429,7 +1434,11 @@ void Deep2Engine::computeLogitsBatch(
         throw std::runtime_error("computeLogitsBatch: invalid batch");
     const size_t H=modelWeights.hiddenDim;
     const size_t V=modelWeights.vocabSize;
-    if(!H||!V||!modelWeights.finalNorm.data||!modelWeights.lmHead.data)
+    if(!H||!V||
+       (!modelWeights.finalNorm.data && !modelWeights.finalNorm.compressedF32 &&
+        !modelWeights.finalNorm.compressedBytes)||
+       (!modelWeights.lmHead.data && !modelWeights.lmHead.compressedF32 &&
+        !modelWeights.lmHead.compressedBytes))
         throw std::runtime_error("computeLogitsBatch: model tensors missing");
 
     std::vector<float> normed(count*H);
@@ -1519,7 +1528,9 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         std::fprintf(stderr,"LINEARW name=%s rows=%zu cols=%zu type=%d\n",
                      wtn, wt.rows, wt.cols, wt.type); std::fflush(stderr);
     }
-    if (!wt.data || !input || !output || outDim == 0) {
+    const bool hasCompressedBacking = static_cast<bool>(wt.compressedF32) ||
+                                      static_cast<bool>(wt.compressedBytes);
+    if ((!wt.data && !hasCompressedBacking) || !input || !output || outDim == 0) {
         throw std::runtime_error("LinearW: null tensor/input/output");
     }
 
@@ -1537,7 +1548,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     }
 
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
-    if (vulkanInitialized_ && !vulkanDevices_.empty()) {
+    // A compressed-only tensor has no source mapping to pin or raw pointer to
+    // upload. Keep it on the bounded CPU range-decode path until the GPU
+    // compressed-tile uploader can consume an owner-backed view directly.
+    if (wt.data && vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
         if (deep2ForwardTraceEnabled()) {
             std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
@@ -1738,7 +1752,8 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
     const float invRms =
         1.0f / std::sqrt(static_cast<float>(ss / static_cast<double>(dim)) + eps);
 
-    if (!normWeight.data) {
+    if (!normWeight.data && !normWeight.compressedF32 &&
+        !normWeight.compressedBytes) {
         for (size_t i = 0; i < dim; ++i) output[i] = input[i] * invRms;
     } else {
         const auto* desc = LookupQuantType(static_cast<uint32_t>(normWeight.type));
