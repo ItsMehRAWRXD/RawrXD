@@ -85,3 +85,9 @@ jobs:
           name: native-ide-build-smoke-NOT-GUI-CERTIFIED
           path: native-build-receipt.txt
           if-no-files-found: ignore
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"

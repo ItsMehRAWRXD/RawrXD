@@ -56,6 +56,12 @@ jobs:
         run: cmake --build build/compressed-weight-store --config Release --parallel
       - name: Test
         run: ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
 
   zlib-provider:
     runs-on: ubuntu-latest
@@ -72,3 +78,9 @@ jobs:
         run: cmake --build build/zlib-provider --config Release --parallel
       - name: Test zlib public API roundtrip
         run: ctest --test-dir build/zlib-provider -C Release --output-on-failure
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"

@@ -56,3 +56,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Product zlib provider compile/link failed" }
           .\compression_zlib_provider_compile_test.exe
           if ($LASTEXITCODE -ne 0) { throw "Product zlib provider roundtrip failed" }
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"

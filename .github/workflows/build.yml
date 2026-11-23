@@ -126,6 +126,12 @@ jobs:
   # ============================================================
   # Windows Build (Clang)
   # ============================================================
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
   build-windows-clang:
     runs-on: windows-latest
     
@@ -174,6 +180,12 @@ jobs:
   # ============================================================
   # Linux Build (GCC/Clang)
   # ============================================================
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
   build-linux-gcc:
     runs-on: ubuntu-latest
     
@@ -236,6 +248,12 @@ jobs:
   # ============================================================
   # Build for ARM64 (Windows)
   # ============================================================
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
   build-arm64:
     runs-on: windows-latest
     
@@ -289,6 +307,12 @@ jobs:
   # ============================================================
   # Build Size Analysis
   # ============================================================
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
   build-size-analysis:
     runs-on: windows-latest
     needs: [build-windows-msvc]

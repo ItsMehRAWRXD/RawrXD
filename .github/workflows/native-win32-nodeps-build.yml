@@ -38,3 +38,9 @@ jobs:
           $exe = Get-ChildItem build-nodeps -Recurse -Filter RawrXD-Win32IDE-Native.exe | Select-Object -First 1
           if (-not $exe) { throw "Native IDE executable not produced" }
           Get-FileHash $exe.FullName -Algorithm SHA256 | Format-List
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"

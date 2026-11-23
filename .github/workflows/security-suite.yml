@@ -41,6 +41,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
+          clean: false
 
       - name: Select MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
@@ -74,12 +77,21 @@ jobs:
           name: security-suite-logs
           path: build-security-ci/Testing/**
           if-no-files-found: ignore
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
 
   security-gate-asan:
     name: Security suite under AddressSanitizer
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
+          clean: false
 
       - name: Select MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
@@ -104,12 +116,21 @@ jobs:
 
       - name: Run under ASan
         run: .\security_suite_asan.exe
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
 
   security-gate-portable:
     name: Portability (GCC / Linux, dependency-free)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
+          clean: false
 
       - name: Compile suite with g++
         # The project root CMakeLists.txt is Windows-only (ASM_MASM at the top),
@@ -135,3 +156,9 @@ jobs:
 
       - name: Run suite
         run: ./build-linux/security_suite
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"

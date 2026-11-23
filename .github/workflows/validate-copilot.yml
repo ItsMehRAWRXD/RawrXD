@@ -26,6 +26,8 @@ jobs:
         with:
           fetch-depth: 0
 
+          submodules: false
+          clean: false
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -63,3 +65,9 @@ jobs:
           echo "## Copilot Instructions Validation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ All copilot instructions verified against current codebase" >> $GITHUB_STEP_SUMMARY
+      - name: Guard checkout cleanup for undeclared legacy evidence gitlink
+        if: always()
+        shell: bash
+        run: |
+          git config --file .gitmodules submodule.ci-orphaned-evidence.path "evidence/TOP25_CLI_GUI_CONTINUE_20261112_030620/ws_git"
+          git config --file .gitmodules submodule.ci-orphaned-evidence.url "file:///dev/null"
