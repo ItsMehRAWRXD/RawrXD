@@ -151,11 +151,16 @@ struct WeightTensor {
     // decompressed weight tensor. The GGUF source remains untouched.
     bool ReadCompressedF32(size_t first, size_t count,
                            float* destination) const noexcept {
-        if (!compressedF32 || (!destination && count) ||
-            first > compressedF32->elements() ||
-            count > compressedF32->elements() - first)
+        // A cache-backed tensor may be held solely by its residency lease.
+        // Do not require a second shared_ptr or materialize the full tensor.
+        const auto* backing = compressedF32
+            ? compressedF32.get() : (compressedF32Lease
+                ? compressedF32Lease.operator->() : nullptr);
+        if (!backing || (!destination && count) ||
+            first > backing->elements() ||
+            count > backing->elements() - first)
             return false;
-        return compressedF32->DecodeRange(first, count, destination);
+        return backing->DecodeRange(first, count, destination);
     }
 
     struct GpuCompressedF32Payload {
