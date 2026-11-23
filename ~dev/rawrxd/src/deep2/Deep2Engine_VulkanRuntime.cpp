@@ -146,22 +146,17 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
         ++compressedTensors;
     };
 
-    prepare(weights.tokenEmbed);
-    prepare(weights.lmHead);
-    prepare(weights.finalNorm);
+    // Only compress tensors consumed as matrix weights by the packed QGEMV
+    // path. Norm vectors, biases, embeddings and convolution/state vectors
+    // retain their existing upload/lookup paths and residency accounting.
     for (auto& layer : weights.layers) {
         WeightTensor* dense[] = {
             &layer.wq, &layer.wk, &layer.wv, &layer.wo, &layer.wqkv,
-            &layer.bq, &layer.bk, &layer.bv, &layer.attnNorm,
-            &layer.attnQNorm, &layer.attnKNorm, &layer.attnQ_a,
-            &layer.attnQ_a_norm, &layer.attnQ_b, &layer.attnKV_a_mqa,
-            &layer.attnKV_a_norm, &layer.attnK_b, &layer.attnV_b,
-            &layer.attnO, &layer.wGate, &layer.wUp, &layer.wDown,
-            &layer.ffnNorm, &layer.moeRouter, &layer.moeSharedGate,
-            &layer.moeSharedUp, &layer.moeSharedDown, &layer.ssmA,
-            &layer.ssmAlpha, &layer.ssmBeta, &layer.ssmIn, &layer.ssmD,
-            &layer.ssmConv1d, &layer.ssmConv1dBias, &layer.ssmDtBias,
-            &layer.ssmNorm, &layer.ssmOut
+            &layer.attnQ_a, &layer.attnQ_b, &layer.attnKV_a_mqa,
+            &layer.attnK_b, &layer.attnV_b, &layer.attnO,
+            &layer.wGate, &layer.wUp, &layer.wDown, &layer.moeRouter,
+            &layer.moeSharedGate, &layer.moeSharedUp, &layer.moeSharedDown,
+            &layer.ssmAlpha, &layer.ssmBeta, &layer.ssmIn, &layer.ssmOut
         };
         for (WeightTensor* tensor : dense) prepare(*tensor);
         for (auto& tensor : layer.moeGate) prepare(tensor);
