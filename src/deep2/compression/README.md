@@ -24,7 +24,7 @@ ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
 
 ## Integration status
 
-This is the first runtime-residency primitive, not a claim of completed inference integration. The current branch does not yet route GGUFLoader, Deep2 WeightTensor, CPU GEMV, or Vulkan staging through this store. That wiring must preserve existing quantized kernels and tensor layouts; it must not dequantize the full model to F32. GPU-side staging/reclamation must additionally use the existing submission-completion ownership protocol before reusing or releasing device resources.
+This is the first runtime-residency primitive plus an initial Deep2 kernel-consumer hook. `Deep2::WeightTensor` can attach a shared store/key and read byte ranges from either raw or compressed backing. `Deep2Engine::LinearW` now accepts a compressed-only WeightTensor and materializes that tensor into a per-invocation buffer before dispatch; the temporary stays alive until CPU workers and the synchronous dispatch path return. This enables the LinearW CPU/Vulkan call chain to consume compressed-only tensors, but the production GGUF loader does not yet populate/attach the store and other direct-pointer consumers remain unchanged. Full-model residency reduction is therefore NOT yet achieved. Future loader integration must preserve native quantized layouts and must not dequantize the full model to F32. GPU-side staging/reclamation must additionally use the existing submission-completion ownership protocol before reusing or releasing device resources.
 
 The standalone test covers multi-block range reads, exact round trips for compressible and high-entropy data, duplicate-name rejection, bounds checks, and lease survival when the cache budget is reduced.
 
