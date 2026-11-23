@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <limits>
 #include <string>
 #include <unordered_map>
@@ -494,6 +495,8 @@ bool Deep2Engine::forwardLayerGpuResident(
                                                 &decodeError);
                         });
 
+                    if (cols > std::numeric_limits<std::size_t>::max() / tileRows)
+                        throw std::overflow_error("compressed GPU tile element count overflow");
                     bool dispatched = false;
                     if (packed) {
                         dispatched = gpu->DispatchGemvQuant(
@@ -519,8 +522,20 @@ bool Deep2Engine::forwardLayerGpuResident(
                             f32Tile.data(), 0, input, tileOutput,
                             static_cast<uint32_t>(tileRows), cols);
                     }
-                    if (!dispatched ||
-                        !gpu->CopyVector(tileOutput, stagedOutput, tileRows,
+                    if (!dispatched) {
+                        tiledOk = false;
+                        break;
+                    }
+                    ++counters.opSubmits;
+                    if (packed) {
+                        if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K))
+                            ++counters.q4kPackedOps;
+                        else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K))
+                            ++counters.q6kPackedOps;
+                        else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q2_K))
+                            ++counters.q2kPackedOps;
+                    }
+                    if (!gpu->CopyVector(tileOutput, stagedOutput, tileRows,
                                          0, firstRow)) {
                         tiledOk = false;
                         break;
@@ -545,15 +560,6 @@ bool Deep2Engine::forwardLayerGpuResident(
                 return false;
             if (!tiledOk) return false;
 
-            if (packed) {
-                if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K))
-                    ++counters.q4kPackedOps;
-                else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K))
-                    ++counters.q6kPackedOps;
-                else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q2_K))
-                    ++counters.q2kPackedOps;
-            }
-            ++counters.opSubmits;
             return true;
         }
 
