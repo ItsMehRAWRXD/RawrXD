@@ -312,9 +312,15 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     VkDeviceSize ysize = (VkDeviceSize)rows * 4;
 
     auto cleanup = [&]() {
+        if (Wmapped && Wmem) vkUnmapMemory(gpu.device, Wmem);
+        if (xmapped && xmem) vkUnmapMemory(gpu.device, xmem);
+        if (ymapped && ymem) vkUnmapMemory(gpu.device, ymem);
+        Wmapped = xmapped = ymapped = nullptr;
         vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
+        Wbuf = xbuf = ybuf = VK_NULL_HANDLE;
+        Wmem = xmem = ymem = VK_NULL_HANDLE;
     };
 
     VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -399,6 +405,10 @@ bool Deep2Engine::vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
     const VkMemoryPropertyFlags memory = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     auto cleanup = [&]() {
+        if (wMapped && wMemory) vkUnmapMemory(gpu.device, wMemory);
+        if (xMapped && xMemory) vkUnmapMemory(gpu.device, xMemory);
+        if (yMapped && yMemory) vkUnmapMemory(gpu.device, yMemory);
+        wMapped = xMapped = yMapped = nullptr;
         vulkan->destroyBuffer(gpu, wBuffer, wMemory);
         vulkan->destroyBuffer(gpu, xBuffer, xMemory);
         vulkan->destroyBuffer(gpu, yBuffer, yMemory);
