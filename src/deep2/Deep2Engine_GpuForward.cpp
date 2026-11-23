@@ -439,21 +439,52 @@ bool Deep2Engine::forwardLayerGpuResident(
         const bool packed = gpuPackedType(wt.type);
         bool ok = false;
         if (packed) {
-            std::vector<uint8_t> compressedPacked;
             const void* packedData = wt.data;
-            if (!packedData && wt.hasCompressedBacking()) {
-                compressedPacked.resize(wt.sizeBytes);
-                std::string decodeError;
-                if (!wt.readBytes(0, compressedPacked.data(), compressedPacked.size(), &decodeError)) {
-                    gpuForwardTrace("reject: compressed packed-weight read failed");
+            if (!packedData && wt.hasCompressedBacking() &&
+                wt.type != 40 && rows == wt.rows && cols == wt.cols &&
+                rows != 0 && wt.sizeBytes % rows == 0) {
+                const size_t rowBytes = wt.sizeBytes / rows;
+                if (rowBytes != VulkanCompute::QuantPackedRowBytes(wt.type, cols))
                     return false;
+                constexpr uint32_t kCompressedGpuTileRows = 128;
+                ok = true;
+                for (uint32_t rowBase = 0; rowBase < rows;) {
+                    const uint32_t tileRows = std::min<uint32_t>(
+                        kCompressedGpuTileRows, rows - rowBase);
+                    if (tileRows > std::numeric_limits<size_t>::max() / rowBytes)
+                        return false;
+                    const size_t tileBytes = static_cast<size_t>(tileRows) * rowBytes;
+                    std::vector<uint8_t> packedTile(tileBytes);
+                    std::string decodeError;
+                    if (!wt.readBytes(static_cast<size_t>(rowBase) * rowBytes,
+                                      packedTile.data(), tileBytes, &decodeError)) {
+                        gpuForwardTrace("reject: compressed packed-weight tile read failed");
+                        return false;
+                    }
+                    if (!gpu->DispatchGemvQuantTile(
+                            wt.type, packedTile.data(), packedTile.size(),
+                            input, output, tileRows, cols, rowBase)) {
+                        gpuForwardTrace("reject: compressed Vulkan quantized tile dispatch failed");
+                        return false;
+                    }
+                    rowBase += tileRows;
                 }
-                packedData = compressedPacked.data();
+            } else {
+                std::vector<uint8_t> compressedPacked;
+                if (!packedData && wt.hasCompressedBacking()) {
+                    compressedPacked.resize(wt.sizeBytes);
+                    std::string decodeError;
+                    if (!wt.readBytes(0, compressedPacked.data(), compressedPacked.size(), &decodeError)) {
+                        gpuForwardTrace("reject: compressed packed-weight read failed");
+                        return false;
+                    }
+                    packedData = compressedPacked.data();
+                }
+                if (!packedData) return false;
+                ok = gpu->DispatchGemvQuant(wt.type, packedData, wt.sizeBytes,
+                                            input, output, rows, cols,
+                                            weightKey(wt));
             }
-            if (!packedData) return false;
-            ok = gpu->DispatchGemvQuant(wt.type, packedData, wt.sizeBytes,
-                                        input, output, rows, cols,
-                                        weightKey(wt));
             if (ok) {
                 if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K))
                     ++counters.q4kPackedOps;
