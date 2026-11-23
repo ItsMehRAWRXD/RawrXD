@@ -44,6 +44,7 @@ inline std::vector<uint8_t> serialize(const Tensor& t) {
     uint64_t sum=0;
     for (size_t i=0;i<t.blocks.size();++i) {
         const auto& b=t.blocks[i];
+        if (sum >= t.plain_size) throw std::invalid_argument("excess tensor blocks");
         const uint64_t remaining=t.plain_size-sum;
         const uint32_t expected=static_cast<uint32_t>(
             std::min<uint64_t>(t.block_size,remaining));
@@ -77,6 +78,8 @@ inline Tensor deserialize(const std::vector<uint8_t>& bytes,
         t.plain_size>max_plain_bytes ||
         (t.plain_size/t.block_size + (t.plain_size%t.block_size!=0)) != count)
         throw std::runtime_error("invalid tensor dimensions");
+    if (count > (bytes.size()-r.pos)/16)
+        throw std::runtime_error("truncated tensor block directory");
     t.element_bytes=static_cast<uint8_t>(element);
     uint64_t sum=0;
     for (uint32_t i=0;i<count;++i) {
@@ -85,6 +88,7 @@ inline Tensor deserialize(const std::vector<uint8_t>& bytes,
         b.plain_size=r.u32();
         b.crc32_plain=r.u32();
         const uint32_t n=r.u32();
+        if (sum >= t.plain_size) throw std::runtime_error("excess tensor blocks");
         const uint32_t expected=static_cast<uint32_t>(
             std::min<uint64_t>(t.block_size,t.plain_size-sum));
         if (codec>2 || b.plain_size!=expected || !expected ||
