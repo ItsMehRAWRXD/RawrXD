@@ -1,5 +1,11 @@
 name: Native compressed residency
 
+# Keep only the newest validation for each branch/PR ref; rapid fix batches
+# should not leave obsolete test matrices queued behind the latest source.
+concurrency:
+  group: native-compressed-residency-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, "codex/native-compressed-residency-integration-20261123"]
