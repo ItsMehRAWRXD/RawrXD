@@ -24,7 +24,7 @@ int main(){
  std::vector<std::uint8_t> random_out(random_data.size());
  assert(store.readRange("random",0,random_out.data(),random_out.size(),&error));assert(random_data==random_out);
  const float f32[]={1.0f,-2.0f,65504.0f,0.00006103515625f,0.0f,std::numeric_limits<float>::infinity(),std::numeric_limits<float>::quiet_NaN()};
- const std::uint8_t q4_payload[]={0x21,0x43,0x65,0x87,0x21,0x43,0x65,0x87};
+ const std::uint8_t q4_payload[18]={0x00}; // one packed Q4_0 block payload
  assert(store.addTensor("quant.q4_0",q4_payload,sizeof(q4_payload),&error,2u));
  assert(store.tensorType("quant.q4_0")==2u); // GGML_TYPE_Q4_0
  std::uint8_t q4_roundtrip[sizeof(q4_payload)]={};
