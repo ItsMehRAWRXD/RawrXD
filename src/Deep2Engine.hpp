@@ -65,7 +65,7 @@ struct Deep2Engine {
     deep2::TensorROM rom;
     // F32 weights are retained in bounded compressed chunks; inference reads tiles.
     Deep2::TensorResidencyCache compressedF32Weights{2ull * 1024ull * 1024ull * 1024ull};
-    // Lossless RLE residency for sparse/repetitive encoded non-F32 payloads.
+    // Lossless RLE/LZ4 residency for repetitive encoded non-F32 payloads.
     // Already-quantized weights remain in their canonical GGUF byte layout.
     Deep2::TensorByteResidencyCache compressedEncodedWeights{512ull * 1024ull * 1024ull};
     std::atomic<float> compressedF32MaxAbsError{0.0f}; // Lossless by default; finite tolerance opts into F16/BF16.
