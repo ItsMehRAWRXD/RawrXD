@@ -67,6 +67,24 @@ public:
             throw;
         }
     }
+    // Caller-owned bounded destination: avoids allocating a tensor-sized result.
+    // Copy to independently owned staging memory before submitting GPU work.
+    void read_into(uint64_t offset, uint8_t* dest, size_t length) {
+        if ((!dest && length) || offset>source_.plain_size() ||
+            uint64_t(length)>source_.plain_size()-offset)
+            throw std::out_of_range("compressed tensor destination/range");
+        size_t copied=0;
+        while (copied<length) {
+            const uint64_t position=offset+copied;
+            const size_t index=static_cast<size_t>(position/source_.block_size());
+            const size_t within=static_cast<size_t>(position%source_.block_size());
+            const auto& block=get(index);
+            if (within>=block.size()) throw std::runtime_error("invalid block extent");
+            const size_t n=std::min(length-copied,block.size()-within);
+            std::memcpy(dest+copied,block.data()+within,n);
+            copied+=n;
+        }
+    }
     // Range reads allocate only the requested output plus the bounded cache.
     // Prefer get() for zero-copy access inside hot inference kernels.
     std::vector<uint8_t> read(uint64_t offset,size_t length) {
