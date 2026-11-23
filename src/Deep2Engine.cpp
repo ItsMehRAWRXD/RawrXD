@@ -1,5 +1,6 @@
 #include "Deep2Engine.hpp"
 #include "native_q8_0_kernel.hpp"
+#include "native_resident_f16_matvec.hpp"
 #include "TensorROM.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
@@ -59,6 +60,29 @@ void Deep2Engine::SetCompressedWeightsBudget(std::size_t bytes) {
         if (it == compressedWeights.end()) continue;
         compressedWeightsBytes -= it->second->compressed_bytes();
         compressedWeights.erase(it);
+    }
+}
+
+bool Deep2Engine::gemvROMCompressedF16(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols, std::size_t blockBytes,
+    std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode || (rows && !y)) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::F16 ||
+        entry->dims.size() != 2 || entry->dims[0] != cols ||
+        entry->dims[1] != rows) return false;
+    try {
+        // F16 tensors are already half-size on disk. Preserve their compressed
+        // payload in memory and decode only bounded fragments per operation.
+        auto resident = rom.loadResidentCompressedTensor(*entry, blockBytes);
+        auto result = rawrxd::compression::resident_f16_matvec(
+            resident, x, rows, cols, stagingBudgetBytes);
+        if (rows) std::copy(result.begin(), result.end(), y);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_F16_GEMV] %s\\n", e.what());
+        return false;
     }
 }
 
