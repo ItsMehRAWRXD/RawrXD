@@ -14900,6 +14900,24 @@ target_include_directories(rawrxd-native-synthetic-transformer-e2e-test PRIVATE
 add_test(NAME rawrxd_native_synthetic_transformer_e2e
     COMMAND rawrxd-native-synthetic-transformer-e2e-test)
 
+# Actual Deep2 runtime E2E: generate a tiny valid GGUF in the test, load it
+# through GGUFLoader/Deep2Engine, verify F32-LZ4 and Q8_0 compressed backing,
+# then run CPU prefill + two decode steps through the production engine.
+option(RAWRXD_BUILD_DEEP2_SYNTHETIC_GGUF_E2E
+    "Build the production Deep2 synthetic-GGUF inference E2E test" OFF)
+if(RAWRXD_BUILD_DEEP2_SYNTHETIC_GGUF_E2E)
+    add_executable(rawrxd-native-deep2-gguf-model-e2e-test EXCLUDE_FROM_ALL
+        tests/native_deep2_gguf_model_e2e_test.cpp)
+    target_compile_features(rawrxd-native-deep2-gguf-model-e2e-test PRIVATE cxx_std_17)
+    target_link_libraries(rawrxd-native-deep2-gguf-model-e2e-test PRIVATE InferenceEngine)
+    target_include_directories(rawrxd-native-deep2-gguf-model-e2e-test PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2")
+    set_target_properties(rawrxd-native-deep2-gguf-model-e2e-test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    add_test(NAME rawrxd_native_deep2_synthetic_gguf_model_e2e
+        COMMAND rawrxd-native-deep2-gguf-model-e2e-test)
+endif()
+
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/K2GlobalTensorIndex.cpp

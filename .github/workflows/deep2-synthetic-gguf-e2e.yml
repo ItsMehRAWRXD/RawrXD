@@ -1,0 +1,59 @@
+name: Deep2 synthetic GGUF model end-to-end
+
+on:
+  push:
+    branches:
+      - feat/native-universal-compression-expansion-20261123-v2
+    paths:
+      - '~dev/rawrxd/CMakeLists.txt'
+      - '~dev/rawrxd/src/deep2/Deep2Engine.cpp'
+      - '~dev/rawrxd/src/deep2/Deep2Engine.h'
+      - '~dev/rawrxd/src/deep2/GGUFLoader.hpp'
+      - '~dev/rawrxd/src/deep2/NativeTensorCompression.hpp'
+      - '~dev/rawrxd/src/deep2/TensorResidencyCache.hpp'
+      - '~dev/rawrxd/tests/native_deep2_gguf_model_e2e_test.cpp'
+      - '.github/workflows/deep2-synthetic-gguf-e2e.yml'
+  pull_request:
+    paths:
+      - '~dev/rawrxd/CMakeLists.txt'
+      - '~dev/rawrxd/src/deep2/Deep2Engine.cpp'
+      - '~dev/rawrxd/src/deep2/Deep2Engine.h'
+      - '~dev/rawrxd/src/deep2/GGUFLoader.hpp'
+      - '~dev/rawrxd/src/deep2/NativeTensorCompression.hpp'
+      - '~dev/rawrxd/src/deep2/TensorResidencyCache.hpp'
+      - '~dev/rawrxd/tests/native_deep2_gguf_model_e2e_test.cpp'
+      - '.github/workflows/deep2-synthetic-gguf-e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  deep2-synthetic-gguf:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Install NASM
+        shell: pwsh
+        run: |
+          choco install nasm -y
+          echo "C:\Program Files\NASM" >> $env:GITHUB_PATH
+      - name: Configure native Deep2 project
+        shell: pwsh
+        run: |
+          cmake -S "~dev/rawrxd" -B build-deep2-e2e -A x64 -DRAWR_ENABLE_VULKAN=OFF -DRAWRXD_BUILD_DEEP2_SYNTHETIC_GGUF_E2E=ON
+          if ($LASTEXITCODE -ne 0) { throw "Deep2 CMake configure failed" }
+      - name: Build production engine and synthetic GGUF test
+        shell: pwsh
+        run: |
+          cmake --build build-deep2-e2e --config Release --target rawrxd-native-deep2-gguf-model-e2e-test --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw "Deep2 synthetic E2E build failed" }
+      - name: Run actual GGUF load and generation
+        shell: pwsh
+        run: |
+          $exe = "build-deep2-e2e\bin\Release\rawrxd-native-deep2-gguf-model-e2e-test.exe"
+          if (!(Test-Path $exe)) { throw "Synthetic Deep2 E2E executable missing: $exe" }
+          & $exe
+          if ($LASTEXITCODE -ne 0) { throw "Synthetic Deep2 model generation failed" }
