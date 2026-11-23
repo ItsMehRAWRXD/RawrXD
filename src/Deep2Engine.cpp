@@ -150,17 +150,30 @@ getResidentCompressedTensorRange(Deep2Engine& engine, const deep2::TensorEntry& 
     const auto bytes = loaded->resident_bytes();
     if (bytes > engine.compressedWeightsBudgetBytes) return loaded;
     while (engine.compressedWeightsBytes >
-               engine.compressedWeightsBudgetBytes - bytes &&
-           !engine.compressedWeightsLru.empty()) {
-        const auto victim = engine.compressedWeightsLru.back();
-        engine.compressedWeightsLru.pop_back();
-        auto found = engine.compressedWeights.find(victim);
-        if (found == engine.compressedWeights.end()) continue;
-        const auto residentBytes = found->second->resident_bytes();
-        engine.compressedWeightsBytes =
-            residentBytes > engine.compressedWeightsBytes
+               engine.compressedWeightsBudgetBytes - bytes) {
+        // Range-backed embedding rows obey the same live-request lease rule
+        // as full tensors; never hide a still-owned allocation from the budget.
+        auto victim = engine.compressedWeightsLru.end();
+        for (auto it = engine.compressedWeightsLru.end();
+             it != engine.compressedWeightsLru.begin();) {
+            --it;
+            const auto found = engine.compressedWeights.find(*it);
+            if (found != engine.compressedWeights.end() &&
+                found->second.use_count() == 1) {
+                victim = it;
+                break;
+            }
+        }
+        if (victim == engine.compressedWeightsLru.end())
+            return loaded; // Request-scoped when every cache entry is leased.
+        const auto found = engine.compressedWeights.find(*victim);
+        if (found != engine.compressedWeights.end()) {
+            const auto residentBytes = found->second->resident_bytes();
+            engine.compressedWeightsBytes = residentBytes > engine.compressedWeightsBytes
                 ? 0 : engine.compressedWeightsBytes - residentBytes;
-        engine.compressedWeights.erase(found);
+            engine.compressedWeights.erase(found);
+        }
+        engine.compressedWeightsLru.erase(victim);
     }
     engine.compressedWeightsBytes += bytes;
     engine.compressedWeightsLru.push_front(key);
