@@ -248,9 +248,12 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = entries_.find(key);
             if (it == entries_.end()) { ++cacheMisses_; packed.clear(); return false; }
+            if (first > it->second.logicalBytes / sizeof(float) ||
+                count > it->second.logicalBytes / sizeof(float) - first) {
+                ++cacheMisses_; packed.clear(); return false;
+            }
             it->second.lastUse = ++tick_;
             ++it->second.activeReaders;
-            ++cacheHits_;
             storage = it->second.storage;
         }
         bool exported = false;
@@ -264,6 +267,7 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
+            if (exported) ++cacheHits_; else ++cacheMisses_;
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
         }
@@ -281,9 +285,14 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = entries_.find(key);
             if (it == entries_.end()) { ++cacheMisses_; return false; }
+            if (first > it->second.logicalBytes / sizeof(float) ||
+                count > it->second.logicalBytes / sizeof(float) - first ||
+                (count != 0 && (destination == nullptr ||
+                 count > destinationBytes / sizeof(uint16_t)))) {
+                ++cacheMisses_; return false;
+            }
             it->second.lastUse = ++tick_;
             ++it->second.activeReaders;
-            ++cacheHits_;
             storage = it->second.storage;
         }
         bool copied = false;
@@ -298,6 +307,7 @@ public:
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders)
                 --it->second.activeReaders;
+            if (copied) ++cacheHits_; else ++cacheMisses_;
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
         }
