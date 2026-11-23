@@ -360,6 +360,23 @@ int main() {
     const auto boundaryTokens = exactRuntime.generate(prompt, 2);
     assert(boundaryTokens.size() == 2);
     assert(boundaryTokens == std::vector<int32_t>(generated.begin(), generated.begin()+2));
+    // Admission must charge only actual forward passes, not the final token
+    // that is emitted directly from the preceding logits.
+    auto exactKvBudget = exactContext;
+    // kv_heads=0 means MHA, resolved to heads in the runtime constructor.
+    const std::size_t resolvedKvBytesPerToken =
+        exactKvBudget.layers * 2u * exactKvBudget.heads * exactKvBudget.head_dim * sizeof(float);
+    exactKvBudget.max_kv_cache_bytes =
+        (prompt.size() + 2u - 1u) * resolvedKvBytesPerToken;
+    rawrxd::compression::CompressedTransformerRuntime budgetRuntime(model, exactKvBudget);
+    assert(budgetRuntime.generate(prompt, 2) == boundaryTokens);
+    exactKvBudget.max_kv_cache_bytes -= 1u;
+    rawrxd::compression::CompressedTransformerRuntime insufficientBudget(model, exactKvBudget);
+    bool kvBudgetRejected = false;
+    try { (void)insufficientBudget.generate(prompt, 2); }
+    catch (const std::length_error&) { kvBudgetRejected = true; }
+    assert(kvBudgetRejected);
+
     bool contextOverflowRejected = false;
     try { (void)exactRuntime.generate(prompt, 3); }
     catch (const std::out_of_range&) { contextOverflowRejected = true; }
