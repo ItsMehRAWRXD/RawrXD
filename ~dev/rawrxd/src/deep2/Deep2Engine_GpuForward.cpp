@@ -43,6 +43,17 @@ bool PackedQuant(const WeightTensor& wt) {
            t == (int)GGMLType::GGML_TYPE_Q6_K;
 }
 
+// Only these four formats have native packed decoders in deep2_qgemv.comp.
+// Q3_K/Q5_K are registered packed formats but must use bounded F32 row tiles.
+bool NativePackedShaderQuant(const WeightTensor& wt) {
+    if (!wt.data || !wt.sizeBytes) return false;
+    const int t = wt.type;
+    return t == (int)GGMLType::GGML_TYPE_Q8_0 ||
+           t == (int)GGMLType::GGML_TYPE_Q2_K ||
+           t == (int)GGMLType::GGML_TYPE_Q4_K ||
+           t == (int)GGMLType::GGML_TYPE_Q6_K;
+}
+
 size_t StreamBytes(const WeightTensor& wt) {
     if (!wt.data || !wt.rows || !wt.cols) return 0;
     if (wt.compressedBytes)
@@ -359,7 +370,7 @@ bool Deep2Engine::forwardLayerGpuResident(
         // group of rows, then submit those F32 rows through the typed shader's
         // F32 mode. Unknown geometries/dequantizers stay on the established
         // raw-mapping fallback below.
-        if (wt.compressedBytes && !PackedQuant(wt) &&
+        if (wt.compressedBytes && !NativePackedShaderQuant(wt) &&
             !vc->FusedRecording()) {
             const auto geometry =
                 QuantKernelRegistry::Instance().GetGeometry(wt.type);
