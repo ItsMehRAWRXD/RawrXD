@@ -40,6 +40,7 @@ int main() {
     CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q5_1) == 24);
     CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q8_0) == 34);
     CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q8_1) == 40);
+    CHECK(deep2::tensorTypeBytesPerValue(deep2::TensorType::Q8_1) == 1.25);
     CHECK(deep2::tensorStorageBytes((std::numeric_limits<std::uint64_t>::max)(),
                                     deep2::TensorType::F32) ==
           (std::numeric_limits<std::uint64_t>::max)());
