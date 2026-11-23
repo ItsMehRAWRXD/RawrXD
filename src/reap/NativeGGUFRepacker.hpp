@@ -894,7 +894,10 @@ inline RepackError RepackGGUF(const std::string& input,
             // a K decoder on a row that is not a complete superblock.
             ((t.type!=13 && t.type!=14 && t.type!=15) || t.dims[0]%256==0) &&
             q4Bytes<t.bytes &&
-            (!auto_compress || matrix)) {
+            // Q4_1 vector blocks have a strictly smaller Q4_0 layout.
+            // Preserve sensitive vectors, but allow ordinary vectors to
+            // use the same Q4_1 decoder and bit-exact affine fast path.
+            (!auto_compress || matrix || t.type==3)) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
