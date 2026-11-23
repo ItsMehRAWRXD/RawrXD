@@ -441,6 +441,47 @@ public:
             packed.insert(packed.end(), chunk.payload.begin(), chunk.payload.end());
         return packed.size() == total;
     }
+    // Export only complete, independently encoded F16/BF16 chunks intersecting
+    // [first, first+count). The range must start on a chunk boundary and end
+    // on a chunk boundary (or at tensor end). This lets a device kernel consume
+    // the compact representation without first expanding it to F32 on the CPU.
+    // Mixed encodings and partial chunks fail closed; the caller may use ReadRange.
+    bool ExportUniform16BitRange(size_t first, size_t count, Encoding& encoding,
+                                 std::vector<uint8_t>& packed) const {
+        packed.clear();
+        if (first > element_count_ || count > element_count_ - first) return false;
+        if (!count) {
+            encoding = Encoding::Raw;
+            return true;
+        }
+        if (first % chunk_elements_ != 0) return false;
+        const size_t end = first + count;
+        if (end != element_count_ && end % chunk_elements_ != 0) return false;
+        const size_t firstChunk = first / chunk_elements_;
+        const size_t lastChunk = (end - 1) / chunk_elements_;
+        if (lastChunk >= chunks_.size()) return false;
+        const Encoding selected = chunks_[firstChunk].encoding;
+        if (selected != Encoding::F16 && selected != Encoding::BF16) return false;
+        size_t total = 0;
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const auto& chunk = chunks_[i];
+            const size_t expected = static_cast<size_t>(chunk.original_bytes / 2);
+            if (chunk.encoding != selected || chunk.original_bytes % sizeof(float) != 0 ||
+                chunk.payload.size() != expected ||
+                expected > std::numeric_limits<size_t>::max() - total)
+                return false;
+            total += expected;
+        }
+        packed.reserve(total);
+        for (size_t i = firstChunk; i <= lastChunk; ++i)
+            packed.insert(packed.end(), chunks_[i].payload.begin(), chunks_[i].payload.end());
+        if (packed.size() != total) {
+            packed.clear();
+            return false;
+        }
+        encoding = selected;
+        return true;
+    }
     void ReadRange(size_t first,size_t count,float* destination,
                    std::vector<uint8_t>& scratch) const {
         if(first>element_count_ || count>element_count_-first)
