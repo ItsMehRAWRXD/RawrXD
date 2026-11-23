@@ -8,9 +8,9 @@ int main() {
  {std::ofstream o(src,std::ios::binary);
  WriteU32(o,0x46554747);WriteU32(o,3);WriteU64(o,2);WriteU64(o,0);
  WriteName(o,"custom.vector");WriteU32(o,1);WriteU64(o,64);WriteU32(o,3);WriteU64(o,0);
- WriteName(o,"blk.0.attn_norm.weight");WriteU32(o,1);WriteU64(o,64);WriteU32(o,3);WriteU64(o,64);
+ WriteName(o,"blk.0.attn_norm.weight");WriteU32(o,1);WriteU64(o,64);WriteU32(o,3);WriteU64(o,96);
  PadTo(o,32);
- for(int b=0;b<4;++b){WriteU16(o,0x3800);WriteU16(o,0xc400);
+ for(int b=0;b<4;++b){if(b==2)PadTo(o,32);WriteU16(o,0x3800);WriteU16(o,0xc400);
  for(int i=0;i<16;++i)o.put(static_cast<char>(i*7+b));}
  }
  if(RepackGGUF(src,dst,UINT64_MAX,false,false,false,false,true)!=RepackError::None)++failures;
