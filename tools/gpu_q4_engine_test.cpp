@@ -81,14 +81,19 @@ int main(int argc, char** argv) {
         std::vector<float> yCpu(rows);
         for (uint32_t r=0;r<rows;++r){ double a=0; const float* wr=&W[(size_t)r*cols]; for(uint32_t c=0;c<cols;++c) a+=(double)wr[c]*x[c]; yCpu[r]=(float)a; }
 
-        // Deep2Engine + gpuMatvecQ4.
+        // Deep2Engine + gpuMatvecQ4 (two calls: cold + warm cache hit).
         Deep2Engine engine;
         if (!engine.Initialize(model)) { std::fprintf(stderr, "Deep2Engine init failed\n"); return 1; }
-        std::vector<float> y(rows);
-        bool ok = engine.gpuMatvecQ4(sub, raw.data(), raw.size(), x.data(), y.data(), rows, cols, type);
+        std::vector<float> y(rows), y2(rows);
+        bool ok1 = engine.gpuMatvecQ4(sub, raw.data(), raw.size(), x.data(), y.data(), rows, cols, type);
+        bool ok2 = engine.gpuMatvecQ4(sub, raw.data(), raw.size(), x.data(), y2.data(), rows, cols, type);
         double maxd=0; for(uint32_t r=0;r<rows;++r) maxd=std::max(maxd,(double)std::fabs(y[r]-yCpu[r]));
-        std::printf("  gpuMatvecQ4 -> ok=%d maxDiff=%g %s\n", ok?1:0, maxd, (ok && maxd<1e-3)?"PASS":"FAIL");
-        return (ok && maxd<1e-3) ? 0 : 1;
+        double maxd2=0; for(uint32_t r=0;r<rows;++r) maxd2=std::max(maxd2,(double)std::fabs(y2[r]-yCpu[r]));
+        bool pass = ok1 && ok2 && (maxd<1e-3) && (maxd2<1e-3);
+        std::printf("  gpuMatvecQ4 call1=%d call2=%d maxDiff1=%g maxDiff2=%g %s\n",
+            ok1?1:0, ok2?1:0, maxd, maxd2, pass?"PASS (cold+warm)":"FAIL");
+        engine.Shutdown(); // release cached GPU buffers
+        return pass ? 0 : 1;
     }
     std::fprintf(stderr, "no Q4_0/Q4_K 2D tensor found\n");
     return 1;

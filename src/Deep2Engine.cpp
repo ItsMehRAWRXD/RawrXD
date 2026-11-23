@@ -73,6 +73,15 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 }
 
 void Deep2Engine::Shutdown() {
+    // Stage 6L: release cached packed-weight GPU buffers exactly once.
+    if (vulkan) {
+        auto* gpu = vulkan->primary();
+        if (gpu) {
+            for (auto& kv : gpuQ4Cache_)
+                if (kv.second.wbuf) vulkan->destroyBuffer(*gpu, kv.second.wbuf, kv.second.wmem);
+        }
+    }
+    gpuQ4Cache_.clear();
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
@@ -645,18 +654,29 @@ bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, si
         return vulkan->createBuffer(*gpu, sz, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, b, m, &p);
     };
-    // Weights: reuse cached buffer if present, else create + upload.
+    // Weights: reuse cached buffer if present (same size), else create + upload.
+    // weightInCache tracks ownership: true => the cache owns the buffer, per-call
+    // cleanup must NOT destroy it. This avoids the stale-iterator use-after-free.
+    bool weightInCache = false;
     auto it = gpuQ4Cache_.find(name);
     if (it != gpuQ4Cache_.end() && it->second.bytes == packedBytes) {
-        wb = it->second.wbuf; wm = it->second.wmem; // persistent, do not destroy
+        wb = it->second.wbuf; wm = it->second.wmem; // persistent, cache-owned
+        weightInCache = true;
     } else {
+        // Cache miss (or size mismatch): if a stale entry exists with a
+        // different size, destroy it to avoid a leak, then create + upload.
+        if (it != gpuQ4Cache_.end()) {
+            vulkan->destroyBuffer(*gpu, it->second.wbuf, it->second.wmem);
+            gpuQ4Cache_.erase(it);
+        }
         void* wp = nullptr;
         if (!mk(wsz, wb, wm, wp)) return false;
         std::memcpy(wp, packed, (size_t)wsz);
-        gpuQ4Cache_[name] = {wb, wm, packedBytes}; // retain for reuse
+        gpuQ4Cache_[name] = {wb, wm, packedBytes}; // transfer ownership to cache
+        weightInCache = true;
     }
     if (!mk(xsz, xb, xm, xp) || !mk(ysz, yb, ym, yp)) {
-        if (it == gpuQ4Cache_.end()) vulkan->destroyBuffer(*gpu, wb, wm);
+        if (!weightInCache) vulkan->destroyBuffer(*gpu, wb, wm);
         return false;
     }
     std::memcpy(xp, x, (size_t)xsz);
@@ -677,8 +697,8 @@ bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, si
         void* p; vkMapMemory(gpu->device, ym, 0, ysz, 0, &p);
         std::memcpy(y, p, (size_t)ysz); vkUnmapMemory(gpu->device, ym);
     }
-    // Cleanup: x/y/dims always; weights only if newly created (not cached).
-    if (it == gpuQ4Cache_.end()) vulkan->destroyBuffer(*gpu, wb, wm);
+    // Cleanup: x/y/dims always; weights only if NOT owned by the cache.
+    if (!weightInCache) vulkan->destroyBuffer(*gpu, wb, wm);
     vulkan->destroyBuffer(*gpu, xb, xm);
     vulkan->destroyBuffer(*gpu, yb, ym);
     vulkan->destroyBuffer(*gpu, db, dm);
