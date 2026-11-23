@@ -173,9 +173,9 @@ public:
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
             if (decoded) {
-                const uint64_t bytes=static_cast<uint64_t>(count)*sizeof(float);
-                bytesDecoded_ = bytes > std::numeric_limits<uint64_t>::max()-bytesDecoded_
-                    ? std::numeric_limits<uint64_t>::max() : bytesDecoded_+bytes;
+                const uint64_t bytes = storage->DecodedBytesForRange(first, count);
+                bytesDecoded_ = bytes > std::numeric_limits<uint64_t>::max() - bytesDecoded_
+                    ? std::numeric_limits<uint64_t>::max() : bytesDecoded_ + bytes;
             }
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
