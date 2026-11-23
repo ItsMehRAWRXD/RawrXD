@@ -1,5 +1,7 @@
 #include "../src/ShardPager.hpp"
-#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#define CHECK(expr) do { if (!(expr)) { std::fprintf(stderr, "CHECK failed: %s:%d: %s\\n", __FILE__, __LINE__, #expr); std::abort(); } } while (0)
 #include <cstdint>
 #include <cstring>
 #include <utility>
@@ -15,33 +17,33 @@ int main() {
         return true;
     });
     uint8_t result[40] = {};
-    assert(cache.readRange(3, 8, sizeof(result), result));
+    CHECK(cache.readRange(3, 8, sizeof(result), result));
     for (std::size_t i = 0; i < sizeof(result); ++i)
-        assert(result[i] == static_cast<uint8_t>(i + 11));
-    assert(cache.residentBytes() <= 2 * pageSize);
-    assert(!cache.readRange(3, UINT64_MAX - 1, 8, result));
-    assert(!cache.readRange(3, 0, 1, nullptr));
-    assert(cache.readRange(3, 0, 0, nullptr));
+        CHECK(result[i] == static_cast<uint8_t>(i + 11));
+    CHECK(cache.residentBytes() <= 2 * pageSize);
+    CHECK(!cache.readRange(3, UINT64_MAX - 1, 8, result));
+    CHECK(!cache.readRange(3, 0, 1, nullptr));
+    CHECK(cache.readRange(3, 0, 0, nullptr));
 
     // Different 64-bit page numbers must never alias in the cache index.
     Page* low = cache.acquire(2, 1);
-    assert(low);
+    CHECK(low);
     Page* high = cache.acquire(2, (uint64_t{1} << 32) + 1);
-    assert(high && high != low);
+    CHECK(high && high != low);
     cache.release(high);
     cache.release(low);
 
     // Moving a lease transfers page ownership exactly once.
     TensorLease first(cache, 1, 0, pageSize);
-    assert(first);
+    CHECK(first);
     TensorLease second(std::move(first));
-    assert(second && !first);
-    assert(second.read(0, 1, result));
+    CHECK(second && !first);
+    CHECK(second.read(0, 1, result));
     TensorLease third;
     third = std::move(second);
-    assert(third && !second);
-    assert(!third.read(1, pageSize, result));
-    assert(!third.read(0, 1, nullptr));
-    assert(third.read(0, 0, nullptr));
+    CHECK(third && !second);
+    CHECK(!third.read(1, pageSize, result));
+    CHECK(!third.read(0, 1, nullptr));
+    CHECK(third.read(0, 0, nullptr));
     return 0;
 }
