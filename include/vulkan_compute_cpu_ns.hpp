@@ -80,6 +80,7 @@ public:
 
     // ---- GEMV dispatch -----------------------------------------------------
     // F32 window: output[r] = dot(weights[r][0..cols), input[0..cols).
+    // cacheKey=0 requests a one-shot upload that is retired after GPU completion.
     bool DispatchGEMV(const float* weights, const float* input, float* output,
                       uint32_t rows, uint32_t cols, uint64_t cacheKey);
 
