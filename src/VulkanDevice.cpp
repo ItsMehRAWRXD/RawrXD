@@ -321,8 +321,12 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
 
 
 void VulkanDevice::evictCachedWeightsLocked(size_t requiredBytes) {
+    // Clamp the subtraction: active dispatch leases may temporarily keep
+    // residency above a newly lowered budget. Unsigned underflow would
+    // otherwise make the free-space test report a huge fictitious capacity.
     while (m_weightCacheBytes > m_weightCacheBudgetBytes ||
-           requiredBytes > m_weightCacheBudgetBytes - m_weightCacheBytes) {
+           requiredBytes > m_weightCacheBudgetBytes -
+               std::min(m_weightCacheBytes, m_weightCacheBudgetBytes)) {
         auto victim = m_weightBuffers.end();
         for (auto it = m_weightBuffers.begin(); it != m_weightBuffers.end(); ++it) {
             if (it->second.activeLeases != 0) continue;
