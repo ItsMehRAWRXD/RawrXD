@@ -13,6 +13,7 @@
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); }
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
     }
@@ -56,8 +57,21 @@ bool Deep2Engine::gemvROMCompressedF32(
     if (entry->dims.size() != 2 ||
         entry->dims[0] != cols || entry->dims[1] != rows) return false;
     try {
-        auto resident = rom.loadResidentCompressedTensor(*entry, blockBytes);
-        return gemvResidentF32(resident, x, y, rows, cols, stagingBudgetBytes);
+        // Keep the compressed payload resident between token evaluations.
+        // Lock also serializes first construction to avoid duplicate full stores.
+        std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor> resident;
+        {
+            std::lock_guard<std::mutex> lock(compressedWeightsMutex);
+            const auto key = tensorName + ":" + std::to_string(blockBytes);
+            auto it = compressedWeights.find(key);
+            if (it == compressedWeights.end()) {
+                auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
+                    rom.loadResidentCompressedTensor(*entry, blockBytes));
+                it = compressedWeights.emplace(key, std::move(loaded)).first;
+            }
+            resident = it->second;
+        }
+        return gemvResidentF32(*resident, x, y, rows, cols, stagingBudgetBytes);
     } catch (const std::exception& e) {
         std::fprintf(stderr, "[ROM_COMPRESSED_GEMV] %s\\n", e.what());
         return false;
@@ -81,6 +95,7 @@ bool Deep2Engine::gemvResidentF32(
 }
 
 void Deep2Engine::Shutdown() {
+    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); }
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
