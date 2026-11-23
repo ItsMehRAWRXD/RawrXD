@@ -104,8 +104,8 @@ public:
 
     TensorLease(const TensorLease&) = delete;
     TensorLease& operator=(const TensorLease&) = delete;
-    TensorLease(TensorLease&& other) noexcept = default;
-    TensorLease& operator=(TensorLease&& other) noexcept = default;
+    TensorLease(TensorLease&& other) noexcept;
+    TensorLease& operator=(TensorLease&& other) noexcept;
 
     explicit operator bool() const { return m_ok; }
     uint32_t shard() const { return m_shard; }
