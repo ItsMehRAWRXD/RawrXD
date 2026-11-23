@@ -550,6 +550,43 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     };
 
+    bool compressQuantizedBytesOnLoad = true;
+    if (const char* setting = std::getenv("RAWRXD_COMPRESS_QUANTIZED_BYTES")) {
+        if (setting[0] == '0' && setting[1] == '\0')
+            compressQuantizedBytesOnLoad = false;
+        else if (!(setting[0] == '1' && setting[1] == '\0'))
+            compressQuantizedBytesOnLoad = false;
+    }
+    size_t quantizedCompressedBytes = 0;
+    size_t quantizedCompressedTensors = 0;
+    auto compressQuantizedBytes = [&](WeightTensor& wt) {
+        if (!compressQuantizedBytesOnLoad ||
+            wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+            !wt.data || wt.sizeBytes < 64u * 1024u ||
+            !f32CompressionBudget)
+            return;
+        const size_t remaining = f32CompressionBudget;
+        if (wt.sizeBytes > remaining &&
+            remaining <= std::numeric_limits<size_t>::max() / 8u &&
+            wt.sizeBytes > remaining * 8u)
+            return;
+        if (!wt.EnableCompressedBytes(64u * 1024u, remaining))
+            return;
+        const size_t stored = wt.compressedBytes->storedBytes();
+        if (!stored || stored > remaining) {
+            wt.compressedBytes.reset();
+            return;
+        }
+        f32CompressionBudget -= stored;
+        quantizedCompressedBytes += stored;
+        ++quantizedCompressedTensors;
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,
+                "[Deep2Engine] compressed quant bytes tensor=%s source=%zu stored=%zu remaining=%zu\n",
+                wt.name.c_str(), wt.sizeBytes, stored, f32CompressionBudget);
+        }
+    };
+
     auto tensor = [&](const char* name) -> const GGUFTensor* {
         return loader->getTensor(name);
     };
@@ -587,6 +624,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
 
         compressF32Tensor(wt);
+        compressQuantizedBytes(wt);
         return true;
     };
 
@@ -1125,8 +1163,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     modelWeights.loaded = true;
     if (compressF32OnLoad) {
         std::fprintf(stderr,
-            "[Deep2Engine] F32_RESIDENCY tensors=%zu stored_bytes=%zu budget_bytes=%zu tolerance=%.9g\n",
+            "[Deep2Engine] TENSOR_RESIDENCY f32_tensors=%zu f32_bytes=%zu quantized_tensors=%zu quantized_bytes=%zu budget_bytes=%zu f32_tolerance=%.9g\n",
             f32CompressedTensors, f32CompressedBytes,
+            quantizedCompressedTensors, quantizedCompressedBytes,
             f32CompressionBudgetInitial, f32CompressionTolerance);
     }
 
