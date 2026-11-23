@@ -61,3 +61,28 @@ A dedicated CTest fixture checks both nibble lanes, nonuniform activations,
 byte-exact packed roundtrip, wrong-type rejection, and invalid column geometry.
 This is a CPU operator implementation only; it does not imply that every
 Q4_0 Deep2 dispatch path or Vulkan shader has been redirected to this reader.
+
+## Bounded Vulkan row-tile staging
+
+The Deep2 LinearW GPU path now has an opt-in compressed-weight tile mode:
+
+- RAWRXD_COMPRESSED_WEIGHT_GPU_TILED=1 enables row-aligned staging from
+  compressed backing into the existing Vulkan GEMV ABI.
+- RAWRXD_COMPRESSED_WEIGHT_GPU_TILE_BYTES sets the maximum host staging
+  allocation per tile (default 16 MiB). A single packed row may exceed the
+  configured budget because a row cannot be split across the current GEMV ABI.
+- The same reusable host buffer is used for every tile. Vulkan GEMV dispatch
+  waits for submission completion before returning, so the staging buffer is
+  not reused while its upload is in flight.
+- Each tile carries a distinct source-offset-derived cache key, preventing
+  same-name/same-shape row slices from aliasing in the GPU weight cache.
+- If a tile read or dispatch fails, the GPU attempt is abandoned; the existing
+  CPU compressed-row path remains the fallback unless strict GPU mode forbids it.
+- RAWRXD_COMPRESSED_WEIGHT_GPU_STAGING=1 remains the separate full-tensor
+  staging override and takes precedence over tiled staging.
+
+The tile planner has a standalone CTest for row coverage, offsets, budget
+limits, oversized single rows, invalid geometry, and overflow. This is a
+bounded staging implementation for the existing GEMV path; it is not yet a
+claim that all Vulkan operators or every tensor consumer use block-resident
+weights.
