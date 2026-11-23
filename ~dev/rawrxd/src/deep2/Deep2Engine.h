@@ -80,6 +80,11 @@ struct WeightTensor {
     std::string name;                 // Tensor name from GGUF
     std::vector<int64_t> shape;       // Full shape (from GGUF loader)
 
+    bool hasBacking() const noexcept {
+        return data != nullptr || static_cast<bool>(compressedF32) ||
+               static_cast<bool>(compressedBytes);
+    }
+
     size_t numElements() const {
         if (shape.empty()) return rows * cols;
         size_t n = 1;
