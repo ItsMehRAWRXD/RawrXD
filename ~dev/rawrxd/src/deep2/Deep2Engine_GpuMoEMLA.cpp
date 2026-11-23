@@ -67,9 +67,9 @@ void applyMlaRope(float* qFull,float* kPe,
 bool Deep2Engine::tryVulkanHostGEMV(
     const WeightTensor& wt,const float* input,float* output,size_t outDim)
 {
-    const bool compressedF32Only = !wt.data && static_cast<bool>(wt.compressedF32);
+    const bool compressedF32Path = static_cast<bool>(wt.compressedF32);
     if(!vulkanInitialized_||vulkanDevices_.empty()||
-       !input||!output||(!wt.data && !compressedF32Only)||wt.rows!=outDim||
+       !input||!output||(!wt.data && !compressedF32Path)||wt.rows!=outDim||
        wt.rows==0||wt.cols==0||
        wt.rows>std::numeric_limits<uint32_t>::max()||
        wt.cols>std::numeric_limits<uint32_t>::max())
@@ -78,7 +78,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
 
     // First preference: true simultaneous independent row partitions.
-    if(wt.data && vulkanDevices_.size()>=2 && wt.rows>=2){
+    if(wt.data && !compressedF32Path && vulkanDevices_.size()>=2 && wt.rows>=2){
         RowSplitReceipt r{};
         if(Deep2RunDualGpuRowSplit(
                 *vulkanDevices_[0],*vulkanDevices_[1],
@@ -104,7 +104,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
     }
     const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
     GpuWeightView view{};
-    if (!compressedF32Only && !fullView(wt,view)) {
+    if (!compressedF32Path && !fullView(wt,view)) {
         std::fprintf(stderr,"GEMV_SINGLE fullView failed name=%s\\n",wtn); std::fflush(stderr);
         return false;
     }
@@ -124,7 +124,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
         std::fprintf(stderr,"GEMV_SINGLE UploadVector failed name=%s\n",wtn); std::fflush(stderr);
         return false;
     }
-    if (compressedF32Only) {
+    if (compressedF32Path) {
         // Keep conversion scratch bounded independently of model size. Each
         // tile is uploaded in its native F16/BF16 form when safe, or exact F32
         // when the configured error budget cannot be met.
