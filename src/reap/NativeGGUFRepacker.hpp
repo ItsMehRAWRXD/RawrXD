@@ -566,6 +566,8 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
         // Q8_K uses one FP32 scale for 256 signed codes. If it fits
         // FP16 exactly, all eight Q8_0 blocks can reuse those codes
         // without any requantization or numerical reconstruction error.
+        // Reject finite FP32 scales that overflow the FP16 scale field
+        // only after evaluating the per-group requantization alternative.
         const uint16_t directHalf=Float32BitsToFloat16(bits);
         if(Float16ToFloat32Bits(directHalf)==bits) {
             encoded[0]=static_cast<unsigned char>(directHalf);
