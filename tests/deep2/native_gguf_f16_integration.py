@@ -83,6 +83,14 @@ def run(binary):
             qsamples=struct.unpack_from("<32b",qb,start_block+2)
             for j,q in enumerate(qsamples):
                 assert abs(scale*q-values[block*32+j])<=300
+        # Strict Q8_0 error budget must retain F32, including all payload bytes.
+        strictq=root/"strict-q8.gguf"
+        subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
+        sq,ss,sm,st=parse(strictq)
+        assert sm==metadata
+        assert st["blk.0.attn_q.weight"][0]==0
+        original_raw=struct.pack("<"+"f"*len(values),*values)
+        assert sq[ss+st["blk.0.attn_q.weight"][2]:ss+st["blk.0.attn_q.weight"][2]+len(original_raw)]==original_raw
         # FP16 input must also quantize correctly, with the same GGUF Q8_0 layout.
         f16q=root/"f16-to-q8.gguf"
         subprocess.run([binary,str(target),str(f16q),"300","q8_0"],check=True)
