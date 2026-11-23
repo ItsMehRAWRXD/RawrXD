@@ -2,6 +2,7 @@
 
 #include "GGUFLoader.hpp"
 #include "TensorROM.hpp"
+#include "TensorROMCompressedView.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
 #include "VulkanDeviceAllocator.hpp"
@@ -31,6 +32,9 @@ struct Deep2Engine {
     // Paged ROM path (default execution layer from Move 3 onward).
     bool romMode = true;
     deep2::TensorROM rom;
+    // Persistent compressed views: raw GGUF shard pages are fetched directly,
+    // avoiding a second uncompressed PageCache copy.
+    std::unordered_map<const deep2::TensorEntry*, std::unique_ptr<deep2::TensorROMCompressedView>> compressedWeightViews;
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
 
