@@ -290,6 +290,20 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
 // Scan Q4_1 blocks before planning a sensitive-tensor conversion.
 // Only accept the affine representation when dropping the minimum leaves
 // every decoded weight unchanged. No speculative lossy conversion.
+// GGML affine and symmetric dequantization can differ by one F32 ULP
+// even when the offsets are algebraically equal. Compare the actual
+// reconstructed F32 bits for every representable code, including signed zero.
+inline bool AffineCodesBitExact(float d,float m,unsigned midpoint,unsigned codes) {
+    if(!std::isfinite(d)||!std::isfinite(m))return false;
+    for(unsigned q=0;q<codes;++q) {
+        const float affine=d*static_cast<float>(q)+m;
+        const float symmetric=d*static_cast<float>(static_cast<int>(q)-static_cast<int>(midpoint));
+        uint32_t a=0,b=0;
+        std::memcpy(&a,&affine,4);std::memcpy(&b,&symmetric,4);
+        if(a!=b)return false;
+    }
+    return true;
+}
 inline bool IsExactQ4_1ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
     if(bytes%20 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
@@ -302,7 +316,8 @@ inline bool IsExactQ4_1ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
         const uint16_t mh=uint16_t(header[2])|(uint16_t(header[3])<<8);
         const uint32_t db=Float16ToFloat32Bits(dh),mb=Float16ToFloat32Bits(mh);
         float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
-        if(!std::isfinite(d)||!std::isfinite(m)||m!=-8.0f*d)return false;
+        if(!std::isfinite(d)||!std::isfinite(m)||m!=-8.0f*d||
+           !AffineCodesBitExact(d,m,8,16))return false;
         in.seekg(16,std::ios::cur);
         if(!in)return false;
         bytes-=20;
@@ -357,7 +372,8 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
             // affine minimum is exactly -8*d, its 16 codes already have
             // Q4_0 semantics: drop the minimum, preserve d and all codes.
             // Avoid needless requantization (including FP16 rounding).
-            if(sourceType==3 && minimum==-8.0f*scale) {
+            if(sourceType==3 && minimum==-8.0f*scale &&
+               AffineCodesBitExact(scale,minimum,8,16)) {
                 encoded[0]=source[0];
                 encoded[1]=source[1];
                 std::memcpy(encoded+2,source+4,16);
@@ -581,7 +597,7 @@ inline bool ConvertQ5_1ToQ5_0(std::ifstream& in,std::ofstream& out,
         // Q5_1 has the same 32 packed codes as Q5_0. When the
         // affine offset equals -16*d, remove only the redundant minimum.
         // Preserve both the original FP16 scale and every quantized code.
-        if(m==-16.0f*d) {
+        if(m==-16.0f*d && AffineCodesBitExact(d,m,16,32)) {
             encoded[0]=source[0];
             encoded[1]=source[1];
             std::memcpy(encoded+2,source+4,20);
