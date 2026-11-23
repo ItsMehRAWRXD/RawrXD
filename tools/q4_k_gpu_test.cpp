@@ -58,20 +58,35 @@ struct Q4KProgram {
 int main(int argc, char** argv) {
     uint32_t rows = argc>1?(uint32_t)std::stoul(argv[1]):16;
     uint32_t cols = argc>2?(uint32_t)std::stoul(argv[2]):256;
+    int isolate = -1;
+    for (int i = 1; i < argc; ++i) { std::string a = argv[i]; if (a.rfind("--isolate=",0)==0) isolate = std::stoi(a.substr(10)); }
     if(cols%256){std::fprintf(stderr,"cols must be multiple of 256\n");return 1;}
     const uint32_t bpr=cols/256, n_blocks=rows*bpr;
 
     std::mt19937 rng(123);
     std::vector<uint8_t> q4k(n_blocks*144);
     for(auto&x:q4k) x=(uint8_t)rng();
-    // Controlled d=1.0, dmin=0.0 for predictable math.
-    for(uint32_t b=0;b<n_blocks;++b){ uint8_t* blk=q4k.data()+b*144; blk[0]=0x00;blk[1]=0x3C; blk[2]=0x00;blk[3]=0x00; }
+    // d=1.0 (0x3C00); dmin = moderate nonzero (0.03..1.0) via fp16 exp 120..127.
+    // Random 6-bit scales/mins + qs. This exercises nonzero dmin without extreme
+    // magnitudes that cause float-precision divergence.
+    for(uint32_t b=0;b<n_blocks;++b){
+        uint8_t* blk=q4k.data()+b*144;
+        blk[0]=0x00; blk[1]=0x3C; // d = 1.0
+        uint32_t dexp = 120u + (rng() % 8u); // 120..127 -> ~0.03..1.0
+        uint16_t dmin = (uint16_t)((dexp << 10) | (rng() & 0x3FFu));
+        blk[2]=(uint8_t)(dmin&0xff); blk[3]=(uint8_t)(dmin>>8);
+    }
     std::vector<float> x(cols);
-    for(size_t i=0;i<cols;++i) x[i]=std::sin((double)i)*0.1f;
+    if (isolate >= 0 && (uint32_t)isolate < cols) {
+        x[isolate] = 1.0f;
+        std::printf("ISOLATE mode: only x[%d]=1\n", isolate);
+    } else {
+        for(size_t i=0;i<cols;++i) x[i]=std::sin((double)i)*0.1f;
+    }
 
     std::vector<float> W; DequantizeQ4_K(q4k.data(), n_blocks, W);
     std::vector<float> yCpu(rows);
-    for(uint32_t r=0;r<rows;++r){float a=0;const float*wr=&W[(size_t)r*cols];for(uint32_t c=0;c<cols;++c)a+=wr[c]*x[c];yCpu[r]=a;}
+    for(uint32_t r=0;r<rows;++r){ double a=0; const float*wr=&W[(size_t)r*cols]; for(uint32_t c=0;c<cols;++c) a+=(double)wr[c]*x[c]; yCpu[r]=(float)a; }
 
     deep2::VulkanDevice vk;
     if(!vk.init()||!vk.gpuCount()){std::fprintf(stderr,"no Vulkan GPU\n");return 1;}

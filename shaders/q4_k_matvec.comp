@@ -15,7 +15,7 @@ layout(set = 0, binding = 1) readonly  buffer InputX  { float x[]; };
 layout(set = 0, binding = 2) writeonly buffer OutputY { float y[]; };
 layout(set = 0, binding = 3) uniform  Dims { uint rows; uint cols; uint bpr; };
 
-shared float s_partial[256];
+shared double s_partial[256];
 
 float half_to_float(uint h) {
     uint sign = (h & 0x8000u) << 16;
@@ -50,7 +50,7 @@ void main() {
     if (row >= rows) return;
     uint tid = gl_LocalInvocationID.x;        // 0..255 (element within superblock)
 
-    float acc = 0.0;
+    double acc = 0.0;
     // Stream every 256-value superblock of this row.
     for (uint cb = 0; cb < bpr; ++cb) {
         uint blk = row * bpr + cb;
@@ -67,8 +67,8 @@ void main() {
         uint qbyte = read_byte(base + 16u + qi);
         uint nib = (l < 32u) ? (qbyte & 0x0fu) : ((qbyte >> 4) & 0x0fu);
 
-        float w = float(int(nib)) * (d * float(scale_d(int(si), base))) - dmin * float(scale_m(int(si), base));
-        acc += w * x[cb * 256u + e];
+        double w = double(int(nib)) * (double(d) * double(scale_d(int(si), base))) - double(dmin) * double(scale_m(int(si), base));
+        acc += w * double(x[cb * 256u + e]);
     }
     s_partial[tid] = acc;
     barrier();
@@ -76,5 +76,5 @@ void main() {
         if (tid < stride) s_partial[tid] += s_partial[tid + stride];
         barrier();
     }
-    if (tid == 0) y[row] = s_partial[0];
+    if (tid == 0) y[row] = float(s_partial[0]);
 }
