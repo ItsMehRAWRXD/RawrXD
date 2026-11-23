@@ -46,9 +46,9 @@ ROM F32, floating and supported quantized 2-D projection weights use bounded row
 
 The standalone ROM GEMV path now has a typed packed-weight shader for:
 - F16 and BF16 weights, including F32 source tensors admitted to exact or explicitly error-bounded 16-bit residency.
-- Native GGUF Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, and Q8_1 fixed blocks (32 values per canonical block).
+- Native GGUF Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, and Q8_1 fixed blocks (32 values per block), plus Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, and Q8_K blocks (256 values per block).
 
-The shader consumes those compact bytes directly and accumulates products in F32. Q4/Q5/Q8 blocks are decoded from their canonical GGUF byte layouts; a CPU mirror regression compares the shader's nibble, high-bit, signed-byte, and F16-scale interpretation with the canonical dequantizer across adjacent blocks. Other GGUF quant formats continue through the bounded CPU F32-tile fallback.
+The shader consumes those compact bytes directly and accumulates products in F32. Q4/Q5/Q8 and K-quant blocks are decoded from their GGUF byte layouts; a CPU mirror regression compares the shader's nibble, bit-plane, scale/minimum, signed-byte, and F16/F32-scale interpretation with the repository's NativeKQuant and fixed-block dequantizers across adjacent blocks. Other GGUF quant formats continue through the bounded CPU F32-tile fallback.
 
 Compact weight tiles are uploaded through a completion-backed staging transfer into device-local Vulkan buffers. Transfer-to-compute and compute-to-host memory barriers make the dataflow explicit. Vulkan copy sizes are padded to the required four-byte alignment without changing logical tensor geometry. The staging resources are released only after a successful fence wait (or a safe device-idle recovery); uncertain completion fails closed.
 
@@ -107,8 +107,15 @@ The CPU LinearW fallback uses the registered GGML block geometry and dequantizer
 
 ## Packed Q8_0 and persistent device-local tile cache
 
-The gemv_packed16.comp shader now accepts encodings 3 through 8 for canonical GGUF Q8_0, Q4_0, Q4_1, Q5_0, Q5_1, and Q8_1. Each format is decoded using its canonical 32-value block stride and F16 scale/minimum metadata. The ROM path reads only the block-aligned byte range for the current row tile. The Vulkan GEMV preflight checks block geometry, element-index limits, byte-size overflow, and the device's maxStorageBufferRange.
+The gemv_packed16.comp shader now accepts encodings 3 through 14 for fixed-block Q4/Q5/Q8 and K-quant Q2_K/Q3_K/Q4_K/Q5_K/Q6_K/Q8_K. Fixed formats use 32-value blocks; K-quants use 256-value blocks and their native scale, minimum, nibble, and bit-plane layouts. The ROM path reads only the block-aligned byte range for the current row tile. The Vulkan GEMV preflight checks block geometry, element-index limits, byte-size overflow, and the device's maxStorageBufferRange.
 
-F16, BF16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1, and eligible F32-derived 16-bit tiles are uploaded in their compact byte representation to device-local storage. A per-device LRU cache retains those immutable buffers under DEEP2_GPU_WEIGHT_RESIDENCY_MB; uncacheable or over-budget tiles use an ephemeral device-local buffer and are released after synchronous dispatch. Pipeline objects are cached independently per VkDevice and destroyed before their device, avoiding cross-GPU pipeline reinitialization and stale handles.
+F16, BF16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1, Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K, and eligible F32-derived 16-bit tiles are uploaded in their compact byte representation to device-local storage. A per-device LRU cache retains those immutable buffers under DEEP2_GPU_WEIGHT_RESIDENCY_MB; uncacheable or over-budget tiles use an ephemeral device-local buffer and are released after synchronous dispatch. Pipeline objects are cached independently per VkDevice and destroyed before their device, avoiding cross-GPU pipeline reinitialization and stale handles.
 
-CI now includes a CPU mirror of the packed Q4/Q5/Q8 shader decoders against the canonical GGUF dequantizer, plus optional glslc compilation when the compiler is installed. The full native Vulkan engine build, shader validation on an SDK-equipped runner, GPU parity, device-cache stress/eviction, and measured host/VRAM savings remain release gates.
+CI now includes a CPU mirror of the packed Q4/Q5/Q8 and K-quant shader decoders against the canonical GGUF dequantizer, plus optional glslc compilation when the compiler is installed. The full native Vulkan engine build, shader validation on an SDK-equipped runner, GPU parity, device-cache stress/eviction, and measured host/VRAM savings remain release gates.
+
+
+## K-quant direct packed GEMV
+
+The packed Vulkan shader now has encodings for all six GGML K-quant formats. The ROM tile reader enforces 256-value row/block alignment and streams only the corresponding encoded block interval. The shader decodes Q2_K scale/minimum nibbles, Q3_K scale/high-mask bitplanes, Q4_K/Q5_K grouped scales and minima (including Q5 high bits), Q6_K low/high planes and signed group scales, and Q8_K F32 scale plus signed bytes. Accumulation remains F32.
+
+The K-quant decoder implementation is mirrored from `NativeKQuant::DecodeBlock`; the expanded CPU regression checks the shader's byte-address calculations against that decoder for two adjacent blocks per format. This establishes CPU decoder agreement, not independent upstream GGML validation or GPU numerical parity. Shader compilation, Vulkan execution, full-model operator coverage, and memory/latency measurements remain required before release certification.
