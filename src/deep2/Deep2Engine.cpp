@@ -10,6 +10,7 @@
 
 #include "deep2/ReapCapturePolicy.hpp"
 #include "Deep2Engine.h"
+#include "deep2/compression/CompressedWeightTile.hpp"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
 #include "../sampling/advanced_sampler.hpp"
@@ -7660,23 +7661,19 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
                 {
                     const std::size_t tileRows =
                         (std::min)(kCompressedGpuTileRows, rows - firstRow);
-                    if (tileRows > (std::numeric_limits<std::size_t>::max)() / packedRowBytes)
-                        throw std::overflow_error("LinearW: compressed GPU tile size overflow");
-                    const std::size_t tileBytes = tileRows * packedRowBytes;
-                    if (firstRow > (std::numeric_limits<std::size_t>::max)() / packedRowBytes)
-                        throw std::overflow_error("LinearW: compressed GPU tile offset overflow");
-
-                    std::vector<std::uint8_t> tile(tileBytes);
                     std::string decodeError;
-                    if (!wtEffective.readBytes(firstRow * packedRowBytes,
-                                               tile.data(), tileBytes, &decodeError))
-                        throw std::runtime_error("LinearW: compressed GPU tile read failed for " +
-                                                 wt.name + ": " + decodeError);
-
+                    auto tile = rawrxd::compression::ReadCompressedWeightTile(
+                        wtEffective.sizeBytes, wtEffective.rows, packedRowBytes,
+                        firstRow, tileRows,
+                        [&](std::size_t offset, std::uint8_t* destination,
+                            std::size_t length) {
+                            return wtEffective.readBytes(offset, destination,
+                                                         length, &decodeError);
+                        });
                     WeightTensor gpuTile = wtEffective;
-                    gpuTile.data = tile.data();
-                    gpuTile.sizeBytes = tileBytes;
-                    gpuTile.rows = tileRows;
+                    gpuTile.data = tile.bytes.data();
+                    gpuTile.sizeBytes = tile.bytes.size();
+                    gpuTile.rows = tile.row_count;
                     // A zero cache key is essential: every temporary tile is
                     // expanded for this dispatch only and must not pin VRAM.
                     if (!tryVulkanGEMV(gpuTile, input,
