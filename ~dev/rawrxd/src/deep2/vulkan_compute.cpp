@@ -2980,7 +2980,8 @@ bool VulkanCompute::ensureWeightF32(
 }
 
 bool VulkanCompute::ensureWeightQuant(
-    int type, const void* weights, size_t bytes, DeviceBuf*& out)
+    int type, const void* weights, size_t bytes, DeviceBuf*& out,
+    uint64_t cacheKey)
 {
     // DEEP2_DIRECT_RESIDENT_DISPATCH_001: certification counter — see
     // ensureWeightF32.
@@ -2992,7 +2993,8 @@ bool VulkanCompute::ensureWeightQuant(
             residentDispatchDepth_, type);
 #endif
     }
-    const uint64_t key=quantWeightKey(weights,bytes,type);
+    const uint64_t key = cacheKey ? cacheKey
+        : quantWeightKey(weights,bytes,type);
     auto it=weightCache_.find(key);
     if(it!=weightCache_.end()){
         ++weightHits_;
@@ -3100,23 +3102,36 @@ bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
 {
+    return DispatchGemvQuantRows(type,weights,weightBytes,input,output,
+                                 rows,cols,0,0);
+}
+
+bool VulkanCompute::DispatchGemvQuantRows(
+    int type,const void* weights,size_t weightBytes,
+    DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
+    uint32_t outputRowBase,uint64_t cacheKey)
+{
     if(type!=1 && type!=8 && type!=10 && type!=12 && type!=14 && type!=30)
         return false;
     if(!weights||!weightBytes||!rows||!cols||
-       rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
+       outputRowBase > std::numeric_limits<uint32_t>::max() - rows ||
+       static_cast<uint64_t>(outputRowBase + rows) * sizeof(float) > output.size ||
+       static_cast<uint64_t>(cols) * sizeof(float) > input.size)
         return false;
     if (weightBytes > std::numeric_limits<uint32_t>::max()) return false;
     if ((type == 1 || type == 30) &&
         (cols > std::numeric_limits<uint32_t>::max() / 2u ||
          weightBytes != static_cast<size_t>(rows) * static_cast<size_t>(cols) * 2u))
         return false;
+    if (cacheKey && type != 1 && type != 30) return false;
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightQuant(type,weights,weightBytes,w)) return false;
+    if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) return false;
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
     p.weightBytes=static_cast<uint32_t>(weightBytes);
+    p.outputRowBase=outputRowBase;
     bool ok=dispatchQuant(*w,input,output,p);
     if(ok) ++gemvSuccess_;
     return ok;
