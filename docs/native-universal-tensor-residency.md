@@ -28,36 +28,42 @@ Admission failures are classified: source-reader failures and unexpected runtime
 - `DEEP2_F32_RESIDENCY_MB` and `DEEP2_ENCODED_RESIDENCY_MB` override the respective budgets in MiB. Invalid or overflowing values are ignored in favor of the computed default.
 - `DEEP2_F32_CACHE_BYTES` and `DEEP2_ENCODED_CACHE_BYTES` provide exact byte-count overrides and take precedence over the MiB settings. Invalid values fail initialization rather than silently selecting an unexpected memory budget.
 
-The engine exposes `GetTensorResidencySnapshot()` for compressed/logical bytes, source-pager resident bytes and capacity, tensor counts, cache hits/misses, decoded bytes and evictions. The snapshot's total-resident value counts compressed cache bytes plus source-pager resident bytes once.
+The engine exposes `GetTensorResidencySnapshot()` for compressed/logical bytes, source-pager resident bytes and capacity, persistent device-local packed-weight bytes and budget, tensor counts, cache hits/misses, decoded bytes and evictions. Total tracked residency includes host compressed storage, source-pager resident bytes, and persistent GPU tile buffers.
 
 ## Current kernel integration
 
-ROM F32, floating and supported quantized 2-D projection weights use bounded row tiles. For Vulkan, each requested tile is decoded on the CPU, uploaded as F32, and dispatched through the existing Vulkan GEMV path. This avoids a full-matrix F32 allocation but is **not** GPU-native decompression.
+ROM F32, floating and supported quantized 2-D projection weights use bounded row tiles. F32 tiles admitted as uniform F16/BF16 are exported in compact form; native GGUF F16/BF16 and Q8_0 tiles are read directly from the ROM. These formats are uploaded compactly to device-local Vulkan storage and consumed by a typed GEMV shader. Other quantized formats still use the bounded CPU dequantize-to-F32 fallback.
 
 ## Deliberate limitations / remaining certification
 
 - IQ-family, TQ-family, MXFP4, NVFP4, and other GGUF formats not listed above remain unsupported by this Deep2 ROM decoder. The loader rejects unknown type IDs rather than guessing.
-- GPU-side decode kernels and persistent compressed GPU weight residency are not implemented by this change.
+- GPU-side RLE/LZ4 decode and direct Q2_K/Q3_K/Q4_K/Q5_K/Q6_K/Q8_K shader kernels remain unimplemented. Those formats still use CPU block decode for unsupported operators.
 - Every production operator must be audited for use of the tiled ROM path; this document does not claim universal operator coverage.
 - CI must pass on Windows and Linux, followed by reference-logit parity, peak host/VRAM measurement, and multi-agent stress tests before release certification.
 
 
-## Vulkan tile staging lifecycle
+## Vulkan compact-weight execution and residency
 
-The ROM Vulkan GEMV route still expands only the requested compressed/dequantized row tile on the CPU, then uploads/dispatches that bounded F32 tile. It does **not** yet perform RLE/LZ4/F16/BF16 decode inside a Vulkan shader or retain a compressed representation in VRAM. This distinction is intentional: the current shader contract consumes F32 storage buffers, so claiming GPU-native compressed residency would be inaccurate.
+The standalone ROM GEMV path now has a typed packed-weight shader for:
+- F16 and BF16 weights, including F32 source tensors admitted to exact or explicitly error-bounded 16-bit residency.
+- Native GGUF Q8_0 blocks (32 signed values plus one F16 scale per 34-byte block).
 
-The synchronous GEMV path now explicitly unmaps each host-visible weight/input/output allocation before destroying its buffer and freeing its memory. The Vulkan buffer allocator also fails closed if binding or mapping fails and clears output handles on those failures. This fixes a per-tile mapped-memory lifetime defect in the current upload path; it does not change numerical behavior or establish GPU decompression parity.
+The shader consumes those compact bytes directly and accumulates products in F32. Q8_0 is decoded from its canonical GGUF block layout; a CPU mirror regression compares the shader's byte/scale interpretation with the canonical dequantizer across adjacent blocks. Other GGUF quant formats continue through the bounded CPU F32-tile fallback.
 
-The next GPU-residency milestone requires a separate shader contract that accepts the encoded chunk format and its metadata (encoding kind, compressed byte length, logical element count, and chunk boundaries), validates bounds before decode, and feeds decoded values directly into the compute operation. That work must preserve the existing F32 GEMV reference path until device-side decode has independent correctness and memory measurements.
+Compact weight tiles are uploaded through a completion-backed staging transfer into device-local Vulkan buffers. Transfer-to-compute and compute-to-host memory barriers make the dataflow explicit. Vulkan copy sizes are padded to the required four-byte alignment without changing logical tensor geometry. The staging resources are released only after a successful fence wait (or a safe device-idle recovery); uncertain completion fails closed.
+
+An LRU device-local weight-buffer cache retains immutable packed tiles across GEMV calls. Cache identity includes the device, shard/tensor identity, tile range, source type, and F32-derived packed encoding. DEEP2_GPU_WEIGHT_RESIDENCY_MB sets its byte budget in MiB; the default is capped at 512 MiB and scales against reported device-local memory. Shutdown waits for devices and destroys cached buffers before destroying their owning devices. GetTensorResidencySnapshot() reports the GPU cache budget and resident bytes.
+
+This is persistent compressed tile residency, not yet a full-model VRAM cache: only tiles actually requested by the ROM GEMV path are admitted, and eviction is LRU. RLE/LZ4 streams are still decoded on the CPU before unsupported operators run. The F32 reference shader remains available as a correctness fallback.
 
 
 ## Compact F16/BF16 range export for device consumers
 
-`ChunkedF32Storage::ExportUniform16BitRange` and `TensorResidencyCache::ExportUniform16BitRange` expose a selected range of cached F16/BF16 payloads without first decoding them to F32. The range must cover complete independently encoded chunks (the final range may end at tensor end), and every chunk must use the same 16-bit encoding. Partial chunks, mixed codecs, raw chunks, RLE, and LZ4 are rejected without returning ambiguous bytes. The cache wrapper pins the entry while exporting so concurrent LRU eviction cannot invalidate the source.
+`ChunkedF32Storage::ExportUniform16BitRange` and `TensorResidencyCache::ExportUniform16BitRange` expose a selected range of cached F16/BF16 payloads without first decoding them to F32. The requested logical range may begin or end inside a chunk and may span multiple chunks, provided all intersecting chunks share the same F16 or BF16 encoding. Partial chunk slices are copied directly from compact payloads; mixed codecs, raw chunks, RLE, and LZ4 are rejected without returning ambiguous bytes. The cache wrapper pins the entry while exporting so concurrent LRU eviction cannot invalidate the source.
 
 This is the required host-side handoff primitive for a GPU kernel that consumes compressed F16/BF16 weights directly. A regression test verifies the exported bytes round-trip to the exact source values for an F16-exact tensor, rejects unaligned ranges, and confirms the reader pin is released.
 
-**Important boundary:** the current standalone Vulkan GEMV still consumes F32 tiles. This commit does not yet connect the compact export to a Vulkan descriptor or ship a compressed-weight GEMV shader. Until that kernel and independent GPU parity test exist, the runtime GPU-resident memory reduction is not certified. Quantized GGUF RLE/LZ4 payloads also still need an explicit device decoder/kernel contract; their encoded representation must not be mistaken for F16/BF16.
+**Important boundary:** the standalone ROM Vulkan GEMV now connects compact F16/BF16/Q8_0 payloads to the packed shader and retains packed tiles in a bounded device-local cache. This does not make every Deep2 operator consume compressed data. Quantized GGUF RLE/LZ4 payloads still require a separate device decoder/kernel contract; their encoded representation must not be mistaken for F16/BF16/Q8_0.
 
 
 ## Production Deep2 GPU path: packed F16/BF16 GEMV
@@ -97,3 +103,12 @@ For supported Vulkan QGEMV types (Q8_0, Q2_K, Q4_K, Q6_K), the resident forward 
 The CPU LinearW fallback uses the registered GGML block geometry and dequantizer to reconstruct one quantized row at a time into reusable scratch, then computes that row's dot product. It does not expand the full quantized matrix to F32. Quantized types not supported by the packed Vulkan shader can still use the CPU row path when a compressed byte backing exists.
 
 **Remaining scope:** compressed-byte residency is currently attached to model-bound tensors and selected supported quantized operators. Embedding lookup, all normalization/state tensors, every quantized GGML type on Vulkan, expert-prefetch/fused execution, and lazy tensor-loading paths still require dedicated integration. The source GGUF mapping remains available for fallback; this is not yet a claim that all mapped pages have been released or that process RSS has fallen by the compressed-byte ratio.
+
+
+## Packed Q8_0 and persistent device-local tile cache
+
+The gemv_packed16.comp shader now accepts encoding 3 for canonical GGUF Q8_0. Each block is decoded as a little-endian F16 scale followed by 32 signed int8 values; block stride is 34 bytes. The ROM path reads only the block-aligned byte range for the current row tile. The Vulkan GEMV preflight checks block geometry, element-index limits, byte-size overflow, and the device's maxStorageBufferRange.
+
+F16, BF16, Q8_0, and eligible F32-derived 16-bit tiles are uploaded in their compact byte representation to device-local storage. A per-device LRU cache retains those immutable buffers under DEEP2_GPU_WEIGHT_RESIDENCY_MB; uncacheable or over-budget tiles use an ephemeral device-local buffer and are released after synchronous dispatch. Pipeline objects are cached independently per VkDevice and destroyed before their device, avoiding cross-GPU pipeline reinitialization and stale handles.
+
+CI now includes a CPU mirror of the packed Q8_0 shader decoder against the canonical GGUF dequantizer, plus optional glslc compilation when the compiler is installed. The full native Vulkan engine build, shader validation on an SDK-equipped runner, GPU parity, device-cache stress/eviction, and measured host/VRAM savings remain release gates.
