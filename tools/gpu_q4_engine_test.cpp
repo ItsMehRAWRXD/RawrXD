@@ -36,11 +36,12 @@ static bool ReadTensor(const std::string& path, const std::string& want,
     struct TI{std::string name;uint64_t dim[4];uint32_t nd;uint32_t type;uint64_t off;};
     std::vector<TI> infos(nt);
     for(uint64_t i=0;i<nt;++i){auto&t=infos[i];if(!rdus(t.name)||!rds(t.nd)||t.nd>4)return false;for(uint32_t d=0;d<t.nd;++d)if(!rds(t.dim[d]))return false;if(!rds(t.type)||!rds(t.off))return false;}
-    uint64_t ds=((uint64_t)f.tellg()+alignment-1)&~((uint64_t)alignment-1);
+    // General alignment (works for any alignment, not just powers of two).
+    uint64_t ds = ((uint64_t)f.tellg() + alignment - 1) / alignment * alignment;
     auto tb=[](uint32_t t,uint64_t ne)->uint64_t{switch(t){case 0:return ne*4;case 1:return ne*2;case 2:return(ne/32)*18;case 3:return(ne/32)*20;case 6:return(ne/32)*22;case 7:return(ne/32)*24;case 8:return(ne/32)*34;case 9:return(ne/32)*36;case 10:return(ne/256)*84;case 11:return(ne/256)*110;case 12:return(ne/256)*144;case 13:return(ne/256)*176;case 14:return(ne/256)*210;case 15:return(ne/256)*292;default:return 0;}};
     for(auto&t:infos){
         if(t.name.find(want)==std::string::npos) continue;
-        if(t.nd<2) continue;
+        if(t.nd != 2) continue; // only 2D matrices for unambiguous reference
         uint64_t ne=1; for(uint32_t d=0;d<t.nd;++d) ne*=t.dim[d];
         uint64_t bytes=tb(t.type,ne);
         if(bytes==0) continue;
