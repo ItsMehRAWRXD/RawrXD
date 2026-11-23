@@ -528,6 +528,11 @@ inline bool ConvertQ8_1ToQ8_0(std::ifstream& in,std::ofstream& out,
     unsigned char source[36],encoded[34];
     while(sourceBytes) {
         if(!in.read(reinterpret_cast<char*>(source),36))return false;
+        const uint16_t d=uint16_t(source[0])|(uint16_t(source[1])<<8);
+        const uint32_t dbits=Float16ToFloat32Bits(d);
+        float scale=0;
+        std::memcpy(&scale,&dbits,sizeof(scale));
+        if(!std::isfinite(scale))return false;
         // Upstream GGML block_q8_1: fp16 d, fp16 s, int8 qs[32].
         // The sum is auxiliary; the 32 codes and FP16 scale are
         // directly reusable in Q8_0 without requantization.
