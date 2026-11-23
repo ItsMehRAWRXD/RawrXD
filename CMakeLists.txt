@@ -148,6 +148,10 @@ add_executable(test_native_tensor_residency_cache tests/deep2/native_tensor_resi
 target_compile_features(test_native_tensor_residency_cache PRIVATE cxx_std_17)
 target_include_directories(test_native_tensor_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# Standalone real-weight payload benchmark: no Vulkan, Qt or zstd dependency.
+add_executable(tensor_codec_benchmark tools/tensor_codec_benchmark.cpp)
+target_compile_features(tensor_codec_benchmark PRIVATE cxx_std_17)
+
 add_executable(test_decoded_weight_tile_cache tests/deep2/decoded_weight_tile_cache_test.cpp)
 target_compile_features(test_decoded_weight_tile_cache PRIVATE cxx_std_17)
 target_include_directories(test_decoded_weight_tile_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
