@@ -50,7 +50,7 @@ static void testFixedBlockRange(uint32_t type) {
         else if(type==6) { put16(p,0x3c00);for(int i=0;i<16;++i)p[6+i]=0x98; }
         else if(type==7) { put16(p,0x3c00);put16(p+2,0x3800);for(int i=0;i<16;++i)p[8+i]=0x98; }
         else if(type==8) { put16(p,0x3c00);for(int i=0;i<32;++i)p[2+i]=uint8_t(int8_t(i-16)); }
-        else if(type==9) { putFloat(p,1.0f);putFloat(p+4,0.0f);for(int i=0;i<32;++i)p[8+i]=uint8_t(int8_t(i-16)); }
+        else if(type==9) { put16(p,0x3c00);put16(p+2,0);for(int i=0;i<32;++i)p[4+i]=uint8_t(int8_t(i-16)); }
     }
     float tile[30]{};
     assert(deep2::dequantizeTensorRange(tt,64,13,30,encoded.data(),encoded.size(),tile));
