@@ -162,6 +162,31 @@ target_compile_features(test_native_compressed_gguf_e2e PRIVATE cxx_std_17)
 target_include_directories(test_native_compressed_gguf_e2e PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(test_native_compressed_gguf_e2e PRIVATE Threads::Threads)
 
+# Windows integration test: exercise the actual Deep2Engine ROM forward path
+# against a tiny generated Phi-3-compatible GGUF model. It intentionally shares
+# the production engine sources and Vulkan linkage, not a mocked inference API.
+if(MSVC)
+    add_executable(test_deep2_compressed_model_e2e
+        tests/deep2/native_deep2_compressed_model_e2e_test.cpp
+        src/Deep2Engine.cpp
+        src/GGUFLoader.cpp
+        src/TensorROM.cpp
+        src/ShardPager.cpp
+        src/quant_kernels.cpp
+        src/MasmCoreKernels.cpp
+        src/VulkanDevice.cpp
+        src/VulkanDeviceAllocator.cpp
+        src/VulkanStagingPipeline.cpp)
+    target_compile_features(test_deep2_compressed_model_e2e PRIVATE cxx_std_17)
+    target_include_directories(test_deep2_compressed_model_e2e PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+        ${Vulkan_INCLUDE_DIRS})
+    target_compile_options(test_deep2_compressed_model_e2e PRIVATE
+        /O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2)
+    target_link_libraries(test_deep2_compressed_model_e2e PRIVATE
+        Vulkan::Vulkan kernel32.lib user32.lib advapi32.lib)
+endif()
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
@@ -181,6 +206,9 @@ add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
 add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
 add_test(NAME NativeCompressedGGUFE2E COMMAND test_native_compressed_gguf_e2e)
+if(MSVC)
+    add_test(NAME Deep2CompressedModelE2E COMMAND test_deep2_compressed_model_e2e)
+endif()
 
 # Validate the x64-only MASM gzip writer against zlib's independent decoder.
 if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
