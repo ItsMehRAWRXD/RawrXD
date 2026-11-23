@@ -1618,6 +1618,45 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         return;
     }
 
+    // Losslessly compressed quantized wire bytes are expanded one row at
+    // a time for CPU GEMV. The original quantized matrix is never copied into
+    // a second full-size buffer, and the registered GGML dequantizer remains
+    // the single source of truth for each row's numerical interpretation.
+    if (wt.compressedBytes) {
+        auto& registry = QuantKernelRegistry::Instance();
+        const BlockGeometry geometry = registry.GetGeometry(wt.type);
+        auto dequant = registry.GetDequant(wt.type);
+        if (!geometry.blockBytes || !geometry.blockElements || !dequant ||
+            cols > std::numeric_limits<size_t>::max() -
+                       (geometry.blockElements - 1u))
+            throw std::runtime_error("LinearW: unsupported compressed quant geometry");
+        const size_t blocks =
+            (cols + geometry.blockElements - 1u) / geometry.blockElements;
+        if (blocks > std::numeric_limits<size_t>::max() / geometry.blockBytes)
+            throw std::runtime_error("LinearW: compressed quant row size overflow");
+        const size_t rowBytes = blocks * geometry.blockBytes;
+        if (!rowBytes || rows > std::numeric_limits<size_t>::max() / rowBytes ||
+            rows * rowBytes != wt.sizeBytes ||
+            wt.compressedBytes->size() != wt.sizeBytes)
+            throw std::runtime_error("LinearW: compressed quant backing geometry mismatch");
+        std::vector<uint8_t> encodedRow(rowBytes);
+        std::vector<uint8_t> decodeScratch;
+        std::vector<float> decodedRow(cols);
+        for (size_t row = 0; row < rows; ++row) {
+            wt.compressedBytes->ReadRange(
+                row * rowBytes, rowBytes, encodedRow.data(), decodeScratch);
+            dequant(encodedRow.data(), decodedRow.data(), cols);
+            float sum = 0.0f;
+            for (size_t col = 0; col < cols; ++col)
+                sum += decodedRow[col] * input[col];
+            output[row] = sum;
+        }
+        if (bias) for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+        if (!finiteVector(output, outDim))
+            throw std::runtime_error("LinearW: non-finite compressed quant output");
+        return;
+    }
+
     // CPU fallback
     if (deep2ForwardTraceEnabled()) {
         std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
