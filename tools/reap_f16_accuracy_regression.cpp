@@ -38,6 +38,12 @@ int main(){
     }
     check(!AuditF32ToF16(source,target,0,0,6,accuracy),
           "corrupted_conversion_rejected");
+    check(!AuditF32ToF16(source,target,0,0,7,accuracy),
+          "truncated_tensor_rejected");
+    check(!AuditF32ToF16(source,target,UINT64_MAX,0,1,accuracy),
+          "source_offset_overflow_rejected");
+    check(!AuditF32ToF16(source,target,0,UINT64_MAX,1,accuracy),
+          "destination_offset_overflow_rejected");
     check(!AuditF32ToF16(source,target,0,0,0,accuracy),
           "zero_elements_rejected");
     std::remove(source);std::remove(target);
