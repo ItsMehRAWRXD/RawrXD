@@ -162,3 +162,7 @@ add_test(NAME NativeShardPager COMMAND native_shard_pager_test)
 add_executable(native_resident_f32_matvec_test tests/native_resident_f32_matvec_test.cpp)
 target_include_directories(native_resident_f32_matvec_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_test(NAME NativeResidentF32Matvec COMMAND native_resident_f32_matvec_test)
+
+add_executable(native_q8_0_kernel_test tests/native_q8_0_kernel_test.cpp)
+target_include_directories(native_q8_0_kernel_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME NativeQ8_0Kernel COMMAND native_q8_0_kernel_test)
