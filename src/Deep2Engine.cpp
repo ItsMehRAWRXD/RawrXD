@@ -260,6 +260,57 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         decodeScratch);
 }
 
+bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                                  uint64_t firstElement,
+                                                  uint64_t elementCount,
+                                                  float* destination) {
+    if (!romMode || !destination) return false;
+    switch (entry.type) {
+    case deep2::TensorType::F16:
+    case deep2::TensorType::Q8_0:
+    case deep2::TensorType::Q2_K:
+    case deep2::TensorType::Q3_K_S:
+    case deep2::TensorType::Q3_K_M:
+    case deep2::TensorType::Q4_K_S:
+    case deep2::TensorType::Q6_K:
+        break;
+    default:
+        return false;
+    }
+
+    const uint64_t totalElements = deep2::TensorROM::tensorNumValues(entry);
+    if (firstElement > totalElements || elementCount > totalElements - firstElement)
+        return false;
+    if (!elementCount) return true;
+
+    const uint64_t blockValues = deep2::quantBlockSize(entry.type);
+    if (!blockValues) return false;
+    const uint64_t firstBlock = firstElement / blockValues;
+    const uint64_t alignedFirst = firstBlock * blockValues;
+    const uint64_t endElement = firstElement + elementCount;
+    const uint64_t lastBlock = (endElement - 1) / blockValues;
+    if (lastBlock == std::numeric_limits<uint64_t>::max()) return false;
+    const uint64_t blockEnd = lastBlock + 1;
+    if (blockEnd > std::numeric_limits<uint64_t>::max() / blockValues)
+        return false;
+    const uint64_t alignedEnd = std::min(totalElements, blockEnd * blockValues);
+    if (alignedEnd < alignedFirst) return false;
+    const uint64_t alignedCount = alignedEnd - alignedFirst;
+
+    const uint64_t byteOffset = deep2::tensorStorageBytes(alignedFirst, entry.type);
+    const uint64_t byteCount = deep2::tensorStorageBytes(alignedCount, entry.type);
+    const uint64_t tensorBytes = entry.byteSize();
+    if (byteOffset > tensorBytes || byteCount > tensorBytes - byteOffset ||
+        byteCount > std::numeric_limits<size_t>::max())
+        return false;
+
+    std::vector<uint8_t> encoded(static_cast<size_t>(byteCount));
+    if (!rom.readTensorRange(entry, byteOffset, byteCount, encoded.data()))
+        return false;
+    return deep2::dequantizeTensorRange(entry.type, totalElements, firstElement,
+        elementCount, encoded.data(), encoded.size(), destination);
+}
+
 bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* input,
                                 float* output, uint64_t* rowsOut, uint64_t* colsOut,
                                 size_t tileRows) {
