@@ -781,9 +781,9 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return entry.dims.empty() ? 0 : entry.dims[0];
     };
 
-    // Route F32 ROM projections through bounded compressed tiles on the
-    // primary Vulkan device when available. Non-F32 GGUF tensors retain the
-    // existing dequantized CPU path; a failed Vulkan dispatch is fail-closed.
+    // Route every supported ROM projection through bounded row tiles. F32
+    // uses compressed resident chunks; encoded F16/BF16 and quantized GGUF
+    // types decode only their requested blocks. Vulkan dispatch is fail-closed.
     auto runProjection = [this](const deep2::TensorEntry& entry,
                                 const float* input, float* output) -> bool {
         if (vulkanReady && vulkan) {
