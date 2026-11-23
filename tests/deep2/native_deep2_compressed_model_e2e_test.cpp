@@ -126,6 +126,9 @@ int main() {
             std::cerr << "compression configuration rejected\n";
             rc = 2;
         } else {
+            // Keep this numerical smoke deterministic on hosted runners: the
+            // production CPU tiled GEMV still consumes compressed cache ranges.
+            engine.vulkanReady = false;
             std::vector<float> logits, baseline;
             if (!engine.executePhi3ROMForwardPass({1}, logits, baseline)) {
                 std::cerr << "Deep2Engine synthetic Phi-3 forward pass failed\n";
