@@ -206,6 +206,12 @@ public:
                            DeviceBuf& input, DeviceBuf& output,
                            uint32_t rows, uint32_t cols);
 
+    // Dispatch bounded packed-weight row tiles into their final output window.
+    bool DispatchGemvQuantRows(int type, const void* weights, size_t weightBytes,
+                               DeviceBuf& input, DeviceBuf& output,
+                               uint32_t rows, uint32_t cols,
+                               uint32_t outputRowBase, uint64_t cacheKey);
+
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
                             uint32_t rows, uint32_t cols,
@@ -1338,6 +1344,7 @@ private:
         uint32_t rows = 0;
         uint32_t cols = 0;
         uint32_t weightBytes = 0;
+        uint32_t outputRowBase = 0;
     };
 
     bool createInstance();
@@ -1377,7 +1384,7 @@ private:
     bool ensureWeightF32(const float* weights, uint64_t key,
                          size_t bytes, DeviceBuf*& out);
     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
-                           DeviceBuf*& out);
+                           DeviceBuf*& out, uint64_t cacheKey = 0);
     void clearWeightCache();
 
     // B5.2 probe state
