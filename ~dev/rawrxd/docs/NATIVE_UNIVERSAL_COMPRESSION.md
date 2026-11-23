@@ -47,7 +47,7 @@ A valid runtime-memory claim must report packed payload bytes, retained host all
 
 ## Cache and lifetime
 
-`TensorResidencyCache` is a bounded, thread-safe LRU for immutable `ChunkedF32Storage` payloads. A `Lease` holds shared ownership; eviction and erase refuse to reclaim a payload while a lease is active. The cache implementation is currently a reusable primitive and is not yet wired into Deep2 per-weight ownership/eviction. The per-weight `shared_ptr` and GPU payload lifetime remain authoritative.
+`TensorResidencyCache` is instantiated for the model's configured F32 compression budget. Each successfully compressed F32 tensor is inserted under a stable shard/file-offset/name key and receives a `Lease` stored on its `WeightTensor`. The lease pins the immutable payload for the tensor's lifetime; cache admission is therefore an enforced model-load budget, while eviction is available only after tensor owners release their leases. The GPU payload retains the same canonical backing through its own shared owner. This avoids a duplicate compressed host allocation and makes ownership explicit. Active-model tensors are intentionally pinned; this is not a demand-paged LRU that evicts weights still referenced by the model.
 
 ## Supported and unsupported representations
 
@@ -59,4 +59,4 @@ A valid runtime-memory claim must report packed payload bytes, retained host all
 
 ## Regression target
 
-The native test target `rawrxd-native-tensor-compression-test` covers exact 16-bit compaction, zero-copy packed views, reader-bounded construction, absolute/relative error selection, NaN/infinity preservation, exact F32 fallback, mixed chunk encodings, LZ4 round trips, raw-byte fallback, range boundaries, storage budgets, and lease-aware cache admission/eviction. A Windows CI workflow is configured to compile and run this standalone test with MSVC; no successful workflow receipt has yet been recorded. Full model numerical parity, end-to-end Vulkan inference, and process working-set measurements remain separate release gates.
+The native test target `rawrxd-native-tensor-compression-test` covers exact 16-bit compaction, zero-copy packed views, reader-bounded construction, absolute/relative error selection, NaN/infinity preservation, exact F32 fallback, mixed chunk encodings, LZ4 round trips, raw-byte fallback, range boundaries, storage budgets, and lease-aware cache admission/eviction. The model-load cache insertion/lease wiring is integrated but still requires a full Deep2 build and model-load runtime validation. A Windows CI workflow is configured to compile and run this standalone test with MSVC; no successful workflow receipt has yet been recorded. Full model numerical parity, end-to-end Vulkan inference, and process working-set measurements remain separate release gates.
