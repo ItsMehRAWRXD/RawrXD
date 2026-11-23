@@ -168,12 +168,17 @@ jobs:
                 ..
 
           if ($LASTEXITCODE -ne 0) {
-            # Informational job: clang-cl + Ninja is an optional toolchain
-            # check, not a release gate.
-            Write-Host "Note: Clang build not available in this environment (optional)"
-            exit 0
+            throw "Clang configure failed with exit code $LASTEXITCODE"
           }
           Write-Host "Clang configure OK"
+
+      - name: Build with Clang
+        shell: pwsh
+        run: |
+          cmake --build build_clang --parallel 4
+          if ($LASTEXITCODE -ne 0) {
+            throw "Clang build failed with exit code $LASTEXITCODE"
+          }
 
   # ============================================================
   # Linux Build (GCC/Clang)
