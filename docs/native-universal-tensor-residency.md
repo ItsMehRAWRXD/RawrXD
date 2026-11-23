@@ -26,6 +26,7 @@ The byte residency cache is deliberately lossless: a quantized payload is never 
 - `DEEP2_ENCODED_CACHE_BYTES`: lossless encoded-byte residency budget (default 512 MiB).
 - F32 and encoded-byte residency budgets are selected from currently available physical RAM at engine initialization (F32: one eighth, capped at 2 GiB; encoded bytes: one thirty-second, capped at 512 MiB, with conservative minimums).
 - `DEEP2_F32_RESIDENCY_MB` and `DEEP2_ENCODED_RESIDENCY_MB` override the respective budgets in MiB. Invalid or overflowing values are ignored in favor of the computed default.
+- `DEEP2_F32_CACHE_BYTES` and `DEEP2_ENCODED_CACHE_BYTES` provide exact byte-count overrides and take precedence over the MiB settings. Invalid values fail initialization rather than silently selecting an unexpected memory budget.
 
 The engine exposes `GetTensorResidencySnapshot()` for compressed/logical bytes, budgets, tensor counts, cache hits/misses, decoded bytes and evictions.
 
