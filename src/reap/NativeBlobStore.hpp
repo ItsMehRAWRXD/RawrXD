@@ -22,6 +22,27 @@ struct BlobResult {
     uint64_t bytes=0;
     bool already_present=false;
 };
+// Verify an existing blob by its digest before returning its path.
+// Strict digest validation prevents path traversal via caller-controlled IDs.
+enum class BlobVerifyError { None, InvalidDigest, Missing, Corrupt, IoError };
+inline BlobVerifyError VerifyGGUFBlob(const std::string& modelRoot,
+                                     const std::string& digest,
+                                     std::string& verifiedPath) {
+    namespace fs=std::filesystem;
+    verifiedPath.clear();
+    if(modelRoot.empty()||digest.size()!=64)return BlobVerifyError::InvalidDigest;
+    for(char c:digest)if(!((c>='0'&&c<='9')||(c>='a'&&c<='f')))
+        return BlobVerifyError::InvalidDigest;
+    const fs::path target=fs::path(modelRoot)/"blobs"/("sha256-"+digest);
+    std::error_code ec;
+    if(!fs::exists(target,ec))return ec?BlobVerifyError::IoError:BlobVerifyError::Missing;
+    if(ec||!fs::is_regular_file(target,ec)||ec)return BlobVerifyError::IoError;
+    std::string actual;
+    if(!HashFileSHA256(target.string(),actual))return BlobVerifyError::IoError;
+    if(actual!=digest)return BlobVerifyError::Corrupt;
+    verifiedPath=target.string();
+    return BlobVerifyError::None;
+}
 inline BlobResult StoreRepackedGGUFBlob(const std::string& source,
                                         const std::string& modelRoot,
                                         uint64_t budget=UINT64_MAX) {
