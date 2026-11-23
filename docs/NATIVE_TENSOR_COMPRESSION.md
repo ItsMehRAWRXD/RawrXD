@@ -96,9 +96,15 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   compressed representation is admitted, the corresponding unleased raw
   TensorROM pages are evicted so the pager and compressed cache do not retain
   duplicate full payloads.
-- `TensorResidencyCache` retains only encodings that actually reduce bytes,
-  enforces a configurable memory budget, tracks hits/misses/decoded bytes and
-  evicts least-recently-used entries.
+- `TensorResidencyCache` and `TensorByteResidencyCache` retain only
+  encodings that actually reduce bytes, enforce configurable memory budgets,
+  track hits/misses/decoded bytes and evict least-recently-used entries.
+  In-flight range reads pin their entries: eviction skips pinned storage,
+  budget reductions are completed when the final read releases its pin, and
+  model-clear waits for active readers before releasing representations.
+  A changed budget invalidates raw-only admission memoization so tensors can
+  be reconsidered under the new capacity; setting the same budget preserves
+  the memoized decision.
 - Range reads decompress only the chunks intersecting the requested range
   into caller-owned output memory. A caller can reuse a scratch buffer; the
   cache does not retain an expanded F32 copy.
