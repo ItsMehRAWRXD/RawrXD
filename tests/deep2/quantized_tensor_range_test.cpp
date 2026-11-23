@@ -15,7 +15,7 @@ int main() {
     // F16: each element is independently addressable.
     std::vector<std::uint8_t> halfBytes(64 * 2);
     for (std::uint16_t i = 0; i < 64; ++i) {
-        // Values 0..63 are exactly representable in binary16.
+        // A constant 2.0 value is exactly representable in binary16.
         putU16(halfBytes.data() + i * 2, static_cast<std::uint16_t>(0x4000));
     }
     float halfOut[9] = {};
