@@ -3099,7 +3099,8 @@ bool VulkanCompute::DispatchGemvDevice(
 
 bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
-    DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
+    DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
+    uint64_t stableKey)
 {
     if(type!=8 && type!=10 && type!=12 && type!=14) return false;
     if(!weights||!weightBytes||!rows||!cols||
@@ -3107,7 +3108,7 @@ bool VulkanCompute::DispatchGemvQuant(
         return false;
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightQuant(type,weights,weightBytes,w)) return false;
+    if(!ensureWeightQuant(type,weights,weightBytes,w,stableKey)) return false;
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
