@@ -7,11 +7,13 @@ on:
       - 'src/reap/**'
       - 'tools/reap_*regression.cpp'
       - '.github/workflows/reap-native-regressions.yml'
+      - 'CMakeLists.txt'
   pull_request:
     paths:
       - 'src/reap/**'
       - 'tools/reap_*regression.cpp'
       - '.github/workflows/reap-native-regressions.yml'
+      - 'CMakeLists.txt'
 jobs:
   native-reap:
     runs-on: ubuntu-latest
@@ -36,3 +38,27 @@ jobs:
             (cd /tmp/rawrxd-reap-regressions && "./${name}")
             echo "::endgroup::"
           done
+  native-reap-windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute native REAP regressions on Windows
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\reap-tests" | Out-Null
+          $sources = @(Get-ChildItem tools -Filter 'reap_*regression.cpp' -File)
+          if ($sources.Count -eq 0) { throw 'No REAP regression tests found' }
+          foreach ($source in $sources) {
+            $name = [System.IO.Path]::GetFileNameWithoutExtension($source.Name)
+            Write-Host "::group::$name"
+            & cl.exe /nologo /std:c++17 /EHsc /O2 /W3 /I src /Fe:"$env:RUNNER_TEMP\reap-tests\$name.exe" $source.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Compilation failed: $name" }
+            Push-Location "$env:RUNNER_TEMP\reap-tests"
+            try {
+              & ".\$name.exe"
+              if ($LASTEXITCODE -ne 0) { throw "Regression failed: $name" }
+            } finally { Pop-Location }
+            Write-Host "::endgroup::"
+          }
