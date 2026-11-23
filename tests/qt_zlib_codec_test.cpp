@@ -1,6 +1,7 @@
 #include "codec/compression.h"
 
 #include <cstdio>
+#include <initializer_list>
 
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr, "zlib codec check failed at %d: %s\\n", __LINE__, #x); return 1; } } while (false)
 
@@ -26,6 +27,22 @@ int main() {
     CHECK(ok && !compact.isEmpty());
     CHECK(compact.size() < 4096);
     CHECK(codec::inflate(compact, &ok) == repetitive && ok);
+
+    // Boundary acceptance must be exact: the cap is inclusive, and the
+    // streaming decoder must reject a one-byte-short cap across chunk edges.
+    CHECK(codec::inflate(compact, &ok, repetitive.size()) == repetitive && ok);
+    CHECK(codec::inflate(compact, &ok, repetitive.size() - 1).isEmpty() && !ok);
+    CHECK(codec::inflate(compact, &ok, 0).isEmpty() && !ok);
+    CHECK(codec::inflate(compact, &ok, -1).isEmpty() && !ok);
+
+    // Exercise output sizes immediately around the 64 KiB inflate buffer.
+    for (int size : {65535, 65536, 65537, 131073}) {
+        const QByteArray source(size, 'B');
+        const QByteArray packed = codec::deflate(source, &ok);
+        CHECK(ok && !packed.isEmpty());
+        CHECK(codec::inflate(packed, &ok, size) == source && ok);
+        CHECK(codec::inflate(packed, &ok, size - 1).isEmpty() && !ok);
+    }
 
     const QByteArray overLimit = codec::inflate(compact, &ok, 1024);
     CHECK(!ok && overLimit.isEmpty());
