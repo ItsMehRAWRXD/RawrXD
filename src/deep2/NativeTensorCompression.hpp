@@ -659,9 +659,33 @@ private:
              throw std::out_of_range("compressed byte tensor range");
          if (count && !destination) throw std::invalid_argument("null byte range destination");
          if (!count) return;
+         if (!chunk_bytes_) throw std::runtime_error("zero stored byte chunk size");
          const size_t end = first + count;
          const size_t firstChunk = first / chunk_bytes_;
          const size_t lastChunk = (end - 1) / chunk_bytes_;
+         if (lastChunk >= chunks_.size())
+             throw std::runtime_error("truncated compressed byte chunk directory");
+         // Preflight every intersecting chunk before modifying the caller's
+         // output. A damaged directory must not cause an out-of-bounds access.
+         size_t covered = 0;
+         for (size_t ci = firstChunk; ci <= lastChunk; ++ci) {
+             const Result& encoded = chunks_[ci];
+             if (ci > std::numeric_limits<size_t>::max() / chunk_bytes_)
+                 throw std::runtime_error("compressed byte chunk offset overflow");
+             const size_t chunkFirst = ci * chunk_bytes_;
+             if (chunkFirst > byte_count_ ||
+                 encoded.original_bytes > byte_count_ - chunkFirst ||
+                 encoded.original_bytes > chunk_bytes_)
+                 throw std::runtime_error("invalid compressed byte chunk length");
+             const size_t chunkEnd = chunkFirst + static_cast<size_t>(encoded.original_bytes);
+             const size_t copyFirst = std::max(first, chunkFirst);
+             const size_t copyEnd = std::min(end, chunkEnd);
+             if (copyEnd < copyFirst || copyEnd - copyFirst > count - covered)
+                 throw std::runtime_error("compressed byte chunk coverage gap");
+             covered += copyEnd - copyFirst;
+         }
+         if (covered != count)
+             throw std::runtime_error("incomplete compressed byte range");
          for (size_t ci = firstChunk; ci <= lastChunk; ++ci) {
              const Result& encoded = chunks_[ci];
              const size_t chunkFirst = ci * chunk_bytes_;
