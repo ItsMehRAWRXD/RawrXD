@@ -13,7 +13,8 @@ bool roundTrip(const std::vector<std::uint8_t>& input) {
     std::size_t encodedSize = 999;
     void* raw = deflate_brutal_masm(input.empty() ? nullptr : input.data(),
                                     input.size(), &encodedSize);
-    if (!raw || encodedSize < 23) return false;
+    if (!raw) return false;
+    if (encodedSize < 23) { std::free(raw); return false; }
     const auto* encoded = static_cast<const std::uint8_t*>(raw);
     const bool headerOk =
         encoded[0] == 0x1f && encoded[1] == 0x8b &&
