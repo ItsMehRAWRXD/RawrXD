@@ -761,13 +761,6 @@ private:
                  DecodeInto(encoded, destination + (copyFirst - first), chunkCount);
                  continue;
              }
-             // A complete compressed chunk can be decoded straight into
-             // the caller's destination. This avoids duplicate peak memory
-             // and preserves the no-partial-write preflight in DecodeInto.
-             if (n == chunkCount) {
-                 DecodeInto(encoded, destination + (copyFirst - first), n);
-                 continue;
-             }
              scratch.resize(chunkCount);
              DecodeInto(encoded, scratch.data(), scratch.size());
              std::memcpy(destination + (copyFirst - first),
