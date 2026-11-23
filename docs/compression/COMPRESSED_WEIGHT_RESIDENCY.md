@@ -13,6 +13,18 @@ Unset `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY` to preserve the existing mapped-weigh
 
 The budget is the maximum encoded host-resident payload admitted by the single-shard loader. The default is 4096 MiB. A tensor is admitted only when its exact packed GGML row geometry is known and the encoded representation is smaller than the source. Failed admission leaves the original mapped view active.
 
+## Optional F32-to-F16 reduction
+
+A separate, explicitly lossy conversion can halve eligible F32 projection payloads before block compression:
+
+```powershell
+$env:RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16 = "1"
+```
+
+This setting has no effect unless compressed residency is enabled. It applies only to eligible F32 linear projections with validated row geometry. Conversion is performed in bounded reader blocks using round-to-nearest-even, stores the resulting tensor as GGML F16, and updates the runtime weight type and byte geometry before kernel dispatch. If conversion admission fails, the loader retries the byte-preserving F32 path.
+
+F32-to-F16 can change model outputs. It is disabled by default and must be validated with teacher-forced logits and task-quality tests before production use. Byte-preserving compression remains the default.
+
 ## What is compressed
 
 The single-shard path selects two-dimensional linear projections routed through `LinearW` (attention/FFN projections and output projection). The standard multi-shard binding path already has an opt-in admission path for compatible matrix projections.
