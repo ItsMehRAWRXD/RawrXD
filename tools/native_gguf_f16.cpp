@@ -636,7 +636,8 @@ int main(int argc,char** argv) {
                 }
 
                 if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
-                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ4[i]) {
+                if(!out)throw std::runtime_error("quantized streaming write failure");
+            } else if(streamQ4[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[18];
@@ -656,7 +657,8 @@ int main(int argc,char** argv) {
                 }
 
                 if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
-                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ41[i]) {
+                if(!out)throw std::runtime_error("quantized streaming write failure");
+            } else if(streamQ41[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[20];
@@ -676,7 +678,8 @@ int main(int argc,char** argv) {
                 }
 
                 if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
-                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ51[i]) {
+                if(!out)throw std::runtime_error("quantized streaming write failure");
+            } else if(streamQ51[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[24];
@@ -696,7 +699,8 @@ int main(int argc,char** argv) {
                 }
 
                 if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
-                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ8[i]) {
+                if(!out)throw std::runtime_error("quantized streaming write failure");
+            } else if(streamQ8[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[34];
@@ -716,7 +720,8 @@ int main(int argc,char** argv) {
                 }
 
                 if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
-                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamBf16[i]) {
+                if(!out)throw std::runtime_error("quantized streaming write failure");
+            } else if(streamBf16[i]) {
                 seek(in,add(dataStart,t.offset));
                 // Reuse fixed-size buffers to avoid one write syscall per weight.
                 std::vector<uint8_t> chunk(65536), packed(chunk.size()/2);
