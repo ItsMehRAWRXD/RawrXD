@@ -183,6 +183,11 @@ struct BatchAccounting {
 };
 BatchAccounting BatchAccountingSnapshot();
 
+// RAWRXD_G04F: the calling executor thread's own accounting (thread-local).
+// Use this for per-executor attribution; BatchAccountingSnapshot() stays the
+// process-wide aggregate.
+BatchAccounting ThreadAccountingSnapshot();
+
 // Backend instrumentation mirror (RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY).
 // `kernel_ms` is retained for compatibility but is a legacy alias of the host
 // fence-wait span in the current implementation. `gpu_ms` is the Vulkan

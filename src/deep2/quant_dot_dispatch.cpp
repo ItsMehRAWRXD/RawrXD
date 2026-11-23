@@ -177,6 +177,11 @@ struct BatchStats {
     uint64_t device_batches_opened = 0;   // real Gpu().BeginQuantDotBatch() calls
 };
 BatchStats g_batch_stats;
+// RAWRXD_G04F: per-executor accounting. The batch state is thread_local, so the
+// owning executor's accepted/completed/failed counters are thread-local too;
+// BatchAccountingSnapshot() remains the process-wide aggregate while
+// ThreadAccountingSnapshot() reports the calling executor's own counters (B03 G2).
+thread_local BatchStats g_thread_stats;
 uint64_t g_active_batch_count = 0;
 uint64_t g_pending_queued_count = 0;
 
@@ -200,6 +205,7 @@ bool BeginBatchImpl()
     g_batch_active = true;
     g_queued.clear();
     ++g_batch_stats.batches_opened;
+    ++g_thread_stats.batches_opened;
     ++g_active_batch_count;
     return true;
 }
@@ -278,6 +284,7 @@ bool EndBatchImpl()
         {
             std::lock_guard<std::mutex> slk(g_batch_mutex);
             ++g_batch_stats.device_batches_opened;
+                ++g_thread_stats.device_batches_opened;
         }
         const bool closed = Gpu().EndQuantDotBatch();
         g_receipt = Receipt{};
@@ -308,6 +315,7 @@ bool EndBatchImpl()
     } else {
         std::lock_guard<std::mutex> slk(g_batch_mutex);
         ++g_batch_stats.device_batches_opened;
+                ++g_thread_stats.device_batches_opened;
     }
     for (size_t base = 0; base < qs.size() && ok; base += chunk) {
         const size_t end = (qs.size() - base) < chunk ? qs.size() : base + chunk;
@@ -321,6 +329,7 @@ bool EndBatchImpl()
         if (base > 0) {
             std::lock_guard<std::mutex> slk(g_batch_mutex);
             ++g_batch_stats.device_batches_opened;
+                ++g_thread_stats.device_batches_opened;
         }
         for (size_t i = base; i < end; ++i) {
             const QueuedDot& e = qs[i];
@@ -363,6 +372,8 @@ bool EndBatchImpl()
         const size_t done = ok ? qs.size() : replay_from;
         g_batch_stats.completed += done;
         g_batch_stats.failed += qs.size() - done;
+        g_thread_stats.completed += done;
+        g_thread_stats.failed += qs.size() - done;
     }
     if (ok) return true;
     // Record which stage and which entry failed BEFORE the replay overwrites the
@@ -650,6 +661,26 @@ BatchAccounting BatchAccountingSnapshot()
     return a;
 }
 
+// RAWRXD_G04F: the calling executor's own accounting. All fields are
+// thread-local, so no lock is needed: batch_active/queued describe this
+// executor's logical batch, and accepted/completed/failed were incremented by
+// this same thread at begin/queue/end. This is the per-executor view the B03 G2
+// attribution test requires; BatchAccountingSnapshot() remains the aggregate.
+BatchAccounting ThreadAccountingSnapshot()
+{
+    BatchAccounting a;
+    a.accepted = g_thread_stats.accepted;
+    a.completed = g_thread_stats.completed;
+    a.failed = g_thread_stats.failed;
+    a.batches_opened = g_thread_stats.batches_opened;
+    a.device_batches_opened = g_thread_stats.device_batches_opened;
+    a.batch_active = g_batch_active;
+    a.queued = g_queued.size();
+    a.active_batches = g_batch_active ? 1 : 0;
+    a.pending_queued = g_queued.size();
+    return a;
+}
+
 const BackendStats& BackendCounters() {
     const GpuCounters& c = Gpu().GetGpuCounters();
     g_backend.buffer_allocations = c.buffer_allocations;
@@ -840,6 +871,7 @@ bool DotBlocked(int kind,
             qd.cpu = cpu;
             g_queued.push_back(std::move(qd));
             ++g_batch_stats.accepted;
+            ++g_thread_stats.accepted;
             ++g_pending_queued_count;
             queued = true;
         }

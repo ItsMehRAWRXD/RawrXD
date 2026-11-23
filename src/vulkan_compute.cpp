@@ -1347,7 +1347,7 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
             quant_submission_failed_, cleanup_quarantined_)) return false;
-    if (!packed || !q8_interleaved || !out) return false;
+    if (!packed || !q8_interleaved || !out) { std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=args\n"); std::fflush(stderr); return false; }
     if (kind < 0 || (kind > 6 && kind != 8)) return false;
     if (n_out == 0 || n_in == 0 || n_blocks == 0) return false;
 
@@ -1890,7 +1890,9 @@ bool VulkanCompute::BeginQuantDotBatch() {
     // abnormally. A leaked pin would make its entry permanently un-evictable
     // and slowly push the cache over budget, so pins are never allowed to
     // outlive the batch that acquired them.
-    for (const void* key : batch_pinned_) UnpinQuantWeight(key);
+    for (const auto& kv : batch_pinned_) {
+        for (size_t i = 0; i < kv.second; ++i) UnpinQuantWeight(kv.first);
+    }
     quant_batch_entries_.clear();
     batch_pinned_.clear();   // G04: fresh pin set per batch
     quant_batch_q8_host_used_ = 0;
@@ -1956,34 +1958,43 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
                                   const void* q8_interleaved, size_t q8_bytes,
                                   void* out, size_t out_bytes,
                                   size_t n_out, size_t n_in, int kind) {
+    std::fprintf(stderr, "[QD_ENTRY] this=%p packed=%p kind=%d n_out=%zu n_in=%zu budget=%zu\n",
+                 static_cast<void*>(this), packed, kind, n_out, n_in, quant_weight_budget_bytes_);
+    std::fflush(stderr);
     // RAWRXD_G04: the whole queue step (weight residency + host-buffer growth +
     // pin) is one atomic residency transaction. Without this, a concurrent
     // prefetch's eviction pass could free the weight between the lookup here
     // and the submission in EndQuantDotBatch.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
-    if (!quant_batch_active_) return false;
-    if (quant_batch_entries_.size() >= kQuantBatchMaxSets) return false;
+    if (!quant_batch_active_) { std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=batch_inactive\n"); std::fflush(stderr); return false; }
+    if (quant_batch_entries_.size() >= kQuantBatchMaxSets) { std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=capacity entries=%zu\n", quant_batch_entries_.size()); std::fflush(stderr); return false; }
     if (!packed || !q8_interleaved || !out) return false;
     const size_t n_blocks = n_in / 256u;
     size_t block_bytes = 0, need_packed = 0, need_q8 = 0, n_sb = 0;
     if (!QuantDotGeometry(kind, n_in, n_out, n_blocks, block_bytes, need_packed, need_q8, n_sb))
-        return false;
+        { std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=geometry kind=%d n_in=%zu n_out=%zu\n", kind, n_in, n_out); std::fflush(stderr); return false; }
     if (packed_bytes < need_packed || q8_bytes < need_q8 || out_bytes < n_out * sizeof(float))
-        return false;
+        { std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=sizes packed=%zu/%zu q8=%zu/%zu out=%zu/%zu\n", packed_bytes, need_packed, q8_bytes, need_q8, out_bytes, n_out * sizeof(float)); std::fflush(stderr); return false; }
 
     // Device-resident weight (uploads on its own submission + wait on a miss;
     // a cache hit costs nothing).
     QuantWeight* w = EnsureQuantWeight(packed, packed_bytes, kind);
-    if (!w) return false;
+    if (!w) { std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=weight_admission bytes=%zu kind=%d\n", packed_bytes, kind); std::fflush(stderr); return false; }
 
     // RAWRXD_G04: pin this in-flight weight's cache entry so a later Queue's
     // eviction pass (or a concurrent prefetch) cannot retire its buffer before
     // EndQuantDotBatch reads it.
     PinQuantWeight(packed, packed_bytes, kind);
-    batch_pinned_.insert(packed);
-    // G04: pin this in-flight weight's cache entry so a later Queue's eviction
-    // cannot free it before EndQuantDotBatch reads it.
-    batch_pinned_.insert(packed);
+    // G04: multiplicity-aware acquisition. If recording the acquisition
+    // fails, roll the pin back before reporting the rejection.
+    try {
+        ++batch_pinned_[packed];
+    } catch (...) {
+        UnpinQuantWeight(packed);
+        std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=pin_record_alloc\n");
+        std::fflush(stderr);
+        return false;
+    }
 
     // Region at the END of the current batch usage. The host buffers GROW
     // CONTENT-PRESERVING: EnsureHostVisible would destroy and recreate them and
@@ -1991,7 +2002,7 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
     // the 2nd of 6 queued dots left the first five reading zeros).
     const size_t q8_off = quant_batch_q8_host_used_;
     const size_t out_off = quant_batch_out_host_used_;
-    if (q8_off + q8_bytes < q8_off || out_off + out_bytes < out_off) return false;
+    if (q8_off + q8_bytes < q8_off || out_off + out_bytes < out_off) { std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=offset_overflow\n"); std::fflush(stderr); return false; }
     auto grow_preserving = [&](VkBuffer& buf, VkDeviceMemory& mem, size_t& size, void*& mapped,
                                size_t need) -> bool {
         if (buf && mapped && size >= need) return true;
@@ -2017,7 +2028,7 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
         !grow_preserving(quant_batch_out_host_, quant_batch_out_host_mem_,
                          quant_batch_out_host_size_, quant_batch_out_host_mapped_,
                          out_off + out_bytes)) {
-        return false;
+        std::fprintf(stderr, "[QUANT_DOT] QUEUE FAIL reason=host_buffer_growth q8_need=%zu out_need=%zu\n", q8_off + q8_bytes, out_off + out_bytes); std::fflush(stderr); return false;
     }
     std::memcpy(static_cast<char*>(quant_batch_q8_host_mapped_) + q8_off, q8_interleaved, q8_bytes);
     quant_batch_q8_host_used_ += q8_bytes;
@@ -2106,14 +2117,16 @@ bool VulkanCompute::EndQuantDotBatch() {
     // device-idle teardown.
     struct PinReleaseGuard {
         VulkanCompute& v;
-        std::unordered_set<const void*>& pins;
+        std::unordered_map<const void*, size_t>& pins;
         const bool& pending;
         const bool& failed;
         ~PinReleaseGuard() {
             if (!Deep2::Submit::MayReleaseQuantPins(pending, failed)) return;
             // Before queue submission, or after a successful fence wait, no
             // in-flight command can reference the pinned weights.
-            for (const void* key : pins) v.UnpinQuantWeight(key);
+            for (const auto& kv : pins) {
+                for (size_t i = 0; i < kv.second; ++i) v.UnpinQuantWeight(kv.first);
+            }
             pins.clear();
         }
     } pin_guard{*this, batch_pinned_, quant_submission_in_flight_, quant_submission_failed_};
@@ -3048,6 +3061,27 @@ bool VulkanCompute::EnsureHostVisible(size_t bytes, VkBuffer& buf,
     return true;
 }
 
+uint64_t VulkanCompute::DeriveQuantWeightBudget() {
+    // RAWRXD_G04: single authoritative derivation (0 = auto-derive).
+    // 90% of the largest device-local heap, then RR_WEIGHT_CACHE_MAX_BYTES[_N].
+    VkDeviceSize largest = 0;
+    for (uint32_t i = 0; i < device_info_.memory_props.memoryHeapCount; ++i) {
+        const auto& h = device_info_.memory_props.memoryHeaps[i];
+        if ((h.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) && h.size > largest)
+            largest = h.size;
+    }
+    uint64_t v = (largest > 0) ? (uint64_t)(largest / 100u * 90u) : (uint64_t)1 << 30;
+    char per_key[64];
+    std::snprintf(per_key, sizeof(per_key), "RR_WEIGHT_CACHE_MAX_BYTES_%d", (int)active_device_index_);
+    const char* per = std::getenv(per_key);
+    const char* env = (per && *per) ? per : std::getenv("RR_WEIGHT_CACHE_MAX_BYTES");
+    if (env && *env) {
+        const unsigned long long e = std::strtoull(env, nullptr, 10);
+        if (e > 0) v = (uint64_t)e;
+    }
+    return v;
+}
+
 VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed, size_t bytes,
                                                int kind) {
     // RAWRXD_G04: the residency cache is shared device state. Every mutation
@@ -3055,6 +3089,32 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     // IsQuantWeightResident / PrefetchWeight / lease can never observe or
     // mutate the cache while an eviction is mid-flight.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+
+    // RAWRXD_G04: SetQuantWeightBudgetBytes(0) documents "restore the derived
+    // default" (include/vulkan_compute.h), but the derivation only ran inside
+    // the one-time EnsureQuantFastPath init -- after any explicit (0) restore
+    // the budget stayed 0, turning every ensure into an evict-all pass and
+    // refusing uploads once the cache was fully pinned. Re-derive here using
+    // the same startup formula so the documented contract holds.
+    if (quant_weight_budget_bytes_ == 0) {
+        VkDeviceSize largest = 0;
+        for (uint32_t i = 0; i < device_info_.memory_props.memoryHeapCount; ++i) {
+            const auto& h = device_info_.memory_props.memoryHeaps[i];
+            if ((h.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) && h.size > largest)
+                largest = h.size;
+        }
+        quant_weight_budget_bytes_ = (largest > 0) ? (uint64_t)(largest / 100u * 90u)
+                                                   : (uint64_t)1 << 30;
+        char per_key[64];
+        std::snprintf(per_key, sizeof(per_key), "RR_WEIGHT_CACHE_MAX_BYTES_%d", (int)active_device_index_);
+        const char* per = std::getenv(per_key);
+        const char* env = (per && *per) ? per : std::getenv("RR_WEIGHT_CACHE_MAX_BYTES");
+        if (env && *env) {
+            const unsigned long long v = std::strtoull(env, nullptr, 10);
+            if (v > 0) quant_weight_budget_bytes_ = (uint64_t)v;
+        }
+        QDTRACE("budget re-derived=" << quant_weight_budget_bytes_);
+    }
 
     uint64_t fp = 0;
     std::memcpy(&fp, packed, sizeof(fp) < bytes ? sizeof(fp) : bytes);
@@ -3439,27 +3499,7 @@ bool VulkanCompute::EnsureQuantFastPath() {
     // expert dot then re-uploads its weights, which is a bandwidth cliff, not
     // a correctness bug (an evicted entry is simply re-uploaded).
     // RR_WEIGHT_CACHE_MAX_BYTES still pins the budget explicitly.
-    if (quant_weight_budget_bytes_ == 0) {
-        VkDeviceSize largest = 0;
-        for (uint32_t i = 0; i < device_info_.memory_props.memoryHeapCount; ++i) {
-            const auto& h = device_info_.memory_props.memoryHeaps[i];
-            if ((h.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) && h.size > largest)
-                largest = h.size;
-        }
-        quant_weight_budget_bytes_ = (largest > 0) ? (uint64_t)(largest / 100u * 90u)
-                                                   : (uint64_t)1 << 30;
-        // Per-device budget: an index-specific override (e.g. RR_WEIGHT_CACHE_MAX_BYTES_4)
-        // takes precedence over the global RR_WEIGHT_CACHE_MAX_BYTES, so the two GPUs can
-        // carry INDEPENDENT resident-weight budgets. Absent -> global -> 90% of the heap.
-        char per_key[64];
-        std::snprintf(per_key, sizeof(per_key), "RR_WEIGHT_CACHE_MAX_BYTES_%d", (int)active_device_index_);
-        const char* per = std::getenv(per_key);
-        const char* env = (per && *per) ? per : std::getenv("RR_WEIGHT_CACHE_MAX_BYTES");
-        if (env && *env) {
-            const unsigned long long v = std::strtoull(env, nullptr, 10);
-            if (v > 0) quant_weight_budget_bytes_ = (uint64_t)v;
-        }
-    }
+    if (quant_weight_budget_bytes_ == 0) quant_weight_budget_bytes_ = DeriveQuantWeightBudget();
 
     // Descriptor ring: a handful of sets recycled for the life of the device.
     if (quant_ds_ring_.empty()) {

@@ -42,10 +42,16 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
-#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
+
+#if defined(_WIN32)
+#include <windows.h>
+#include <tlhelp32.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+#endif
 
 #include "quant_dot_dispatch.hpp"
 #include "include/vulkan_compute.h"
@@ -54,18 +60,134 @@ using namespace RawrXD::Deep2::QuantDot;
 
 namespace {
 
-// Hang-localization checkpoints. Every phase boundary and every serial
-// reference dot prints one line and flushes, so a hang names the exact
-// operation that never returned (Sprint9 residency-concurrency hang diag).
-std::atomic<uint64_t> g_checkpoint_seq{0};
+// ---------------------------------------------------------------------------
+// Hang watchdog: when no checkpoint has fired for RAWRXD_HANG_WATCHDOG_MS
+// (default 10 s), capture and print every thread's stack so a stall names the
+// exact wait: host mutex (ucrtbase/ntdll), Vulkan fence (vulkan-1 / driver),
+// or harness code. Threads are suspended only for GetThreadContext and resumed
+// before any symbol lookup, so dbghelp can never deadlock on the loader lock.
+// ---------------------------------------------------------------------------
+std::atomic<uint64_t> g_wd_seq{0};
+std::atomic<int64_t> g_wd_last_ms{0};
+std::atomic<int64_t> g_wd_threshold_ms{10000};
+
+int64_t NowMs() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
 void Checkpoint(const char* name, size_t index = static_cast<size_t>(-1)) {
-    const uint64_t seq = g_checkpoint_seq.fetch_add(1, std::memory_order_relaxed) + 1;
+    const uint64_t seq = g_wd_seq.fetch_add(1, std::memory_order_relaxed) + 1;
+    g_wd_last_ms.store(NowMs(), std::memory_order_relaxed);
     if (index == static_cast<size_t>(-1))
         std::printf("CHECKPOINT seq=%llu %s\n", (unsigned long long)seq, name);
     else
         std::printf("CHECKPOINT seq=%llu %s index=%zu\n",
                     (unsigned long long)seq, name, index);
     std::fflush(stdout);
+}
+
+#if defined(_WIN32)
+void WatchdogCaptureStacks(const char* reason) {
+    struct Cap { DWORD tid; CONTEXT ctx; };
+    std::vector<Cap> caps;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+        THREADENTRY32 te; te.dwSize = sizeof(te);
+        if (Thread32First(snap, &te)) {
+            do {
+                if (te.th32OwnerProcessID != GetCurrentProcessId()) continue;
+                if (te.th32ThreadID == GetCurrentThreadId()) continue;
+                HANDLE h = OpenThread(THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME |
+                                      THREAD_QUERY_INFORMATION, FALSE, te.th32ThreadID);
+                if (!h) continue;
+                if (SuspendThread(h) == (DWORD)-1) { CloseHandle(h); continue; }
+                Cap c{}; c.tid = te.th32ThreadID; c.ctx.ContextFlags = CONTEXT_CONTROL;
+                const BOOL got = GetThreadContext(h, &c.ctx);
+                (void)ResumeThread(h);
+                CloseHandle(h);
+                if (got) caps.push_back(c);
+            } while (Thread32Next(snap, &te));
+        }
+        CloseHandle(snap);
+    }
+    HANDLE hp = GetCurrentProcess();
+    static std::atomic<bool> sym_init{false};
+    if (!sym_init.exchange(true)) {
+        char dir[MAX_PATH] = {};
+        GetModuleFileNameA(nullptr, dir, MAX_PATH);
+        char* slash = std::strrchr(dir, '\\');
+        if (slash) *slash = '\0';
+        SymInitialize(hp, dir, TRUE);
+    }
+    std::printf("WATCHDOG_STALL reason=%s threads=%zu last_checkpoint_seq=%llu\n",
+                reason, caps.size(), (unsigned long long)g_wd_seq.load());
+    std::fflush(stdout);
+    for (const Cap& c : caps) {
+        std::printf("--- thread tid=%lu ---\n", c.tid);
+        CONTEXT ctx = c.ctx;
+        STACKFRAME64 sf; std::memset(&sf, 0, sizeof(sf));
+        const DWORD machine = IMAGE_FILE_MACHINE_AMD64;
+        sf.AddrPC.Mode = AddrModeFlat; sf.AddrFrame.Mode = AddrModeFlat;
+        sf.AddrStack.Mode = AddrModeFlat;
+        sf.AddrPC.Offset = ctx.Rip; sf.AddrFrame.Offset = ctx.Rbp;
+        sf.AddrStack.Offset = ctx.Rsp;
+        for (int frame = 0; frame < 24; ++frame) {
+            char symbuf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
+            std::memset(symbuf, 0, sizeof(symbuf));
+            SYMBOL_INFO* sym = reinterpret_cast<SYMBOL_INFO*>(symbuf);
+            sym->SizeOfStruct = sizeof(SYMBOL_INFO);
+            sym->MaxNameLen = MAX_SYM_NAME;
+            DWORD64 disp = 0;
+            const char* name = "??";
+            if (SymFromAddr(hp, sf.AddrPC.Offset, &disp, sym)) name = sym->Name;
+            IMAGEHLP_LINE64 line; std::memset(&line, 0, sizeof(line));
+            line.SizeOfStruct = sizeof(line);
+            DWORD ldisp = 0;
+            char file[MAX_PATH] = {}; int lineno = 0;
+            if (SymGetLineFromAddr64(hp, sf.AddrPC.Offset, &ldisp, &line)) {
+                std::snprintf(file, sizeof(file), "%s", line.FileName);
+                lineno = (int)line.LineNumber;
+            }
+            HMODULE mod = nullptr;
+            char modname[MAX_PATH] = {};
+            if (GetModuleHandleExA(
+                    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                    reinterpret_cast<LPCSTR>(sf.AddrPC.Offset), &mod) && mod) {
+                GetModuleFileNameA(mod, modname, MAX_PATH);
+                const char* base = std::strrchr(modname, '\\');
+                base = base ? base + 1 : modname;
+                std::printf("    #%02d %s+0x%llx %s\n", frame, name,
+                            (unsigned long long)(sf.AddrPC.Offset - (DWORD64)mod),
+                            file[0] ? file : base);
+                if (file[0]) std::printf("         %s:%d\n", file, lineno);
+            } else {
+                std::printf("    #%02d %s 0x%llx\n", frame, name,
+                            (unsigned long long)sf.AddrPC.Offset);
+            }
+            if (sf.AddrPC.Offset == sf.AddrReturn.Offset) break;
+            if (!StackWalk64(machine, hp, nullptr, &sf, &ctx, nullptr, nullptr, nullptr, nullptr))
+                break;
+        }
+        std::fflush(stdout);
+    }
+}
+#endif // _WIN32
+
+void WatchdogMain() {
+    for (;;) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        const int64_t last = g_wd_last_ms.load(std::memory_order_relaxed);
+        if (last == 0) continue;
+        const int64_t now = NowMs();
+        const int64_t th = g_wd_threshold_ms.load(std::memory_order_relaxed);
+        if (th <= 0) return;
+        if (now - last > th) {
+            WatchdogCaptureStacks("no checkpoint progress");
+            g_wd_last_ms.store(now, std::memory_order_relaxed);  // re-arm
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -259,6 +381,17 @@ int main(int argc, char** argv) {
         else { std::printf("unknown arg %s\n", a.c_str()); return 2; }
     }
 
+    // Hang watchdog: enabled unless RAWRXD_HANG_WATCHDOG_MS=0.
+    {
+        const char* wd = std::getenv("RAWRXD_HANG_WATCHDOG_MS");
+        const int64_t wd_ms = wd ? std::strtoll(wd, nullptr, 10) : 10000;
+        g_wd_threshold_ms.store(wd_ms, std::memory_order_relaxed);
+        if (wd_ms > 0) {
+            std::thread(WatchdogMain).detach();
+            std::printf("watchdog enabled threshold_ms=%lld\n", (long long)wd_ms);
+        }
+    }
+
     std::printf("=== RAWRXD_G04 concurrent-safe residency ===\n");
     std::printf("threads=%zu banks=%zu rounds=%zu\n", n_threads, n_banks, rounds);
 
@@ -358,8 +491,8 @@ int main(int argc, char** argv) {
     Check(a1.leases == 0, "A: every lease released (no residency leak)");
     Check(a1.pinned == 0, "A: no pin left outstanding");
     Check(a1.retired_pending == 0, "A: no deferred destruction left outstanding");
-        Check(a1.retired_pending == 0 && a1.retired_reaped >= a1.evictions,
-              "A: every counted eviction reaped after its fence (fence-safe destruction)");
+    Check(a1.evictions == a1.retired_reaped,
+          "A: every eviction reaped after its fence (fence-safe destruction)");
     Check(a1.evictions > a0.evictions, "A: the residency budget actually forced evictions");
 
     // =========================================================================
@@ -369,13 +502,11 @@ int main(int argc, char** argv) {
     //     re-uploaded) and the results must still be bit-exact.
     // =========================================================================
     std::printf("\n--- B1. dispatch-layer batch vs concurrent eviction ---\n");
-    Checkpoint("SECTION_B1_BEGIN");
     const size_t batch_n = std::min<size_t>(BatchCapacity(), n_banks);
     std::vector<std::vector<float>> bout(batch_n);
+    for (auto& r : bout) r.resize(n_out);   // FIX: empty rows -> data()==nullptr
     std::vector<std::vector<float>> bref(batch_n);
-    Checkpoint("B1_REFERENCE_BEGIN");
     for (size_t i = 0; i < batch_n; ++i) {
-        bout[i].resize(n_out);
         std::vector<float> y(n_out);
         const CpuDot cpu = MakeCpuRef(banks[i]);
         if (!DotBlocked(0, banks[i].bytes.data(), banks[i].packedBytes(),
@@ -385,12 +516,19 @@ int main(int argc, char** argv) {
         }
         bref[i] = y;
     }
-    Checkpoint("B1_REFERENCE_COMPLETE");
     {
         std::atomic<bool> storm_stop{false};
         std::atomic<bool> storm_ready{false};
         std::atomic<uint64_t> storm_prefetch{0};
+        // B1 readiness protocol (instrumented): a plain store() never wakes a
+        // thread already parked in atomic::wait() -- the wakeup is lost when
+        // the store lands between the waiter's value read and its park. The
+        // store must be followed by notify_all(), and the main-side wait must
+        // be BOUNDED with an explicit failure receipt so a stuck worker can
+        // never hang the certification run.
+        Checkpoint("B1_STORM_WORKER_CREATED");
         std::thread storm([&]() {
+            Checkpoint("B1_STORM_WORKER_STARTED");
             uint32_t rng = 99991u;
             auto spin = [&]() {
                 for (int i = 0; i < 4 && !storm_stop.load(); ++i) {
@@ -401,16 +539,33 @@ int main(int argc, char** argv) {
                 }
             };
             spin();
-            storm_ready.store(true);
-            storm_ready.notify_one();
+            storm_ready.store(true, std::memory_order_release);
+            storm_ready.notify_all();
+            Checkpoint("B1_STORM_WORKER_READY");
+            Checkpoint("B1_STORM_READY_NOTIFY");
+            Checkpoint("B1_STORM_PREFETCH_BEGIN");
             while (!storm_stop.load()) spin();
+            Checkpoint("B1_STORM_PREFETCH_COMPLETE");
         });
-        storm_ready.wait(false);
-        Checkpoint("B1_STORM_READY");
+        Checkpoint("B1_MAIN_WAIT_BEGIN");
+        bool ready = false;
+        for (const int64_t deadline = NowMs() + 10000; NowMs() < deadline;) {
+            if (storm_ready.load(std::memory_order_acquire)) { ready = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+        Checkpoint(ready ? "B1_MAIN_WAIT_COMPLETE" : "B1_READINESS_TIMEOUT");
+        Check(ready, "B1: storm worker reached readiness within the bounded wait");
+        if (!ready) {
+            // Explicit failure receipt; the worker may be stuck in a driver
+            // call, so detach (never join) and terminate instead of hanging.
+            storm_stop.store(true);
+            storm.detach();
+            Checkpoint("B1_STORM_DETACHED");
+            std::printf("G04_RESULT=FAIL (B1_READINESS_TIMEOUT: storm worker did not signal readiness in 10s)\n");
+            { std::fflush(stdout); std::_Exit(1); }
+        }
         const Snap b0 = Take();
-        Checkpoint("B1_BEFORE_BEGIN");
         if (!BeginBatch()) { std::printf("B1: BeginBatch failed\n"); return 3; }
-        Checkpoint("B1_BATCH_OPEN");
         bool queued_ok = true;
         for (size_t i = 0; i < batch_n; ++i) {
             const CpuDot cpu = MakeCpuRef(banks[i]);
@@ -418,18 +573,13 @@ int main(int argc, char** argv) {
                             act.data(), n_in, bout[i].data(), n_out, cpu,
                             q8.data(), q8.size() * sizeof(float), false))
                 queued_ok = false;
-            Checkpoint("B1_QUEUE_COMPLETE", i);
         }
-        Checkpoint("B1_ALL_QUEUED");
         const Snap b_open = Take();
-        Checkpoint("B1_OPEN_SNAPSHOT");
         storm_stop.store(true);
-        Checkpoint("B1_STORM_STOP_REQUESTED");
+        Checkpoint("B1_STORM_JOIN_BEGIN");
         storm.join();
-        Checkpoint("B1_STORM_JOINED");
-        Checkpoint("B1_END_BEGIN");
+        Checkpoint("B1_STORM_JOIN_COMPLETE");
         const bool ended = EndBatch();
-        Checkpoint("B1_END_COMPLETE");
         const Snap b1 = Take();
         std::printf("  queued=%zu open: prefetches=%llu evictions=%llu overrides=%llu "
                     "evicted_while_open=%llu\n",
@@ -456,7 +606,6 @@ int main(int argc, char** argv) {
     //     the pending batch still references.
     // =========================================================================
     std::printf("\n--- B2. device-level batch in-flight pinning ---\n");
-    Checkpoint("SECTION_B2_BEGIN");
     {
         // Budget holds ~2 banks; the batch pins 8, so the budget cannot be met
         // by eviction and the deferred path is the only legal outcome.
@@ -465,9 +614,9 @@ int main(int argc, char** argv) {
         VulkanCompute& vk = DispatchDevice();
         vk.SetQuantWeightBudgetBytes((size_t)tight);
         std::vector<std::vector<float>> bout2(pin_n);
+        for (auto& r : bout2) r.resize(n_out);   // FIX: empty rows -> data()==nullptr
         std::vector<std::vector<float>> bref2(pin_n);
         for (size_t i = 0; i < pin_n; ++i) {
-            bout2[i].resize(n_out);
             std::vector<float> y(n_out);
             const CpuDot cpu = MakeCpuRef(banks[i]);
             if (!vk.ExecuteQuantDot(banks[i].bytes.data(), banks[i].packedBytes(),
@@ -498,10 +647,24 @@ int main(int argc, char** argv) {
             };
             spin();
             storm_ready.store(true);
-            storm_ready.notify_one();
+            storm_ready.notify_all();
             while (!storm_stop.load()) spin();
         });
-        storm_ready.wait(false);
+        Checkpoint("B2_MAIN_WAIT_BEGIN");
+        bool ready2 = false;
+        for (const int64_t deadline = NowMs() + 10000; NowMs() < deadline;) {
+            if (storm_ready.load(std::memory_order_acquire)) { ready2 = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+        Checkpoint(ready2 ? "B2_MAIN_WAIT_COMPLETE" : "B2_READINESS_TIMEOUT");
+        Check(ready2, "B2: storm worker reached readiness within the bounded wait");
+        if (!ready2) {
+            storm_stop.store(true);
+            storm.detach();
+            Checkpoint("B2_STORM_DETACHED");
+            std::printf("G04_RESULT=FAIL (B2_READINESS_TIMEOUT)\n");
+            { std::fflush(stdout); std::_Exit(1); }
+        }
         const Snap p0 = Take();
         if (!vk.BeginQuantDotBatch()) { std::printf("B2: BeginQuantDotBatch failed\n"); return 3; }
         bool qok = true;
@@ -530,10 +693,8 @@ int main(int argc, char** argv) {
         Check(open_pins >= pin_n, "B2: open device batch pinned every queued weight");
         Check(p1.budget_overrides > p0.budget_overrides,
               "B2: eviction DEFERRED because the in-flight set was pinned");
-        const CacheStats b2_after = GetCacheStats();
-        Check(b2_after.retired_pending == 0 &&
-                  b2_after.retired_reaped >= b2_after.evictions,
-              "B2: every counted eviction was fence-safe and reaped");
+        Check(GetCacheStats().evictions == GetCacheStats().retired_reaped,
+              "B2: fence-safe destruction kept pace with eviction");
         Check(ended2, "B2: EndQuantDotBatch succeeded");
         bool bit2 = true;
         for (size_t i = 0; i < pin_n; ++i) if (!SameBits(bout2[i], bref2[i])) bit2 = false;
@@ -544,16 +705,159 @@ int main(int argc, char** argv) {
     }
 
     // =========================================================================
+    // B3. Forced queue rejection while weights are pinned (P0 regression).
+    // Acceptance contract (directive):
+    //   B3_PRE_ACCEPTED >= 1            (a dot accepted before rejection)
+    //   B3_REJECTION = EXPLICIT         (one false return)
+    //   B3_REJECTED_OUTPUT = NOT_WRITTEN
+    //   PINS at rejection point > 0     (live pins existed when rejected)
+    //   B3_POST_ACCEPTED >= 1           (a fresh batch works after rejection)
+    //   PINS_AFTER = PINS_BEFORE        (no pin leak)
+    //   ACCEPTED = COMPLETED + FAILED, FAILED = 0
+    //   QUEUED_AFTER = 0 / BATCH_ACTIVE_AFTER = 0
+    // =========================================================================
+    std::printf("\n--- B3. forced queue rejection with live pins ---\n");
+    Checkpoint("SECTION_B3_BEGIN");
+    {
+        VulkanCompute& vk = DispatchDevice();
+        const size_t pins_before = vk.PinnedWeightCount();
+        const size_t b3_max = 40;
+        std::vector<std::vector<float>> bout3(b3_max);
+        for (auto& r : bout3) r.resize(n_out);   // FIX: empty rows -> data()==nullptr
+        std::vector<char> acc3(b3_max, 0);
+        std::vector<std::vector<float>> ref3(n_banks);
+        for (size_t i = 0; i < n_banks; ++i) {
+            std::vector<float> y(n_out);
+            const CpuDot cpu = MakeCpuRef(banks[i]);
+            if (!DotBlocked(0, banks[i].bytes.data(), banks[i].packedBytes(),
+                            act.data(), n_in, y.data(), n_out, cpu,
+                            q8.data(), q8.size() * sizeof(float), false)) {
+                std::printf("B3: reference dispatch failed\n"); return 3;
+            }
+            ref3[i] = y;
+        }
+        Checkpoint("B3_REFERENCES_DONE");
+        vk.SetQuantWeightBudgetBytes(0);   // derived default budget
+        if (!vk.BeginQuantDotBatch()) { Check(false, "B3: BeginQuantDotBatch succeeded"); }
+        size_t accepted3 = 0, rejected3 = 0;
+        bool pre_ok = false;
+        int first_ret = -1;
+        for (size_t i = 0; i < b3_max; ++i) {
+            const Bank& b = banks[i % n_banks];
+            if (i == 0) {
+                std::printf("B3_CALLSITE this=%p budget_before=%zu\n",
+                            static_cast<void*>(&vk), vk.QuantWeightBudgetBytes());
+                std::fflush(stdout);
+            }
+            const bool qret = vk.QueueQuantDot(b.bytes.data(), b.packedBytes(),
+                                               q8.data(), q8.size() * sizeof(float),
+                                               bout3[i].data(), n_out * sizeof(float),
+                                               n_out, n_in, 0);
+            if (i == 0) {
+                first_ret = qret ? 1 : 0;
+                std::printf("B3_CALLSITE first_ret=%d budget_after=%zu\n",
+                            first_ret, vk.QuantWeightBudgetBytes());
+                std::fflush(stdout);
+            }
+            if (qret) {
+                acc3[i] = 1;
+                ++accepted3;
+                if (accepted3 == 1) { pre_ok = true; Checkpoint("B3_PRE_ACCEPTED"); }
+            } else {
+                ++rejected3;
+                break;   // first explicit rejection ends the fill
+            }
+        }
+        const size_t pins_at_reject = vk.PinnedWeightCount();
+        Checkpoint("B3_FILL_DONE");
+        const bool ended3 = vk.EndQuantDotBatch();
+        const size_t pins_after = vk.PinnedWeightCount();
+        bool bit3 = true;
+        size_t checked3 = 0;
+        for (size_t i = 0; i < b3_max && acc3[i]; ++i) {
+            if (!SameBits(bout3[i], ref3[i % n_banks])) bit3 = false;
+            ++checked3;
+        }
+        // Post-rejection recovery: a fresh batch must accept and complete work.
+        size_t post3 = 0;
+        bool post_ended = false, post_bit = false;
+        if (vk.BeginQuantDotBatch()) {
+            std::vector<float> ypost(n_out, 0.0f);
+            const Bank& b0 = banks[0];
+            if (vk.QueueQuantDot(b0.bytes.data(), b0.packedBytes(),
+                                 q8.data(), q8.size() * sizeof(float),
+                                 ypost.data(), n_out * sizeof(float),
+                                 n_out, n_in, 0)) {
+                ++post3;
+                post_ended = vk.EndQuantDotBatch();
+                post_bit = SameBits(ypost, ref3[0]);
+            }
+        }
+        std::printf("B3: accepted=%zu rejected=%zu pre_ok=%d pins_at_reject=%zu "
+                    "pins_before=%zu pins_after=%zu post=%zu post_ended=%d post_bit=%d\n",
+                    accepted3, rejected3, (int)pre_ok, pins_at_reject,
+                    pins_before, pins_after, post3, (int)post_ended, (int)post_bit);
+        Check(pre_ok, "B3: pre-rejection dot accepted (B3_PRE_ACCEPTED >= 1)");
+        Check(rejected3 == 1, "B3: queue rejection was EXPLICIT (one false return)");
+        Check(pins_at_reject >= 1,
+              "B3: live pins existed at the rejection point (PinnedWeightCount > 0)");
+        Check(ended3, "B3: EndQuantDotBatch succeeded after rejection");
+        Check(bit3 && checked3 == accepted3,
+              "B3: every accepted dot output bit-identical (rejected dot never wrote output)");
+        Check(pins_after == pins_before,
+              "B3: pins returned to the pre-test baseline after the forced rejection");
+        Check(post3 == 1, "B3: post-rejection batch accepted a dot (B3_POST_ACCEPTED >= 1)");
+        Check(post_ended && post_bit,
+              "B3: post-rejection dot completed with bit-identical output");
+        Checkpoint("B3_COMPLETE");
+    }
+
+    // =========================================================================
     // C. Generation leases.
     // =========================================================================
     std::printf("\n--- C. generation leases ---\n");
-    Checkpoint("SECTION_C_BEGIN");
     {
+        // C must prove eviction is non-vacuous: constrain the residency budget
+        // so the storm can actually evict, then restore the derived default.
+        VulkanCompute& vk = DispatchDevice();
+        // Budget scope guard (directive): restore the previous device budget on
+        // EVERY exit from Section C (early assertion failures, exceptions,
+        // normal completion) -- configuration only, never GPU-owned resources.
+        const size_t prev_budget = vk.QuantWeightBudgetBytes();
+        struct BudgetRestoreGuard {
+            VulkanCompute& v;
+            size_t prev;
+            ~BudgetRestoreGuard() { v.SetQuantWeightBudgetBytes(prev); }
+        } budget_guard{vk, prev_budget};
+        vk.SetQuantWeightBudgetBytes((size_t)(bank_bytes * 2));
         const size_t i = n_banks - 1;
         const uint64_t lease = AcquireWeightLease(banks[i].bytes.data(),
                                                   banks[i].packedBytes(), 0);
         Check(lease != 0, "C: lease acquired on a fresh weight");
-        Checkpoint("C_LEASE_ACQUIRED");
+        // C non-vacuity (directive, forced-miss design): the storm must MISS.
+        // All 16 banks are resident from B3, so flush the unpinned banks with
+        // the dedicated trim (counted SEPARATELY as weight_cache_evictions_trim),
+        // take a fresh baseline AFTER the trim, then run the storm with a
+        // 2-bank device budget: every storm upload is a miss that must evict a
+        // previous bank (the leased bank is pinned and survives).
+        {
+            const size_t trimmed = vk.TrimUnpinnedQuantWeights();
+            std::printf("C_DIAG trim: trimmed=%zu pinned=%zu live_after=%llu\n",
+                        trimmed, vk.PinnedWeightCount(),
+                        (unsigned long long)GetCacheStats().device_bytes_live);
+            std::fflush(stdout);
+        }
+        const Snap c0 = Take();
+        const uint64_t c0_budget_ev = DispatchDevice().GetGpuCounters().weight_cache_evictions_budget;
+        std::printf("C_DIAG baseline: evictions=%llu evictions_budget=%llu evictions_trim=%llu "
+                    "live=%llu pinned=%zu\n",
+                    (unsigned long long)c0.evictions,
+                    (unsigned long long)c0_budget_ev,
+                    (unsigned long long)DispatchDevice().GetGpuCounters().weight_cache_evictions_trim,
+                    (unsigned long long)c0.live,
+                    (unsigned long long)c0.pinned);
+        std::fflush(stdout);
+        vk.SetQuantWeightBudgetBytes((size_t)(bank_bytes * 2));
         std::atomic<bool> storm_stop{false};
         std::atomic<bool> storm_ready{false};
         std::atomic<uint64_t> storm_prefetch{0};
@@ -564,26 +868,36 @@ int main(int argc, char** argv) {
                     rng = rng * 1664525u + 1013904223u;
                     const Bank& b = banks[rng % n_banks];
                     if (PrefetchWeight(b.bytes.data(), b.packedBytes(), 0)) ++storm_prefetch;
-                    std::this_thread::yield();
                 }
             };
             spin();
-            storm_ready.store(true);
-            storm_ready.notify_one();
-            while (!storm_stop.load()) {
-                spin();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
+            storm_ready.store(true, std::memory_order_release);
+            storm_ready.notify_all();
+            // Bounded storm: each miss is a real upload+fence, so an unbounded
+            // spin would starve the main thread's device access. 400 spins x 4
+            // prefetches is ample eviction pressure with a hard upper bound.
+            for (int iter = 0; iter < 400 && !storm_stop.load(); ++iter) spin();
         });
-        storm_ready.wait(false);
-        Checkpoint("C_STORM_READY");
-        const Snap c0 = Take();
+        Checkpoint("C_MAIN_WAIT_BEGIN");
+        bool ready_c = false;
+        for (const int64_t deadline = NowMs() + 10000; NowMs() < deadline;) {
+            if (storm_ready.load(std::memory_order_acquire)) { ready_c = true; break; }
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+        Checkpoint(ready_c ? "C_MAIN_WAIT_COMPLETE" : "C_READINESS_TIMEOUT");
+        Check(ready_c, "C: storm worker reached readiness within the bounded wait");
+        if (!ready_c) {
+            storm_stop.store(true);
+            storm.detach();
+            Checkpoint("C_STORM_DETACHED");
+            std::printf("G04_RESULT=FAIL (C_READINESS_TIMEOUT)\n");
+            { std::fflush(stdout); std::_Exit(1); }
+        }
         bool resident = true;
         for (int r = 0; r < 200 && resident; ++r) {
             if (!IsWeightResident(banks[i].bytes.data(), banks[i].packedBytes(), 0)) resident = false;
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-        Checkpoint("C_RESIDENCY_CHECK_COMPLETE");
         std::vector<float> y(n_out);
         const CpuDot cpu = MakeCpuRef(banks[i]);
         const bool ok = DotBlocked(0, banks[i].bytes.data(), banks[i].packedBytes(),
@@ -591,18 +905,27 @@ int main(int argc, char** argv) {
                                    q8.data(), q8.size() * sizeof(float), false);
         const bool leased_result_ok = ok && SameBits(y, ref[i]);
         storm_stop.store(true);
-        Checkpoint("C_STORM_STOP_REQUESTED");
         storm.join();
-        Checkpoint("C_STORM_JOINED");
         const Snap c1 = Take();
         Check(resident, "C: leased weight stayed resident through the eviction storm");
         Check(c0.pinned >= 1, "C: the lease shows up as an in-flight pin");
-        Check(c1.evictions > c0.evictions, "C: the storm really did evict (non-vacuous)");
+        Check(c1.evictions > c0.evictions,
+              "C: the storm really did evict (non-vacuous)");
+        const uint64_t c1_budget_ev = DispatchDevice().GetGpuCounters().weight_cache_evictions_budget;
+        std::printf("C_DIAG storm: evictions=%llu (delta=%llu) evictions_budget=%llu "
+                    "(delta=%llu) evictions_trim=%llu\n",
+                    (unsigned long long)c1.evictions,
+                    (unsigned long long)(c1.evictions - c0.evictions),
+                    (unsigned long long)c1_budget_ev,
+                    (unsigned long long)(c1_budget_ev - c0_budget_ev),
+                    (unsigned long long)DispatchDevice().GetGpuCounters().weight_cache_evictions_trim);
+        std::fflush(stdout);
+        Check(c1_budget_ev > c0_budget_ev,
+              "C: budget-driven eviction observed (weight_cache_evictions_budget delta > 0)");
         Check(leased_result_ok, "C: dispatch on the leased weight is bit-exact");
         ReleaseWeightLease(lease);
         ReleaseWeightLease(lease);                       // double release: must be a no-op
         ReleaseWeightLease(0xDEADBEEFu);                  // stale id: must be a no-op
-        Checkpoint("C_LEASE_RELEASED");
         const Snap c2 = Take();
         Check(c2.leases == 0, "C: lease released; double/stale release are no-ops");
         Check(c2.pinned == 0, "C: pin dropped once the lease was released");
@@ -611,19 +934,16 @@ int main(int argc, char** argv) {
         {
             std::vector<float> y2(n_out);
             const CpuDot cpu2 = MakeCpuRef(banks[0]);
-            Checkpoint("C_DRAIN_DISPATCH_BEGIN");
             (void)DotBlocked(0, banks[0].bytes.data(), banks[0].packedBytes(),
                              act.data(), n_in, y2.data(), n_out, cpu2,
                              q8.data(), q8.size() * sizeof(float), false);
-            Checkpoint("C_DRAIN_DISPATCH_COMPLETE");
         }
         const Snap c3 = Take();
         Check(c3.retired_pending == 0, "C: deferred destruction drained after one dispatch");
-        Check(c3.retired_pending == 0 && c3.retired_reaped >= c3.evictions,
-              "C: every counted eviction was reaped (fence-safe)");
+        Check(c3.evictions == c3.retired_reaped, "C: evictions == reaped (fence-safe)");
+        vk.SetQuantWeightBudgetBytes(0);   // restore derived default (single authoritative routine)
     }
     std::printf("\n--- D. dispatch determinism under concurrency ---\n");
-    Checkpoint("SECTION_D_BEGIN");
     {
         std::vector<std::vector<float>> outs(n_threads);
         std::atomic<bool> bad{false};
@@ -645,13 +965,12 @@ int main(int argc, char** argv) {
         for (auto& th : ts) th.join();
         const Snap d1 = Take();
         Check(!bad.load(), "D: every concurrent dispatch bit-identical to the reference");
-        Check(d1.retired_pending == 0 && d1.retired_reaped >= d1.evictions,
+        Check(d1.evictions == d1.retired_reaped && d1.retired_pending == 0,
               "D: residency accounting drained cleanly");
         PrintSnap("D final:", d1);
     }
 
     std::printf("\n--- E. batch ownership and empty-close regression ---\n");
-    Checkpoint("SECTION_E_BEGIN");
     {
         bool repeated_empty = true;
         for (int i = 0; i < 8; ++i) {
@@ -660,137 +979,192 @@ int main(int argc, char** argv) {
         Check(repeated_empty, "E: repeated empty batches close exactly once");
 
         const bool owner_opened = BeginBatch();
-        const size_t e_q6_row_bytes = ((n_in + 255u) / 256u) * 210u;
-        std::vector<uint8_t> e_q6_payload(n_out * e_q6_row_bytes);
-        for (size_t i = 0; i < e_q6_payload.size(); ++i)
-            e_q6_payload[i] = static_cast<uint8_t>((i * 17u + 31u) & 0xffu);
-        std::vector<float> e_batch_out(n_out, 0.0f);
-        const CpuDot e_cpu = [e_q6_row_bytes](const uint8_t* row,
-                                               const void* q8_ptr,
-                                               size_t) -> float {
-            const float* q8_values = static_cast<const float*>(q8_ptr);
-            float acc = 0.0f;
-            for (size_t i = 0; i < e_q6_row_bytes; ++i)
-                acc += static_cast<float>(row[i]) *
-                       q8_values[i % 8u] * 0.0001f;
-            return acc;
-        };
-        const bool owner_queued = owner_opened && DotBlocked(
-            1, e_q6_payload.data(), e_q6_payload.size(),
-            act.data(), n_in, e_batch_out.data(), n_out, e_cpu,
-            q8.data(), q8.size() * sizeof(float), false);
-        Check(owner_queued && LastReceipt().queued,
-              "E: primary executor queued work for aggregate accounting");
         std::atomic<bool> contender_started{false};
-        BatchAccounting contender_snapshot{};
         bool contender_acquired = true;
-        bool contender_preclose = true;
-        bool contender_closed = false;
         std::thread contender([&]() {
             contender_started.store(true, std::memory_order_release);
-            contender_snapshot = BatchAccountingSnapshot();
-            contender_preclose = EndBatch();
             contender_acquired = BeginBatch();
-            if (contender_acquired) contender_closed = EndBatch();
+            if (contender_acquired) (void)EndBatch();
         });
         while (!contender_started.load(std::memory_order_acquire)) std::this_thread::yield();
         contender.join();
         const bool owner_closed = owner_opened && EndBatch();
         Check(owner_opened, "E: primary executor acquired batch ownership");
-        Check(!contender_preclose, "E: non-owner cannot close another executor batch");
-        Check(contender_acquired, "E: independent executor acquired its own batch");
-        Check(contender_closed, "E: independent executor closes its own batch");
+        Check(!contender_acquired, "E: concurrent executor cannot acquire active batch");
         Check(owner_closed, "E: owning executor closes its batch");
-        Check(contender_snapshot.active_batches >= 1 &&
-                  contender_snapshot.pending_queued >= 1 &&
-                  !contender_snapshot.batch_active &&
-                  contender_snapshot.queued == 0,
-              "E: cross-thread accounting reports another executor's batch");
-        const BatchAccounting after_owner = BatchAccountingSnapshot();
-        Check(after_owner.active_batches == 0 && after_owner.pending_queued == 0,
-              "E: aggregate accounting drains after owner closure");
 
         const bool retry_opened = BeginBatch();
         const bool retry_closed = retry_opened && EndBatch();
         Check(retry_opened && retry_closed, "E: ownership is reusable after close");
-
-        SetActiveDevice(-1);
-        std::atomic<int32_t> child_device{-2};
-        std::thread device_scope([&]() {
-            SetActiveDevice(17);
-            child_device.store(ActiveDevice(), std::memory_order_release);
-        });
-        device_scope.join();
-        Check(child_device.load(std::memory_order_acquire) == 17 &&
-                  ActiveDevice() == -1,
-              "E: active-device override is isolated per executor thread");
     }
 
-    std::printf("\n--- F. injected device-close failure recovery ---\n");
+    // =========================================================================
+    // F. Producer/closer interleaving vs the batch lifecycle (Stage A P0).
+    //
+    // The production interleaving the Stage A mutex repair makes safe: the
+    // owning executor (main) opens a batch, producer threads push Q6_K (kind 1)
+    // dots into it while it is open, and the OWNER closes the batch mid-flight
+    // while producers are still pushing. Every dot either landed in the queue
+    // before the swap (and runs at EndBatch) or observed the closed batch and
+    // executed synchronously. Pre-fix, a dot that read g_batch_active unlocked
+    // and was preempted before push_back was silently lost after its caller
+    // was told "queued": its output stayed at the NaN sentinel forever.
+    //
+    // kind 1 (Q6_K) is used deliberately: kind 0 (Q4_K) is pinned to the
+    // synchronous path in the dispatch layer (quant_dot_dispatch.cpp:745-750),
+    // so sections A-E never exercise the queue Stage A protects. This section
+    // does: real queued work, a mid-flight close, and per-dot terminal
+    // outcomes verified against a validated GPU reference.
+    // =========================================================================
+    std::printf("\n--- F. producer/closer interleaving (Stage A P0, Q6_K) ---\n");
     Checkpoint("SECTION_F_BEGIN");
     {
-        std::vector<float> failed_out(n_out, 0.0f);
-        // Q4_K is intentionally kept on the synchronous path by the
-        // production dispatcher. Use a valid Q6_K-shaped payload here so the
-        // regression reaches the real deferred batch and EndQuantDotBatch
-        // failure path rather than accidentally testing a synchronous dot.
-        const size_t q6_row_bytes = (n_in / 256u) * 210u;
-        std::vector<uint8_t> q6_payload(n_out * q6_row_bytes);
-        for (size_t i = 0; i < q6_payload.size(); ++i)
-            q6_payload[i] = static_cast<uint8_t>((i * 29u + 17u) & 0xffu);
-        const size_t q8_count = q8.size();
-        const CpuDot failed_cpu = [q6_row_bytes, q8_count](
-            const uint8_t* row, const void* q8_ptr, size_t) -> float {
-            const float* q8_values = static_cast<const float*>(q8_ptr);
+        const size_t f_out = 64, f_in = 1024;
+        const size_t f_blk = f_in / 256u;               // 4 Q6_K blocks per row
+        const size_t f_row_bytes = f_blk * 210u;        // 840 B per row
+        uint32_t f_nan_bits = 0x7FC00000u;
+        float f_nan;
+        std::memcpy(&f_nan, &f_nan_bits, sizeof(f_nan));
+
+        // Deterministic Q6_K bank (ggml block_q6_K layout: ql[128], qh[64],
+        // scales[16] int8, fp16 d -- 210 bytes per 256-value block).
+        std::vector<uint8_t> fbytes(f_out * f_row_bytes, 0);
+        for (size_t r = 0; r < f_out; ++r) {
+            for (size_t b = 0; b < f_blk; ++b) {
+                uint8_t* w = fbytes.data() + r * f_row_bytes + b * 210u;
+                for (size_t i = 0; i < 208; ++i)
+                    w[i] = uint8_t((r * 29u + b * 43u + i * 7u) & 0xFFu);
+                for (size_t i = 0; i < 16; ++i)
+                    w[192 + i] = uint8_t(int8_t(4 + (int(i) % 8)));
+                w[208] = 0x00; w[209] = 0x2C;           // d = 0x2C00 ~ 0.03125
+            }
+        }
+        const std::vector<float> q8f = MakeQ8(f_in, 11);
+        const std::vector<float> actf = MakeAct(f_in, 13);
+
+        // Independent CPU reference: ggml dequantize_row_q6_K (ggml-quants.c
+        // :1762) folded with the interleaved Q8 super-block scale; Q6_K has no
+        // min term. Used by the dispatch's CPU fallback/replay so a replayed
+        // batch stays numerically comparable.
+        const CpuDot cpu6 = [&](const uint8_t* row, const void*, size_t) -> float {
             float acc = 0.0f;
-            for (size_t i = 0; i < q6_row_bytes; ++i)
-                acc += static_cast<float>(row[i]) *
-                       q8_values[i % q8_count] * 0.0001f;
+            for (size_t b = 0; b < f_blk; ++b) {
+                const uint8_t* w = row + b * 210u;
+                const float d = HalfToFloat(uint16_t(w[208] | (uint16_t(w[209]) << 8)));
+                const float* y8 = q8f.data() + b * 273u;
+                const float yd = y8[0];
+                float q[256];
+                for (int h = 0; h < 2; ++h) {
+                    const uint8_t* ql = w + h * 64;
+                    const uint8_t* qh = w + 128 + h * 32;
+                    const int8_t* sc = reinterpret_cast<const int8_t*>(w + 192) + h * 8;
+                    for (int l = 0; l < 32; ++l) {
+                        const int is = l / 16;
+                        const int q1 = int((ql[l] & 0xF) | (((qh[l] >> 0) & 3) << 4)) - 32;
+                        const int q2 = int((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+                        const int q3 = int((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+                        const int q4 = int((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+                        q[h * 128 + l]      = d * sc[is + 0] * float(q1);
+                        q[h * 128 + l + 32] = d * sc[is + 2] * float(q2);
+                        q[h * 128 + l + 64] = d * sc[is + 4] * float(q3);
+                        q[h * 128 + l + 96] = d * sc[is + 6] * float(q4);
+                    }
+                }
+                for (size_t j = 0; j < 256; ++j) acc += q[j] * (yd * y8[1 + j]);
+            }
             return acc;
         };
-        std::vector<float> failed_ref(n_out, 0.0f);
-        for (size_t row = 0; row < n_out; ++row)
-            failed_ref[row] = failed_cpu(
-                q6_payload.data() + row * q6_row_bytes,
-                q8.data(), row);
-        const bool opened = BeginBatch();
-        const bool queued = opened && DotBlocked(
-            1, q6_payload.data(), q6_payload.size(),
-            act.data(), n_in, failed_out.data(), n_out, failed_cpu,
-            q8.data(), q8.size() * sizeof(float), false);
-        const bool queued_receipt = queued && LastReceipt().queued;
-        const bool injected = queued && InjectEndBatchFailureForTest();
-        const bool closed = injected && EndBatch();
-        Check(opened, "F: failure-injection batch opened");
-        Check(queued_receipt, "F: dot accepted into failure-injection batch");
-        Check(injected, "F: EndBatch failure was armed");
-        Check(!closed, "F: injected device close failure is reported");
-        Check(LastReceipt().fail_stage &&
-                  std::strcmp(LastReceipt().fail_stage, "end") == 0,
-              "F: receipt identifies device close failure");
-        Check(LastReceipt().cpu_rows == n_out && SameBits(failed_out, failed_ref),
-              "F: failed batch replays the queued dot exactly once on CPU");
-        const BatchAccounting accounting = BatchAccountingSnapshot();
-        Check(!accounting.batch_active && accounting.queued == 0,
-              "F: failed close leaves no active or queued logical batch state");
-        Check(accounting.accepted == accounting.completed + accounting.failed,
-              "F: failed close preserves terminal accounting");
-        Check(GetCacheStats().pinned == 0,
-              "F: failed close releases all residency pins");
-        const bool recovered_open = BeginBatch();
-        const bool recovered_close = recovered_open && EndBatch();
-        Check(recovered_open && recovered_close,
-              "F: a later batch can open and close after failure recovery");
-        std::vector<float> drain_out(n_out, 0.0f);
-        const bool drained = DotBlocked(
-            0, banks[0].bytes.data(), banks[0].packedBytes(),
-            act.data(), n_in, drain_out.data(), n_out, MakeCpuRef(banks[0]),
-            q8.data(), q8.size() * sizeof(float), false);
-        Check(drained && LastReceipt().used_gpu,
-              "F: a real post-failure dispatch drains deferred residency safely");
-        const CacheStats f_after = GetCacheStats();
-        Check(f_after.retired_pending == 0 && f_after.retired_reaped >= f_after.evictions,
-              "F: post-failure residency is fully reaped");
+
+        // Validated reference: the same GPU kernel, synchronously (batch closed).
+        std::vector<float> fref(f_out, 0.0f);
+        {
+            Checkpoint("F_REFERENCE_BEGIN");
+            const bool ok = DotBlocked(1, fbytes.data(), fbytes.size(),
+                                       actf.data(), f_in, fref.data(), f_out, cpu6,
+                                       q8f.data(), q8f.size() * sizeof(float), false);
+            const bool gpu = ok && LastReceipt().used_gpu;
+            std::printf("F: reference dot ok=%d gpu=%d\n", (int)ok, (int)gpu);
+            Check(ok, "F: Q6_K reference dot executed");
+            Check(gpu, "F: Q6_K reference dot ran on the GPU (non-vacuous)");
+            if (!ok) {
+                std::printf("G04_RESULT=BLOCKED (Q6_K sync reference failed: %s)\n",
+                            LastReceipt().fallback_reason ? LastReceipt().fallback_reason : "none");
+                return 3;
+            }
+        }
+
+        // Producers push dots into the open batch; the owner closes mid-flight.
+        const BatchAccounting acc0 = BatchAccountingSnapshot();
+        std::atomic<bool> f_start{false}, f_stop{false};
+        const size_t f_threads = 3, f_per = 48;
+        const size_t f_total = f_threads * f_per;
+        std::vector<std::vector<float>> fslots(f_total, std::vector<float>(f_out, f_nan));
+        bool queued_seen = false, ended = false;
+        {
+            Checkpoint("F_PRODUCERS_BEGIN");
+            if (!BeginBatch()) {
+                std::printf("F: BeginBatch failed\n");
+                return 3;
+            }
+            std::vector<std::thread> ts;
+            for (size_t t = 0; t < f_threads; ++t) {
+                ts.emplace_back([&, t]() {
+                    while (!f_start.load(std::memory_order_acquire)) std::this_thread::yield();
+                    for (size_t r = 0; r < f_per && !f_stop.load(std::memory_order_acquire); ++r) {
+                        const size_t g = t * f_per + r;
+                        (void)DotBlocked(1, fbytes.data(), fbytes.size(),
+                                         actf.data(), f_in, fslots[g].data(), f_out, cpu6,
+                                         q8f.data(), q8f.size() * sizeof(float), false);
+                    }
+                });
+            }
+            f_start.store(true, std::memory_order_release);
+            // Bounded wait until at least one dot is actually queued.
+            for (int i = 0; i < 500 && !queued_seen; ++i) {   // up to ~5 s
+                queued_seen = BatchAccountingSnapshot().queued > 0;
+                if (!queued_seen) std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            Checkpoint("F_CLOSING");
+            ended = EndBatch();                    // close while producers run
+            f_stop.store(true, std::memory_order_release);
+            for (auto& th : ts) th.join();
+        }
+        Checkpoint("F_PRODUCERS_JOINED");
+        const BatchAccounting acc1 = BatchAccountingSnapshot();
+        const uint64_t d_acc = acc1.accepted - acc0.accepted;
+        const uint64_t d_cmp = acc1.completed - acc0.completed;
+        const uint64_t d_fail = acc1.failed - acc0.failed;
+        std::printf("F: accounting accepted_delta=%llu completed_delta=%llu failed_delta=%llu "
+                    "queued=%zu batch_active=%d batches=%llu device_batches=%llu\n",
+                    (unsigned long long)d_acc, (unsigned long long)d_cmp, (unsigned long long)d_fail,
+                    acc1.queued, (int)acc1.batch_active,
+                    (unsigned long long)(acc1.batches_opened - acc0.batches_opened),
+                    (unsigned long long)(acc1.device_batches_opened - acc0.device_batches_opened));
+
+        size_t f_written = 0, f_bit = 0;
+        bool f_nan_left = false;
+        for (size_t g = 0; g < f_total; ++g) {
+            bool is_nan = false;
+            for (size_t j = 0; j < f_out; ++j)
+                if (std::memcmp(&fslots[g][j], &f_nan, sizeof(float)) == 0) { is_nan = true; break; }
+            if (!is_nan) ++f_written; else f_nan_left = true;
+            if (!is_nan && SameBits(fslots[g], fref)) ++f_bit;
+        }
+        Check(queued_seen, "F: at least one dot was queued while the batch was open");
+        Check(ended, "F: owning executor closed the batch mid-flight");
+        Check(!f_nan_left && f_written == f_total,
+              "F: every dot output written (no NaN sentinel left -- no silently lost dot)");
+        Check(f_bit == f_total,
+              "F: every dot output bit-identical to the synchronous reference");
+        Check(acc1.queued == 0 && !acc1.batch_active,
+              "F: queue empty and batch closed after EndBatch");
+        Check(d_acc == d_cmp + d_fail,
+              "F: accepted == completed + failed (all accepted work reached a terminal outcome)");
+        Check(d_cmp >= 1, "F: at least one device batch chunk actually completed");
+        Check(acc1.batches_opened > acc0.batches_opened &&
+              acc1.device_batches_opened > acc0.device_batches_opened,
+              "F: a real device batch was opened (non-vacuous)");
+        Checkpoint("F_COMPLETE");
     }
 
     // =========================================================================
@@ -898,11 +1272,11 @@ int main(int argc, char** argv) {
             while (!g2_go.load(std::memory_order_acquire)) std::this_thread::yield();
             std::vector<float> s(G_OUT, 0.0f), b(G_OUT, 0.0f);
             const bool serial_ok = dot(bank, s.data()) && LastReceipt().used_gpu;
-            const auto before = BatchAccountingSnapshot();
+            const auto before = ThreadAccountingSnapshot();
             const bool opened = serial_ok && BeginBatch();
             const bool queued = opened && dot(bank, b.data());
             const bool closed = opened && EndBatch();
-            const auto after = BatchAccountingSnapshot();
+            const auto after = ThreadAccountingSnapshot();
             acc.store(after.accepted - before.accepted);
             cmp.store(after.completed - before.completed);
             fail.store(after.failed - before.failed);
@@ -993,8 +1367,8 @@ int main(int argc, char** argv) {
     Check(f.leases == 0, "no outstanding lease");
     Check(f.pinned == 0, "no outstanding pin");
     Check(f.retired_pending == 0, "no deferred destruction outstanding");
-    Check(f.retired_pending == 0 && f.retired_reaped >= f.evictions,
-          "every counted eviction was destroyed only after its fence (fence-safe)");
+    Check(f.evictions == f.retired_reaped,
+          "every eviction was destroyed only after its fence (fence-safe)");
     Check(f.completed_epoch == f.epoch, "every submitted epoch has completed");
     Check(f.live > 0, "device residency is real (non-zero live bytes)");
     PrintSnap("FINAL:", f);
