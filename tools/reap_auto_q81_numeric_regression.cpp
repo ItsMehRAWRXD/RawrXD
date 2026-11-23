@@ -17,7 +17,7 @@ int main() {
         PadTo(out,32);
         for(int block=0;block<8;++block) {
             WriteU32(out,0x3f800000u);
-            WriteU32(out,0); // Q8_1 block sum is not a scale
+            WriteU32(out,0xc1800000u); // Q8_1 d*sum(qs) = -16, not a second scale
             for(int i=0;i<32;++i)out.put(static_cast<char>(i-16));
         }
     }
