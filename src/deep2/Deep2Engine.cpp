@@ -3418,10 +3418,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = name;
-            // Owned by ggufResult's mapped GGUF loader. Keep vectors/norms
-            // mapped because legacy scalar consumers still read their data
-            // pointer directly. Matrix projections that use LinearW can instead
-            // retain native GGML bytes in bounded compressed blocks.
+            // Owned by ggufResult's mapped GGUF loader. Eligible LinearW
+            // matrices, RMSNorm vectors, and migrated Mamba-2 vectors may move
+            // to compressed backing only after their consumers support ranges.
+            // Unsupported direct-pointer tensors remain mapped.
             wt.mapped = true;
             wt.hasFileBacking = true;
             wt.fileOffset = t.dataOffset;
@@ -6291,8 +6291,8 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         dst.hasFileBacking = true;
         dst.fileOffset = ref->fileOffset;
 
-        // Opt-in native compressed residency for matrix weights. Keep norms
-        // and vectors mapped because their current consumers read direct pointers.
+        // Opt-in native compressed residency for LinearW matrices and the
+        // explicitly range-enabled final/attention/FFN RMSNorm vectors.
         const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
         const bool compressedModeEnabled =
             compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
