@@ -5295,7 +5295,7 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path)
     if (config.numLayers > 0)
     {
         const auto& lw0 = modelWeights.layers[0];
-        if (lw0.wq.data && lw0.wk.data && lw0.wq.rows != lw0.wk.rows)
+        if (lw0.wq.hasBacking() && lw0.wk.hasBacking() && lw0.wq.rows != lw0.wk.rows)
         {
             size_t inferredKVHeads = lw0.wk.rows / config.headDim;
             if (inferredKVHeads > 0 && inferredKVHeads != config.numKVHeads)
