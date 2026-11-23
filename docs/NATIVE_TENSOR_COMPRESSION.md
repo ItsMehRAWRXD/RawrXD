@@ -33,7 +33,7 @@ fail-closed: rejected tensors retain their original type and bytes.
 Supported floating source types are F64, F32, F16, and BF16. The writer
 preserves tensor names, dimensions, metadata, alignment, and untouched
 tensor payloads. It writes standard GGUF type IDs and canonical block sizes:
-Q2_K 84 B, Q3_K 110 B, Q4_K 144 B, Q5_K 176 B, Q6_K 210 B per 256 values.
+Q2_K 84 B, Q3_K 110 B, Q4_K 144 B, Q5_K 176 B, Q6_K 210 B, and Q8_K 292 B per 256 values. Q8_K is available as an explicit mode; automatic selection compares the smaller K formats and Q8_0 first.
 
 ## Deep2 and model loading
 
