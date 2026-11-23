@@ -2997,6 +2997,16 @@ bool VulkanCompute::ensureWeightQuant(
         : quantWeightKey(weights,bytes,type);
     auto it=weightCache_.find(key);
     if(it!=weightCache_.end()){
+        // Explicit row-tile keys are part of the residency contract. Never
+        // return a cached buffer whose type or byte geometry differs from the
+        // current request; a collision must fail closed, not feed stale data.
+        if (it->second.type != type || it->second.bytes != bytes) {
+            std::fprintf(stderr,
+                "[WEIGHT_CACHE_KEY_COLLISION] key=%llu cached_type=%d requested_type=%d cached_bytes=%zu requested_bytes=%zu\\n",
+                static_cast<unsigned long long>(key), it->second.type, type,
+                it->second.bytes, bytes);
+            return false;
+        }
         ++weightHits_;
         it->second.lastUse = weightUseClock_++;
         out=&it->second.buffer;
