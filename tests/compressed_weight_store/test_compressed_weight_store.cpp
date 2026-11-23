@@ -1,5 +1,10 @@
 #include "CompressedWeightStore.hpp"
 #include <algorithm>
+#include <chrono>
+#include <condition_variable>
+#include <future>
+#include <mutex>
+#include <thread>
 #include <cstring>
 #include <cstdint>
 #include <iostream>
@@ -51,6 +56,62 @@ int main(){
  REQUIRE(std::equal(input.begin()+range_offset,
                     input.begin()+range_offset+range_length,
                     output.begin()+range_offset));
+
+ // A slow source reader must not hold the store mutex: an existing inference
+ // read must complete while another tensor is still being encoded/admitted.
+ struct SlowReaderContext {
+  const std::vector<std::uint8_t>* bytes;
+  std::mutex mutex;
+  std::condition_variable cv;
+  bool entered=false;
+  bool release=false;
+ } slowContext{nullptr};
+ std::vector<std::uint8_t> slowData(2u*1024u*1024u,static_cast<std::uint8_t>('S'));
+ slowContext.bytes=&slowData;
+ bool slowWriterOk=false;
+ std::string slowWriterError;
+ std::thread slowWriter([&] {
+  slowWriterOk=store.addTensorFromReader(
+   "slow.admission",slowData.size(),
+   [](void* opaque,std::size_t offset,void* destination,std::size_t length)->bool {
+    auto& ctx=*static_cast<SlowReaderContext*>(opaque);
+    {
+     std::unique_lock<std::mutex> lock(ctx.mutex);
+     if(!ctx.entered) {
+      ctx.entered=true;
+      ctx.cv.notify_all();
+      ctx.cv.wait(lock,[&]{return ctx.release;});
+     }
+    }
+    if(length) std::memcpy(destination,ctx.bytes->data()+offset,length);
+    return true;
+   },
+   &slowContext,&slowWriterError,rawrxd::compression::GGML_TYPE_OPAQUE,false);
+ });
+ {
+  std::unique_lock<std::mutex> lock(slowContext.mutex);
+  REQUIRE(slowContext.cv.wait_for(lock,std::chrono::seconds(5),
+                                  [&]{return slowContext.entered;}));
+ }
+ std::vector<std::uint8_t> concurrentRead(range_length);
+ auto readFuture=std::async(std::launch::async,[&] {
+  std::string readError;
+  return store.readRange("layer.0.weight",range_offset,
+                         concurrentRead.data(),concurrentRead.size(),&readError);
+ });
+ const bool readCompletedDuringAdmission =
+  readFuture.wait_for(std::chrono::seconds(2))==std::future_status::ready;
+ {
+  std::lock_guard<std::mutex> lock(slowContext.mutex);
+  slowContext.release=true;
+ }
+ slowContext.cv.notify_all();
+ slowWriter.join();
+ REQUIRE(readCompletedDuringAdmission);
+ REQUIRE(readFuture.get());
+ REQUIRE(slowWriterOk);
+ REQUIRE(concurrentRead==std::vector<std::uint8_t>(
+  input.begin()+range_offset,input.begin()+range_offset+range_length));
  auto lease=store.acquireBlock("layer.0.weight",0,&error);REQUIRE(lease&&lease->size()==1024);store.setDecodedCacheBudget(0);REQUIRE((*lease)[0]==input[0]);
  REQUIRE(!store.readRange("layer.0.weight",input.size(),output.data(),1,&error));
  std::vector<std::uint8_t> random_data(4096);std::mt19937 rng(7);for(auto& b:random_data)b=static_cast<std::uint8_t>(rng());
@@ -87,6 +148,6 @@ int main(){
   REQUIRE(roundTrip==expected);
  }
  REQUIRE(store.addTensor("empty",nullptr,0,&error));REQUIRE(store.tensorBlocks("empty")==0);REQUIRE(store.readRange("empty",0,nullptr,0,&error));
- const auto s=store.stats();REQUIRE(s.tensors==5&&s.raw_bytes==input.size()+random_data.size()+sizeof(q4_payload)+14);REQUIRE(s.compressed_bytes<s.raw_bytes);
+ const auto s=store.stats();REQUIRE(s.tensors==6&&s.raw_bytes==input.size()+random_data.size()+sizeof(q4_payload)+14+slowData.size());REQUIRE(s.compressed_bytes<s.raw_bytes);
  std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\n';
 }
