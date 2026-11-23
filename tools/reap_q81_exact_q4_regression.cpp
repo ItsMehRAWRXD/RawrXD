@@ -10,10 +10,13 @@ int main(){
  WriteName(o,"blk.0.attn_norm.weight");WriteU32(o,1);WriteU64(o,64);WriteU32(o,9);WriteU64(o,0);
  WriteName(o,"blk.1.attn_norm.weight");WriteU32(o,1);WriteU64(o,64);WriteU32(o,9);WriteU64(o,96);
  PadTo(o,32);
- for(int tensor=0;tensor<2;++tensor)for(int block=0;block<2;++block){
+ for(int tensor=0;tensor<2;++tensor){
+  for(int block=0;block<2;++block){
   WriteU16(o,0x3c00);WriteU16(o,0);
   for(int i=0;i<32;++i)o.put(static_cast<char>(tensor==0?(i%16-8):(i==0?127:0)));
  }
+  }
+  PadTo(o,32);
  }
  bool ok=RepackGGUF(src,dst,UINT64_MAX,false,false,false,false,true)==RepackError::None;
  if(ok){
