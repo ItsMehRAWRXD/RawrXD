@@ -7,6 +7,8 @@ on:
       - "include/native_*.hpp"
       - "src/Deep2Engine.cpp"
       - "src/Deep2Engine.hpp"
+      - "src/TensorROM.cpp"
+      - "src/TensorROM.hpp"
       - "src/TensorView.hpp"
       - "src/quant_kernels.cpp"
       - "tests/native_*_test.cpp"
