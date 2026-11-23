@@ -288,4 +288,228 @@ private:
     std::vector<std::uint8_t> payload_; // one contiguous backing; chunks index into it
 };
 
+
+/*
+ * Lossless chunked byte storage for already-quantized GGUF payloads.
+ * Each independent block is encoded as an LZ4-compatible raw block only when
+ * it shrinks; otherwise the original bytes are retained. Range reads decode
+ * only intersecting blocks into caller-owned reusable scratch.
+ */
+class ChunkedByteStorage {
+public:
+    enum class Encoding : std::uint8_t { Raw = 0, Lz4Block = 1 };
+    struct Chunk {
+        std::size_t first = 0;
+        std::size_t count = 0;
+        std::size_t payloadOffset = 0;
+        std::size_t payloadBytes = 0;
+        Encoding encoding = Encoding::Raw;
+    };
+
+    template <class Reader>
+    static ChunkedByteStorage BuildFromReader(
+        std::size_t bytes, Reader&& reader, std::size_t chunkBytes = 64u * 1024u,
+        bool /*reservedPolicy*/ = false,
+        std::size_t maxStoredBytes = std::numeric_limits<std::size_t>::max()) {
+        if (chunkBytes == 0)
+            throw std::invalid_argument("invalid ChunkedByteStorage chunk size");
+        ChunkedByteStorage result;
+        result.size_ = bytes;
+        std::vector<std::uint8_t> source;
+        std::vector<std::uint8_t> encoded;
+        for (std::size_t first = 0; first < bytes;) {
+            const std::size_t count = std::min(chunkBytes, bytes - first);
+            source.resize(count);
+            if (!reader(first, count, source.data()))
+                throw std::runtime_error("ChunkedByteStorage source read failed");
+            encoded = lz4Compress(source.data(), count);
+            Chunk chunk;
+            chunk.first = first;
+            chunk.count = count;
+            const bool useLz4 = encoded.size() < count;
+            const std::size_t stored = useLz4 ? encoded.size() : count;
+            if (result.payload_.size() > maxStoredBytes ||
+                stored > maxStoredBytes - result.payload_.size())
+                throw std::length_error("compressed byte tensor exceeds storage budget");
+            chunk.encoding = useLz4 ? Encoding::Lz4Block : Encoding::Raw;
+            chunk.payloadOffset = result.payload_.size();
+            chunk.payloadBytes = stored;
+            const std::size_t oldSize = result.payload_.size();
+            result.payload_.resize(oldSize + stored);
+            std::memcpy(result.payload_.data() + oldSize,
+                        useLz4 ? encoded.data() : source.data(), stored);
+            result.chunks_.push_back(chunk);
+            first += count;
+        }
+        result.storedBytes_ = result.payload_.size();
+        return result;
+    }
+
+    std::size_t size() const noexcept { return size_; }
+    std::size_t storedBytes() const noexcept { return storedBytes_; }
+    std::size_t chunkCount() const noexcept { return chunks_.size(); }
+    const std::vector<Chunk>& chunks() const noexcept { return chunks_; }
+
+    void ReadRange(std::size_t first, std::size_t count,
+                   std::uint8_t* destination,
+                   std::vector<std::uint8_t>& decodeScratch) const {
+        if ((!destination && count) || first > size_ || count > size_ - first)
+            throw std::out_of_range("ChunkedByteStorage::ReadRange outside tensor");
+        if (count == 0) return;
+        const std::size_t end = first + count;
+        for (const Chunk& chunk : chunks_) {
+            const std::size_t chunkEnd = chunk.first + chunk.count;
+            const std::size_t begin = std::max(first, chunk.first);
+            const std::size_t finish = std::min(end, chunkEnd);
+            if (begin >= finish) continue;
+            const std::size_t sourceOffset = begin - chunk.first;
+            const std::size_t destinationOffset = begin - first;
+            const std::size_t copyBytes = finish - begin;
+            const std::uint8_t* packed = payload_.data() + chunk.payloadOffset;
+            if (chunk.encoding == Encoding::Raw) {
+                std::memcpy(destination + destinationOffset,
+                            packed + sourceOffset, copyBytes);
+                continue;
+            }
+            decodeScratch.resize(chunk.count);
+            if (!lz4Decompress(packed, chunk.payloadBytes,
+                               decodeScratch.data(), chunk.count))
+                throw std::runtime_error("ChunkedByteStorage LZ4 block is corrupt");
+            std::memcpy(destination + destinationOffset,
+                        decodeScratch.data() + sourceOffset, copyBytes);
+        }
+    }
+
+private:
+    static std::uint32_t load32(const std::uint8_t* p) noexcept {
+        std::uint32_t value;
+        std::memcpy(&value, p, sizeof(value));
+        return value;
+    }
+
+    static void appendLength(std::vector<std::uint8_t>& out, std::size_t length) {
+        while (length >= 255) {
+            out.push_back(255);
+            length -= 255;
+        }
+        out.push_back(static_cast<std::uint8_t>(length));
+    }
+
+    static std::vector<std::uint8_t> lz4Compress(
+        const std::uint8_t* source, std::size_t size) {
+        std::vector<std::uint8_t> out;
+        out.reserve(size);
+        if (size < 13) {
+            out.push_back(static_cast<std::uint8_t>(std::min<std::size_t>(size, 15) << 4));
+            if (size >= 15) appendLength(out, size - 15);
+            out.insert(out.end(), source, source + size);
+            return out;
+        }
+        constexpr std::uint32_t kHashBits = 16;
+        constexpr std::uint32_t kHashSize = 1u << kHashBits;
+        std::vector<std::int32_t> table(kHashSize, -1);
+        auto hashAt = [&](std::size_t p) {
+            return (load32(source + p) * 2654435761u) >> (32 - kHashBits);
+        };
+        std::size_t anchor = 0;
+        std::size_t pos = 0;
+        while (pos <= size - 12) {
+            const std::uint32_t h = hashAt(pos);
+            const std::int32_t reference = table[h];
+            table[h] = static_cast<std::int32_t>(pos);
+            if (reference < 0 ||
+                pos - static_cast<std::size_t>(reference) > 65535u ||
+                std::memcmp(source + reference, source + pos, 4) != 0) {
+                ++pos;
+                continue;
+            }
+            const std::size_t ref = static_cast<std::size_t>(reference);
+            std::size_t matchLength = 4;
+            while (pos + matchLength < size - 5 &&
+                   source[ref + matchLength] == source[pos + matchLength])
+                ++matchLength;
+            const std::size_t literalLength = pos - anchor;
+            const std::size_t matchCode = matchLength - 4;
+            const std::size_t tokenIndex = out.size();
+            out.push_back(0);
+            out[tokenIndex] = static_cast<std::uint8_t>(
+                (std::min<std::size_t>(literalLength, 15) << 4) |
+                 std::min<std::size_t>(matchCode, 15));
+            if (literalLength >= 15) appendLength(out, literalLength - 15);
+            out.insert(out.end(), source + anchor, source + pos);
+            const std::uint16_t distance = static_cast<std::uint16_t>(pos - ref);
+            out.push_back(static_cast<std::uint8_t>(distance & 0xffu));
+            out.push_back(static_cast<std::uint8_t>(distance >> 8));
+            if (matchCode >= 15) appendLength(out, matchCode - 15);
+            pos += matchLength;
+            anchor = pos;
+            // Seed positions inside the match to improve subsequent matches.
+            for (std::size_t p = pos > matchLength ? pos - matchLength + 1 : 0;
+                 p + 4 <= pos && p <= size - 4; ++p)
+                table[hashAt(p)] = static_cast<std::int32_t>(p);
+        }
+        const std::size_t literalLength = size - anchor;
+        const std::size_t tokenIndex = out.size();
+        out.push_back(static_cast<std::uint8_t>(std::min<std::size_t>(literalLength, 15) << 4));
+        if (literalLength >= 15) appendLength(out, literalLength - 15);
+        out.insert(out.end(), source + anchor, source + size);
+        (void)tokenIndex;
+        return out;
+    }
+
+    static bool readExtendedLength(const std::uint8_t* source, std::size_t size,
+                                   std::size_t& cursor, std::size_t& length) noexcept {
+        std::uint8_t part = 255;
+        while (part == 255) {
+            if (cursor >= size) return false;
+            part = source[cursor++];
+            if (length > std::numeric_limits<std::size_t>::max() - part) return false;
+            length += part;
+        }
+        return true;
+    }
+
+    static bool lz4Decompress(const std::uint8_t* source, std::size_t sourceSize,
+                              std::uint8_t* destination,
+                              std::size_t destinationSize) noexcept {
+        std::size_t src = 0, dst = 0;
+        while (src < sourceSize) {
+            const std::uint8_t token = source[src++];
+            std::size_t literalLength = token >> 4;
+            if (literalLength == 15 &&
+                !readExtendedLength(source, sourceSize, src, literalLength))
+                return false;
+            if (literalLength > sourceSize - src ||
+                literalLength > destinationSize - dst)
+                return false;
+            if (literalLength) {
+                std::memcpy(destination + dst, source + src, literalLength);
+                src += literalLength;
+                dst += literalLength;
+            }
+            if (src == sourceSize) break;
+            if (sourceSize - src < 2) return false;
+            const std::size_t distance =
+                static_cast<std::size_t>(source[src]) |
+                (static_cast<std::size_t>(source[src + 1]) << 8);
+            src += 2;
+            if (!distance || distance > dst) return false;
+            std::size_t matchLength = (token & 0x0fu) + 4u;
+            if ((token & 0x0fu) == 15 &&
+                !readExtendedLength(source, sourceSize, src, matchLength))
+                return false;
+            if (matchLength > destinationSize - dst) return false;
+            for (std::size_t i = 0; i < matchLength; ++i)
+                destination[dst + i] = destination[dst + i - distance];
+            dst += matchLength;
+        }
+        return dst == destinationSize;
+    }
+
+    std::size_t size_ = 0;
+    std::size_t storedBytes_ = 0;
+    std::vector<Chunk> chunks_;
+    std::vector<std::uint8_t> payload_;
+};
+
 } // namespace RawrXD::TensorCompression
