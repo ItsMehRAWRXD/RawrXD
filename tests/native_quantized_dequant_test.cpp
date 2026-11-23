@@ -173,5 +173,11 @@ int main() {
     overflowView.dims = {(std::numeric_limits<std::uint64_t>::max)(), 2};
     DequantizedTensor overflowOut;
     CHECK(!deep2::dequantizeTensor(overflowView, overflowOut));
+
+    // Storage includes per-row padding, but the current flat reference
+    // dequantizer must reject non-block-aligned rows instead of crossing them.
+    std::vector<std::uint8_t> paddedRows(72, 0);
+    TensorView paddedView{TensorType::Q4_0, paddedRows.data(), paddedRows.size(), {33, 2}, true};
+    CHECK(!deep2::dequantizeTensor(paddedView, overflowOut));
     return 0;
 }
