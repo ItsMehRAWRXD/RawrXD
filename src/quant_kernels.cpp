@@ -32,9 +32,8 @@ static inline float fp16ToF32(uint16_t v) {
     return std::isfinite(result) ? result : 0.0f;
 }
 static inline uint16_t readU16(const uint8_t* p) {
-    uint16_t v;
-    std::memcpy(&v, p, 2);
-    return v;
+    return static_cast<uint16_t>(p[0]) |
+           (static_cast<uint16_t>(p[1]) << 8);
 }
 
 bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
