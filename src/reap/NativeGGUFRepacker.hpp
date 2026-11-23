@@ -519,6 +519,18 @@ inline bool ConvertQ5_1ToQ5_0(std::ifstream& in,std::ofstream& out,
         const uint32_t db=Float16ToFloat32Bits(dh),mb=Float16ToFloat32Bits(mh);
         float d=0,m=0;std::memcpy(&d,&db,4);std::memcpy(&m,&mb,4);
         if(!std::isfinite(d)||!std::isfinite(m))return false;
+        // Q5_1 has the same 32 packed codes as Q5_0. When the
+        // affine offset equals -16*d, remove only the redundant minimum.
+        // Preserve both the original FP16 scale and every quantized code.
+        if(m==-16.0f*d) {
+            encoded[0]=source[0];
+            encoded[1]=source[1];
+            std::memcpy(encoded+2,source+4,20);
+            if(!out.write(reinterpret_cast<const char*>(encoded),22))
+                return false;
+            sourceBytes-=24;
+            continue;
+        }
         float values[32],extreme=0;
         for(unsigned i=0;i<32;++i) {
             const unsigned j=i%16;
