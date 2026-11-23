@@ -9,6 +9,7 @@
 #include <limits>
 #include <stdexcept>
 #include <cmath>
+#include <utility>
 
 namespace RawrXD { namespace TensorCompression {
 enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3 };
