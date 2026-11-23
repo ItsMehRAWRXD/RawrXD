@@ -50,7 +50,7 @@ public:
         try {
             built = std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
-                    elementCount,maxAbsError,std::forward<Reader>(reader),chunkElements));
+                    elementCount,maxAbsError,std::forward<Reader>(reader),chunkElements,true));
         } catch (...) {
             return false;
         }
