@@ -6849,22 +6849,29 @@ static bool ValidateQ6KAsm(const block_q6_K* blocks, const float* input, float* 
 // consumed by LinearW_Range. Quantized rows remain in their native GGML layout.
 static size_t LinearW_RowBytes(int type, size_t cols)
 {
+    const auto packed = [cols](size_t blockElements, size_t blockBytes) -> size_t {
+        const size_t blocks = cols / blockElements + (cols % blockElements != 0 ? 1u : 0u);
+        if (blocks > (std::numeric_limits<size_t>::max)() / blockBytes) return 0;
+        return blocks * blockBytes;
+    };
+    if (type == (int)GGMLType::GGML_TYPE_F32)
+        return cols > (std::numeric_limits<size_t>::max)() / sizeof(float) ? 0 : cols * sizeof(float);
+    if (type == (int)GGMLType::GGML_TYPE_F16)
+        return cols > (std::numeric_limits<size_t>::max)() / sizeof(uint16_t) ? 0 : cols * sizeof(uint16_t);
     switch (type)
     {
-        case (int)GGMLType::GGML_TYPE_F32: return cols * sizeof(float);
-        case (int)GGMLType::GGML_TYPE_F16: return cols * sizeof(uint16_t);
-        case (int)GGMLType::GGML_TYPE_Q4_0: return ((cols + 31) / 32) * sizeof(block_q4_0);
-        case (int)GGMLType::GGML_TYPE_Q4_1: return ((cols + 31) / 32) * sizeof(block_q4_1);
-        case (int)GGMLType::GGML_TYPE_Q5_0: return ((cols + 31) / 32) * sizeof(block_q5_0);
-        case (int)GGMLType::GGML_TYPE_Q5_1: return ((cols + 31) / 32) * sizeof(block_q5_1);
-        case (int)GGMLType::GGML_TYPE_Q8_0: return ((cols + 31) / 32) * sizeof(block_q8_0);
-        case (int)GGMLType::GGML_TYPE_Q2_K: return ((cols + 255) / 256) * sizeof(block_q2_K);
-        case (int)GGMLType::GGML_TYPE_Q3_K: return ((cols + 255) / 256) * sizeof(block_q3_K);
-        case (int)GGMLType::GGML_TYPE_Q4_K: return ((cols + 255) / 256) * sizeof(block_q4_K);
-        case (int)GGMLType::GGML_TYPE_Q5_K: return ((cols + 255) / 256) * sizeof(block_q5_K);
-        case (int)GGMLType::GGML_TYPE_Q6_K: return ((cols + 255) / 256) * sizeof(block_q6_K);
-        case (int)GGMLType::GGML_TYPE_Q8_K: return ((cols + 255) / 256) * sizeof(block_q8_K);
-        case (int)GGMLType::GGML_TYPE_NVFP4: return ((cols + 63) / 64) * 36;
+        case (int)GGMLType::GGML_TYPE_Q4_0: return packed(32, sizeof(block_q4_0));
+        case (int)GGMLType::GGML_TYPE_Q4_1: return packed(32, sizeof(block_q4_1));
+        case (int)GGMLType::GGML_TYPE_Q5_0: return packed(32, sizeof(block_q5_0));
+        case (int)GGMLType::GGML_TYPE_Q5_1: return packed(32, sizeof(block_q5_1));
+        case (int)GGMLType::GGML_TYPE_Q8_0: return packed(32, sizeof(block_q8_0));
+        case (int)GGMLType::GGML_TYPE_Q2_K: return packed(256, sizeof(block_q2_K));
+        case (int)GGMLType::GGML_TYPE_Q3_K: return packed(256, sizeof(block_q3_K));
+        case (int)GGMLType::GGML_TYPE_Q4_K: return packed(256, sizeof(block_q4_K));
+        case (int)GGMLType::GGML_TYPE_Q5_K: return packed(256, sizeof(block_q5_K));
+        case (int)GGMLType::GGML_TYPE_Q6_K: return packed(256, sizeof(block_q6_K));
+        case (int)GGMLType::GGML_TYPE_Q8_K: return packed(256, sizeof(block_q8_K));
+        case (int)GGMLType::GGML_TYPE_NVFP4: return packed(64, 36);
         default: return 0;
     }
 }
