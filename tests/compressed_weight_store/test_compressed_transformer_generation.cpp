@@ -4,6 +4,7 @@
 #endif
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <future>
 #include <stdexcept>
 #include <string>
@@ -14,7 +15,32 @@ struct OwnedTensor {
     std::string name;
     std::vector<std::int64_t> shape;
     std::vector<std::uint8_t> bytes;
+    std::uint32_t type = 1; // GGML_TYPE_F16
 };
+float decodeHalfForFixture(std::uint16_t h) {
+    const std::uint32_t sign = std::uint32_t(h & 0x8000u) << 16;
+    const std::uint32_t exp = (h >> 10) & 31u;
+    const std::uint32_t frac = h & 1023u;
+    std::uint32_t bits = sign;
+    if (exp == 31u) bits |= 0x7f800000u | (frac << 13);
+    else if (exp) bits |= ((exp + 112u) << 23) | (frac << 13);
+    else if (frac) {
+        std::uint32_t m = frac;
+        int e = -14;
+        while ((m & 0x400u) == 0) { m <<= 1; --e; }
+        bits |= (std::uint32_t(e + 127) << 23) | ((m & 0x3ffu) << 13);
+    }
+    float value = 0.0f;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+std::uint16_t encodeBFloat16ForFixture(float value) {
+    std::uint32_t bits = 0;
+    std::memcpy(&bits, &value, sizeof(bits));
+    const std::uint32_t upper = bits >> 16;
+    const std::uint32_t rounded = bits + 0x7fffu + (upper & 1u);
+    return static_cast<std::uint16_t>(rounded >> 16);
+}
 void appendF16(OwnedTensor& t, float value) {
     const auto h = rawrxd::compression::floatToHalfRNE(value);
     t.bytes.push_back(static_cast<std::uint8_t>(h & 0xffu));
@@ -187,7 +213,7 @@ std::vector<Deep2::GGUFTensor> descriptors(std::vector<OwnedTensor>& owned) {
     for (auto& src : owned) {
         Deep2::GGUFTensor t;
         t.name = src.name;
-        t.type = static_cast<Deep2::GGMLType>(1); // GGML_TYPE_F16
+        t.type = static_cast<Deep2::GGMLType>(src.type);
         t.shape = src.shape;
         t.data = src.bytes.data();
         t.sizeBytes = src.bytes.size();
@@ -244,6 +270,35 @@ int main() {
                 down[r*intermediate+col]=(col%hidden==r)?0.25f:0.025f;
         addMatrix(owned,p+"ffn_down.weight",hidden,intermediate,down);
     }
+
+    // A second copy of the complete synthetic model uses BF16 payloads.
+    // Convert the F16 fixture values back to F32 before rounding to BF16 so
+    // the test exercises the BF16 wire representation rather than aliasing
+    // the IEEE F16 bit layout.
+    auto bf16Owned = owned;
+    for (auto& tensor : bf16Owned) {
+        std::vector<std::uint8_t> converted;
+        converted.reserve(tensor.bytes.size());
+        for (std::size_t i = 0; i + 1 < tensor.bytes.size(); i += 2) {
+            const std::uint16_t half = std::uint16_t(tensor.bytes[i]) |
+                                       (std::uint16_t(tensor.bytes[i + 1]) << 8);
+            const std::uint16_t bf16 = encodeBFloat16ForFixture(decodeHalfForFixture(half));
+            converted.push_back(static_cast<std::uint8_t>(bf16 & 0xffu));
+            converted.push_back(static_cast<std::uint8_t>(bf16 >> 8));
+        }
+        tensor.bytes.swap(converted);
+        tensor.type = 30u; // GGML_TYPE_BF16
+    }
+    auto bf16Tensors = descriptors(bf16Owned);
+    rawrxd::compression::CompressedGGUFModel bf16Model(storeOptions);
+    assert(bf16Model.loadMappedTensors(bf16Tensors, &error, &failed));
+    rawrxd::compression::CompressedTransformerRuntime bf16Runtime(bf16Model, config);
+    const auto bf16Generated = bf16Runtime.generate(prompt, 3);
+    assert(bf16Generated.size() == 3);
+    for (auto token : bf16Generated)
+        assert(token >= 0 && token < static_cast<int32_t>(vocab));
+    assert(bf16Runtime.generate(prompt, 3) == bf16Generated);
+    assert(bf16Model.stats().cached_decoded_bytes == 0);
 
     auto tensors=descriptors(owned);
     rawrxd::compression::CompressedGGUFModel::Options storeOptions;
