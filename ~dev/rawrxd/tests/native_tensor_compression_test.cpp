@@ -109,6 +109,14 @@ int main() {
     CHECK(std::memcmp(repeatedF32Slice.data(), repeatedF32.data() + 333,
                       repeatedF32Slice.size() * sizeof(float)) == 0);
 
+    RawrXD::TensorCompression::Encoding repeatedTileEncoding{};
+    std::vector<std::uint8_t> repeatedTile;
+    CHECK(!repeatedF32Store.ExportUniform16BitRange(
+        0, 1024, repeatedTileEncoding, repeatedTile, 0.0f));
+    CHECK(repeatedF32Store.ExportUniform16BitRange(
+        0, 1024, repeatedTileEncoding, repeatedTile, 0.01f));
+    CHECK(repeatedTile.size() == 1024 * sizeof(std::uint16_t));
+
     // Lossless LZ4 byte chunks keep already-quantized GGUF blocks packed.
     std::vector<std::uint8_t> byteSource(256u*1024u);
     for (std::size_t i=0;i<byteSource.size();++i)
