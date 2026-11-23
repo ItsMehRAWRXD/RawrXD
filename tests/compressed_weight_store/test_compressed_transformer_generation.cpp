@@ -416,8 +416,9 @@ int main() {
     assert(gqaModel.loadMappedTensors(gqaTensors, &error, &failed));
     auto gqaConfig = config;
     gqaConfig.kv_heads = 1;
-    // 2 layers * 4 cached positions * 2 KV values * K+V * sizeof(float).
-    gqaConfig.max_kv_cache_bytes = 128;
+    // 2 layers * 3 forwarded positions * 2 KV values * K+V * sizeof(float).
+    // The final emitted token does not enter the KV cache.
+    gqaConfig.max_kv_cache_bytes = 96;
     rawrxd::compression::CompressedTransformerRuntime gqaRuntime(gqaModel, gqaConfig);
     const auto gqaGenerated = gqaRuntime.generate(prompt, 2);
     assert(gqaGenerated.size() == 2);
@@ -430,7 +431,7 @@ int main() {
     assert(gqaGenerated == gqaReference);
 
     auto tooSmallGqaCache = gqaConfig;
-    tooSmallGqaCache.max_kv_cache_bytes = 127;
+    tooSmallGqaCache.max_kv_cache_bytes = 95;
     rawrxd::compression::CompressedTransformerRuntime tooSmallGqa(gqaModel, tooSmallGqaCache);
     bool rejectedGqaCache = false;
     try { (void)tooSmallGqa.generate(prompt, 2); }
