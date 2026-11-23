@@ -198,20 +198,26 @@ struct WeightTensor {
                     encoding, packedData, packedBytes) ||
                 packedBytes != rows * cols * 2 || !packedData)
                 return false;
-            auto candidate = std::make_shared<GpuCompressedF32Payload>();
-            candidate->owner = compressedF32;
-            candidate->data = packedData;
-            candidate->bytes = packedBytes;
-            candidate->ggmlType = encoding ==
-                RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
-            std::shared_ptr<const GpuCompressedF32Payload> desired = candidate;
-            std::shared_ptr<const GpuCompressedF32Payload> expected;
-            if (std::atomic_compare_exchange_strong_explicit(
-                    &gpuF16Payload, &expected, desired,
-                    std::memory_order_release, std::memory_order_acquire))
-                payload = std::move(desired);
-            else
-                payload = std::move(expected);
+            // This method is noexcept: allocation failure must return a
+            // recoverable miss, not terminate the inference process.
+            try {
+                auto candidate = std::make_shared<GpuCompressedF32Payload>();
+                candidate->owner = compressedF32;
+                candidate->data = packedData;
+                candidate->bytes = packedBytes;
+                candidate->ggmlType = encoding ==
+                    RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
+                std::shared_ptr<const GpuCompressedF32Payload> desired = candidate;
+                std::shared_ptr<const GpuCompressedF32Payload> expected;
+                if (std::atomic_compare_exchange_strong_explicit(
+                        &gpuF16Payload, &expected, desired,
+                        std::memory_order_release, std::memory_order_acquire))
+                    payload = std::move(desired);
+                else
+                    payload = std::move(expected);
+            } catch (...) {
+                return false;
+            }
         }
         if (!payload || !payload->owner || !payload->data ||
             (payload->ggmlType != 1 && payload->ggmlType != 30) ||
