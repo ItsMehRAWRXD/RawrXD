@@ -122,6 +122,21 @@ int main(){
  REQUIRE(slowWriterOk);
  REQUIRE(concurrentRead==std::vector<std::uint8_t>(
   input.begin()+range_offset,input.begin()+range_offset+range_length));
+
+ // Exercise simultaneous range reads across overlapping encoded blocks.
+ std::vector<std::future<bool>> concurrentReaders;
+ for(std::size_t worker=0;worker<8;++worker) {
+  concurrentReaders.emplace_back(std::async(std::launch::async,[&,worker] {
+   const std::size_t offset=(worker*127u)%(input.size()-257u);
+   const std::size_t length=257u+worker*31u;
+   std::vector<std::uint8_t> bytes(length);
+   std::string readError;
+   if(!store.readRange("layer.0.weight",offset,bytes.data(),bytes.size(),&readError))
+    return false;
+   return std::equal(bytes.begin(),bytes.end(),input.begin()+offset);
+  }));
+ }
+ for(auto& reader:concurrentReaders) REQUIRE(reader.get());
  auto lease=store.acquireBlock("layer.0.weight",0,&error);REQUIRE(lease&&lease->size()==1024);store.setDecodedCacheBudget(0);REQUIRE((*lease)[0]==input[0]);
  REQUIRE(!store.readRange("layer.0.weight",input.size(),output.data(),1,&error));
  std::vector<std::uint8_t> random_data(4096);std::mt19937 rng(7);for(auto& b:random_data)b=static_cast<std::uint8_t>(rng());
