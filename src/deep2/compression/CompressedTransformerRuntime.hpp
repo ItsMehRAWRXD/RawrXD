@@ -132,14 +132,22 @@ private:
         if (!model_.contains(name))
             throw std::invalid_argument("compressed transformer missing tensor: " + name);
         const std::uint32_t type = model_.tensorType(name);
-        const std::size_t scalar = type == GGML_TYPE_F16 ? 2u :
-                                   type == GGML_TYPE_F32 ? 4u : 0u;
+        const std::size_t scalar =
+            (type == GGML_TYPE_F16 || type == 30u) ? 2u :
+            type == GGML_TYPE_F32 ? 4u : 0u;
         if (!scalar) throw std::invalid_argument("unsupported transformer tensor type: " + name);
         if (cols && rows > std::numeric_limits<std::size_t>::max() / cols)
             throw std::overflow_error("transformer tensor geometry overflow: " + name);
         if (cols * rows > std::numeric_limits<std::size_t>::max() / scalar ||
             model_.tensorBytes(name) != cols * rows * scalar)
             throw std::invalid_argument("transformer tensor byte geometry mismatch: " + name);
+    }
+
+    static float bfloat16ToFloat(std::uint16_t h) noexcept {
+        const std::uint32_t bits = std::uint32_t(h) << 16;
+        float value = 0.0f;
+        std::memcpy(&value, &bits, sizeof(value));
+        return value;
     }
 
     static float halfToFloat(std::uint16_t h) noexcept {
@@ -168,17 +176,20 @@ private:
     std::vector<float> readVector(const std::string& name,
                                   std::size_t count) const {
         const auto type = model_.tensorType(name);
-        const std::size_t scalar = type == GGML_TYPE_F16 ? 2u : 4u;
+        const std::size_t scalar =
+            (type == GGML_TYPE_F16 || type == 30u) ? 2u : 4u;
+        if (count > std::numeric_limits<std::size_t>::max() / scalar)
+            throw std::overflow_error("compressed vector byte size overflow");
         std::vector<std::uint8_t> bytes(count * scalar);
         std::string error;
         if (!model_.readTensorRange(name, 0, bytes.data(), bytes.size(), &error))
             throw std::runtime_error("compressed vector read failed for " + name + ": " + error);
         std::vector<float> result(count);
         for (std::size_t i = 0; i < count; ++i) {
-            if (type == GGML_TYPE_F16) {
+            if (type == GGML_TYPE_F16 || type == 30u) {
                 const std::uint16_t h = std::uint16_t(bytes[2*i]) |
                                         (std::uint16_t(bytes[2*i+1]) << 8);
-                result[i] = halfToFloat(h);
+                result[i] = type == GGML_TYPE_F16 ? halfToFloat(h) : bfloat16ToFloat(h);
             } else {
                 std::memcpy(&result[i], bytes.data() + 4*i, sizeof(float));
             }
@@ -227,17 +238,26 @@ private:
         std::vector<std::vector<std::vector<float>>>& keys,
         std::vector<std::vector<std::vector<float>>>& values) const {
         std::vector<float> hidden(config_.hidden);
-        const std::size_t scalar = model_.tensorType("token_embd.weight") == GGML_TYPE_F16 ? 2u : 4u;
+        const auto embeddingType = model_.tensorType("token_embd.weight");
+        const std::size_t scalar =
+            (embeddingType == GGML_TYPE_F16 || embeddingType == 30u) ? 2u : 4u;
+        if (config_.hidden > std::numeric_limits<std::size_t>::max() / scalar)
+            throw std::overflow_error("compressed embedding row size overflow");
         std::vector<std::uint8_t> row(config_.hidden * scalar);
+        const std::size_t rowBytes = row.size();
+        if (static_cast<std::size_t>(token) >
+            std::numeric_limits<std::size_t>::max() / rowBytes)
+            throw std::overflow_error("compressed embedding offset overflow");
         std::string error;
         if (!model_.readTensorRange("token_embd.weight",
-                static_cast<std::size_t>(token) * row.size(), row.data(), row.size(), &error))
+                static_cast<std::size_t>(token) * rowBytes, row.data(), rowBytes, &error))
             throw std::runtime_error("compressed embedding read failed: " + error);
         for (std::size_t i = 0; i < config_.hidden; ++i) {
-            if (scalar == 2) {
+            if (embeddingType == GGML_TYPE_F16 || embeddingType == 30u) {
                 const std::uint16_t h = std::uint16_t(row[2*i]) |
                                         (std::uint16_t(row[2*i+1]) << 8);
-                hidden[i] = halfToFloat(h);
+                hidden[i] = embeddingType == GGML_TYPE_F16
+                    ? halfToFloat(h) : bfloat16ToFloat(h);
             } else std::memcpy(&hidden[i], row.data() + 4*i, sizeof(float));
         }
 
