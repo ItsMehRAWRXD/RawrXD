@@ -531,6 +531,20 @@ inline bool ConvertQ8_1ToQ8_0(std::ifstream& in,std::ofstream& out,
             (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
         float scale=0;std::memcpy(&scale,&bits,4);
         if(!std::isfinite(scale))return false;
+        // Exact fast path: Q8_1 and Q8_0 share the same signed 8-bit
+        // quantization payload. If the FP32 scale is exactly representable
+        // in FP16, preserve all 32 codes verbatim (including -128) instead
+        // of introducing a second lossy quantization step. The Q8_1 sum
+        // field is auxiliary and does not participate in reconstruction.
+        const uint16_t directHalf=Float32BitsToFloat16(bits);
+        if(Float16ToFloat32Bits(directHalf)==bits) {
+            encoded[0]=static_cast<unsigned char>(directHalf);
+            encoded[1]=static_cast<unsigned char>(directHalf>>8);
+            std::memcpy(encoded+2,source+8,32);
+            if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
+            sourceBytes-=40;
+            continue;
+        }
         float values[32],maxAbs=0;
         for(unsigned i=0;i<32;++i) {
             values[i]=scale*static_cast<float>(static_cast<int8_t>(source[8+i]));
