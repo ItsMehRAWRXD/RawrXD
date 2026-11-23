@@ -45,6 +45,9 @@ public:
             config_.heads * config_.head_dim != config_.hidden ||
             (config_.head_dim & 1u) != 0 || !config_.max_context ||
             !config_.max_kv_cache_bytes ||
+            config_.vocabulary > static_cast<std::size_t>((std::numeric_limits<int32_t>::max)()) ||
+            !std::isfinite(config_.rms_epsilon) ||
+            !std::isfinite(config_.rope_theta) ||
             !(config_.rms_epsilon > 0.0f) || !(config_.rope_theta > 0.0f) ||
             (config_.eos_token >= 0 &&
              static_cast<std::size_t>(config_.eos_token) >= config_.vocabulary))
@@ -115,6 +118,10 @@ public:
         std::vector<int32_t> generated;
         generated.reserve(max_new_tokens);
         for (std::size_t n = 0; n < max_new_tokens; ++n) {
+            if (logits.size() != config_.vocabulary ||
+                !std::all_of(logits.begin(), logits.end(),
+                             [](float v) { return std::isfinite(v); }))
+                throw std::runtime_error("non-finite or malformed compressed transformer logits");
             const auto next = static_cast<int32_t>(
                 std::distance(logits.begin(), std::max_element(logits.begin(), logits.end())));
             generated.push_back(next);
