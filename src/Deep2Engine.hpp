@@ -20,6 +20,7 @@
 #include <memory>
 #include <unordered_map>
 #include <mutex>
+#include <shared_mutex>
 #include <list>
 #include <queue>
 #include <functional>
@@ -40,6 +41,8 @@ struct Deep2Engine {
     bool vulkanReady = false;
 
     bool initialized = false;
+    // Serialize model reload/shutdown against an active ROM forward pass.
+    mutable std::shared_mutex lifecycleMutex;
     // Persistent compressed weight ownership; shared_ptrs returned to
     // inference requests pin their entries until the final consumer releases.
     rawrxd::compression::ResidentTensorCache compressedWeights{
