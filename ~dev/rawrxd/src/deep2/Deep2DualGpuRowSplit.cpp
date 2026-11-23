@@ -649,7 +649,7 @@ bool Deep2BuildGpuWeightView(
     // F32 weights with a uniform F16/BF16 compressed representation travel
     // to the GPU in packed 16-bit form. QGEMV consumes those bytes directly
     // and accumulates in F32; no host F32 expansion is performed.
-    if (wt.type == 0 && wt.compressedF32 &&
+    if (wt.type == 0 && wt.gpuF16Payload &&
         wt.BuildCompressedF32GpuView(rowBegin, rowCount, out))
         return true;
 
