@@ -91,8 +91,12 @@ QByteArray inflate(const QByteArray& data, bool* success,
     while (status != Z_STREAM_END) {
         if (stream.avail_in == 0 && inputOffset < data.size()) {
             const ArraySize remaining = data.size() - inputOffset;
-            const ArraySize inputCount = std::min<ArraySize>(
-                remaining, static_cast<ArraySize>((std::numeric_limits<uInt>::max)()));
+            // Compute the min in an unsigned wide type. Casting UINT_MAX to
+            // Qt5's 32-bit signed int would otherwise produce -1.
+            const std::uint64_t inputCount64 = std::min<std::uint64_t>(
+                static_cast<std::uint64_t>(remaining),
+                static_cast<std::uint64_t>((std::numeric_limits<uInt>::max)()));
+            const ArraySize inputCount = static_cast<ArraySize>(inputCount64);
             stream.next_in = reinterpret_cast<Bytef*>(
                 const_cast<char*>(data.constData() + inputOffset));
             stream.avail_in = static_cast<uInt>(inputCount);
