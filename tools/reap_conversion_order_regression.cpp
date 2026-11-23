@@ -15,9 +15,22 @@ int main() {
         PadTo(out,32);
         for(int i=0;i<64;++i)WriteU32(out,0x3f800000u);
     }
-    // Explicit F32->F16 wins and must not be chained to Q4 or Q8
-    // using the mutated tensor type with original F32 payload bytes.
-    if(RepackGGUF(src,dst,UINT64_MAX,true,true,true,false,true)!=RepackError::None)
+    // The API rejects mutually exclusive conversion flags before touching
+    // the destination. This prevents interpreting converted bytes as source.
+    {
+        std::ofstream sentinel(dst,std::ios::binary);
+        sentinel<<"SENTINEL";
+    }
+    if(RepackGGUF(src,dst,UINT64_MAX,true,true,true,false,true)
+       !=RepackError::Unsupported)++failures;
+    {
+        std::ifstream in(dst,std::ios::binary);
+        std::string contents((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
+        if(contents!="SENTINEL")++failures;
+    }
+    // A single explicit conversion is valid and its output is checked.
+    if(RepackGGUF(src,dst,UINT64_MAX,true,false,false,false,false)!=RepackError::None)
         ++failures;
     else {
         std::ifstream in(dst,std::ios::binary);
