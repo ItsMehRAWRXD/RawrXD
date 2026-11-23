@@ -33,8 +33,9 @@ int main() {
             return true;
         },4096));
     std::vector<uint8_t> patternedRange(6000);
+    std::vector<uint8_t> patternedScratch;
     assert(cache.ReadRange("shard0:patterned",4000,patternedRange.size(),
-                           patternedRange.data(),scratch));
+                           patternedRange.data(),patternedScratch));
     assert(std::equal(patternedRange.begin(),patternedRange.end(),
                       patterned.begin()+4000));
 
