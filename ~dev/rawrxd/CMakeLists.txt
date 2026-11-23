@@ -172,6 +172,14 @@ project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 # Native standard-GGUF tensor compression (no external codec dependency).
 include(cmake/NativeTensorCompression.cmake)
 
+# Native chunked F32 precision storage and bounded compressed-residency regression.
+add_executable(rawrxd-native-tensor-compression-test
+    "${CMAKE_SOURCE_DIR}/tests/native_tensor_compression_test.cpp")
+target_compile_features(rawrxd-native-tensor-compression-test PRIVATE cxx_std_17)
+target_include_directories(rawrxd-native-tensor-compression-test PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/deep2")
+
+
 # ============================================================================
 # nlohmann/json via FetchContent (fixes Deep2Discovery.cpp json/json.hpp)
 # ============================================================================
