@@ -960,8 +960,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             });
 
             const bool anyShared =
-                lw.moeSharedGate.data || lw.moeSharedUp.data ||
-                lw.moeSharedDown.data;
+                lw.moeSharedGate.hasBacking() || lw.moeSharedUp.hasBacking() ||
+                lw.moeSharedDown.hasBacking();
             const bool allShared =
                 lw.moeSharedGate.hasBacking() &&
                 lw.moeSharedUp.hasBacking() &&
@@ -1895,7 +1895,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     const LayerWeights& lw = modelWeights.layers[layer];
     const size_t H = config.hiddenDim;
 
-    if (!lw.attnNorm.data) {
+    if (!lw.attnNorm.hasBacking()) {
         throw std::runtime_error("forwardLayer: missing attention norm");
     }
     RMSNormW(lw.attnNorm, input, layerTemp, H, modelWeights.normEps);
@@ -1913,7 +1913,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     parityEmit(ParityCheckpoint::AttnResidual, output, H);
     parityEmitLayer(static_cast<int>(layer), "ATTN_RESIDUAL", output, H);
 
-    if (!lw.ffnNorm.data) {
+    if (!lw.ffnNorm.hasBacking()) {
         throw std::runtime_error("forwardLayer: missing FFN norm");
     }
     RMSNormW(lw.ffnNorm, output, layerTemp, H, modelWeights.normEps);
@@ -2224,7 +2224,7 @@ void Deep2Engine::computeMoEFFN(size_t layer,
 
     if (H == 0 || E == 0 || K == 0 || K > E || I == 0)
         throw std::runtime_error("MoE: invalid model geometry");
-    if (!lw.moeRouter.data ||
+    if (!lw.moeRouter.hasBacking() ||
         lw.moeRouter.rows != E ||
         lw.moeRouter.cols != H)
         throw std::runtime_error("MoE: router tensor not bound");
@@ -2248,8 +2248,8 @@ void Deep2Engine::computeMoEFFN(size_t layer,
     std::fill(output, output + H, 0.0f);
 
     // Shared expert participates independently of routed top-k experts.
-    if (lw.moeSharedGate.data || lw.moeSharedUp.data ||
-        lw.moeSharedDown.data) {
+    if (lw.moeSharedGate.hasBacking() || lw.moeSharedUp.hasBacking() ||
+        lw.moeSharedDown.hasBacking()) {
         std::vector<float> shared(H, 0.0f);
         computeSharedExpertFFN(layer, input, shared.data());
         for (size_t i = 0; i < H; ++i)
