@@ -396,7 +396,10 @@ bool Deep2Engine::ensureCompressedF32Tensor(const deep2::TensorEntry& entry) {
     // corresponding unleased raw file pages to avoid duplicate residency.
     if (rom.pager() && entry.shardIndex < rom.shards().size()) {
         const auto& shard = rom.shards()[entry.shardIndex];
-        if (shard.dataOffset <= UINT64_MAX - entry.offset)
+        // Both additions must fit: a wrapped end offset could evict unrelated
+        // source pages and leave a concurrent inference reader without data.
+        if (shard.dataOffset <= UINT64_MAX - entry.offset &&
+            bytes <= UINT64_MAX - (shard.dataOffset + entry.offset))
             rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
                 shard.dataOffset + entry.offset, bytes);
     }
