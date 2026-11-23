@@ -591,15 +591,40 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
             const uint32_t decoded=Float16ToFloat32Bits(half);
             float actual=0;std::memcpy(&actual,&decoded,4);
             if(maxAbs!=0 && (!std::isfinite(actual)||actual==0))return false;
-            encoded[0]=static_cast<unsigned char>(half);
-            encoded[1]=static_cast<unsigned char>(half>>8);
+            // Compare the usual per-group requantization with keeping the
+            // original signed codes and rounding only their shared scale.
+            // Q8_K codes include -128; the direct candidate preserves it.
+            // Select the candidate with smaller maximum reconstruction
+            // error, rather than always discarding the original codes.
+            unsigned char requant[32];
+            double requantError=0, directError=0;
             for(unsigned i=0;i<32;++i) {
                 const double normalized=actual==0?0.0:
                     static_cast<double>(values[i])/actual;
-                const double q=std::round(normalized);
-                const int value=static_cast<int>(std::max(-127.0,std::min(127.0,q)));
-                encoded[2+i]=static_cast<unsigned char>(static_cast<int8_t>(value));
+                const double rounded=std::round(normalized);
+                const int code=static_cast<int>(std::max(-127.0,std::min(127.0,rounded)));
+                requant[i]=static_cast<unsigned char>(static_cast<int8_t>(code));
+                requantError=std::max(requantError,std::abs(
+                    static_cast<double>(values[i])-static_cast<double>(actual)*code));
             }
+            const uint32_t directBits=Float16ToFloat32Bits(directHalf);
+            float directScale=0;
+            std::memcpy(&directScale,&directBits,4);
+            const bool directValid=std::isfinite(directScale) &&
+                (scale==0 || directScale!=0);
+            if(directValid) {
+                for(unsigned i=0;i<32;++i) {
+                    const int code=static_cast<int8_t>(source[4+group*32+i]);
+                    directError=std::max(directError,std::abs(
+                        static_cast<double>(values[i])-static_cast<double>(directScale)*code));
+                }
+            }
+            const bool useDirect=directValid && directError<=requantError;
+            const uint16_t chosen=useDirect?directHalf:half;
+            encoded[0]=static_cast<unsigned char>(chosen);
+            encoded[1]=static_cast<unsigned char>(chosen>>8);
+            if(useDirect)std::memcpy(encoded+2,source+4+group*32,32);
+            else std::memcpy(encoded+2,requant,32);
             if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
         }
         sourceBytes-=292;
