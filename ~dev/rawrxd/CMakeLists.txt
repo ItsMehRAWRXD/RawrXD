@@ -14890,6 +14890,16 @@ target_include_directories(rawrxd-native-compressed-inference-e2e-test PRIVATE
 add_test(NAME rawrxd_native_compressed_inference_e2e
     COMMAND rawrxd-native-compressed-inference-e2e-test)
 
+# Tiny decoder-only transformer: embedding, causal attention, FFN and logits
+# all read compressed weights by row/range and compare against F32 reference.
+add_executable(rawrxd-native-synthetic-transformer-e2e-test
+    tests/native_synthetic_transformer_e2e_test.cpp)
+target_compile_features(rawrxd-native-synthetic-transformer-e2e-test PRIVATE cxx_std_17)
+target_include_directories(rawrxd-native-synthetic-transformer-e2e-test PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/deep2")
+add_test(NAME rawrxd_native_synthetic_transformer_e2e
+    COMMAND rawrxd-native-synthetic-transformer-e2e-test)
+
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/K2GlobalTensorIndex.cpp
