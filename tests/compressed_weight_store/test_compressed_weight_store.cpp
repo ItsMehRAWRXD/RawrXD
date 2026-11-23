@@ -180,6 +180,13 @@ int main(){
   (std::numeric_limits<std::size_t>::max)(),
   (std::numeric_limits<float>::infinity)(),true,&precisionRejected));
  REQUIRE(precisionRejected&&!store.contains("fp16.non_finite"));
+ const float overflowF32[]={1.0e20f};
+ precisionRejected=false;
+ REQUIRE(!store.addTensorF32AsF16FromReader(
+  "fp16.overflow",overflowF32,1,&error,
+  (std::numeric_limits<std::size_t>::max)(),
+  (std::numeric_limits<float>::infinity)(),true,&precisionRejected));
+ REQUIRE(precisionRejected&&!store.contains("fp16.overflow"));
  REQUIRE(rawrxd::compression::floatToHalfRNE(1.00048828125f)==0x3C00u); // halfway rounds to even
  REQUIRE(rawrxd::compression::floatToHalfRNE(1.00146484375f)==0x3C02u); // odd halfway rounds up
  REQUIRE(rawrxd::compression::floatToHalfRNE(0x1.0p-25f)==0x0000u); // exact subnormal midpoint rounds to even zero
