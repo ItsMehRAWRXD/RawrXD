@@ -62,6 +62,10 @@ jobs:
           build/native-compression/native_quantized_dequant_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include tests/native_compressed_inference_e2e_test.cpp -o build/native-compression/native_compressed_inference_e2e_test
           build/native-compression/native_compressed_inference_e2e_test
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev zlib1g-dev
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -fPIC -I include $(pkg-config --cflags Qt6Core) tests/qt_zlib_codec_test.cpp src/codec/compression.cpp $(pkg-config --libs Qt6Core) -lz -o build/native-compression/qt_zlib_codec_test
+          build/native-compression/qt_zlib_codec_test
 
   windows:
     runs-on: windows-latest
