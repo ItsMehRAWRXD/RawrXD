@@ -213,7 +213,7 @@ std::vector<int32_t> referenceGenerate(const std::vector<OwnedTensor>& tensors,
         const auto next=static_cast<int32_t>(std::distance(logits.begin(),
             std::max_element(logits.begin(),logits.end())));
         generated.push_back(next);
-        logits=forward(next,position++);
+        if(n+1<steps) logits=forward(next,position++);
     }
     return generated;
 }
@@ -352,6 +352,19 @@ int main() {
         intermediate, vocab, 2, 2, 0, hidden/2, config.rms_epsilon,
         config.rope_theta);
     assert(generated == denseReference);
+    // Exact context-boundary admission: generating the final allowed token
+    // must not perform an additional, unneeded transformer forward.
+    auto exactContext = config;
+    exactContext.max_context = prompt.size() + 2;
+    rawrxd::compression::CompressedTransformerRuntime exactRuntime(model, exactContext);
+    const auto boundaryTokens = exactRuntime.generate(prompt, 2);
+    assert(boundaryTokens.size() == 2);
+    assert(boundaryTokens == std::vector<int32_t>(generated.begin(), generated.begin()+2));
+    bool contextOverflowRejected = false;
+    try { (void)exactRuntime.generate(prompt, 3); }
+    catch (const std::out_of_range&) { contextOverflowRejected = true; }
+    assert(contextOverflowRejected);
+
 
     // Request-local KV state must reset between generations.
     const auto repeated=runtime.generate(prompt,6);
