@@ -56,6 +56,7 @@ target_include_directories(rawrxd_reap_repack PRIVATE ${CMAKE_CURRENT_SOURCE_DIR
 add_executable(reap_repacker_regression tools/reap_repacker_regression.cpp)
 target_include_directories(reap_repacker_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+add_executable(rawrxd_reap_blob tools/reap_blob_cli.cpp)
 add_executable(reap_blob_regression tools/reap_blob_regression.cpp)
 add_executable(reap_sha256_regression tools/reap_sha256_regression.cpp)
 add_executable(reap_publisher_regression tools/reap_publisher_regression.cpp)
