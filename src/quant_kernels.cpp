@@ -87,16 +87,60 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         }
         return true;
     }
-    case TensorType::Q8_0: {
-        const size_t blocks = static_cast<size_t>((n + 31) / 32);
+    case TensorType::Q4_0:
+    case TensorType::Q4_1:
+    case TensorType::Q5_0:
+    case TensorType::Q5_1:
+    case TensorType::Q8_0:
+    case TensorType::Q8_1: {
+        const uint32_t type = static_cast<uint32_t>(src.type);
+        const size_t blockValues = quantBlockSize(src.type);
+        const size_t blockBytes = static_cast<size_t>(tensorStorageBytes(blockValues, src.type));
+        const size_t blocks = static_cast<size_t>((n + blockValues - 1) / blockValues);
         for (size_t b = 0; b < blocks; ++b) {
-            const uint8_t* block = src.data + b * 34;
-            const float d = fp16ToF32(readU16(block));
-            const int8_t* qs = reinterpret_cast<const int8_t*>(block + 2);
-            const size_t base = b * 32;
-            const size_t take = std::min<size_t>(32, static_cast<size_t>(n) - base);
-            for (size_t k = 0; k < take; ++k)
-                out[base + k] = d * static_cast<float>(qs[k]);
+            const uint8_t* block = src.data + b * blockBytes;
+            const size_t base = b * blockValues;
+            const size_t take = std::min<size_t>(blockValues, static_cast<size_t>(n) - base);
+            if (type == 2 || type == 3) {
+                const float d = fp16ToF32(readU16(block));
+                const float m = type == 3 ? fp16ToF32(readU16(block + 2)) : 0.0f;
+                const uint8_t* qs = block + (type == 3 ? 4 : 2);
+                for (size_t j = 0; j < take; ++j) {
+                    const uint8_t packed = qs[j & 15u];
+                    const int q = (j < 16) ? int(packed & 0x0fu) : int(packed >> 4);
+                    out[base + j] = type == 2
+                        ? d * float(q - 8)
+                        : d * float(q) + m;
+                }
+            } else if (type == 6 || type == 7) {
+                const float d = fp16ToF32(readU16(block));
+                const float m = type == 7 ? fp16ToF32(readU16(block + 2)) : 0.0f;
+                const uint8_t* qh = block + (type == 7 ? 4 : 2);
+                const uint8_t* qs = qh + 4;
+                for (size_t j = 0; j < take; ++j) {
+                    const size_t lane = j & 15u;
+                    const uint8_t packed = qs[lane];
+                    const int low = (j < 16) ? int(packed & 0x0fu) : int(packed >> 4);
+                    const size_t highBit = j;
+                    const int high = (qh[highBit >> 3] >> (highBit & 7u)) & 1;
+                    const int q = low | (high << 4);
+                    out[base + j] = type == 6
+                        ? d * float(q - 16)
+                        : d * float(q) + m;
+                }
+            } else if (type == 8) {
+                const float d = fp16ToF32(readU16(block));
+                const int8_t* qs = reinterpret_cast<const int8_t*>(block + 2);
+                for (size_t j = 0; j < take; ++j)
+                    out[base + j] = d * float(qs[j]);
+            } else { // Q8_1: fp32 scale + fp32 block sum + 32 signed bytes.
+                float d = 0.0f;
+                std::memcpy(&d, block, sizeof(d));
+                if (!std::isfinite(d)) return false;
+                const int8_t* qs = reinterpret_cast<const int8_t*>(block + 8);
+                for (size_t j = 0; j < take; ++j)
+                    out[base + j] = d * float(qs[j]);
+            }
         }
         return true;
     }
@@ -144,7 +188,12 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::F16:
     case TensorType::BF16:
     case TensorType::F64:
+    case TensorType::Q4_0:
+    case TensorType::Q4_1:
+    case TensorType::Q5_0:
+    case TensorType::Q5_1:
     case TensorType::Q8_0:
+    case TensorType::Q8_1:
     case TensorType::Q2_K:
     case TensorType::Q3_K:
     case TensorType::Q4_K:
