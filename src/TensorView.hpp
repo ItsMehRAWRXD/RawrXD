@@ -121,9 +121,8 @@ inline bool isQuantized(TensorType t) {
     return quantBlockSize(t) > 1;
 }
 
-// Standard GGML packed storage geometry. Unsupported types deliberately return
-// their logical element count only as a fallback; production readers must gate
-// execution on an explicitly supported TensorType.
+// Standard GGML packed storage geometry. Unknown identifiers return UINT64_MAX
+// so a reader fails closed instead of guessing a byte size and crossing tensor bounds.
 inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
     const auto max = (std::numeric_limits<std::uint64_t>::max)();
     if (t == TensorType::F32) return numValues > max / 4u ? max : numValues * 4u;
@@ -167,7 +166,7 @@ inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
         case TensorType::TQ1_0: bytesPerBlock = 54; break;
         case TensorType::TQ2_0: bytesPerBlock = 66; break;
         case TensorType::MXFP4: bytesPerBlock = 17; break;
-        default: return numValues;
+        default: return max;
     }
     return blocks > max / bytesPerBlock ? max : blocks * bytesPerBlock;
 }
