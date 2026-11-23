@@ -470,6 +470,7 @@ target_compile_features(rawrxd_compression_core PUBLIC cxx_std_17)
 if(ZLIB_FOUND AND TARGET ZLIB::ZLIB)
     target_link_libraries(rawrxd_compression_core PUBLIC ZLIB::ZLIB)
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+    set(RAWRXD_ZLIB_ENABLED TRUE)
 elseif(ZLIB_FOUND AND ZLIB_LIBRARIES AND (ZLIB_INCLUDE_DIRS OR ZLIB_INCLUDE_DIR))
     # Older FindZLIB providers can report FOUND without exporting an imported
     # target, and some expose only the singular ZLIB_INCLUDE_DIR variable.
@@ -482,6 +483,7 @@ elseif(ZLIB_FOUND AND ZLIB_LIBRARIES AND (ZLIB_INCLUDE_DIRS OR ZLIB_INCLUDE_DIR)
         target_include_directories(rawrxd_compression_core PUBLIC ${ZLIB_INCLUDE_DIR})
     endif()
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+    set(RAWRXD_ZLIB_ENABLED TRUE)
 elseif(TARGET zlib)
     # FetchContent fallback (FETCHCONTENT_ZLIB=ON) defines a plain `zlib` target
     # that does not export include directories, so add them explicitly. Both the
@@ -492,6 +494,7 @@ elseif(TARGET zlib)
         "${CMAKE_BINARY_DIR}/_deps/zlib-src"
         "${CMAKE_BINARY_DIR}/_deps/zlib-build")
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+    set(RAWRXD_ZLIB_ENABLED TRUE)
     elseif((EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zlib.h" AND
             EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h") OR
            (EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zlib.h" AND
@@ -511,6 +514,7 @@ elseif(TARGET zlib)
         file(GLOB ZLIB_HDRS "${_rawrxd_zlib_src}/*.h")
         target_sources(rawrxd_compression_core PUBLIC ${ZLIB_HDRS})
         target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+    set(RAWRXD_ZLIB_ENABLED TRUE)
 else()
     # No zlib provider. compression_core.cpp compiles to an explicit Unsupported
     # backend: compression/decompression calls fail with Status::Unsupported at
@@ -553,6 +557,19 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/compression_roundtrip_test.cpp")
             endif()
         endif()
     endforeach()
+endif()
+
+# Provider-only compile/link smoke. This target includes zlib.h and links
+# through the same public dependency closure as the product codec core, so a
+# broken auto-detected include path or missing zlib link is a build failure.
+if(RAWRXD_BUILD_TESTS AND RAWRXD_ZLIB_ENABLED)
+    add_executable(compression_zlib_provider_compile_test
+        tests/compression_zlib_provider_compile_test.cpp)
+    target_link_libraries(compression_zlib_provider_compile_test PRIVATE
+        rawrxd_compression_core)
+    target_compile_features(compression_zlib_provider_compile_test PRIVATE cxx_std_17)
+    add_test(NAME compression_zlib_provider_compile_test
+        COMMAND compression_zlib_provider_compile_test)
 endif()
 
 find_package(CURL QUIET)
