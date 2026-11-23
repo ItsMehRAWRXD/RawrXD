@@ -16,6 +16,8 @@ on:
       - 'shaders/gemv_packed16.comp'
       - 'src/VulkanDevice.cpp'
       - 'src/Deep2Engine.cpp'
+      - 'src/Deep2Engine.hpp'
+      - 'src/VulkanDevice.hpp'
       - 'tests/deep2/native_tensor_compression_test.cpp'
       - 'src/Deep2Engine.hpp'
       - 'src/Deep2Engine.cpp'
