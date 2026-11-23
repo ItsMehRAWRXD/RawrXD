@@ -130,6 +130,7 @@ inline bool SelectExpertIndices(const std::string& architecture,
                                 uint32_t group_size = 8) {
     const uint32_t count = static_cast<uint32_t>(importance.size());
     if (!count || !requested_keep || requested_keep > count) return false;
+    for (double score : importance) if (!std::isfinite(score)) return false;
     std::vector<uint32_t> order;
     order.reserve(count);
     for (uint32_t i = 0; i < count; ++i) order.push_back(i);
@@ -159,8 +160,6 @@ inline bool SelectExpertIndices(const std::string& architecture,
         return true;
     }
     std::stable_sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b) {
-        if (!std::isfinite(importance[a]) || !std::isfinite(importance[b]))
-            return a < b;
         return importance[a] > importance[b];
     });
     order.resize(requested_keep);
@@ -325,6 +324,9 @@ inline PruneError PruneGGUF(const std::string& input,
         std::vector<uint32_t> order;
         if (!SelectExpertIndices(arch, imp, k, order, 8))
             return PruneError::Unsupported;
+        // Group-aware DeepSeek selection rounds to complete groups. Every
+        // report, metadata field, and tensor byte count must use actual K.
+        k = static_cast<uint32_t>(order.size());
         t.pruned = true;
         t.kept = order;
         // physical bytes per retained expert: the slowest-dim slice
