@@ -14872,6 +14872,17 @@ set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# Native compressed F32 storage / range decode / residency lease regression.
+add_executable(rawrxd-native-tensor-compression-test
+    tests/native_tensor_compression_test.cpp)
+target_compile_features(rawrxd-native-tensor-compression-test PRIVATE cxx_std_17)
+target_include_directories(rawrxd-native-tensor-compression-test PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/deep2")
+if(BUILD_TESTING)
+    add_test(NAME rawrxd_native_tensor_compression
+             COMMAND rawrxd-native-tensor-compression-test)
+endif()
+
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/K2GlobalTensorIndex.cpp
