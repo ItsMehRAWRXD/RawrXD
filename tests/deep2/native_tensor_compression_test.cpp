@@ -156,12 +156,14 @@ int main() {
     narrowHalf.ReadRange(3, 2, narrowResult, narrowScratch);
     assert(narrowResult[0] == 8.0f && narrowResult[1] == 16.0f);
     assert(narrowScratch.empty());
+    assert(narrowHalf.DecodedBytesForRange(3, 2) == 2 * sizeof(float));
     // BF16 uses the same selective path, including values outside F16 range.
     const float narrowWideValues[] = {1.0e20f, -1.0e20f, 3.25f, 4.0f};
     auto narrowWide = ChunkedF32Storage::Build(narrowWideValues, 4, 1.0e18f, 4);
     float narrowWideResult = 0.0f;
     narrowWide.ReadRange(2, 1, &narrowWideResult, narrowScratch);
     assert(narrowWideResult == 3.25f && narrowScratch.empty());
+    assert(narrowWide.DecodedBytesForRange(2, 1) == sizeof(float));
     const float multiChunkExact[]={1.0f,-2.0f,0.5f,4.0f,8.0f,-16.0f,0.25f,0.125f};
     auto multiChunkStorage=ChunkedF32Storage::Build(multiChunkExact,8,0.0f,4);
     assert(multiChunkStorage.ExportUniform16Bit(exportedEncoding,exportedHalf));
