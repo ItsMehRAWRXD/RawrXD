@@ -50,6 +50,23 @@ int main() {
     check(RepackGGUF(source,source)==RepackError::Output,
           "in_place_overwrite_rejected");
     a.close(); b.close(); intact.close();
+    // Reject alternate spellings and hard links to the source file.
+    check(RepackGGUF(source,"./reap_repack_source.gguf")==RepackError::Output,
+          "relative_path_source_alias_rejected");
+    {
+        const char* alias="reap_repack_source_hardlink.gguf";
+        std::error_code ec;
+        std::filesystem::remove(alias,ec);
+        ec.clear();
+        std::filesystem::create_hard_link(source,alias,ec);
+        if(!ec) {
+            check(RepackGGUF(source,alias)==RepackError::Output,
+                  "hardlink_source_alias_rejected");
+            std::filesystem::remove(alias,ec);
+        } else {
+            std::cout<<"SKIP hardlink_source_alias_rejected (unsupported filesystem)\n";
+        }
+    }
     // A GGUF directory may enumerate tensors in a different order from
     // their physical locations. The repacker must preserve both payloads.
     {
