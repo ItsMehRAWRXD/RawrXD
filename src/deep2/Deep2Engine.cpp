@@ -6529,11 +6529,14 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         const auto compressionStats = compressedWeightStore_->stats();
         std::fprintf(stderr,
                      "[COMPRESSED_RESIDENCY] tensors=%llu raw_bytes=%llu encoded_bytes=%llu "
-                     "decoded_cache_bytes=%llu budget_bytes=%u\n",
+                     "decoded_cache_bytes=%llu f32_to_f16_tensors=%llu f32_source_bytes=%llu "
+                     "budget_bytes=%u\n",
                      static_cast<unsigned long long>(compressionStats.tensors),
                      static_cast<unsigned long long>(compressionStats.raw_bytes),
                      static_cast<unsigned long long>(compressionStats.compressed_bytes),
                      static_cast<unsigned long long>(compressionStats.cached_decoded_bytes),
+                     static_cast<unsigned long long>(compressionStats.f32_to_f16_tensors),
+                     static_cast<unsigned long long>(compressionStats.f32_source_bytes),
                      512u * 1024u * 1024u);
     }
     standardMultiShardWeightsBound_ = true;
