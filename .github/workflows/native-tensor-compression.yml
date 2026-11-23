@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - 'src/deep2/NativeTensorCompression.hpp'
+      - 'src/deep2/NativeKQuant.hpp'
+      - 'tests/deep2/native_k_quant_test.cpp'
       - 'tools/native_tensor_pack.cpp'
       - 'tests/deep2/native_tensor_compression_test.cpp'
       - 'tests/deep2/native_gguf_f16_integration.py'
@@ -24,6 +26,8 @@ jobs:
         run: |
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
           ./tensor_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_k_quant_test.cpp -o native_k_test
+          ./native_k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_gguf_f16.cpp -o native_gguf_f16
           python3 tests/deep2/native_gguf_f16_integration.py ./native_gguf_f16
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_tensor_pack.cpp -o tensor_pack
@@ -43,6 +47,10 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_compression_test.cpp /Fe:tensor_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\tensor_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_k_quant_test.cpp /Fe:native_k_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\native_k_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 tools/native_gguf_f16.cpp /Fe:native_gguf_f16.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
