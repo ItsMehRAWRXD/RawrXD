@@ -145,3 +145,12 @@ Both F32 and encoded-byte residency storage expose `DecodedBytesForRange`. Cache
 Regression coverage now includes a one-float read from a 4 KiB compressed F32 chunk and a one-byte read from a 4 KiB encoded-byte chunk; the reported decompressed byte counts must reflect the full chunks expanded.
 
 The packed-weight shader decoder regression is also registered as a native CMake executable and CTest (`NativePackedWeightShaderDecode`), in addition to the direct compiler invocations in the dedicated CI workflow.
+
+
+## First-touch packed F32 GPU admission
+
+The ROM-backed F32 GEMV path now separates compressed-cache admission from tile materialization. On first touch, it streams the tensor into bounded compressed chunks and attempts direct F16/BF16 range export for the current Vulkan tile. It no longer decodes that tile into a temporary F32 vector before exporting the same values in packed form.
+
+If the requested range is mixed-codec/raw, packed export is unavailable, or the packed shader cannot dispatch, the engine expands only the requested tile and uses the established F32 Vulkan path. If compression admission is rejected or a transient source read fails, the raw ROM tile fallback remains available.
+
+A residency-cache regression verifies that exporting a uniform F16 range does not increment host decompression-byte telemetry. This is the behavior required to ensure packed F32 weights stay packed from cache through the GPU upload boundary whenever the selected range and shader support it.
