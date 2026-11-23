@@ -22,6 +22,8 @@ The byte residency cache is deliberately lossless: a quantized payload is never 
 
 - `DEEP2_ROM_CACHE_BYTES`: source-page cache capacity.
 - `DEEP2_F32_MAX_ABS_ERROR`: optional finite, nonnegative absolute error allowance for F32-to-F16/BF16 private residency. Default is `0` (lossless only). This setting does not alter GGUF files.
+- `DEEP2_F32_CACHE_BYTES`: F32 compressed residency budget (default 2 GiB).
+- `DEEP2_ENCODED_CACHE_BYTES`: lossless encoded-byte residency budget (default 512 MiB).
 - F32 compressed residency budget: 2 GiB by default.
 - Lossless encoded-byte residency budget: 512 MiB by default.
 
