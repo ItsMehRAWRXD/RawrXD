@@ -32,8 +32,9 @@ public:
         if (level < Z_DEFAULT_COMPRESSION || level > Z_BEST_COMPRESSION)
             throw std::invalid_argument("invalid compression level");
         std::vector<Block> next;
-        if (size / blockBytes_ > next.max_size()) throw std::length_error("too many blocks");
-        next.reserve(size / blockBytes_ + (size % blockBytes_ != 0));
+        const std::size_t count = size / blockBytes_ + (size % blockBytes_ != 0);
+        if (count > next.max_size()) throw std::length_error("too many blocks");
+        next.reserve(count);
         for (std::size_t pos = 0; pos < size;) {
             const auto n = std::min(blockBytes_, size - pos);
             Block b;
@@ -70,6 +71,7 @@ public:
             const std::size_t index = offset / blockBytes_;
             const std::size_t within = offset % blockBytes_;
             const Block& b = blocks_[index];
+            if (within >= b.originalSize) return false;
             const auto take = std::min(remaining, static_cast<std::size_t>(b.originalSize) - within);
             if (b.compressed) {
                 uLongf decoded = b.originalSize;
