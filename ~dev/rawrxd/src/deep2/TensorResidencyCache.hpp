@@ -238,7 +238,8 @@ private:
     void TouchLocked(Entry& entry) const { entry.lastUse = ++tick_; }
 
     void EvictLocked(size_t incoming) {
-        while (incoming > budgetBytes_ - std::min(budgetBytes_, storedBytes_)) {
+        while (storedBytes_ > budgetBytes_ ||
+               incoming > budgetBytes_ - storedBytes_) {
             auto victim = entries_.end();
             for (auto it = entries_.begin(); it != entries_.end(); ++it)
                 if (victim == entries_.end() ||
