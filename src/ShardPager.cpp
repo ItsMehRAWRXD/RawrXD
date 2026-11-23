@@ -109,6 +109,12 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
     // Reserve capacity before loadPage() increments residentBytes. Evicting
     // after loading and passing m_pageSize again double-counted the new page.
     evictToFit(m_pageSize);
+    if (m_residentBytes > m_capacityBytes - m_pageSize) {
+        // All resident pages are leased; fail closed rather than exceeding the
+        // configured budget with another pinned allocation.
+        delete page;
+        return nullptr;
+    }
     if (!loadPage(page)) {
         delete page;
         return nullptr;
