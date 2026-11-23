@@ -8,6 +8,7 @@
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
 #include "native_resident_f32_matvec.hpp"
+#include "native_resident_typed_matvec.hpp"
 
 #include <vector>
 #include <string>
@@ -92,6 +93,24 @@ struct Deep2Engine {
                               std::size_t rows, std::size_t cols,
                               std::size_t blockBytes = 64 * 1024,
                               std::size_t stagingBudgetBytes = 64 * 1024);
+
+    // Lossless compressed-resident typed paths. GGML bytes are preserved
+    // exactly; only bounded F16/Q4_0/Q8_0 row fragments are decoded for GEMV.
+    bool gemvROMCompressedF16(const std::string& tensorName,
+                              const float* x, float* y,
+                              std::size_t rows, std::size_t cols,
+                              std::size_t blockBytes = 64 * 1024,
+                              std::size_t stagingBudgetBytes = 64 * 1024);
+    bool gemvROMCompressedQ4_0(const std::string& tensorName,
+                               const float* x, float* y,
+                               std::size_t rows, std::size_t cols,
+                               std::size_t blockBytes = 64 * 1024,
+                               std::size_t stagingBudgetBytes = 64 * 1024);
+    bool gemvROMCompressedQ8_0(const std::string& tensorName,
+                               const float* x, float* y,
+                               std::size_t rows, std::size_t cols,
+                               std::size_t blockBytes = 64 * 1024,
+                               std::size_t stagingBudgetBytes = 64 * 1024);
 
     // Direct GGUF Q8_0 block GEMV; never expands the full matrix.
     bool gemvROMQ8_0(const std::string& tensorName,
