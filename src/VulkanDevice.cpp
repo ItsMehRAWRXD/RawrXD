@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <set>
+#include <limits>
 
 namespace deep2 {
 
@@ -210,47 +211,97 @@ void VulkanDevice::destroyBuffer(const Gpu& gpu, VkBuffer buf, VkDeviceMemory me
 bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dstOffset,
                                   const void* data, VkDeviceSize size) {
     if (size == 0) return true;
+    if (dst == VK_NULL_HANDLE || !data ||
+        size > static_cast<VkDeviceSize>(std::numeric_limits<size_t>::max()))
+        return false;
+
     VkBuffer staging = VK_NULL_HANDLE;
-    VkDeviceMemory smem = VK_NULL_HANDLE;
+    VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
     void* mapped = nullptr;
+    VkCommandBuffer command = VK_NULL_HANDLE;
+    VkFence fence = VK_NULL_HANDLE;
+    bool submitted = false;
+    auto cleanup = [&]() {
+        if (fence != VK_NULL_HANDLE) vkDestroyFence(gpu.device, fence, nullptr);
+        if (command != VK_NULL_HANDLE)
+            vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &command);
+        if (mapped && stagingMemory != VK_NULL_HANDLE)
+            vkUnmapMemory(gpu.device, stagingMemory);
+        destroyBuffer(gpu, staging, stagingMemory);
+        staging = VK_NULL_HANDLE;
+        stagingMemory = VK_NULL_HANDLE;
+        mapped = nullptr;
+        command = VK_NULL_HANDLE;
+        fence = VK_NULL_HANDLE;
+    };
+
     if (!createBuffer(gpu, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                      staging, smem, &mapped)) {
+                      staging, stagingMemory, &mapped))
         return false;
-    }
     std::memcpy(mapped, data, static_cast<size_t>(size));
-    vkUnmapMemory(gpu.device, smem);
+    vkUnmapMemory(gpu.device, stagingMemory);
+    mapped = nullptr;
 
     VkCommandBufferAllocateInfo cbai{};
     cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     cbai.commandPool = gpu.pool;
     cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cbai.commandBufferCount = 1;
-    VkCommandBuffer cmd = VK_NULL_HANDLE;
-    vkAllocateCommandBuffers(gpu.device, &cbai, &cmd);
+    if (vkAllocateCommandBuffers(gpu.device, &cbai, &command) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
 
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &cbi);
+    if (vkBeginCommandBuffer(command, &cbi) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
 
     VkBufferCopy region{};
-    region.srcOffset = 0; region.dstOffset = dstOffset; region.size = size;
-    vkCmdCopyBuffer(cmd, staging, dst, 1, &region);
+    region.srcOffset = 0;
+    region.dstOffset = dstOffset;
+    region.size = size;
+    vkCmdCopyBuffer(command, staging, dst, 1, &region);
+    if (vkEndCommandBuffer(command) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
 
-    vkEndCommandBuffer(cmd);
-    VkFence fence = VK_NULL_HANDLE;
-    VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(gpu.device, &fci, nullptr, &fence);
-    VkSubmitInfo si{};
-    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    si.commandBufferCount = 1;
-    si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, fence);
-    vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
-    vkDestroyFence(gpu.device, fence, nullptr);
-    vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
-    destroyBuffer(gpu, staging, smem);
+    VkFenceCreateInfo fci{};
+    fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    if (vkCreateFence(gpu.device, &fci, nullptr, &fence) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
+
+    VkSubmitInfo submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit.commandBufferCount = 1;
+    submit.pCommandBuffers = &command;
+    if (vkQueueSubmit(gpu.queue, 1, &submit, fence) != VK_SUCCESS) {
+        cleanup();
+        return false;
+    }
+    submitted = true;
+
+    const VkResult waitResult =
+        vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
+    if (waitResult != VK_SUCCESS) {
+        const VkResult idleResult = vkDeviceWaitIdle(gpu.device);
+        if (idleResult == VK_SUCCESS || idleResult == VK_ERROR_DEVICE_LOST) {
+            cleanup();
+        } else {
+            // Do not destroy staging resources while the queue may still read them.
+            (void)submitted;
+        }
+        return false;
+    }
+
+    cleanup();
     return true;
 }
 
