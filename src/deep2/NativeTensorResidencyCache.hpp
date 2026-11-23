@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 namespace Deep2 {
 class TensorResidencyCache {
@@ -54,8 +55,8 @@ public:
             return false;
         }
         const size_t stored = built->storedBytes();
-        if(stored > budgetBytes_) return false;
         std::lock_guard<std::mutex> lock(mutex_);
+        if(stored > budgetBytes_) return false;
         if(entries_.find(key)!=entries_.end()) {
             entries_[key].lastUse=++tick_;
             return true;
