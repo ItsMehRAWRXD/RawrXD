@@ -173,7 +173,7 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         }
         if (tensorTypeBytesPerValue(e.type) <= 0.0 ||
             (quantBlockSize(e.type) > 1 && e.dims[0] % quantBlockSize(e.type) != 0) ||
-            tensorStorageBytes(elements, e.type) == std::numeric_limits<uint64_t>::max()) {
+            deep2::tensorStorageBytes(elements, e.type) == std::numeric_limits<uint64_t>::max()) {
             fprintf(stderr, "[ROM] %s: unsupported or misaligned GGUF tensor %s type=%u\\n",
                     manifest.path.c_str(), e.name.c_str(), type);
             return false;

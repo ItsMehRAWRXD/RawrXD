@@ -77,10 +77,10 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
             fprintf(stderr, "[ROM] invalid DEEP2_F32_MAX_ABS_ERROR; expected finite nonnegative float\\n");
             return false;
         }
-        compressedF32MaxAbsError = parsed;
+        compressedF32MaxAbsError.store(parsed, std::memory_order_relaxed);
     }
     fprintf(stderr, "[ROM] F32 compressed residency absolute-error budget: %.9g\\n",
-            compressedF32MaxAbsError);
+            compressedF32MaxAbsError.load(std::memory_order_relaxed));
 
     const auto applyCacheBudget = [](const char* variable, auto&& setter) -> bool {
         const char* value = std::getenv(variable);
