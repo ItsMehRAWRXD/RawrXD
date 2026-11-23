@@ -27,6 +27,7 @@ public:
         uint64_t misses = 0;
         uint64_t evictions = 0;
         uint64_t bytesDecoded = 0;
+        size_t activeReaders = 0;
     };
 
     explicit TensorByteResidencyCache(size_t budget = 512ull * 1024ull * 1024ull)
@@ -149,8 +150,10 @@ public:
     }
     Stats GetStats() const {
         std::lock_guard<std::mutex> lock(mutex_);
-        return {budgetBytes_, compressedBytes_, logicalBytes_, entries_.size(),
-                hits_, misses_, evictions_, bytesDecoded_};
+        Stats stats{budgetBytes_, compressedBytes_, logicalBytes_, entries_.size(),
+                    hits_, misses_, evictions_, bytesDecoded_, 0};
+        for (const auto& item : entries_) stats.activeReaders += item.second.activeReaders;
+        return stats;
     }
 private:
     struct Entry {
