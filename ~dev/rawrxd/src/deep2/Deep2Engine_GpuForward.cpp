@@ -509,7 +509,12 @@ bool Deep2Engine::forwardLayerGpuResident(
                             CPUInference::VulkanCompute::DeviceBuf& outB,
                             CPUInference::VulkanCompute::DeviceBuf& outC,
                             uint32_t rA, uint32_t rB, uint32_t rC, uint32_t cols) -> bool {
-        if (!(prefetch && vc->WeightStreamActive())) {
+        // The packed-prefetch fast path consumes the original mapped
+        // payload. Route compressed tensors through the bounded row-tile
+        // reader instead of silently uploading their full raw matrices.
+        if (qa.compressedBytes || qb.compressedBytes || qc.compressedBytes ||
+            qa.compressedF32 || qb.compressedF32 || qc.compressedF32 ||
+            !(prefetch && vc->WeightStreamActive())) {
             return gemv(qa, in, outA, rA, cols) && gemv(qb, in, outB, rB, cols) &&
                    gemv(qc, in, outC, rC, cols);
         }
