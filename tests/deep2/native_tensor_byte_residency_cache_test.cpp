@@ -51,7 +51,13 @@ int main() {
     // Mixed tensor: first 4 KiB is incompressible, remaining 12 KiB repeats.
     // Whole-tensor accounting should admit it even though chunk zero cannot shrink.
     std::vector<uint8_t> mixed(16*1024, 0xA7);
-    std::copy(noise.begin(), noise.begin()+4096, mixed.begin());
+    uint32_t mixedState = 0x9e3779b9u;
+    for (size_t i = 0; i < 4096; ++i) {
+        mixedState ^= mixedState << 13;
+        mixedState ^= mixedState >> 17;
+        mixedState ^= mixedState << 5;
+        mixed[i] = static_cast<uint8_t>(mixedState);
+    }
     Deep2::TensorByteResidencyCache mixedCache(8*1024);
     size_t mixedReads = 0;
     assert(mixedCache.RegisterFromReader("mixed", mixed.size(),
