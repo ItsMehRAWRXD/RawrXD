@@ -29,6 +29,7 @@ public:
         uint64_t bytesDecoded = 0;
         uint64_t evictions = 0;
         size_t tensorCount = 0;
+        size_t activeReaders = 0;
     };
 
     explicit TensorResidencyCache(size_t budgetBytes = 512ull * 1024ull * 1024ull)
@@ -205,6 +206,7 @@ public:
         s.bytesDecoded=bytesDecoded_;
         s.evictions=evictions_;
         s.tensorCount=entries_.size();
+        for (const auto& item : entries_) s.activeReaders += item.second.activeReaders;
         return s;
     }
 
