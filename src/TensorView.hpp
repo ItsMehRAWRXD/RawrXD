@@ -145,7 +145,11 @@ struct TensorView {
     std::size_t rank() const { return dims.size(); }
     std::uint64_t totalElements() const {
         std::uint64_t n = 1;
-        for (auto d : dims) n *= d;
+        const auto max = (std::numeric_limits<std::uint64_t>::max)();
+        for (auto d : dims) {
+            if (d && n > max / d) return max;
+            n *= d;
+        }
         return n;
     }
 };
