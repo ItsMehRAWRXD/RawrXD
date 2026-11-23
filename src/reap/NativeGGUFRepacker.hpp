@@ -859,21 +859,25 @@ inline bool ConvertQ8_1ToQ8_0(std::ifstream& in,std::ofstream& out,
 // Q8_K stores one F32 scale for 256 signed codes. Q8_0 can reuse
 // those codes without loss only if the scale is exactly FP16 representable.
 // Check every source superblock before changing a sensitive tensor's type.
+inline bool Q8KAllZeroCodes(const unsigned char* block) {
+    for(unsigned i=0;i<256;++i)
+        if(block[4+i]!=0)return false;
+    return true;
+}
 inline bool IsExactQ8KToQ8_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
     if(bytes%292 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
     in.clear();in.seekg(static_cast<std::streamoff>(from));
     if(!in)return false;
-    unsigned char scaleBytes[4];
+    unsigned char block[292];
     while(bytes) {
-        if(!in.read(reinterpret_cast<char*>(scaleBytes),4))return false;
-        const uint32_t bits=uint32_t(scaleBytes[0])|(uint32_t(scaleBytes[1])<<8)|
-            (uint32_t(scaleBytes[2])<<16)|(uint32_t(scaleBytes[3])<<24);
+        if(!in.read(reinterpret_cast<char*>(block),292))return false;
+        const uint32_t bits=uint32_t(block[0])|(uint32_t(block[1])<<8)|
+            (uint32_t(block[2])<<16)|(uint32_t(block[3])<<24);
         float d=0;std::memcpy(&d,&bits,4);
         if(!std::isfinite(d) ||
-           Float16ToFloat32Bits(Float32BitsToFloat16(bits))!=bits)return false;
-        in.seekg(288,std::ios::cur);
-        if(!in)return false;
+           (Float16ToFloat32Bits(Float32BitsToFloat16(bits))!=bits &&
+            !Q8KAllZeroCodes(block)))return false;
         bytes-=292;
     }
     return true;
@@ -897,9 +901,11 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
         // Reject finite FP32 scales that overflow the FP16 scale field
         // only after evaluating the per-group requantization alternative.
         const uint16_t directHalf=Float32BitsToFloat16(bits);
-        if(Float16ToFloat32Bits(directHalf)==bits) {
-            encoded[0]=static_cast<unsigned char>(directHalf);
-            encoded[1]=static_cast<unsigned char>(directHalf>>8);
+        if(Float16ToFloat32Bits(directHalf)==bits || Q8KAllZeroCodes(source)) {
+            const uint16_t chosen=Float16ToFloat32Bits(directHalf)==bits ?
+                directHalf : static_cast<uint16_t>((bits>>16)&0x8000u);
+            encoded[0]=static_cast<unsigned char>(chosen);
+            encoded[1]=static_cast<unsigned char>(chosen>>8);
             for(unsigned group=0;group<8;++group) {
                 std::memcpy(encoded+2,source+4+group*32,32);
                 if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
