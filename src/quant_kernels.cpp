@@ -137,6 +137,44 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
             out[i] = static_cast<float>(value);
         }
         return true;
+    case TensorType::TQ1_0: {
+        static constexpr uint8_t pow3[5] = {1, 3, 9, 27, 81};
+        const size_t blocks = static_cast<size_t>((n + 255) / 256);
+        for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
+            const uint8_t* block = src.data + blockIndex * 54;
+            const uint8_t* qs = block;
+            const uint8_t* qh = block + 48;
+            const float scale = fp16ToF32(readU16(block + 52));
+            float* dst = out + blockIndex * 256;
+            size_t written = 0;
+            // First 32 qs bytes encode five 32-value ternary planes.
+            for (size_t j = 0; j < 32; ++j) {
+                for (size_t plane = 0; plane < 5; ++plane) {
+                    const uint8_t q = static_cast<uint8_t>(qs[j] * pow3[plane]);
+                    const int value = (static_cast<uint16_t>(q) * 3u) >> 8;
+                    dst[written++] = static_cast<float>(value - 1) * scale;
+                }
+            }
+            // Remaining 16 qs bytes encode five 16-value planes.
+            for (size_t j = 32; j < 48; ++j) {
+                for (size_t plane = 0; plane < 5; ++plane) {
+                    const uint8_t q = static_cast<uint8_t>(qs[j] * pow3[plane]);
+                    const int value = (static_cast<uint16_t>(q) * 3u) >> 8;
+                    dst[written++] = static_cast<float>(value - 1) * scale;
+                }
+            }
+            // Four qh bytes encode four final four-value planes.
+            for (size_t plane = 0; plane < 4; ++plane) {
+                for (size_t j = 0; j < 4; ++j) {
+                    const uint8_t q = static_cast<uint8_t>(qh[j] * pow3[plane]);
+                    const int value = (static_cast<uint16_t>(q) * 3u) >> 8;
+                    dst[written++] = static_cast<float>(value - 1) * scale;
+                }
+            }
+            if (written != 256) return false;
+        }
+        return true;
+    }
     case TensorType::TQ2_0: {
         const size_t blocks = static_cast<size_t>((n + 255) / 256);
         for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
@@ -354,6 +392,7 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::IQ4_XS:
     case TensorType::MXFP4:
     case TensorType::NVFP4:
+    case TensorType::TQ1_0:
     case TensorType::TQ2_0:
     case TensorType::Q2_K:
     case TensorType::Q3_K:
