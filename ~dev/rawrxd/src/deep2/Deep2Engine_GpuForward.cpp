@@ -300,15 +300,27 @@ bool Deep2Engine::forwardLayerGpuResident(
                     packed.bytes != static_cast<size_t>(rows) *
                                     static_cast<size_t>(cols) * 2u)
                     return false;
+                bool submitted = false;
                 if (prefetch && vc->WeightStreamActive()) {
                     if (!vc->FlushWeightComputes()) return false;
                     uint32_t sl = 0;
                     if (!vc->PrefetchWeight(packed.data, packed.bytes, sl)) return false;
-                    return vc->SubmitGemvPrefetch(
+                    submitted = vc->SubmitGemvPrefetch(
                         sl, in, out, rows, cols, packed.bytes, packed.type);
+                } else {
+                    submitted = vc->DispatchGemvQuant(
+                        packed.type, packed.data, packed.bytes, in, out, rows, cols);
                 }
-                return vc->DispatchGemvQuant(
-                    packed.type, packed.data, packed.bytes, in, out, rows, cols);
+                if (submitted) {
+                    if (packed.type == 1) ++c.compressedF16GemvOps;
+                    else ++c.compressedBF16GemvOps;
+                    const uint64_t bytes = static_cast<uint64_t>(packed.bytes);
+                    c.compressedWeightBytesSubmitted =
+                        bytes > UINT64_MAX - c.compressedWeightBytesSubmitted
+                            ? UINT64_MAX
+                            : c.compressedWeightBytesSubmitted + bytes;
+                }
+                return submitted;
             }
         }
         /* Product decode: Q2_K must not host-Expand F32 / 72-byte MASM. */
