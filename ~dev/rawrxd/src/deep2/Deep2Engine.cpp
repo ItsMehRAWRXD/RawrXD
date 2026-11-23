@@ -482,8 +482,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     // prevents compression from consuming unbounded extra host memory.
     bool compressF32OnLoad = true;
     if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32")) {
-        if (*setting == '0') compressF32OnLoad = false;
-        else if (*setting != '1') {
+        if (setting[0] == '0' && setting[1] == '\0') compressF32OnLoad = false;
+        else if (!(setting[0] == '1' && setting[1] == '\0')) {
             std::fprintf(stderr,
                 "[Deep2Engine] invalid RAWRXD_COMPRESS_F32; compression disabled\n");
             compressF32OnLoad = false;
