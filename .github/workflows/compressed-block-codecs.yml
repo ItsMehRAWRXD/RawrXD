@@ -22,7 +22,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y zlib1g-dev
       - name: Build and test with zlib
         run: |
-          c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+          c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -pthread \
             -DRAWRXD_HAVE_ZLIB=1 \
             -Iinclude -Isrc/deep2/compression \
             tests/compressed_block_codec_adapters_test.cpp \
