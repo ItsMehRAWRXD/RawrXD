@@ -173,6 +173,7 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
     uint32_t mt = 0;
     if (!pickMemoryType(gpu, mr.memoryTypeBits, memProps, mt)) {
         vkDestroyBuffer(gpu.device, buf, nullptr);
+        buf = VK_NULL_HANDLE;
         return false;
     }
 
@@ -182,6 +183,8 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
     ai.memoryTypeIndex = mt;
     if (vkAllocateMemory(gpu.device, &ai, nullptr, &mem) != VK_SUCCESS) {
         vkDestroyBuffer(gpu.device, buf, nullptr);
+        buf = VK_NULL_HANDLE;
+        mem = VK_NULL_HANDLE;
         return false;
     }
     if (vkBindBufferMemory(gpu.device, buf, mem, 0) != VK_SUCCESS) {
