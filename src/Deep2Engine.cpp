@@ -61,6 +61,48 @@ void Deep2Engine::SetCompressedWeightsBudget(std::size_t bytes) {
     }
 }
 
+bool Deep2Engine::gemvROMQ8_0(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols) {
+    if (!initialized || !romMode || !x || !y || !cols || cols % 32) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::Q8_0 ||
+        entry->dims.size() != 2 || entry->dims[0] != cols ||
+        entry->dims[1] != rows || rows > SIZE_MAX / (cols / 32) ||
+        rows * (cols / 32) > SIZE_MAX / 34) return false;
+    // GGML block_q8_0: little-endian IEEE binary16 scale, then 32 signed bytes.
+    std::uint8_t block[34];
+    for (std::size_t row = 0; row < rows; ++row) {
+        double accum = 0;
+        for (std::size_t col = 0; col < cols; col += 32) {
+            const std::size_t offset = (row * (cols / 32) + col / 32) * 34;
+            if (!rom.readTensorRange(*entry, offset, sizeof(block), block))
+                return false;
+            const std::uint16_t half = std::uint16_t(block[0]) |
+                                       (std::uint16_t(block[1]) << 8);
+            const std::uint32_t sign = std::uint32_t(half & 0x8000u) << 16;
+            const std::uint32_t exponent = (half >> 10) & 31u;
+            const std::uint32_t fraction = half & 1023u;
+            std::uint32_t bits = sign;
+            if (exponent == 31) bits |= 0x7f800000u | (fraction << 13);
+            else if (exponent) bits |= ((exponent + 112u) << 23) | (fraction << 13);
+            else if (fraction) {
+                std::uint32_t mantissa = fraction, shift = 0;
+                while ((mantissa & 1024u) == 0) { mantissa <<= 1; ++shift; }
+                bits |= ((113u - shift) << 23) | ((mantissa & 1023u) << 13);
+            }
+            float scale;
+            std::memcpy(&scale, &bits, sizeof(scale));
+            if (!std::isfinite(scale)) return false;
+            for (std::size_t j = 0; j < 32; ++j)
+                accum += static_cast<double>(scale) *
+                         static_cast<std::int8_t>(block[j + 2]) * x[col + j];
+        }
+        y[row] = static_cast<float>(accum);
+    }
+    return true;
+}
+
 bool Deep2Engine::gemvROMCompressedF32(
     const std::string& tensorName, const float* x, float* y,
     std::size_t rows, std::size_t cols,
