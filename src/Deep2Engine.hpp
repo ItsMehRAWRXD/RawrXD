@@ -44,6 +44,9 @@ struct Deep2Engine {
     // inference requests pin their entries until the final consumer releases.
     rawrxd::compression::ResidentTensorCache compressedWeights{
         256ull * 1024ull * 1024ull};
+    // Prevent cache-key reuse across model reloads while older requests still
+    // hold immutable leases from the previous model generation.
+    std::atomic<std::uint64_t> compressedWeightsGeneration{0};
     void SetCompressedWeightsBudget(std::size_t bytes);
 
 
