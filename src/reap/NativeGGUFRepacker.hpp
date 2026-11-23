@@ -273,7 +273,7 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         uint64_t block=0,blockBytes=0;
         if(!ReadU32(in,t.type)||!ReadU64(in,t.old_offset)||
-           !StorageLayout(t.type,block,blockBytes)||count%block||
+           !StorageLayout(t.type,block,blockBytes)||t.dims[0]%block||
            !CheckedMultiply(count/block,blockBytes,t.bytes))
             return RepackError::Unsupported;
         t.source_bytes=t.bytes;
@@ -282,7 +282,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
         }
-        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1) && count%32==0) {
+        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1) && t.dims[0]%32==0) {
             t.convert_q8_0=true;
             t.q8_source_f16=(t.type==1);
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
