@@ -499,7 +499,7 @@ int main(int argc,char** argv) {
                         const int8_t qi=int8_t(q);
                         encoded[4+j]=uint8_t(qi);
                         sums[j/16]=int16_t(sums[j/16]+q);
-                        if(!(std::fabs(double(d)*q-values[j]<=double(tolerance)))) {
+                        if(!(std::fabs(double(d)*q-values[j])<=double(tolerance))) {
                             valid=false;break;
                         }
                     }
