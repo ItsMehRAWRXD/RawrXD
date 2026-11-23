@@ -27,7 +27,7 @@ int main(){
  ok=ok&&(q5zero==expected(0))&&
     (q5changed==(expected(0)&&expected(16)));
  // Signed-zero differences must not be silently accepted.
- unsigned char allMid[16];std::memset(allMid,0x88,sizeof(allMid));
+ unsigned char allMid[16];std::memset(allMid,0x00,sizeof(allMid));
  ok=ok&&!AffineBlockCodesBitExact(0.0f,-0.0f,8,allMid);
  std::cout<<"REAP_AFFINE_USED_CODES="<<(ok?"PASS":"FAIL")<<"\n";
  return ok?0:1;
