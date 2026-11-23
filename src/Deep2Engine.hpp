@@ -28,6 +28,24 @@ namespace Deep2EngineVulkan {
 }
 
 struct Deep2Engine {
+    struct TensorResidencySnapshot {
+        size_t f32BudgetBytes = 0, encodedBudgetBytes = 0;
+        size_t f32CompressedBytes = 0, encodedCompressedBytes = 0;
+        size_t f32LogicalBytes = 0, encodedLogicalBytes = 0;
+        size_t f32TensorCount = 0, encodedTensorCount = 0;
+        uint64_t f32CacheHits = 0, f32CacheMisses = 0;
+        uint64_t encodedCacheHits = 0, encodedCacheMisses = 0;
+        uint64_t bytesDecoded = 0, evictions = 0;
+        size_t totalCompressedBytes() const noexcept {
+            return encodedCompressedBytes > SIZE_MAX - f32CompressedBytes
+                ? SIZE_MAX : f32CompressedBytes + encodedCompressedBytes;
+        }
+        size_t totalLogicalBytes() const noexcept {
+            return encodedLogicalBytes > SIZE_MAX - f32LogicalBytes
+                ? SIZE_MAX : f32LogicalBytes + encodedLogicalBytes;
+        }
+    };
+
     // Whole-model loader context (fallback / regression baseline).
     EngineContext ctx;
     // Paged ROM path (default execution layer from Move 3 onward).
@@ -46,6 +64,7 @@ struct Deep2Engine {
 
     bool Initialize(const std::string& modelPath, const std::string& manifestPath = "", bool forceWholeLoader = false);
     void Shutdown();
+    TensorResidencySnapshot GetTensorResidencySnapshot() const;
 
     void SynchronizeRoPEScaling(double modelThetaConfig = 0.0);
     void ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position);
