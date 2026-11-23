@@ -45,8 +45,8 @@ uint64_t tensorResidentBytes(const WeightTensor& w) {
     // source size. The raw host source remains the CPU fallback.
     const auto packed = std::atomic_load_explicit(
         &w.gpuF16Payload, std::memory_order_acquire);
-    if (packed && !packed->bytes.empty())
-        return static_cast<uint64_t>(packed->bytes.size());
+    if (packed && packed->data && packed->bytes)
+        return static_cast<uint64_t>(packed->bytes);
     if (w.sizeBytes) return static_cast<uint64_t>(w.sizeBytes);
     const uint64_t n = static_cast<uint64_t>(w.numElements());
     return n > UINT64_MAX / sizeof(float) ? 0 : n * sizeof(float);
@@ -123,29 +123,29 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
         }
         const size_t expectedBytes = tensor.sizeBytes / 2u;
         if (expectedBytes > remaining) return;
-        // This encoder intentionally bypasses RLE/LZ4 selection. The Vulkan
-        // QGEMV descriptor requires a fixed 16-bit stride, so every source
-        // element must satisfy the configured F16/BF16 error bound.
-        RawrXD::TensorCompression::Encoding encoding{};
-        std::vector<uint8_t> packed;
-        if (!RawrXD::TensorCompression::EncodeUniform16BitF32(
-                static_cast<const float*>(tensor.data),
-                tensor.sizeBytes / sizeof(float), tolerance, encoding, packed) ||
-            packed.size() != expectedBytes || packed.size() > remaining) {
+        // Reuse the canonical chunked backing. The GPU descriptor receives a
+        // stable view into that allocation and retains its owner; no second
+        // contiguous 16-bit host vector is constructed.
+        if (!tensor.compressedF32 &&
+            !tensor.EnableCompressedF32(tolerance, tensor.cols, remaining)) {
             ++rejectedTensors;
             return;
         }
-        auto payload = std::make_shared<WeightTensor::GpuCompressedF32Payload>();
-        payload->bytes = std::move(packed);
-        payload->ggmlType = encoding ==
-            RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
-        std::shared_ptr<const WeightTensor::GpuCompressedF32Payload> immutable = payload;
-        std::atomic_store_explicit(&tensor.gpuF16Payload, immutable,
-            std::memory_order_release);
-        // The raw source remains the CPU fallback. Release the chunk-object
-        // duplicate now that its packed GPU representation owns the payload.
-        tensor.compressedF32.reset();
-        storedBytes += immutable->bytes.size();
+        GpuWeightView packed{};
+        if (!tensor.BuildCompressedF32GpuView(
+                0, static_cast<uint32_t>(tensor.rows), packed) ||
+            !packed.data || packed.bytes != expectedBytes ||
+            (packed.type != 1 && packed.type != 30)) {
+            ++rejectedTensors;
+            return;
+        }
+        const size_t retained = tensor.compressedF32
+            ? tensor.compressedF32->residentBytes() : 0;
+        if (!retained || retained > remaining) {
+            ++rejectedTensors;
+            return;
+        }
+        storedBytes += retained;
         ++compressedTensors;
     };
 
