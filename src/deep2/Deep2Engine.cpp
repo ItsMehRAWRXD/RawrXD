@@ -3478,9 +3478,43 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 const std::size_t remaining =
                     encoded < compressedModelBudget ? compressedModelBudget - encoded : 0;
                 std::string compressionError;
-                const bool stored = remaining > 0 &&
-                    compressedWeightStore_->addTensorFromReader(
-                        name, wt.sizeBytes,
+                const char* f32ToF16Env = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16");
+                const bool allowF32ToF16 =
+                    f32ToF16Env && f32ToF16Env[0] == '1' && f32ToF16Env[1] == '\0';
+                const std::size_t originalType = static_cast<std::size_t>(wt.type);
+                const std::size_t originalBytes = wt.sizeBytes;
+                bool convertedF32ToF16 = false;
+                bool stored = false;
+
+                if (remaining > 0 && allowF32ToF16 &&
+                    wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                    wt.rows <= (std::numeric_limits<std::size_t>::max)() / wt.cols)
+                {
+                    const std::size_t elements = wt.rows * wt.cols;
+                    if (elements <= (std::numeric_limits<std::size_t>::max)() / sizeof(float) &&
+                        elements * sizeof(float) == originalBytes &&
+                        elements <= (std::numeric_limits<std::size_t>::max)() / sizeof(std::uint16_t))
+                    {
+                        stored = compressedWeightStore_->addTensorF32AsF16FromReader(
+                            name, static_cast<const float*>(t.data), elements,
+                            &compressionError, remaining);
+                        if (stored)
+                        {
+                            wt.type = (int)GGMLType::GGML_TYPE_F16;
+                            wt.sizeBytes = elements * sizeof(std::uint16_t);
+                            convertedF32ToF16 = true;
+                        }
+                    }
+                }
+
+                // Lossless byte-preserving path remains the default. If the
+                // optional F32->F16 admission did not succeed, retry the exact
+                // original GGML representation rather than changing semantics.
+                if (!stored && remaining > 0)
+                {
+                    compressionError.clear();
+                    stored = compressedWeightStore_->addTensorFromReader(
+                        name, originalBytes,
                         [](void* context, std::size_t offset, void* destination,
                            std::size_t length) -> bool {
                             if ((!context && length) || (!destination && length))
@@ -3492,26 +3526,35 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                             return true;
                         },
                         t.data, &compressionError,
-                        static_cast<std::uint32_t>(wt.type), true, remaining);
+                        static_cast<std::uint32_t>(originalType), true, remaining);
+                }
 
                 if (stored && wt.attachCompressedBacking(compressedWeightStore_, name))
                 {
-                    // CPU LinearW decodes only its worker's packed row range.
-                    // Keep the loader mapping alive for metadata/lifecycle, but
-                    // do not retain a second raw pointer in the inference view.
+                    // CPU LinearW decodes only its worker's packed output rows.
+                    // Optional F32->F16 conversion is explicitly lossy and
+                    // changes the kernel type/byte geometry before attachment.
                     wt.data = nullptr;
                     wt.mapped = false;
                     wt.hasFileBacking = false;
                     std::fprintf(stderr,
                         "[COMPRESSED_RESIDENCY] source=single-shard tensor=%s "
-                        "raw_bytes=%zu encoded_bytes=%llu block_bytes=%zu mode=lazy-row-decode\n",
-                        name.c_str(), wt.sizeBytes,
+                        "source_type=%s resident_type=%s source_bytes=%zu resident_bytes=%zu "
+                        "encoded_bytes=%llu block_bytes=%zu mode=lazy-row-decode\n",
+                        name.c_str(),
+                        convertedF32ToF16 ? "F32" : "GGML",
+                        convertedF32ToF16 ? "F16" : "unchanged",
+                        originalBytes, wt.sizeBytes,
                         static_cast<unsigned long long>(
                             compressedWeightStore_->stats().compressed_bytes - encoded),
                         compressedWeightStore_->blockBytes());
                 }
                 else
                 {
+                    // Do not leave the view with a speculative converted type
+                    // if admission/attachment failed.
+                    wt.type = static_cast<int>(originalType);
+                    wt.sizeBytes = originalBytes;
                     std::fprintf(stderr,
                         "[COMPRESSED_RESIDENCY] source=single-shard tensor=%s "
                         "fallback=mapped reason=%s\n",
@@ -13937,6 +13980,10 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt, const std::string& name)
             wt.fileOffset = t.dataOffset;
             if (compressedWeightStore_ && compressedWeightStore_->contains(name))
             {
+                // The resident GGML type/size may intentionally differ from
+                // the source descriptor when F32->F16 was explicitly enabled.
+                wt.type = static_cast<int>(compressedWeightStore_->tensorType(name));
+                wt.sizeBytes = compressedWeightStore_->tensorBytes(name);
                 if (!wt.attachCompressedBacking(compressedWeightStore_, name))
                     return false;
                 wt.data = nullptr;
