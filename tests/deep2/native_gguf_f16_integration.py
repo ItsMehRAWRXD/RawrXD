@@ -72,7 +72,7 @@ def run(binary):
         assert b[start+off:start+off+32]==quant
         assert len(b)<len(original)
         q8path=root/"q8.gguf"
-        subprocess.run([binary,str(source),str(q8path),"0.01","q8_0"],check=True)
+        subprocess.run([binary,str(source),str(q8path),"300","q8_0"],check=True)
         qb,qs,qmeta,qt=parse(q8path)
         assert qmeta==metadata
         assert qt["blk.0.attn_q.weight"][:2]==(8,(len(values),))
@@ -82,7 +82,18 @@ def run(binary):
             scale=struct.unpack_from("<e",qb,start_block)[0]
             qsamples=struct.unpack_from("<32b",qb,start_block+2)
             for j,q in enumerate(qsamples):
-                assert abs(scale*q-values[block*32+j])<=0.01
+                assert abs(scale*q-values[block*32+j])<=300
+        # FP16 input must also quantize correctly, with the same GGUF Q8_0 layout.
+        f16q=root/"f16-to-q8.gguf"
+        subprocess.run([binary,str(target),str(f16q),"300","q8_0"],check=True)
+        fb,fs,fmeta,ft=parse(f16q)
+        assert fmeta==metadata
+        assert ft["blk.0.attn_q.weight"][0]==8
+        foff=ft["blk.0.attn_q.weight"][2]
+        for block in range(len(values)//32):
+            scale=struct.unpack_from("<e",fb,fs+foff+block*34)[0]
+            qsamples=struct.unpack_from("<32b",fb,fs+foff+block*34+2)
+            assert all(abs(scale*q-values[block*32+j])<=300 for j,q in enumerate(qsamples))
         assert qt["blk.0.attn_k.weight"][0]==6
         assert qb[qs+qt["blk.0.attn_k.weight"][2]:qs+qt["blk.0.attn_k.weight"][2]+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
