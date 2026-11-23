@@ -114,10 +114,10 @@ if(RAWRXD_GLSLC)
                 "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
                 -o "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/gemv_packed16.spv"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
-        COMMENT "Compiling native packed F16/BF16 Vulkan GEMV shader")
+        COMMENT "Compiling native packed F16/BF16/Q8_0 Vulkan GEMV shader")
     add_dependencies(Deep2Engine_Benchmark RawrXD_PackedWeightShader)
 else()
-    message(WARNING "[BUILD] glslc not found; packed F16/BF16 Vulkan dispatch will be unavailable")
+    message(WARNING "[BUILD] glslc not found; packed F16/BF16/Q8_0 Vulkan dispatch will be unavailable")
 endif()
 
 # Link libraries
