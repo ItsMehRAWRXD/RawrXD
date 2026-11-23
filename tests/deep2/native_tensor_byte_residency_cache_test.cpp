@@ -47,13 +47,34 @@ int main() {
             return true;
         },4096));
     assert(patternReads==(patterned.size()+4095)/4096);
+
+    // Mixed tensor: first 4 KiB is incompressible, remaining 12 KiB repeats.
+    // Whole-tensor accounting should admit it even though chunk zero cannot shrink.
+    std::vector<uint8_t> mixed(16*1024, 0xA7);
+    std::copy(noise.begin(), noise.begin()+4096, mixed.begin());
+    Deep2::TensorByteResidencyCache mixedCache(8*1024);
+    size_t mixedReads = 0;
+    assert(mixedCache.RegisterFromReader("mixed", mixed.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            ++mixedReads;
+            std::copy(mixed.begin()+offset, mixed.begin()+offset+count, out);
+            return true;
+        }, 4096));
+    assert(mixedReads == 4);
+    const auto mixedStats = mixedCache.GetStats();
+    assert(mixedStats.compressedBytes < mixedStats.logicalBytes);
+    assert(mixedStats.compressedBytes <= mixedStats.budgetBytes);
+    std::vector<uint8_t> mixedTile(12*1024);
+    assert(mixedCache.ReadRange("mixed", 4096, mixedTile.size(), mixedTile.data(), scratch));
+    assert(std::all_of(mixedTile.begin(), mixedTile.end(), [](uint8_t v){ return v == 0xA7; }));
+
     std::vector<uint8_t> patternTile(12000);
     assert(cache.ReadRange("shard0:patterned",17000,patternTile.size(),
                            patternTile.data(),scratch));
     assert(std::equal(patternTile.begin(),patternTile.end(),patterned.begin()+17000));
 
-    // An incompressible first chunk is rejected immediately; raw pager reads
-    // remain the correct fallback and are memoized by the engine.
+    // Entire tensors are evaluated: an incompressible leading chunk must not
+    // hide later chunks whose savings make the complete tensor worthwhile.
     std::vector<uint8_t> noise(64*1024);
     uint32_t state=0x12345678u;
     for(auto& value:noise) {
@@ -67,7 +88,7 @@ int main() {
             std::copy(noise.begin()+offset,noise.begin()+offset+count,out);
             return true;
         },4096));
-    assert(noiseReads==1);
+    assert(noiseReads==5); // 4 chunks fill the 16 KiB budget; the next proves it cannot fit
     assert(!cache.Contains("noise"));
     assert(cache.IsRawFallback("noise")); // deterministic rejection is atomic with first-touch admission
     cache.MarkRawFallback("noise");
@@ -98,7 +119,7 @@ int main() {
             std::copy(noise.begin()+offset,noise.begin()+offset+count,out);
             return true;
         },4096));
-    assert(changedBudgetReads==1);
+    assert(changedBudgetReads==5);
     cache.MarkRawFallback("noise");
 
     assert(cache.Evict("shard0:weight0"));
