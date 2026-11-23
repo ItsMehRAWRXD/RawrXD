@@ -320,5 +320,32 @@ int main() {
     } catch (const StorageAdmissionRejected&) { byteBudgetRejected = true; }
     assert(byteBudgetRejected && byteSourceReads == 0);
 
+    // A huge declared tensor whose first source read fails must not reserve
+    // model-wide chunk metadata before attempting that read.
+    const size_t hugeLogicalCount = std::numeric_limits<size_t>::max() / 16;
+    size_t hugeF32Reads = 0;
+    bool hugeF32SourceFailure = false;
+    try {
+        (void)ChunkedF32Storage::BuildFromReader(
+            hugeLogicalCount, 0.0f,
+            [&hugeF32Reads](size_t, size_t, float*) {
+                ++hugeF32Reads;
+                return false;
+            }, 4096);
+    } catch (const SourceReadFailure&) { hugeF32SourceFailure = true; }
+    assert(hugeF32SourceFailure && hugeF32Reads == 1);
+
+    size_t hugeByteReads = 0;
+    bool hugeByteSourceFailure = false;
+    try {
+        (void)ChunkedByteStorage::BuildFromReader(
+            hugeLogicalCount,
+            [&hugeByteReads](size_t, size_t, uint8_t*) {
+                ++hugeByteReads;
+                return false;
+            }, 16384);
+    } catch (const SourceReadFailure&) { hugeByteSourceFailure = true; }
+    assert(hugeByteSourceFailure && hugeByteReads == 1);
+
     std::cout<<"native tensor compression tests PASS\n";
 }
