@@ -109,6 +109,11 @@ evictions and the live TensorROM pager resident-byte count. The snapshot also
 reports total tracked weight residency (compressed caches plus resident pager
 pages), so savings can be measured rather than inferred from file size.
 
+Residency budgets adapt to available physical memory and can be overridden
+with `DEEP2_F32_RESIDENCY_MB` and `DEEP2_ENCODED_RESIDENCY_MB`.
+Lossy F32 conversion is opt-in through `DEEP2_F32_MAX_ABS_ERROR`; invalid,
+negative or non-finite values are rejected. The default error budget is zero.
+
 This is an in-memory runtime cache, not a change to GGUF wire types. Existing
 quantized weights remain encoded in the TensorROM pager; only the requested
 blocks are expanded into the row tile consumed by the CPU or Vulkan GEMV.
