@@ -29,7 +29,7 @@ It also does not claim a fixed memory reduction ratio. Incompressible data remai
 
 ## Build and test
 
-The root CMake project now registers nine regression targets, including the quant-kernel reference test:
+The root CMake project now registers eight regression targets, including the quant-kernel reference test:
 - `native_compressed_residency_test`
 - `native_compressed_tensor_test`
 - `native_file_tensor_reader_test`
