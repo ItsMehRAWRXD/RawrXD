@@ -1,14 +1,15 @@
 #pragma once
 
 // Keep one canonical C ABI declaration for both architecture backends.
-// In particular, do not redeclare the x64 entry point with a different return
-// type: that conflicts with brutal_gzip.h when both headers are included.
+// Backend feature macros are exported by the CMake target that actually links
+// the corresponding implementation; CPU architecture alone does not prove
+// that the symbol is present in the final link.
 #include "brutal_gzip.h"
 
-#ifdef _WIN64
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_MASM)
 #  define HAS_BRUTAL_GZIP_MASM 1
 #endif
 
-#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_NEON)
 #  define HAS_BRUTAL_GZIP_NEON 1
 #endif
