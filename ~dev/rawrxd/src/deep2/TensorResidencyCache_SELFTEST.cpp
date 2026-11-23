@@ -45,6 +45,20 @@ int main() {
                        [](uint8_t v) { return v == 0xa5; }));
     CHECK(!cache.ReadRange("missing", 0, untouched.size(), untouched.data()));
 
+    // Zero-filled tensor blocks are represented with zero payload bytes.
+    // Verify cross-chunk range reads, sparse interior and exact byte counts.
+    std::vector<uint8_t> sparse(4096, 0);
+    sparse[1024] = 0x7b;
+    sparse[3071] = 0x39;
+    const auto beforeSparse = cache.GetStats();
+    CHECK(cache.Register("sparse", sparse.data(), sparse.size()));
+    const auto afterSparse = cache.GetStats();
+    CHECK(afterSparse.storedBytes - beforeSparse.storedBytes < 2048);
+    std::vector<uint8_t> sparseRead(sparse.size(), 0xff);
+    CHECK(cache.ReadRange("sparse", 0, sparseRead.size(), sparseRead.data()));
+    CHECK(sparseRead == sparse);
+    CHECK(cache.Erase("sparse"));
+
     // Incompressible input is rejected rather than retained as duplicate raw data.
     std::vector<uint8_t> noisy(2048);
     uint32_t state = 0x9e3779b9u;
