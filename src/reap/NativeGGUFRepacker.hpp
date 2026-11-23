@@ -233,9 +233,9 @@ inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
         const uint16_t half=Float32BitsToFloat16(scaleBits);
         const uint32_t decoded=Float16ToFloat32Bits(half);
         float actualScale=0.0f;std::memcpy(&actualScale,&decoded,4);
-        if(!std::isfinite(actualScale) ||
-           ((positiveMax!=0.0f || negativeMax!=0.0f) && actualScale==0.0f))
-            return false;
+        // A nearest FP16 scale of infinity or zero can still have
+        // a valid finite adjacent candidate. Defer rejection until
+        // all candidates have been evaluated.
         // Search both adjacent finite FP16 scales as well as the
         // nearest one. The smaller neighbor can improve reconstruction
         // when rounding the scale upward increases error on many weights.
