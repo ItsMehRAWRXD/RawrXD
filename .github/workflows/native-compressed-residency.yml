@@ -8,6 +8,7 @@ on:
       - "src/Deep2Engine.cpp"
       - "src/Deep2Engine.hpp"
       - "src/TensorView.hpp"
+      - "src/quant_kernels.cpp"
       - "tests/native_*_test.cpp"
       - "tests/native_file_tensor_reader_test.cpp"
       - "tests/native_resident_*_test.cpp"
@@ -47,6 +48,8 @@ jobs:
             c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include "$source" -o "build/native-compression/$name"
             "build/native-compression/$name"
           done
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include -I src tests/native_quantized_dequant_test.cpp src/quant_kernels.cpp -o build/native-compression/native_quantized_dequant_test
+          build/native-compression/native_quantized_dequant_test
 
   windows:
     runs-on: windows-latest
@@ -72,3 +75,8 @@ jobs:
             & "build/native-compression/$name.exe"
             if ($LASTEXITCODE -ne 0) { throw "Test failed: $name" }
           }
+          cl /nologo /std:c++17 /EHsc /W4 /WX /I include /I src tests/native_quantized_dequant_test.cpp src/quant_kernels.cpp /Fe:build/native-compression/native_quantized_dequant_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Compile failed: native_quantized_dequant_test" }
+          & "build/native-compression/native_quantized_dequant_test.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Test failed: native_quantized_dequant_test" }
+
