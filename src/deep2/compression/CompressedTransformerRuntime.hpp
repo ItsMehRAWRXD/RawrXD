@@ -248,8 +248,9 @@ private:
             rmsNorm(normed, p + "attn_norm.weight");
             std::vector<float> q, k, v;
             project(p + "attn_q.weight", normed, q, config_.hidden);
-            project(p + "attn_k.weight", normed, k, config_.hidden);
-            project(p + "attn_v.weight", normed, v, config_.hidden);
+            const std::size_t kvDim = config_.kv_heads * config_.head_dim;
+            project(p + "attn_k.weight", normed, k, kvDim);
+            project(p + "attn_v.weight", normed, v, kvDim);
             applyRope(q, position, config_.heads);
             applyRope(k, position, config_.kv_heads);
             keys[layer].push_back(k);
