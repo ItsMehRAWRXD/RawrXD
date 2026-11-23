@@ -340,14 +340,14 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ41(ts.size(),false);
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32) && t.type==28) && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
-            if((automatic || f32) && t.type==28) {
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            if((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) {
                 // GGML F64 (type 28) to F32: 50% storage reduction only
                 // when every finite double survives the precision budget.
                 seek(in,add(dataStart,t.offset));
                 bool valid=true;
-                bool halfValid=automatic;
-                bool bf16Valid=automatic;
+                bool halfValid=automatic || (argc==5 && std::string(argv[4])=="f16");
+                bool bf16Valid=automatic || bf16;
                 uint8_t block[65536];
                 for(U off=0;off<t.bytes && valid;) {
                     const size_t n=size_t(std::min<U>(t.bytes-off,sizeof(block)));
@@ -381,9 +381,9 @@ int main(int argc,char** argv) {
                     }
                     off+=n;
                 }
-                if(valid && halfValid){streamF64toF16[i]=true;outputTypes[i]=1;++changed;}
-                else if(valid && bf16Valid){streamF64toBf16[i]=true;outputTypes[i]=30;++changed;}
-                else if(valid){streamF64toF32[i]=true;outputTypes[i]=0;++changed;}
+                if(valid && halfValid && !bf16){streamF64toF16[i]=true;outputTypes[i]=1;++changed;}
+                else if(valid && bf16Valid && !f32){streamF64toBf16[i]=true;outputTypes[i]=30;++changed;}
+                else if(valid && (automatic || f32)){streamF64toF32[i]=true;outputTypes[i]=0;++changed;}
                 continue;
             }
             if(f32)continue;
