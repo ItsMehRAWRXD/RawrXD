@@ -96,3 +96,13 @@ production-model or GPU parity.
 ### Cache key identity and model rebinding
 
 Both the F32 and byte-preserving compressed residency caches now reject a repeated key when the new tensor's logical byte count differs from the resident entry. This prevents a differently shaped tensor from silently aliasing the prior model's weights, without reading or modifying the new source. **Equal-sized but different tensors cannot be distinguished by byte count alone**: callers must namespace cache keys by stable model/shard identity and clear or evict old entries when rebinding models. This guard is not a content hash or a substitute for model lifecycle isolation. Deterministic collision tests run in the native cache test executables, including Release-mode CI.
+
+### F32 cache tolerance identity (2026-11-23)
+
+A resident F32 tensor records the maximum absolute reconstruction error
+accepted when it was built. Re-registering the same key with a stricter
+error budget now fails closed without reading the replacement source. A
+relaxed request can reuse a stricter resident entry. Tensor keys must still
+include model identity: equal-size, equal-tolerance weights from distinct
+models cannot safely share a key. Regression coverage exercises both strict
+rejection and relaxed reuse. This does not certify model-level numerical parity.
