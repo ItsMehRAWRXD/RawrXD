@@ -13,8 +13,8 @@ inline std::uint32_t hash4(const std::uint8_t* p) {
  return (v*2654435761u)>>16;
 }
 }
-CompressedWeightStore::CompressedWeightStore(std::size_t budget,std::size_t block_bytes)
- : block_bytes_(block_bytes),cache_budget_(budget) {
+CompressedWeightStore::CompressedWeightStore(std::size_t budget,std::size_t block_bytes,std::size_t encoded_budget)
+ : block_bytes_(block_bytes),cache_budget_(budget),encoded_residency_budget_(encoded_budget) {
  if(!block_bytes_||block_bytes_>static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) throw std::invalid_argument("invalid block size: exceeds signed match index capacity");
 }
 std::uint32_t CompressedWeightStore::crc32(const std::uint8_t* p,std::size_t n) {
@@ -55,7 +55,13 @@ bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::si
  if(size && size > std::numeric_limits<std::size_t>::max() - (block_bytes_ - 1)) {
   if(error)*error="tensor size cannot be safely partitioned";return false;
  }
+ std::lock_guard<std::mutex> lock(mutex_);
+ if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
  const auto* src=static_cast<const std::uint8_t*>(bytes);Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
+ const auto resident=static_cast<std::size_t>(counters_.compressed_bytes);
+ if(resident>encoded_residency_budget_){if(error)*error="encoded residency accounting exceeds budget";return false;}
+ const auto global_remaining=encoded_residency_budget_-resident;
+ const auto admission_limit=std::min(max_encoded_bytes,global_remaining);
  std::size_t encoded_size=0;
  for(std::size_t off=0;off<size;){
   const auto take=std::min(block_bytes_,size-off);
@@ -64,7 +70,7 @@ bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::si
   b.payload=encode(src+off,take,b.stored_raw);
   // Enforce admission incrementally: do not retain a full encoded tensor
   // when a configured residency ceiling has already been exceeded.
-  if(encoded_size>max_encoded_bytes||b.payload.size()>max_encoded_bytes-encoded_size){
+  if(encoded_size>admission_limit||b.payload.size()>admission_limit-encoded_size){
    if(error)*error="encoded tensor exceeds residency budget";return false;
   }
   encoded_size+=b.payload.size();
@@ -72,7 +78,6 @@ bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::si
   off+=take;
  }
  if(require_savings&&encoded_size>=size){if(error)*error="compression did not reduce tensor size";return false;}
- std::lock_guard<std::mutex> lock(mutex_);if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
  counters_.raw_bytes+=size;for(const auto& b:tensor.blocks)counters_.compressed_bytes+=b.payload.size();counters_.blocks+=tensor.blocks.size();++counters_.tensors;tensors_.emplace(std::move(name),std::move(tensor));return true;
 }
 bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error) {
