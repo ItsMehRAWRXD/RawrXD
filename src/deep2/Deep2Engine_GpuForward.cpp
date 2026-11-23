@@ -461,12 +461,36 @@ bool Deep2Engine::forwardLayerGpuResident(
                     ++counters.q2kPackedOps;
             }
         } else {
-            const float* f32 = ensureF32(wt, vulkanWeightF32_);
-            if (!f32) return false;
+            std::vector<float> compressedF32;
+            const float* f32 = nullptr;
+            if (!wt.data && wt.hasCompressedBacking()) {
+                if (wt.rows > std::numeric_limits<size_t>::max() / wt.cols)
+                    return false;
+                const size_t elements = wt.rows * wt.cols;
+                if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
+                    return false;
+                compressedF32.resize(elements);
+                if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+                    if (!wt.readBytes(0, compressedF32.data(), elements * sizeof(float)))
+                        return false;
+                } else {
+                    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
+                    if (!dequant) return false;
+                    std::vector<uint8_t> packedBytes(wt.sizeBytes);
+                    if (!wt.readBytes(0, packedBytes.data(), packedBytes.size()))
+                        return false;
+                    dequant(packedBytes.data(), compressedF32.data(), elements);
+                    ++counters.cpuF32Expands;
+                }
+                f32 = compressedF32.data();
+            } else {
+                f32 = ensureF32(wt, vulkanWeightF32_);
+                if (!f32) return false;
+                if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
+                    ++counters.cpuF32Expands;
+            }
             ok = gpu->DispatchGemvDevice(f32, weightKey(wt), input, output,
                                          rows, cols);
-            if (ok && wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
-                ++counters.cpuF32Expands;
         }
         if (ok) ++counters.opSubmits;
         return ok;
