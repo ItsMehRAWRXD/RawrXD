@@ -293,8 +293,6 @@ inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
         const float scale=static_cast<float>(scale64);
         uint32_t scaleBits=0;std::memcpy(&scaleBits,&scale,4);
         const uint16_t half=Float32BitsToFloat16(scaleBits);
-        const uint32_t decoded=Float16ToFloat32Bits(half);
-        float actualScale=0.0f;std::memcpy(&actualScale,&decoded,4);
         // A nearest FP16 scale of infinity or zero can still have
         // a valid finite adjacent candidate. Defer rejection until
         // all candidates have been evaluated.
