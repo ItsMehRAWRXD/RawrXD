@@ -7635,50 +7635,104 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     const char* compressedGpuEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_STAGING");
     const bool allowFullCompressedGpuStaging =
         compressedGpuEnv && compressedGpuEnv[0] == '1' && compressedGpuEnv[1] == '\0';
-    // Default to bounded CPU row slices for compressed weights. The existing
-    // Vulkan upload ABI requires a full contiguous tensor; opt into that
-    // temporary expansion explicitly rather than silently defeating residency.
-    if ((!wtEffective.hasCompressedBacking() || allowFullCompressedGpuStaging) &&
-        !plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
+    const bool gpuEligible = !plannedCpu && !p2lwForceCpu &&
+        vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty();
+    if (gpuEligible)
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
-        WeightTensor gpuWeight = wtEffective;
-        if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+        bool gpuDispatched = false;
+
+        if (wtEffective.hasCompressedBacking() && !allowFullCompressedGpuStaging)
         {
-            compressedGpuBytes.resize(gpuWeight.sizeBytes);
-            std::string decodeError;
-            if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
-                                     compressedGpuBytes.size(), &decodeError))
-                throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
-                                         wt.name + ": " + decodeError);
-            gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            // Expand only bounded output-row tiles for the Vulkan dispatch.
+            // Each tile is a one-shot GPU weight window (cacheKey=0), so the
+            // backend cannot retain a full model's worth of expanded weights.
+            const std::size_t packedRowBytes = LinearW_RowBytes(wtEffective.type, cols);
+            if (packedRowBytes != 0 &&
+                rows <= (std::numeric_limits<std::size_t>::max)() / packedRowBytes &&
+                rows * packedRowBytes <= wtEffective.sizeBytes)
+            {
+                constexpr std::size_t kCompressedGpuTileRows = 32;
+                std::vector<float> tiledOutput(rows, 0.0f);
+                gpuDispatched = true;
+                for (std::size_t firstRow = 0; firstRow < rows;
+                     firstRow += kCompressedGpuTileRows)
+                {
+                    const std::size_t tileRows =
+                        (std::min)(kCompressedGpuTileRows, rows - firstRow);
+                    if (tileRows > (std::numeric_limits<std::size_t>::max)() / packedRowBytes)
+                        throw std::overflow_error("LinearW: compressed GPU tile size overflow");
+                    const std::size_t tileBytes = tileRows * packedRowBytes;
+                    if (firstRow > (std::numeric_limits<std::size_t>::max)() / packedRowBytes)
+                        throw std::overflow_error("LinearW: compressed GPU tile offset overflow");
+
+                    std::vector<std::uint8_t> tile(tileBytes);
+                    std::string decodeError;
+                    if (!wtEffective.readBytes(firstRow * packedRowBytes,
+                                               tile.data(), tileBytes, &decodeError))
+                        throw std::runtime_error("LinearW: compressed GPU tile read failed for " +
+                                                 wt.name + ": " + decodeError);
+
+                    WeightTensor gpuTile = wtEffective;
+                    gpuTile.data = tile.data();
+                    gpuTile.sizeBytes = tileBytes;
+                    gpuTile.rows = tileRows;
+                    // A zero cache key is essential: every temporary tile is
+                    // expanded for this dispatch only and must not pin VRAM.
+                    if (!tryVulkanGEMV(gpuTile, input,
+                                       tiledOutput.data() + firstRow,
+                                       tileRows, true))
+                    {
+                        gpuDispatched = false;
+                        break;
+                    }
+                }
+                if (gpuDispatched)
+                    std::copy(tiledOutput.begin(), tiledOutput.end(), output);
+            }
         }
-        if (tryVulkanGEMV(gpuWeight, input, output, outDim))
+        else
+        {
+            WeightTensor gpuWeight = wtEffective;
+            if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+            {
+                compressedGpuBytes.resize(gpuWeight.sizeBytes);
+                std::string decodeError;
+                if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
+                                         compressedGpuBytes.size(), &decodeError))
+                    throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
+                                             wt.name + ": " + decodeError);
+                gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            }
+            gpuDispatched = tryVulkanGEMV(gpuWeight, input, output, outDim);
+        }
+
+        if (gpuDispatched)
         {
             ++plannedGpuGemvOps_;
-if (bias)
-    {
-        for (size_t i = 0; i < outDim; ++i)
-        {
-            output[i] += bias[i];
-        }
-    }
-    // S07 diagnostic: dump LinearW output AFTER bias for layer-0 wq.
-    if (wt.name.find("blk.0.attn_q") != std::string::npos)
-    {
-        static bool s_postBiasDump = false;
-        if (!s_postBiasDump)
-        {
-            s_postBiasDump = true;
-            std::fprintf(stderr, "[POSTBIAS_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e bias0=%.6e\n",
-                         wt.name.c_str(), output[0], output[1], output[2], output[3], output[4],
-                         output[5], bias ? bias[0] : 0.0f);
-            std::fflush(stderr);
-        }
-    }
+            if (bias)
+            {
+                for (size_t i = 0; i < outDim; ++i)
+                    output[i] += bias[i];
+            }
+            if (wt.name.find("blk.0.attn_q") != std::string::npos)
+            {
+                static bool s_postBiasDump = false;
+                if (!s_postBiasDump)
+                {
+                    s_postBiasDump = true;
+                    std::fprintf(stderr,
+                        "[POSTBIAS_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e bias0=%.6e\n",
+                        wt.name.c_str(), output[0], output[1], output[2], output[3],
+                        output[4], output[5], bias ? bias[0] : 0.0f);
+                    std::fflush(stderr);
+                }
+            }
+
             auto tLinearW1 = std::chrono::high_resolution_clock::now();
-            double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
-            int typeIdx = wtEffective.type & 0x1F;
+            const double linearwMs =
+                std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
+            const int typeIdx = wtEffective.type & 0x1F;
             if (typeIdx >= 0 && typeIdx < 32)
             {
                 g_linearwByType[typeIdx].calls++;
@@ -7687,30 +7741,29 @@ if (bias)
             }
             if (telemetryControllerEnabled_ && telemetryController_)
             {
-                auto tGpuDispatch1 = std::chrono::high_resolution_clock::now();
-                auto gpuDispatchNs =
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(tGpuDispatch1 - tGpuDispatch0).count();
-                telemetryController_->record_gpu_dispatch(static_cast<uint64_t>(gpuDispatchNs));
+                const auto tGpuDispatch1 = std::chrono::high_resolution_clock::now();
+                const auto gpuDispatchNs =
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        tGpuDispatch1 - tGpuDispatch0).count();
+                telemetryController_->record_gpu_dispatch(
+                    static_cast<uint64_t>(gpuDispatchNs));
             }
             if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty())
-            {
                 elasticResidency_->ReleaseTensor(wt.name);
-            }
             return;
         }
+
         // Gate-killing: never silently substitute CPU while GPU slot is claimed.
         if (vulkanStrictNoCpuFallback_)
         {
             vulkanStrictViolation_ = true;
-            fprintf(stderr,
-                    "[LAYER_EXEC] FATAL: GPU LinearW failed for '%s' "
-                    "(type=%d rows=%zu cols=%zu) — CPU fallback forbidden\n",
-                    wt.name.c_str(), wtEffective.type, rows, cols);
-            fflush(stderr);
+            std::fprintf(stderr,
+                "[LAYER_EXEC] FATAL: GPU LinearW failed for '%s' "
+                "(type=%d rows=%zu cols=%zu) — CPU fallback forbidden\n",
+                wt.name.c_str(), wtEffective.type, rows, cols);
+            std::fflush(stderr);
             if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty())
-            {
                 elasticResidency_->ReleaseTensor(wt.name);
-            }
             throw std::runtime_error(
                 "LinearW: GPU dispatch failed and CPU fallback forbidden: " + wt.name);
         }
