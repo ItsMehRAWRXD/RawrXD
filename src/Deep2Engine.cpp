@@ -362,8 +362,8 @@ bool Deep2Engine::readROMCompressedRow(
             break;
         case deep2::TensorType::Q8_1:
             if (cols % 32u || cols / 32u >
-                (std::numeric_limits<std::size_t>::max)() / 40u) return false;
-            rowBytes = (cols / 32u) * 40u;
+                (std::numeric_limits<std::size_t>::max)() / 36u) return false;
+            rowBytes = (cols / 32u) * 36u;
             break;
         default:
             return false;
