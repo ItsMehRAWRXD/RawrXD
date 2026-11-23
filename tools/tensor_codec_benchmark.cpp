@@ -26,6 +26,7 @@ static const char* Name(Encoding e) {
     case Encoding::LZ4: return "lz4";
     case Encoding::ShuffleLZ4: return "shuffle-lz4";
     case Encoding::Shuffle16LZ4: return "shuffle16-lz4";
+    case Encoding::XorDeltaLZ4: return "xor-delta-lz4";
     }
     return "unknown";
 }
