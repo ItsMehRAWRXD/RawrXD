@@ -51,7 +51,9 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
 
 - `ChunkedF32Storage::BuildFromReader` builds the representation by reading
   bounded source chunks from a callback. It never stages the complete F32
-  tensor in an intermediate buffer.
+  tensor in an intermediate buffer. The cache probes the first bounded chunk
+  and rejects a non-compressible tensor immediately rather than scanning the
+  entire model before falling back to raw tile reads.
 - `TensorResidencyCache` retains only encodings that actually reduce bytes,
   enforces a configurable memory budget, tracks hits/misses/decoded bytes and
   evicts least-recently-used entries.
