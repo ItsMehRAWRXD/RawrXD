@@ -46,7 +46,7 @@ public:
 
     // Register an immutable byte span. No source pointer is retained.
     // Returns false if encoding does not save space or the entry cannot fit.
-    bool Register(const std::string& key, const void* source, size_t bytes) {
+    bool Register(const std::string& key, const void* source, size_t bytes,\n                  bool requireCompression = true) {
         if (key.empty() || (bytes && !source)) return false;
         if (!bytes) return false;
 
@@ -65,7 +65,7 @@ public:
             candidate->chunks.emplace_back(std::move(chunk));
             offset += n;
         }
-        if (total >= bytes) return false;
+        if (requireCompression && total >= bytes) return false;
         candidate->storedBytes = total;
 
         std::lock_guard<std::mutex> lock(mutex_);
@@ -82,6 +82,38 @@ public:
         logicalBytes_ += bytes;
         chunkCount_ += candidate->chunks.size();
         entries_.emplace(key, std::move(candidate));
+        return true;
+    }
+
+    // Store FP32 values as IEEE-754 binary16. This is a precision-reduction
+    // path (not lossless compression); callers must explicitly choose it.
+    // The source is copied and converted before admission, so no mmap pointer
+    // is retained. Range reads convert only requested values back to FP32.
+    bool RegisterF32AsF16(const std::string& key, const float* source,
+                          size_t elementCount) {
+        if (!source || !elementCount ||
+            elementCount > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+            return false;
+        std::vector<uint16_t> half(elementCount);
+        for (size_t i = 0; i < elementCount; ++i)
+            half[i] = FloatToHalf(source[i]);
+        return Register(key, half.data(), half.size() * sizeof(uint16_t), false);
+    }
+
+    bool ReadF32Range(const std::string& key, size_t elementOffset,
+                      size_t elementCount, float* destination) {
+        if (elementOffset > std::numeric_limits<size_t>::max() / sizeof(uint16_t) ||
+            elementCount > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+            return false;
+        const size_t byteOffset = elementOffset * sizeof(uint16_t);
+        const size_t byteCount = elementCount * sizeof(uint16_t);
+        if (elementOffset > std::numeric_limits<size_t>::max() - elementCount)
+            return false;
+        std::vector<uint16_t> half(elementCount);
+        if (!ReadRange(key, byteOffset, byteCount, half.data())) return false;
+        if (elementCount && !destination) return false;
+        for (size_t i = 0; i < elementCount; ++i)
+            destination[i] = HalfToFloat(half[i]);
         return true;
     }
 
@@ -187,6 +219,69 @@ private:
         size_t storedBytes = 0;
         uint64_t lastUse = 0;
     };
+
+    static uint16_t FloatToHalf(float value) noexcept {
+        uint32_t bits = 0;
+        std::memcpy(&bits, &value, sizeof(bits));
+        const uint32_t sign = (bits >> 16) & 0x8000u;
+        const uint32_t exponent = (bits >> 23) & 0xffu;
+        uint32_t mantissa = bits & 0x7fffffu;
+        if (exponent == 0xffu) {
+            if (!mantissa) return static_cast<uint16_t>(sign | 0x7c00u);
+            uint16_t payload = static_cast<uint16_t>(mantissa >> 13);
+            if (!payload) payload = 1;
+            return static_cast<uint16_t>(sign | 0x7c00u | payload | 0x0200u);
+        }
+        int32_t halfExp = static_cast<int32_t>(exponent) - 127 + 15;
+        if (halfExp >= 31) return static_cast<uint16_t>(sign | 0x7c00u);
+        if (halfExp <= 0) {
+            if (halfExp < -10) return static_cast<uint16_t>(sign);
+            mantissa |= 0x800000u;
+            const uint32_t shift = static_cast<uint32_t>(14 - halfExp);
+            uint32_t rounded = mantissa >> shift;
+            const uint32_t remainder = mantissa & ((1u << shift) - 1u);
+            const uint32_t halfway = 1u << (shift - 1u);
+            if (remainder > halfway || (remainder == halfway && (rounded & 1u)))
+                ++rounded;
+            return static_cast<uint16_t>(sign | rounded);
+        }
+        uint32_t rounded = mantissa >> 13;
+        const uint32_t remainder = mantissa & 0x1fffu;
+        if (remainder > 0x1000u || (remainder == 0x1000u && (rounded & 1u))) {
+            ++rounded;
+            if (rounded == 0x400u) {
+                rounded = 0;
+                ++halfExp;
+                if (halfExp >= 31) return static_cast<uint16_t>(sign | 0x7c00u);
+            }
+        }
+        return static_cast<uint16_t>(sign |
+            (static_cast<uint32_t>(halfExp) << 10) | rounded);
+    }
+
+    static float HalfToFloat(uint16_t value) noexcept {
+        const uint32_t sign = static_cast<uint32_t>(value & 0x8000u) << 16;
+        uint32_t exponent = (value >> 10) & 0x1fu;
+        uint32_t mantissa = value & 0x03ffu;
+        uint32_t bits = 0;
+        if (exponent == 0) {
+            if (!mantissa) bits = sign;
+            else {
+                int32_t e = -14;
+                while ((mantissa & 0x0400u) == 0) { mantissa <<= 1; --e; }
+                mantissa &= 0x03ffu;
+                bits = sign | (static_cast<uint32_t>(e + 127) << 23) |
+                       (mantissa << 13);
+            }
+        } else if (exponent == 0x1fu) {
+            bits = sign | 0x7f800000u | (mantissa << 13);
+        } else {
+            bits = sign | ((exponent - 15u + 127u) << 23) | (mantissa << 13);
+        }
+        float result = 0.0f;
+        std::memcpy(&result, &bits, sizeof(result));
+        return result;
+    }
 
     static void EncodeChunk(const uint8_t* src, size_t bytes, Chunk& out) {
         std::vector<uint8_t> rle;
