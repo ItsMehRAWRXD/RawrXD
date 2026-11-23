@@ -508,10 +508,10 @@ bool Deep2Engine::forwardLayerGpuResident(
                                         f32Tile.size() * sizeof(float));
                         } else {
                             for (std::size_t i = 0; i < f32Tile.size(); ++i) {
-                                uint16_t half = 0;
-                                std::memcpy(&half,
-                                            tile.bytes.data() + i * sizeof(uint16_t),
-                                            sizeof(half));
+                                const std::size_t byteOffset = i * sizeof(uint16_t);
+                                const uint16_t half = static_cast<uint16_t>(
+                                    tile.bytes[byteOffset] |
+                                    (static_cast<uint16_t>(tile.bytes[byteOffset + 1]) << 8));
                                 f32Tile[i] = rawrxd::compression::DecodeHalfToFloat(half);
                             }
                         }
