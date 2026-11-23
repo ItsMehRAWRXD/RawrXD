@@ -86,6 +86,12 @@ int main() {
         else if (std::isinf(expected)) CHECK(fp16Decoded[i] == expected);
         else CHECK(std::fabs(fp16Decoded[i] - expected) < 0.002f);
     }
+    uint16_t rawHalf[4] = {};
+    CHECK(cache.ReadF16Range("fp32.norm", 20, 4, rawHalf));
+    CHECK(rawHalf[0] == 0x7c00u);
+    CHECK(rawHalf[1] == 0xfc00u);
+    CHECK((rawHalf[2] & 0x7c00u) == 0x7c00u && (rawHalf[2] & 0x03ffu));
+    CHECK(rawHalf[3] == 0x0001u);
     float special[4] = {};
     CHECK(cache.ReadF32Range("fp32.norm", 20, 4, special));
     CHECK(std::isinf(special[0]) && special[0] > 0.0f);
