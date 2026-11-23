@@ -78,17 +78,103 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $listing = @(ctest --test-dir build -C Release -N)
           if ($LASTEXITCODE -ne 0) { throw "CTest discovery failed" }
-          foreach ($test in @('Deep2CompressedModelE2E', 'ZlibAutoDetectSmoke')) {
-            if (-not ($listing | Select-String -SimpleMatch $test)) {
-              throw "Required synthetic-model test not registered: $test"
-            }
+          if (-not ($listing | Select-String -SimpleMatch 'Deep2CompressedModelE2E')) {
+            throw "Required synthetic-model test not registered: Deep2CompressedModelE2E"
+          }
+          if ($listing | Select-String -SimpleMatch 'ZlibAutoDetectSmoke') {
+            Write-Host "ZLIB_AUTODETECT_TEST=REGISTERED"
+          } else {
+            Write-Host "ZLIB_AUTODETECT_TEST=NOT_REGISTERED (optional ZLIB dependency)"
           }
 
       - name: Run Deep2 compressed synthetic-model E2E
         shell: pwsh
         run: |
-          ctest --test-dir build -C Release -R "^(Deep2CompressedModelE2E|ZlibAutoDetectSmoke)$" --output-on-failure
+          $ErrorActionPreference = 'Stop'
+          ctest --test-dir build -C Release -R '^Deep2CompressedModelE2E
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        working-directory: services
+        run: pip install -r requirements.txt
+
+      # One step: the runner terminates the process tree after each step, so a
+      # background swarm started earlier is gone by the next step.
+      - name: HexMag swarm smoke test (/ask + /agent)
+        working-directory: services
+        shell: pwsh
+        run: |
+          $swarm = Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow -PassThru
+          try {
+            $deadline = [DateTime]::UtcNow.AddSeconds(90)
+            $healthy = $false
+            while ([DateTime]::UtcNow -lt $deadline) {
+              if ($swarm.HasExited) { throw "HexMag swarm exited early (exit code $($swarm.ExitCode))" }
+              try {
+                $healthy = (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode -eq 200
+              } catch { $healthy = $false }
+              if ($healthy) { break }
+              Start-Sleep -Seconds 1
+            }
+            if (!$healthy) { throw "HexMag swarm health timeout (90 seconds)" }
+            Write-Host "Swarm healthy on :8001"
+            python test_smoke.py
+            if ($LASTEXITCODE -ne 0) { throw "HexMag smoke tests failed" }
+          } finally {
+            if (!$swarm.HasExited) { Stop-Process -Id $swarm.Id -Force -ErrorAction SilentlyContinue }
+            Write-Host "Swarm cleanup done (PID $($swarm.Id))"
+          }
+ --output-on-failure --no-tests=error
           if ($LASTEXITCODE -ne 0) { throw "Deep2 compressed model E2E failed" }
+          $listing = @(ctest --test-dir build -C Release -N)
+          if ($LASTEXITCODE -ne 0) { throw "CTest discovery failed" }
+          if ($listing | Select-String -SimpleMatch 'ZlibAutoDetectSmoke') {
+            ctest --test-dir build -C Release -R '^ZlibAutoDetectSmoke
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        working-directory: services
+        run: pip install -r requirements.txt
+
+      # One step: the runner terminates the process tree after each step, so a
+      # background swarm started earlier is gone by the next step.
+      - name: HexMag swarm smoke test (/ask + /agent)
+        working-directory: services
+        shell: pwsh
+        run: |
+          $swarm = Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow -PassThru
+          try {
+            $deadline = [DateTime]::UtcNow.AddSeconds(90)
+            $healthy = $false
+            while ([DateTime]::UtcNow -lt $deadline) {
+              if ($swarm.HasExited) { throw "HexMag swarm exited early (exit code $($swarm.ExitCode))" }
+              try {
+                $healthy = (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode -eq 200
+              } catch { $healthy = $false }
+              if ($healthy) { break }
+              Start-Sleep -Seconds 1
+            }
+            if (!$healthy) { throw "HexMag swarm health timeout (90 seconds)" }
+            Write-Host "Swarm healthy on :8001"
+            python test_smoke.py
+            if ($LASTEXITCODE -ne 0) { throw "HexMag smoke tests failed" }
+          } finally {
+            if (!$swarm.HasExited) { Stop-Process -Id $swarm.Id -Force -ErrorAction SilentlyContinue }
+            Write-Host "Swarm cleanup done (PID $($swarm.Id))"
+          }
+ --output-on-failure --no-tests=error
+            if ($LASTEXITCODE -ne 0) { throw "Zlib auto-detect smoke failed" }
+          } else {
+            Write-Host "ZLIB_AUTODETECT_SMOKE=SKIPPED (not registered; not a pass)"
+          }
 
       - name: Set up Python
         uses: actions/setup-python@v5
