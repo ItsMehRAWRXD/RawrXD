@@ -84,6 +84,9 @@ public:
         return entries_.find(key) != entries_.end();
     }
     void MarkRawFallback(const std::string& key) {
+        // Serialize with first-touch construction so a concurrent admission
+        // cannot race a newly published raw-only decision.
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
         rawFallback_.insert(key);
     }
