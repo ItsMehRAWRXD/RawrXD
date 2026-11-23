@@ -71,7 +71,8 @@ public:
                 // Callers must also namespace keys by model identity, since
                 // equal-sized tensors can contain different values.
                 if (elementCount > std::numeric_limits<size_t>::max() / sizeof(float) ||
-                    existing->second.logicalBytes != elementCount * sizeof(float))
+                    existing->second.logicalBytes != elementCount * sizeof(float) ||
+                    existing->second.maxAbsError > maxAbsError)
                     return false;
                 existing->second.lastUse = ++tick_;
                 return true;
@@ -127,6 +128,7 @@ public:
         e.storage=std::move(built);
         e.compressedBytes=stored;
         e.logicalBytes=elementCount*sizeof(float);
+        e.maxAbsError=maxAbsError;
         e.lastUse=++tick_;
         compressedBytes_+=e.compressedBytes;
         logicalBytes_+=e.logicalBytes;
@@ -306,6 +308,7 @@ private:
         std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> storage;
         size_t compressedBytes=0;
         size_t logicalBytes=0;
+        float maxAbsError=0.0f;
         uint64_t lastUse=0;
         size_t activeReaders=0;
     };
