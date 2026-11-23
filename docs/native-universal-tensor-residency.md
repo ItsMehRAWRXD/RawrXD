@@ -122,3 +122,15 @@ The K-quant decoder implementation is mirrored from `NativeKQuant::DecodeBlock`;
 
 
 The Deep2 row-tile QGEMV shader now also accepts a typed F32 tile (4-byte values) so mixed-codec F32 chunks and registered quant formats without native packed shader decoding can still execute on GPU without expanding a full matrix. CI compiles this shader with `glslc` on SDK-equipped Linux and Windows runners. This is bounded CPU decompression followed by GPU F32 GEMV, not GPU-side RLE/LZ4 decompression.
+
+
+## Upstream GGML layout audit — Q4_K/Q5_K and Q6_K
+
+A byte-layout review against the upstream `ggml-org/llama.cpp` dequantization routines identified and corrected two decoder address calculations:
+
+- Q4_K/Q5_K: the packed minimum-scale high bits for groups 4–7 must be read from `scales[group]` relative to the scales array (absolute block byte `4 + group`). The Vulkan decoder and its CPU shader mirror now use that offset.
+- Q6_K: the low-nibble plane is ordered as q1/q2/q3/q4 slices. The low-nibble source lane is `(lane & 1) * 32 + column`, while the nibble shift is `(lane >> 1) * 4`. The native block decoder, Vulkan shader, and CPU shader mirror were corrected to match the upstream ordering.
+
+The regression now compares the packed shader mirror with the native range dequantizer for two adjacent blocks of every K-quant type. This catches disagreement between those implementations, but they still share a repository-owned native decoder; it is not a substitute for running a separately compiled upstream GGML reference fixture.
+
+CI now installs `glslc` and `spirv-tools` on Linux and makes packed-shader compilation plus `spirv-val` validation mandatory rather than silently skipping shader validation when the compiler is absent.
