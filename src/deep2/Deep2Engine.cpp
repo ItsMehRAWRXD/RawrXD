@@ -5965,6 +5965,8 @@ bool Deep2Engine::embedTokenFromShard(int tokenId, float* output)
 }
 
 // ============================================================================
+static size_t LinearW_RowBytes(int type, size_t cols);
+
 // Bind standard multi-shard weights
 //
 // Kimi/DeepSeek MLA uses K2NativeStreamGate. Standard multi-shard families
@@ -6044,7 +6046,7 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         // and vectors mapped because their current consumers read direct pointers.
         const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
         const bool compressMatrix = compressedMode && compressedMode[0] == '1' &&
-                                    dst.rows > 1 && dst.cols > 1;
+                                    dst.rows > 1 && dst.cols > 1 && LinearW_RowBytes(dst.type, dst.cols) > 0;
         if (compressMatrix)
         {
             if (!compressedWeightStore_)
