@@ -100,6 +100,22 @@ int main() {
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
     };
 
+    // BF16: upper 16 bits of IEEE F32, with bounded range reads and row lookup.
+    {
+        const std::vector<std::uint8_t> bytes = {
+            0x80,0x3f, 0x00,0x40, 0x40,0x40, 0x80,0x40,
+            0x00,0x40, 0x40,0x40, 0x80,0x40, 0xa0,0x40
+        };
+        auto tensor = load_bytes(bytes, path, 5);
+        const auto y = resident_bf16_matvec(tensor, x4, 2, 4, 6);
+        CHECK(y.size() == 2);
+        CHECK(std::fabs(y[0] - 30.f) < 1e-6f);
+        CHECK(std::fabs(y[1] - 40.f) < 1e-6f);
+        const auto row = resident_bf16_row(tensor, 1, 2, 4, 4);
+        CHECK(row.size() == 4 && row[0] == 2.f && row[1] == 3.f &&
+              row[2] == 4.f && row[3] == 5.f);
+    }
+
     // Q8_0: half scale 1.0 followed by 32 signed quantized values.
     {
         std::vector<std::uint8_t> bytes(2 * 34);
