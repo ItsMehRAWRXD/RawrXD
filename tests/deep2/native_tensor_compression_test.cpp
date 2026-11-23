@@ -295,5 +295,30 @@ int main() {
     bool rejected=false;
     try { auto bad=r; bad.payload[0]=0; (void)Decode(bad); } catch(const std::invalid_argument&) {rejected=true;}
     assert(rejected);
+    // Impossible admissions must not touch the backing model source.
+    size_t f32SourceReads = 0;
+    bool f32BudgetRejected = false;
+    try {
+        (void)ChunkedF32Storage::BuildFromReader(
+            16, 0.0f,
+            [&f32SourceReads](size_t, size_t, float*) {
+                ++f32SourceReads;
+                return true;
+            }, 4, false, 0);
+    } catch (const StorageAdmissionRejected&) { f32BudgetRejected = true; }
+    assert(f32BudgetRejected && f32SourceReads == 0);
+
+    size_t byteSourceReads = 0;
+    bool byteBudgetRejected = false;
+    try {
+        (void)ChunkedByteStorage::BuildFromReader(
+            16,
+            [&byteSourceReads](size_t, size_t, uint8_t*) {
+                ++byteSourceReads;
+                return true;
+            }, 4, false, 0);
+    } catch (const StorageAdmissionRejected&) { byteBudgetRejected = true; }
+    assert(byteBudgetRejected && byteSourceReads == 0);
+
     std::cout<<"native tensor compression tests PASS\n";
 }
