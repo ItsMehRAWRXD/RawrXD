@@ -614,22 +614,7 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
         if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
             return false;
 
-        tile.resize(elements);
         const uint64_t firstElement = firstRow * cols;
-        const bool tileRead = entry.type == deep2::TensorType::F32
-            ? readCompressedF32Tile(entry, firstElement, elements,
-                                    tile.data(), decodeScratch)
-            : readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
-                                        encodedScratch, decodeScratch);
-        if (!tileRead) return false;
-
-        deep2::TensorView weightTile{
-            deep2::TensorType::F32,
-            reinterpret_cast<const uint8_t*>(tile.data()),
-            elements * sizeof(float),
-            { countRows, cols },
-            true
-        };
         deep2::TensorView inputView{
             deep2::TensorType::F32,
             reinterpret_cast<const uint8_t*>(input),
@@ -637,8 +622,103 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             { cols },
             true
         };
-        if (!vulkanGemv(gpu, weightTile, inputView, tileOutput) ||
-            tileOutput.size() != static_cast<size_t>(countRows))
+        bool dispatched = false;
+
+        if (entry.type == deep2::TensorType::F32) {
+            // First touch streams the F32 source into the bounded compressed
+            // cache. Once admitted, export only the intersecting compact F16/
+            // BF16 bytes and send those bytes directly to the Vulkan shader.
+            const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+                std::to_string(entry.offset) + ":" + entry.name;
+            bool haveF32Tile = false;
+            if (!compressedF32Weights.Contains(cacheKey) &&
+                !compressedF32Weights.IsRawFallback(cacheKey)) {
+                tile.resize(elements);
+                if (!readCompressedF32Tile(entry, firstElement, elements,
+                                           tile.data(), decodeScratch))
+                    return false;
+                haveF32Tile = true;
+            }
+
+            if (compressedF32Weights.Contains(cacheKey)) {
+                RawrXD::TensorCompression::Encoding encoding =
+                    RawrXD::TensorCompression::Encoding::Raw;
+                std::vector<uint8_t> packedWeights;
+                if (compressedF32Weights.ExportUniform16BitRange(
+                        cacheKey, static_cast<size_t>(firstElement), elements,
+                        encoding, packedWeights)) {
+                    const deep2::TensorType packedType =
+                        encoding == RawrXD::TensorCompression::Encoding::F16
+                            ? deep2::TensorType::F16 : deep2::TensorType::BF16;
+                    deep2::TensorView packedView{
+                        packedType, packedWeights.data(), packedWeights.size(),
+                        { countRows, cols }, true
+                    };
+                    if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
+                        return false;
+                    dispatched = true;
+                }
+            }
+
+            if (!dispatched) {
+                if (!haveF32Tile) {
+                    tile.resize(elements);
+                    if (!readCompressedF32Tile(entry, firstElement, elements,
+                                               tile.data(), decodeScratch))
+                        return false;
+                }
+                deep2::TensorView weightTile{
+                    deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(tile.data()),
+                    elements * sizeof(float),
+                    { countRows, cols },
+                    true
+                };
+                if (!vulkanGemv(gpu, weightTile, inputView, tileOutput))
+                    return false;
+                dispatched = true;
+            }
+        } else if (entry.type == deep2::TensorType::F16 ||
+                   entry.type == deep2::TensorType::BF16) {
+            // GGUF F16/BF16 payloads are already compact. Read only the
+            // requested byte interval and keep them packed through dispatch.
+            if (firstElement > UINT64_MAX / sizeof(uint16_t) ||
+                elements > UINT64_MAX / sizeof(uint16_t))
+                return false;
+            const uint64_t byteOffset = firstElement * sizeof(uint16_t);
+            const uint64_t byteCount = static_cast<uint64_t>(elements) * sizeof(uint16_t);
+            if (byteOffset > entry.byteSize() ||
+                byteCount > entry.byteSize() - byteOffset ||
+                byteCount > std::numeric_limits<size_t>::max())
+                return false;
+            encodedScratch.resize(static_cast<size_t>(byteCount));
+            if (!rom.readTensorRange(entry, byteOffset, byteCount, encodedScratch.data()))
+                return false;
+            deep2::TensorView packedView{
+                entry.type, encodedScratch.data(), encodedScratch.size(),
+                { countRows, cols }, true
+            };
+            if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
+                return false;
+            dispatched = true;
+        } else {
+            tile.resize(elements);
+            if (!readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
+                                           encodedScratch, decodeScratch))
+                return false;
+            deep2::TensorView weightTile{
+                deep2::TensorType::F32,
+                reinterpret_cast<const uint8_t*>(tile.data()),
+                elements * sizeof(float),
+                { countRows, cols },
+                true
+            };
+            if (!vulkanGemv(gpu, weightTile, inputView, tileOutput))
+                return false;
+            dispatched = true;
+        }
+
+        if (!dispatched || tileOutput.size() != static_cast<size_t>(countRows))
             return false;
 
         std::copy(tileOutput.begin(), tileOutput.end(),
