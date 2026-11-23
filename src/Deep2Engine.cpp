@@ -824,7 +824,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
             const std::string spv = exeDir() + "shaders\\gemv_f32.spv";
             if (!f32Program.init(gpu.device, spv)) {
                 f32Program.destroy(gpu.device);
-                fprintf(stderr, "[VULKAN_GEMV] F32 program init failed for %s\\n", spv.c_str());
+                fprintf(stderr, "[VULKAN_GEMV] F32 program init failed for %s\n", spv.c_str());
                 f32BoundDevice = VK_NULL_HANDLE;
                 return false;
             }
@@ -837,7 +837,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
             const std::string spv = exeDir() + "shaders\\gemv_packed16.spv";
             if (!packed16Program.init(gpu.device, spv)) {
                 packed16Program.destroy(gpu.device);
-                fprintf(stderr, "[VULKAN_GEMV] packed16 program init failed for %s\\n", spv.c_str());
+                fprintf(stderr, "[VULKAN_GEMV] packed16 program init failed for %s\n", spv.c_str());
                 packed16BoundDevice = VK_NULL_HANDLE;
                 return false;
             }
