@@ -24,6 +24,7 @@ struct RepackTensor {
     uint64_t old_offset = 0, new_offset = 0, bytes = 0, source_bytes = 0;
     bool convert_f16 = false;
     bool convert_q8_0 = false;
+    bool q8_source_f16 = false;
 };
 inline bool ReadU32(std::istream& in, uint32_t& v) {
     return static_cast<bool>(in.read(reinterpret_cast<char*>(&v),4));
@@ -239,6 +240,7 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         if(convert_f32_to_q8_0 && (t.type==0 || t.type==1) && count%32==0) {
             t.convert_q8_0=true;
+            t.q8_source_f16=(t.type==1);
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
@@ -325,7 +327,7 @@ inline RepackError RepackGGUF(const std::string& input,
         if(t.old_offset>UINT64_MAX-dataStart)return RepackError::Overflow;
         if(t.convert_q8_0) {
             if(!ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
-                                        t.source_bytes,t.source_bytes==t.bytes*2))
+                                        t.source_bytes,t.q8_source_f16))
                 return RepackError::Output;
         } else if(t.convert_f16) {
             if(!ConvertF32RangeToF16(in,out,dataStart+t.old_offset,t.source_bytes))
