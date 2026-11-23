@@ -30,3 +30,9 @@ jobs:
               "./reap-test-bin/$name"
             fi
           done
+          echo "Compiling native F16 accuracy audit CLI"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            g++ -std=c++17 -O2 -Wall -Wextra "tools/reap_f16_audit_cli.cpp" -o "reap-test-bin/reap_f16_audit_cli.exe"
+          else
+            g++ -std=c++17 -O2 -Wall -Wextra "tools/reap_f16_audit_cli.cpp" -o "reap-test-bin/reap_f16_audit_cli"
+          fi
