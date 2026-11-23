@@ -1249,8 +1249,13 @@ inline RepackError RepackGGUF(const std::string& input,
     // arithmetic; unlike the general matrix Q4 path, this is lossless.
     if(auto_compress) {
         for(auto& t:tensors) {
-            if(t.type!=7 || t.convert_q4_0 || t.convert_q5_0 ||
-               t.dims[0]%32)continue;
+            // A nonsensitive matrix may already have selected lossy
+            // Q4_0. Prefer exact Q5_0 when its original Q5_1
+            // payload admits a bit-identical representation.
+            const bool plannedQ4FromQ51=
+                t.convert_q4_0 && t.q4_source_type==7;
+            if((t.type!=7 && !plannedQ4FromQ51) ||
+               t.convert_q5_0 || t.dims[0]%32)continue;
             uint64_t count=1;
             for(const auto dim:t.dims)
                 if(!CheckedMultiply(count,dim,count))
@@ -1258,10 +1263,12 @@ inline RepackError RepackGGUF(const std::string& input,
             uint64_t compact=0;
             if(!CheckedMultiply(count/32,22,compact))
                 return RepackError::Overflow;
-            if(compact>=t.bytes)continue;
+            if(compact>=t.source_bytes)continue;
             if(dataStart>UINT64_MAX-t.old_offset)
                 return RepackError::Overflow;
             if(IsExactQ5_1ToQ5_0(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q4_0=false;
+                t.q4_source_type=0;
                 t.convert_q5_0=true;
                 t.q5_source_q5_1=true;
                 t.type=6;
