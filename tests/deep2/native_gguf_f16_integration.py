@@ -341,6 +341,38 @@ def run(binary):
         strict=root/"f64-q8k-strict.gguf"
         subprocess.run([binary,str(ksrc),str(strict),"0","q8_k"],check=True)
         assert strict.read_bytes()==ksrc.read_bytes()
+        # Q2_K native 256-value superblock: 16 affine subgroups, packed
+        # 2-bit codes, fp16 super-scales. Independently decode its layout.
+        q2vals=[((i%17)-8)/4.0 for i in range(256)]
+        q2raw=struct.pack("<"+"d"*256,*q2vals)
+        q2meta=S("general.architecture")+U32(8)+S("llama")
+        q2meta+=S("general.alignment")+U32(4)+U32(ALIGN)
+        q2hdr=b"GGUF"+U32(3)+U64(1)+U64(2)+q2meta
+        q2hdr+=S("blk.0.attn_q.weight")+U32(1)+U64(256)+U32(28)+U64(0)
+        q2src=root/"f64-q2k-source.gguf"
+        q2src.write_bytes(pad(q2hdr)+q2raw)
+        q2out=root/"f64-q2k-output.gguf"
+        subprocess.run([binary,str(q2src),str(q2out),"0.5","q2_k"],check=True)
+        q2b,q2s,q2m,q2t=parse(q2out)
+        assert q2t["blk.0.attn_q.weight"][0]==10
+        assert len(q2b)-q2s==84
+        qo=q2s+q2t["blk.0.attn_q.weight"][2]
+        scales=q2b[qo:qo+16];packed=q2b[qo+16:qo+80]
+        d,dm=struct.unpack_from("<ee",q2b,qo+80)
+        restored=[0.0]*256
+        for chunk in range(2):
+            for pair in range(4):
+                for half in range(2):
+                    g=chunk*8+pair*2+half
+                    sc=scales[g]&15;mn=scales[g]>>4
+                    for j in range(16):
+                        qi=chunk*32+pair*16+j
+                        code=(packed[qi]>>(pair*2))&3
+                        restored[g*16+j]=d*sc*code-dm*mn
+        assert max(abs(a-b) for a,b in zip(restored,q2vals))<=0.5
+        q2strict=root/"f64-q2k-strict.gguf"
+        subprocess.run([binary,str(q2src),str(q2strict),"0","q2_k"],check=True)
+        assert q2strict.read_bytes()==q2src.read_bytes()
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
