@@ -91,6 +91,12 @@ int main() {
     std::vector<float> tile(1500,-999.0f);
     chunked.ReadRange(900,tile.size(),tile.data());
     for(size_t i=0;i<tile.size();++i) assert(tile[i]==resident[900+i]);
+    std::vector<uint8_t> reusableDecodeScratch;
+    std::vector<float> secondTile(700);
+    chunked.ReadRange(3000,secondTile.size(),secondTile.data(),reusableDecodeScratch);
+    for(size_t i=0;i<secondTile.size();++i)
+        assert(secondTile[i]==resident[3000+i]);
+
     std::vector<float> whole(resident.size());
     chunked.ReadRange(0,whole.size(),whole.data());
     assert(whole==resident);
