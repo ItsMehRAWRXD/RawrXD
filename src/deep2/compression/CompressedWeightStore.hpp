@@ -73,6 +73,9 @@ public:
                    bool require_savings=false,
                    std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     bool addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error=nullptr);
+    bool addTensorF32AsF16FromReader(std::string name,const float* values,
+                   std::size_t count,std::string* error=nullptr,
+                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     std::uint32_t tensorType(const std::string& name) const;
     bool contains(const std::string& name) const;
     std::size_t tensorBytes(const std::string& name) const;
