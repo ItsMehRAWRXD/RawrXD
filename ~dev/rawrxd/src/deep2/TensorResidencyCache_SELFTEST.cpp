@@ -29,6 +29,15 @@ int main() {
     CHECK(cache.ReadRange("weights.layer0", 777, tile.size(), tile.data()));
     CHECK(std::equal(tile.begin(), tile.end(), source.begin() + 777));
 
+    // Matrix-style row-at-a-time reads match the exact packed source rows.
+    std::vector<uint8_t> rowTile(1024);
+    for (size_t row = 0; row < 8; ++row) {
+        CHECK(cache.ReadRange("weights.layer0", row * rowTile.size(),
+                              rowTile.size(), rowTile.data()));
+        CHECK(std::equal(rowTile.begin(), rowTile.end(),
+                         source.begin() + row * rowTile.size()));
+    }
+
     // Invalid range and missing key must not mutate the destination.
     std::vector<uint8_t> untouched(16, 0xa5);
     CHECK(!cache.ReadRange("weights.layer0", source.size() - 2, 4, untouched.data()));
