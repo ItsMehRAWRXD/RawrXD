@@ -1620,8 +1620,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
 
     // Compressed F32 tensors remain available for CPU execution after GPU
     // attempts. This ordering lets eligible exact F16/BF16 representations use
-    // Vulkan QGEMV first, while RLE/LZ4/mixed chunks decode only the rows needed
-    // by the CPU GEMV when no packed GPU view is available.
+    // Vulkan QGEMV first, while mixed F32 chunks and losslessly compressed
+    // quantized-byte chunks decode only bounded rows when no packed GPU view applies.
     if (wt.compressedF32) {
         if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
             throw std::runtime_error("LinearW: compressed backing requires F32 wire type");
