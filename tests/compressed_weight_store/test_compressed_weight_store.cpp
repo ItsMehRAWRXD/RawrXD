@@ -18,6 +18,14 @@ int main(){
  std::vector<std::uint8_t> random_data(4096);std::mt19937 rng(7);for(auto& b:random_data)b=static_cast<std::uint8_t>(rng());
  assert(store.addTensor("random",random_data.data(),random_data.size(),&error));std::vector<std::uint8_t> random_out(random_data.size());
  assert(store.readRange("random",0,random_out.data(),random_out.size(),&error));assert(random_data==random_out);
- const auto s=store.stats();assert(s.tensors==2&&s.raw_bytes==input.size()+random_data.size());
+ const float f32[]={1.0f,-2.0f,65504.0f,0.00006103515625f,0.0f};
+ assert(store.addTensorF32AsF16("fp16.weights",f32,5,&error));
+ assert(store.tensorType("fp16.weights")==rawrxd::compression::GGML_TYPE_F16);
+ assert(store.tensorBytes("fp16.weights")==10);
+ std::uint16_t half[5]={};assert(store.readRange("fp16.weights",0,half,sizeof(half),&error));
+ assert(half[0]==0x3C00u&&half[1]==0xC000u&&half[2]==0x7BFFu&&half[3]==0x0400u&&half[4]==0u);
+ assert(rawrxd::compression::floatToHalfRNE(1.00048828125f)==0x3C00u); // halfway rounds to even
+ assert(rawrxd::compression::floatToHalfRNE(1.00146484375f)==0x3C02u); // odd halfway rounds up
+ const auto s=store.stats();assert(s.tensors==3&&s.raw_bytes==input.size()+random_data.size()+10);
  std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\n';
 }
