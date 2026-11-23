@@ -908,7 +908,11 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
                               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Wbuf, Wmem, nullptr)) {
         cleanup(); return false;
     }
-    if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, wView.data, logicalWeightBytes)) {
+    // Vulkan buffer-copy sizes/offsets are 4-byte aligned. Pad the final
+    // compact word without changing the logical element count seen by the shader.
+    std::vector<uint8_t> alignedWeights(static_cast<size_t>(weightBufferBytes), 0);
+    std::memcpy(alignedWeights.data(), wView.data, logicalWeightBytes);
+    if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, alignedWeights.data(), weightBufferBytes)) {
         cleanup(); return false;
     }
     if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) {
