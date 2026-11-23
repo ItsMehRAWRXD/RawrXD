@@ -553,6 +553,47 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/compression_roundtrip_test.cpp")
     endif()
 endif()
 
+# Tensor-aware lossless compression for non-repetitive model weights:
+# adaptive per-block selection among raw / zlib / byte-shuffle-zlib /
+# delta-shuffle-zlib, with CRC-checked portable storage and a bounded
+# request-local decoded-block cache. CompressedMatVecReference multiplies
+# through that cache without ever materialising the full matrix. These tests
+# use zlib directly (independent of rawrxd_compression_core), so they only
+# build when a zlib provider is available.
+if(HAVE_ZLIB OR ZLIB_FOUND OR TARGET zlib OR TARGET ZLIB::ZLIB)
+    set(_RAWRXD_TENSOR_TESTS
+        tensor_aware_lossless_test
+        tensor_weight_storage_test
+        decoded_block_cache_test
+        compressed_matvec_reference_test)
+    foreach(_ttest ${_RAWRXD_TENSOR_TESTS})
+        if(EXISTS "${CMAKE_SOURCE_DIR}/tests/${_ttest}.cpp")
+            add_executable(${_ttest} tests/${_ttest}.cpp)
+            target_include_directories(${_ttest} PRIVATE
+                "${CMAKE_SOURCE_DIR}"
+                "${CMAKE_SOURCE_DIR}/include"
+                "${CMAKE_SOURCE_DIR}/src")
+            target_compile_features(${_ttest} PRIVATE cxx_std_17)
+            if(MSVC)
+                target_compile_options(${_ttest} PRIVATE /EHsc)
+            endif()
+            add_test(NAME ${_ttest} COMMAND ${_ttest})
+            foreach(_zlib_target zlib ZLIB::ZLIB)
+                if(TARGET ${_zlib_target})
+                    get_target_property(_zlib_kind3 ${_zlib_target} TYPE)
+                    if(_zlib_kind3 STREQUAL "SHARED_LIBRARY")
+                        add_custom_command(TARGET ${_ttest} POST_BUILD
+                            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                "$<TARGET_FILE:${_zlib_target}>"
+                                "$<TARGET_FILE_DIR:${_ttest}>"
+                            VERBATIM)
+                    endif()
+                endif()
+            endforeach()
+        endif()
+    endforeach()
+endif()
+
 find_package(CURL QUIET)
 if(CURL_FOUND)
     message(STATUS "CURL found: ${CURL_VERSION_STRING}")
