@@ -10,7 +10,7 @@ int main() {
  WriteName(o,"custom.vector");WriteU32(o,1);WriteU64(o,320);WriteU32(o,3);WriteU64(o,0);
  WriteName(o,"blk.0.attn_norm.weight");WriteU32(o,1);WriteU64(o,64);WriteU32(o,3);WriteU64(o,224);
  PadTo(o,32);
- for(int b=0;b<12;++b){if(b==10)PadTo(o,32);WriteU16(o,0x3800);WriteU16(o,0xc400);
+ for(int b=0;b<12;++b){if(b==10)PadTo(o,32);WriteU16(o,0x3800);WriteU16(o,b<10?0xc400:0x0000);
  for(int i=0;i<16;++i)o.put(static_cast<char>(i*7+b));}
  }
  if(RepackGGUF(src,dst,UINT64_MAX,false,false,false,false,true)!=RepackError::None)++failures;
