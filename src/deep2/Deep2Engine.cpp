@@ -3526,6 +3526,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
 
                 if (remaining > 0 && allowF32ToF16 && validF32Tolerance &&
                     wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                    wt.cols != 0 &&
                     wt.rows <= (std::numeric_limits<std::size_t>::max)() / wt.cols)
                 {
                     const std::size_t elements = wt.rows * wt.cols;
