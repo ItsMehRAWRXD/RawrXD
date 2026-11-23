@@ -702,7 +702,7 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,streamF64toF32[i]?t.bytes/2:(streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size())))))))));
+            cursor=add(cursor,streamF64toF32[i]?t.bytes/2:(streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size()))))))))));
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
