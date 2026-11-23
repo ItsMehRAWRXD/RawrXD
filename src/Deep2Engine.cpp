@@ -506,7 +506,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         deep2::DequantizedTensor tokenEmbDq;
         if (!dequantTensor(*tokenEmb, tokenEmbDq)) return false;
         if (firstToken >= tokenEmbDq.cols) firstToken = 0;
-        if (tokenEmbDq.data.size() < (static_cast<size_t>(firstToken) + 1) * hiddenDim) return false;
+        if (hiddenDim && static_cast<size_t>(firstToken) + 1 > tokenEmbDq.data.size() / hiddenDim) return false;
         std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
                     hiddenDim * sizeof(float));
     }
