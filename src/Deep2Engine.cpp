@@ -284,6 +284,17 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
                                                   uint64_t elementCount,
                                                   float* destination,
                                                   std::vector<uint8_t>& encodedScratch) {
+    std::vector<uint8_t> decodeScratch;
+    return readDequantizedTensorTile(entry, firstElement, elementCount,
+                                     destination, encodedScratch, decodeScratch);
+}
+
+bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                                  uint64_t firstElement,
+                                                  uint64_t elementCount,
+                                                  float* destination,
+                                                  std::vector<uint8_t>& encodedScratch,
+                                                  std::vector<uint8_t>& decodeScratch) {
     if (!romMode || !destination) return false;
     switch (entry.type) {
     case deep2::TensorType::F16:
@@ -379,10 +390,9 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
     }
 
     encodedScratch.resize(static_cast<size_t>(byteCount));
-    std::vector<uint8_t> byteDecodeScratch;
     const bool cached = compressedEncodedWeights.Contains(cacheKey) &&
         compressedEncodedWeights.ReadRange(cacheKey, static_cast<size_t>(byteOffset),
-            static_cast<size_t>(byteCount), encodedScratch.data(), byteDecodeScratch);
+            static_cast<size_t>(byteCount), encodedScratch.data(), decodeScratch);
     if (!cached && !rom.readTensorRange(entry, byteOffset, byteCount, encodedScratch.data()))
         return false;
     return deep2::dequantizeTensorRange(entry.type, totalElements, firstElement,
@@ -408,6 +418,7 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
         std::fill(output, output + static_cast<size_t>(rows), 0.0f);
         std::vector<float> tile;
         std::vector<uint8_t> encodedScratch;
+        std::vector<uint8_t> decodeScratch;
         for (uint64_t firstRow = 0; firstRow < rows;) {
             const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
             if (countRows > std::numeric_limits<size_t>::max() / colsSize)
@@ -415,7 +426,7 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
             const size_t elements = static_cast<size_t>(countRows) * colsSize;
             tile.resize(elements);
             if (!readDequantizedTensorTile(entry, firstRow * cols, elements, tile.data(),
-                                          encodedScratch) ||
+                                          encodedScratch, decodeScratch) ||
                 !gemvFloat(tile.data(), input, output + static_cast<size_t>(firstRow),
                            countRows, cols))
                 return false;
@@ -482,7 +493,7 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             ? readCompressedF32Tile(entry, firstElement, elements,
                                     tile.data(), decodeScratch)
             : readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
-                                        decodeScratch);
+                                        encodedScratch, decodeScratch);
         if (!tileRead) return false;
 
         deep2::TensorView weightTile{
