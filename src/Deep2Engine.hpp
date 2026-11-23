@@ -34,6 +34,7 @@ struct Deep2Engine {
         size_t f32BudgetBytes = 0, encodedBudgetBytes = 0;
         size_t sourcePagerBudgetBytes = 0, sourcePagerResidentBytes = 0;
         size_t sourcePagerPageCount = 0;
+        size_t gpuWeightBudgetBytes = 0, gpuCachedWeightBytes = 0;
         size_t f32CompressedBytes = 0, encodedCompressedBytes = 0;
         size_t f32LogicalBytes = 0, encodedLogicalBytes = 0;
         size_t f32TensorCount = 0, encodedTensorCount = 0;
