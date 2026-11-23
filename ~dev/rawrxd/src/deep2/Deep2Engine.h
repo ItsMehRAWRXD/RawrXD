@@ -95,6 +95,11 @@ struct WeightTensor {
     // Optional private compressed F32 backing. GGUF wire type and mapped
     // source remain unchanged; CPU inference may opt into row-streamed reads.
     std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> compressedF32;
+    struct GpuCompressedF32Payload {
+        std::vector<uint8_t> bytes;
+        int ggmlType = -1; // 1=F16, 30=BF16; payload remains compressed on device
+    };
+    mutable std::shared_ptr<const GpuCompressedF32Payload> gpuF16Payload;
 
     bool EnableCompressedF32(float maxAbsError, size_t chunkElements=4096) {
         if (type != 0 || !data || rows == 0 || cols == 0 ||
@@ -110,10 +115,65 @@ struct WeightTensor {
             if (candidate.storedBytes() >= sizeBytes) return false;
             compressedF32=std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 std::move(candidate));
+            std::atomic_store_explicit(&gpuF16Payload,
+                std::shared_ptr<const GpuCompressedF32Payload>{},
+                std::memory_order_release);
             return true;
         } catch (...) {
             return false;
         }
+    }
+
+    // Materialize one immutable, contiguous 16-bit GPU representation once.
+    // The shared payload owns the bytes for every GpuWeightView and upload.
+    // Only uniform F16/BF16 chunk sets qualify.
+    bool BuildCompressedF32GpuView(uint32_t rowBegin, uint32_t rowCount,
+                                   GpuWeightView& out) const noexcept {
+        out = {};
+        if (type != 0 || !compressedF32 || !rows || !cols || !rowCount ||
+            rowBegin >= rows || rowCount > rows - rowBegin ||
+            cols > std::numeric_limits<size_t>::max() / 2 ||
+            rows > std::numeric_limits<size_t>::max() / (cols * 2))
+            return false;
+        auto payload = std::atomic_load_explicit(
+            &gpuF16Payload, std::memory_order_acquire);
+        if (!payload) {
+            RawrXD::TensorCompression::Encoding encoding{};
+            std::vector<uint8_t> bytes;
+            if (!compressedF32->ExportUniform16Bit(encoding, bytes) ||
+                bytes.size() != rows * cols * 2)
+                return false;
+            auto candidate = std::make_shared<GpuCompressedF32Payload>();
+            candidate->bytes = std::move(bytes);
+            candidate->ggmlType = encoding ==
+                RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
+            std::shared_ptr<const GpuCompressedF32Payload> desired = candidate;
+            std::shared_ptr<const GpuCompressedF32Payload> expected;
+            if (std::atomic_compare_exchange_strong_explicit(
+                    &gpuF16Payload, &expected, desired,
+                    std::memory_order_release, std::memory_order_acquire))
+                payload = std::move(desired);
+            else
+                payload = std::move(expected);
+        }
+        if (!payload || (payload->ggmlType != 1 && payload->ggmlType != 30))
+            return false;
+        const size_t rowBytes = cols * 2;
+        const size_t offset = static_cast<size_t>(rowBegin) * rowBytes;
+        const size_t bytes = static_cast<size_t>(rowCount) * rowBytes;
+        if (offset > payload->bytes.size() ||
+            bytes > payload->bytes.size() - offset)
+            return false;
+        out.data = payload->bytes.data() + offset;
+        out.bytes = bytes;
+        out.type = payload->ggmlType;
+        out.rows = rowCount;
+        out.cols = static_cast<uint32_t>(cols);
+        out.key = static_cast<uint64_t>(
+            reinterpret_cast<uintptr_t>(payload->bytes.data())) ^
+            (static_cast<uint64_t>(rowBegin) << 32) ^ rowCount ^
+            (static_cast<uint64_t>(payload->ggmlType) << 56);
+        return true;
     }
 
     // BP16 / external mapping support
