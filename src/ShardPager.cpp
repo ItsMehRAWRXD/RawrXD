@@ -118,34 +118,23 @@ void PageCache::release(Page* page) {
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
     if (size == 0) return true;
     if (!out || offset > UINT64_MAX - (size - 1)) return false;
-    const uint64_t firstPage64 = offset / m_pageSize;
-    const uint64_t lastPage64 = (offset + size - 1) / m_pageSize;
-    if (lastPage64 < firstPage64 ||
-        lastPage64 - firstPage64 >= std::numeric_limits<size_t>::max())
-        return false;
-    const size_t firstPage = static_cast<size_t>(firstPage64);
-    const size_t lastPage = static_cast<size_t>(lastPage64);
-    std::vector<Page*> held;
-    held.reserve(lastPage - firstPage + 1);
-    for (std::size_t p = firstPage; p <= lastPage; ++p) {
-        Page* pg = acquire(shard, static_cast<uint64_t>(p));
-        if (!pg) {
-            for (Page* rel : held) release(rel);
-            return false;
-        }
-        held.push_back(pg);
-    }
-    std::uint64_t copied = 0;
+
+    // Acquire/copy/release one page at a time. Holding every page in a large
+    // request simultaneously can exceed the configured pager budget because
+    // leased pages are not evictable.
+    uint64_t copied = 0;
     while (copied < size) {
-        std::size_t p = static_cast<std::size_t>((offset + copied) / m_pageSize);
-        Page* pg = held[p - firstPage];
-        std::size_t pageRel = static_cast<std::size_t>((offset + copied) % m_pageSize);
-        std::size_t avail = m_pageSize - pageRel;
-        std::size_t chunk = (std::size_t)(size - copied) < avail ? (std::size_t)(size - copied) : avail;
-        std::memcpy(out + copied, pg->data.data() + pageRel, chunk);
+        const uint64_t absolute = offset + copied;
+        const uint64_t pageNo = absolute / m_pageSize;
+        Page* page = acquire(shard, pageNo);
+        if (!page) return false;
+        const size_t pageOffset = static_cast<size_t>(absolute % m_pageSize);
+        const uint64_t available = static_cast<uint64_t>(m_pageSize - pageOffset);
+        const size_t chunk = static_cast<size_t>(std::min<uint64_t>(size - copied, available));
+        std::memcpy(out + static_cast<size_t>(copied), page->data.data() + pageOffset, chunk);
+        release(page);
         copied += chunk;
     }
-    for (Page* rel : held) release(rel);
     return true;
 }
 
