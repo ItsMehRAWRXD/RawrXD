@@ -582,6 +582,13 @@ if(RAWRXD_BUILD_TESTS AND RAWRXD_ZLIB_ENABLED)
             endif()
         endif()
     endforeach()
+    if(WIN32 AND ZLIB_DLL)
+        add_custom_command(TARGET compression_zlib_provider_compile_test POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${ZLIB_DLL}"
+                "$<TARGET_FILE_DIR:compression_zlib_provider_compile_test>"
+            VERBATIM)
+    endif()
 endif()
 
 find_package(CURL QUIET)
