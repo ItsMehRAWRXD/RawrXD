@@ -34,6 +34,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Win32 IDE source-order regression failed" }
           python tests/win32ide_ci_lifecycle_regression.py
           if ($LASTEXITCODE -ne 0) { throw "Win32 IDE CI lifecycle regression failed" }
+          python tests/win32ide_artifact_e2e_gate_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Win32 IDE artifact/E2E gate regression failed" }
 
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
