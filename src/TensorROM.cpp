@@ -139,11 +139,29 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         e.name = readGGUFStr(f);
         uint32_t nDims = 0;
         f.read(reinterpret_cast<char*>(&nDims), 4);
+        if (!f || nDims == 0 || nDims > 4) {
+            fprintf(stderr, "[ROM] %s: invalid tensor rank %u for %s\\n",
+                    manifest.path.c_str(), nDims, e.name.c_str());
+            return false;
+        }
         e.dims.resize(nDims);
-        if (nDims > 0) f.read(reinterpret_cast<char*>(e.dims.data()), nDims * 8);
+        f.read(reinterpret_cast<char*>(e.dims.data()), nDims * 8);
         uint32_t type = 0;
         f.read(reinterpret_cast<char*>(&type), sizeof(type));
         e.type = static_cast<TensorType>(type);
+        uint64_t elements = 1;
+        for (uint64_t dim : e.dims) {
+            if (dim == 0 || elements > std::numeric_limits<uint64_t>::max() / dim)
+                return false;
+            elements *= dim;
+        }
+        if (tensorTypeBytesPerValue(e.type) <= 0.0 ||
+            (quantBlockSize(e.type) > 1 && e.dims[0] % quantBlockSize(e.type) != 0) ||
+            tensorStorageBytes(elements, e.type) == std::numeric_limits<uint64_t>::max()) {
+            fprintf(stderr, "[ROM] %s: unsupported or misaligned GGUF tensor %s type=%u\\n",
+                    manifest.path.c_str(), e.name.c_str(), type);
+            return false;
+        }
         f.read(reinterpret_cast<char*>(&e.offset), 8);
         e.shardIndex = static_cast<size_t>(m_shards.size());
         manifest.tensors.push_back(std::move(e));
