@@ -3,12 +3,16 @@
 #include "TensorWeightStorage.hpp"
 #include "StreamingTensorFile.hpp"
 #include "StreamingBlockCache.hpp"
-#include <cassert>
+#include <algorithm>
+#include <string>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+static void require(bool ok, const char* what) {
+    if (!ok) throw std::runtime_error(std::string("failed: ")+what);
+}
 int main() {
     using namespace rawrxd::weights;
     const char* path="streaming_residency_test.rwt1";
@@ -25,24 +29,24 @@ int main() {
         }
         {
             StreamingTensorFile file(path);
-            assert(file.plain_size()==plain.size());
-            assert(file.block_count()==9);
+            require(file.plain_size()==plain.size(), "file.plain_size()==plain.size()");
+            require(file.block_count()==9, "file.block_count()==9");
             StreamingBlockCache cache(file,2048);
             auto whole=cache.read(0,plain.size());
-            assert(whole==plain);
-            assert(cache.peak_resident_bytes()<=2048);
-            assert(cache.evictions()>0);
+            require(whole==plain, "whole==plain");
+            require(cache.peak_resident_bytes()<=2048, "cache.peak_resident_bytes()<=2048");
+            require(cache.evictions()>0, "cache.evictions()>0");
             auto cross=cache.read(990,90);
-            assert(std::equal(cross.begin(),cross.end(),plain.begin()+990));
+            require(std::equal(cross.begin(),cross.end(),plain.begin()+990), "std::equal(cross.begin(),cross.end(),plain.begin()+990)");
             cache.get(0);
             const auto misses=cache.misses();
             cache.get(0);
-            assert(cache.misses()==misses && cache.hits()>0);
-            assert(cache.resident_bytes()<=2048);
+            require(cache.misses()==misses && cache.hits()>0, "cache.misses()==misses && cache.hits()>0");
+            require(cache.resident_bytes()<=2048, "cache.resident_bytes()<=2048");
             bool rejected=false;
             try { (void)cache.read(plain.size()-3,10); }
             catch (const std::out_of_range&) { rejected=true; }
-            assert(rejected);
+            require(rejected, "rejected");
         }
         {
             auto bad=packed;
@@ -54,7 +58,7 @@ int main() {
             bool rejected=false;
             try { (void)file.read_block(file.block_count()-1); }
             catch (const std::exception&) { rejected=true; }
-            assert(rejected);
+            require(rejected, "rejected");
         }
         std::remove(path);
         std::cout<<"STREAMING_RWT1=PASS CACHE_EVICTION=PASS CRC_REJECTION=PASS\n";
