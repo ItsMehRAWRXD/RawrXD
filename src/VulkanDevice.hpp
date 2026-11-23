@@ -79,7 +79,7 @@ public:
 
     // Dispatch gemv-style compute on `gpu`. Buffers must already live on `gpu` memory.
     bool dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                  uint32_t rows, uint32_t cols);
+                  uint32_t rows, uint32_t cols, uint32_t weightEncoding = 0);
 
 private:
     VkDevice m_device = VK_NULL_HANDLE;
