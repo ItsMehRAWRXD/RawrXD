@@ -25,6 +25,7 @@ struct RepackTensor {
     bool convert_f16 = false;
     bool convert_q8_0 = false;
     bool q8_source_f16 = false;
+    bool convert_q4_0 = false;
 };
 inline bool ReadU32(std::istream& in, uint32_t& v) {
     return static_cast<bool>(in.read(reinterpret_cast<char*>(&v),4));
@@ -175,12 +176,55 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
                                    uint64_t from,uint64_t sourceBytes) {
     return ConvertFloatRangeToQ8_0(in,out,from,sourceBytes,false);
 }
+// GGML Q4_0 from existing Q8_0: 32 values, FP16 scale and 16 packed nibbles.
+// Nibble i is the low half; nibble i+16 is the high half of byte i.
+inline bool ConvertQ8_0RangeToQ4_0(std::ifstream& in,std::ofstream& out,
+                                    uint64_t from,uint64_t sourceBytes) {
+    if(sourceBytes%34 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char source[34],encoded[18];
+    while(sourceBytes) {
+        if(!in.read(reinterpret_cast<char*>(source),34))return false;
+        const uint16_t h=uint16_t(source[0])|(uint16_t(source[1])<<8);
+        const uint32_t scaleBits=Float16ToFloat32Bits(h);
+        float scale=0;std::memcpy(&scale,&scaleBits,4);
+        if(!std::isfinite(scale))return false;
+        float values[32],extreme=0;
+        for(unsigned i=0;i<32;++i) {
+            values[i]=static_cast<float>(static_cast<int8_t>(source[2+i]))*scale;
+            if(!std::isfinite(values[i]))return false;
+            if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
+        }
+        const float d=extreme/-8.0f;
+        uint32_t bits=0;std::memcpy(&bits,&d,4);
+        const uint16_t half=Float32BitsToFloat16(bits);
+        const uint32_t decoded=Float16ToFloat32Bits(half);
+        float actual=0;std::memcpy(&actual,&decoded,4);
+        if(extreme!=0 && (!std::isfinite(actual)||actual==0))return false;
+        encoded[0]=static_cast<unsigned char>(half);
+        encoded[1]=static_cast<unsigned char>(half>>8);
+        unsigned char codes[32];
+        for(unsigned i=0;i<32;++i) {
+            const double normalized=actual==0?0.0:static_cast<double>(values[i])/actual;
+            const double q=std::floor(normalized+8.5);
+            codes[i]=static_cast<unsigned char>(std::max(0.0,std::min(15.0,q)));
+        }
+        for(unsigned i=0;i<16;++i)encoded[2+i]=static_cast<unsigned char>(codes[i]|(codes[i+16]<<4));
+        if(!out.write(reinterpret_cast<const char*>(encoded),18))return false;
+        sourceBytes-=34;
+    }
+    return true;
+}
 inline RepackError RepackGGUF(const std::string& input,
                              const std::string& output,
                              uint64_t max_output_bytes=UINT64_MAX,
                              bool convert_f32_to_f16=false,
-                             bool convert_f32_to_q8_0=false) {
-    if(convert_f32_to_f16 && convert_f32_to_q8_0)return RepackError::Unsupported;
+                             bool convert_f32_to_q8_0=false,
+                             bool convert_q8_0_to_q4_0=false) {
+    if(unsigned(convert_f32_to_f16)+unsigned(convert_f32_to_q8_0)+
+       unsigned(convert_q8_0_to_q4_0)>1)return RepackError::Unsupported;
     if(input==output)return RepackError::Output;
     // A different spelling of the same file must not truncate the source.
     // This also catches hard links and relative/absolute path aliases.
@@ -243,6 +287,11 @@ inline RepackError RepackGGUF(const std::string& input,
             t.q8_source_f16=(t.type==1);
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
+        }
+        if(convert_q8_0_to_q4_0 && t.type==8) {
+            t.convert_q4_0=true;
+            t.type=2; // GGML_TYPE_Q4_0
+            t.bytes=(count/32)*18;
         }
         tensors.push_back(std::move(t));
     }
@@ -325,7 +374,10 @@ inline RepackError RepackGGUF(const std::string& input,
             padding-=static_cast<uint64_t>(chunk);
         }
         if(t.old_offset>UINT64_MAX-dataStart)return RepackError::Overflow;
-        if(t.convert_q8_0) {
+        if(t.convert_q4_0) {
+            if(!ConvertQ8_0RangeToQ4_0(in,out,dataStart+t.old_offset,t.source_bytes))
+                return RepackError::Output;
+        } else if(t.convert_q8_0) {
             if(!ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
                                         t.source_bytes,t.q8_source_f16))
                 return RepackError::Output;
