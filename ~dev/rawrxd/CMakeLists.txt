@@ -5206,7 +5206,7 @@ add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
 # through DEEP2_SHADER_DIR; the shader consumes F16/BF16 weight bytes directly.
 if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
     find_program(RAWRXD_DEEP2_GLSLC glslc REQUIRED)
-    set(RAWRXD_DEEP2_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/shaders")
+    set(RAWRXD_DEEP2_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/shaders")
     set(RAWRXD_DEEP2_QGEMV_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.comp")
     set(RAWRXD_DEEP2_QGEMV_SPV
