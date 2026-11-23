@@ -68,10 +68,13 @@ bool Deep2Engine::ConfigureTensorCompression(size_t f32BudgetBytes,
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
     // Reinitialization is a full lifecycle boundary; discard prior model state.
     Shutdown();
-    // Bind both compressed caches to the model lifecycle. A tensor name and
-    // byte count alone cannot distinguish equal-shaped weights from another
-    // GGUF. Shutdown drains old leases; switching scope also invalidates
-    // cached admission/fallback decisions before new ROM reads.
+    // Always invalidate after Shutdown, including when reopening the same
+    // path: a GGUF may have been replaced in place with equal-sized tensors.
+    // SetModelIdentity alone intentionally preserves same-identity entries.
+    // Clear waits for active leases and discards both resident data and
+    // raw-fallback decisions before the new loader can read model bytes.
+    compressedF32Weights.Clear();
+    compressedEncodedWeights.Clear();
     compressedF32Weights.SetModelIdentity(modelPath);
     compressedEncodedWeights.SetModelIdentity(modelPath);
     configureTensorResidencyBudgets(*this);
