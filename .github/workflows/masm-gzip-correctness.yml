@@ -37,9 +37,19 @@ jobs:
       - name: Compile and run independent gzip roundtrip
         shell: pwsh
         run: |
-          $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          $vcpkgRoot = (& vcpkg root).Trim()
+          $vcpkg = Join-Path $vcpkgRoot "installed\x64-windows"
           if (-not (Test-Path "$vcpkg\include\zlib.h")) { throw "vcpkg zlib headers missing" }
           cl /nologo /std:c++17 /EHsc /W4 /WX /I include /I "$vcpkg\include" tests/test_brutal_masm_gzip_roundtrip.cpp src/codec/brutal_gzip_masm_adapter.cpp build-deflate-brutal.obj /link /LIBPATH:"$vcpkg\lib" zlib.lib
           if ($LASTEXITCODE -ne 0) { throw "MASM gzip test compile/link failed" }
           .\test_brutal_masm_gzip_roundtrip.exe
           if ($LASTEXITCODE -ne 0) { throw "Independent gzip roundtrip failed" }
+      - name: Compile and run the product zlib provider smoke
+        shell: pwsh
+        run: |
+          $vcpkgRoot = (& vcpkg root).Trim()
+          $vcpkg = Join-Path $vcpkgRoot "installed\x64-windows"
+          cl /nologo /std:c++17 /EHsc /W4 /WX /DRAWRXD_HAVE_ZLIB=1 /I include /I "$vcpkg\include" tests/compression_zlib_provider_compile_test.cpp src/codec/compression_core.cpp /link /LIBPATH:"$vcpkg\lib" zlib.lib
+          if ($LASTEXITCODE -ne 0) { throw "Product zlib provider compile/link failed" }
+          .\compression_zlib_provider_compile_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Product zlib provider roundtrip failed" }
