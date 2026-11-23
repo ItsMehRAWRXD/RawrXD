@@ -4271,6 +4271,9 @@ bool VulkanCompute::DispatchGemvQuant(
         inputBytes > input.size || outputBytes > output.size)
         return fail("ARGS_OR_ARENA");
 
+    if (weightBytes > std::numeric_limits<uint32_t>::max())
+        return fail("WEIGHT_SIZE_U32");
+
     if (std::getenv("DEEP2_MOE_PLACE_TRACE")) {
         std::fprintf(stderr,
                      "[MOE_GEMV_GEOMETRY] type=%d rows=%u cols=%u "
@@ -4331,7 +4334,6 @@ bool VulkanCompute::DispatchGemvQuant(
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
-    if(weightBytes>std::numeric_limits<uint32_t>::max()) return fail("WEIGHT_SIZE_U32");
     p.weightBytes=static_cast<uint32_t>(weightBytes);
     bool ok;
         if(type==2) {
