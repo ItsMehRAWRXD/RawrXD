@@ -2,6 +2,7 @@
  * Connects: tokenizer, sampler, KV cache, weights, forward pass
  */
 #include "Deep2Engine.h"
+#include "F32CompressionConfig.hpp"
 #include "Tokenizer.hpp"
 #include "Sampler.hpp"
 #include "GGUFLoader.hpp"
@@ -517,10 +518,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         // error budget gain a private chunked backing used by LinearW.
         if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
             const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
-            if (setting && *setting) {
-                char* end=nullptr;
-                const float tolerance=std::strtof(setting,&end);
-                if (end && *end=='\0' && std::isfinite(tolerance) && tolerance>=0.0f) {
+            float tolerance = 0.0f;
+            if (TryParseF32CompressionMaxAbsError(setting, tolerance)) {
                     if (wt.EnableCompressedF32(tolerance, wt.cols) && deep2ForwardTraceEnabled()) {
                         std::fprintf(stderr,
                             "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu\n",
@@ -2724,12 +2723,9 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
     wt.rows = rows;
     if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
         const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
-        if (setting && *setting) {
-            char* end=nullptr;
-            const float tolerance=std::strtof(setting,&end);
-            if (end && *end=='\\0' && std::isfinite(tolerance) && tolerance>=0.0f)
-                wt.EnableCompressedF32(tolerance,wt.cols);
-        }
+        float tolerance = 0.0f;
+        if (TryParseF32CompressionMaxAbsError(setting, tolerance))
+            wt.EnableCompressedF32(tolerance, wt.cols);
     }
     return true;
 }
