@@ -22,7 +22,7 @@ int main() {
         source[i] = static_cast<uint8_t>(state & 0xffu);
     }
 
-    uint64_t readerCalls = 0;
+    std::atomic<uint64_t> readerCalls{0};
     deep2::CompressedTensorPager pager(source.size(),
         [&](uint64_t offset, uint64_t count, uint8_t* out) {
             ++readerCalls;
@@ -43,9 +43,32 @@ int main() {
     CHECK(std::memcmp(crossing.data(), source.data() + crossingOffset, crossing.size()) == 0);
 
     // Cache hits must not refetch source pages.
-    const uint64_t callsAfterMisses = readerCalls;
+    const uint64_t callsAfterMisses = readerCalls.load();
     CHECK(pager.read(1000, 64, got.data()));
-    CHECK(readerCalls == callsAfterMisses);
+    CHECK(readerCalls.load() == callsAfterMisses);
+
+    // Multiple workers may read the same/different pages concurrently. The
+    // shared page lease must keep data alive even if another reader evicts it.
+    pager.clear();
+    std::atomic<int> concurrentFailures{0};
+    std::vector<std::thread> workers;
+    for (int worker = 0; worker < 8; ++worker) {
+        workers.emplace_back([&, worker]() {
+            std::vector<uint8_t> local(4096);
+            const uint64_t offset = (worker % 2 == 0)
+                ? static_cast<uint64_t>(worker * 97)
+                : pageSize + static_cast<uint64_t>(worker * 113);
+            for (int repeat = 0; repeat < 4; ++repeat) {
+                if (!pager.read(offset, local.size(), local.data()) ||
+                    std::memcmp(local.data(), source.data() + offset, local.size()) != 0) {
+                    ++concurrentFailures;
+                    break;
+                }
+            }
+        });
+    }
+    for (auto& worker : workers) worker.join();
+    CHECK(concurrentFailures.load() == 0);
 
     const auto stats = pager.stats();
     CHECK(stats.logicalBytes == source.size());
