@@ -4,6 +4,7 @@
 #include "../../src/deep2/NativeTensorCompression.hpp"
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -48,6 +49,8 @@ static void Measure(const std::string& name, const std::vector<uint8_t>& input,
             float before, after;
             std::memcpy(&before, input.data() + i, 4);
             std::memcpy(&after, decoded.data() + i, 4);
+            if (!std::isfinite(before) || !std::isfinite(after))
+                throw std::runtime_error("non-finite F32 value in lossy comparison");
             const double err = std::abs(double(before) - double(after));
             if (err > maxError) maxError = err;
             if (!(err <= tolerance))
