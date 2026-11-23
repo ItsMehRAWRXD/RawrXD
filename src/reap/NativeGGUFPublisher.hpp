@@ -29,6 +29,12 @@ inline PublishResult PublishRepackedGGUF(const std::string& source,
        !fs::exists(input,ec)||ec) {
         result.error=PublishError::InvalidPath;return result;
     }
+    // Reject aliases of the source, including symlinks and hard links.
+    // A source/destination collision must not destroy model input.
+    if(fs::equivalent(input,target,ec)) {
+        result.error=PublishError::InvalidPath;return result;
+    }
+    ec.clear();
     if(fs::exists(target,ec)||ec) {
         result.error=PublishError::DestinationExists;return result;
     }
@@ -39,8 +45,8 @@ inline PublishResult PublishRepackedGGUF(const std::string& source,
     static std::atomic<uint64_t> serial{0};
     const auto tick=std::chrono::steady_clock::now().time_since_epoch().count();
     fs::path stage;
-    // The temporary is in the destination directory, so commit is a
-    // same-filesystem rename. Refuse if a collision cannot be avoided.
+    // Stage in the destination directory for same-filesystem hard-link commit.
+    // Refuse if a collision cannot be avoided.
     bool found=false;
     for(unsigned attempt=0;attempt<32;++attempt) {
         stage=parent/(target.filename().string()+".reap-part-"+
