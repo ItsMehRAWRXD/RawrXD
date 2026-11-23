@@ -519,12 +519,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
             const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
             float tolerance = 0.0f;
-            if (TryParseF32CompressionMaxAbsError(setting, tolerance)) {
-                    if (wt.EnableCompressedF32(tolerance, wt.cols) && deep2ForwardTraceEnabled()) {
-                        std::fprintf(stderr,
-                            "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu\n",
-                            wt.name.c_str(),wt.sizeBytes,wt.compressedF32->storedBytes());
-                    }
+            if (TryParseF32CompressionMaxAbsError(setting, tolerance) &&
+                wt.EnableCompressedF32(tolerance, wt.cols) &&
+                deep2ForwardTraceEnabled()) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu\\n",
+                    wt.name.c_str(), wt.sizeBytes, wt.compressedF32->storedBytes());
             }
         }
         return true;
