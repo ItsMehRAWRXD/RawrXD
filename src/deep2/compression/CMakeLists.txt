@@ -36,3 +36,11 @@ if(BUILD_TESTING)
  target_compile_features(test_compressed_gguf_model PRIVATE cxx_std_20)
  add_test(NAME compressed_gguf_model_lifecycle COMMAND test_compressed_gguf_model)
 endif()
+
+if(BUILD_TESTING)
+ add_executable(test_compressed_weight_tile
+     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_compressed_weight_tile.cpp)
+ target_link_libraries(test_compressed_weight_tile PRIVATE rawrxd_compressed_weight_store)
+ target_compile_features(test_compressed_weight_tile PRIVATE cxx_std_20)
+ add_test(NAME compressed_weight_tile_bounds COMMAND test_compressed_weight_tile)
+endif()
