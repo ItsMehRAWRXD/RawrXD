@@ -37,6 +37,10 @@ public:
     TensorResidencyCache& operator=(const TensorResidencyCache&) = delete;
 
     void SetBudget(size_t bytes) {
+        // Serialize budget changes with first-touch builds. Otherwise a build
+        // can hold a candidate sized for the old budget while the new smaller
+        // budget is already advertised to concurrent inference callers.
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
         budgetBytes_ = bytes;
         EvictToFitLocked(0, std::string());
