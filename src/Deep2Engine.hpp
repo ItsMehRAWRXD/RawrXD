@@ -93,7 +93,7 @@ struct Deep2Engine {
     // in host or device memory as contiguous F32.
     bool gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                              const deep2::TensorEntry& entry, const float* input,
-                             float* output, size_t tileRows = 16);
+                             float* output, size_t tileRows = 64);
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
