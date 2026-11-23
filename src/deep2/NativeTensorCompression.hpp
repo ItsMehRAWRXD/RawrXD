@@ -656,8 +656,9 @@ private:
 
      size_t size() const noexcept { return byte_count_; }
      size_t storedBytes() const noexcept { return stored_bytes_; }
-     // Count complete compressed chunks expanded to satisfy a byte range.
-     // This exposes decode amplification separately from caller-visible bytes.
+     // Count bytes actually expanded by range reads. Raw bytes are copied,
+     // RLE runs expand only the requested window, while LZ4 partial reads
+     // still require full-chunk expansion.
      uint64_t DecodedBytesForRange(size_t first, size_t count) const noexcept {
          if (first > byte_count_ || count > byte_count_ - first || !count)
              return 0;
@@ -667,8 +668,15 @@ private:
          for (size_t i = firstChunk; i <= lastChunk; ++i) {
              const auto& chunk = chunks_[i];
              if (chunk.encoding == Encoding::Raw) continue;
-             if (chunk.original_bytes > UINT64_MAX - total) return UINT64_MAX;
-             total += chunk.original_bytes;
+             const size_t chunkFirst = i * chunk_bytes_;
+             const size_t chunkEnd = chunkFirst + static_cast<size_t>(chunk.original_bytes);
+             const size_t requested = std::min(first + count, chunkEnd) -
+                                      std::max(first, chunkFirst);
+             const uint64_t expanded = chunk.encoding == Encoding::RLE
+                                           ? static_cast<uint64_t>(requested)
+                                           : chunk.original_bytes;
+             if (expanded > UINT64_MAX - total) return UINT64_MAX;
+             total += expanded;
          }
          return total;
      }
