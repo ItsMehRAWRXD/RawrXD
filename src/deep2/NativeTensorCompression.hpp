@@ -13,7 +13,7 @@
 #include <utility>
 
 namespace RawrXD { namespace TensorCompression {
-enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4 };
+enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4, ShuffleLZ4 = 5, Shuffle16LZ4 = 6, XorDeltaLZ4 = 7, Shuffle8LZ4 = 8, XorDelta16LZ4 = 9 };
 struct Result {
     Encoding encoding = Encoding::Raw;
     uint64_t original_bytes = 0;
@@ -174,6 +174,93 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
             best.payload = std::move(lz4);
         }
     }
+    // XOR-predict 16-bit words (FP16/BF16 and packed 16-bit metadata).
+    // This is strictly bitwise: no floating-point rounding or special-value
+    // canonicalization occurs. Incompressible blocks keep their raw bytes.
+    if (bytes >= 64 && bytes % 2 == 0) {
+        std::vector<uint8_t> residual(bytes);
+        uint16_t previous = 0;
+        for (size_t i = 0; i < bytes; i += 2) {
+            uint16_t word;
+            std::memcpy(&word, p + i, sizeof(word));
+            const uint16_t delta = uint16_t(word ^ previous);
+            std::memcpy(residual.data() + i, &delta, sizeof(delta));
+            previous = word;
+        }
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(residual.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::XorDelta16LZ4;
+            best.payload = std::move(packed);
+        }
+    }
+    // Eight-byte lane shuffle can expose repeated metadata/scales and
+    // correlated byte planes in packed quantized blocks. Adaptive selection
+    // prevents growth when the bytes are already high-entropy.
+    if (bytes >= 128 && bytes % 8 == 0) {
+        std::vector<uint8_t> shuffled(bytes);
+        const size_t words = bytes / 8;
+        for (size_t lane = 0; lane < 8; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                shuffled[lane * words + i] = p[i * 8 + lane];
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(shuffled.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::Shuffle8LZ4;
+            best.payload = std::move(packed);
+        }
+    }
+    // Bit-exact XOR predictor on consecutive 32-bit words. Unlike
+    // arithmetic float prediction, this preserves NaN payloads and signed
+    // zero. Correlated words can produce zero-heavy XOR residuals.
+    if (bytes >= 64 && bytes % 4 == 0) {
+        std::vector<uint8_t> residual(bytes);
+        uint32_t previous = 0;
+        for (size_t i = 0; i < bytes; i += 4) {
+            uint32_t word;
+            std::memcpy(&word, p + i, sizeof(word));
+            const uint32_t delta = word ^ previous;
+            std::memcpy(residual.data() + i, &delta, sizeof(delta));
+            previous = word;
+        }
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(residual.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::XorDeltaLZ4;
+            best.payload = std::move(packed);
+        }
+    }
+    // Shuffle 16-bit lanes: BF16/FP16 weights often have high-byte exponent
+    // correlations even when no complete two-byte values repeat.
+    if (bytes >= 64 && bytes % 2 == 0) {
+        std::vector<uint8_t> shuffled(bytes);
+        const size_t words = bytes / 2;
+        for (size_t lane = 0; lane < 2; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                shuffled[lane * words + i] = p[i * 2 + lane];
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(shuffled.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::Shuffle16LZ4;
+            best.payload = std::move(packed);
+        }
+    }
+    // Byte-shuffle 32-bit lanes before LZ4. Non-repeating float weights often
+    // share exponent/high mantissa bytes even when full values never repeat.
+    // Keep this only when it wins over raw, RLE, and ordinary LZ4.
+    if (bytes >= 64 && bytes % 4 == 0) {
+        std::vector<uint8_t> shuffled(bytes);
+        const size_t words = bytes / 4;
+        for (size_t lane = 0; lane < 4; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                shuffled[lane * words + i] = p[i * 4 + lane];
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(shuffled.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::ShuffleLZ4;
+            best.payload = std::move(packed);
+        }
+    }
     if (allow_fp16 && bytes%4==0 && bytes/2<best.payload.size()) {
         std::vector<uint8_t> half(bytes/2);
         bool valid=true;
@@ -227,6 +314,74 @@ inline void DecodeInto(const Result& r, void* destination, size_t destination_by
     if (destination_bytes!=n) throw std::invalid_argument("destination size mismatch");
     if (n && !destination) throw std::invalid_argument("null decode destination");
     auto* out=static_cast<uint8_t*>(destination);
+    if (r.encoding==Encoding::XorDelta16LZ4) {
+        if (n % 2 != 0) throw std::invalid_argument("XOR delta16 alignment");
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> residual(n);
+        DecodeInto(inner, residual.data(), residual.size());
+        uint16_t previous = 0;
+        for (size_t i = 0; i < n; i += 2) {
+            uint16_t delta;
+            std::memcpy(&delta, residual.data() + i, sizeof(delta));
+            previous = uint16_t(previous ^ delta);
+            std::memcpy(out + i, &previous, sizeof(previous));
+        }
+        return;
+    }
+    if (r.encoding==Encoding::Shuffle8LZ4) {
+        if (n % 8 != 0) throw std::invalid_argument("shuffled8 LZ4 alignment");
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> shuffled(n);
+        DecodeInto(inner, shuffled.data(), shuffled.size());
+        const size_t words = n / 8;
+        for (size_t lane = 0; lane < 8; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                out[i * 8 + lane] = shuffled[lane * words + i];
+        return;
+    }
+    if (r.encoding==Encoding::XorDeltaLZ4) {
+        if (n % 4 != 0) throw std::invalid_argument("XOR delta alignment");
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> residual(n);
+        DecodeInto(inner, residual.data(), residual.size());
+        uint32_t previous = 0;
+        for (size_t i = 0; i < n; i += 4) {
+            uint32_t delta;
+            std::memcpy(&delta, residual.data() + i, sizeof(delta));
+            previous ^= delta;
+            std::memcpy(out + i, &previous, sizeof(previous));
+        }
+        return;
+    }
+    if (r.encoding==Encoding::Shuffle16LZ4) {
+        if (n % 2 != 0) throw std::invalid_argument("shuffled16 LZ4 alignment");
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> shuffled(n);
+        DecodeInto(inner, shuffled.data(), shuffled.size());
+        const size_t words = n / 2;
+        for (size_t lane = 0; lane < 2; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                out[i * 2 + lane] = shuffled[lane * words + i];
+        return;
+    }
+    if (r.encoding==Encoding::ShuffleLZ4) {
+        if (n % 4 != 0) throw std::invalid_argument("shuffled LZ4 alignment");
+        // Decode and validate in private scratch before touching the caller's
+        // output; never expose partially decoded corrupt data.
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> shuffled(n);
+        DecodeInto(inner, shuffled.data(), shuffled.size());
+        const size_t words = n / 4;
+        for (size_t lane = 0; lane < 4; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                out[i * 4 + lane] = shuffled[lane * words + i];
+        return;
+    }
     if (r.encoding==Encoding::Raw) {
         if (r.payload.size()!=n) throw std::invalid_argument("raw size mismatch");
         if(n) std::memcpy(out,r.payload.data(),n);

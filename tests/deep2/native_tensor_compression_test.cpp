@@ -25,7 +25,8 @@ int main() {
     for(size_t i=0;i<patterned.size();++i)
         patterned[i]=static_cast<uint8_t>((i % 251) ^ ((i / 251) & 7));
     auto lz=Encode(patterned.data(),patterned.size());
-    assert(lz.encoding==Encoding::LZ4);
+    // Adaptive selection may prefer a shuffle or predictor over plain LZ4.
+    assert(lz.encoding != Encoding::Raw);
     assert(lz.payload.size()<patterned.size());
     assert(Decode(lz)==patterned);
     std::vector<uint8_t> lzDirect(patterned.size(),0);
@@ -262,6 +263,97 @@ int main() {
         }, 256, false);
     assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
+
+    // Distinct but correlated 16-bit bit patterns. The predictor is bitwise
+    // and must preserve all payload bits without numerical approximation.
+    std::vector<uint16_t> correlated16(4096);
+    uint16_t running16 = 0x3c00u;
+    for (size_t i = 0; i < correlated16.size(); ++i) {
+        running16 = uint16_t(running16 ^ uint16_t(i % 11u));
+        correlated16[i] = running16;
+    }
+    correlated16[21] = 0x8000u;
+    correlated16[22] = 0x7e55u;
+    const auto encoded16 = Encode(correlated16.data(),
+                                  correlated16.size() * sizeof(uint16_t));
+    const auto restored16 = Decode(encoded16);
+    assert(restored16.size() == correlated16.size() * sizeof(uint16_t));
+    assert(std::memcmp(restored16.data(), correlated16.data(), restored16.size()) == 0);
+    assert(encoded16.payload.size() <= restored16.size());
+
+    // Structured 8-byte records: independent varying payloads and common
+    // metadata bytes. Test exact byte restoration regardless of which
+    // adaptive lossless codec wins the block.
+    std::vector<uint8_t> records(8192);
+    for (size_t i = 0; i < records.size() / 8; ++i) {
+        for (size_t lane = 0; lane < 8; ++lane)
+            records[i * 8 + lane] = lane < 4
+                ? uint8_t((i * 29u + lane * 67u) & 0xffu)
+                : uint8_t(0x40u + lane);
+    }
+    const auto recordsEncoded = Encode(records.data(), records.size());
+    assert(recordsEncoded.payload.size() < records.size());
+    assert(Decode(recordsEncoded) == records);
+
+    // Correlated, non-identical 32-bit patterns. XOR prediction must be
+    // lossless, including signed zero and NaN payload bits.
+    std::vector<uint32_t> correlated(4096);
+    uint32_t state = 0x3f800000u;
+    for (size_t i = 0; i < correlated.size(); ++i) {
+        state ^= (uint32_t(i % 7u) << (i % 5u));
+        correlated[i] = state ^ uint32_t(i & 0xffu);
+    }
+    correlated[13] = 0x80000000u;
+    correlated[14] = 0x7fc12345u;
+    const auto correlatedEncoded = Encode(correlated.data(),
+                                          correlated.size() * sizeof(uint32_t));
+    const auto correlatedDecoded = Decode(correlatedEncoded);
+    assert(correlatedDecoded.size() == correlated.size() * sizeof(uint32_t));
+    assert(std::memcmp(correlatedDecoded.data(), correlated.data(),
+                       correlatedDecoded.size()) == 0);
+    assert(correlatedEncoded.payload.size() <= correlatedDecoded.size());
+
+    // Distinct FP16/BF16-like values with a shared exponent byte. The
+    // low byte varies, so whole 16-bit words are not a repetitive byte run.
+    std::vector<uint16_t> varied16(4096);
+    for (size_t i = 0; i < varied16.size(); ++i)
+        varied16[i] = uint16_t(0x3c00u | ((i * 73u) & 0x03ffu));
+    auto packed16 = Encode(varied16.data(), varied16.size() * sizeof(uint16_t));
+    assert(packed16.encoding != Encoding::Raw);
+    assert(packed16.payload.size() < varied16.size() * sizeof(uint16_t));
+    auto decoded16 = Decode(packed16);
+    assert(std::memcmp(decoded16.data(), varied16.data(), decoded16.size()) == 0);
+    auto corrupt16 = packed16;
+    corrupt16.payload.clear();
+    std::vector<uint8_t> untouched16(decoded16.size(), 0x5a);
+    bool caught16 = false;
+    try { DecodeInto(corrupt16, untouched16.data(), untouched16.size()); }
+    catch (const std::invalid_argument&) { caught16 = true; }
+    assert(caught16);
+    assert(std::all_of(untouched16.begin(), untouched16.end(),
+                       [](uint8_t x) { return x == 0x5a; }));
+
+    // Non-repeating F32 weights can still have compressible exponent lanes.
+    // This lossless shuffled representation must beat raw without relying on
+    // repeated whole float values, and must roundtrip bit-for-bit.
+    std::vector<uint32_t> variedBits(4096);
+    for (size_t i = 0; i < variedBits.size(); ++i)
+        variedBits[i] = 0x3f800000u | static_cast<uint32_t>(i * 131u);
+    auto varied = Encode(variedBits.data(), variedBits.size() * sizeof(uint32_t));
+    assert(varied.encoding != Encoding::Raw);
+    assert(varied.payload.size() < variedBits.size() * sizeof(uint32_t));
+    const auto restoredVaried = Decode(varied);
+    assert(restoredVaried.size() == variedBits.size() * sizeof(uint32_t));
+    assert(std::memcmp(restoredVaried.data(), variedBits.data(), restoredVaried.size()) == 0);
+    auto damagedVaried = varied;
+    damagedVaried.payload.clear();
+    std::vector<uint8_t> intactVaried(restoredVaried.size(), 0x7e);
+    bool rejectedVaried = false;
+    try { DecodeInto(damagedVaried, intactVaried.data(), intactVaried.size()); }
+    catch (const std::invalid_argument&) { rejectedVaried = true; }
+    assert(rejectedVaried);
+    assert(std::all_of(intactVaried.begin(), intactVaried.end(),
+                       [](uint8_t byte) { return byte == 0x7e; }));
 
     // Direct packed row-window staging: no intermediate whole-tensor buffer.
     // Vary every value so RLE cannot beat packed F16. Generate a
