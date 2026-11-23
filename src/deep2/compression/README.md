@@ -24,7 +24,15 @@ ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
 
 ## Integration status
 
-This is the first runtime-residency primitive plus an initial Deep2 kernel-consumer hook. `Deep2::WeightTensor` can attach a shared store/key and read byte ranges from either raw or compressed backing. `Deep2Engine::LinearW_Range` now reads only the packed rows assigned to each CPU worker, preserving the original GGML row layout. Single-range calls read only the rows required by that invocation. The existing Vulkan upload API still requires a contiguous base pointer, so the Vulkan branch stages the complete tensor for now. This enables the LinearW CPU/Vulkan call chain to consume compressed-only tensors. The standard multi-shard Deep2 binder now has an opt-in integration: set `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY=1` before model load. Eligible matrix tensors are compressed from the existing mapped shard view, and the mapping-cache pin is released only after the compressed store accepts the tensor. Only tensors whose encoded representation is strictly smaller are admitted, under a 512 MiB per-model compressed-payload budget; otherwise the original mapped representation remains active. Norms and vectors remain mapped because their current consumers use direct pointers. Single-file GGUF loading and other direct-pointer consumers are not yet migrated, so this is not yet universal model coverage. The Vulkan upload API still stages a complete tensor. Future GPU block staging must preserve the existing submission-completion ownership protocol.
+This is the runtime-residency primitive plus Deep2 kernel-consumer integration. `Deep2::WeightTensor` can attach a shared store/key and read byte ranges from either raw or compressed backing. `Deep2Engine::LinearW_Range` reads only the packed rows assigned to each CPU worker, preserving the original GGML row layout. Single-range calls read only the rows required by that invocation.
+
+Both model-binding routes now have opt-in admission via `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY=1` before model load:
+- The single-shard/single-file GGUF binder admits eligible named matrix projections and embedding matrices from the mapped tensor view.
+- The standard multi-shard binder admits eligible two-dimensional matrix weights from the shard mapping cache and releases the mapping pin only after the compressed store accepts the tensor.
+- Both preserve the original GGML type and packed bytes by default. The separate `RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16=1` option is explicitly lossy and changes the resident GGML type to F16.
+- Both enforce a per-model encoded-payload budget, defaulting to 4 GiB and configurable with `RAWRXD_COMPRESSED_WEIGHT_BUDGET_MB`. A tensor is admitted only when its encoded representation is smaller; otherwise it stays mapped.
+
+Norms, vectors, biases, and any consumers that still require direct pointers remain mapped. The CPU LinearW range path reads only required rows. The opt-in Vulkan GEMV tile path stages bounded row-aligned slices; other Vulkan operators and direct-pointer consumers are not yet universally migrated. This is not yet universal all-tensor coverage.
 
 The standalone test covers multi-block range reads, exact round trips for compressible and high-entropy data, duplicate-name rejection, bounds checks, and lease survival when the cache budget is reduced.
 
