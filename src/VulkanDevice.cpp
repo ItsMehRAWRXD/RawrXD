@@ -330,6 +330,9 @@ void VulkanDevice::evictCachedWeightsLocked(size_t requiredBytes) {
                 victim = it;
         }
         if (victim == m_weightBuffers.end()) break;
+        // Cached buffers can still be referenced by an in-flight dispatch.
+        // Wait only on eviction, never on cache hits, before releasing VRAM.
+        if (vkDeviceWaitIdle(victim->second.owner) != VK_SUCCESS) break;
         if (victim->second.buffer != VK_NULL_HANDLE)
             vkDestroyBuffer(victim->second.owner, victim->second.buffer, nullptr);
         if (victim->second.memory != VK_NULL_HANDLE)
@@ -375,6 +378,10 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
             buffer = existing->second.buffer;
             return true;
         }
+        // Replacement also invalidates the old VkBuffer handle. Drain
+        // outstanding device submissions before destroying that allocation.
+        if (vkDeviceWaitIdle(existing->second.owner) != VK_SUCCESS)
+            return false;
         if (existing->second.buffer != VK_NULL_HANDLE)
             vkDestroyBuffer(existing->second.owner, existing->second.buffer, nullptr);
         if (existing->second.memory != VK_NULL_HANDLE)
