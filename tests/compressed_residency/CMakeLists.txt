@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.15)
+project(RawrXDCompressedResidencyTests LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+enable_testing()
+add_executable(compressed_residency_test compressed_residency_test.cpp)
+add_test(NAME CompressedResidency COMMAND compressed_residency_test)
