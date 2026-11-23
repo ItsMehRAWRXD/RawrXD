@@ -4,6 +4,7 @@
 #endif
 #include <cassert>
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -129,11 +130,29 @@ int main() {
     assert(generated.size()==6);
     for(auto token:generated) assert(token>=0 && token<static_cast<int32_t>(vocab));
 
-    // Recreate request-local KV state and require deterministic autoregressive
-    // output. All projections still read the compressed store; no full decoded
-    // weights or persistent decoded-block cache are allowed.
+    // Independent scalar-reference golden sequence for this fixed F16 fixture.
+    // This catches numerically wrong but deterministic generation paths.
+    const std::vector<int32_t> expected{7,7,7,7,7,7};
+    assert(generated == expected);
+
+    // Request-local KV state must reset between generations.
     const auto repeated=runtime.generate(prompt,6);
     assert(repeated==generated);
+
+    // Reject invalid prompts and inconsistent attention geometry before doing
+    // any weight reads or allocating a request KV cache.
+    bool rejectedPrompt=false;
+    try { (void)runtime.generate({-1},1); }
+    catch (const std::out_of_range&) { rejectedPrompt=true; }
+    assert(rejectedPrompt);
+
+    bool rejectedGeometry=false;
+    try {
+        auto invalid=config;
+        invalid.head_dim=1;
+        rawrxd::compression::CompressedTransformerRuntime bad(model,invalid);
+    } catch (const std::invalid_argument&) { rejectedGeometry=true; }
+    assert(rejectedGeometry);
     const auto stats=model.stats();
     assert(stats.tensors==owned.size());
     assert(stats.compressed_bytes>0 && stats.raw_bytes>0);
