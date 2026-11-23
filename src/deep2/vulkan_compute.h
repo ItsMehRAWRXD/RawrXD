@@ -249,6 +249,15 @@ public:
                            uint32_t rows, uint32_t cols,
                            uint64_t cacheKey = 0);
 
+    // Bounded host-to-device tile dispatch. The caller supplies one complete
+    // packed row range; outputRowBase selects the corresponding output slice.
+    // The temporary device weight buffer is released only after the dispatch
+    // fence confirms completion.
+    bool DispatchGemvQuantTile(int type, const void* packedRows,
+                               size_t packedBytes, DeviceBuf& input,
+                               DeviceBuf& output, uint32_t rowCount,
+                               uint32_t cols, uint32_t outputRowBase);
+
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
                             uint32_t rows, uint32_t cols,
