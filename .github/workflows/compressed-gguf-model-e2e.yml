@@ -79,6 +79,10 @@ jobs:
             -o qt_zlib_codec_regression \
             $(pkg-config --libs Qt6Core) -lz
           ./qt_zlib_codec_regression
+          cmake -S tests/compressed_weight_store/qt_zlib_codec_cmake \
+            -B qt-zlib-cmake-build -DCMAKE_BUILD_TYPE=Release
+          cmake --build qt-zlib-cmake-build --config Release --parallel 2
+          ctest --test-dir qt-zlib-cmake-build -C Release --output-on-failure
 
       - name: Configure MSVC
         if: runner.os == 'Windows'
