@@ -1038,7 +1038,8 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         if (Wmapped && Wmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, Wmem); Wmapped = nullptr; }
         if (xmapped && xmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, xmem); xmapped = nullptr; }
         if (ymapped && ymem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, ymem); ymapped = nullptr; }
-        if (!cachedWeightBuffer) vulkan->destroyBuffer(gpu, Wbuf, Wmem);
+        if (cachedWeightBuffer) vulkan->releaseCachedWeightBuffer(Wbuf);
+        else vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
         if (!cachedWeightBuffer) { Wbuf = VK_NULL_HANDLE; Wmem = VK_NULL_HANDLE; }
