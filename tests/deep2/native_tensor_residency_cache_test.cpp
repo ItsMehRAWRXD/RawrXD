@@ -69,7 +69,7 @@ int main() {
             ++arbitraryReads;
             std::copy(arbitrary.begin()+o,arbitrary.begin()+o+n,out); return true;
         },2));
-    assert(arbitraryReads==1); // only the probe chunk was read
+    assert(arbitraryReads==2); // both chunks are evaluated before whole-tensor rejection
     assert(!cache.Contains("not.compressible"));
     assert(cache.IsRawFallback("not.compressible")); // rejection is memoized before releasing the build lock
     cache.MarkRawFallback("not.compressible");
@@ -100,8 +100,34 @@ int main() {
             std::copy(arbitrary.begin()+o,arbitrary.begin()+o+n,out);
             return true;
         },2));
-    assert(newBudgetReads==1);
+    assert(newBudgetReads==2);
     cache.MarkRawFallback("not.compressible");
+
+    // Mixed F32 tensor: an incompressible first chunk followed by F16-exact
+    // zero chunks. Whole-tensor accounting must retain the net savings.
+    std::vector<float> mixedF32(4096, 0.0f);
+    uint32_t mixedState = 0x6d2b79f5u;
+    for (size_t i = 0; i < 1024; ++i) {
+        mixedState ^= mixedState << 13;
+        mixedState ^= mixedState >> 17;
+        mixedState ^= mixedState << 5;
+        mixedF32[i] = static_cast<float>(static_cast<int32_t>(mixedState % 100000u) - 50000) / 137.0f;
+    }
+    Deep2::TensorResidencyCache mixedF32Cache(16*1024);
+    size_t mixedF32Reads = 0;
+    assert(mixedF32Cache.RegisterF32FromReader("mixed.f32", mixedF32.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            ++mixedF32Reads;
+            std::copy(mixedF32.begin()+offset, mixedF32.begin()+offset+count, out);
+            return true;
+        }, 1024));
+    assert(mixedF32Reads == 4);
+    const auto mixedF32Stats = mixedF32Cache.GetStats();
+    assert(mixedF32Stats.compressedBytes < mixedF32Stats.logicalBytes);
+    assert(mixedF32Stats.compressedBytes <= mixedF32Stats.budgetBytes);
+    std::vector<float> mixedF32Tile(3072);
+    assert(mixedF32Cache.ReadRange("mixed.f32", 1024, mixedF32Tile.size(), mixedF32Tile.data()));
+    assert(std::all_of(mixedF32Tile.begin(), mixedF32Tile.end(), [](float v) { return v == 0.0f; }));
 
     // A fitting insertion evicts the least-recently-used compressed tensor.
     std::vector<float> second(10003);
