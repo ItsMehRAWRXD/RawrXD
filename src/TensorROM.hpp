@@ -142,6 +142,33 @@ public:
         return resident;
     }
 
+    // Build a compressed resident view of only a tensor byte range. This is
+    // used for embedding rows and other sparse accesses so a large tensor that
+    // exceeds the shared cache budget is never loaded/compressed in full.
+    rawrxd::compression::ResidentCompressedTensor
+    loadResidentCompressedTensorRange(const TensorEntry& entry,
+                                      std::uint64_t relOffset,
+                                      std::uint64_t rangeBytes,
+                                      std::size_t blockBytes = 64 * 1024) const {
+        if (entry.shardIndex >= m_shards.size())
+            throw std::out_of_range("invalid tensor shard");
+        const auto& shard = m_shards[entry.shardIndex];
+        const auto tensorBytes = entry.byteSize();
+        if (relOffset > tensorBytes || rangeBytes > tensorBytes - relOffset)
+            throw std::out_of_range("tensor range exceeds tensor payload");
+        if (entry.offset > shard.dataSize || tensorBytes > shard.dataSize - entry.offset)
+            throw std::out_of_range("tensor exceeds shard payload");
+        if (shard.dataOffset > std::numeric_limits<std::uint64_t>::max() - entry.offset ||
+            shard.dataOffset + entry.offset >
+                std::numeric_limits<std::uint64_t>::max() - relOffset)
+            throw std::overflow_error("tensor range file offset overflow");
+        rawrxd::compression::FileTensorReader reader(
+            shard.path, shard.dataOffset + entry.offset + relOffset, rangeBytes);
+        rawrxd::compression::ResidentCompressedTensor resident(blockBytes);
+        resident.load(reader);
+        return resident;
+    }
+
     // Shard inventory: presence/byte counts per shard (Moves 13/14 gates).
     struct ShardStatus {
         std::string path;
