@@ -377,9 +377,18 @@ public:
         ChunkedF32Storage result;
         result.element_count_=count;
         result.chunk_elements_=chunk_elements;
-        result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
+        const size_t chunkCount = count/chunk_elements+(count%chunk_elements!=0);
+        if (chunkCount > result.chunks_.max_size())
+            throw std::length_error("F32 chunk metadata overflow");
+        // The chunk directory itself is retained for the lifetime of the
+        // tensor. Include it in the hard residency budget before allocating it.
+        if (chunkCount > max_stored_bytes / sizeof(Result))
+            throw StorageAdmissionRejected("F32 chunk metadata exceeds residency budget");
+        result.chunks_.reserve(chunkCount);
+        size_t storedBytes = result.chunks_.capacity() * sizeof(Result);
+        if (storedBytes > max_stored_bytes)
+            throw StorageAdmissionRejected("F32 chunk metadata exceeds residency budget");
         std::vector<float> tile;
-        size_t storedBytes=0;
         for(size_t offset=0;offset<count;) {
             const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
             tile.resize(n);
@@ -392,9 +401,12 @@ public:
             if(require_first_chunk_savings && offset==0 &&
                encoded.payload.size()>=n*sizeof(float))
                 throw StorageAdmissionRejected("first F32 chunk has no smaller safe encoding");
-            if(encoded.payload.size()>max_stored_bytes-storedBytes)
+            // std::vector capacity, not just logical size, is retained
+            // between inference calls and therefore consumes the budget.
+            const size_t payloadCapacity = encoded.payload.capacity();
+            if(payloadCapacity>max_stored_bytes-storedBytes)
                 throw StorageAdmissionRejected("compressed F32 tensor exceeds residency budget");
-            storedBytes+=encoded.payload.size();
+            storedBytes+=payloadCapacity;
             result.chunks_.push_back(std::move(encoded));
             offset+=n;
         }
@@ -404,11 +416,17 @@ public:
     size_t chunkElements() const noexcept { return chunk_elements_; }
     size_t chunkCount() const noexcept { return chunks_.size(); }
     size_t storedBytes() const noexcept {
-        size_t total=0;
-        for(const auto& c:chunks_) {
-            if(c.payload.size()>std::numeric_limits<size_t>::max()-total)
+        // Account for the retained chunk directory and each payload's actual
+        // allocation. payload.size() alone systematically undercounts memory.
+        if (chunks_.capacity() >
+            std::numeric_limits<size_t>::max() / sizeof(Result))
+            return std::numeric_limits<size_t>::max();
+        size_t total = chunks_.capacity() * sizeof(Result);
+        for (const auto& chunk : chunks_) {
+            if (chunk.payload.capacity() >
+                std::numeric_limits<size_t>::max() - total)
                 return std::numeric_limits<size_t>::max();
-            total+=c.payload.size();
+            total += chunk.payload.capacity();
         }
         return total;
     }
@@ -543,9 +561,18 @@ private:
          ChunkedByteStorage result;
          result.byte_count_ = byteCount;
          result.chunk_bytes_ = chunkBytes;
-         result.chunks_.reserve(byteCount / chunkBytes + (byteCount % chunkBytes != 0));
+         const size_t chunkCount = byteCount / chunkBytes + (byteCount % chunkBytes != 0);
+         if (chunkCount > result.chunks_.max_size())
+             throw std::length_error("byte chunk metadata overflow");
+         // Bound retained per-chunk metadata before reserve; otherwise tiny
+         // chunks could allocate a huge directory outside the residency cap.
+         if (chunkCount > maxStoredBytes / sizeof(Result))
+             throw StorageAdmissionRejected("byte chunk metadata exceeds residency budget");
+         result.chunks_.reserve(chunkCount);
+         size_t stored = result.chunks_.capacity() * sizeof(Result);
+         if (stored > maxStoredBytes)
+             throw StorageAdmissionRejected("byte chunk metadata exceeds residency budget");
          std::vector<uint8_t> tile;
-         size_t stored = 0;
          for (size_t offset = 0; offset < byteCount;) {
              const size_t n = std::min(chunkBytes, byteCount - offset);
              tile.resize(n);
@@ -554,13 +581,14 @@ private:
              Result encoded = Encode(tile.data(), n, false, 0.0f, false);
              if (requireFirstChunkSavings && offset == 0 && encoded.payload.size() >= n)
                  throw StorageAdmissionRejected("first byte chunk has no lossless compression win");
-             if (encoded.payload.size() > maxStoredBytes - stored)
+             const size_t payloadCapacity = encoded.payload.capacity();
+             if (payloadCapacity > maxStoredBytes - stored)
                  throw StorageAdmissionRejected("compressed byte tensor exceeds residency budget");
-             stored += encoded.payload.size();
+             stored += payloadCapacity;
              result.chunks_.push_back(std::move(encoded));
              offset += n;
          }
-         result.stored_bytes_ = stored;
+         result.stored_bytes_ = stored; // directory + retained payload capacities
          if (byteCount && stored >= byteCount)
              throw StorageAdmissionRejected("byte tensor has no net compression win");
          return result;
