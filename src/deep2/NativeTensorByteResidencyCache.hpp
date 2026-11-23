@@ -33,6 +33,13 @@ public:
     TensorByteResidencyCache(const TensorByteResidencyCache&) = delete;
     TensorByteResidencyCache& operator=(const TensorByteResidencyCache&) = delete;
 
+    void SetBudget(size_t bytes) {
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
+        budgetBytes_ = bytes;
+        EvictToFitLocked(0, std::string());
+    }
+
     template<class Reader>
     bool RegisterFromReader(const std::string& key, size_t byteCount, Reader&& reader,
                             size_t chunkBytes = 64 * 1024) {
