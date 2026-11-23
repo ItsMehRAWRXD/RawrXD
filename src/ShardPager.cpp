@@ -12,6 +12,17 @@ PageCache::PageCache(std::size_t capacityBytes, std::size_t pageSize)
     , m_capacityBytes(capacityBytes) {}
 
 PageCache::~PageCache() {
+    // Async prefetch workers capture this and may still insert pages. Join
+    // them before clearing the index or destroying cache synchronization.
+    {
+        std::lock_guard<std::mutex> lock(m_prefetchMutex);
+        for (auto& future : m_prefetchFutures) {
+            if (future.valid()) {
+                try { future.get(); } catch (...) {}
+            }
+        }
+        m_prefetchFutures.clear();
+    }
     evictUnleasedAll();
 }
 
