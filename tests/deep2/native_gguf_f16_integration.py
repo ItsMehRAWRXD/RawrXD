@@ -355,6 +355,15 @@ def run(binary):
         for i in (0, 16383, 16384, 16385, n-1):
             assert struct.unpack_from("<e",data,ds+2*i)[0]==1.0
         assert len(data)-ds==n*2
+        # BF16 streaming must also handle tensors beyond the old 64 MiB cap
+        # without retaining the entire source or destination in the converter.
+        huge_bf=root/"huge-bf16.gguf"
+        subprocess.run([binary,str(huge),str(huge_bf),"0","bf16"],check=True)
+        hb,hbs,hbm,hbt=parse(huge_bf)
+        assert hbt["blk.0.attn_q.weight"][:2]==(30,(n,))
+        assert len(hb)-hbs==n*2
+        for j in (0,16383,16384,16385,n-1):
+            assert struct.unpack_from("<H",hb,hbs+2*j)[0]==0x3f80
         # A pre-existing staging file belongs to another invocation.
         # A rejected conversion must leave it byte-for-byte unchanged.
         staged=root/"already-staged.gguf.partial"
