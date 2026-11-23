@@ -26,6 +26,7 @@ int main() {
     if(ok) {
         std::ifstream in(dst,std::ios::binary);
         double maxError=0;
+        bool sawNegative128=false;
         for(unsigned group=0;group<8;++group) {
             unsigned char block[34]={};
             ok &= bool(in.read(reinterpret_cast<char*>(block),34));
@@ -35,6 +36,7 @@ int main() {
             for(unsigned i=0;i<32;++i) {
                 const int original=static_cast<int>(group*32+i)-128;
                 const int converted=static_cast<int8_t>(block[i+2]);
+                if(original==-128 && converted==-128)sawNegative128=true;
                 const double error=std::abs(double(original)*scale-double(converted)*d);
                 maxError=std::max(maxError,error);
             }
@@ -44,7 +46,8 @@ int main() {
         const uint16_t rounded=Float32BitsToFloat16(bits);
         const uint32_t roundedBits=Float16ToFloat32Bits(rounded);
         float roundedScale=0;std::memcpy(&roundedScale,&roundedBits,4);
-        ok &= maxError<=128.0*std::abs(double(scale)-roundedScale)+1e-6;
+        ok &= sawNegative128 &&
+              maxError<=128.0*std::abs(double(scale)-roundedScale)+1e-6;
     }
     std::remove(src);std::remove(dst);
     std::cout<<"REAP_Q8K_QUALITY_SELECT="<<(ok?"PASS":"FAIL")<<"\n";
