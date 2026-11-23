@@ -149,14 +149,14 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
     // Only compress tensors consumed as matrix weights by the packed QGEMV
     // path. Norm vectors, biases, embeddings and convolution/state vectors
     // retain their existing upload/lookup paths and residency accounting.
+    prepare(weights.lmHead);
     for (auto& layer : weights.layers) {
         WeightTensor* dense[] = {
             &layer.wq, &layer.wk, &layer.wv, &layer.wo, &layer.wqkv,
             &layer.attnQ_a, &layer.attnQ_b, &layer.attnKV_a_mqa,
             &layer.attnK_b, &layer.attnV_b, &layer.attnO,
             &layer.wGate, &layer.wUp, &layer.wDown, &layer.moeRouter,
-            &layer.moeSharedGate, &layer.moeSharedUp, &layer.moeSharedDown,
-            &layer.ssmAlpha, &layer.ssmBeta, &layer.ssmIn, &layer.ssmOut
+            &layer.moeSharedGate, &layer.moeSharedUp, &layer.moeSharedDown
         };
         for (WeightTensor* tensor : dense) prepare(*tensor);
         for (auto& tensor : layer.moeGate) prepare(tensor);
