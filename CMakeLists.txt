@@ -61,6 +61,11 @@ target_include_directories(reap_publisher_regression PRIVATE ${CMAKE_CURRENT_SOU
 find_package(Threads REQUIRED)
 target_link_libraries(reap_publisher_regression PRIVATE Threads::Threads)
 
+# R04: native expert pruning regression (synthetic MoE GGUF -> prune -> verify).
+add_executable(reap_prune_regression tools/reap_prune_regression.cpp)
+target_include_directories(reap_prune_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_test(NAME reap_prune_regression COMMAND reap_prune_regression)
+
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
 )
