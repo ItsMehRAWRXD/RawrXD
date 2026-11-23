@@ -17,9 +17,10 @@ int main() {
         WriteU64(out,256);WriteU64(out,2);
         WriteU32(out,15);WriteU64(out,0);
         PadTo(out,32);
-        // Two valid-size Q8_K blocks with overflowing FP32 scales.
+        // First block converts successfully; second block overflows FP16.
+        // This forces failure after staging already contains tensor data.
         for(unsigned block=0;block<2;++block) {
-            WriteU32(out,0x501502f9); // 1e10f: cannot fit FP16
+            WriteU32(out,block==0?0x3f800000u:0x501502f9u);
             for(unsigned i=0;i<256;++i)out.put(static_cast<char>(127));
             for(unsigned i=0;i<32;++i)out.put(0);
         }
@@ -34,7 +35,7 @@ int main() {
     const std::string found((std::istreambuf_iterator<char>(out)),
                             std::istreambuf_iterator<char>());
     std::ifstream leftover(stage,std::ios::binary);
-    const bool ok=error!=RepackError::None && found==sentinel && !leftover.good();
+    const bool ok=error==RepackError::Output && found==sentinel && !leftover.good();
     std::remove(src);std::remove(dst);std::remove(stage);
     std::cout<<"REAP_ATOMIC_FAILURE="<<(ok?"PASS":"FAIL")<<"\n";
     return ok?0:1;
