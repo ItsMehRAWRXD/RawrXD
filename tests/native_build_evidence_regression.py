@@ -25,6 +25,14 @@ class NativeBuildEvidenceRegression(unittest.TestCase):
         self.assertNotIn("All builds** compiled successfully", self.summary)
         self.assertNotIn("## ✅ Build Verification Complete", self.summary)
 
+    def test_clang_build_cannot_report_success_without_compilation(self):
+        clang = self.source.split("  build-windows-clang:", 1)[1].split("  build-linux-gcc:", 1)[0]
+        self.assertIn("Clang configure failed with exit code", clang)
+        self.assertIn("cmake --build build_clang --parallel 4", clang)
+        self.assertIn("Clang build failed with exit code", clang)
+        self.assertNotIn("Clang build not available in this environment (optional)", clang)
+        self.assertNotIn("exit 0", clang)
+
     def test_matrix_status_is_not_misattributed_to_individual_legs(self):
         self.assertIn("Windows (MSVC) matrix (x64/Win32, Debug/Release)", self.summary)
         self.assertIn("Aggregate only", self.summary)
