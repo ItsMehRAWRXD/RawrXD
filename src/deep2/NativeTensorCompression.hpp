@@ -408,8 +408,8 @@ private:
 
 
  // Generic lossless byte storage for non-F32 tensors. Encoded GGUF blocks
- // remain byte-identical after decode; only independently addressable chunks
- // are RLE-compressed, and raw chunks are retained only when needed.
+ // remain byte-identical after decode; independently addressable chunks use
+ // the smallest profitable RLE/LZ representation, otherwise raw bytes.
  class ChunkedByteStorage {
  public:
      ChunkedByteStorage() = default;
