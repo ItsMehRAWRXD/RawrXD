@@ -3,6 +3,8 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <limits>
+#include <utility>
 
 static const std::vector<std::string> ARCH_PREFIXES = {
     "llama", "qwen2", "gemma2", "phi3", "nemotron", "granite", "starcoder2", "glm"
@@ -155,177 +157,110 @@ bool ParseOllamaManifest(const std::string& manifestPath, EngineContext* ctx) {
     return true;
 }
 
-void ParseUniversalGGUFMetadata(const std::string& keyStr, uint32_t kvType, std::ifstream& file, EngineContext* ctx) {
-    // Handle specific known-problematic keys FIRST, before generic type dispatch
-    if (keyStr == "general.tags" || keyStr == "general.languages") {
-        // These are arrays of strings, sometimes written as type 9 (string) instead of type 8 (array)
-        std::streampos pos = file.tellg();
-        uint64_t len = 0;
-        file.read(reinterpret_cast<char*>(&len), sizeof(len));
-        if (len > 0 && len < 10000) {
-            file.seekg(len, std::ios::cur);
-        } else {
-            file.seekg(pos);
-            SkipArray(file);
+void ParseUniversalGGUFMetadata(const std::string& key, uint32_t type,
+                                std::ifstream& file, EngineContext* ctx) {
+    if (!ctx) { file.setstate(std::ios::failbit); return; }
+    // All keys are consumed according to their declared GGUF type.
+    // Never guess an alternative encoding from the key name.
+    const auto suffix = [&key](const char* part) {
+        const std::string tail(part);
+        return key.size() > tail.size() &&
+               key.compare(key.size() - tail.size(), tail.size(), tail) == 0 &&
+               key[key.size() - tail.size() - 1] == '.';
+    };
+    if (key == "general.alignment") {
+        if (type != 4) { file.setstate(std::ios::failbit); return; }
+        uint32_t alignment = 0;
+        file.read(reinterpret_cast<char*>(&alignment), 4);
+        if (!file || alignment < 8 || alignment > 4096 ||
+            (alignment & (alignment - 1)) != 0) {
+            file.setstate(std::ios::failbit); return;
         }
+        ctx->cfg.ggufAlignment = alignment;
         return;
     }
-    
-    bool keyHandled = false;
-
-    // 1. Scan for Dynamic Architecture Geometry Overrides
-    for (const auto& prefix : ARCH_PREFIXES) {
-        if (keyStr == prefix + ".embedding_length") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.hiddenDim = v; }
-            else if (kvType == 5) { uint64_t v = 0; file.read(reinterpret_cast<char*>(&v), 8); ctx->cfg.hiddenDim = v; }
-            else { file.seekg(8, std::ios::cur); }
-            keyHandled = true;
-        } else if (keyStr == prefix + ".block_count") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.numLayers = v; }
-            else if (kvType == 5) { uint64_t v = 0; file.read(reinterpret_cast<char*>(&v), 8); ctx->cfg.numLayers = v; }
-            else { file.seekg(8, std::ios::cur); }
-            keyHandled = true;
-        } else if (keyStr == prefix + ".feed_forward_length") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.intermediateDim = v; }
-            else if (kvType == 5) { uint64_t v = 0; file.read(reinterpret_cast<char*>(&v), 8); ctx->cfg.intermediateDim = v; }
-            else { file.seekg(8, std::ios::cur); }
-            keyHandled = true;
-        } else if (keyStr == prefix + ".attention.head_count") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.numHeads = v; }
-            else { file.seekg(4, std::ios::cur); }
-            keyHandled = true;
-        }
-    }
-
-    // 2. Global Standalone Metadata Keys Fallback (e.g., general.* namespaces)
-    if (!keyHandled) {
-        if (keyStr == "general.embedding_length" || keyStr == "general.architecture.embedding_length") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.hiddenDim = v; }
-            else if (kvType == 5) { uint64_t v = 0; file.read(reinterpret_cast<char*>(&v), 8); ctx->cfg.hiddenDim = v; }
-            else { file.seekg(8, std::ios::cur); }
-        } else if (keyStr == "general.block_count" || keyStr == "general.architecture.block_count") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.numLayers = v; }
-            else if (kvType == 5) { uint64_t v = 0; file.read(reinterpret_cast<char*>(&v), 8); ctx->cfg.numLayers = v; }
-            else { file.seekg(8, std::ios::cur); }
-        } else if (keyStr == "general.feed_forward_length" || keyStr == "general.architecture.feed_forward_length") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.intermediateDim = v; }
-            else if (kvType == 5) { uint64_t v = 0; file.read(reinterpret_cast<char*>(&v), 8); ctx->cfg.intermediateDim = v; }
-            else { file.seekg(8, std::ios::cur); }
-        } else if (keyStr == "general.attention.head_count" || keyStr == "general.architecture.attention.head_count") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.numHeads = v; }
-            else { file.seekg(4, std::ios::cur); }
-        } else if (keyStr == "general.attention.layer_norm_rms_epsilon") {
-            // Read and discard (float32)
-            file.seekg(4, std::ios::cur);
-        } else if (keyStr == "general.rope.freq_base" || keyStr == "general.architecture.rope.freq_base") {
-            double val = 0; file.read(reinterpret_cast<char*>(&val), sizeof(val)); ctx->cfg.ropeThetaGlobal = val;
-        } else if (keyStr == "general.rope.dimension_count" || keyStr == "general.architecture.rope.dimension_count") {
-            uint32_t val = 0; file.read(reinterpret_cast<char*>(&val), sizeof(val));
-        } else if (keyStr == "tokenizer.ggml.tokens") {
-            // tokenizer.ggml.tokens is an array of strings
-            // kvType should be 9 (ARRAY). Format: [array_type: uint32] [array_len: uint64] [elements...]
-            if (kvType == 9) {
-                uint32_t arrayType = 0;
-                uint64_t arrayLen = 0;
-                file.read(reinterpret_cast<char*>(&arrayType), sizeof(arrayType));
-                file.read(reinterpret_cast<char*>(&arrayLen), sizeof(arrayLen));
-                if (arrayLen > 1000000) {
-                    // Not a valid array, treat as single string (fallback)
-                    // Seek back to re-read as string
-                    file.seekg(-12, std::ios::cur);
-                    ReadGGUFStr(file);
-} else {
-                    ctx->cfg.vocabSize = arrayLen;
-                    if (arrayType == 8) {  // String elements
-                        for (uint64_t i = 0; i < arrayLen; ++i) ReadGGUFStr(file);
-                    } else if (arrayType == 9) {  // Nested arrays
-                        for (uint64_t i = 0; i < arrayLen; ++i) SkipArray(file);
-                    } else {  // Primitive elements
-                        uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-                        file.seekg(arrayLen * sz[arrayType & 7], std::ios::cur);
-                    }
-                }
-            } else if (kvType == 8) {
-                // Sometimes incorrectly written as string (type 8) - try to parse as array
-                std::streampos pos = file.tellg();
-                uint32_t arrayType = 0;
-                uint64_t arrayLen = 0;
-                file.read(reinterpret_cast<char*>(&arrayType), sizeof(arrayType));
-                file.read(reinterpret_cast<char*>(&arrayLen), sizeof(arrayLen));
-                if (arrayLen > 1000000) {
-                    file.seekg(pos);
-                    ReadGGUFStr(file);
-                } else {
-                    ctx->cfg.vocabSize = arrayLen;
-                    if (arrayType == 8) {
-                        for (uint64_t i = 0; i < arrayLen; ++i) ReadGGUFStr(file);
-                    } else if (arrayType == 9) {
-                        for (uint64_t i = 0; i < arrayLen; ++i) SkipArray(file);
-                    } else {
-                        uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-                        file.seekg(arrayLen * sz[arrayType & 7], std::ios::cur);
-                    }
-                }
-            } else {
-                // Other types - skip
-                SkipGGUFValue(kvType, file);
-            }
-        } else if (keyStr == "tokenizer.ggml.token_type") {
-            // Array of int32
-            SkipGGUFValue(kvType, file);
-        } else if (keyStr == "tokenizer.ggml.merges") {
-            // Array of strings
-            SkipGGUFValue(kvType, file);
-        } else if (keyStr == "tokenizer.ggml.bos_token_id" || keyStr == "tokenizer.ggml.eos_token_id" ||
-                   keyStr == "tokenizer.ggml.unknown_token_id" || keyStr == "tokenizer.ggml.padding_token_id") {
-            // uint32 values
-            file.seekg(4, std::ios::cur);
-        } else if (keyStr == "phi3.context_length") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); ctx->cfg.maxSeqLen = v; }
-            else { file.seekg(4, std::ios::cur); }
-        } else if (keyStr == "phi3.rope.scaling.original_context_length") {
-            if (kvType == 4) { uint32_t v = 0; file.read(reinterpret_cast<char*>(&v), 4); }
-            else { file.seekg(4, std::ios::cur); }
+    const bool isGeometry = suffix("embedding_length") || suffix("block_count") ||
+        suffix("feed_forward_length") || suffix("attention.head_count") ||
+        suffix("attention.head_count_kv") || suffix("context_length");
+    if (isGeometry && (type == 4 || type == 10)) {
+        uint64_t value = 0;
+        if (type == 4) {
+            uint32_t v = 0;
+            file.read(reinterpret_cast<char*>(&v), 4);
+            value = v;
         } else {
-            // Secure skip sequence for unknown/unhandled keys
-            SkipGGUFValue(kvType, file);
+            file.read(reinterpret_cast<char*>(&value), 8);
         }
+        if (!file || value == 0 || value > UINT32_MAX) {
+            file.setstate(std::ios::failbit); return;
+        }
+        if (suffix("embedding_length")) ctx->cfg.hiddenDim = static_cast<size_t>(value);
+        else if (suffix("block_count")) ctx->cfg.numLayers = static_cast<size_t>(value);
+        else if (suffix("feed_forward_length")) ctx->cfg.intermediateDim = static_cast<size_t>(value);
+        else if (suffix("attention.head_count_kv")) ctx->cfg.numKVHeads = static_cast<size_t>(value);
+        else if (suffix("attention.head_count")) ctx->cfg.numHeads = static_cast<size_t>(value);
+        else if (suffix("context_length")) ctx->cfg.maxSeqLen = static_cast<size_t>(value);
+        return;
     }
+    if (key == "tokenizer.ggml.tokens" && type == 9) {
+        const auto pos = file.tellg();
+        uint32_t elementType = 0;
+        uint64_t count = 0;
+        file.read(reinterpret_cast<char*>(&elementType), 4);
+        file.read(reinterpret_cast<char*>(&count), 8);
+        if (!file || elementType != 8 || count > kMaxMetadataElements) {
+            file.setstate(std::ios::failbit); return;
+        }
+        ctx->cfg.vocabSize = static_cast<size_t>(count);
+        file.seekg(pos);
+    }
+    if (suffix("rope.freq_base") && type == 6) {
+        float theta = 0;
+        file.read(reinterpret_cast<char*>(&theta), 4);
+        if (!file || !std::isfinite(theta) || theta <= 0) {
+            file.setstate(std::ios::failbit); return;
+        }
+        ctx->cfg.ropeThetaGlobal = theta;
+        return;
+    }
+    SkipGGUFValue(type, file);
 }
 
 bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
+    if (!ctx) return false;
+    EngineContext parsed;
     std::ifstream f(path, std::ios::binary);
     if (!f.is_open()) {
         fprintf(stderr, "[ERROR] Could not open model file: %s\n", path.c_str());
         return false;
     }
 
-    f.read(reinterpret_cast<char*>(&ctx->cfg.magic), 4);
-    f.read(reinterpret_cast<char*>(&ctx->cfg.version), 4);
-    if (ctx->cfg.magic != 0x46554747) {  // "GGUF"
-        fprintf(stderr, "[ERROR] Invalid GGUF magic: 0x%08X\n", ctx->cfg.magic);
+    f.read(reinterpret_cast<char*>(&parsed.cfg.magic), 4);
+    f.read(reinterpret_cast<char*>(&parsed.cfg.version), 4);
+    if (parsed.cfg.magic != 0x46554747) {  // "GGUF"
+        fprintf(stderr, "[ERROR] Invalid GGUF magic: 0x%08X\n", parsed.cfg.magic);
         return false;
     }
 
-    f.read(reinterpret_cast<char*>(&ctx->cfg.tensorCount), 8);
-    f.read(reinterpret_cast<char*>(&ctx->cfg.kvCount), 8);
+    f.read(reinterpret_cast<char*>(&parsed.cfg.tensorCount), 8);
+    f.read(reinterpret_cast<char*>(&parsed.cfg.kvCount), 8);
 
-    if (!f || ctx->cfg.version < 2 || ctx->cfg.version > 3 ||
-        ctx->cfg.kvCount > kMaxMetadataElements ||
-        ctx->cfg.tensorCount > kMaxMetadataElements) return false;
+    if (!f || parsed.cfg.version < 2 || parsed.cfg.version > 3 ||
+        parsed.cfg.kvCount > kMaxMetadataElements ||
+        parsed.cfg.tensorCount > kMaxMetadataElements) return false;
 
     // Parse Dynamic Prefix Metadata arrays
-    for (size_t i = 0; i < ctx->cfg.kvCount; ++i) {
+    for (size_t i = 0; i < parsed.cfg.kvCount; ++i) {
         std::string key = ReadGGUFStr(f);
         uint32_t type = 0;
         f.read(reinterpret_cast<char*>(&type), sizeof(type));
         if (!f || key.empty() || type > 12) return false;
-        ParseUniversalGGUFMetadata(key, type, f, ctx);
+        ParseUniversalGGUFMetadata(key, type, f, &parsed);
         if (!f) return false;
     }
 
     // Read Layer Allocation Layout indices
-    for (size_t i = 0; i < ctx->cfg.tensorCount; ++i) {
+    for (size_t i = 0; i < parsed.cfg.tensorCount; ++i) {
         GGUFTensorMeta meta;
         meta.name = ReadGGUFStr(f);
         uint32_t nDims = 0;
@@ -335,12 +270,15 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
         if (nDims > 0) f.read(reinterpret_cast<char*>(meta.dims.data()), nDims * 8);
         f.read(reinterpret_cast<char*>(&meta.type), 4);
         f.read(reinterpret_cast<char*>(&meta.offset), 8);
-        if (!f || !ctx->tensors.emplace(meta.name, meta).second) return false;
+        if (!f || !parsed.tensors.emplace(meta.name, meta).second) return false;
     }
 
-    // Align memory segment lines to 64-byte boundaries
-    uint64_t currentPos = f.tellg();
-    uint64_t pad = (currentPos + 63) & ~63;
+    // GGUF tensor data starts at the declared alignment (default 32).
+    if (!f || f.tellg() < 0) return false;
+    uint64_t currentPos = static_cast<uint64_t>(f.tellg());
+    const uint64_t alignment = parsed.cfg.ggufAlignment;
+    if (currentPos > UINT64_MAX - (alignment - 1)) return false;
+    uint64_t pad = (currentPos + alignment - 1) & ~(alignment - 1);
     f.seekg(pad, std::ios::beg);
     uint64_t alignedDataStart = f.tellg();
 
@@ -348,28 +286,31 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
     f.seekg(0, std::ios::end);
     if (!f || f.tellg() < 0 || static_cast<uint64_t>(f.tellg()) < alignedDataStart) return false;
     uint64_t totalBytes = static_cast<uint64_t>(f.tellg()) - alignedDataStart;
+    if (totalBytes > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max()) ||
+        totalBytes > parsed.tensorWeightsPool.max_size()) return false;
     f.seekg(alignedDataStart, std::ios::beg);
 
-    ctx->tensorWeightsPool.resize(totalBytes);
-    if (totalBytes) f.read(reinterpret_cast<char*>(ctx->tensorWeightsPool.data()), static_cast<std::streamsize>(totalBytes));
+    parsed.tensorWeightsPool.resize(totalBytes);
+    if (totalBytes) f.read(reinterpret_cast<char*>(parsed.tensorWeightsPool.data()), static_cast<std::streamsize>(totalBytes));
     if (!f) return false;
 
     // Bind raw internal device mapping coordinates
-    for (auto& pair : ctx->tensors) {
+    for (auto& pair : parsed.tensors) {
         if (pair.second.offset >= totalBytes) return false;
-        pair.second.dataData = ctx->tensorWeightsPool.data() + pair.second.offset;
+        pair.second.dataData = parsed.tensorWeightsPool.data() + pair.second.offset;
     }
 
     // Dynamic Geometry Adaption Guard - ONLY if metadata not parsed from GGUF keys
     // (i.e., values still zero). Don't override correctly parsed phi3.* metadata.
-    if (ctx->cfg.hiddenDim == 0 || ctx->cfg.intermediateDim == 0) {
-        auto sample_wUp = ctx->tensors.find("blk.0.ffn_up.weight");
-        if (sample_wUp != ctx->tensors.end() && sample_wUp->second.dims.size() >= 2) {
+    if (parsed.cfg.hiddenDim == 0 || parsed.cfg.intermediateDim == 0) {
+        auto sample_wUp = parsed.tensors.find("blk.0.ffn_up.weight");
+        if (sample_wUp != parsed.tensors.end() && sample_wUp->second.dims.size() >= 2) {
             // dims[0] = output_dim (intermediate), dims[1] = input_dim (hidden)
-            if (ctx->cfg.intermediateDim == 0) ctx->cfg.intermediateDim = sample_wUp->second.dims[0];
-            if (ctx->cfg.hiddenDim == 0) ctx->cfg.hiddenDim = sample_wUp->second.dims[1];
+            if (parsed.cfg.intermediateDim == 0) parsed.cfg.intermediateDim = sample_wUp->second.dims[0];
+            if (parsed.cfg.hiddenDim == 0) parsed.cfg.hiddenDim = sample_wUp->second.dims[1];
         }
     }
 
+    *ctx = std::move(parsed);
     return true;
 }
