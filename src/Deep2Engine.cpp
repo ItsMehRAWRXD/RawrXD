@@ -18,6 +18,9 @@
 
 namespace {
 constexpr size_t kResidencyMiB = 1024ull * 1024ull;
+// Encoded-weight chunks bound decode amplification for small inference tiles.
+// 16 KiB is independently addressable and remains large enough for useful LZ4/RLE runs.
+constexpr size_t kEncodedResidencyChunkBytes = 16ull * 1024ull;
 
 // Pipeline handles are process-shared across engine instances, but must be
 // explicitly destroyed before the owning VkDevice is torn down.
@@ -447,7 +450,7 @@ bool Deep2Engine::readCompressedEncodedRange(const deep2::TensorEntry& entry,
                                        static_cast<uint64_t>(count), out);
         };
         if (compressedEncodedWeights.RegisterFromReader(
-                cacheKey, static_cast<size_t>(tensorBytes), reader, 64 * 1024)) {
+                cacheKey, static_cast<size_t>(tensorBytes), reader, kEncodedResidencyChunkBytes)) {
             if (rom.pager() && entry.shardIndex < rom.shards().size()) {
                 const auto& shard = rom.shards()[entry.shardIndex];
                 if (shard.dataOffset <= UINT64_MAX - entry.offset)
