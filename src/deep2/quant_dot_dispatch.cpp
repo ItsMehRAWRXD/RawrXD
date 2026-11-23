@@ -527,9 +527,14 @@ void SetPreferredDevice(int index) {
 }
 
 size_t BatchCapacity() {
-    // kQuantBatchMaxSets: the descriptor ring bounds one batch. Reported, not
-    // asserted, so callers can chunk instead of failing closed.
-    return Gpu().QuantDotBatchCapacity();
+    // Match the active GPU's descriptor capacity to the device that will
+    // own BeginBatch. Device initialization errors fail closed to capacity 0.
+    try {
+        return (g_active_device >= 0 ? GpuFor(g_active_device) : Gpu())
+            .QuantDotBatchCapacity();
+    } catch (const std::exception&) {
+        return 0;
+    }
 }
 
 const Receipt& LastReceipt() { return g_receipt; }
