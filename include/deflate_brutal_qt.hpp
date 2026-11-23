@@ -10,6 +10,7 @@
 // the Qt overloads are compiled only when QT_CORE_LIB is defined, and a
 // std::vector<uint8_t> API is always available.
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
