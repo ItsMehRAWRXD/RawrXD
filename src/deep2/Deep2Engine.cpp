@@ -3515,9 +3515,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 wt.cols > 0 &&
                 wt.cols <= (std::numeric_limits<std::size_t>::max)() / sizeof(float) &&
                 wt.cols * sizeof(float) == wt.sizeBytes;
+            const bool attentionBiasName =
+                hasSuffix("attn_q.bias") || hasSuffix("attn_k.bias") ||
+                hasSuffix("attn_v.bias");
+            const bool eligibleCompressedBias =
+                compressedModeEnabled && attentionBiasName &&
+                normElementBytes != 0 && t.dimensions.size() == 1 &&
+                wt.cols > 0 &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+                wt.cols * normElementBytes == wt.sizeBytes;
 
             if ((eligibleCompressedMatrix || eligibleCompressedNorm ||
-                 eligibleCompressedSsmVector) && t.data)
+                 eligibleCompressedSsmVector || eligibleCompressedBias) && t.data)
             {
                 constexpr std::size_t kDefaultCompressedModelBudget =
                     4ull * 1024ull * 1024ull * 1024ull;
@@ -6322,13 +6331,21 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
             ref->shape.size() == 1 && normElementBytes != 0 && dst.cols > 0 &&
             dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
             dst.cols * normElementBytes == dst.sizeBytes;
+        const bool attentionBiasBinding =
+            bindingLabel == "attention Q bias" ||
+            bindingLabel == "attention K bias" ||
+            bindingLabel == "attention V bias";
+        const bool compressAttentionBias = compressedModeEnabled && attentionBiasBinding &&
+            ref->shape.size() == 1 && normElementBytes != 0 && dst.cols > 0 &&
+            dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+            dst.cols * normElementBytes == dst.sizeBytes;
         const bool compressMatrix = compressedModeEnabled && !bindingIsNormOrBias &&
             bindingLabel != "MoE router" &&
             ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
             packedRowBytes > 0 &&
             packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
             packedRowBytes * dst.rows == dst.sizeBytes;
-        if (compressMatrix || compressNormVector)
+        if (compressMatrix || compressNormVector || compressAttentionBias)
         {
             constexpr std::size_t kDefaultCompressedModelBudget =
                 4ull * 1024ull * 1024ull * 1024ull;
@@ -11232,16 +11249,57 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 std::fflush(stderr);
             }
         }
+        // Q/K/V biases are small vectors but participate in every
+        // projection. Resolve raw or compressed backing into request-local
+        // FP32 only when the current projection needs it.
+        std::vector<float> qBiasScratch, kBiasScratch, vBiasScratch;
+        const auto resolveProjectionBias = [](const WeightTensor& bias,
+                                              std::size_t elements,
+                                              std::vector<float>& scratch,
+                                              const char* role) -> const float* {
+            if (!bias.hasBacking() || elements == 0)
+                return nullptr;
+            const std::size_t elementBytes =
+                bias.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+                bias.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+            if (elementBytes == 0)
+                return nullptr;
+            if (elements > bias.sizeBytes / elementBytes)
+                throw std::runtime_error(std::string("attention ") + role +
+                                         " bias is smaller than projection output");
+            if (bias.type == (int)GGMLType::GGML_TYPE_F32 && !bias.hasCompressedBacking())
+                return static_cast<const float*>(bias.data);
+            if (bias.type == (int)GGMLType::GGML_TYPE_F32) {
+                scratch.resize(elements);
+                std::string readError;
+                if (!bias.readBytes(0, scratch.data(), elements * sizeof(float), &readError))
+                    throw std::runtime_error(std::string("compressed attention ") + role +
+                                             " bias read failed: " + readError);
+                return scratch.data();
+            }
+            std::vector<std::uint16_t> encoded(elements);
+            if (bias.hasCompressedBacking()) {
+                std::string readError;
+                if (!bias.readBytes(0, encoded.data(), elements * sizeof(std::uint16_t), &readError))
+                    throw std::runtime_error(std::string("compressed attention ") + role +
+                                             " bias read failed: " + readError);
+            } else {
+                std::memcpy(encoded.data(), bias.data, elements * sizeof(std::uint16_t));
+            }
+            scratch.resize(elements);
+            for (std::size_t i = 0; i < elements; ++i)
+                scratch[i] = fp16ToFloat(encoded[i]);
+            return scratch.data();
+        };
+
         // Q projection: input -> the actual tensor row count.  This may be
         // wider than the residual stream for GQA models. Qwen gated attn_q is
         // 2*H*D (query+gate interleaved per head) then compacted to H*D.
         const size_t qLinearOut =
             qwenGatedAttn ? (2 * numHeads * headDim) : projectedQDim;
-        LinearW(lw.wq, input,
-                (lw.bq.data && lw.bq.type == (int)GGMLType::GGML_TYPE_F32)
-                    ? static_cast<const float*>(lw.bq.data)
-                    : nullptr,
-                qProj, qLinearOut);
+        const float* qBias = resolveProjectionBias(lw.bq, qLinearOut,
+                                                       qBiasScratch, "Q");
+        LinearW(lw.wq, input, qBias, qProj, qLinearOut);
         if (qwenGatedAttn)
         {
             std::vector<float> qOnly(numHeads * headDim, 0.0f);
@@ -11284,11 +11342,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // K projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wk, input,
-                (lw.bk.data && lw.bk.type == (int)GGMLType::GGML_TYPE_F32)
-                    ? static_cast<const float*>(lw.bk.data)
-                    : nullptr,
-                kProj, kvDim);
+        const float* kBias = resolveProjectionBias(lw.bk, kvDim,
+                                                       kBiasScratch, "K");
+        LinearW(lw.wk, input, kBias, kProj, kvDim);
         B3_TraceState("ATTN_K", layer, kProj, kvDim);
 
         // ── Layer 12 diagnostic: K norm (opt-in) ──
@@ -11303,11 +11359,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // V projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wv, input,
-                (lw.bv.data && lw.bv.type == (int)GGMLType::GGML_TYPE_F32)
-                    ? static_cast<const float*>(lw.bv.data)
-                    : nullptr,
-                vProj, vDim);
+        const float* vBias = resolveProjectionBias(lw.bv, vDim,
+                                                       vBiasScratch, "V");
+        LinearW(lw.wv, input, vBias, vProj, vDim);
 
         // S07 diagnostic: dump Q/K/V projection first 6 values (layer 0, first call).
         {
