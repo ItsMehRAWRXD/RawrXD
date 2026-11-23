@@ -672,8 +672,13 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
         }
+        // Q8_K is already 292 bytes/256 weights; Q8_0 would be
+        // 272 bytes/256. Never choose an expanding target format.
+        // Preserve the original tensor when a requested conversion
+        // does not strictly reduce its serialized payload.
+        const uint64_t q8Bytes = (count/32)*34;
         if(convert_f32_to_q8_0 && (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
-           t.dims[0]%32==0) {
+           t.dims[0]%32==0 && q8Bytes<t.bytes) {
             t.convert_q8_0=true;
             t.q8_source_f16=(t.type==1);
             t.q8_source_k=(t.type==15);
@@ -696,7 +701,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=2; // GGML_TYPE_Q4_0
             t.bytes=(count/32)*18;
         }
-        if(convert_q6_k_to_q5_0 && t.type==14) {
+        if(convert_q6_k_to_q5_0 && t.type==14 && t.dims[0]%256==0) {
             t.convert_q5_0=true;
             t.type=6; // GGML_TYPE_Q5_0: 8 x 22-byte blocks per 256 weights
             t.bytes=(count/256)*176;
