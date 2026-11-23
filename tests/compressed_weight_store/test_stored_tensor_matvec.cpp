@@ -49,5 +49,28 @@ int main() {
                            input.data(), output.data(), rows, cols);
     } catch (const std::invalid_argument&) { rejected = true; }
     assert(rejected);
+    // A correctly sized tensor with the wrong GGML encoding must fail closed.
+    rejected = false;
+    try {
+        StoredTensorMatvec(store, "f16", ResidentWeightType::F32,
+                           input.data(), output.data(), rows, cols);
+    } catch (const std::invalid_argument&) { rejected = true; }
+    assert(rejected);
+
+    // Q8_0 block layout: little-endian FP16 scale, then 32 signed bytes.
+    // Zero-filled blocks compress well; a nonzero first value proves decoding.
+    std::vector<std::uint8_t> q8(rows * 34, 0);
+    for (std::size_t row = 0; row < rows; ++row) {
+        q8[row * 34 + 1] = 0x3c; // FP16 scale 1.0
+        q8[row * 34 + 2] = 2;    // first signed Q8 weight
+    }
+    assert(store.addTensor("q8", q8.data(), q8.size(), &error, 8u, true));
+    std::fill(output.begin(), output.end(), 0.f);
+    StoredTensorMatvec(store, "q8", ResidentWeightType::Q8_0,
+                       input.data(), output.data(), rows, cols, 1);
+    for (float v : output) assert(v == 6.f);
+    const auto finalStats = store.stats();
+    assert(finalStats.compressed_bytes < finalStats.raw_bytes);
+    assert(finalStats.cached_decoded_bytes == 0);
     return 0;
 }
