@@ -661,10 +661,13 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             if (compressedF32Weights.Contains(cacheKey)) {
                 RawrXD::TensorCompression::Encoding encoding =
                     RawrXD::TensorCompression::Encoding::Raw;
-                std::vector<uint8_t> packedWeights;
-                if (compressedF32Weights.ExportUniform16BitRange(
+                // Stage exactly this GEMV row tile, not a whole tensor.
+                // vulkanGemv waits for dispatch completion before returning,
+                // so the caller-owned packed buffer remains live through use.
+                std::vector<uint8_t> packedWeights(elements * sizeof(uint16_t));
+                if (compressedF32Weights.CopyUniform16BitRange(
                         cacheKey, static_cast<size_t>(firstElement), elements,
-                        encoding, packedWeights)) {
+                        encoding, packedWeights.data(), packedWeights.size())) {
                     const deep2::TensorType packedType =
                         encoding == RawrXD::TensorCompression::Encoding::F16
                             ? deep2::TensorType::F16 : deep2::TensorType::BF16;
