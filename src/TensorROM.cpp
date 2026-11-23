@@ -342,10 +342,7 @@ uint64_t TensorROM::tensorStorageBytes(const TensorEntry& e) {
 }
 
 bool TensorROM::readTensor(const TensorEntry& entry, uint8_t* out) const {
-    if (!m_pager) return false;
-    const ShardManifest& m = m_shards[entry.shardIndex];
-    return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
-                              m.dataOffset + entry.offset, entry.byteSize(), out);
+    return readTensorRange(entry, 0, entry.byteSize(), out);
 }
 
 bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
