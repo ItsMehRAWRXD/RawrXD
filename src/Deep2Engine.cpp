@@ -698,9 +698,9 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             // materializing this inference tile as F32 first. The previous
             // first-touch path decoded the tile and then exported the same
             // values as F16/BF16, creating avoidable transient duplicate memory.
-            if (!ensureCompressedF32Tensor(entry)) return false;
+            const bool residencyReady = ensureCompressedF32Tensor(entry);
 
-            if (compressedF32Weights.Contains(cacheKey)) {
+            if (residencyReady && compressedF32Weights.Contains(cacheKey)) {
                 RawrXD::TensorCompression::Encoding encoding =
                     RawrXD::TensorCompression::Encoding::Raw;
                 std::vector<uint8_t> packedWeights;
