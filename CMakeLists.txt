@@ -158,3 +158,7 @@ add_test(NAME NativeBoundedWeightStager COMMAND native_bounded_weight_stager_tes
 add_executable(native_shard_pager_test tests/native_shard_pager_test.cpp src/ShardPager.cpp)
 target_include_directories(native_shard_pager_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_test(NAME NativeShardPager COMMAND native_shard_pager_test)
+
+add_executable(native_resident_f32_matvec_test tests/native_resident_f32_matvec_test.cpp)
+target_include_directories(native_resident_f32_matvec_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME NativeResidentF32Matvec COMMAND native_resident_f32_matvec_test)
