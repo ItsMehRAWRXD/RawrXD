@@ -21,9 +21,15 @@ int main() {
         assert(DecodeBlock(type,buf.data(),decoded));
         for(int k=0;k<256;++k)assert(decoded[k]==0);
         // Exercise all groups/lanes/bitplanes with signed nonuniform weights.
-        for(int k=0;k<256;++k)
-            v[k]=(double((k*37+5)%101)-50.0)*0.125 +
-                 double(k/16)*0.01;
+        for(int g=0;g<16;++g) for(int k=0;k<16;++k) {
+            const int j=g*16+k;
+            switch(g%4) {
+                case 0: v[j]=0.125+double(k)*0.03125; break; // positive-only
+                case 1: v[j]=-0.125-double(k)*0.03125; break; // negative-only
+                case 2: v[j]=-0.25+double(k)*0.03125; break; // mixed signs
+                default: v[j]=0.0; break; // zero subgroup
+            }
+        }
         assert(EncodeBlock(type,v,float(tolerances[t]),buf.data()));
         assert(DecodeBlock(type,buf.data(),decoded));
         double maxError=0;
