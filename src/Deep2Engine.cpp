@@ -68,6 +68,12 @@ bool Deep2Engine::ConfigureTensorCompression(size_t f32BudgetBytes,
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
     // Reinitialization is a full lifecycle boundary; discard prior model state.
     Shutdown();
+    // Bind both compressed caches to the model lifecycle. A tensor name and
+    // byte count alone cannot distinguish equal-shaped weights from another
+    // GGUF. Shutdown drains old leases; switching scope also invalidates
+    // cached admission/fallback decisions before new ROM reads.
+    compressedF32Weights.SetModelIdentity(modelPath);
+    compressedEncodedWeights.SetModelIdentity(modelPath);
     configureTensorResidencyBudgets(*this);
     // Lossy F32->F16/BF16 residency is opt-in and bounded by a caller-supplied
     // absolute-error tolerance. The default remains bit-exact/lossless.
