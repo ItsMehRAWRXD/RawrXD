@@ -521,7 +521,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 char* end=nullptr;
                 const float tolerance=std::strtof(setting,&end);
                 if (end && *end=='\0' && std::isfinite(tolerance) && tolerance>=0.0f) {
-                    if (wt.EnableCompressedF32(tolerance) && deep2ForwardTraceEnabled()) {
+                    if (wt.EnableCompressedF32(tolerance, wt.cols) && deep2ForwardTraceEnabled()) {
                         std::fprintf(stderr,
                             "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu\n",
                             wt.name.c_str(),wt.sizeBytes,wt.compressedF32->storedBytes());
