@@ -61,13 +61,10 @@ inline PublishResult PublishRepackedGGUF(const std::string& source,
     if(ec||bytes>max_bytes||bytes<24) {
         result.error=PublishError::VerificationFailed;return result;
     }
-    // Re-check the target before commit. This does not provide a
-    // race-free no-replace guarantee on every platform; callers must
-    // serialize publication to the same destination.
-    if(fs::exists(target,ec)||ec) {
-        result.error=PublishError::DestinationExists;return result;
-    }
-    fs::rename(stage,target,ec);
+    // Hard-link publication is atomic and no-replace: link creation fails
+    // when target exists, avoiding rename's platform-specific overwrite.
+    // Filesystems without hard links fail closed instead of overwriting.
+    fs::create_hard_link(stage,target,ec);
     if(ec){result.error=PublishError::CommitFailed;return result;}
     result.published_bytes=bytes;
     return result;
