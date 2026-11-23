@@ -203,7 +203,13 @@ inline PruneError PruneGGUF(const std::string& input,
             if (!ReadU32(in, v) || v < 8 || v > 4096 || (v & (v - 1))) { R04_PARSE_ERR("kv 'general.alignment' invalid value=%u", v); return PruneError::Format; }
             alignment = v;
         }
-        if (kv.key == arch + ".expert_count") { have_expert_count = true; }
+        // Pattern-match (not arch-dependent): the writer patches any type-4 key
+        // ending in ".expert_count" (excluding ".expert_used_count") when the
+        // pruning produced a new count. The arch-based check missed fixtures
+        // whose arch string was captured after the KV order differed.
+        if (EndsWith(kv.key, "expert_count") && !EndsWith(kv.key, "expert_used_count")) {
+            have_expert_count = true;
+        }
         {
             const long long vend = (long long)in.tellg();
             std::fprintf(stderr, "[R04_KV] idx=%llu key=%s type=%u start=%lld end=%lld%s\n",
