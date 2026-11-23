@@ -71,8 +71,10 @@ double envPositiveDouble(const char* name, double fallback) {
 // F16/BF16 representation. The Vulkan quant GEMV shader consumes those packed
 // bytes directly. Default tolerance is zero (bit-exact conversion only).
 bool prepareF32GpuCompression(ModelWeights& weights) {
+    // Safe-by-default: zero tolerance means only bit-exact F16/BF16
+    // conversions are admitted. Set DEEP2_F32_GPU_COMPRESSION=0 to opt out.
     const char* enabled = std::getenv("DEEP2_F32_GPU_COMPRESSION");
-    if (!enabled || !*enabled || *enabled == '0') return true;
+    if (enabled && *enabled == '0') return true;
 
     float tolerance = 0.0f;
     if (const char* value = std::getenv("DEEP2_F32_MAX_ABS_ERROR")) {
