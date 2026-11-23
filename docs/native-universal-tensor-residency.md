@@ -12,7 +12,7 @@ The runtime must never select an encoding unless its decoder is implemented and 
 |---|---|---|
 | F32 | Bounded chunked adaptive representation (lossless RLE/LZ4 by default; optional error-bounded F16/BF16) | Requested F32 chunk/tile |
 | F16, BF16, F64 | Original encoded bytes in the bounded ROM pager; optional lossless RLE/LZ4 byte residency when a chunk wins | Requested F32 tile |
-| Q4_0, Q4_1, Q5_0, Q5_1, Q1_0, Q2_0, Q8_0, Q8_1, IQ4_NL, IQ4_XS, MXFP4, NVFP4, TQ1_0, TQ2_0 | Canonical GGML blocks; optional lossless RLE/LZ4 byte residency only when smaller | Requested block-aligned F32 tile |
+| Q4_0, Q4_1, Q5_0, Q5_1, Q1_0, Q2_0, F8_E4M3, Q8_0, Q8_1, IQ4_NL, IQ4_XS, MXFP4, NVFP4, TQ1_0, TQ2_0 | Canonical GGML blocks; optional lossless RLE/LZ4 byte residency only when smaller | Requested block-aligned F32 tile |
 | Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K | Canonical GGML super-blocks; optional lossless RLE/LZ4 byte residency only when smaller | Requested 256-value-block-aligned F32 tile |
 | I8, I16, I32, I64 | Original exact integer bytes; optional lossless RLE byte residency when smaller | Requested F32 tile for current floating-point inference kernels |
 
