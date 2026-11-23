@@ -170,7 +170,7 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
     if (size == 0 || !m_reader || offset > UINT64_MAX - (size - 1)) return;
     const uint64_t firstPage64 = offset / m_pageSize;
     const uint64_t lastPage64 = (offset + size - 1) / m_pageSize;
-    if (lastPage64 < firstPage64 ||
+    if (lastPage64 < firstPage64 || lastPage64 > 0xFFFFFFFFull ||
         lastPage64 - firstPage64 >= std::numeric_limits<size_t>::max()) return;
     const size_t firstPage = static_cast<size_t>(firstPage64);
     const size_t lastPage = static_cast<size_t>(lastPage64);
