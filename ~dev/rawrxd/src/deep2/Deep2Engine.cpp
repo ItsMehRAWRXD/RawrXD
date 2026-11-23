@@ -2722,6 +2722,15 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
         rows *= d;
     }
     wt.rows = rows;
+    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+        const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
+        if (setting && *setting) {
+            char* end=nullptr;
+            const float tolerance=std::strtof(setting,&end);
+            if (end && *end=='\\0' && std::isfinite(tolerance) && tolerance>=0.0f)
+                wt.EnableCompressedF32(tolerance,wt.cols);
+        }
+    }
     return true;
 }
 
