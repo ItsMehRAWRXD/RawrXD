@@ -558,6 +558,29 @@ inline bool IsExactQ4_1ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
     }
     return true;
 }
+// A Q8_0 block can be re-encoded as Q4_0 without arithmetic when
+// every signed code fits the Q4_0 [-8,7] interval. The FP16 scale
+// and signed-zero behavior are preserved exactly.
+inline bool IsExactQ8_0ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%34 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char block[34];
+    while(bytes) {
+        if(!in.read(reinterpret_cast<char*>(block),34))return false;
+        const uint16_t half=uint16_t(block[0])|(uint16_t(block[1])<<8);
+        const uint32_t bits=Float16ToFloat32Bits(half);
+        float scale=0;std::memcpy(&scale,&bits,4);
+        if(!std::isfinite(scale))return false;
+        for(unsigned i=0;i<32;++i) {
+            const int q=static_cast<int8_t>(block[2+i]);
+            if(q < -8 || q > 7)return false;
+        }
+        bytes-=34;
+    }
+    return true;
+}
 inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                            uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
     const uint64_t inputBlock=sourceType==0?128:sourceType==1?64:
@@ -601,6 +624,27 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                 const uint32_t bits=Float16ToFloat32Bits(half);
                 std::memcpy(&minimum,&bits,4);
                 if(!std::isfinite(minimum))return false;
+            }
+            if(sourceType==8) {
+                bool exact=true;
+                for(unsigned i=0;i<32;++i) {
+                    const int q=static_cast<int8_t>(source[2+i]);
+                    if(q < -8 || q > 7){exact=false;break;}
+                }
+                if(exact) {
+                    encoded[0]=source[0];encoded[1]=source[1];
+                    for(unsigned i=0;i<16;++i) {
+                        const unsigned lo=static_cast<unsigned>(
+                            static_cast<int8_t>(source[2+i])+8);
+                        const unsigned hi=static_cast<unsigned>(
+                            static_cast<int8_t>(source[18+i])+8);
+                        encoded[2+i]=static_cast<unsigned char>(lo|(hi<<4));
+                    }
+                    if(!out.write(reinterpret_cast<const char*>(encoded),18))
+                        return false;
+                    sourceBytes-=inputBlock;
+                    continue;
+                }
             }
             // Q4_1 and Q4_0 have identical nibble order. When Q4_1's
             // used affine codes reconstruct bit-exactly, its codes already have
@@ -1412,6 +1456,29 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.type=1;
                 t.bytes=t.source_bytes/2;
             }
+        }
+    }
+    // Quality-sensitive and vector Q8_0 tensors may shrink to Q4_0
+    // only when every source code fits without changing its decoded
+    // value. Ordinary matrices retain their existing Q4 planner.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(t.type!=8 || t.convert_q4_0 || t.convert_q8_0 ||
+               t.dims[0]%32)continue;
+            const bool matrix=t.dims.size()>=2 && t.dims[1]>1;
+            if(matrix && !IsQualitySensitiveTensor(t.name))continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(!IsExactQ8_0ToQ4_0(in,dataStart+t.old_offset,t.source_bytes))
+                continue;
+            uint64_t count=1,compact=0;
+            for(const auto dim:t.dims)
+                if(!CheckedMultiply(count,dim,count))return RepackError::Overflow;
+            if(!CheckedMultiply(count/32,18,compact))return RepackError::Overflow;
+            if(compact>=t.bytes)continue;
+            t.convert_q4_0=true;
+            t.q4_source_type=8;
+            t.type=2;
+            t.bytes=compact;
         }
     }
     // The general Q4_0 planner also selects ordinary Q4_1 vectors.
