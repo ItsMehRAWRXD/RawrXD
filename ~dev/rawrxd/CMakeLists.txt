@@ -14878,10 +14878,8 @@ add_executable(rawrxd-native-tensor-compression-test
 target_compile_features(rawrxd-native-tensor-compression-test PRIVATE cxx_std_17)
 target_include_directories(rawrxd-native-tensor-compression-test PRIVATE
     "${CMAKE_SOURCE_DIR}/src/deep2")
-if(BUILD_TESTING)
-    add_test(NAME rawrxd_native_tensor_compression
-             COMMAND rawrxd-native-tensor-compression-test)
-endif()
+add_test(NAME rawrxd_native_tensor_compression
+         COMMAND rawrxd-native-tensor-compression-test)
 
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
