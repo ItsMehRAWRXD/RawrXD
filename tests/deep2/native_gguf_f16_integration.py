@@ -360,17 +360,15 @@ def run(binary):
         scales=q2b[qo:qo+16];packed=q2b[qo+16:qo+80]
         d,dm=struct.unpack_from("<ee",q2b,qo+80)
         restored=[0.0]*256
-        for g in range(16):
-            chunk=g//8;within=g%8;half=within%2;shift=(within//2)*2
+        for j in range(256):
+            chunk=j//128;within=j%128;lane=within//32;col=within%32;g=j//16
             sc=scales[g]&15;mn=scales[g]>>4
-            for j in range(16):
-                qi=chunk*32+(16 if half else 0)+j
-                code=(packed[qi]>>shift)&3
-                restored[g*16+j]=d*sc*code-dm*mn
+            qi=chunk*64+(lane//2)*32+col
+            code=(packed[qi]>>(2*(lane%2)))&3
+            restored[j]=d*sc*code-dm*mn
         assert max(abs(a-b) for a,b in zip(restored,q2vals))<=0.5
-        # Q2_K regression: the encoded per-group scale/min must be normalized
-        # by the stored half super-scale exactly once. The older encoder
-        # incorrectly divided both codes by 15 a second time.
+        # Q2_K scale/min metadata and bitplanes follow GGML's two 128-value
+        # halves: two 32-byte planes, with paired 2-bit lanes per byte.
         q2_levels=[(-1.5,-0.5,0.5,1.5)[i%4] for i in range(256)]
         levels_src=root/"f64-q2k-levels-source.gguf"
         levels_src.write_bytes(pad(q2hdr)+struct.pack("<256d",*q2_levels))
@@ -384,12 +382,12 @@ def run(binary):
         assert min((c >> 4) for c in codes)>=14
         d,dm=struct.unpack_from("<ee",ld,lo+80)
         packed=ld[lo+16:lo+80]
-        levels_decoded=[]
-        for g in range(16):
-            for j in range(16):
-                qi=(g//8)*32+((g%8)%2)*16+j
-                q=(packed[qi]>>(((g%8)//2)*2))&3
-                levels_decoded.append(d*(codes[g]&15)*q-dm*(codes[g]>>4))
+        levels_decoded=[0.0]*256
+        for j in range(256):
+            chunk=j//128;within=j%128;lane=within//32;col=within%32;g=j//16
+            qi=chunk*64+(lane//2)*32+col
+            q=(packed[qi]>>(2*(lane%2)))&3
+            levels_decoded[j]=d*(codes[g]&15)*q-dm*(codes[g]>>4)
         assert max(abs(x-y) for x,y in zip(levels_decoded,q2_levels)) <= 0.01
         q2strict=root/"f64-q2k-strict.gguf"
         subprocess.run([binary,str(q2src),str(q2strict),"0","q2_k"],check=True)
