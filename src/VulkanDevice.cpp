@@ -179,10 +179,23 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
         vkDestroyBuffer(gpu.device, buf, nullptr);
         return false;
     }
-    vkBindBufferMemory(gpu.device, buf, mem, 0);
+    if (vkBindBufferMemory(gpu.device, buf, mem, 0) != VK_SUCCESS) {
+        vkFreeMemory(gpu.device, mem, nullptr);
+        vkDestroyBuffer(gpu.device, buf, nullptr);
+        buf = VK_NULL_HANDLE;
+        mem = VK_NULL_HANDLE;
+        return false;
+    }
 
     if (mapped && (memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
-        vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped);
+        if (vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped) != VK_SUCCESS) {
+            vkDestroyBuffer(gpu.device, buf, nullptr);
+            vkFreeMemory(gpu.device, mem, nullptr);
+            buf = VK_NULL_HANDLE;
+            mem = VK_NULL_HANDLE;
+            *mapped = nullptr;
+            return false;
+        }
     }
     return true;
 }
