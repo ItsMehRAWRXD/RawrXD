@@ -584,6 +584,36 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         const auto byteOffset = static_cast<uint64_t>(firstToken) * hiddenDim * sizeof(float);
         if (!rom.readTensorRange(*tokenEmb, byteOffset, hiddenDim * sizeof(float),
                                  reinterpret_cast<uint8_t*>(hiddenStates.data()))) return false;
+    } else if (tokenEmb->type == deep2::TensorType::Q8_0 &&
+               tokenEmb->dims.size() == 2 && tokenEmb->dims[0] == hiddenDim &&
+               tokenEmb->dims[1] > 0 && hiddenDim % 32 == 0) {
+        if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
+        // GGML Q8_0 uses 34 bytes per 32 weights. Decode one embedding
+        // row only; no vocabulary-sized FP32 allocation.
+        if (hiddenDim / 32 > SIZE_MAX / 34) return false;
+        const size_t rowBytes = (hiddenDim / 32) * 34;
+        if (firstToken > UINT64_MAX / rowBytes) return false;
+        const uint64_t rowOffset = uint64_t(firstToken) * rowBytes;
+        std::uint8_t block[34];
+        for (size_t j = 0; j < hiddenDim; j += 32) {
+            if (!rom.readTensorRange(*tokenEmb, rowOffset + (j / 32) * 34,
+                                     sizeof(block), block)) return false;
+            const uint16_t h = uint16_t(block[0]) | (uint16_t(block[1]) << 8);
+            const uint32_t exponent = (h >> 10) & 31u, fraction = h & 1023u;
+            uint32_t bits = uint32_t(h & 0x8000u) << 16;
+            if (exponent == 31) bits |= 0x7f800000u | (fraction << 13);
+            else if (exponent) bits |= ((exponent + 112u) << 23) | (fraction << 13);
+            else if (fraction) {
+                uint32_t mantissa = fraction, shift = 0;
+                while ((mantissa & 1024u) == 0) { mantissa <<= 1; ++shift; }
+                bits |= ((113u - shift) << 23) | ((mantissa & 1023u) << 13);
+            }
+            float scale;
+            std::memcpy(&scale, &bits, sizeof(scale));
+            if (!std::isfinite(scale)) return false;
+            for (size_t k = 0; k < 32; ++k)
+                hiddenStates[j + k] = scale * static_cast<int8_t>(block[k + 2]);
+        }
     } else {
         deep2::DequantizedTensor tokenEmbDq;
         if (!dequantTensor(*tokenEmb, tokenEmbDq)) return false;
