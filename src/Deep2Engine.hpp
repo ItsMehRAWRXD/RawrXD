@@ -32,6 +32,8 @@ namespace Deep2EngineVulkan {
 struct Deep2Engine {
     struct TensorResidencySnapshot {
         size_t f32BudgetBytes = 0, encodedBudgetBytes = 0;
+        size_t sourcePagerBudgetBytes = 0, sourcePagerResidentBytes = 0;
+        size_t sourcePagerPageCount = 0;
         size_t f32CompressedBytes = 0, encodedCompressedBytes = 0;
         size_t f32LogicalBytes = 0, encodedLogicalBytes = 0;
         size_t f32TensorCount = 0, encodedTensorCount = 0;
@@ -46,6 +48,11 @@ struct Deep2Engine {
         size_t totalLogicalBytes() const noexcept {
             return encodedLogicalBytes > static_cast<size_t>(-1) - f32LogicalBytes
                 ? static_cast<size_t>(-1) : f32LogicalBytes + encodedLogicalBytes;
+        }
+        size_t totalResidentBytes() const noexcept {
+            const size_t compressed = totalCompressedBytes();
+            return sourcePagerResidentBytes > static_cast<size_t>(-1) - compressed
+                ? static_cast<size_t>(-1) : compressed + sourcePagerResidentBytes;
         }
         size_t totalTrackedWeightResidentBytes() const noexcept {
             const size_t cacheBytes = totalCompressedBytes();
