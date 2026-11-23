@@ -249,6 +249,15 @@ public:
                            uint32_t rows, uint32_t cols,
                            uint64_t cacheKey = 0);
 
+    // Bounded host-to-device tile dispatch. The caller supplies one complete
+    // packed row range; outputRowBase selects the corresponding output slice.
+    // The temporary device weight buffer is released only after the dispatch
+    // fence confirms completion.
+    bool DispatchGemvQuantTile(int type, const void* packedRows,
+                               size_t packedBytes, DeviceBuf& input,
+                               DeviceBuf& output, uint32_t rowCount,
+                               uint32_t cols, uint32_t outputRowBase);
+
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
                             uint32_t rows, uint32_t cols,
@@ -479,6 +488,9 @@ public:
     void ResetSpecKvMirror();
     std::vector<DeviceBuf> specKMirror_;
     std::vector<DeviceBuf> specVMirror_;
+    // Device buffers whose submission completion is unresolved. Retained
+    // until cleanup has authoritative device-idle/terminal-loss evidence.
+    std::vector<DeviceBuf> quarantinedDeviceBuffers_;
     uint32_t specKvLayers_ = 0, specKvHeads_ = 0, specKvHeadDim_ = 0;
     uint32_t specKvCapacity_ = 0;
 

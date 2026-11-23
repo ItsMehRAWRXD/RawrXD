@@ -4239,6 +4239,138 @@ bool VulkanCompute::DispatchGemvQuant(
     return ok;
 }
 
+// One bounded packed-weight tile per dispatch. The output descriptor starts
+// at outputRowBase, so the existing quant shader writes the tile into its
+// final output range without allocating a second output tensor.
+bool VulkanCompute::DispatchGemvQuantTile(
+    int type, const void* packedRows, size_t packedBytes,
+    DeviceBuf& input, DeviceBuf& output, uint32_t rowCount,
+    uint32_t cols, uint32_t outputRowBase)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (lostSeq_.lost || !initialized_ || !qPipeline_ || !packedRows || !packedBytes ||
+        !input || !output || !rowCount || !cols || type == 40 ||
+        (type != 2 && type != 8 && type != 10 && type != 11 &&
+         type != 12 && type != 13 && type != 14 && type != 20))
+        return false;
+    const size_t outputOffset = static_cast<size_t>(outputRowBase) * sizeof(float);
+    const size_t outputBytes = static_cast<size_t>(rowCount) * sizeof(float);
+    const size_t inputBytes = static_cast<size_t>(cols) * sizeof(float);
+    if (outputRowBase > UINT32_MAX - rowCount ||
+        outputOffset > output.size || outputBytes > output.size - outputOffset ||
+        inputBytes > input.size || packedBytes > UINT32_MAX)
+        return false;
+    // Vulkan storage-buffer descriptor offsets must satisfy the physical
+    // device's minStorageBufferOffsetAlignment. Refuse this tile route on
+    // unusual devices rather than issuing an invalid descriptor update.
+    VkPhysicalDeviceProperties deviceProperties{};
+    vkGetPhysicalDeviceProperties(physical_, &deviceProperties);
+    const VkDeviceSize descriptorAlignment =
+        deviceProperties.limits.minStorageBufferOffsetAlignment;
+    if (descriptorAlignment &&
+        (static_cast<VkDeviceSize>(outputOffset) % descriptorAlignment) != 0)
+        return false;
+    // The output descriptor covers this tile, not the rest of the model's
+    // output allocation. This also enforces maxStorageBufferRange for devices
+    // with small storage-buffer descriptor limits.
+    if (outputBytes > deviceProperties.limits.maxStorageBufferRange ||
+        packedBytes > deviceProperties.limits.maxStorageBufferRange ||
+        inputBytes > deviceProperties.limits.maxStorageBufferRange)
+        return false;
+    const size_t rowBytes = QuantPackedRowBytes(type, cols);
+    if (!rowBytes || rowCount > SIZE_MAX / rowBytes ||
+        packedBytes != rowBytes * static_cast<size_t>(rowCount))
+        return false;
+
+    // The temporary device allocation is intentionally tile-sized. On a
+    // confirmed completion it is destroyed immediately; on timeout/device
+    // loss it is retained because the queue may still reference it.
+    DeviceBuf tile{};
+    if (!createBuffer(packedBytes,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tile))
+        return false;
+    if (!uploadToBuffer(tile, packedRows, packedBytes)) {
+        // uploadToBuffer is completion-backed; failure may mean the transfer
+        // was submitted but completion was not established. Keep ownership
+        // in the teardown quarantine rather than losing the DeviceBuf handle.
+        quarantinedDeviceBuffers_.push_back(tile);
+        tile = {};
+        return false;
+    }
+
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if (!beginCommand(cmd, query, true)) {
+        destroyBuffer(tile);
+        return false;
+    }
+    VkDescriptorSet set = VK_NULL_HANDLE;
+    VkDescriptorSetAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    ai.descriptorPool = descriptorPool_;
+    ai.descriptorSetCount = 1;
+    ai.pSetLayouts = &qSetLayout_;
+    if (vkAllocateDescriptorSets(device_, &ai, &set) != VK_SUCCESS) {
+        vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+        if (query) vkDestroyQueryPool(device_, query, nullptr);
+        destroyBuffer(tile);
+        return false;
+    }
+
+    DeviceBuf* bufs[3] = {&tile, &input, &output};
+    VkDescriptorBufferInfo bi[3]{};
+    VkWriteDescriptorSet wr[3]{};
+    for (uint32_t i = 0; i < 3; ++i) {
+        bi[i].buffer = bufs[i]->buffer;
+        bi[i].offset = i == 2 ? static_cast<VkDeviceSize>(outputOffset) : 0;
+        bi[i].range = i == 2
+            ? static_cast<VkDeviceSize>(outputBytes)
+            : (i == 1 ? static_cast<VkDeviceSize>(inputBytes)
+                      : static_cast<VkDeviceSize>(packedBytes));
+        wr[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        wr[i].dstSet = set;
+        wr[i].dstBinding = i;
+        wr[i].descriptorCount = 1;
+        wr[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        wr[i].pBufferInfo = &bi[i];
+    }
+    vkUpdateDescriptorSets(device_, 3, wr, 0, nullptr);
+
+    QPush push{};
+    push.type = static_cast<uint32_t>(type);
+    push.rows = rowCount;
+    push.cols = cols;
+    push.weightBytes = static_cast<uint32_t>(packedBytes);
+    const char* strictEnv = std::getenv("RAWRXD_DEEP2_GEMV_STRICT_ORDER");
+    push.strictOrder =
+        (strictEnv && strictEnv[0] == '1' && strictEnv[1] == '\0') ? 1u : 0u;
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                            qPipelineLayout_, 0, 1, &set, 0, nullptr);
+    vkCmdPushConstants(cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                       0, sizeof(push), &push);
+    vkCmdDispatch(cmd, rowCount, 1, 1);
+    recordComputeBarrier(cmd);
+
+    const bool completed = endSubmitWait(
+        cmd, query, GpuWorkKind::ModelCompute, packedBytes, workEpoch_, nullptr);
+    if (completed) {
+        vkFreeDescriptorSets(device_, descriptorPool_, 1, &set);
+        ++rangedSetFrees_;
+        destroyBuffer(tile);
+        ++gemvSuccess_;
+        return true;
+    }
+    // Do not release resources while completion is unknown. The descriptor
+    // pool and tile are reclaimed only after cleanup's device-idle gate.
+    quarantinedDeviceBuffers_.push_back(tile);
+    tile = {};
+    return false;
+}
+
     bool VulkanCompute::DispatchRouter(
         const GpuWeightView& routerWeights,
         const float* hiddenState,
@@ -7438,6 +7570,10 @@ void VulkanCompute::cleanup() {
     }
     // Device idle or confirmed terminal loss above authorizes these drains.
     if (!resetDownloadRing(true) || !resetAsyncCmdRing(true)) return;
+    // Reclaim tile buffers quarantined after an unresolved upload/compute
+    // completion. This point is reached only after the device-idle gate.
+    for (auto& pending : quarantinedDeviceBuffers_) destroyBuffer(pending);
+    quarantinedDeviceBuffers_.clear();
 
     clearRecordedQ4K();
     clearRecordedGroups();

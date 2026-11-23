@@ -81,8 +81,12 @@ bool gpuPackedType(int type) noexcept {
            type == static_cast<int>(GGMLType::GGML_TYPE_Q4_0);
 }
 
+bool hasWeightStorage(const WeightTensor& wt) noexcept {
+    return wt.data != nullptr || wt.hasCompressedBacking();
+}
+
 bool usableWeight(const WeightTensor& wt) noexcept {
-    return wt.data != nullptr && wt.rows != 0 && wt.cols != 0 &&
+    return hasWeightStorage(wt) && wt.rows != 0 && wt.cols != 0 &&
            wt.sizeBytes != 0 && wt.rows <= UINT32_MAX && wt.cols <= UINT32_MAX;
 }
 
@@ -90,7 +94,7 @@ const float* ensureF32(
     const WeightTensor& wt,
     std::unordered_map<std::string, std::vector<float>>& cache) {
     if (!usableWeight(wt)) return nullptr;
-    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32))
+    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32) && wt.data)
         return static_cast<const float*>(wt.data);
 
     std::string key = wt.name;
@@ -100,8 +104,10 @@ const float* ensureF32(
     auto cached = cache.find(key);
     if (cached != cache.end()) return cached->second.data();
 
-    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
-    if (!dequant) return nullptr;
+    auto dequant = wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+        ? nullptr : QuantKernelRegistry::Instance().GetDequant(wt.type);
+    if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32) && !dequant)
+        return nullptr;
     if (wt.rows > std::numeric_limits<size_t>::max() / wt.cols)
         return nullptr;
     const size_t elements = wt.rows * wt.cols;
@@ -109,13 +115,19 @@ const float* ensureF32(
         return nullptr;
 
     std::vector<float> decoded(elements);
-    dequant(static_cast<const uint8_t*>(wt.data), decoded.data(), elements);
+    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+        if (!wt.readBytes(0, decoded.data(), elements * sizeof(float))) return nullptr;
+    } else {
+        std::vector<uint8_t> packed(wt.sizeBytes);
+        if (!wt.readBytes(0, packed.data(), packed.size())) return nullptr;
+        dequant(packed.data(), decoded.data(), elements);
+    }
     auto inserted = cache.emplace(std::move(key), std::move(decoded));
     return inserted.first->second.data();
 }
 
 bool denseLayerReady(const LayerWeights& lw) noexcept {
-    const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
     return usableWeight(lw.attnNorm) && usableWeight(lw.wq) &&
            usableWeight(lw.wk) && usableWeight(lw.wv) && usableWeight(wo) &&
            usableWeight(lw.ffnNorm) && usableWeight(lw.wGate) &&
@@ -136,7 +148,7 @@ bool layerIsMla(const LayerWeights& lw) noexcept {
 bool mlaLayerReady(const LayerWeights& lw, bool isMoe) noexcept {
     // The output projection may be stored in lw.wo (raw load) or lw.attnO
     // (mapped load); denseLayerReady resolves the same alias.
-    const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
     // MoE layers carry no dense FFN tensors; their experts live in the proxy.
     const bool ffnReady = isMoe ? true
         : (usableWeight(lw.wGate) && usableWeight(lw.wUp) && usableWeight(lw.wDown));
@@ -211,7 +223,7 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         largest = std::max(largest, weightBytes(lw.wq));
         largest = std::max(largest, weightBytes(lw.wk));
         largest = std::max(largest, weightBytes(lw.wv));
-        largest = std::max(largest, weightBytes(lw.wo.data ? lw.wo : lw.attnO));
+        largest = std::max(largest, weightBytes(hasWeightStorage(lw.wo) ? lw.wo : lw.attnO));
         largest = std::max(largest, weightBytes(lw.wGate));
         largest = std::max(largest, weightBytes(lw.wUp));
         largest = std::max(largest, weightBytes(lw.wDown));
@@ -249,7 +261,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (!gpu) return reject("reject: no gpu slot");
     if (!ensureGpuForwardArena(slot)) return reject("reject: ensureGpuForwardArena failed");
     const LayerWeights& lw = modelWeights.layers[layer];
-    const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
     
     // Check if layer is ready for GPU execution
     // MLA layers need different weights than dense layers
@@ -264,7 +276,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             : (usableWeight(lw.wGate) && usableWeight(lw.wUp) && usableWeight(lw.wDown));
         // Output projection aliases lw.wo on the raw load path and lw.attnO on
         // the mapped path; resolve the alias before testing readiness.
-        const WeightTensor& woReady = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& woReady = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         layerReady = usableWeight(lw.attnNorm) &&
                      usableWeight(lw.wq) &&
                      usableWeight(woReady) &&
@@ -321,7 +333,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             return reject("reject: attnKV_a_mqa shape mismatch");
         if (!usableWeight(lw.attnK_b))
             return reject("reject: attnK_b absent");
-        const WeightTensor& woMla = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& woMla = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         if (woMla.rows != hidden || woMla.cols != hidden)
             return reject("reject: attnO shape mismatch");
     } else {
@@ -332,7 +344,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             return reject("reject: wk.rows mismatch");
         if (lw.wv.rows != static_cast<size_t>(kvDim))
             return reject("reject: wv.rows mismatch");
-        const WeightTensor& wo_check = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& wo_check = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         if (wo_check.rows != hidden || wo_check.cols != hidden)
             return reject("reject: wo shape mismatch");
     }
@@ -427,9 +439,61 @@ bool Deep2Engine::forwardLayerGpuResident(
         const bool packed = gpuPackedType(wt.type);
         bool ok = false;
         if (packed) {
-            ok = gpu->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes,
-                                        input, output, rows, cols,
-                                        weightKey(wt));
+            const void* packedData = wt.data;
+            if (!packedData && wt.hasCompressedBacking() &&
+                wt.type != 40 && rows == wt.rows && cols == wt.cols &&
+                rows != 0 && wt.sizeBytes % rows == 0) {
+                const size_t rowBytes = wt.sizeBytes / rows;
+                if (rowBytes != VulkanCompute::QuantPackedRowBytes(wt.type, cols))
+                    return false;
+                constexpr uint32_t kCompressedGpuTileRows = 128;
+                // A packed row must fit the Vulkan storage-buffer range.
+                // Reject unsupported geometry before allocating host scratch
+                // or issuing any partial GPU writes.
+                if (rowBytes == 0 || rowBytes > UINT32_MAX)
+                    return false;
+                // Reuse one bounded host decode buffer for every tile. This
+                // avoids per-dispatch allocations and keeps peak temporary
+                // host residency independent of the full matrix row count.
+                const size_t capacityRows =
+                    std::min<size_t>(kCompressedGpuTileRows, rows);
+                if (rowBytes > std::numeric_limits<size_t>::max() / capacityRows)
+                    return false;
+                std::vector<uint8_t> packedTile(rowBytes * capacityRows);
+                ok = true;
+                for (uint32_t rowBase = 0; rowBase < rows;) {
+                    const uint32_t tileRows = std::min<uint32_t>(
+                        kCompressedGpuTileRows, rows - rowBase);
+                    if (tileRows > std::numeric_limits<size_t>::max() / rowBytes)
+                        return false;
+                    const size_t tileBytes = static_cast<size_t>(tileRows) * rowBytes;
+                    std::string decodeError;
+                    if (!wt.readBytes(static_cast<size_t>(rowBase) * rowBytes,
+                                      packedTile.data(), tileBytes, &decodeError)) {
+                        gpuForwardTrace("reject: compressed packed-weight tile read failed");
+                        return false;
+                    }
+                    if (!gpu->DispatchGemvQuantTile(
+                            wt.type, packedTile.data(), tileBytes,
+                            input, output, tileRows, cols, rowBase)) {
+                        gpuForwardTrace("reject: compressed Vulkan quantized tile dispatch failed");
+                        return false;
+                    }
+                    rowBase += tileRows;
+                }
+            } else {
+                // An unsupported compressed layout must not silently allocate
+                // a full uncompressed matrix. Keep the runtime-residency
+                // contract explicit and fail before dispatching GPU work.
+                if (!packedData && wt.hasCompressedBacking()) {
+                    gpuForwardTrace("reject: compressed packed-weight tile geometry unsupported");
+                    return false;
+                }
+                if (!packedData) return false;
+                ok = gpu->DispatchGemvQuant(wt.type, packedData, wt.sizeBytes,
+                                            input, output, rows, cols,
+                                            weightKey(wt));
+            }
             if (ok) {
                 if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K))
                     ++counters.q4kPackedOps;
@@ -439,12 +503,19 @@ bool Deep2Engine::forwardLayerGpuResident(
                     ++counters.q2kPackedOps;
             }
         } else {
+            // Dense GEMV currently requires contiguous F32 weights.
+            // Never silently inflate compressed matrices into full-sized
+            // temporary allocations: this violates compressed residency.
+            if (!wt.data && wt.hasCompressedBacking()) {
+                gpuForwardTrace("reject: compressed dense GEMV requires bounded tile dispatch");
+                return false;
+            }
             const float* f32 = ensureF32(wt, vulkanWeightF32_);
             if (!f32) return false;
+            if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
+                ++counters.cpuF32Expands;
             ok = gpu->DispatchGemvDevice(f32, weightKey(wt), input, output,
                                          rows, cols);
-            if (ok && wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32))
-                ++counters.cpuF32Expands;
         }
         if (ok) ++counters.opSubmits;
         return ok;
@@ -524,11 +595,11 @@ bool Deep2Engine::forwardLayerGpuResident(
         
         // Upload K_b and V_b weights and K_pe to GPU
         // K_pe is embedded in attnKV_a_mqa tensor (last 64 elements)
-        if (lw.attnK_b.data && lw.attnV_b.data) {
-            if (!gpu->UploadBuf(gpu->MlaKb(), 
-                               static_cast<const float*>(lw.attnK_b.data), nHeads * nope) ||
-                !gpu->UploadBuf(gpu->MlaVb(), 
-                               static_cast<const float*>(lw.attnV_b.data), nHeads * 128)) {
+        const float* mlaKb = ensureF32(lw.attnK_b, vulkanWeightF32_);
+        const float* mlaVb = ensureF32(lw.attnV_b, vulkanWeightF32_);
+        if (mlaKb && mlaVb) {
+            if (!gpu->UploadBuf(gpu->MlaKb(), mlaKb, nHeads * nope) ||
+                !gpu->UploadBuf(gpu->MlaVb(), mlaVb, nHeads * 128)) {
                 gpuForwardTrace("layer fail: MLA KV upload");
             } else {
                 const float scale = 1.0f / std::sqrt(static_cast<float>(192));
@@ -912,7 +983,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
                     i, isMla ? 1 : 0,
                     usableWeight(lw.attnNorm), usableWeight(lw.wq),
                     usableWeight(lw.wk), usableWeight(lw.wv),
-                    usableWeight(lw.wo.data ? lw.wo : lw.attnO),
+                    usableWeight(hasWeightStorage(lw.wo) ? lw.wo : lw.attnO),
                     usableWeight(lw.ffnNorm), usableWeight(lw.wGate),
                     usableWeight(lw.wUp), usableWeight(lw.wDown),
                     usableWeight(lw.attnKV_a_mqa), usableWeight(lw.attnK_b));
@@ -920,7 +991,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             }
             return false;
         }
-        const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+        const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
         // MoE layers have no dense FFN tensors, so the dense FFN type checks
         // only apply to non-MoE models.
         const bool ffnTypesOk = modelWeights.isMoE

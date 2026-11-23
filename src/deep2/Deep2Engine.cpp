@@ -5965,6 +5965,8 @@ bool Deep2Engine::embedTokenFromShard(int tokenId, float* output)
 }
 
 // ============================================================================
+static size_t LinearW_RowBytes(int type, size_t cols);
+
 // Bind standard multi-shard weights
 //
 // Kimi/DeepSeek MLA uses K2NativeStreamGate. Standard multi-shard families
@@ -5987,7 +5989,7 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         error = "standard multi-shard binding has no layer geometry";
         return false;
     }
-    if (!standardMultiShardMappingKeys_.empty())
+    if (standardMultiShardWeightsBound_)
         return true;
 
     const auto findFirst = [&](std::initializer_list<const char*> names) -> const GlobalTensorRef*
@@ -6039,6 +6041,42 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         dst.mapped = true;
         dst.hasFileBacking = true;
         dst.fileOffset = ref->fileOffset;
+
+        // Opt-in native compressed residency for matrix weights. Keep norms
+        // and vectors mapped because their current consumers read direct pointers.
+        const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
+        const bool compressMatrix = compressedMode && compressedMode[0] == '1' &&
+                                    ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
+                                    LinearW_RowBytes(dst.type, dst.cols) > 0;
+        if (compressMatrix)
+        {
+            if (!compressedWeightStore_)
+                compressedWeightStore_ = std::make_shared<rawrxd::compression::CompressedWeightStore>();
+            std::string compressionError;
+            constexpr std::size_t kCompressedModelBudget = 512u * 1024u * 1024u;
+            const auto beforeCompression = compressedWeightStore_->stats();
+            const std::size_t remainingBudget =
+                beforeCompression.compressed_bytes < kCompressedModelBudget
+                    ? kCompressedModelBudget - static_cast<std::size_t>(beforeCompression.compressed_bytes)
+                    : 0;
+            if (remainingBudget > 0 &&
+                compressedWeightStore_->addTensor(
+                    ref->name, mapping->data, dst.sizeBytes, &compressionError,
+                    static_cast<std::uint32_t>(dst.type), true, remainingBudget) &&
+                dst.attachCompressedBacking(compressedWeightStore_, ref->name))
+            {
+                // The compressed store now owns the authoritative bytes.
+                // Drop this cache pin immediately; inference reads packed row ranges.
+                dst.data = nullptr;
+                dst.mapped = false;
+                dst.hasFileBacking = false;
+                residencyCache_->release(mapping);
+                return true;
+            }
+            fprintf(stderr, "[COMPRESSED_RESIDENCY] tensor=%s fallback=mapped reason=%s\n",
+                    ref->name.c_str(), compressionError.c_str());
+        }
+
         standardMultiShardMappingKeys_.emplace_back(ref->shardId, ref->fileOffset);
         return true;
     };
@@ -6161,6 +6199,19 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
                  modelWeights.numLayers, modelWeights.numExperts, modelWeights.numExpertsPerToken,
                  modelWeights.numSharedExperts, modelWeights.moeIntermediateDim,
                  standardMultiShardMappingKeys_.size());
+    if (compressedWeightStore_)
+    {
+        const auto compressionStats = compressedWeightStore_->stats();
+        std::fprintf(stderr,
+                     "[COMPRESSED_RESIDENCY] tensors=%llu raw_bytes=%llu encoded_bytes=%llu "
+                     "decoded_cache_bytes=%llu budget_bytes=%u\n",
+                     static_cast<unsigned long long>(compressionStats.tensors),
+                     static_cast<unsigned long long>(compressionStats.raw_bytes),
+                     static_cast<unsigned long long>(compressionStats.compressed_bytes),
+                     static_cast<unsigned long long>(compressionStats.cached_decoded_bytes),
+                     512u * 1024u * 1024u);
+    }
+    standardMultiShardWeightsBound_ = true;
     std::fflush(stderr);
     return true;
 }
@@ -6182,10 +6233,12 @@ void Deep2Engine::releaseStandardMultiShardWeights()
         }
     }
     standardMultiShardMappingKeys_.clear();
+    standardMultiShardWeightsBound_ = false;
     for (auto& layer : modelWeights.layers)
         layer = LayerWeights{};
     modelWeights.finalNorm = WeightTensor{};
     modelWeights.lmHead = WeightTensor{};
+    compressedWeightStore_.reset();
 }
 
 // ============================================================================
@@ -6806,6 +6859,37 @@ static bool ValidateQ6KAsm(const block_q6_K* blocks, const float* input, float* 
 }
 }  // namespace
 
+// Compute the exact packed byte stride of one output row for the formats
+// consumed by LinearW_Range. Quantized rows remain in their native GGML layout.
+static size_t LinearW_RowBytes(int type, size_t cols)
+{
+    const auto packed = [cols](size_t blockElements, size_t blockBytes) -> size_t {
+        const size_t blocks = cols / blockElements + (cols % blockElements != 0 ? 1u : 0u);
+        if (blocks > (std::numeric_limits<size_t>::max)() / blockBytes) return 0;
+        return blocks * blockBytes;
+    };
+    if (type == (int)GGMLType::GGML_TYPE_F32)
+        return cols > (std::numeric_limits<size_t>::max)() / sizeof(float) ? 0 : cols * sizeof(float);
+    if (type == (int)GGMLType::GGML_TYPE_F16)
+        return cols > (std::numeric_limits<size_t>::max)() / sizeof(uint16_t) ? 0 : cols * sizeof(uint16_t);
+    switch (type)
+    {
+        case (int)GGMLType::GGML_TYPE_Q4_0: return packed(32, sizeof(block_q4_0));
+        case (int)GGMLType::GGML_TYPE_Q4_1: return packed(32, sizeof(block_q4_1));
+        case (int)GGMLType::GGML_TYPE_Q5_0: return packed(32, sizeof(block_q5_0));
+        case (int)GGMLType::GGML_TYPE_Q5_1: return packed(32, sizeof(block_q5_1));
+        case (int)GGMLType::GGML_TYPE_Q8_0: return packed(32, sizeof(block_q8_0));
+        case (int)GGMLType::GGML_TYPE_Q2_K: return packed(256, sizeof(block_q2_K));
+        case (int)GGMLType::GGML_TYPE_Q3_K: return packed(256, sizeof(block_q3_K));
+        case (int)GGMLType::GGML_TYPE_Q4_K: return packed(256, sizeof(block_q4_K));
+        case (int)GGMLType::GGML_TYPE_Q5_K: return packed(256, sizeof(block_q5_K));
+        case (int)GGMLType::GGML_TYPE_Q6_K: return packed(256, sizeof(block_q6_K));
+        case (int)GGMLType::GGML_TYPE_Q8_K: return packed(256, sizeof(block_q8_K));
+        case (int)GGMLType::GGML_TYPE_NVFP4: return packed(64, 36);
+        default: return 0;
+    }
+}
+
 // ============================================================================
 // LinearW_Range: Matrix-vector multiply for a sub-range of output rows
 // ============================================================================
@@ -6884,9 +6968,9 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
             fprintf(traceFile, "[LR_ENTER] name=%s type=%s(%d) rows=%zu cols=%zu startRow=%zu endRow=%zu\n",
                     wt.name.c_str(), typeName, wt.type, rows, cols, startRow, endRow);
             bool valid = true;
-            if (!wt.data)
+            if (!wt.data && !wt.hasCompressedBacking())
             {
-                fprintf(traceFile, "[LR_VALIDATE_FAIL] wt.data is null\n");
+                fprintf(traceFile, "[LR_VALIDATE_FAIL] wt has no raw or compressed backing\n");
                 valid = false;
             }
             if (!input)
@@ -7024,6 +7108,29 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
     auto kernel = reg.GetGEMV(wt.type);
     auto geom = reg.GetGeometry(wt.type);
 
+    // Decode only this worker's output-row slice. The cache lease is internal
+    // to readBytes; this temporary remains alive for the complete row kernel.
+    std::vector<std::uint8_t> compressedRows;
+    const std::uint8_t* weightData = static_cast<const std::uint8_t*>(wt.data);
+    const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, cols);
+    if (!weightData && wt.hasCompressedBacking())
+    {
+        if (packedRowBytes == 0 ||
+            startRow > (std::numeric_limits<std::size_t>::max)() / packedRowBytes ||
+            rows > (std::numeric_limits<std::size_t>::max)() / packedRowBytes)
+            throw std::runtime_error("LinearW_Range: unsupported or overflowing compressed row layout: " + wt.name);
+        const std::size_t byteOffset = startRow * packedRowBytes;
+        const std::size_t byteCount = rows * packedRowBytes;
+        if (byteOffset > wt.sizeBytes || byteCount > wt.sizeBytes - byteOffset)
+            throw std::runtime_error("LinearW_Range: compressed row slice exceeds tensor bounds: " + wt.name);
+        compressedRows.resize(byteCount);
+        std::string decodeError;
+        if (!wt.readBytes(byteOffset, compressedRows.data(), byteCount, &decodeError))
+            throw std::runtime_error("LinearW_Range: compressed row decode failed for " +
+                                     wt.name + ": " + decodeError);
+        weightData = compressedRows.data();
+    }
+
     // NVFP4 is routed to the inline CPU path below (registry dispatch isolated separately)
     if (kernel && geom.blockSize > 0 && wt.type != (int)GGMLType::GGML_TYPE_NVFP4)
     {
@@ -7031,7 +7138,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
         reg.GetBatch21Counters().kernelInvocations.fetch_add(1, std::memory_order_relaxed);
         size_t blocksPerRow = (cols + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
         size_t rowBytes = blocksPerRow * geom.blockSize;
-        const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+        const uint8_t* rowWeights = weightData + (compressedRows.empty() ? startRow * rowBytes : 0);
         // ── VAL-051.7: Q4_0 dispatch telemetry (capped) ─────────────
         if (wt.type == (int)GGMLType::GGML_TYPE_Q4_0)
         {
@@ -7060,7 +7167,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
             float acc = 0.0f;
             for (size_t c = 0; c < cols; ++c)
             {
-                acc += ((const float*)wt.data)[r * cols + c] * input[c];
+                acc += ((const float*)weightData)[(compressedRows.empty() ? r : r - startRow) * cols + c] * input[c];
             }
             output[r] = acc;
         }
@@ -7086,7 +7193,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
         for (size_t r = startRow; r < endRow; ++r)
         {
             float acc = 0.0f;
-            const uint8_t* row_data = (const uint8_t*)wt.data + r * row_bytes;
+            const uint8_t* row_data = weightData + (compressedRows.empty() ? r : r - startRow) * row_bytes;
             for (size_t c = 0; c < cols; ++c)
             {
                 int block_idx = c / 64;
@@ -7152,11 +7259,19 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
 // ============================================================================
 void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const float* bias, float* output, size_t outDim)
 {
-    if (!wt.data || !input || !output || outDim == 0)
+    // Keep compressed weights authoritative on CPU: LinearW_Range decodes
+    // only each worker's packed output-row slice. Vulkan currently stages one
+    // complete tensor because its existing upload interface accepts a base pointer.
+    WeightTensor wtEffective = wt;
+    std::vector<std::uint8_t> compressedGpuBytes;
+
+    if ((!wtEffective.data && !wtEffective.hasCompressedBacking()) ||
+        !input || !output || outDim == 0)
     {
         throw std::runtime_error(
             "LinearW: invalid arguments: name=" + wt.name +
-            ", wt.data=" + (wt.data ? "valid" : "null") +
+            ", wt.data=" + (wtEffective.data ? "valid" : "null") +
+            ", compressed=" + (wt.hasCompressedBacking() ? "yes" : "no") +
             ", input=" + (input ? "valid" : "null") +
             ", output=" + (output ? "valid" : "null") +
             ", outDim=" + std::to_string(outDim));
@@ -7165,7 +7280,6 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     // --- VAL-051.7+: Cyclone-Elastic contract ---
     // AcquireTensor guarantees CPU-resident pointer before compute.
     // No fallback to wt.data — eliminates silent page-fault escape hatch.
-    WeightTensor wtEffective = wt;
     Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
     bool acquired = false;
     if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty() && !vulkanEnabled_)
@@ -7250,7 +7364,18 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     if (!plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
-        if (tryVulkanGEMV(wtEffective, input, output, outDim))
+        WeightTensor gpuWeight = wtEffective;
+        if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+        {
+            compressedGpuBytes.resize(gpuWeight.sizeBytes);
+            std::string decodeError;
+            if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
+                                     compressedGpuBytes.size(), &decodeError))
+                throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
+                                         wt.name + ": " + decodeError);
+            gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+        }
+        if (tryVulkanGEMV(gpuWeight, input, output, outDim))
         {
             ++plannedGpuGemvOps_;
 if (bias)
