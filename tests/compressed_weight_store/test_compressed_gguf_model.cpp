@@ -114,6 +114,37 @@ int main() {
     assert(failed == second_tensor.name);
     assert(bounded_model.tensorCount() == 1 && bounded_model.contains(tensor.name));
 
+    // The model owner exposes only the resident kernels it can execute;
+    // verify the F32 and native Q8_0 paths in addition to F16 above.
+    std::vector<float> f32_values = {1.f, -2.f, 0.5f, 2.f};
+    Deep2::GGUFTensor f32_tensor;
+    f32_tensor.name = "blk.0.f32.weight";
+    f32_tensor.type = static_cast<Deep2::GGMLType>(0);
+    f32_tensor.shape = {2, 2};
+    f32_tensor.data = f32_values.data();
+    f32_tensor.sizeBytes = f32_values.size() * sizeof(float);
+    assert(model.loadMappedTensors({f32_tensor}, &error, &failed));
+    float f32_output[2] = {};
+    assert(model.matvec(f32_tensor.name, input, f32_output, 8, &error));
+    assert(f32_output[0] == -3.f && f32_output[1] == 4.5f);
+
+    std::vector<std::uint8_t> q8_bytes(68, 0);
+    q8_bytes[0] = 0x00; q8_bytes[1] = 0x3c; // row 0 scale = 1
+    for (std::size_t i = 0; i < 32; ++i) q8_bytes[2 + i] = 1;
+    q8_bytes[34] = 0x00; q8_bytes[35] = 0x3c; // row 1 scale = 1
+    for (std::size_t i = 0; i < 32; ++i) q8_bytes[36 + i] = 0xff;
+    Deep2::GGUFTensor q8_tensor;
+    q8_tensor.name = "blk.0.q8.weight";
+    q8_tensor.type = static_cast<Deep2::GGMLType>(8);
+    q8_tensor.shape = {32, 2};
+    q8_tensor.data = q8_bytes.data();
+    q8_tensor.sizeBytes = q8_bytes.size();
+    std::vector<float> q8_input(32, 1.f);
+    float q8_output[2] = {};
+    assert(model.loadMappedTensors({q8_tensor}, &error, &failed));
+    assert(model.matvec(q8_tensor.name, q8_input.data(), q8_output, 34, &error));
+    assert(q8_output[0] == 32.f && q8_output[1] == -32.f);
+
     // Unsupported quantization is readable byte-for-byte but not silently
     // interpreted by a mismatched scalar kernel.
     auto unsupported = tensor;
