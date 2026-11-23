@@ -175,6 +175,13 @@ def run(binary):
         woff=ws+wt["blk.0.attn_q.weight"][2]
         assert struct.unpack_from("<H",wb,woff+3*2)[0]==0x4780
         assert wb[ws+wt["blk.0.attn_k.weight"][2]:ws+wt["blk.0.attn_k.weight"][2]+32]==quant
+        # Invalid precision budgets must fail before publishing any model.
+        for bad in ("0.1oops","nan","inf","-0.01",""):
+            bad_output=root/("bad-tolerance-"+str(len(bad))+("-neg" if bad.startswith("-") else "")+".gguf")
+            result=subprocess.run([binary,str(source),str(bad_output),bad,"auto"],
+                                  capture_output=True)
+            assert result.returncode!=0, ("accepted invalid tolerance",bad)
+            assert not bad_output.exists(), ("published invalid conversion",bad)
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
