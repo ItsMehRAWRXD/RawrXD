@@ -601,16 +601,18 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
             // Q8_K codes include -128; the direct candidate preserves it.
             // Select the candidate with smaller maximum reconstruction
             // error, rather than always discarding the original codes.
-            unsigned char requant[32];
+            unsigned char requant[32]={};
             double requantError=0, directError=0;
-            for(unsigned i=0;i<32;++i) {
-                const double normalized=actual==0?0.0:
-                    static_cast<double>(values[i])/actual;
-                const double rounded=std::round(normalized);
-                const int code=static_cast<int>(std::max(-127.0,std::min(127.0,rounded)));
-                requant[i]=static_cast<unsigned char>(static_cast<int8_t>(code));
-                requantError=std::max(requantError,std::abs(
-                    static_cast<double>(values[i])-static_cast<double>(actual)*code));
+            if(requantValid) {
+                for(unsigned i=0;i<32;++i) {
+                    const double normalized=actual==0?0.0:
+                        static_cast<double>(values[i])/actual;
+                    const double rounded=std::round(normalized);
+                    const int code=static_cast<int>(std::max(-127.0,std::min(127.0,rounded)));
+                    requant[i]=static_cast<unsigned char>(static_cast<int8_t>(code));
+                    requantError=std::max(requantError,std::abs(
+                        static_cast<double>(values[i])-static_cast<double>(actual)*code));
+                }
             }
             const uint32_t directBits=Float16ToFloat32Bits(directHalf);
             float directScale=0;
