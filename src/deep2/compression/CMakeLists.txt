@@ -47,3 +47,15 @@ if(BUILD_TESTING)
  target_compile_features(test_stored_q4_q5_matvec PRIVATE cxx_std_20)
  add_test(NAME compressed_resident_q4_q5_matvec COMMAND test_stored_q4_q5_matvec)
 endif()
+
+if(BUILD_TESTING)
+ add_executable(test_synthetic_gguf_model_e2e
+     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_synthetic_gguf_model_e2e.cpp)
+ target_include_directories(test_synthetic_gguf_model_e2e PRIVATE
+     ${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_SOURCE_DIR}/../../../include)
+ target_link_libraries(test_synthetic_gguf_model_e2e PRIVATE
+     rawrxd_compressed_weight_store)
+ target_compile_features(test_synthetic_gguf_model_e2e PRIVATE cxx_std_20)
+ add_test(NAME synthetic_gguf_compressed_model_e2e
+          COMMAND test_synthetic_gguf_model_e2e)
+endif()
