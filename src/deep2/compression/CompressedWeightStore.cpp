@@ -51,34 +51,35 @@ bool CompressedWeightStore::decode(const EncodedBlock& b,std::vector<std::uint8_
  return out.size()==b.raw_size&&crc32(out.data(),out.size())==b.checksum;
 }
 bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
- if(name.empty()||(!bytes&&size)){if(error)*error="name and source bytes are required";return false;}
- if(size && size > std::numeric_limits<std::size_t>::max() - (block_bytes_ - 1)) {
-  if(error)*error="tensor size cannot be safely partitioned";return false;
- }
+ if(!bytes&&size){if(error)*error="source bytes are required";return false;}
+ return addTensorFromReader(std::move(name),size,
+  [](void* context,std::size_t offset,void* destination,std::size_t length)->bool {
+   if(length)std::memcpy(destination,static_cast<const std::uint8_t*>(context)+offset,length);
+   return true;
+  },const_cast<void*>(bytes),error,ggml_type,require_savings,max_encoded_bytes);
+}
+bool CompressedWeightStore::addTensorFromReader(std::string name,std::size_t size,TensorReadCallback reader,void* context,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
+ if(name.empty()||!reader){if(error)*error="name and tensor reader are required";return false;}
+ if(size && size > std::numeric_limits<std::size_t>::max() - (block_bytes_ - 1)){if(error)*error="tensor size cannot be safely partitioned";return false;}
  std::lock_guard<std::mutex> lock(mutex_);
  if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
- const auto* src=static_cast<const std::uint8_t*>(bytes);Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
+ Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
  const auto resident=static_cast<std::size_t>(counters_.compressed_bytes);
  if(resident>encoded_residency_budget_){if(error)*error="encoded residency accounting exceeds budget";return false;}
- const auto global_remaining=encoded_residency_budget_-resident;
- const auto admission_limit=std::min(max_encoded_bytes,global_remaining);
+ const auto admission_limit=std::min(max_encoded_bytes,encoded_residency_budget_-resident);
  std::size_t encoded_size=0;
+ std::vector<std::uint8_t> scratch(block_bytes_);
  for(std::size_t off=0;off<size;){
   const auto take=std::min(block_bytes_,size-off);
-  EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);
-  b.checksum=crc32(src+off,take);
-  b.payload=encode(src+off,take,b.stored_raw);
-  // Enforce admission incrementally: do not retain a full encoded tensor
-  // when a configured residency ceiling has already been exceeded.
-  if(encoded_size>admission_limit||b.payload.size()>admission_limit-encoded_size){
-   if(error)*error="encoded tensor exceeds residency budget";return false;
-  }
-  encoded_size+=b.payload.size();
-  tensor.blocks.emplace_back(std::move(b));
-  off+=take;
+  if(!reader(context,off,scratch.data(),take)){if(error)*error="tensor reader failed before completing requested range";return false;}
+  EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(scratch.data(),take);
+  b.payload=encode(scratch.data(),take,b.stored_raw);
+  if(encoded_size>admission_limit||b.payload.size()>admission_limit-encoded_size){if(error)*error="encoded tensor exceeds residency budget";return false;}
+  encoded_size+=b.payload.size();tensor.blocks.emplace_back(std::move(b));off+=take;
  }
  if(require_savings&&encoded_size>=size){if(error)*error="compression did not reduce tensor size";return false;}
- counters_.raw_bytes+=size;for(const auto& b:tensor.blocks)counters_.compressed_bytes+=b.payload.size();counters_.blocks+=tensor.blocks.size();++counters_.tensors;tensors_.emplace(std::move(name),std::move(tensor));return true;
+ counters_.raw_bytes+=size;for(const auto& b:tensor.blocks)counters_.compressed_bytes+=b.payload.size();
+ counters_.blocks+=tensor.blocks.size();++counters_.tensors;tensors_.emplace(std::move(name),std::move(tensor));return true;
 }
 bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error) {
  if(!values&&count){if(error)*error="source values are required";return false;}
