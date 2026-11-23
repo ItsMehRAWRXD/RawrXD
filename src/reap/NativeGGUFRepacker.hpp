@@ -308,11 +308,11 @@ inline bool AffineCodesBitExact(float d,float m,unsigned midpoint,unsigned codes
 // unused code points rejects valid lossless conversions unnecessarily.
 inline bool AffineBlockCodesBitExact(float d,float m,unsigned midpoint,
                                      const unsigned char* packed,
-                                     bool fiveBit) {
+                                     const unsigned char* highBits=nullptr) {
     if(!std::isfinite(d)||!std::isfinite(m))return false;
     for(unsigned i=0;i<32;++i) {
         const unsigned nibble=i<16?(packed[i]&15u):(packed[i-16]>>4);
-        const unsigned q=fiveBit?(nibble|(((packed[16+i/8]>>(i%8))&1u)<<4)):nibble;
+        const unsigned q=highBits?(nibble|(((highBits[i/8]>>(i%8))&1u)<<4)):nibble;
         const float affine=d*static_cast<float>(q)+m;
         const float symmetric=d*static_cast<float>(static_cast<int>(q)-static_cast<int>(midpoint));
         uint32_t a=0,b=0;std::memcpy(&a,&affine,4);std::memcpy(&b,&symmetric,4);
