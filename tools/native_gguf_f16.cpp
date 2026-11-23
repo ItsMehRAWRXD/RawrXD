@@ -521,8 +521,8 @@ int main(int argc,char** argv) {
                     std::memset(encoded,0,80);
                     uint8_t qs[64]={};
                     for(int g=0;g<16;++g) {
-                        int ls=d?int(std::round(sc[g]/(d*15.0))):0;
-                        int lm=dm?int(std::round(mn[g]/(dm*15.0))):0;
+                        int ls=d?int(std::round(sc[g]/d)):0;
+                        int lm=dm?int(std::round(mn[g]/dm)):0;
                         ls=std::max(0,std::min(15,ls));lm=std::max(0,std::min(15,lm));
                         encoded[g]=uint8_t(ls|(lm<<4));
                         const double ds=d*ls,ms=dm*lm;
@@ -1051,7 +1051,7 @@ int main(int argc,char** argv) {
                     for(int g=0;g<16;++g){lo[g]=hi[g]=v[g*16];for(int j=1;j<16;++j){lo[g]=std::min(lo[g],v[g*16+j]);hi[g]=std::max(hi[g],v[g*16+j]);}sc[g]=(hi[g]-lo[g])/3.0;mn[g]=std::max(0.0,-lo[g]);maxSc=std::max(maxSc,sc[g]);maxMn=std::max(maxMn,mn[g]);}
                     const uint16_t hd=ToHalf(float(maxSc/15.0)),hm=ToHalf(float(maxMn/15.0));const double d=FromHalf(hd),dm=FromHalf(hm);
                     std::memset(encoded,0,84);encoded[80]=uint8_t(hd);encoded[81]=uint8_t(hd>>8);encoded[82]=uint8_t(hm);encoded[83]=uint8_t(hm>>8);
-                    for(int g=0;g<16;++g){int ls=d?int(std::round(sc[g]/(d*15.0))):0,lm=dm?int(std::round(mn[g]/(dm*15.0))):0;ls=std::max(0,std::min(15,ls));lm=std::max(0,std::min(15,lm));encoded[g]=uint8_t(ls|(lm<<4));const double ds=d*ls,ms=dm*lm;for(int j=0;j<16;++j){const int q=ds?std::max(0,std::min(3,int(std::round((v[g*16+j]+ms)/ds)))):0;const int within=g%8,qi=(g/8)*32+((within%2)?16:0)+j,shift=(within/2)*2;encoded[16+qi]|=uint8_t(q<<shift);}}
+                    for(int g=0;g<16;++g){int ls=d?int(std::round(sc[g]/d)):0,lm=dm?int(std::round(mn[g]/dm)):0;ls=std::max(0,std::min(15,ls));lm=std::max(0,std::min(15,lm));encoded[g]=uint8_t(ls|(lm<<4));const double ds=d*ls,ms=dm*lm;for(int j=0;j<16;++j){const int q=ds?std::max(0,std::min(3,int(std::round((v[g*16+j]+ms)/ds)))):0;const int within=g%8,qi=(g/8)*32+((within%2)?16:0)+j,shift=(within/2)*2;encoded[16+qi]|=uint8_t(q<<shift);}}
                     out.write(reinterpret_cast<const char*>(encoded),84);if(!out)throw std::runtime_error("F64 Q2_K write failure");
                 }
             } else if(streamF64toQ8K[i]) {
