@@ -113,6 +113,39 @@ int main() {
         assert(std::fabs(tiledOutput[row] - expected) < 1e-5f);
     }
 
+    // Exercise F32 compressed reads with the same bounded 32-row window
+    // used by the canonical Vulkan forward path. No callback may request the
+    // full matrix, and the final partial tile must preserve exact byte order.
+    std::vector<float> f32Matrix(70 * 4);
+    for (std::size_t i = 0; i < f32Matrix.size(); ++i)
+        f32Matrix[i] = static_cast<float>(static_cast<int>(i % 19) - 9) * 0.125f;
+    assert(store.addTensor("f32-matrix", f32Matrix.data(),
+                           f32Matrix.size() * sizeof(float), &error,
+                           rawrxd::compression::GGML_TYPE_F32, false));
+    const std::size_t f32RowBytes = 4 * sizeof(float);
+    std::size_t f32TileCalls = 0, maxF32Window = 0;
+    std::vector<float> f32Reassembled(f32Matrix.size());
+    for (std::size_t firstRow = 0; firstRow < 70; firstRow += 32) {
+        const std::size_t tileRows = (std::min)(std::size_t{32}, 70 - firstRow);
+        auto f32Tile = ReadCompressedWeightTile(
+            store.tensorBytes("f32-matrix"), 70, f32RowBytes,
+            firstRow, tileRows,
+            [&](std::size_t offset, std::uint8_t* destination, std::size_t length) {
+                ++f32TileCalls;
+                maxF32Window = (std::max)(maxF32Window, length);
+                assert(length <= 32 * f32RowBytes);
+                assert(offset == firstRow * f32RowBytes);
+                return store.readRange("f32-matrix", offset, destination,
+                                       length, &error);
+            });
+        std::memcpy(f32Reassembled.data() + firstRow * 4,
+                    f32Tile.bytes.data(), f32Tile.bytes.size());
+    }
+    assert(f32TileCalls == 3);
+    assert(maxF32Window == 32 * f32RowBytes);
+    assert(std::memcmp(f32Reassembled.data(), f32Matrix.data(),
+                       f32Matrix.size() * sizeof(float)) == 0);
+
     // RMSNorm consumes one vector, not a full model tensor. Verify the
     // compressed prefix reader returns exactly dim*elementBytes and preserves
     // the normalized weighted result.
