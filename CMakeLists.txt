@@ -6605,3 +6605,39 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_zero_prune_manifest.cpp")
   add_executable(reap-zero-prune-manifest tools/reap_zero_prune_manifest.cpp)
   target_compile_features(reap-zero-prune-manifest PRIVATE cxx_std_20)
 endif()
+
+# Keep every standalone native consumer of GGUFLoader on the same Qt-free
+# compression contract as the product targets.  These executables include
+# src/gguf_loader.cpp directly, so relying on another executable or on the
+# IDE's transitive link closure leaves rawrxd::compression unresolved in a
+# clean ALL_BUILD.
+if(TARGET rawrxd_compression_core)
+  foreach(_rawrxd_compression_consumer IN ITEMS
+      deep2_context_scaling
+      deep2_d1_prefill_parity
+      deep2_fused_lmhead_verify
+      deep2_gguf_lifecycle
+      deep2_prefill_parity
+      deep2_spec_bench
+      rawrxd_loader_hardening_tests)
+    if(TARGET ${_rawrxd_compression_consumer})
+      target_link_libraries(${_rawrxd_compression_consumer} PRIVATE
+          rawrxd_compression_core)
+    endif()
+  endforeach()
+endif()
+
+# The global VulkanCompute implementation consults the production QuantDot
+# retention policy.  The three standalone probes intentionally compile the
+# global implementation directly, so they must also carry the real policy
+# owner; otherwise a clean link fails with WeightCacheRetention unresolved.
+foreach(_rawrxd_quantdot_consumer IN ITEMS
+    gpu_quant_dot_verify
+    gpu_quant_dot_realweights
+    test_kv_cache)
+  if(TARGET ${_rawrxd_quantdot_consumer})
+    target_sources(${_rawrxd_quantdot_consumer} PRIVATE
+        src/vulkan_compute_attn.cpp
+        src/deep2/quant_dot_dispatch.cpp)
+  endif()
+endforeach()
