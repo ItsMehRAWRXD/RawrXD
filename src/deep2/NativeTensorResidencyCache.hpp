@@ -87,8 +87,12 @@ public:
                     buildBudget));
         } catch (const RawrXD::TensorCompression::SourceReadFailure&) {
             return false; // retryable: do not memoize transient source I/O failures
+        } catch (const RawrXD::TensorCompression::StorageAdmissionRejected&) {
+            return rejectAndMemoize(); // deterministic no-win/budget rejection
         } catch (...) {
-            return rejectAndMemoize();
+            // Allocation and unexpected failures do not establish that the
+            // tensor is intrinsically incompressible; permit a later retry.
+            return false;
         }
         if (elementCount > std::numeric_limits<size_t>::max()/sizeof(float))
             return rejectAndMemoize();
