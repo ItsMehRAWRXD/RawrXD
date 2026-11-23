@@ -57,6 +57,7 @@ struct StoreStats {
     std::uint64_t encoded_capacity_bytes=0;
     std::uint64_t metadata_bytes_estimate=0;
     std::uint64_t resident_bytes_estimate=0;
+    std::uint64_t f32_to_f16_tensors=0, f32_source_bytes=0;
     std::uint64_t cached_decoded_bytes=0, cache_hits=0, cache_misses=0, evictions=0;
 };
 class CompressedWeightStore {
@@ -79,9 +80,12 @@ public:
                    bool require_savings=false,
                    std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     bool addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error=nullptr);
-    bool addTensorF32AsF16FromReader(std::string name,const float* values,
+    bool addTensorF32AsF16FromReader(std::string name,const void* source_bytes,
                    std::size_t count,std::string* error=nullptr,
-                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
+                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)(),
+                   float max_abs_error=(std::numeric_limits<float>::infinity)(),
+                   bool reject_non_finite=false,
+                   bool* precision_rejected=nullptr);
     std::uint32_t tensorType(const std::string& name) const;
     bool contains(const std::string& name) const;
     std::size_t tensorBytes(const std::string& name) const;
