@@ -451,8 +451,17 @@ public:
         for (size_t i = firstChunk; i <= lastChunk; ++i) {
             const auto& chunk = chunks_[i];
             if (chunk.encoding == Encoding::Raw) continue;
-            if (chunk.original_bytes > UINT64_MAX - total) return UINT64_MAX;
-            total += chunk.original_bytes;
+            const size_t chunkFirst = i * chunk_elements_;
+            const size_t chunkEnd = chunkFirst +
+                                    static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            const size_t requested = std::min(first + count, chunkEnd) -
+                                     std::max(first, chunkFirst);
+            const uint64_t expanded =
+                chunk.encoding == Encoding::F16 || chunk.encoding == Encoding::BF16
+                    ? static_cast<uint64_t>(requested) * sizeof(float)
+                    : chunk.original_bytes;
+            if (expanded > UINT64_MAX - total) return UINT64_MAX;
+            total += expanded;
         }
         return total;
     }
