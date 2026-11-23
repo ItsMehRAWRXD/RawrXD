@@ -9,7 +9,7 @@ This change adds a dependency-free C++17 compressed-weight storage path. It is a
 3. `ResidentCompressedTensor` retains encoded blocks and releases each temporary source block after admission. It does not retain a full uncompressed tensor.
 4. `read(offset, destination, length)` reconstructs only the requested range. RLE ranges are expanded directly into the destination without materializing a full block.
 5. `BoundedWeightStager` limits each kernel-facing decode to a caller-selected scratch budget.
-6. Typed resident GEMV consumes F32, F16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, and Q8_1 matrices row-by-row using bounded staging; quantized blocks are decoded directly into the accumulator and never expanded into a full F32 matrix. A deterministic synthetic-model E2E test now exercises range-backed F16 embedding-row lookup, an F16 projection, Q4_0 logits, an independent scalar reference, eight concurrent inference requests, and staging-budget rejection. The optional Qt codec target auto-detects ZLIB and Qt6 Core; its Linux CI smoke test exercises zlib deflate/inflate roundtrips, the level-9 wrapper, empty input, and corrupt-stream rejection. Inflate now streams output in bounded chunks rather than assuming a 4x/10x expansion ratio.
+6. Typed resident GEMV consumes F32, F16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1, and standard GGML Q2_K through Q8_K matrices using bounded staging. K-quant superblocks are decoded one 256-value block at a time into a fixed 1 KiB scratch array; full F32 matrices are never retained. The canonical GGML type registry now uses the actual on-disk identifiers and packed sizes (Q2_K=84, Q3_K=110, Q4_K=144, Q5_K=176, Q6_K=210, Q8_K=292 bytes per superblock). A deterministic synthetic-model E2E test now exercises range-backed F16 embedding-row lookup, an F16 projection, Q4_0 logits, an independent scalar reference, eight concurrent inference requests, and staging-budget rejection. The optional Qt codec target auto-detects ZLIB and Qt6 Core; its Linux CI smoke test exercises zlib deflate/inflate roundtrips, the level-9 wrapper, empty input, and corrupt-stream rejection. Inflate now streams output in bounded chunks rather than assuming a 4x/10x expansion ratio.
 
 ## Correctness and safety contracts
 
@@ -37,7 +37,7 @@ The root CMake project now registers eight regression targets, including the qua
 - `native_bounded_weight_stager_test`
 - `native_resident_f32_matvec_test`
 - `native_resident_typed_matvec_test` (F32/F16/Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1 matvec and selected-row reads plus GGUF byte-geometry checks)
-- `native_quantized_dequant_test` (independent Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1 known answers, F16 subnormal, truncated block, and overflow rejection)
+- `native_quantized_dequant_test` (independent known answers for standard Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1 and Q2_K–Q8_K, F16 subnormal, truncated block, and overflow rejection)
 
 The native residency tests compile as C++17 without Vulkan, Qt, or model downloads. The dedicated GitHub Actions workflow runs them on Linux and Windows; Linux additionally installs Qt6 Core and zlib development headers to compile and run the real Qt zlib adapter.
 
