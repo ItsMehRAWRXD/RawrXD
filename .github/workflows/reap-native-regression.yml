@@ -36,6 +36,22 @@ jobs:
           else
             g++ -std=c++17 -O2 -Wall -Wextra "tools/reap_f16_audit_cli.cpp" -o "reap-test-bin/reap_f16_audit_cli"
           fi
+          # Two FP32 values: 1.0 and 1.00048828125 (halfway to next half).
+          # Both convert to FP16 1.0, so max_abs and rms_abs are nonzero.
+          printf '\\x00\\x00\\x80\\x3f\\x00\\x10\\x80\\x3f' > reap-test-bin/audit-source.bin
+          printf '\\x00\\x3c\\x00\\x3c' > reap-test-bin/audit-half.bin
+          audit="reap-test-bin/reap_f16_audit_cli"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then audit="$audit.exe"; fi
+          "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-abs 0.001 --max-rel 0.001 --max-rms 0.001
+          if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-abs 0 >/dev/null 2>&1; then
+            echo "FAIL: strict absolute-error threshold accepted"; exit 1
+          fi
+          if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-rel 0 >/dev/null 2>&1; then
+            echo "FAIL: strict relative-error threshold accepted"; exit 1
+          fi
+          if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-rms 0 >/dev/null 2>&1; then
+            echo "FAIL: strict RMS-error threshold accepted"; exit 1
+          fi
           # Invalid invocation must fail closed with a nonzero exit status.
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             if "./reap-test-bin/reap_f16_audit_cli.exe" >/dev/null 2>&1; then
