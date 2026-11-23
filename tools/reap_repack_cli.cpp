@@ -12,7 +12,11 @@ int main(int argc, char** argv) {
                     " [--f16 | --q8-0 | --q4-0 | --q5-0 | --auto] [--max-bytes POSITIVE_INTEGER]\n"
                     "  --q4-0 requantizes eligible FP32/FP16 and quantized tensors.\n"
                     "  --q5-0 requantizes Q6_K tensors only; other types are preserved.\n"
-                    "  --auto uses Q4_0 on eligible matrices and F16 on F32 vectors/sensitive tensors.\n";
+                    "  --auto selects tensor-aware compression: F64->F32, F32->F16 for\n"
+                    "  sensitive/unaligned tensors, Q8_0 for ordinary F32/F16 vectors,\n"
+                    "  Q4_0 for eligible ordinary matrices/Q4_1 vectors, and Q5_0 for\n"
+                    "  eligible Q6_K/Q5_1 sensitive tensors. Lossy conversions may occur.\n"
+                    "  No mode guarantees numerical parity; validate the resulting model.\n";
         return 2;
     }
     uint64_t budget=UINT64_MAX;
