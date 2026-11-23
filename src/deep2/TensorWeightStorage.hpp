@@ -50,7 +50,7 @@ inline std::vector<uint8_t> serialize(const Tensor& t) {
             std::min<uint64_t>(t.block_size,remaining));
         if (!expected || b.plain_size != expected ||
             b.payload.size() > std::numeric_limits<uint32_t>::max() ||
-            static_cast<uint8_t>(b.codec)>2 ||
+            static_cast<uint8_t>(b.codec)>3 ||
             (b.codec==BlockCodec::Raw && b.payload.size()!=expected))
             throw std::invalid_argument("invalid block metadata");
         sum+=expected;
@@ -91,7 +91,7 @@ inline Tensor deserialize(const std::vector<uint8_t>& bytes,
         if (sum >= t.plain_size) throw std::runtime_error("excess tensor blocks");
         const uint32_t expected=static_cast<uint32_t>(
             std::min<uint64_t>(t.block_size,t.plain_size-sum));
-        if (codec>2 || b.plain_size!=expected || !expected ||
+        if (codec>3 || b.plain_size!=expected || !expected ||
             n>bytes.size()-r.pos || n>max_block_bytes+65536u ||
             (codec==0 && n!=expected))
             throw std::runtime_error("invalid block encoding");
