@@ -794,6 +794,13 @@ inline RepackError RepackGGUF(const std::string& input,
     std::error_code stageError;
     if(std::filesystem::exists(stage,stageError) || stageError)
         return RepackError::Output;
+    // The staging path can itself alias the input through a relative path
+    // or an explicit input ending in .reap-part. Never truncate the source.
+    if(std::filesystem::path(input).lexically_normal()==stage.lexically_normal())
+        return RepackError::Output;
+    stageError.clear();
+    if(std::filesystem::equivalent(input,stage,stageError))
+        return RepackError::Output;
     struct StageCleanup {
         std::filesystem::path path;
         bool committed=false;
