@@ -52,7 +52,8 @@ class SHA256 {
     }
 public:
     bool Update(const uint8_t* p,size_t n){
-        if(n && !p)return false;
+        if(n==0)return true;
+        if(!p)return false;
         if(n>((UINT64_MAX/8)-total_))return false;
         total_+=n;
         size_t offset=0;
