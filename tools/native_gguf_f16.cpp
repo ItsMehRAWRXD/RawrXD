@@ -2,6 +2,7 @@
 // No dependencies; writes to a temporary file and only publishes on success.
 // Build: c++ -std=c++17 -O2 tools/native_gguf_f16.cpp -o native_gguf_f16
 #include "../src/deep2/NativeTensorCompression.hpp"
+#include "../src/deep2/NativeKQuant.hpp"
 #include <fstream>
 #include <vector>
 #include <string>
@@ -237,7 +238,7 @@ bool encodeQ4K_F64(const uint8_t* raw,float tolerance,uint8_t out[144]) {
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|q2_k|q3_k|q4_k|f32|f16|bf16|q8_k|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|q2_k|q3_k|q4_k|q5_k|q6_k|f32|f16|bf16|q8_k|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     bool ownsTemporary=false;
@@ -255,6 +256,8 @@ int main(int argc,char** argv) {
         const bool automatic=argc==5 && std::string(argv[4])=="auto";
         const bool bf16=argc==5 && std::string(argv[4])=="bf16";
         const bool q4k=argc==5 && std::string(argv[4])=="q4_k";
+        const bool q5k=argc==5 && std::string(argv[4])=="q5_k";
+        const bool q6k=argc==5 && std::string(argv[4])=="q6_k";
         const bool q3k=argc==5 && std::string(argv[4])=="q3_k";
         const bool q2k=argc==5 && std::string(argv[4])=="q2_k";
         const bool q8k=argc==5 && std::string(argv[4])=="q8_k";
@@ -263,10 +266,10 @@ int main(int argc,char** argv) {
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q4k && !q3k && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q6k && !q5k && !q4k && !q3k && !q5k && !q6k && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
-        const bool quantized=q4k||q3k||q2k||q8k||q8||q4||q5||q41||q51;
+        const bool quantized=q6k||q5k||q4k||q3k||q2k||q8k||q8||q4||q5||q41||q51;
         // Require the complete argument to be a finite nonnegative number.
         // std::stof alone accepts trailing garbage (e.g. "0.1oops").
         const std::string toleranceArg(argv[3]);
@@ -372,6 +375,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamF64toQ51(ts.size(),false);
         std::vector<bool> streamF64toQ4(ts.size(),false);
         std::vector<bool> streamF64toQ5(ts.size(),false);
+        std::vector<uint32_t> streamNativeK(ts.size(),0);
         std::vector<bool> streamF64toQ4K(ts.size(),false);
         std::vector<bool> streamF64toQ3K(ts.size(),false);
         std::vector<bool> streamF64toQ2K(ts.size(),false);
@@ -389,6 +393,35 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !((automatic || f32 || bf16 || (argc==5 && std::string(argv[4])=="f16")) && t.type==28) && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            // Q5_K/Q6_K: independent GGML block layout, whole-tensor
+            // precision gate. No original tensor is modified on rejection.
+            if((q5k||q6k) && t.dims[0]%256==0) {
+                const uint32_t type=q5k?13u:14u;
+                const size_t stride=t.type==28?8:(t.type==0?4:2);
+                const U rawBlockBytes=mul(256,stride);
+                if(t.bytes%rawBlockBytes==0) {
+                    seek(in,add(dataStart,t.offset));
+                    std::vector<uint8_t> raw(size_t(rawBlockBytes));
+                    bool valid=true;
+                    for(U off=0;off<t.bytes;off+=rawBlockBytes) {
+                        if(!in.read(reinterpret_cast<char*>(raw.data()),
+                                    std::streamsize(raw.size())))
+                            throw std::runtime_error("truncated Q5_K/Q6_K preflight");
+                        double values[256];uint8_t encoded[210];
+                        if(!RawrXD::NativeKQuant::ReadFloatingBlock(raw.data(),t.type,values) ||
+                           !RawrXD::NativeKQuant::EncodeBlock(type,values,tolerance,encoded)) {
+                            valid=false;break;
+                        }
+                    }
+                    if(valid) {
+                        streamNativeK[i]=type;
+                        outputTypes[i]=type;
+                        ++changed;
+                    }
+                }
+                continue;
+            }
+            if(q5k||q6k)continue;
             if(t.type==28 && (automatic || q41 || q51) &&
                t.dims[0]%32==0 && t.bytes%256==0) {
                 for(int candidate=0;candidate<2;++candidate) {
@@ -1030,7 +1063,12 @@ int main(int argc,char** argv) {
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
             U encodedBytes=t.bytes;
-            if(streamF64toQ4K[i])encodedBytes=mul(t.bytes/2048,144);
+            if(streamNativeK[i]) {
+                const size_t stride=t.type==28?8:(t.type==0?4:2);
+                encodedBytes=mul(t.bytes/mul(256,stride),
+                                 RawrXD::NativeKQuant::BlockBytes(streamNativeK[i]));
+            }
+            else if(streamF64toQ4K[i])encodedBytes=mul(t.bytes/2048,144);
             if(streamF64toQ3K[i])encodedBytes=mul(t.bytes/2048,110);
             if(streamF64toQ41[i])encodedBytes=mul(t.bytes/256,20);
             else if(streamF64toQ51[i])encodedBytes=mul(t.bytes/256,24);
@@ -1060,7 +1098,23 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamF64toQ4K[i]) {
+            if(streamNativeK[i]) {
+                const size_t stride=t.type==28?8:(t.type==0?4:2);
+                const U rawBlockBytes=mul(256,stride);
+                seek(in,add(dataStart,t.offset));
+                std::vector<uint8_t> raw(size_t(rawBlockBytes));
+                for(U off=0;off<t.bytes;off+=rawBlockBytes) {
+                    if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))
+                        throw std::runtime_error("truncated native K-quant payload");
+                    double values[256];uint8_t encoded[210];
+                    if(!RawrXD::NativeKQuant::ReadFloatingBlock(raw.data(),t.type,values) ||
+                       !RawrXD::NativeKQuant::EncodeBlock(streamNativeK[i],values,tolerance,encoded))
+                        throw std::runtime_error("native K-quant preflight/write mismatch");
+                    out.write(reinterpret_cast<const char*>(encoded),
+                              std::streamsize(RawrXD::NativeKQuant::BlockBytes(streamNativeK[i])));
+                    if(!out)throw std::runtime_error("native K-quant write failure");
+                }
+            } else if(streamF64toQ4K[i]) {
                 seek(in,add(dataStart,t.offset));uint8_t raw[2048],encoded[144];
                 for(U off=0;off<t.bytes;off+=2048){if(!in.read(reinterpret_cast<char*>(raw),2048))throw std::runtime_error("truncated F64 Q4_K payload");if(!encodeQ4K_F64(raw,tolerance,encoded))throw std::runtime_error("Q4_K preflight/write mismatch");out.write(reinterpret_cast<const char*>(encoded),144);if(!out)throw std::runtime_error("F64 Q4_K write failure");}
             } else if(streamF64toQ3K[i]) {
