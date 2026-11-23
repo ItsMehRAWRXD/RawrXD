@@ -10,6 +10,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cmath>
+#include <limits>
+#include <memory>
 #include <vector>
 #ifdef _WIN32
 #include <malloc.h>
@@ -62,6 +65,96 @@ double envPositiveDouble(const char* name, double fallback) {
     char* end = nullptr;
     const double v = std::strtod(s, &end);
     return end != s && v > 0.0 ? v : fallback;
+}
+
+// Explicit opt-in: prepare only F32 tensors that produce a smaller, uniform
+// F16/BF16 representation. The Vulkan quant GEMV shader consumes those packed
+// bytes directly. Default tolerance is zero (bit-exact conversion only).
+bool prepareF32GpuCompression(ModelWeights& weights) {
+    const char* enabled = std::getenv("DEEP2_F32_GPU_COMPRESSION");
+    if (!enabled || !*enabled || *enabled == '0') return true;
+
+    float tolerance = 0.0f;
+    if (const char* value = std::getenv("DEEP2_F32_MAX_ABS_ERROR")) {
+        char* end = nullptr;
+        tolerance = std::strtof(value, &end);
+        if (end == value || *end != '\0' || !std::isfinite(tolerance) ||
+            tolerance < 0.0f) {
+            std::fprintf(stderr,
+                "[F32_GPU_COMPRESSION] HOLD invalid DEEP2_F32_MAX_ABS_ERROR\n");
+            return false;
+        }
+    }
+
+    size_t budgetBytes = 512ull * 1024ull * 1024ull;
+    if (const char* value = std::getenv("DEEP2_F32_GPU_COMPRESSED_BUDGET_MB")) {
+        if (!*value || *value == '-') return false;
+        char* end = nullptr;
+        const unsigned long long mb = std::strtoull(value, &end, 10);
+        if (end == value || *end != '\0' ||
+            mb > std::numeric_limits<size_t>::max() / (1024ull * 1024ull))
+            return false;
+        budgetBytes = static_cast<size_t>(mb) * 1024ull * 1024ull;
+    }
+
+    size_t storedBytes = 0;
+    size_t compressedTensors = 0;
+    size_t rejectedTensors = 0;
+    auto prepare = [&](WeightTensor& tensor) {
+        if (tensor.type != 0 || !tensor.data || tensor.compressedF32 ||
+            storedBytes >= budgetBytes)
+            return;
+        const size_t remaining = budgetBytes - storedBytes;
+        // Avoid a candidate whose temporary raw-source bound is far beyond
+        // the remaining compressed-residency allowance.
+        if (tensor.sizeBytes > remaining * 2u && remaining <=
+                std::numeric_limits<size_t>::max() / 2u)
+            return;
+        if (!tensor.EnableCompressedF32(tolerance)) {
+            ++rejectedTensors;
+            return;
+        }
+        const size_t bytes = tensor.compressedF32->storedBytes();
+        if (bytes > remaining) {
+            tensor.compressedF32.reset();
+            std::atomic_store_explicit(&tensor.gpuF16Payload,
+                std::shared_ptr<const WeightTensor::GpuCompressedF32Payload>{},
+                std::memory_order_release);
+            ++rejectedTensors;
+            return;
+        }
+        storedBytes += bytes;
+        ++compressedTensors;
+    };
+
+    prepare(weights.tokenEmbed);
+    prepare(weights.lmHead);
+    prepare(weights.finalNorm);
+    for (auto& layer : weights.layers) {
+        WeightTensor* dense[] = {
+            &layer.wq, &layer.wk, &layer.wv, &layer.wo, &layer.wqkv,
+            &layer.bq, &layer.bk, &layer.bv, &layer.attnNorm,
+            &layer.attnQNorm, &layer.attnKNorm, &layer.attnQ_a,
+            &layer.attnQ_a_norm, &layer.attnQ_b, &layer.attnKV_a_mqa,
+            &layer.attnKV_a_norm, &layer.attnK_b, &layer.attnV_b,
+            &layer.attnO, &layer.wGate, &layer.wUp, &layer.wDown,
+            &layer.ffnNorm, &layer.moeRouter, &layer.moeSharedGate,
+            &layer.moeSharedUp, &layer.moeSharedDown, &layer.ssmA,
+            &layer.ssmAlpha, &layer.ssmBeta, &layer.ssmIn, &layer.ssmD,
+            &layer.ssmConv1d, &layer.ssmConv1dBias, &layer.ssmDtBias,
+            &layer.ssmNorm, &layer.ssmOut
+        };
+        for (WeightTensor* tensor : dense) prepare(*tensor);
+        for (auto& tensor : layer.moeGate) prepare(tensor);
+        for (auto& tensor : layer.moeUp) prepare(tensor);
+        for (auto& tensor : layer.moeDown) prepare(tensor);
+    }
+
+    std::fprintf(stderr,
+        "[F32_GPU_COMPRESSION] enabled=1 tolerance=%.9g tensors=%zu "
+        "rejected=%zu packed_host_bytes=%zu budget_bytes=%zu\n",
+        tolerance, compressedTensors, rejectedTensors, storedBytes, budgetBytes);
+    return true;
 }
 
 } // namespace
@@ -150,6 +243,15 @@ void Deep2Engine::enableVulkan(bool enable) {
         vulkanStrictViolation_ = vulkanStrictNoCpuFallback_;
         std::fprintf(stderr,
             "BATCH9_VULKAN_INIT=HOLD no_compute_device_initialized\n");
+        return;
+    }
+
+    if (modelWeights.loaded && !prepareF32GpuCompression(modelWeights)) {
+        vulkanStrictViolation_ = true;
+        vulkanInitialized_ = false;
+        vulkanDevices_.clear();
+        std::fprintf(stderr,
+            "BATCH9_VULKAN_INIT=HOLD invalid compressed-F32 GPU configuration\n");
         return;
     }
 
