@@ -966,6 +966,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND EXISTS "${CMAKE
 # CMake target and the bat now share ONE definition of the build.
 src/deep2/generic_vulkan_matmul.cpp
 src/deep2/quant_dot_dispatch.cpp
+src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
@@ -1036,6 +1037,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp" AND
         src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
@@ -1094,6 +1096,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND EXISTS "${CMAKE_
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         # The executor's stateful GDN path uses the Deep2 VulkanCompute
@@ -1170,6 +1173,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1218,6 +1222,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1266,6 +1271,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1315,6 +1321,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1361,6 +1368,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1777,6 +1785,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND EXISTS "${
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
@@ -1840,6 +1849,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_S
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
@@ -1864,6 +1874,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_S
         ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
         ${_rawrxd_vk_sdk_inc}
     )
+    # gguf_loader.cpp references rawrxd::compression symbols supplied by
+    # compression_core.cpp; linking zlib alone does not define that API.
+    target_link_libraries(deep2_spec_bench PRIVATE rawrxd_compression_core)
     if(TARGET ggml_interface)
         target_link_libraries(deep2_spec_bench PRIVATE ggml_interface)
     endif()
@@ -2009,6 +2022,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND EXISTS "${CM
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
@@ -2071,6 +2085,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
@@ -2132,6 +2147,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/gpu_quant_dot_verify.cpp" AND Vulkan_FOUND 
     add_executable(gpu_quant_dot_verify
         tools/gpu_quant_dot_verify.cpp
         src/vulkan_compute.cpp
+        src/deep2/weight_cache_retention.cpp
     )
     target_include_directories(gpu_quant_dot_verify PRIVATE
         # include/ FIRST: the tool's bare "vulkan_compute.h" must resolve to
@@ -2168,6 +2184,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/gpu_quant_dot_realweights.cpp" AND Vulkan_F
     add_executable(gpu_quant_dot_realweights
         tools/gpu_quant_dot_realweights.cpp
         src/vulkan_compute.cpp
+        src/deep2/weight_cache_retention.cpp
     )
     target_include_directories(gpu_quant_dot_realweights PRIVATE
         ${CMAKE_SOURCE_DIR}/include
@@ -2316,6 +2333,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
         src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/vulkan_compute.cpp
@@ -2469,6 +2487,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
@@ -2534,6 +2553,7 @@ if(FALSE AND EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_exec_trace.cpp" AND EXISTS
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
@@ -2587,6 +2607,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/QuantKernelRegistry.cpp
@@ -2611,6 +2632,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND EXISTS "${CMA
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${_rawrxd_vk_sdk_inc}
     )
+    # gguf_loader.cpp references rawrxd::compression symbols supplied by
+    # compression_core.cpp; linking zlib alone does not define that API.
+    target_link_libraries(deep2_prefill_parity PRIVATE rawrxd_compression_core)
     if(TARGET ggml_interface)
         target_link_libraries(deep2_prefill_parity PRIVATE ggml_interface)
     endif()
@@ -2667,6 +2691,7 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
         # keep the policy definition in the same library so consumers do not need
         # executable-specific symbol injection.
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/deep2/QuantKernelRegistry.cpp
         # QuantKernelRegistry's real fallback/registration owners live in the
         # shared Deep2 asm_stubs translation unit.  Keep this dependency on
@@ -4490,6 +4515,7 @@ if(ENABLE_VULKAN)
 add_executable(test_kv_cache 
     src/test_kv_cache.cpp
     src/vulkan_compute.cpp
+        src/deep2/weight_cache_retention.cpp
 )
 target_link_libraries(test_kv_cache PRIVATE Vulkan::Vulkan)
 target_include_directories(test_kv_cache PRIVATE
@@ -5733,6 +5759,7 @@ if(TARGET deep2_engine_lib)
         src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/weight_cache_retention.cpp
         src/vulkan_compute.cpp
         src/vulkan_compute_attn.cpp)
     target_link_libraries(ltt_tensor_invoke PRIVATE deep2_engine_lib)
