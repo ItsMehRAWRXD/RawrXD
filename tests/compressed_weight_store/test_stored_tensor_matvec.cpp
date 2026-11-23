@@ -80,6 +80,21 @@ int main() {
     } catch (const std::invalid_argument&) { rejected = true; }
     assert(rejected);
 
+    // Streaming F32->F16 conversion halves the tensor payload without
+    // allocating a full converted tensor. The stored GGML type changes to F16
+    // explicitly; this is opt-in lossy conversion, not byte-preserving codec.
+    std::vector<float> f32Source(rows * cols, 1.25f);
+    CompressedWeightStore convertedStore(0, 63); // odd block size tests byte-split reader callbacks
+    assert(convertedStore.addTensorF32AsF16FromReader(
+        "f32_as_f16", f32Source.data(), f32Source.size(), &error));
+    assert(convertedStore.tensorType("f32_as_f16") == GGML_TYPE_F16);
+    assert(convertedStore.tensorBytes("f32_as_f16") == f32Source.size() * 2);
+    assert(convertedStore.tensorBytes("f32_as_f16") < f32Source.size() * sizeof(float));
+    std::vector<float> convertedOutput(rows, 0.0f);
+    StoredTensorMatvec(convertedStore, "f32_as_f16", ResidentWeightType::F16,
+                       input.data(), convertedOutput.data(), rows, cols, 7);
+    for (float v : convertedOutput) assert(v == 3.75f);
+
     // Q8_0 block layout: little-endian FP16 scale, then 32 signed bytes.
     // Zero-filled blocks compress well; a nonzero first value proves decoding.
     std::vector<std::uint8_t> q8(rows * 34, 0);
