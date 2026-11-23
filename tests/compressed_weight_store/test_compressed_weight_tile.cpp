@@ -128,10 +128,9 @@ int main() {
     for (std::size_t i = 0; i < 4; ++i) {
         const float decoded = rawrxd::compression::DecodeHalfLE(
             normTile.bytes.data() + 2 * i);
-        const float expected = decoded * normInput[i] * invRms;
-        assert(std::fabs(expected -
-            rawrxd::compression::DecodeHalfLE(normTile.bytes.data() + 2 * i) *
-            normInput[i] * invRms) < 1e-6f);
+        const float actual = decoded * normInput[i] * invRms;
+        const float expected = normValues[i] * normInput[i] * invRms;
+        assert(std::fabs(actual - expected) < 1e-6f);
     }
     return 0;
 }
