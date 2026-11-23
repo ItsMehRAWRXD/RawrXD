@@ -196,7 +196,8 @@ int main(int argc,char** argv) {
                 }
                 if(valid){streamQ8[i]=true;outputTypes[i]=8;++changed;}
                 continue;
-            }            if(t.bytes>64u*1024u*1024u) {
+            }
+            if(t.bytes>64u*1024u*1024u) {
                 if(t.type!=0 || quantized)continue;
                 // First pass: validate every F32 weight before changing its type.
                 // The second pass emits the same half values using fixed memory.
