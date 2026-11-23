@@ -502,6 +502,20 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     size_t vocabSize = geometry.vocabSize;
     const size_t intermediateDim = geometry.intermediateDim;
 
+    auto matrixRows = [](const deep2::TensorEntry& entry) -> uint64_t {
+        if (entry.dims.size() < 2) return 0;
+        uint64_t rows = 1;
+        for (size_t i = 1; i < entry.dims.size(); ++i) {
+            if (!entry.dims[i] || rows > std::numeric_limits<uint64_t>::max() / entry.dims[i])
+                return 0;
+            rows *= entry.dims[i];
+        }
+        return rows;
+    };
+    auto matrixCols = [](const deep2::TensorEntry& entry) -> uint64_t {
+        return entry.dims.empty() ? 0 : entry.dims[0];
+    };
+
     std::cout << "[Move 10] Model geometry: layers=" << numLayers
               << " hidden=" << hiddenDim << " heads=" << numHeads
               << " vocab=" << vocabSize << " intermediate=" << intermediateDim << "\n" << std::flush;
@@ -521,19 +535,31 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
-    deep2::DequantizedTensor tokenEmbDq;
-    std::cout << "[Move 10] Dequantizing token_embd.weight...\n" << std::flush;
-    if (!dequantTensor(*tokenEmb, tokenEmbDq)) {
-        fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
+    if (inputTokens.empty()) return false;
+    const uint64_t embeddingRows = matrixRows(*tokenEmb);
+    const uint64_t embeddingCols = matrixCols(*tokenEmb);
+    if (embeddingRows == 0 || embeddingCols != hiddenDim) {
+        fprintf(stderr, "[Move 10] Invalid token embedding geometry\n");
         return false;
     }
-    std::cout << "[Move 10] token_embd.weight dequantized: " << tokenEmbDq.rows << "x" << tokenEmbDq.cols << "\n" << std::flush;
-
-    // Use first token's embedding as initial hidden state
-    if (inputTokens.empty()) return false;
     uint32_t firstToken = inputTokens[0];
-    if (firstToken >= tokenEmbDq.cols) firstToken = 0;
-    std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
+    if (firstToken >= embeddingRows) firstToken = 0;
+    if (tokenEmb->type == deep2::TensorType::F32) {
+        const uint64_t firstElement = uint64_t(firstToken) * hiddenDim;
+        if (!readCompressedF32Tile(*tokenEmb, firstElement, hiddenDim, hiddenStates.data())) {
+            fprintf(stderr, "[Move 10] Failed to read compressed embedding row\n");
+            return false;
+        }
+    } else {
+        deep2::DequantizedTensor tokenEmbDq;
+        if (!dequantTensor(*tokenEmb, tokenEmbDq) ||
+            firstToken >= tokenEmbDq.rows || tokenEmbDq.cols != hiddenDim) {
+            fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
+            return false;
+        }
+        std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
+                    hiddenDim * sizeof(float));
+    }
     std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
 
     // Process each token position
@@ -558,22 +584,19 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
-            if (!dequantTensor(*qkv, qkvDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
-                return false;
-            }
-            std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq.rows << "x" << qkvDq.cols << "\n" << std::flush;
-
-            qkvRows = qkvDq.rows;
-            qkvCols = qkvDq.cols;
+            qkvRows = matrixRows(*qkv);
+            qkvCols = matrixCols(*qkv);
+            if (!qkvRows || !qkvCols) return false;
 
             // --- ATTENTION COMPUTATION ---
             std::vector<float> hiddenStatesCopy(hiddenDim);
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
-
-            std::vector<float> qkvOut(qkvRows, 0.0f);
-            gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
+            std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
+            if (!gemvTensorROM(*qkv, hiddenStatesCopy.data(), qkvOut.data(),
+                               &qkvRows, &qkvCols)) {
+                fprintf(stderr, "[Move 10] Layer %zu: tiled QKV GEMV failed\n", layer);
+                return false;
+            }
 
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
@@ -601,31 +624,32 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            if (!dequantTensor(*upEntry, upDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN up dequant failed\n", layer);
-                return false;
-            }
-
-            if (!dequantTensor(*downEntry, downDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN down dequant failed\n", layer);
-                return false;
-            }
+            const uint64_t upRows = matrixRows(*upEntry);
+            const uint64_t upCols = matrixCols(*upEntry);
+            const uint64_t downRows = matrixRows(*downEntry);
+            const uint64_t downCols = matrixCols(*downEntry);
+            if (!upRows || !upCols || !downRows || !downCols) return false;
 
             // FFN: hidden = down(gelu(up(hidden)))
-            std::vector<float> upOut(intermediateDim, 0.0f);
-            gemvFloat(upDq.data.data(), hiddenStates.data(), upOut.data(), upDq.rows, upDq.cols);
+            std::vector<float> upOut(static_cast<size_t>(upRows), 0.0f);
+            if (!gemvTensorROM(*upEntry, hiddenStates.data(), upOut.data())) {
+                fprintf(stderr, "[Move 10] Layer %zu: tiled FFN-up GEMV failed\n", layer);
+                return false;
+            }
 
             // GELU activation (approximate)
-            for (size_t i = 0; i < intermediateDim; ++i) {
+            for (size_t i = 0; i < upOut.size(); ++i) {
                 float x = upOut[i];
                 float gelu = 0.5f * x * (1.0f + std::tanh(0.79788456f * (x + 0.044715f * x * x * x)));
                 upOut[i] = gelu;
             }
 
-            static thread_local float downOutStatic[3072];
-            float* downOut = downOutStatic;
-            std::fill_n(downOut, hiddenDim, 0.0f);
-            gemvFloat(downDq.data.data(), upOut.data(), downOut, downDq.rows, downDq.cols);
+            std::vector<float> downOut(static_cast<size_t>(downRows), 0.0f);
+            if (!gemvTensorROM(*downEntry, upOut.data(), downOut.data())) {
+                fprintf(stderr, "[Move 10] Layer %zu: tiled FFN-down GEMV failed\n", layer);
+                return false;
+            }
+            if (downOut.size() != hiddenDim) return false;
 
             // Residual connection
             for (size_t i = 0; i < hiddenDim; ++i) {
@@ -651,13 +675,14 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             return false;
         }
 
-        if (!dequantTensor(*outputEntry, outputDq)) {
-            fprintf(stderr, "[Move 10] Failed to dequantize output.weight\n");
+        const uint64_t outputRows = matrixRows(*outputEntry);
+        const uint64_t outputCols = matrixCols(*outputEntry);
+        if (!outputRows || outputCols != hiddenDim) return false;
+        outputLogits.resize(static_cast<size_t>(outputRows), 0.0f);
+        if (!gemvTensorROM(*outputEntry, hiddenStates.data(), outputLogits.data())) {
+            fprintf(stderr, "[Move 10] Tiled output projection GEMV failed\n");
             return false;
         }
-
-        outputLogits.resize(vocabSize, 0.0f);
-        gemvFloat(outputDq.data.data(), hiddenStates.data(), outputLogits.data(), outputDq.rows, outputDq.cols);
 
         // Store baseline logits for first token (for parity check)
         if (tokenPos == 0) {
