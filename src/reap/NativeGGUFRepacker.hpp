@@ -179,7 +179,12 @@ inline bool ConvertF64RangeToF16(std::ifstream& in,std::ofstream& out,
                     valid=true;best=error;half=candidate;
                 }
             }
-            if(!valid)return false;
+            // Do not manufacture a nonzero F16 value when zero is
+            // actually closer to the original F64 value. In particular,
+            // a tiny nonzero F64 must not become the minimum subnormal.
+            // The converter's contract rejects nonzero-to-zero underflow.
+            if(!valid || (value!=0.0 &&
+               best>=std::abs(value)))return false;
             dst[(i/8)*2]=static_cast<unsigned char>(half);
             dst[(i/8)*2+1]=static_cast<unsigned char>(half>>8);
         }
