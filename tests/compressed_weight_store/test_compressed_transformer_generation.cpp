@@ -86,11 +86,21 @@ const OwnedTensor& referenceTensor(const std::vector<OwnedTensor>& tensors,
 std::vector<float> referenceValues(const std::vector<OwnedTensor>& tensors,
                                    const std::string& name) {
     const auto& tensor=referenceTensor(tensors,name);
-    if(tensor.bytes.size()%2) throw std::runtime_error("reference F16 tensor has odd byte length");
+    if(tensor.type != rawrxd::compression::GGML_TYPE_F16 &&
+       tensor.type != rawrxd::compression::GGML_TYPE_BF16)
+        throw std::runtime_error("reference only supports F16 and BF16");
+    if(tensor.bytes.size()%2) throw std::runtime_error("reference tensor has odd byte length");
     std::vector<float> values(tensor.bytes.size()/2);
-    for(std::size_t i=0;i<values.size();++i)
-        values[i]=referenceHalfToFloat(std::uint16_t(tensor.bytes[2*i])|
-                                      (std::uint16_t(tensor.bytes[2*i+1])<<8));
+    for(std::size_t i=0;i<values.size();++i) {
+        const std::uint16_t word=std::uint16_t(tensor.bytes[2*i])|
+                                 (std::uint16_t(tensor.bytes[2*i+1])<<8);
+        if(tensor.type == rawrxd::compression::GGML_TYPE_F16) {
+            values[i]=referenceHalfToFloat(word);
+        } else {
+            const std::uint32_t bits=std::uint32_t(word)<<16;
+            std::memcpy(&values[i],&bits,sizeof(float));
+        }
+    }
     return values;
 }
 std::vector<float> referenceMatvec(const std::vector<OwnedTensor>& tensors,
@@ -322,6 +332,12 @@ int main() {
     for (auto token : bf16Generated)
         assert(token >= 0 && token < static_cast<int32_t>(vocab));
     assert(bf16Runtime.generate(prompt, 3) == bf16Generated);
+    // The dense oracle reads the original BF16 fixture bytes and performs
+    // independent scalar projections without the compressed store/reader.
+    const auto bf16Reference = referenceGenerate(bf16Owned, prompt, 3, hidden,
+        intermediate, vocab, 2, 2, 0, hidden/2, config.rms_epsilon,
+        config.rope_theta);
+    assert(bf16Generated == bf16Reference);
     assert(bf16Model.stats().cached_decoded_bytes == 0);
 
     const auto generated=runtime.generate(prompt,6);
