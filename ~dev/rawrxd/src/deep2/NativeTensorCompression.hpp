@@ -75,6 +75,16 @@ public:
                     halfValid = halfValid && (h == value);
                     bfloatValid = bfloatValid && (b == value);
                 }
+                // A zero-error policy is bit-exact, including signed zero and
+                // NaN payloads. Floating-point comparisons alone cannot enforce it.
+                if (maxAbsError == 0.0f) {
+                    std::uint32_t sourceBits = 0, halfDecodedBits = 0, bfloatDecodedBits = 0;
+                    std::memcpy(&sourceBits, &value, sizeof(sourceBits));
+                    std::memcpy(&halfDecodedBits, &h, sizeof(halfDecodedBits));
+                    std::memcpy(&bfloatDecodedBits, &b, sizeof(bfloatDecodedBits));
+                    halfValid = halfValid && sourceBits == halfDecodedBits;
+                    bfloatValid = bfloatValid && sourceBits == bfloatDecodedBits;
+                }
                 halfValid = halfValid && mh <= maxAbsError;
                 bfloatValid = bfloatValid && mb <= maxAbsError;
                 halfError = std::max(halfError, eh);
