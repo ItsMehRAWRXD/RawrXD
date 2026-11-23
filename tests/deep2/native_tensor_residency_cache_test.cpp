@@ -1,5 +1,6 @@
 #include "../../src/deep2/NativeTensorResidencyCache.hpp"
 #include <cassert>
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
