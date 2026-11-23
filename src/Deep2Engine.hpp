@@ -3,6 +3,7 @@
 #include "GGUFLoader.hpp"
 #include "TensorROM.hpp"
 #include "deep2/NativeTensorResidencyCache.hpp"
+#include "deep2/NativeTensorByteResidencyCache.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
 #include "VulkanDeviceAllocator.hpp"
@@ -34,6 +35,9 @@ struct Deep2Engine {
     deep2::TensorROM rom;
     // F32 weights are retained in bounded compressed chunks; inference reads tiles.
     Deep2::TensorResidencyCache compressedF32Weights{2ull * 1024ull * 1024ull * 1024ull};
+    // Lossless RLE residency for sparse/repetitive encoded non-F32 payloads.
+    // Already-quantized weights remain in their canonical GGUF byte layout.
+    Deep2::TensorByteResidencyCache compressedEncodedWeights{512ull * 1024ull * 1024ull};
     float compressedF32MaxAbsError = 0.0f; // Lossless by default; opt into lossy F16/BF16 explicitly.
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
