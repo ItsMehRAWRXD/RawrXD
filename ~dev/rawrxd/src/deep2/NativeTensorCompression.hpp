@@ -62,9 +62,11 @@ public:
                 const std::uint16_t bfloatBits = floatToBfloat(value);
                 const float h = halfToFloat(halfBits);
                 const float b = bfloatToFloat(bfloatBits);
-                const float eh = std::isnan(value) ? 0.0f : std::fabs(value - h);
-                const float eb = std::isnan(value) ? 0.0f : std::fabs(value - b);
-                const float scale = useRelativeError
+                const float eh = (std::isnan(value) ||
+                    (std::isinf(value) && h == value)) ? 0.0f : std::fabs(value - h);
+                const float eb = (std::isnan(value) ||
+                    (std::isinf(value) && b == value)) ? 0.0f : std::fabs(value - b);
+                const float scale = useRelativeError && std::isfinite(value)
                     ? std::max(std::fabs(value), std::numeric_limits<float>::min())
                     : 1.0f;
                 const float mh = eh / scale;
