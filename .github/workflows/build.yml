@@ -41,6 +41,12 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Validate native build evidence gates
+        shell: pwsh
+        run: |
+          python tests/native_build_evidence_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Native build evidence regression failed" }
+
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
