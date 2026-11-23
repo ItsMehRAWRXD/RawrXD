@@ -340,7 +340,7 @@ uint64_t TensorROM::tensorNumValues(const TensorEntry& e) {
 }
 
 uint64_t TensorROM::tensorStorageBytes(const TensorEntry& e) {
-    return deep2::tensorStorageBytes(tensorNumValues(e), e.type);
+    return deep2::tensorStorageBytesForShape(e.dims, e.type);
 }
 
 bool TensorROM::readTensor(const TensorEntry& entry, uint8_t* out) const {
