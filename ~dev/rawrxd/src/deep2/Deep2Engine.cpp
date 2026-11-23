@@ -517,6 +517,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
     const size_t f32CompressionBudgetInitial = f32CompressionBudget;
+    // The residency cache owns the canonical immutable F32 payloads and
+    // leases prevent eviction while a WeightTensor is still bound to them.
+    residencyCache_ = std::make_unique<Deep2::TensorResidencyCache>(
+        f32CompressionBudgetInitial);
     size_t f32CompressedBytes = 0;
     size_t f32CompressedTensors = 0;
     auto compressF32Tensor = [&](WeightTensor& wt) {
@@ -537,6 +541,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             return;
         const size_t stored = wt.compressedF32->residentBytes();
         if (!stored || stored > remaining) {
+            wt.compressedF32.reset();
+            return;
+        }
+        const std::string cacheKey =
+            std::to_string(wt.shardId) + ":" +
+            std::to_string(wt.fileOffset) + ":" + wt.name;
+        if (!residencyCache_ ||
+            !residencyCache_->Insert(cacheKey, wt.compressedF32)) {
+            wt.compressedF32.reset();
+            return;
+        }
+        wt.compressedF32Lease = residencyCache_->Acquire(cacheKey);
+        if (!wt.compressedF32Lease) {
+            residencyCache_->Erase(cacheKey);
             wt.compressedF32.reset();
             return;
         }
