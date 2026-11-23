@@ -1,8 +1,9 @@
 #pragma once
 // Native, dependency-free GGUF repacker. Preserves metadata bytes and tensor
 // types; streams tensor payloads without materializing the whole model.
-// This is lossless repackaging, not compression or expert pruning.
+// Optional F32->F16 conversion is lossy; all other tensor types are preserved.
 #include "NativeTensorInventory.hpp"
+#include "NativeFloat16.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
@@ -17,7 +18,8 @@ struct RepackTensor {
     std::string name;
     std::vector<uint64_t> dims;
     uint32_t type = 0;
-    uint64_t old_offset = 0, new_offset = 0, bytes = 0;
+    uint64_t old_offset = 0, new_offset = 0, bytes = 0, source_bytes = 0;
+    bool convert_f16 = false;
 };
 inline bool ReadU32(std::istream& in, uint32_t& v) {
     return static_cast<bool>(in.read(reinterpret_cast<char*>(&v),4));
@@ -89,9 +91,34 @@ inline bool PadTo(std::ofstream& out, uint64_t alignment) {
     for(uint64_t i=0;i<missing;++i)out.put('\0');
     return static_cast<bool>(out);
 }
+inline bool ConvertF32RangeToF16(std::ifstream& in, std::ofstream& out,
+                                  uint64_t from, uint64_t sourceBytes) {
+    if(sourceBytes%4 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();
+    in.seekg(static_cast<std::streamoff>(from),std::ios::beg);
+    if(!in)return false;
+    unsigned char source[65536];
+    unsigned char dest[32768];
+    while(sourceBytes) {
+        const auto n=static_cast<std::streamsize>(std::min<uint64_t>(sourceBytes,sizeof(source)));
+        if(!in.read(reinterpret_cast<char*>(source),n))return false;
+        for(std::streamsize i=0;i<n;i+=4) {
+            const uint32_t bits=uint32_t(source[i])|(uint32_t(source[i+1])<<8)|
+                (uint32_t(source[i+2])<<16)|(uint32_t(source[i+3])<<24);
+            const uint16_t half=Float32BitsToFloat16(bits);
+            dest[i/2]=static_cast<unsigned char>(half);
+            dest[i/2+1]=static_cast<unsigned char>(half>>8);
+        }
+        if(!out.write(reinterpret_cast<const char*>(dest),n/2))return false;
+        sourceBytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
 inline RepackError RepackGGUF(const std::string& input,
                              const std::string& output,
-                             uint64_t max_output_bytes=UINT64_MAX) {
+                             uint64_t max_output_bytes=UINT64_MAX,
+                             bool convert_f32_to_f16=false) {
     if(input==output)return RepackError::Output;
     std::ifstream in(input,std::ios::binary);
     if(!in)return RepackError::Input;
@@ -138,6 +165,12 @@ inline RepackError RepackGGUF(const std::string& input,
            !StorageLayout(t.type,block,blockBytes)||count%block||
            !CheckedMultiply(count/block,blockBytes,t.bytes))
             return RepackError::Unsupported;
+        t.source_bytes=t.bytes;
+        if(convert_f32_to_f16 && t.type==0) {
+            t.convert_f16=true;
+            t.type=1; // GGML_TYPE_F16
+            t.bytes/=2;
+        }
         tensors.push_back(std::move(t));
     }
     const auto directoryEnd=in.tellg();
@@ -151,7 +184,7 @@ inline RepackError RepackGGUF(const std::string& input,
     const uint64_t payload=static_cast<uint64_t>(fileEnd)-dataStart;
     for(const auto& t:tensors) {
         if(t.old_offset%alignment||t.old_offset>payload||
-           t.bytes>payload-t.old_offset)return RepackError::Format;
+           t.source_bytes>payload-t.old_offset)return RepackError::Format;
     }
     std::vector<const RepackTensor*> offsets;
     for(const auto& t:tensors)offsets.push_back(&t);
@@ -160,7 +193,7 @@ inline RepackError RepackGGUF(const std::string& input,
     uint64_t prev=0;
     for(const auto* t:offsets) {
         if(t->old_offset<prev)return RepackError::Format;
-        prev=t->old_offset+t->bytes;
+        prev=t->old_offset+t->source_bytes;
     }
     uint64_t cursor=0;
     for(auto& t:tensors) {
@@ -219,7 +252,10 @@ inline RepackError RepackGGUF(const std::string& input,
             padding-=static_cast<uint64_t>(chunk);
         }
         if(t.old_offset>UINT64_MAX-dataStart)return RepackError::Overflow;
-        if(!CopyRange(in,out,dataStart+t.old_offset,t.bytes))
+        if(t.convert_f16) {
+            if(!ConvertF32RangeToF16(in,out,dataStart+t.old_offset,t.source_bytes))
+                return RepackError::Output;
+        } else if(!CopyRange(in,out,dataStart+t.old_offset,t.source_bytes))
             return RepackError::Output;
     }
     out.flush();
