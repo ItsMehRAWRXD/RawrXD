@@ -68,18 +68,24 @@ public:
             if (within >= block.decoded_size)
                 throw std::runtime_error("invalid resident block offset");
             const auto n = std::min(bytes, block.decoded_size - within);
-            if (!block.rle) {
+            if (block.lz4) {
+                // LZ4-style matches need prior output context; expand only this
+                // bounded storage block, never the full tensor.
+                const auto decoded = decode(block);
+                std::copy_n(decoded.data() + within, n, out);
+            } else if (!block.rle) {
                 if (block.payload.size() != block.decoded_size)
                     throw std::runtime_error("invalid resident raw block");
                 std::copy_n(block.payload.data() + within, n, out);
             } else {
-                // Decode only the requested span, without a full-block scratch copy.
+                // RLE can satisfy a subrange without a full-block scratch copy.
                 if (block.payload.size() % 2)
                     throw std::runtime_error("invalid resident RLE block");
                 std::size_t cursor = 0, copied = 0;
                 for (std::size_t i = 0; i < block.payload.size(); i += 2) {
                     const auto run = static_cast<std::size_t>(block.payload[i]);
-                    if (!run || run > block.decoded_size - cursor)
+                    if (!run || cursor > block.decoded_size ||
+                        run > block.decoded_size - cursor)
                         throw std::runtime_error("invalid resident RLE run");
                     const auto begin = std::max(cursor, within);
                     const auto finish = std::min(cursor + run, within + n);
