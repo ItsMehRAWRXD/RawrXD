@@ -432,12 +432,12 @@ int main() {
     // and an already-cached key, without touching the source reader or
     // poisoning a future valid admission. This also guards NaN comparisons,
     // which otherwise make a stricter reuse check silently evaluate false.
-    Deep2::TensorResidencyCache toleranceCache(65536);
-    std::vector<float> toleranceSource(4096, 1.0f);
-    size_t toleranceReads = 0;
-    auto toleranceReader = [&](size_t o, size_t n, float* out) {
-        ++toleranceReads;
-        std::copy(toleranceSource.begin()+o, toleranceSource.begin()+o+n, out);
+    Deep2::TensorResidencyCache invalidToleranceCache(65536);
+    std::vector<float> invalidToleranceSource(4096, 1.0f);
+    size_t invalidToleranceReads = 0;
+    auto invalidToleranceReader = [&](size_t o, size_t n, float* out) {
+        ++invalidToleranceReads;
+        std::copy(invalidToleranceSource.begin()+o, invalidToleranceSource.begin()+o+n, out);
         return true;
     };
     const float invalidTolerances[] = {
@@ -446,26 +446,26 @@ int main() {
         std::numeric_limits<float>::quiet_NaN()
     };
     for (float invalid : invalidTolerances) {
-        assert(!toleranceCache.RegisterF32FromReader(
-            "tolerance.weight", toleranceSource.size(), invalid,
-            toleranceReader, 1024));
-        assert(toleranceReads == 0);
-        assert(!toleranceCache.IsRawFallback("tolerance.weight"));
-        assert(!toleranceCache.Contains("tolerance.weight"));
+        assert(!invalidToleranceCache.RegisterF32FromReader(
+            "tolerance.weight", invalidToleranceSource.size(), invalid,
+            invalidToleranceReader, 1024));
+        assert(invalidToleranceReads == 0);
+        assert(!invalidToleranceCache.IsRawFallback("tolerance.weight"));
+        assert(!invalidToleranceCache.Contains("tolerance.weight"));
     }
-    assert(toleranceCache.RegisterF32FromReader(
-        "tolerance.weight", toleranceSource.size(), 0.0f,
-        toleranceReader, 1024));
-    const size_t validReads = toleranceReads;
+    assert(invalidToleranceCache.RegisterF32FromReader(
+        "tolerance.weight", invalidToleranceSource.size(), 0.0f,
+        invalidToleranceReader, 1024));
+    const size_t validReads = invalidToleranceReads;
     assert(validReads == 4);
     for (float invalid : invalidTolerances) {
-        assert(!toleranceCache.RegisterF32FromReader(
-            "tolerance.weight", toleranceSource.size(), invalid,
-            toleranceReader, 1024));
-        assert(toleranceReads == validReads);
+        assert(!invalidToleranceCache.RegisterF32FromReader(
+            "tolerance.weight", invalidToleranceSource.size(), invalid,
+            invalidToleranceReader, 1024));
+        assert(invalidToleranceReads == validReads);
     }
     float toleranceOutput[16] = {};
-    assert(toleranceCache.ReadRange("tolerance.weight", 0, 16, toleranceOutput));
+    assert(invalidToleranceCache.ReadRange("tolerance.weight", 0, 16, toleranceOutput));
     assert(std::all_of(toleranceOutput, toleranceOutput+16,
                        [](float value) { return value == 1.0f; }));
 
