@@ -38,7 +38,13 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      # This repository carries a legacy evidence gitlink without a .gitmodules
+      # URL. The runner is fresh, so skip the redundant git clean/submodule pass
+      # that otherwise aborts before CMake can run.
       - uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: false
       - name: Configure
         run: cmake -S src/deep2/compression -B build/compressed-weight-store -DCMAKE_BUILD_TYPE=Release
       - name: Build
