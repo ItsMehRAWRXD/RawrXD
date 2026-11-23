@@ -268,8 +268,8 @@ int main(int argc,char** argv) {
             U elements=1;
             for(U d=0;d<nd;++d) {U dim=read(in,8);if(!dim)throw std::runtime_error("zero dimension");t.dims.push_back(dim);elements=mul(elements,dim);}
             t.type=uint32_t(read(in,4));t.offset=read(in,8);
-            t.convert=((t.type==0 || t.type==1 || t.type==30) && elements<=std::numeric_limits<size_t>::max()/4);
-            t.bytes=t.type==0?mul(elements,4):((t.type==1 || t.type==30)?mul(elements,2):0);
+            t.convert=((t.type==0 || t.type==1 || t.type==30 || t.type==28) && elements<=std::numeric_limits<size_t>::max()/8);
+            t.bytes=t.type==28?mul(elements,8):(t.type==0?mul(elements,4):((t.type==1 || t.type==30)?mul(elements,2):0));
             ts.push_back(std::move(t));
         }
         U dataStart=align(pos(in),alignment);
@@ -281,15 +281,15 @@ int main(int argc,char** argv) {
             auto& t=ts[order[j]];
             U next=j+1<order.size()?ts[order[j+1]].offset:fileSize-dataStart;
             if(t.offset>next || add(dataStart,next)>fileSize)throw std::runtime_error("invalid tensor offsets");
-            if(j && ts[order[j-1]].type==0 && ts[order[j-1]].bytes>t.offset-ts[order[j-1]].offset)
+            if(j && (ts[order[j-1]].type==0 || ts[order[j-1]].type==28) && ts[order[j-1]].bytes>t.offset-ts[order[j-1]].offset)
                 throw std::runtime_error("overlapping F32 tensor payloads");
             if(j && (ts[order[j-1]].type==1 || ts[order[j-1]].type==30) && ts[order[j-1]].bytes>t.offset-ts[order[j-1]].offset)
                 throw std::runtime_error("overlapping 16-bit tensor payloads");
             if(t.offset%alignment)throw std::runtime_error("unaligned tensor offset");
-            if(t.type==0 || t.type==1 || t.type==30) {
+            if(t.type==0 || t.type==1 || t.type==30 || t.type==28) {
                 U expected=1;
                 for(U d:t.dims)expected=mul(expected,d);
-                expected=mul(expected,t.type==0?4:2);
+                expected=mul(expected,t.type==28?8:(t.type==0?4:2));
                 if(t.bytes!=expected)throw std::runtime_error("invalid floating tensor length");
             }
             if(j && t.offset==ts[order[j-1]].offset)throw std::runtime_error("overlapping tensor offsets");
@@ -328,6 +328,7 @@ int main(int argc,char** argv) {
         std::vector<uint32_t> outputTypes(ts.size());
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
+        std::vector<bool> streamF64toF32(ts.size(),false);
         std::vector<bool> streamHalf(ts.size(),false);
         std::vector<bool> streamBf16(ts.size(),false);
         std::vector<bool> streamQ8(ts.size(),false);
@@ -336,7 +337,33 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ41(ts.size(),false);
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && t.type!=28 && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            if(automatic && t.type==28) {
+                // GGML F64 (type 28) to F32: 50% storage reduction only
+                // when every finite double survives the precision budget.
+                seek(in,add(dataStart,t.offset));
+                bool valid=true;
+                uint8_t block[65536];
+                for(U off=0;off<t.bytes && valid;) {
+                    const size_t n=size_t(std::min<U>(t.bytes-off,sizeof(block)));
+                    if(!in.read(reinterpret_cast<char*>(block),std::streamsize(n)))
+                        throw std::runtime_error("truncated F64 preflight");
+                    for(size_t j=0;j<n;j+=8) {
+                        uint64_t bits=0;
+                        for(int k=0;k<8;++k)bits|=uint64_t(block[j+k])<<(8*k);
+                        double original;
+                        std::memcpy(&original,&bits,8);
+                        const float narrowed=static_cast<float>(original);
+                        if(!std::isfinite(original)||!std::isfinite(narrowed)||
+                           !(std::fabs(double(narrowed)-original)<=double(tolerance))) {
+                            valid=false;break;
+                        }
+                    }
+                    off+=n;
+                }
+                if(valid){streamF64toF32[i]=true;outputTypes[i]=0;++changed;}
+                continue;
+            }
             if(automatic && t.dims[0]>=32 && t.dims[0]%32==0 &&
                (t.type==0 || t.type==1 || t.type==30)) {
                 const size_t inputBlock=t.type==0?128:64;
@@ -675,7 +702,7 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size()))))))));
+            cursor=add(cursor,streamF64toF32[i]?t.bytes/2:(streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size())))))))));
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
@@ -690,7 +717,28 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamQ5[i]) {
+            if(streamF64toF32[i]) {
+                seek(in,add(dataStart,t.offset));
+                uint8_t source[65536],packed[32768];
+                for(U off=0;off<t.bytes;) {
+                    const size_t n=size_t(std::min<U>(t.bytes-off,sizeof(source)));
+                    if(!in.read(reinterpret_cast<char*>(source),std::streamsize(n)))
+                        throw std::runtime_error("truncated F64 streaming payload");
+                    for(size_t j=0;j<n;j+=8) {
+                        uint64_t bits=0;
+                        for(int k=0;k<8;++k)bits|=uint64_t(source[j+k])<<(8*k);
+                        double original;
+                        std::memcpy(&original,&bits,8);
+                        const float narrowed=static_cast<float>(original);
+                        uint32_t word;
+                        std::memcpy(&word,&narrowed,4);
+                        for(int k=0;k<4;++k)packed[j/2+k]=uint8_t(word>>(8*k));
+                    }
+                    out.write(reinterpret_cast<const char*>(packed),std::streamsize(n/2));
+                    if(!out)throw std::runtime_error("F64 to F32 streaming write failure");
+                    off+=n;
+                }
+            } else if(streamQ5[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[22];
