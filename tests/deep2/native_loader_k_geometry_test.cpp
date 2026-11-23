@@ -1,22 +1,32 @@
 #include "../../~dev/rawrxd/src/deep2/GGUFLoader.hpp"
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
-
-int main() {
-    struct Expected { uint32_t type; size_t elements; size_t bytes; };
-    const Expected expected[] = {
-        {10,256,84}, {11,256,110}, {12,256,144},
-        {13,256,176}, {14,256,210}
-    };
-    for(const auto& e: expected) {
-        size_t elems=0,bytes=0;
-        assert(Deep2::GGUFLoader::typeGeometry(e.type,elems,bytes));
-        assert(elems==e.elements);
-        assert(bytes==e.bytes);
+#include <string>
+static void put32(std::ostream& o,uint32_t v){for(int i=0;i<4;++i)o.put(char(v>>(8*i)));}
+static void put64(std::ostream& o,uint64_t v){for(int i=0;i<8;++i)o.put(char(v>>(8*i)));}
+static void putString(std::ostream& o,const std::string& s){put64(o,s.size());o.write(s.data(),std::streamsize(s.size()));}
+int main(){
+    struct Expected{uint32_t type;size_t bytes;};
+    const Expected expected[]={{10,84},{11,110},{12,144},{13,176},{14,210}};
+    for(const auto& e:expected){
+        const auto path=std::filesystem::temp_directory_path()/("rawrxd-k-loader-"+std::to_string(e.type)+".gguf");
+        {
+            std::ofstream out(path,std::ios::binary|std::ios::trunc);assert(out);
+            out.write("GGUF",4);put32(out,3);put64(out,1);put64(out,0);
+            putString(out,"tensor");put32(out,1);put64(out,256);put32(out,e.type);put64(out,0);
+            const auto header=static_cast<size_t>(out.tellp());
+            for(size_t i=header;i%32;++i)out.put('\0');
+            for(size_t i=0;i<e.bytes;++i)out.put('\0');
+            assert(out.good());
+        }
+        Deep2::GGUFLoader loader;
+        if(!loader.load(path.string())){std::cerr<<"loader rejected type "<<e.type<<": "<<loader.error()<<"\n";return 1;}
+        const auto* tensor=loader.getTensor("tensor");
+        assert(tensor&&static_cast<uint32_t>(tensor->type)==e.type&&tensor->sizeBytes==e.bytes);
+        loader.close();std::filesystem::remove(path);
     }
-    size_t elems=0,bytes=0;
-    assert(!Deep2::GGUFLoader::typeGeometry(31,elems,bytes));
-    std::cout<<"Deep2 GGUF loader recognizes standard Q2_K-Q6_K wire geometry\n";
+    std::cout<<"Deep2 mapped GGUF loader accepts Q2_K through Q6_K tensor payloads\n";
 }
