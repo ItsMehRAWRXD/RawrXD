@@ -590,7 +590,12 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
             const uint16_t half=Float32BitsToFloat16(dbits);
             const uint32_t decoded=Float16ToFloat32Bits(half);
             float actual=0;std::memcpy(&actual,&decoded,4);
-            if(maxAbs!=0 && (!std::isfinite(actual)||actual==0))return false;
+            // A failed requantization scale must not reject a valid
+            // direct-code candidate. For tiny nonzero Q8_K scales the
+            // per-group max/127 scale can underflow to FP16 zero even
+            // though the original scale rounds to a usable FP16 value.
+            const bool requantValid=maxAbs==0 ||
+                (std::isfinite(actual) && actual!=0);
             // Compare the usual per-group requantization with keeping the
             // original signed codes and rounding only their shared scale.
             // Q8_K codes include -128; the direct candidate preserves it.
@@ -619,7 +624,9 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
                         static_cast<double>(values[i])-static_cast<double>(directScale)*code));
                 }
             }
-            const bool useDirect=directValid && directError<=requantError;
+            if(!requantValid && !directValid)return false;
+            const bool useDirect=directValid &&
+                (!requantValid || directError<=requantError);
             const uint16_t chosen=useDirect?directHalf:half;
             encoded[0]=static_cast<unsigned char>(chosen);
             encoded[1]=static_cast<unsigned char>(chosen>>8);
