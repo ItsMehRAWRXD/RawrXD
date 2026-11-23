@@ -1,6 +1,7 @@
 #include "brutal_gzip.h"
 #include <zlib.h>
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -35,8 +36,10 @@ static bool roundtrip(const std::vector<std::uint8_t>& input) {
 }
 
 int main() {
-    for (const std::size_t size : {std::size_t(0), 1u, 31u, 65535u, 65536u,
-                                   1048576u}) {
+    constexpr std::array<std::size_t, 6> sizes = {
+        0u, 1u, 31u, 65535u, 65536u, 1048576u
+    };
+    for (const std::size_t size : sizes) {
         std::vector<std::uint8_t> data(size);
         std::mt19937 rng(0x52415752u + static_cast<std::uint32_t>(size));
         for (auto& byte : data) byte = static_cast<std::uint8_t>(rng());
