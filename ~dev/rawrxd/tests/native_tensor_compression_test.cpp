@@ -30,6 +30,14 @@ int main() {
     for (std::size_t i=0;i<decoded.size()-274;++i)
         CHECK(decoded[i]==values[i+137]);
 
+    // BF16 remains viable when IEEE F16 overflows large finite values.
+    const float largeFinite[] = {1000000.0f};
+    auto bf16=ChunkedF32Storage::Build(largeFinite,1,1024.0f,1);
+    CHECK(bf16.chunks()[0].encoding==RawrXD::TensorCompression::Encoding::BF16);
+    float bf16Out[1]{};
+    CHECK(bf16.DecodeRange(0,1,bf16Out));
+    CHECK(std::fabs(bf16Out[0]-largeFinite[0])<=1024.0f);
+
     // Lossless fallback must preserve values that are not representable in 16 bits.
     const float difficult[] = {1.0001234f, -3.1415927f, 1.0e-20f, 65520.0f};
     auto exact=ChunkedF32Storage::Build(difficult,4,0.0f,4);
