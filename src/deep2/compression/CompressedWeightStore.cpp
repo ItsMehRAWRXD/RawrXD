@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstring>
 #include <limits>
+#include <new>
 #include <iterator>
 #include <stdexcept>
 
