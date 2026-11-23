@@ -125,6 +125,21 @@ def run(binary):
         sb,ss,sm,st=parse(bfstrict)
         assert st["blk.0.attn_q.weight"][0]==0
         assert sb[ss+st["blk.0.attn_q.weight"][2]:ss+st["blk.0.attn_q.weight"][2]+4]==struct.pack("<f",1.0001)
+        # BF16 midpoint ties round to even, including an odd upper half.
+        ties=root/"bf16-ties.gguf"
+        tie_bits=[0x3f808000,0x3f818000,0xbf808000,0xbf818000]*8
+        tie_raw=b"".join(struct.pack("<I",x) for x in tie_bits)
+        kv=S("general.architecture")+U32(8)+S("llama")
+        kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+        tie_header=b"GGUF"+U32(3)+U64(1)+U64(2)+kv
+        tie_header+=S("blk.0.attn_q.weight")+U32(1)+U64(32)+U32(0)+U64(0)
+        ties.write_bytes(pad(tie_header)+tie_raw)
+        ties_out=root/"bf16-ties-output.gguf"
+        subprocess.run([binary,str(ties),str(ties_out),"1","bf16"],check=True)
+        tb,ts,tm,tt=parse(ties_out)
+        assert tt["blk.0.attn_q.weight"][0]==30
+        actual=struct.unpack_from("<32H",tb,ts+tt["blk.0.attn_q.weight"][2])
+        assert actual==(0x3f80,0x3f82,0xbf80,0xbf82)*8
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
