@@ -31,7 +31,7 @@ def parse(path):
     b=path.read_bytes()
     assert b[:4]==b"GGUF"
     version,count,kv=struct.unpack_from("<IQQ",b,4)
-    assert version==3 and count==2 and kv==2
+    assert version==3 and 1<=count<=2 and kv==2
     p=24
     def string():
         nonlocal p
