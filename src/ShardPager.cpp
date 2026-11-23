@@ -9,7 +9,10 @@ namespace deep2 {
 
 PageCache::PageCache(std::size_t capacityBytes, std::size_t pageSize)
     : m_pageSize(pageSize == 0 ? 256 * 1024 : pageSize)
-    , m_capacityBytes(capacityBytes) {}
+    // A cache must hold at least one complete page; smaller configured
+    // budgets are rounded up rather than allowing every acquisition to exceed
+    // capacity by an entire page.
+    , m_capacityBytes(std::max(capacityBytes, m_pageSize)) {}
 
 PageCache::~PageCache() {
     // Async prefetch workers capture this and may still insert pages. Join
@@ -130,7 +133,8 @@ void PageCache::release(Page* page) {
 
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
     if (size == 0) return true;
-    if (!out || offset > UINT64_MAX - (size - 1)) return false;
+    if (!out || size > std::numeric_limits<size_t>::max() ||
+        offset > UINT64_MAX - (size - 1)) return false;
 
     // Acquire/copy/release one page at a time. Holding every page in a large
     // request simultaneously can exceed the configured pager budget because
