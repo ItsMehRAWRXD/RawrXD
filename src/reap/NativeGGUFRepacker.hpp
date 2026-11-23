@@ -277,6 +277,31 @@ inline bool ConvertF64RangeToF32(std::ifstream& in,std::ofstream& out,
     }
     return true;
 }
+// Probe automatic FP32 narrowing before staging any output. One incompatible
+// tensor must not prevent independent eligible tensors from shrinking.
+inline bool CanConvertF32ToF16(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%4 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char buffer[8192];
+    while(bytes) {
+        const auto n=static_cast<std::streamsize>(std::min<uint64_t>(bytes,sizeof(buffer)));
+        if(!in.read(reinterpret_cast<char*>(buffer),n))return false;
+        for(std::streamsize i=0;i<n;i+=4) {
+            const uint32_t bits=uint32_t(buffer[i])|(uint32_t(buffer[i+1])<<8)|
+                (uint32_t(buffer[i+2])<<16)|(uint32_t(buffer[i+3])<<24);
+            float value=0;std::memcpy(&value,&bits,4);
+            if(!std::isfinite(value))return false;
+            const uint32_t decoded=Float16ToFloat32Bits(Float32BitsToFloat16(bits));
+            float restored=0;std::memcpy(&restored,&decoded,4);
+            if(!std::isfinite(restored)||(value!=0.0f && restored==0.0f))
+                return false;
+        }
+        bytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
 inline bool ConvertF32RangeToF16(std::ifstream& in, std::ofstream& out,
                                   uint64_t from, uint64_t sourceBytes) {
     if(sourceBytes%4 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -1240,6 +1265,20 @@ inline RepackError RepackGGUF(const std::string& input,
     for(const auto* t:offsets) {
         if(t->old_offset<prev)return RepackError::Format;
         prev=t->old_offset+t->source_bytes;
+    }
+    // Automatic FP32 -> FP16 is opportunistic. Retain an original FP32
+    // tensor if any value cannot be narrowed without overflow/underflow.
+    // Explicit --f32-to-f16 remains fail-closed as requested by the caller.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_f16)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(!CanConvertF32ToF16(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_f16=false;
+                t.type=0;
+                t.bytes=t.source_bytes;
+            }
+        }
     }
     // The general Q4_0 planner also selects ordinary Q4_1 vectors.
     // Unlike matrix weights, vectors must not silently lose precision.
