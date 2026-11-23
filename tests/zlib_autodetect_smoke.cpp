@@ -28,12 +28,12 @@ int main() {
         return 2;
     }
 
-    const uint8_t empty = 0;
+    uint8_t empty = 0;
     bound = compressBound(0);
     compressed.resize(static_cast<size_t>(bound));
     rc = compress2(compressed.data(), &bound, &empty, 0, Z_DEFAULT_COMPRESSION);
     if (rc != Z_OK) return 3;
-    decodedSize = 0;
+    decodedSize = 1;
     rc = uncompress(&empty, &decodedSize, compressed.data(), bound);
     if (rc != Z_OK || decodedSize != 0) return 4;
 
