@@ -332,6 +332,21 @@ def run(binary):
             assert struct.unpack_from("<e",qdata,p)[0]>0
             scale=struct.unpack_from("<e",qdata,p)[0]
             assert all(abs(scale*v-1.0)<=0.01 for v in struct.unpack_from("<32b",qdata,p+2))
+        # Large Q4_0 output uses the streaming path and preserves GGML
+        # signed-scale nibble layout across tensor block boundaries.
+        large4=root/"huge-q4.gguf"
+        subprocess.run([binary,str(huge),str(large4),"1","q4_0"],check=True)
+        q4data,q4start,q4meta,q4desc=parse(large4)
+        assert q4desc["blk.0.attn_q.weight"][:2]==(2,(n,))
+        assert len(q4data)-q4start==(n//32)*18
+        for block in (0,2047,2048,n//32-1):
+            p=q4start+block*18
+            scale=struct.unpack_from("<e",q4data,p)[0]
+            packed=q4data[p+2:p+18]
+            assert len(packed)==16
+            for j in range(32):
+                nib=(packed[j]&15) if j<16 else (packed[j-16]>>4)
+                assert abs(scale*(nib-8)-1.0)<=1
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
