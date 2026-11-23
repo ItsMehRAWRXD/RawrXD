@@ -31,6 +31,7 @@ on:
       - 'src/quant_kernels.hpp'
       - 'src/quant_kernels.cpp'
       - 'src/deep2/NativeKQuant.hpp'
+      - 'CMakeLists.txt'
       - 'tests/deep2/native_k_quant_test.cpp'
       - 'tests/deep2/native_loader_k_geometry_test.cpp'
       - 'tests/deep2/native_q5k_runtime_layout_test.cpp'
