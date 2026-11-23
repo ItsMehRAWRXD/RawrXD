@@ -89,6 +89,22 @@ static void testLosslessByteResidency() {
     assert(std::memcmp(actual, sparse.data() + 117, sizeof(actual)) == 0);
     assert(cache.GetStats().hits == 1);
 
+    // Repeated non-run byte patterns exercise the LZ4 path rather than RLE.
+    std::vector<uint8_t> periodic(4096);
+    for (size_t i = 0; i < periodic.size(); ++i) periodic[i] = static_cast<uint8_t>(i % 64);
+    auto periodicReader = [&](size_t offset, size_t count, uint8_t* out) {
+        if (offset > periodic.size() || count > periodic.size() - offset) return false;
+        std::memcpy(out, periodic.data() + offset, count);
+        return true;
+    };
+    assert(cache.RegisterFromReader("periodic-lz4", periodic.size(), periodicReader, 512));
+    const auto lz4Stats = cache.GetStats();
+    assert(lz4Stats.compressedBytes < lz4Stats.logicalBytes);
+    uint8_t periodicRange[777]{};
+    assert(cache.ReadRange("periodic-lz4", 333, sizeof(periodicRange),
+                           periodicRange, scratch));
+    assert(std::memcmp(periodicRange, periodic.data() + 333, sizeof(periodicRange)) == 0);
+
     std::vector<uint8_t> dense(256);
     for (size_t i = 0; i < dense.size(); ++i) dense[i] = uint8_t(i);
     auto denseReader = [&](size_t offset, size_t count, uint8_t* out) {
