@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent GGML Q5_K / Q6_K wire decoder and loss-gated GGUF integration."""
+"""Independent GGML Q2_K-Q6_K/Q8_K wire decoder and loss-gated GGUF integration."""
 import pathlib
 import struct
 import subprocess
@@ -27,7 +27,6 @@ def independent_decode(typ, block):
     if typ==10:
         d,dm=struct.unpack_from("<ee",block,80)
         for j in range(256):
-            g=j//16;within=j%128;lane=within//32;col=within%32
             g=j//16;chunk=g//8;within=g%8;lane=within//2;half=within%2
             q=(block[16+chunk*32+half*16+(j%16)]>>(2*lane))&3
             out.append(d*(block[g]&15)*q-dm*(block[g]>>4))
