@@ -100,6 +100,15 @@ if(RAWRXD_SMOKE_REQUIRE_ZLIB)
     target_compile_definitions(rawrxd_chunked_resident_bytes_test PRIVATE RAWRXD_TEST_REQUIRE_ZLIB=1)
 endif()
 add_test(NAME rawrxd_chunked_resident_bytes COMMAND rawrxd_chunked_resident_bytes_test)
+add_executable(rawrxd_resident_f32_matvec_test
+    "${RAWRXD_ROOT}/tests/resident_f32_matvec_test.cpp")
+target_link_libraries(rawrxd_resident_f32_matvec_test PRIVATE rawrxd_compression_core)
+target_compile_features(rawrxd_resident_f32_matvec_test PRIVATE cxx_std_17)
+if(RAWRXD_SMOKE_REQUIRE_ZLIB)
+    target_compile_definitions(rawrxd_resident_f32_matvec_test PRIVATE RAWRXD_TEST_REQUIRE_ZLIB=1)
+endif()
+add_test(NAME rawrxd_resident_f32_matvec COMMAND rawrxd_resident_f32_matvec_test)
+
 
 if(ZLIB_FOUND)
     add_executable(brutal_gzip_portable_contract_test
