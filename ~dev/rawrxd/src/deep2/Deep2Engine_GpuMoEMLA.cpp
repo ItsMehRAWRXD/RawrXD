@@ -82,6 +82,194 @@ bool Deep2Engine::tryVulkanHostGEMV(
 
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
 
+    // Compressed tensors use two independent Vulkan devices when available.
+    // Each device receives only its own bounded row tiles and downloads into
+    // a disjoint final output range; no full expanded matrix or host merge is
+    // required.
+    if ((compressedF32Path || compressedBytesPath) &&
+        vulkanDevices_.size() >= 2 && wt.rows >= 2) {
+        struct TileStats {
+            uint64_t f16Ops = 0;
+            uint64_t bf16Ops = 0;
+            uint64_t bytes = 0;
+        };
+        auto* device0 = getVulkanComputeSlot(0);
+        auto* device1 = getVulkanComputeSlot(1);
+        size_t quantRowBytes = 0;
+        bool quantGeometryValid = true;
+        if (compressedBytesPath) {
+            if (wt.type == 1 || wt.type == 30) {
+                quantGeometryValid =
+                    wt.cols <= std::numeric_limits<size_t>::max() /
+                                   sizeof(uint16_t);
+                if (quantGeometryValid)
+                    quantRowBytes = wt.cols * sizeof(uint16_t);
+            } else {
+                const BlockGeometry geometry =
+                    QuantKernelRegistry::Instance().GetGeometry(wt.type);
+                if (!geometry.blockBytes || !geometry.blockElements ||
+                    wt.cols > std::numeric_limits<size_t>::max() -
+                                  (geometry.blockElements - 1u)) {
+                    quantGeometryValid = false;
+                } else {
+                    const size_t blocks =
+                        (wt.cols + geometry.blockElements - 1u) /
+                        geometry.blockElements;
+                    quantGeometryValid =
+                        blocks <= std::numeric_limits<size_t>::max() /
+                                      geometry.blockBytes;
+                    if (quantGeometryValid)
+                        quantRowBytes = blocks * geometry.blockBytes;
+                }
+            }
+        }
+
+        auto runCompressedSlice = [&](VulkanCompute* device,
+                                      size_t sliceBegin, size_t sliceRows,
+                                      TileStats& stats) -> bool {
+            if (!device || !sliceRows ||
+                sliceRows > std::numeric_limits<uint32_t>::max() ||
+                !device->EnsureScratch(30, wt.cols) ||
+                !device->EnsureScratch(31, sliceRows) ||
+                !device->UploadVector(30, input, wt.cols))
+                return false;
+            device->SetWorkEpoch(epoch);
+            constexpr size_t kMaxTileBytes = 256u * 1024u;
+            std::vector<uint8_t> packedTile;
+            std::vector<uint8_t> decodeScratch;
+            if (compressedF32Path) {
+                if (wt.cols > std::numeric_limits<size_t>::max() /
+                                  sizeof(float))
+                    return false;
+                const size_t rowBytes = wt.cols * sizeof(float);
+                const size_t rowsPerTile =
+                    std::max<size_t>(1, kMaxTileBytes / rowBytes);
+                size_t rowBase = sliceBegin;
+                const size_t sliceEnd = sliceBegin + sliceRows;
+                while (rowBase < sliceEnd) {
+                    const size_t maxRows =
+                        std::min(sliceEnd - rowBase, rowsPerTile);
+                    uint32_t actualRows = 0;
+                    int tileType = -1;
+                    if (maxRows > std::numeric_limits<uint32_t>::max() ||
+                        !wt.BuildCompressedF32GpuTile(
+                            static_cast<uint32_t>(rowBase),
+                            static_cast<uint32_t>(maxRows), actualRows,
+                            packedTile, tileType) || !actualRows)
+                        return false;
+                    uint64_t key = 1469598103934665603ull;
+                    for (unsigned char ch : wt.name) {
+                        key ^= ch;
+                        key *= 1099511628211ull;
+                    }
+                    key ^= wt.fileOffset +
+                        (static_cast<uint64_t>(wt.shardId) << 32);
+                    key *= 1099511628211ull;
+                    key ^= static_cast<uint64_t>(
+                        reinterpret_cast<uintptr_t>(wt.compressedF32.get()));
+                    key *= 1099511628211ull;
+                    key ^= (static_cast<uint64_t>(rowBase) << 16) ^
+                           (static_cast<uint64_t>(tileType) << 56);
+                    if (!key) key = 1;
+                    const uint32_t outputBase =
+                        static_cast<uint32_t>(rowBase - sliceBegin);
+                    if (!device->DispatchGemvQuantRows(
+                            tileType, packedTile.data(), packedTile.size(),
+                            30, 31, static_cast<uint32_t>(actualRows),
+                            static_cast<uint32_t>(wt.cols), outputBase, key))
+                        return false;
+                    if (tileType == 1) ++stats.f16Ops;
+                    else if (tileType == 30) ++stats.bf16Ops;
+                    stats.bytes += packedTile.size();
+                    rowBase += actualRows;
+                }
+            } else {
+                if (!quantGeometryValid || !quantRowBytes ||
+                    wt.rows > std::numeric_limits<size_t>::max() /
+                                  quantRowBytes ||
+                    wt.rows * quantRowBytes != wt.sizeBytes ||
+                    wt.compressedBytes->size() != wt.sizeBytes)
+                    return false;
+                const size_t rowsPerTile =
+                    std::max<size_t>(1, kMaxTileBytes / quantRowBytes);
+                size_t rowBase = sliceBegin;
+                const size_t sliceEnd = sliceBegin + sliceRows;
+                while (rowBase < sliceEnd) {
+                    const size_t tileRows =
+                        std::min(sliceEnd - rowBase, rowsPerTile);
+                    if (tileRows > std::numeric_limits<uint32_t>::max() ||
+                        tileRows > std::numeric_limits<size_t>::max() /
+                                       quantRowBytes)
+                        return false;
+                    const size_t tileBytes = tileRows * quantRowBytes;
+                    packedTile.resize(tileBytes);
+                    try {
+                        wt.compressedBytes->ReadRange(
+                            rowBase * quantRowBytes, tileBytes,
+                            packedTile.data(), decodeScratch);
+                    } catch (...) {
+                        return false;
+                    }
+                    uint64_t key = 1469598103934665603ull;
+                    for (unsigned char ch : wt.name) {
+                        key ^= ch;
+                        key *= 1099511628211ull;
+                    }
+                    key ^= wt.fileOffset +
+                        (static_cast<uint64_t>(wt.shardId) << 32);
+                    key *= 1099511628211ull;
+                    key ^= static_cast<uint64_t>(
+                        reinterpret_cast<uintptr_t>(wt.compressedBytes.get()));
+                    key *= 1099511628211ull;
+                    key ^= (static_cast<uint64_t>(rowBase) << 16) ^
+                           (static_cast<uint64_t>(wt.type) << 48);
+                    if (!key) key = 1;
+                    const uint32_t outputBase =
+                        static_cast<uint32_t>(rowBase - sliceBegin);
+                    if (!device->DispatchGemvQuantRows(
+                            wt.type, packedTile.data(), tileBytes,
+                            30, 31, static_cast<uint32_t>(tileRows),
+                            static_cast<uint32_t>(wt.cols), outputBase, key))
+                        return false;
+                    if (wt.type == 1) ++stats.f16Ops;
+                    else if (wt.type == 30) ++stats.bf16Ops;
+                    stats.bytes += tileBytes;
+                    rowBase += tileRows;
+                }
+            }
+            return device->DownloadVector(
+                31, output + sliceBegin, sliceRows);
+        };
+
+        if (device0 && device1 && quantGeometryValid) {
+            const size_t rows0 = wt.rows / 2;
+            const size_t rows1 = wt.rows - rows0;
+            TileStats stats0{}, stats1{};
+            auto task0 = std::async(std::launch::async, [&] {
+                return runCompressedSlice(device0, 0, rows0, stats0);
+            });
+            auto task1 = std::async(std::launch::async, [&] {
+                return runCompressedSlice(device1, rows0, rows1, stats1);
+            });
+            bool ok0 = false, ok1 = false;
+            try { ok0 = task0.get(); } catch (...) { ok0 = false; }
+            try { ok1 = task1.get(); } catch (...) { ok1 = false; }
+            if (ok0 && ok1 && finiteVec(output, outDim)) {
+                if (usedDualGpu) *usedDualGpu = true;
+                ++gpuFwd_.dualRowSplitOps;
+                ++gpuFwd_.dualRowSlot[0];
+                ++gpuFwd_.dualRowSlot[1];
+                gpuFwd_.hostMaterializations += 2;
+                ++gpuFwd_.matDualRowSingle;
+                gpuFwd_.compressedF16GemvOps += stats0.f16Ops + stats1.f16Ops;
+                gpuFwd_.compressedBF16GemvOps += stats0.bf16Ops + stats1.bf16Ops;
+                gpuFwd_.compressedWeightBytesSubmitted +=
+                    stats0.bytes + stats1.bytes;
+                return true;
+            }
+        }
+    }
+
     // First preference: true simultaneous independent row partitions.
     if(wt.data && !compressedF32Path && !compressedBytesPath && vulkanDevices_.size()>=2 && wt.rows>=2){
         RowSplitReceipt r{};
