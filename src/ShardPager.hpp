@@ -61,9 +61,13 @@ public:
 
     std::size_t capacityBytes() const { return m_capacityBytes; }
     std::size_t pageSize() const { return m_pageSize; }
-    std::size_t residentBytes() const { return m_residentBytes; }
+    std::size_t residentBytes() const { std::lock_guard<std::mutex> lock(m_mutex); return m_residentBytes; }
     std::size_t pageCount() const;
     std::size_t leaseCount() const;
+
+    // Evict only unleased pages intersecting an absolute file byte range.
+    // Offset semantics match readRange(): absolute file offsets.
+    std::size_t evictUnleasedRange(uint32_t shard, uint64_t offset, uint64_t size);
 
     // Evict every unleased page (useful between layer groups).
     void evictUnleasedAll();

@@ -41,6 +41,12 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Validate native build evidence gates
+        shell: pwsh
+        run: |
+          python tests/native_build_evidence_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Native build evidence regression failed" }
+
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
@@ -95,7 +101,9 @@ jobs:
           # verifies the Q5/Q6 quantization kernels and exits non-zero on
           # failure).
           $smoke = "bin/${{ matrix.config }}/quant_scalar_smoke.exe"
-          if (Test-Path $smoke) { & $smoke } else { Write-Host "no native smoke binary in this configuration" }
+          if (!(Test-Path $smoke)) { throw "Required native smoke binary missing: $smoke" }
+          & $smoke
+          if ($LASTEXITCODE -ne 0) { throw "Native smoke test failed with exit code $LASTEXITCODE" }
 
       - name: Verify Executable
         shell: pwsh
@@ -160,12 +168,17 @@ jobs:
                 ..
 
           if ($LASTEXITCODE -ne 0) {
-            # Informational job: clang-cl + Ninja is an optional toolchain
-            # check, not a release gate.
-            Write-Host "Note: Clang build not available in this environment (optional)"
-            exit 0
+            throw "Clang configure failed with exit code $LASTEXITCODE"
           }
           Write-Host "Clang configure OK"
+
+      - name: Build with Clang
+        shell: pwsh
+        run: |
+          cmake --build build_clang --parallel 4
+          if ($LASTEXITCODE -ne 0) {
+            throw "Clang build failed with exit code $LASTEXITCODE"
+          }
 
   # ============================================================
   # Linux Build (GCC/Clang)
@@ -340,16 +353,13 @@ jobs:
           
           | Platform | Config | Status |
           |----------|--------|--------|
-          | Windows (MSVC) x64 | Debug | ${{ needs.build-windows-msvc.result }} |
-          | Windows (MSVC) x64 | Release | ${{ needs.build-windows-msvc.result }} |
-          | Windows (MSVC) x86 | Debug | ${{ needs.build-windows-msvc.result }} |
-          | Windows (MSVC) x86 | Release | ${{ needs.build-windows-msvc.result }} |
+          | Windows (MSVC) matrix (x64/Win32, Debug/Release) | Aggregate only | ${{ needs.build-windows-msvc.result }} |
           | Linux (GCC) | Release | ${{ needs.build-linux-gcc.result }} |
           | Windows (ARM64) | Release | ${{ needs.build-arm64.result }} |
           
-          **All builds** compiled successfully with zero errors.
-          
-          Executables available in Artifacts.
+          The Windows matrix result is aggregate, not evidence that each configuration passed.\n          Inspect individual matrix jobs and their artifact hashes for per-configuration evidence.\n          This is a job-result report, not an unconditional build certification.
+          A skipped, cancelled, or failed job is not a passing build.
+          Artifacts are available only for jobs that actually uploaded them.
           "@
           
           Write-Host $summary
@@ -364,12 +374,13 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## ✅ Build Verification Complete
+              body: `## Build verification results
               
-              All platforms built successfully:
-              - ✅ Windows (MSVC) - x64, x86
-              - ✅ Linux (GCC)
-              - ✅ Windows (ARM64)
+              Build jobs (inspect individual matrix legs for architecture/config details):
+              - Windows MSVC: ${{ needs.build-windows-msvc.result }}
+              - Linux GCC: ${{ needs.build-linux-gcc.result }}
+              - Windows ARM64: ${{ needs.build-arm64.result }}
+              - Size analysis: ${{ needs.build-size-analysis.result }}
               
-              Artifacts ready for download and testing.`
+              These are workflow job results; do not infer release certification from them.`
             });

@@ -2,12 +2,16 @@
 
 #include "GGUFLoader.hpp"
 #include "TensorROM.hpp"
+#include "deep2/NativeTensorResidencyCache.hpp"
+#include "deep2/NativeTensorByteResidencyCache.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
 #include "VulkanDeviceAllocator.hpp"
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <thread>
@@ -26,11 +30,46 @@ namespace Deep2EngineVulkan {
 }
 
 struct Deep2Engine {
+    struct TensorResidencySnapshot {
+        size_t f32BudgetBytes = 0, encodedBudgetBytes = 0;
+        size_t sourcePagerBudgetBytes = 0, sourcePagerResidentBytes = 0;
+        size_t sourcePagerPageCount = 0;
+        size_t f32CompressedBytes = 0, encodedCompressedBytes = 0;
+        size_t f32LogicalBytes = 0, encodedLogicalBytes = 0;
+        size_t f32TensorCount = 0, encodedTensorCount = 0;
+        size_t f32ActiveReaders = 0, encodedActiveReaders = 0;
+        uint64_t f32CacheHits = 0, f32CacheMisses = 0;
+        uint64_t encodedCacheHits = 0, encodedCacheMisses = 0;
+        uint64_t bytesDecoded = 0, evictions = 0;
+        size_t totalCompressedBytes() const noexcept {
+            return encodedCompressedBytes > static_cast<size_t>(-1) - f32CompressedBytes
+                ? static_cast<size_t>(-1) : f32CompressedBytes + encodedCompressedBytes;
+        }
+        size_t totalLogicalBytes() const noexcept {
+            return encodedLogicalBytes > static_cast<size_t>(-1) - f32LogicalBytes
+                ? static_cast<size_t>(-1) : f32LogicalBytes + encodedLogicalBytes;
+        }
+        size_t totalResidentBytes() const noexcept {
+            const size_t compressed = totalCompressedBytes();
+            return sourcePagerResidentBytes > static_cast<size_t>(-1) - compressed
+                ? static_cast<size_t>(-1) : compressed + sourcePagerResidentBytes;
+        }
+        size_t totalTrackedWeightResidentBytes() const noexcept {
+            return totalResidentBytes();
+        }
+    };
+
     // Whole-model loader context (fallback / regression baseline).
     EngineContext ctx;
     // Paged ROM path (default execution layer from Move 3 onward).
     bool romMode = true;
     deep2::TensorROM rom;
+    // F32 weights are retained in bounded compressed chunks; inference reads tiles.
+    Deep2::TensorResidencyCache compressedF32Weights{2ull * 1024ull * 1024ull * 1024ull};
+    // Lossless RLE/LZ4 residency for repetitive encoded non-F32 payloads.
+    // Already-quantized weights remain in their canonical GGUF byte layout.
+    Deep2::TensorByteResidencyCache compressedEncodedWeights{512ull * 1024ull * 1024ull};
+    std::atomic<float> compressedF32MaxAbsError{0.0f}; // Lossless by default; finite tolerance opts into F16/BF16.
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
 
@@ -38,6 +77,10 @@ struct Deep2Engine {
 
     bool Initialize(const std::string& modelPath, const std::string& manifestPath = "", bool forceWholeLoader = false);
     void Shutdown();
+    TensorResidencySnapshot GetTensorResidencySnapshot() const;
+    // Zero error preserves F32 exactly; positive finite error permits bounded F16/BF16 chunks.
+    bool ConfigureTensorCompression(size_t f32BudgetBytes, size_t encodedBudgetBytes,
+                                     float f32MaxAbsError);
 
     void SynchronizeRoPEScaling(double modelThetaConfig = 0.0);
     void ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position);
@@ -67,6 +110,45 @@ struct Deep2Engine {
     TensorHandle getTensor(const std::string& name);
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
+    // Read an F32 element range from compressed resident storage. The first
+    // access streams source chunks from the ROM pager; subsequent reads decode
+    // only the chunks intersecting the requested range.
+    bool readCompressedF32Tile(const deep2::TensorEntry& entry, uint64_t firstElement,
+                               uint64_t elementCount, float* destination);
+    bool readCompressedF32Tile(const deep2::TensorEntry& entry, uint64_t firstElement,
+                               uint64_t elementCount, float* destination,
+                               std::vector<uint8_t>& decodeScratch);
+    // Read an arbitrary encoded GGUF byte range through bounded lossless
+    // residency. This also covers native F16/BF16 Vulkan tiles, not just CPU
+    // dequantization paths.
+    bool readCompressedEncodedRange(const deep2::TensorEntry& entry,
+                                    uint64_t byteOffset, uint64_t byteCount,
+                                    uint8_t* destination,
+                                    std::vector<uint8_t>& decodeScratch);
+    // Read and dequantize only the encoded blocks intersecting a logical tile.
+    bool readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                   uint64_t firstElement, uint64_t elementCount,
+                                   float* destination);
+    bool readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                   uint64_t firstElement, uint64_t elementCount,
+                                   float* destination,
+                                   std::vector<uint8_t>& encodedScratch);
+    bool readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                   uint64_t firstElement, uint64_t elementCount,
+                                   float* destination,
+                                   std::vector<uint8_t>& encodedScratch,
+                                   std::vector<uint8_t>& decodeScratch);
+    // CPU GEMV that decompresses bounded row tiles instead of materializing the
+    // full F32 weight matrix. Non-F32 GGUF types retain the established path.
+    bool gemvTensorROM(const deep2::TensorEntry& entry, const float* input, float* output,
+                       uint64_t* rowsOut = nullptr, uint64_t* colsOut = nullptr,
+                       size_t tileRows = 16);
+    // Stream compressed F32 row tiles to Vulkan. Only one bounded weight tile
+    // is materialized and uploaded per dispatch; the full matrix never resides
+    // in host or device memory as contiguous F32.
+    bool gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
+                             const deep2::TensorEntry& entry, const float* input,
+                             float* output, size_t tileRows = 64);
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,

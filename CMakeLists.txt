@@ -101,6 +101,26 @@ if(Vulkan_FOUND)
     message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
 endif()
 
+# Compile the packed-weight GEMV shader when the Vulkan SDK shader compiler is
+# available. The runtime keeps the established F32 shader fallback when it is
+# not, so CPU-only/test configurations do not acquire a new hard dependency.
+find_program(RAWRXD_GLSLC NAMES glslc
+    HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin")
+if(RAWRXD_GLSLC)
+    add_custom_target(RawrXD_PackedWeightShader ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders"
+        COMMAND ${RAWRXD_GLSLC} --target-env=vulkan1.2 -O
+                "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
+                -o "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/gemv_packed16.spv"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
+        COMMENT "Compiling native packed F16/BF16 Vulkan GEMV shader")
+    add_dependencies(Deep2Engine_Benchmark RawrXD_PackedWeightShader)
+else()
+    message(WARNING "[BUILD] glslc not found; packed F16/BF16 Vulkan dispatch will be unavailable")
+endif()
+
+
 # Link libraries
 if(MSVC)
     target_link_libraries(Deep2Engine_Benchmark 
@@ -119,11 +139,94 @@ elseif(APPLE)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
+# Native compressed tensor residency: standalone C++17 tests; no Qt or Vulkan linkage.
+add_executable(test_native_tensor_compression tests/deep2/native_tensor_compression_test.cpp)
+target_compile_features(test_native_tensor_compression PRIVATE cxx_std_17)
+target_include_directories(test_native_tensor_compression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+add_executable(test_native_tensor_residency_cache tests/deep2/native_tensor_residency_cache_test.cpp)
+target_compile_features(test_native_tensor_residency_cache PRIVATE cxx_std_17)
+target_include_directories(test_native_tensor_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+add_executable(test_native_tensor_byte_residency_cache tests/deep2/native_tensor_byte_residency_cache_test.cpp)
+target_compile_features(test_native_tensor_byte_residency_cache PRIVATE cxx_std_17)
+target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Synthetic GGUF -> TensorROM pager -> compressed F32/Q4_K residency -> tiled inference.
+find_package(Threads REQUIRED)
+target_link_libraries(test_native_tensor_residency_cache PRIVATE Threads::Threads)
+target_link_libraries(test_native_tensor_byte_residency_cache PRIVATE Threads::Threads)
+add_executable(test_native_compressed_gguf_e2e
+    tests/deep2/native_compressed_gguf_e2e_test.cpp
+    src/TensorROM.cpp
+    src/ShardPager.cpp)
+target_compile_features(test_native_compressed_gguf_e2e PRIVATE cxx_std_17)
+target_include_directories(test_native_compressed_gguf_e2e PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(test_native_compressed_gguf_e2e PRIVATE Threads::Threads)
+
+# Windows integration test: exercise the actual Deep2Engine ROM forward path
+# against a tiny generated Phi-3-compatible GGUF model. It intentionally shares
+# the production engine sources and Vulkan linkage, not a mocked inference API.
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    add_executable(test_deep2_compressed_model_e2e
+        tests/deep2/native_deep2_compressed_model_e2e_test.cpp
+        src/Deep2Engine.cpp
+        src/GGUFLoader.cpp
+        src/TensorROM.cpp
+        src/ShardPager.cpp
+        src/quant_kernels.cpp
+        src/MasmCoreKernels.cpp
+        src/VulkanDevice.cpp
+        src/VulkanDeviceAllocator.cpp
+        src/VulkanStagingPipeline.cpp)
+    target_compile_features(test_deep2_compressed_model_e2e PRIVATE cxx_std_17)
+    target_include_directories(test_deep2_compressed_model_e2e PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+        ${Vulkan_INCLUDE_DIRS})
+    target_compile_options(test_deep2_compressed_model_e2e PRIVATE
+        /O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2)
+    target_link_libraries(test_deep2_compressed_model_e2e PRIVATE
+        Vulkan::Vulkan kernel32.lib user32.lib advapi32.lib)
+endif()
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
 # Enable testing
+find_package(ZLIB QUIET)
+if(ZLIB_FOUND)
+    add_executable(test_zlib_autodetect_smoke tests/zlib_autodetect_smoke.cpp)
+    target_compile_features(test_zlib_autodetect_smoke PRIVATE cxx_std_17)
+    target_link_libraries(test_zlib_autodetect_smoke PRIVATE ZLIB::ZLIB)
+endif()
+
 enable_testing()
+if(ZLIB_FOUND)
+    add_test(NAME ZlibAutoDetectSmoke COMMAND test_zlib_autodetect_smoke)
+endif()
+add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
+add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
+add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
+add_test(NAME NativeCompressedGGUFE2E COMMAND test_native_compressed_gguf_e2e)
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    add_test(NAME Deep2CompressedModelE2E COMMAND test_deep2_compressed_model_e2e)
+endif()
+
+# Validate the x64-only MASM gzip writer against zlib's independent decoder.
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    enable_language(ASM_MASM)
+    find_package(ZLIB QUIET)
+    if(ZLIB_FOUND)
+        add_executable(test_brutal_gzip_roundtrip
+            tests/bench_deflate_brutal_roundtrip.cpp
+            kernels/deflate_brutal_masm.asm)
+        target_compile_features(test_brutal_gzip_roundtrip PRIVATE cxx_std_17)
+        target_link_libraries(test_brutal_gzip_roundtrip PRIVATE ZLIB::ZLIB)
+        add_test(NAME BrutalGzipRoundtrip COMMAND test_brutal_gzip_roundtrip)
+    else()
+        message(STATUS "ZLIB not found; skipping independent MASM gzip decoder test")
+    endif()
+endif()
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

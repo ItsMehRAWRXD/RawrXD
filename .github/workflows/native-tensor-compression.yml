@@ -1,0 +1,69 @@
+name: Native compressed residency
+on:
+  pull_request:
+    paths:
+      - 'src/deep2/NativeTensorCompression.hpp'
+      - 'src/deep2/NativeTensorResidencyCache.hpp'
+      - 'src/deep2/NativeTensorByteResidencyCache.hpp'
+      - 'tests/deep2/native_tensor_compression_test.cpp'
+      - 'tests/deep2/native_tensor_residency_cache_test.cpp'
+      - 'tests/deep2/native_tensor_byte_residency_cache_test.cpp'
+      - 'tests/deep2/native_compressed_gguf_e2e_test.cpp'
+      - 'tests/deep2/native_deep2_compressed_model_e2e_test.cpp'
+      - 'src/Deep2Engine.cpp'
+      - 'src/Deep2Engine.hpp'
+      - 'src/TensorROM.cpp'
+      - 'src/TensorROM.hpp'
+      - 'src/ShardPager.cpp'
+      - 'src/ShardPager.hpp'
+      - 'src/TensorView.hpp'
+      - 'src/VulkanDevice.cpp'
+      - 'src/VulkanDevice.hpp'
+      - 'src/quant_kernels.cpp'
+      - 'src/quant_kernels.hpp'
+      - 'shaders/gemv_packed16.comp'
+      - 'CMakeLists.txt'
+jobs:
+  tensor-tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run native compression tests (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
+          ./tensor_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread tests/deep2/native_tensor_residency_cache_test.cpp -o residency_cache_test
+          ./residency_cache_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread tests/deep2/native_tensor_byte_residency_cache_test.cpp -o byte_residency_cache_test
+          ./byte_residency_cache_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Isrc tests/deep2/native_compressed_gguf_e2e_test.cpp src/TensorROM.cpp src/ShardPager.cpp -o compressed_gguf_e2e_test
+          ./compressed_gguf_e2e_test
+      - name: Enable MSVC environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Run native compression tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_compression_test.cpp /Fe:tensor_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\tensor_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_residency_cache_test.cpp /Fe:residency_cache_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\residency_cache_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_byte_residency_cache_test.cpp /Fe:byte_residency_cache_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\byte_residency_cache_test.exe
+          cl /nologo /EHsc /std:c++17 /O2 /Isrc tests/deep2/native_compressed_gguf_e2e_test.cpp src/TensorROM.cpp src/ShardPager.cpp /Fe:compressed_gguf_e2e_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\compressed_gguf_e2e_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

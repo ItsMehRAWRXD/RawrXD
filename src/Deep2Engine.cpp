@@ -7,12 +7,102 @@
 #include "MasmCoreKernels.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <fstream>
+#include <limits>
+#include <mutex>
+#include <cstdlib>
 #include <windows.h>
 
+namespace {
+constexpr size_t kResidencyMiB = 1024ull * 1024ull;
+
+size_t readResidencyMiB(const char* name, size_t fallback) {
+    const char* text = std::getenv(name);
+    if (!text || !*text) return fallback;
+    char* end = nullptr;
+    const unsigned long long value = std::strtoull(text, &end, 10);
+    if (end == text || *end != '\0' ||
+        value > std::numeric_limits<size_t>::max() / kResidencyMiB)
+        return fallback;
+    return static_cast<size_t>(value) * kResidencyMiB;
+}
+
+void configureTensorResidencyBudgets(Deep2Engine& engine) {
+    size_t f32Budget = 512ull * kResidencyMiB;
+    size_t encodedBudget = 128ull * kResidencyMiB;
+    MEMORYSTATUSEX memory{};
+    memory.dwLength = sizeof(memory);
+    if (GlobalMemoryStatusEx(&memory) && memory.ullAvailPhys) {
+        const size_t available = static_cast<size_t>(std::min<unsigned long long>(
+            memory.ullAvailPhys, std::numeric_limits<size_t>::max()));
+        f32Budget = std::min<size_t>(2ull * 1024ull * kResidencyMiB,
+            std::max<size_t>(16ull * kResidencyMiB, available / 8));
+        encodedBudget = std::min<size_t>(512ull * kResidencyMiB,
+            std::max<size_t>(8ull * kResidencyMiB, available / 32));
+    }
+    f32Budget = readResidencyMiB("DEEP2_F32_RESIDENCY_MB", f32Budget);
+    encodedBudget = readResidencyMiB("DEEP2_ENCODED_RESIDENCY_MB", encodedBudget);
+    engine.compressedF32Weights.SetBudget(f32Budget);
+    engine.compressedEncodedWeights.SetBudget(encodedBudget);
+    fprintf(stderr, "[TENSOR_RESIDENCY] f32_budget=%zu encoded_budget=%zu\\n",
+            f32Budget, encodedBudget);
+}
+} // namespace
+
+bool Deep2Engine::ConfigureTensorCompression(size_t f32BudgetBytes,
+                                                   size_t encodedBudgetBytes,
+                                                   float f32MaxAbsError) {
+    if (!std::isfinite(f32MaxAbsError) || f32MaxAbsError < 0.0f)
+        return false;
+    // Cache SetBudget operations are synchronized with active reads/builds.
+    // The tolerance is atomic so concurrent inference observes a valid value.
+    compressedF32Weights.SetBudget(f32BudgetBytes);
+    compressedEncodedWeights.SetBudget(encodedBudgetBytes);
+    compressedF32MaxAbsError.store(f32MaxAbsError, std::memory_order_relaxed);
+    return true;
+}
+
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    // Reinitialization is a full lifecycle boundary; discard prior model state.
+    Shutdown();
+    configureTensorResidencyBudgets(*this);
+    // Lossy F32->F16/BF16 residency is opt-in and bounded by a caller-supplied
+    // absolute-error tolerance. The default remains bit-exact/lossless.
+    if (const char* tolerance = std::getenv("DEEP2_F32_MAX_ABS_ERROR")) {
+        char* end = nullptr;
+        const float parsed = std::strtof(tolerance, &end);
+        if (end == tolerance || *end != '\0' || !std::isfinite(parsed) || parsed < 0.0f) {
+            fprintf(stderr, "[ROM] invalid DEEP2_F32_MAX_ABS_ERROR; expected finite nonnegative float\\n");
+            return false;
+        }
+        compressedF32MaxAbsError = parsed;
+    }
+    fprintf(stderr, "[ROM] F32 compressed residency absolute-error budget: %.9g\\n",
+            compressedF32MaxAbsError);
+
+    const auto applyCacheBudget = [](const char* variable, auto&& setter) -> bool {
+        const char* value = std::getenv(variable);
+        if (!value) return true;
+        if (!*value || *value == '-') return false;
+        char* end = nullptr;
+        const unsigned long long parsed = std::strtoull(value, &end, 10);
+        if (end == value || *end != '\0' ||
+            parsed > static_cast<unsigned long long>(std::numeric_limits<size_t>::max()))
+            return false;
+        setter(static_cast<size_t>(parsed));
+        return true;
+    };
+    if (!applyCacheBudget("DEEP2_F32_CACHE_BYTES",
+            [this](size_t bytes) { compressedF32Weights.SetBudget(bytes); }) ||
+        !applyCacheBudget("DEEP2_ENCODED_CACHE_BYTES",
+            [this](size_t bytes) { compressedEncodedWeights.SetBudget(bytes); })) {
+        fprintf(stderr, "[ROM] invalid tensor residency cache budget environment value\\n");
+        return false;
+    }
+
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
     }
@@ -46,8 +136,46 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     return true;
 }
 
+Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() const {
+    const auto f32 = compressedF32Weights.GetStats();
+    const auto encoded = compressedEncodedWeights.GetStats();
+    TensorResidencySnapshot snapshot;
+    snapshot.f32BudgetBytes = f32.budgetBytes;
+    snapshot.encodedBudgetBytes = encoded.budgetBytes;
+    if (const auto* pager = rom.pager()) {
+        snapshot.sourcePagerBudgetBytes = pager->capacityBytes();
+        snapshot.sourcePagerResidentBytes = pager->residentBytes();
+        snapshot.sourcePagerPageCount = pager->pageCount();
+    }
+    snapshot.f32CompressedBytes = f32.compressedBytes;
+    snapshot.encodedCompressedBytes = encoded.compressedBytes;
+    snapshot.f32LogicalBytes = f32.logicalBytes;
+    snapshot.encodedLogicalBytes = encoded.logicalBytes;
+    snapshot.f32TensorCount = f32.tensorCount;
+    snapshot.encodedTensorCount = encoded.tensorCount;
+    snapshot.f32ActiveReaders = f32.activeReaders;
+    snapshot.encodedActiveReaders = encoded.activeReaders;
+    snapshot.f32CacheHits = f32.cacheHits;
+    snapshot.f32CacheMisses = f32.cacheMisses;
+    snapshot.encodedCacheHits = encoded.hits;
+    snapshot.encodedCacheMisses = encoded.misses;
+    const auto saturatingAdd = [](uint64_t a, uint64_t b) {
+        return b > std::numeric_limits<uint64_t>::max() - a
+            ? std::numeric_limits<uint64_t>::max() : a + b;
+    };
+    snapshot.bytesDecoded = saturatingAdd(f32.bytesDecoded, encoded.bytesDecoded);
+    snapshot.evictions = saturatingAdd(f32.evictions, encoded.evictions);
+    return snapshot;
+}
+
 void Deep2Engine::Shutdown() {
+    // Caller must stop/join inference workers before shutdown so no page or
+    // compressed-cache leases remain live.
+    compressedF32Weights.Clear();
+    compressedEncodedWeights.Clear();
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
+    rom.Reset();
+    vulkanReady = false;
     initialized = false;
 }
 
@@ -198,6 +326,430 @@ bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::Dequanti
     return dequantizeTensor(view, out);
 }
 
+bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
+                                              uint64_t firstElement,
+                                              uint64_t elementCount,
+                                              float* destination) {
+    std::vector<uint8_t> decodeScratch;
+    return readCompressedF32Tile(entry,firstElement,elementCount,destination,decodeScratch);
+}
+
+bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
+                                              uint64_t firstElement,
+                                              uint64_t elementCount,
+                                              float* destination,
+                                              std::vector<uint8_t>& decodeScratch) {
+    if (!romMode || entry.type != deep2::TensorType::F32) return false;
+    const uint64_t bytes = entry.byteSize();
+    if ((bytes % sizeof(float)) != 0) return false;
+    const uint64_t totalElements = bytes / sizeof(float);
+    if (totalElements > std::numeric_limits<size_t>::max() ||
+        firstElement > totalElements || elementCount > totalElements - firstElement ||
+        firstElement > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
+        elementCount > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
+        elementCount > std::numeric_limits<size_t>::max()) return false;
+
+    // GGUF tensor names are not a sufficient cache identity across shards.
+    const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+        std::to_string(entry.offset) + ":" + entry.name;
+    if (!compressedF32Weights.Contains(cacheKey) &&
+        !compressedF32Weights.IsRawFallback(cacheKey)) {
+        const size_t count = static_cast<size_t>(totalElements);
+        const auto reader = [this, &entry, bytes](size_t offset, size_t n, float* out) {
+            if (offset > bytes / sizeof(float) ||
+                n > bytes / sizeof(float) - offset) return false;
+            const uint64_t byteOffset = static_cast<uint64_t>(offset) * sizeof(float);
+            const uint64_t byteCount = static_cast<uint64_t>(n) * sizeof(float);
+            return rom.readTensorRange(entry, byteOffset, byteCount,
+                                       reinterpret_cast<uint8_t*>(out));
+        };
+        if (!compressedF32Weights.RegisterF32FromReader(
+                cacheKey, count, compressedF32MaxAbsError.load(std::memory_order_relaxed), reader, 4096)) {
+            // Deterministic no-win/budget rejections are memoized atomically
+            // inside RegisterF32FromReader. A source-read failure is not
+            // memoized, so a later request can retry transient I/O failures.
+            const uint64_t byteOffset = firstElement * sizeof(float);
+            const uint64_t byteCount = elementCount * sizeof(float);
+            return rom.readTensorRange(entry, byteOffset, byteCount,
+                                       reinterpret_cast<uint8_t*>(destination));
+        } else if (rom.pager() && entry.shardIndex < rom.shards().size()) {
+            // The compressed cache now owns the useful representation. Evict
+            // the corresponding unleased raw file pages to avoid double
+            // residency of both full F32 payloads.
+            const auto& shard = rom.shards()[entry.shardIndex];
+            const uint64_t tensorBytes = entry.byteSize();
+            if (shard.dataOffset <= UINT64_MAX - entry.offset)
+                rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
+                    shard.dataOffset + entry.offset, tensorBytes);
+        }
+    }
+    if (compressedF32Weights.IsRawFallback(cacheKey)) {
+        const uint64_t byteOffset = firstElement * sizeof(float);
+        const uint64_t byteCount = elementCount * sizeof(float);
+        return rom.readTensorRange(entry, byteOffset, byteCount,
+                                   reinterpret_cast<uint8_t*>(destination));
+    }
+    return compressedF32Weights.ReadRange(cacheKey,
+        static_cast<size_t>(firstElement), static_cast<size_t>(elementCount), destination,
+        decodeScratch);
+}
+
+bool Deep2Engine::readCompressedEncodedRange(const deep2::TensorEntry& entry,
+                                                    uint64_t byteOffset,
+                                                    uint64_t byteCount,
+                                                    uint8_t* destination,
+                                                    std::vector<uint8_t>& decodeScratch) {
+    if (!romMode || (byteCount && !destination) ||
+        entry.shardIndex >= rom.shards().size()) return false;
+    const uint64_t tensorBytes = entry.byteSize();
+    if (byteOffset > tensorBytes || byteCount > tensorBytes - byteOffset ||
+        tensorBytes > std::numeric_limits<size_t>::max() ||
+        byteOffset > std::numeric_limits<size_t>::max() ||
+        byteCount > std::numeric_limits<size_t>::max()) return false;
+    if (!byteCount) return true;
+
+    // Tensor identity includes shard and payload offset: GGUF names may repeat
+    // across shards, while cache entries must never alias different weights.
+    const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+        std::to_string(entry.offset) + ":" + entry.name;
+    if (!compressedEncodedWeights.Contains(cacheKey) &&
+        !compressedEncodedWeights.IsRawFallback(cacheKey)) {
+        const auto reader = [this, &entry, tensorBytes](size_t offset, size_t count,
+                                                        uint8_t* out) {
+            if (offset > tensorBytes || count > tensorBytes - offset) return false;
+            return rom.readTensorRange(entry, static_cast<uint64_t>(offset),
+                                       static_cast<uint64_t>(count), out);
+        };
+        if (compressedEncodedWeights.RegisterFromReader(
+                cacheKey, static_cast<size_t>(tensorBytes), reader, 64 * 1024)) {
+            if (rom.pager()) {
+                const auto& shard = rom.shards()[entry.shardIndex];
+                if (shard.dataOffset <= UINT64_MAX - entry.offset)
+                    rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
+                        shard.dataOffset + entry.offset, tensorBytes);
+            }
+        }
+        // The cache memoizes deterministic no-win/budget rejection. Transient
+        // source failures remain retryable; the requested-range read below
+        // gets an independent chance to succeed.
+    }
+
+    if (compressedEncodedWeights.Contains(cacheKey))
+        return compressedEncodedWeights.ReadRange(cacheKey,
+            static_cast<size_t>(byteOffset), static_cast<size_t>(byteCount),
+            destination, decodeScratch);
+    return rom.readTensorRange(entry, byteOffset, byteCount, destination);
+}
+
+bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                                  uint64_t firstElement,
+                                                  uint64_t elementCount,
+                                                  float* destination) {
+    std::vector<uint8_t> encodedScratch;
+    return readDequantizedTensorTile(entry, firstElement, elementCount,
+                                     destination, encodedScratch);
+}
+
+bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                                  uint64_t firstElement,
+                                                  uint64_t elementCount,
+                                                  float* destination,
+                                                  std::vector<uint8_t>& encodedScratch) {
+    std::vector<uint8_t> decodeScratch;
+    return readDequantizedTensorTile(entry, firstElement, elementCount,
+                                     destination, encodedScratch, decodeScratch);
+}
+
+bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                                  uint64_t firstElement,
+                                                  uint64_t elementCount,
+                                                  float* destination,
+                                                  std::vector<uint8_t>& encodedScratch,
+                                                  std::vector<uint8_t>& decodeScratch) {
+    if (!romMode || !destination) return false;
+    switch (entry.type) {
+    case deep2::TensorType::F16:
+    case deep2::TensorType::BF16:
+    case deep2::TensorType::Q4_0:
+    case deep2::TensorType::Q4_1:
+    case deep2::TensorType::Q5_0:
+    case deep2::TensorType::Q5_1:
+    case deep2::TensorType::Q8_1:
+    case deep2::TensorType::F64:
+    case deep2::TensorType::I8:
+    case deep2::TensorType::I16:
+    case deep2::TensorType::I32:
+    case deep2::TensorType::I64:
+    case deep2::TensorType::Q8_0:
+    case deep2::TensorType::Q2_K:
+    case deep2::TensorType::Q3_K:
+    case deep2::TensorType::Q4_K:
+    case deep2::TensorType::Q5_K:
+    case deep2::TensorType::Q6_K:
+    case deep2::TensorType::Q8_K:
+        break;
+    default:
+        return false;
+    }
+
+    uint64_t totalElements = 1;
+    for (const uint64_t dimension : entry.dims) {
+        if (!dimension || totalElements > std::numeric_limits<uint64_t>::max() / dimension)
+            return false;
+        totalElements *= dimension;
+    }
+    if (firstElement > totalElements || elementCount > totalElements - firstElement)
+        return false;
+    if (!elementCount) return true;
+
+    const uint64_t blockValues = deep2::quantBlockSize(entry.type);
+    if (!blockValues) return false;
+    if (blockValues > 1 && (entry.dims.empty() || entry.dims[0] % blockValues != 0))
+        return false; // GGUF quant blocks may not straddle matrix rows.
+    const uint64_t firstBlock = firstElement / blockValues;
+    const uint64_t alignedFirst = firstBlock * blockValues;
+    const uint64_t endElement = firstElement + elementCount;
+    const uint64_t lastBlock = (endElement - 1) / blockValues;
+    if (lastBlock == std::numeric_limits<uint64_t>::max()) return false;
+    const uint64_t blockEnd = lastBlock + 1;
+    if (blockEnd > std::numeric_limits<uint64_t>::max() / blockValues)
+        return false;
+    const uint64_t alignedEnd = std::min(totalElements, blockEnd * blockValues);
+    if (alignedEnd < alignedFirst) return false;
+    const uint64_t alignedCount = alignedEnd - alignedFirst;
+
+    const uint64_t bytesPerBlock = deep2::tensorStorageBytes(blockValues, entry.type);
+    const uint64_t alignedBlockCount = alignedFirst / blockValues;
+    const uint64_t requestedBlockCount =
+        alignedCount / blockValues + (alignedCount % blockValues != 0);
+    if (!bytesPerBlock ||
+        alignedBlockCount > std::numeric_limits<uint64_t>::max() / bytesPerBlock ||
+        requestedBlockCount > std::numeric_limits<uint64_t>::max() / bytesPerBlock)
+        return false;
+    const uint64_t byteOffset = alignedBlockCount * bytesPerBlock;
+    const uint64_t byteCount = requestedBlockCount * bytesPerBlock;
+    const uint64_t tensorBytes = entry.byteSize();
+    if (byteOffset > tensorBytes || byteCount > tensorBytes - byteOffset ||
+        byteCount > std::numeric_limits<size_t>::max())
+        return false;
+
+    encodedScratch.resize(static_cast<size_t>(byteCount));
+    if (!readCompressedEncodedRange(entry, byteOffset, byteCount,
+                                    encodedScratch.data(), decodeScratch))
+        return false;
+    return deep2::dequantizeTensorRange(entry.type, totalElements, firstElement,
+        elementCount, encodedScratch.data(), encodedScratch.size(), destination);
+}
+
+bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* input,
+                                float* output, uint64_t* rowsOut, uint64_t* colsOut,
+                                size_t tileRows) {
+    if (!romMode || !input || !output || entry.dims.size() < 2 || tileRows == 0)
+        return false;
+    if (entry.dims.size() != 2) return false;
+    const uint64_t cols = entry.dims[0];
+    const uint64_t rows = entry.dims[1];
+    if (rows == 0 || cols == 0) return false;
+    if (rowsOut) *rowsOut = rows;
+    if (colsOut) *colsOut = cols;
+    if (entry.type != deep2::TensorType::F32) {
+        if (cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+            rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
+            return false;
+        const size_t colsSize = static_cast<size_t>(cols);
+        std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
+        std::vector<float> tile;
+        std::vector<uint8_t> encodedScratch;
+        std::vector<uint8_t> decodeScratch;
+        for (uint64_t firstRow = 0; firstRow < rows;) {
+            const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
+            if (countRows > std::numeric_limits<size_t>::max() / colsSize)
+                return false;
+            const size_t elements = static_cast<size_t>(countRows) * colsSize;
+            tile.resize(elements);
+            if (!readDequantizedTensorTile(entry, firstRow * cols, elements, tile.data(),
+                                          encodedScratch, decodeScratch) ||
+                !gemvFloat(tile.data(), input, completed.data() + static_cast<size_t>(firstRow),
+                           countRows, cols))
+                return false;
+            firstRow += countRows;
+        }
+        std::copy(completed.begin(), completed.end(), output);
+        return true;
+    }
+    if (cols == 0 || rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
+        return false;
+    std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
+    const size_t colsSize = static_cast<size_t>(cols);
+    std::vector<float> tile;
+    std::vector<uint8_t> decodeScratch;
+    for (uint64_t firstRow = 0; firstRow < rows;) {
+        const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
+        if (countRows > std::numeric_limits<size_t>::max() / colsSize) return false;
+        const size_t tileElements = static_cast<size_t>(countRows) * colsSize;
+        tile.resize(tileElements);
+        const uint64_t firstElement = firstRow * cols;
+        if (!readCompressedF32Tile(entry, firstElement, tileElements, tile.data(),decodeScratch))
+            return false;
+        if (!gemvFloat(tile.data(), input, completed.data() + static_cast<size_t>(firstRow),
+                       countRows, cols)) return false;
+        firstRow += countRows;
+    }
+    std::copy(completed.begin(), completed.end(), output);
+    return true;
+}
+
+bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
+                                            const deep2::TensorEntry& entry,
+                                            const float* input, float* output,
+                                            size_t tileRows) {
+    if (!romMode || !vulkanReady || !vulkan || !input || !output ||
+        entry.dims.size() != 2 ||
+        tileRows == 0 || tileRows > UINT32_MAX)
+        return false;
+
+    // GGUF matrix dimensions are [columns, rows]. The Vulkan GEMV view uses
+    // [rows, columns], matching its shader's row-major contract.
+    const uint64_t cols = entry.dims[0];
+    const uint64_t rows = entry.dims[1];
+    if (!rows || !cols || rows > UINT32_MAX || cols > UINT32_MAX ||
+        cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
+        return false;
+
+    const size_t colsSize = static_cast<size_t>(cols);
+    std::vector<float> tile;
+    std::vector<float> tileOutput;
+    std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
+    std::vector<uint8_t> encodedScratch;
+    std::vector<uint8_t> decodeScratch;
+
+    for (uint64_t firstRow = 0; firstRow < rows;) {
+        const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
+        if (countRows > std::numeric_limits<size_t>::max() / colsSize)
+            return false;
+        const size_t elements = static_cast<size_t>(countRows) * colsSize;
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
+            return false;
+
+        const uint64_t firstElement = firstRow * cols;
+        deep2::TensorView inputView{
+            deep2::TensorType::F32,
+            reinterpret_cast<const uint8_t*>(input),
+            colsSize * sizeof(float),
+            { cols },
+            true
+        };
+        bool dispatched = false;
+
+        if (entry.type == deep2::TensorType::F32) {
+            // First touch streams the F32 source into the bounded compressed
+            // cache. Once admitted, export only the intersecting compact F16/
+            // BF16 bytes and send those bytes directly to the Vulkan shader.
+            const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+                std::to_string(entry.offset) + ":" + entry.name;
+            bool haveF32Tile = false;
+            if (!compressedF32Weights.Contains(cacheKey) &&
+                !compressedF32Weights.IsRawFallback(cacheKey)) {
+                tile.resize(elements);
+                if (!readCompressedF32Tile(entry, firstElement, elements,
+                                           tile.data(), decodeScratch))
+                    return false;
+                haveF32Tile = true;
+            }
+
+            if (compressedF32Weights.Contains(cacheKey)) {
+                RawrXD::TensorCompression::Encoding encoding =
+                    RawrXD::TensorCompression::Encoding::Raw;
+                std::vector<uint8_t> packedWeights;
+                if (compressedF32Weights.ExportUniform16BitRange(
+                        cacheKey, static_cast<size_t>(firstElement), elements,
+                        encoding, packedWeights)) {
+                    const deep2::TensorType packedType =
+                        encoding == RawrXD::TensorCompression::Encoding::F16
+                            ? deep2::TensorType::F16 : deep2::TensorType::BF16;
+                    deep2::TensorView packedView{
+                        packedType, packedWeights.data(), packedWeights.size(),
+                        { countRows, cols }, true
+                    };
+                    if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
+                        return false;
+                    dispatched = true;
+                }
+            }
+
+            if (!dispatched) {
+                if (!haveF32Tile) {
+                    tile.resize(elements);
+                    if (!readCompressedF32Tile(entry, firstElement, elements,
+                                               tile.data(), decodeScratch))
+                        return false;
+                }
+                deep2::TensorView weightTile{
+                    deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(tile.data()),
+                    elements * sizeof(float),
+                    { countRows, cols },
+                    true
+                };
+                if (!vulkanGemv(gpu, weightTile, inputView, tileOutput))
+                    return false;
+                dispatched = true;
+            }
+        } else if (entry.type == deep2::TensorType::F16 ||
+                   entry.type == deep2::TensorType::BF16) {
+            // GGUF F16/BF16 payloads are already compact. Read only the
+            // requested byte interval and keep them packed through dispatch.
+            if (firstElement > UINT64_MAX / sizeof(uint16_t) ||
+                elements > UINT64_MAX / sizeof(uint16_t))
+                return false;
+            const uint64_t byteOffset = firstElement * sizeof(uint16_t);
+            const uint64_t byteCount = static_cast<uint64_t>(elements) * sizeof(uint16_t);
+            if (byteOffset > entry.byteSize() ||
+                byteCount > entry.byteSize() - byteOffset ||
+                byteCount > std::numeric_limits<size_t>::max())
+                return false;
+            encodedScratch.resize(static_cast<size_t>(byteCount));
+            if (!readCompressedEncodedRange(entry, byteOffset, byteCount,
+                                            encodedScratch.data(), decodeScratch))
+                return false;
+            deep2::TensorView packedView{
+                entry.type, encodedScratch.data(), encodedScratch.size(),
+                { countRows, cols }, true
+            };
+            if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
+                return false;
+            dispatched = true;
+        } else {
+            tile.resize(elements);
+            if (!readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
+                                           encodedScratch, decodeScratch))
+                return false;
+            deep2::TensorView weightTile{
+                deep2::TensorType::F32,
+                reinterpret_cast<const uint8_t*>(tile.data()),
+                elements * sizeof(float),
+                { countRows, cols },
+                true
+            };
+            if (!vulkanGemv(gpu, weightTile, inputView, tileOutput))
+                return false;
+            dispatched = true;
+        }
+
+        if (!dispatched || tileOutput.size() != static_cast<size_t>(countRows))
+            return false;
+
+        std::copy(tileOutput.begin(), tileOutput.end(),
+                  completed.begin() + static_cast<size_t>(firstRow));
+        firstRow += countRows;
+    }
+
+    // Publish only after every tile has completed successfully.
+    std::copy(completed.begin(), completed.end(), output);
+    return true;
+}
+
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
                             uint64_t rows, uint64_t cols) {
     return deep2::gemvFloat(W, x, y, rows, cols);
@@ -213,60 +765,104 @@ static std::string exeDir() {
 
 bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
                              const deep2::TensorView& xView, std::vector<float>& y) {
-    if (!vulkanReady || !vulkan) return false;
-
-    if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
-        !wView.data || !xView.data) {
-        fprintf(stderr, "[VULKAN_GEMV] requires contiguous f32 views\n");
+    // VulkanProgram owns one descriptor set, fence, and command pool binding.
+    // Serialize reuse across inference agents and GPU selection.
+    static std::mutex programDispatchMutex;
+    std::lock_guard<std::mutex> dispatchLock(programDispatchMutex);
+    if (!vulkanReady || !vulkan || !wView.data || !xView.data ||
+        xView.type != deep2::TensorType::F32 || !xView.contiguous || !wView.contiguous ||
+        wView.dims.size() < 2 || xView.dims.empty())
         return false;
-    }
 
-    if (wView.dims.size() < 2) return false;
-    uint64_t rows = wView.dims[0];
-    uint64_t cols = wView.dims[1];
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+    if (!rows || !cols || rows > UINT32_MAX || cols > UINT32_MAX ||
+        rows > std::numeric_limits<size_t>::max() / cols)
+        return false;
+    const size_t elements = static_cast<size_t>(rows * cols);
+    const bool f32Weights = wView.type == deep2::TensorType::F32;
+    const bool f16Weights = wView.type == deep2::TensorType::F16;
+    const bool bf16Weights = wView.type == deep2::TensorType::BF16;
+    if (!f32Weights && !f16Weights && !bf16Weights) return false;
+    if (xView.byteSize < static_cast<size_t>(cols) * sizeof(float)) return false;
+
+    const size_t logicalWeightBytes = elements * (f32Weights ? sizeof(float) : sizeof(uint16_t));
+    if (wView.byteSize < logicalWeightBytes) return false;
+    const VkDeviceSize weightBufferBytes = f32Weights
+        ? static_cast<VkDeviceSize>(logicalWeightBytes)
+        : static_cast<VkDeviceSize>((logicalWeightBytes + 3u) & ~size_t(3u));
+    const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
+    const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
     y.assign(static_cast<size_t>(rows), 0.0f);
 
-    static deep2::VulkanProgram program;
-    static VkDevice boundDevice = VK_NULL_HANDLE;
-    if (boundDevice != gpu.device) {
-        if (boundDevice != VK_NULL_HANDLE) {
-            program.destroy(boundDevice);
+    static deep2::VulkanProgram f32Program;
+    static deep2::VulkanProgram packed16Program;
+    static VkDevice f32BoundDevice = VK_NULL_HANDLE;
+    static VkDevice packed16BoundDevice = VK_NULL_HANDLE;
+    deep2::VulkanProgram* selectedProgram = nullptr;
+    uint32_t weightEncoding = 0;
+    if (f32Weights) {
+        if (f32BoundDevice != gpu.device) {
+            if (f32BoundDevice != VK_NULL_HANDLE) f32Program.destroy(f32BoundDevice);
+            const std::string spv = exeDir() + "shaders\\gemv_f32.spv";
+            if (!f32Program.init(gpu.device, spv)) {
+                fprintf(stderr, "[VULKAN_GEMV] F32 program init failed for %s\\n", spv.c_str());
+                f32BoundDevice = VK_NULL_HANDLE;
+                return false;
+            }
+            f32BoundDevice = gpu.device;
         }
-        std::string spv = exeDir() + "shaders\\gemv_f32.spv";
-        if (!program.init(gpu.device, spv)) {
-            fprintf(stderr, "[VULKAN_GEMV] program init failed for %s\n", spv.c_str());
-            boundDevice = VK_NULL_HANDLE;
-            return false;
+        selectedProgram = &f32Program;
+    } else {
+        if (packed16BoundDevice != gpu.device) {
+            if (packed16BoundDevice != VK_NULL_HANDLE) packed16Program.destroy(packed16BoundDevice);
+            const std::string spv = exeDir() + "shaders\\gemv_packed16.spv";
+            if (!packed16Program.init(gpu.device, spv)) {
+                fprintf(stderr, "[VULKAN_GEMV] packed16 program init failed for %s\\n", spv.c_str());
+                packed16BoundDevice = VK_NULL_HANDLE;
+                return false;
+            }
+            packed16BoundDevice = gpu.device;
         }
-        boundDevice = gpu.device;
+        selectedProgram = &packed16Program;
+        weightEncoding = f16Weights ? 1u : 2u;
     }
 
     VkBuffer Wbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
     VkDeviceMemory Wmem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
     void* Wmapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
-
-    VkDeviceSize Wsize = (VkDeviceSize)rows * cols * 4;
-    VkDeviceSize xsize = (VkDeviceSize)cols * 4;
-    VkDeviceSize ysize = (VkDeviceSize)rows * 4;
-
     auto cleanup = [&]() {
+        if (Wmapped && Wmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, Wmem); Wmapped = nullptr; }
+        if (xmapped && xmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, xmem); xmapped = nullptr; }
+        if (ymapped && ymem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, ymem); ymapped = nullptr; }
         vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
+        Wbuf = xbuf = ybuf = VK_NULL_HANDLE;
+        Wmem = xmem = ymem = VK_NULL_HANDLE;
     };
 
-    VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags memProps =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    if (!vulkan->createBuffer(gpu, weightBufferBytes, usage, memProps, Wbuf, Wmem, &Wmapped)) {
+        cleanup(); return false;
+    }
+    if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) {
+        cleanup(); return false;
+    }
+    if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) {
+        cleanup(); return false;
+    }
 
-    if (!vulkan->createBuffer(gpu, Wsize, usage, memProps, Wbuf, Wmem, &Wmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) { cleanup(); return false; }
-
-    std::memcpy(Wmapped, wView.data, static_cast<size_t>(Wsize));
+    std::memset(Wmapped, 0, static_cast<size_t>(weightBufferBytes));
+    std::memcpy(Wmapped, wView.data, logicalWeightBytes);
     std::memcpy(xmapped, xView.data, static_cast<size_t>(xsize));
     std::memset(ymapped, 0, static_cast<size_t>(ysize));
 
-    if (!program.dispatch(gpu, Wbuf, xbuf, ybuf, (uint32_t)rows, (uint32_t)cols)) {
+    if (!selectedProgram->dispatch(gpu, Wbuf, xbuf, ybuf,
+                                   static_cast<uint32_t>(rows), static_cast<uint32_t>(cols),
+                                   weightEncoding)) {
         cleanup(); return false;
     }
 
@@ -307,26 +903,40 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
         std::cout << "[VERIFY] blk.0.attn_qkv.weight not present in ROM\n";
         return;
     }
-    deep2::DequantizedTensor dq;
-    if (!engine.dequantTensor(*qkv, dq)) {
-        std::cout << "[VERIFY] dequant of blk.0.attn_qkv.weight failed\n";
+    if (qkv->dims.size() != 2 || qkv->dims[0] == 0 || qkv->dims[1] == 0) {
+        std::cout << "[VERIFY] invalid QKV tensor geometry\n";
         return;
     }
-    std::cout << "[VERIFY] dequantized blk.0.attn_qkv.weight -> " << dq.rows << "x" << dq.cols << " f32\n";
+    const uint64_t cols = qkv->dims[0];
+    const uint64_t rows = qkv->dims[1];
+    const uint64_t testRows = std::min<uint64_t>(16, rows);
+    if (cols > std::numeric_limits<size_t>::max() / sizeof(float) / testRows) {
+        std::cout << "[VERIFY] QKV smoke tile exceeds addressable memory\n";
+        return;
+    }
+    const size_t tileElements = static_cast<size_t>(testRows * cols);
+    std::vector<float> weightTile(tileElements);
+    const bool readOk = qkv->type == deep2::TensorType::F32
+        ? engine.readCompressedF32Tile(*qkv, 0, tileElements, weightTile.data())
+        : engine.readDequantizedTensorTile(*qkv, 0, tileElements, weightTile.data());
+    if (!readOk) {
+        std::cout << "[VERIFY] bounded QKV tile read failed\n";
+        return;
+    }
+    std::cout << "[VERIFY] bounded QKV tile -> " << testRows << "x" << cols << " f32\n";
 
-    uint64_t testRows = std::min<uint64_t>(16, dq.rows);
-    std::vector<float> x(dq.cols, 1.0f), y(testRows, 0.0f);
-    engine.gemvFloat(dq.data.data(), x.data(), y.data(), testRows, dq.cols);
+    std::vector<float> x(static_cast<size_t>(cols), 1.0f), y(static_cast<size_t>(testRows), 0.0f);
+    engine.gemvFloat(weightTile.data(), x.data(), y.data(), testRows, cols);
     float sum = 0.0f;
     for (float v : y) sum += v;
-    std::cout << "[VERIFY] GEMV(" << testRows << "x" << dq.cols << ") sum = " << sum << "\n";
+    std::cout << "[VERIFY] GEMV(" << testRows << "x" << cols << ") sum = " << sum << "\n";
 
     if (engine.vulkanReady) {
-        deep2::TensorView wSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(dq.data.data()),
-                           static_cast<size_t>(testRows * dq.cols * 4),
-                           { testRows, dq.cols }, true };
+        deep2::TensorView wSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(weightTile.data()),
+                           tileElements * sizeof(float),
+                           { testRows, cols }, true };
         deep2::TensorView xSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(x.data()),
-                           static_cast<size_t>(x.size() * 4), { dq.cols }, true };
+                           x.size() * sizeof(float), { cols }, true };
         for (size_t gi = 0; gi < engine.vulkan->gpuCount(); ++gi) {
             const auto* g = engine.vulkan->gpu(gi);
             std::vector<float> yVulkan;
@@ -418,9 +1028,29 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     const size_t hiddenDim = geometry.hiddenDim;
     const size_t numLayers = geometry.numLayers;
     const size_t numHeads = geometry.numHeads;
-    const size_t headDim = hiddenDim / numHeads;
     size_t vocabSize = geometry.vocabSize;
     const size_t intermediateDim = geometry.intermediateDim;
+
+    auto matrixRows = [](const deep2::TensorEntry& entry) -> uint64_t {
+        if (entry.dims.size() != 2) return 0;
+        return entry.dims[1];
+    };
+    auto matrixCols = [](const deep2::TensorEntry& entry) -> uint64_t {
+        return entry.dims.empty() ? 0 : entry.dims[0];
+    };
+
+    // Route every supported ROM projection through bounded row tiles. F32
+    // uses compressed resident chunks; encoded F16/BF16 and quantized GGUF
+    // types decode only their requested blocks. Vulkan dispatch is fail-closed.
+    auto runProjection = [this](const deep2::TensorEntry& entry,
+                                const float* input, float* output) -> bool {
+        if (vulkanReady && vulkan) {
+            const auto* gpu = vulkan->primary();
+            if (!gpu) return false;
+            return gemvTensorROMVulkan(*gpu, entry, input, output);
+        }
+        return gemvTensorROM(entry, input, output);
+    };
 
     std::cout << "[Move 10] Model geometry: layers=" << numLayers
               << " hidden=" << hiddenDim << " heads=" << numHeads
@@ -441,19 +1071,25 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
-    deep2::DequantizedTensor tokenEmbDq;
-    std::cout << "[Move 10] Dequantizing token_embd.weight...\n" << std::flush;
-    if (!dequantTensor(*tokenEmb, tokenEmbDq)) {
-        fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
+    if (inputTokens.empty()) return false;
+    const uint64_t embeddingRows = matrixRows(*tokenEmb);
+    const uint64_t embeddingCols = matrixCols(*tokenEmb);
+    if (embeddingRows == 0 || embeddingCols != hiddenDim) {
+        fprintf(stderr, "[Move 10] Invalid token embedding geometry\n");
         return false;
     }
-    std::cout << "[Move 10] token_embd.weight dequantized: " << tokenEmbDq.rows << "x" << tokenEmbDq.cols << "\n" << std::flush;
-
-    // Use first token's embedding as initial hidden state
-    if (inputTokens.empty()) return false;
     uint32_t firstToken = inputTokens[0];
-    if (firstToken >= tokenEmbDq.cols) firstToken = 0;
-    std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
+    if (firstToken >= embeddingRows) firstToken = 0;
+    const uint64_t embeddingFirstElement = uint64_t(firstToken) * hiddenDim;
+    const bool embeddingRead = tokenEmb->type == deep2::TensorType::F32
+        ? readCompressedF32Tile(*tokenEmb, embeddingFirstElement, hiddenDim,
+                                hiddenStates.data())
+        : readDequantizedTensorTile(*tokenEmb, embeddingFirstElement, hiddenDim,
+                                    hiddenStates.data());
+    if (!embeddingRead) {
+        fprintf(stderr, "[Move 10] Failed to read bounded token embedding row\n");
+        return false;
+    }
     std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
 
     // Process each token position
@@ -461,11 +1097,6 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
-        deep2::DequantizedTensor qkvDq;
-        deep2::DequantizedTensor upDq;
-        deep2::DequantizedTensor downDq;
-        deep2::DequantizedTensor outputDq;
-
         // Process through all layers
         for (size_t layer = 0; layer < numLayers; ++layer) {
             std::cout << "[Move 10] Starting layer " << layer << "\n" << std::flush;
@@ -478,22 +1109,18 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
-            if (!dequantTensor(*qkv, qkvDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
-                return false;
-            }
-            std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq.rows << "x" << qkvDq.cols << "\n" << std::flush;
-
-            qkvRows = qkvDq.rows;
-            qkvCols = qkvDq.cols;
+            qkvRows = matrixRows(*qkv);
+            qkvCols = matrixCols(*qkv);
+            if (qkvRows < 3 * hiddenDim || qkvCols != hiddenDim) return false;
 
             // --- ATTENTION COMPUTATION ---
             std::vector<float> hiddenStatesCopy(hiddenDim);
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
-
-            std::vector<float> qkvOut(qkvRows, 0.0f);
-            gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
+            std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
+            if (!runProjection(*qkv, hiddenStatesCopy.data(), qkvOut.data())) {
+                fprintf(stderr, "[Move 10] Layer %zu: tiled QKV GEMV failed\n", layer);
+                return false;
+            }
 
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
@@ -521,31 +1148,32 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            if (!dequantTensor(*upEntry, upDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN up dequant failed\n", layer);
-                return false;
-            }
-
-            if (!dequantTensor(*downEntry, downDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN down dequant failed\n", layer);
-                return false;
-            }
+            const uint64_t upRows = matrixRows(*upEntry);
+            const uint64_t upCols = matrixCols(*upEntry);
+            const uint64_t downRows = matrixRows(*downEntry);
+            const uint64_t downCols = matrixCols(*downEntry);
+            if (!upRows || upCols != hiddenDim || downRows != hiddenDim || downCols != upRows) return false;
 
             // FFN: hidden = down(gelu(up(hidden)))
-            std::vector<float> upOut(intermediateDim, 0.0f);
-            gemvFloat(upDq.data.data(), hiddenStates.data(), upOut.data(), upDq.rows, upDq.cols);
+            std::vector<float> upOut(static_cast<size_t>(upRows), 0.0f);
+            if (!runProjection(*upEntry, hiddenStates.data(), upOut.data())) {
+                fprintf(stderr, "[Move 10] Layer %zu: tiled FFN-up GEMV failed\n", layer);
+                return false;
+            }
 
             // GELU activation (approximate)
-            for (size_t i = 0; i < intermediateDim; ++i) {
+            for (size_t i = 0; i < upOut.size(); ++i) {
                 float x = upOut[i];
                 float gelu = 0.5f * x * (1.0f + std::tanh(0.79788456f * (x + 0.044715f * x * x * x)));
                 upOut[i] = gelu;
             }
 
-            static thread_local float downOutStatic[3072];
-            float* downOut = downOutStatic;
-            std::fill_n(downOut, hiddenDim, 0.0f);
-            gemvFloat(downDq.data.data(), upOut.data(), downOut, downDq.rows, downDq.cols);
+            std::vector<float> downOut(static_cast<size_t>(downRows), 0.0f);
+            if (!runProjection(*downEntry, upOut.data(), downOut.data())) {
+                fprintf(stderr, "[Move 10] Layer %zu: tiled FFN-down GEMV failed\n", layer);
+                return false;
+            }
+            if (downOut.size() != hiddenDim) return false;
 
             // Residual connection
             for (size_t i = 0; i < hiddenDim; ++i) {
@@ -571,13 +1199,14 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             return false;
         }
 
-        if (!dequantTensor(*outputEntry, outputDq)) {
-            fprintf(stderr, "[Move 10] Failed to dequantize output.weight\n");
+        const uint64_t outputRows = matrixRows(*outputEntry);
+        const uint64_t outputCols = matrixCols(*outputEntry);
+        if (!outputRows || outputCols != hiddenDim) return false;
+        outputLogits.resize(static_cast<size_t>(outputRows), 0.0f);
+        if (!runProjection(*outputEntry, hiddenStates.data(), outputLogits.data())) {
+            fprintf(stderr, "[Move 10] Tiled output projection GEMV failed\n");
             return false;
         }
-
-        outputLogits.resize(vocabSize, 0.0f);
-        gemvFloat(outputDq.data.data(), hiddenStates.data(), outputLogits.data(), outputDq.rows, outputDq.cols);
 
         // Store baseline logits for first token (for parity check)
         if (tokenPos == 0) {

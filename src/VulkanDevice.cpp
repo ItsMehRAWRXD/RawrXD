@@ -152,7 +152,9 @@ bool VulkanDevice::pickMemoryType(const Gpu& gpu, uint32_t typeBits,
 bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsageFlags usage,
                                 VkMemoryPropertyFlags memProps, VkBuffer& buf,
                                 VkDeviceMemory& mem, void** mapped) {
-    buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
+    buf = VK_NULL_HANDLE;
+    mem = VK_NULL_HANDLE;
+    if (mapped) *mapped = nullptr;
     if (size == 0) return true;
 
     VkBufferCreateInfo bci{};
@@ -179,10 +181,23 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
         vkDestroyBuffer(gpu.device, buf, nullptr);
         return false;
     }
-    vkBindBufferMemory(gpu.device, buf, mem, 0);
+    if (vkBindBufferMemory(gpu.device, buf, mem, 0) != VK_SUCCESS) {
+        vkFreeMemory(gpu.device, mem, nullptr);
+        vkDestroyBuffer(gpu.device, buf, nullptr);
+        buf = VK_NULL_HANDLE;
+        mem = VK_NULL_HANDLE;
+        return false;
+    }
 
     if (mapped && (memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
-        vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped);
+        if (vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped) != VK_SUCCESS) {
+            vkDestroyBuffer(gpu.device, buf, nullptr);
+            vkFreeMemory(gpu.device, mem, nullptr);
+            buf = VK_NULL_HANDLE;
+            mem = VK_NULL_HANDLE;
+            *mapped = nullptr;
+            return false;
+        }
     }
     return true;
 }
@@ -302,7 +317,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     VkPushConstantRange pcr{};
     pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     pcr.offset = 0;
-    pcr.size = 8; // uint rows, uint cols
+    pcr.size = 12; // uint rows, uint cols, uint weightEncoding
 
     VkPipelineLayoutCreateInfo plci{};
     plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -353,7 +368,7 @@ void VulkanProgram::destroy(VkDevice device) {
 }
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                             uint32_t rows, uint32_t cols) {
+                             uint32_t rows, uint32_t cols, uint32_t weightEncoding) {
     if (m_device == VK_NULL_HANDLE) return false;
     m_queue = gpu.queue;
 
@@ -380,27 +395,54 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     VkCommandBuffer cmd = VK_NULL_HANDLE;
     if (vkAllocateCommandBuffers(m_device, &cbai, &cmd) != VK_SUCCESS) return false;
 
+    // Every failure before submission is safe to unwind immediately.
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &cbi);
+    if (vkBeginCommandBuffer(cmd, &cbi) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
-    uint32_t pc[2] = {rows, cols};
-    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
-    uint32_t groups = (rows + 255) / 256;
+    const uint32_t pc[3] = {rows, cols, weightEncoding};
+    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 12, pc);
+    const uint32_t groups = (rows + 255) / 256;
     vkCmdDispatch(cmd, groups, 1, 1);
 
-    vkEndCommandBuffer(cmd);
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
+    if (vkResetFences(m_device, 1, &m_fence) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
 
-    vkResetFences(m_device, 1, &m_fence);
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, m_fence);
-    vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+    const VkResult submitResult = vkQueueSubmit(gpu.queue, 1, &si, m_fence);
+    if (submitResult != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
+
+    // This API is synchronous: callers may release the expanded tile and its
+    // VkBuffers only after the fence proves the GPU is finished. Never report
+    // success when a wait failed. On a non-success wait, attempt an idle wait
+    // before releasing the command buffer; VK_ERROR_DEVICE_LOST is terminal
+    // and is propagated as failure to the caller.
+    const VkResult waitResult = vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+    if (waitResult != VK_SUCCESS) {
+        const VkResult idleResult = vkDeviceWaitIdle(m_device);
+        if (idleResult == VK_SUCCESS || idleResult == VK_ERROR_DEVICE_LOST)
+            vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
+
     vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
     return true;
 }

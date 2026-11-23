@@ -27,6 +27,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Verify native Win32 IDE translation-unit source order
+        shell: pwsh
+        run: |
+          python -m py_compile tests/win32ide_source_order_regression.py tests/win32ide_ci_lifecycle_regression.py tests/win32ide_artifact_e2e_gate_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Native IDE CI regression scripts have invalid Python syntax" }
+          python tests/win32ide_source_order_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Win32 IDE source-order regression failed" }
+          python tests/win32ide_ci_lifecycle_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Win32 IDE CI lifecycle regression failed" }
+          python tests/win32ide_artifact_e2e_gate_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Win32 IDE artifact/E2E gate regression failed" }
+
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
@@ -47,6 +59,51 @@ jobs:
       - name: Build Win32 IDE
         run: .\scripts\build.ps1 -Config Release -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
 
+      - name: Verify native IDE and CLI artifacts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $required = @('RawrXD-Win32IDE-Native.exe', 'rawr.exe')
+          foreach ($name in $required) {
+            $matches = @(Get-ChildItem -LiteralPath build -Recurse -File -Filter $name -ErrorAction Stop)
+            if ($matches.Count -eq 0) { throw "Required native executable missing: $name" }
+            foreach ($exe in $matches) {
+              if ($exe.Length -lt 4096) { throw "Native executable unexpectedly small: $($exe.FullName)" }
+              $hash = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash
+              Write-Host "NATIVE_ARTIFACT name=$name bytes=$($exe.Length) sha256=$hash path=$($exe.FullName)"
+            }
+          }
+
+      - name: Verify synthetic-model tests are registered
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $listing = @(ctest --test-dir build -C Release -N)
+          if ($LASTEXITCODE -ne 0) { throw "CTest discovery failed" }
+          if (-not ($listing | Select-String -SimpleMatch 'Deep2CompressedModelE2E')) {
+            throw "Required synthetic-model test not registered: Deep2CompressedModelE2E"
+          }
+          if ($listing | Select-String -SimpleMatch 'ZlibAutoDetectSmoke') {
+            Write-Host "ZLIB_AUTODETECT_TEST=REGISTERED"
+          } else {
+            Write-Host "ZLIB_AUTODETECT_TEST=NOT_REGISTERED (optional ZLIB dependency)"
+          }
+
+      - name: Run Deep2 compressed synthetic-model E2E
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ctest --test-dir build -C Release -R '^Deep2CompressedModelE2E$' --output-on-failure --no-tests=error
+          if ($LASTEXITCODE -ne 0) { throw "Deep2 compressed model E2E failed" }
+          $listing = @(ctest --test-dir build -C Release -N)
+          if ($LASTEXITCODE -ne 0) { throw "CTest discovery failed" }
+          if ($listing | Select-String -SimpleMatch 'ZlibAutoDetectSmoke') {
+            ctest --test-dir build -C Release -R '^ZlibAutoDetectSmoke$' --output-on-failure --no-tests=error
+            if ($LASTEXITCODE -ne 0) { throw "Zlib auto-detect smoke failed" }
+          } else {
+            Write-Host "ZLIB_AUTODETECT_SMOKE=SKIPPED (not registered; not a pass)"
+          }
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -62,16 +119,23 @@ jobs:
         working-directory: services
         shell: pwsh
         run: |
-          Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow
+          $swarm = Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow -PassThru
           try {
-            do {
+            $deadline = [DateTime]::UtcNow.AddSeconds(90)
+            $healthy = $false
+            while ([DateTime]::UtcNow -lt $deadline) {
+              if ($swarm.HasExited) { throw "HexMag swarm exited early (exit code $($swarm.ExitCode))" }
+              try {
+                $healthy = (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode -eq 200
+              } catch { $healthy = $false }
+              if ($healthy) { break }
               Start-Sleep -Seconds 1
-              $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
-            } while ($r -ne 200)
+            }
+            if (!$healthy) { throw "HexMag swarm health timeout (90 seconds)" }
             Write-Host "Swarm healthy on :8001"
             python test_smoke.py
             if ($LASTEXITCODE -ne 0) { throw "HexMag smoke tests failed" }
           } finally {
-            Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-            Write-Host "Swarm cleanup done"
+            if (!$swarm.HasExited) { Stop-Process -Id $swarm.Id -Force -ErrorAction SilentlyContinue }
+            Write-Host "Swarm cleanup done (PID $($swarm.Id))"
           }
