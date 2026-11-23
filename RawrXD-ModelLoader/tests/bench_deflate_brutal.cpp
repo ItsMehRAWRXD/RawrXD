@@ -1,52 +1,45 @@
+#include "gzip_stored_validator.hpp"
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <cstdint>
 #include <vector>
 #include <chrono>
 #include <random>
-#include <algorithm>
 
-extern "C" void* deflate_brutal_masm(const void* src, size_t len, size_t* out_len);
+extern "C" void* deflate_brutal_masm(const void*, std::size_t, std::size_t*);
 
 using namespace std::chrono;
 
 int main() {
-    const size_t len = 1048576; // 1 MB
-    std::vector<char> src(len);
+    constexpr std::size_t len = 1048576;
+    std::vector<std::uint8_t> src(len);
     std::mt19937 rng(42);
-    std::generate(src.begin(), src.end(), [&](){ return (char)rng(); });
+    for (auto& value : src) value = static_cast<std::uint8_t>(rng());
 
-    printf("Benchmarking deflate_brutal_masm with 1MB random data...\n");
-    fflush(stdout);
-
-    // Warmup
-    size_t out_len = 0;
-    void* out = deflate_brutal_masm(src.data(), len, &out_len);
-    if (!out) {
-        printf("Allocation failed!\n");
+    std::size_t outLen = 0;
+    void* out = deflate_brutal_masm(src.data(), src.size(), &outLen);
+    if (!out || !rawrxd_test::validateStoredGzip(
+            static_cast<const std::uint8_t*>(out), outLen, src.data(), src.size())) {
+        std::fprintf(stderr, "FAIL: MASM output is not a valid roundtripping gzip stream\n");
+        std::free(out);
         return 1;
     }
-    printf("Warmup done. Out ptr: %p, Len: %zu\n", out, out_len);
-    fflush(stdout);
-    free(out);
+    std::free(out);
 
-    // Measure
-    auto t0 = high_resolution_clock::now();
-    out = deflate_brutal_masm(src.data(), len, &out_len);
-    auto t1 = high_resolution_clock::now();
-    
-    double ms_asm = duration<double, std::milli>(t1 - t0).count();
-    free(out);
+    const auto start = high_resolution_clock::now();
+    out = deflate_brutal_masm(src.data(), src.size(), &outLen);
+    const auto stop = high_resolution_clock::now();
+    if (!out) return 1;
+    const double ms = duration<double, std::milli>(stop - start).count();
+    const bool valid = rawrxd_test::validateStoredGzip(
+        static_cast<const std::uint8_t*>(out), outLen, src.data(), src.size());
+    std::free(out);
+    if (!valid) return 1;
 
-    printf("Brutal MASM: %.2f ms\n", ms_asm);
-    printf("Target (Qt): ~50.00 ms\n");
-    printf("Speedup vs Target: %.2fx\n", 50.0 / ms_asm);
-
-    if (ms_asm <= 5.0) {
-        printf("SUCCESS: Latency <= 5ms\n");
-    } else {
-        printf("WARNING: Latency > 5ms\n");
-    }
-
+    std::printf("Stored-block gzip packaging: %.3f ms\n", ms);
+    std::printf("Input: %zu bytes, output: %zu bytes, expansion: %.2f%%\n",
+        len, outLen, 100.0 * (static_cast<double>(outLen) / len - 1.0));
+    std::puts("NOTE: DEFLATE BTYPE=00 copies data; this is not a compression-ratio benchmark.");
+    std::puts("BRUTAL_MASM_GZIP_BENCH_ROUNDTRIP=PASS");
     return 0;
 }

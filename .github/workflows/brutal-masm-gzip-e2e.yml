@@ -1,0 +1,50 @@
+name: Brutal MASM gzip end-to-end validation
+
+on:
+  push:
+    branches:
+      - feat/native-universal-compression-expansion-20261123-v2
+    paths:
+      - 'RawrXD-ModelLoader/kernels/deflate_brutal_masm.asm'
+      - 'RawrXD-ModelLoader/src/gzip_crc32.cpp'
+      - 'RawrXD-ModelLoader/tests/gzip_stored_validator.hpp'
+      - 'RawrXD-ModelLoader/tests/test_deflate_brutal_gzip.cpp'
+      - 'RawrXD-ModelLoader/tests/bench_deflate_brutal.cpp'
+      - '.github/workflows/brutal-masm-gzip-e2e.yml'
+  pull_request:
+    paths:
+      - 'RawrXD-ModelLoader/kernels/deflate_brutal_masm.asm'
+      - 'RawrXD-ModelLoader/src/gzip_crc32.cpp'
+      - 'RawrXD-ModelLoader/tests/gzip_stored_validator.hpp'
+      - 'RawrXD-ModelLoader/tests/test_deflate_brutal_gzip.cpp'
+      - 'RawrXD-ModelLoader/tests/bench_deflate_brutal.cpp'
+      - '.github/workflows/brutal-masm-gzip-e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  masm-gzip-e2e:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Assemble MASM kernel
+        shell: cmd
+        run: |
+          ml64 /nologo /c /Fo"%RUNNER_TEMP%\deflate_brutal_masm.obj" "RawrXD-ModelLoader\kernels\deflate_brutal_masm.asm"
+          if errorlevel 1 exit /b %errorlevel%
+      - name: Compile and run gzip roundtrip and corruption tests
+        shell: cmd
+        run: |
+          cl /nologo /std:c++17 /EHsc /O2 /I"RawrXD-ModelLoader\tests" "RawrXD-ModelLoader\tests\test_deflate_brutal_gzip.cpp" "RawrXD-ModelLoader\src\gzip_crc32.cpp" "%RUNNER_TEMP%\deflate_brutal_masm.obj" /Fe:"%RUNNER_TEMP%\test_deflate_brutal_gzip.exe"
+          if errorlevel 1 exit /b %errorlevel%
+          "%RUNNER_TEMP%\test_deflate_brutal_gzip.exe"
+          if errorlevel 1 exit /b %errorlevel%
+      - name: Run validated throughput benchmark
+        shell: cmd
+        run: |
+          cl /nologo /std:c++17 /EHsc /O2 /I"RawrXD-ModelLoader\tests" "RawrXD-ModelLoader\tests\bench_deflate_brutal.cpp" "RawrXD-ModelLoader\src\gzip_crc32.cpp" "%RUNNER_TEMP%\deflate_brutal_masm.obj" /Fe:"%RUNNER_TEMP%\bench_deflate_brutal.exe"
+          if errorlevel 1 exit /b %errorlevel%
+          "%RUNNER_TEMP%\bench_deflate_brutal.exe"
+          if errorlevel 1 exit /b %errorlevel%

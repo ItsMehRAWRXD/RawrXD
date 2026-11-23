@@ -4,6 +4,7 @@ OPTION casemap:none
 PUBLIC deflate_brutal_masm
 EXTERN malloc:PROC
 EXTERN memcpy:PROC
+EXTERN rawrxd_gzip_crc32:PROC
 
 .code
 deflate_brutal_masm PROC
@@ -18,20 +19,40 @@ deflate_brutal_masm PROC
     sub     rsp, 64         ; Reserve 64 bytes (aligned to 16 bytes)
 
     ; Save non-volatile registers
-    mov     rsi, rcx        ; src
+    mov     rsi, rcx        ; src (advanced while copying)
+    mov     r13, rcx        ; original src for CRC32
     mov     rbx, rdx        ; len
     mov     r14, r8         ; out_len*
+
+    ; out_len is mandatory; initialize it before any failure path.
+    test    r14, r14
+    jz      _fail
+    mov     qword ptr [r14], 0
+    ; A null source is valid only for the empty stream.
+    test    rbx, rbx
+    jz      _source_ok
+    test    rsi, rsi
+    jz      _fail
+_source_ok:
 
     ; Calculate block count and allocation size
     mov     rax, rbx
     add     rax, 65534
+    jc      _fail           ; reject size_t overflow
     mov     rcx, 65535
     xor     rdx, rdx
     div     rcx             ; rax = block_count
+    test    rax, rax
+    jnz     _have_blocks
+    mov     eax, 1          ; empty input still needs a final empty block
+_have_blocks:
     mov     rcx, rax
     imul    rcx, 5          ; 5 bytes overhead per block
+    jo      _fail
     add     rcx, rbx
-    add     rcx, 18         ; header + footer
+    jc      _fail
+    add     rcx, 18         ; gzip header + footer
+    jc      _fail
 
     ; Allocate memory
     sub     rsp, 32         ; Shadow space for malloc call
@@ -51,8 +72,18 @@ deflate_brutal_masm PROC
     mov     word ptr [rdi+8], 0003h
     add     rdi, 10
 
-    ; Stored blocks
+    ; Stored blocks. RFC 1951 requires one final empty stored block for
+    ; an empty payload; do not emit a gzip header immediately followed by
+    ; the trailer.
     mov     r12, rbx        ; remaining bytes
+    test    r12, r12
+    jnz     _block_loop
+    mov     byte ptr [rdi], 1
+    inc     rdi
+    mov     word ptr [rdi], 0
+    mov     word ptr [rdi+2], 0FFFFh
+    add     rdi, 4
+    jmp     _after_blocks
 _block_loop:
     test    r12, r12
     jz      _after_blocks
@@ -87,8 +118,14 @@ _hdr_done:
     jmp     _block_loop
 
 _after_blocks:
-    ; Footer: CRC32 (0) + ISIZE (len mod 2^32)
-    mov     dword ptr [rdi], 0
+    ; Footer: IEEE CRC32 of the original input and ISIZE modulo 2^32.
+    ; The helper uses the gzip/IEEE polynomial, not the CRC32C instruction.
+    mov     rcx, r13
+    mov     rdx, rbx
+    sub     rsp, 32
+    call    rawrxd_gzip_crc32
+    add     rsp, 32
+    mov     dword ptr [rdi], eax
     add     rdi, 4
     mov     eax, ebx
     mov     dword ptr [rdi], eax

@@ -578,8 +578,23 @@ if(MSVC)
 
     # Brutal MASM benchmark
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
-        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+        add_executable(bench_deflate_brutal
+            tests/bench_deflate_brutal.cpp
+            kernels/deflate_brutal_masm.asm
+            src/gzip_crc32.cpp
+        )
+        target_include_directories(bench_deflate_brutal PRIVATE tests)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    endif()
+
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_deflate_brutal_gzip.cpp")
+        add_executable(test_deflate_brutal_gzip
+            tests/test_deflate_brutal_gzip.cpp
+            kernels/deflate_brutal_masm.asm
+            src/gzip_crc32.cpp
+        )
+        target_include_directories(test_deflate_brutal_gzip PRIVATE tests)
+        set_target_properties(test_deflate_brutal_gzip PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
 endif()
@@ -605,7 +620,7 @@ endif()
 
 # Add benchmark for 50MB payload
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_50mb.cpp")
-    add_executable(bench_deflate_50mb tests/bench_deflate_50mb.cpp kernels/deflate_brutal_masm.asm)
+    add_executable(bench_deflate_50mb tests/bench_deflate_50mb.cpp kernels/deflate_brutal_masm.asm src/gzip_crc32.cpp)
     set_target_properties(bench_deflate_50mb PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 endif()
 
@@ -615,7 +630,7 @@ endif()
 
 
 # Brutal Gzip Library auto-selects MASM on x64 and NEON on ARM64
-add_library(brutal_gzip STATIC)
+add_library(brutal_gzip STATIC src/gzip_crc32.cpp)
 target_include_directories(brutal_gzip PUBLIC include)
 # Architecture-specific kernels get added below (MASM on x64, NEON on ARM64).
 
