@@ -237,10 +237,10 @@ int main(int argc,char** argv) {
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
-        const bool quantized=q8||q4||q5||q41||q51;
+        const bool quantized=q2k||q8k||q8||q4||q5||q41||q51;
         // Require the complete argument to be a finite nonnegative number.
         // std::stof alone accepts trailing garbage (e.g. "0.1oops").
         const std::string toleranceArg(argv[3]);
@@ -513,8 +513,9 @@ int main(int argc,char** argv) {
                             const int q=ds?std::max(0,std::min(3,int(std::round((v[g*16+j]+ms)/ds)))):0;
                             const double restored=ds*q-ms;
                             if(!(std::fabs(restored-v[g*16+j])<=double(tolerance))){valid=false;break;}
-                            const int chunk=g/8,within=g%8,half=within/2,shift=(within%2)*2;
-                            const int qi=chunk*32+(within/2)*16+j;
+                            const int chunk=g/8,within=g%8,half=within%2;
+                            const int qi=chunk*32+(half?16:0)+j;
+                            const int shift=(within/2)*2;
                             qs[qi]|=uint8_t(q<<shift);
                         }
                         if(!valid)break;
@@ -1029,7 +1030,7 @@ int main(int argc,char** argv) {
                     for(int g=0;g<16;++g){lo[g]=hi[g]=v[g*16];for(int j=1;j<16;++j){lo[g]=std::min(lo[g],v[g*16+j]);hi[g]=std::max(hi[g],v[g*16+j]);}sc[g]=(hi[g]-lo[g])/3.0;mn[g]=std::max(0.0,-lo[g]);maxSc=std::max(maxSc,sc[g]);maxMn=std::max(maxMn,mn[g]);}
                     const uint16_t hd=ToHalf(float(maxSc/15.0)),hm=ToHalf(float(maxMn/15.0));const double d=FromHalf(hd),dm=FromHalf(hm);
                     std::memset(encoded,0,84);encoded[80]=uint8_t(hd);encoded[81]=uint8_t(hd>>8);encoded[82]=uint8_t(hm);encoded[83]=uint8_t(hm>>8);
-                    for(int g=0;g<16;++g){int ls=d?int(std::round(sc[g]/(d*15.0))):0,lm=dm?int(std::round(mn[g]/(dm*15.0))):0;ls=std::max(0,std::min(15,ls));lm=std::max(0,std::min(15,lm));encoded[g]=uint8_t(ls|(lm<<4));const double ds=d*ls,ms=dm*lm;for(int j=0;j<16;++j){const int q=ds?std::max(0,std::min(3,int(std::round((v[g*16+j]+ms)/ds)))):0;const int within=g%8,qi=(g/8)*32+(within/2)*16+j,shift=(within%2)*2;encoded[16+qi]|=uint8_t(q<<shift);}}
+                    for(int g=0;g<16;++g){int ls=d?int(std::round(sc[g]/(d*15.0))):0,lm=dm?int(std::round(mn[g]/(dm*15.0))):0;ls=std::max(0,std::min(15,ls));lm=std::max(0,std::min(15,lm));encoded[g]=uint8_t(ls|(lm<<4));const double ds=d*ls,ms=dm*lm;for(int j=0;j<16;++j){const int q=ds?std::max(0,std::min(3,int(std::round((v[g*16+j]+ms)/ds)))):0;const int within=g%8,qi=(g/8)*32+((within%2)?16:0)+j,shift=(within/2)*2;encoded[16+qi]|=uint8_t(q<<shift);}}
                     out.write(reinterpret_cast<const char*>(encoded),84);if(!out)throw std::runtime_error("F64 Q2_K write failure");
                 }
             } else if(streamF64toQ8K[i]) {
