@@ -667,61 +667,75 @@ static std::string exeDir() {
 bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
                              const deep2::TensorView& xView, std::vector<float>& y) {
     // VulkanProgram owns one descriptor set, fence, and command pool binding.
-    // Serialize its reuse across concurrent inference agents and GPU selection.
+    // Serialize reuse across inference agents and GPU selection.
     static std::mutex programDispatchMutex;
     std::lock_guard<std::mutex> dispatchLock(programDispatchMutex);
-    if (!vulkanReady || !vulkan) return false;
-
-    if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
-        !wView.data || !xView.data) {
-        fprintf(stderr, "[VULKAN_GEMV] requires contiguous f32 views\n");
+    if (!vulkanReady || !vulkan || !wView.data || !xView.data ||
+        xView.type != deep2::TensorType::F32 || !xView.contiguous || !wView.contiguous ||
+        wView.dims.size() < 2 || xView.dims.empty())
         return false;
-    }
 
-    if (wView.dims.size() < 2) return false;
-    uint64_t rows = wView.dims[0];
-    uint64_t cols = wView.dims[1];
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+    if (!rows || !cols || rows > UINT32_MAX || cols > UINT32_MAX ||
+        rows > std::numeric_limits<size_t>::max() / cols)
+        return false;
+    const size_t elements = static_cast<size_t>(rows * cols);
+    const bool f32Weights = wView.type == deep2::TensorType::F32;
+    const bool f16Weights = wView.type == deep2::TensorType::F16;
+    const bool bf16Weights = wView.type == deep2::TensorType::BF16;
+    if (!f32Weights && !f16Weights && !bf16Weights) return false;
+    if (xView.byteSize < static_cast<size_t>(cols) * sizeof(float)) return false;
+
+    const size_t logicalWeightBytes = elements * (f32Weights ? sizeof(float) : sizeof(uint16_t));
+    if (wView.byteSize < logicalWeightBytes) return false;
+    const VkDeviceSize weightBufferBytes = f32Weights
+        ? static_cast<VkDeviceSize>(logicalWeightBytes)
+        : static_cast<VkDeviceSize>((logicalWeightBytes + 3u) & ~size_t(3u));
+    const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
+    const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
     y.assign(static_cast<size_t>(rows), 0.0f);
 
-    static deep2::VulkanProgram program;
-    static VkDevice boundDevice = VK_NULL_HANDLE;
-    if (boundDevice != gpu.device) {
-        if (boundDevice != VK_NULL_HANDLE) {
-            program.destroy(boundDevice);
+    static deep2::VulkanProgram f32Program;
+    static deep2::VulkanProgram packed16Program;
+    static VkDevice f32BoundDevice = VK_NULL_HANDLE;
+    static VkDevice packed16BoundDevice = VK_NULL_HANDLE;
+    deep2::VulkanProgram* selectedProgram = nullptr;
+    uint32_t weightEncoding = 0;
+    if (f32Weights) {
+        if (f32BoundDevice != gpu.device) {
+            if (f32BoundDevice != VK_NULL_HANDLE) f32Program.destroy(f32BoundDevice);
+            const std::string spv = exeDir() + "shaders\\gemv_f32.spv";
+            if (!f32Program.init(gpu.device, spv)) {
+                fprintf(stderr, "[VULKAN_GEMV] F32 program init failed for %s\\n", spv.c_str());
+                f32BoundDevice = VK_NULL_HANDLE;
+                return false;
+            }
+            f32BoundDevice = gpu.device;
         }
-        std::string spv = exeDir() + "shaders\\gemv_f32.spv";
-        if (!program.init(gpu.device, spv)) {
-            fprintf(stderr, "[VULKAN_GEMV] program init failed for %s\n", spv.c_str());
-            boundDevice = VK_NULL_HANDLE;
-            return false;
+        selectedProgram = &f32Program;
+    } else {
+        if (packed16BoundDevice != gpu.device) {
+            if (packed16BoundDevice != VK_NULL_HANDLE) packed16Program.destroy(packed16BoundDevice);
+            const std::string spv = exeDir() + "shaders\\gemv_packed16.spv";
+            if (!packed16Program.init(gpu.device, spv)) {
+                fprintf(stderr, "[VULKAN_GEMV] packed16 program init failed for %s\\n", spv.c_str());
+                packed16BoundDevice = VK_NULL_HANDLE;
+                return false;
+            }
+            packed16BoundDevice = gpu.device;
         }
-        boundDevice = gpu.device;
+        selectedProgram = &packed16Program;
+        weightEncoding = f16Weights ? 1u : 2u;
     }
 
     VkBuffer Wbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
     VkDeviceMemory Wmem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
     void* Wmapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
-
-    VkDeviceSize Wsize = (VkDeviceSize)rows * cols * 4;
-    VkDeviceSize xsize = (VkDeviceSize)cols * 4;
-    VkDeviceSize ysize = (VkDeviceSize)rows * 4;
-
     auto cleanup = [&]() {
-        // createBuffer maps host-visible allocations for this synchronous GEMV.
-        // Vulkan memory must be unmapped before it is freed; this path previously
-        // freed three still-mapped allocations on every tile dispatch.
-        if (Wmapped && Wmem != VK_NULL_HANDLE) {
-            vkUnmapMemory(gpu.device, Wmem);
-            Wmapped = nullptr;
-        }
-        if (xmapped && xmem != VK_NULL_HANDLE) {
-            vkUnmapMemory(gpu.device, xmem);
-            xmapped = nullptr;
-        }
-        if (ymapped && ymem != VK_NULL_HANDLE) {
-            vkUnmapMemory(gpu.device, ymem);
-            ymapped = nullptr;
-        }
+        if (Wmapped && Wmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, Wmem); Wmapped = nullptr; }
+        if (xmapped && xmem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, xmem); xmapped = nullptr; }
+        if (ymapped && ymem != VK_NULL_HANDLE) { vkUnmapMemory(gpu.device, ymem); ymapped = nullptr; }
         vulkan->destroyBuffer(gpu, Wbuf, Wmem);
         vulkan->destroyBuffer(gpu, xbuf, xmem);
         vulkan->destroyBuffer(gpu, ybuf, ymem);
@@ -729,18 +743,27 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         Wmem = xmem = ymem = VK_NULL_HANDLE;
     };
 
-    VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags memProps =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    if (!vulkan->createBuffer(gpu, weightBufferBytes, usage, memProps, Wbuf, Wmem, &Wmapped)) {
+        cleanup(); return false;
+    }
+    if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) {
+        cleanup(); return false;
+    }
+    if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) {
+        cleanup(); return false;
+    }
 
-    if (!vulkan->createBuffer(gpu, Wsize, usage, memProps, Wbuf, Wmem, &Wmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) { cleanup(); return false; }
-
-    std::memcpy(Wmapped, wView.data, static_cast<size_t>(Wsize));
+    std::memset(Wmapped, 0, static_cast<size_t>(weightBufferBytes));
+    std::memcpy(Wmapped, wView.data, logicalWeightBytes);
     std::memcpy(xmapped, xView.data, static_cast<size_t>(xsize));
     std::memset(ymapped, 0, static_cast<size_t>(ysize));
 
-    if (!program.dispatch(gpu, Wbuf, xbuf, ybuf, (uint32_t)rows, (uint32_t)cols)) {
+    if (!selectedProgram->dispatch(gpu, Wbuf, xbuf, ybuf,
+                                   static_cast<uint32_t>(rows), static_cast<uint32_t>(cols),
+                                   weightEncoding)) {
         cleanup(); return false;
     }
 
