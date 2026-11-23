@@ -293,7 +293,14 @@ int main(int argc,char** argv) {
         }
         // Never overwrite an unrelated or interrupted conversion's staging file.
         // This preflight protects existing files but is not atomic against races.
-        if(std::filesystem::exists(tmp))
+        // exists() follows symlinks and misses dangling links. Refuse every
+        // existing directory entry, including dangling symlinks, before opening
+        // a truncating stream through the staging pathname.
+        std::error_code stageError;
+        const auto stageStatus=std::filesystem::symlink_status(tmp,stageError);
+        if(stageError && stageError!=std::errc::no_such_file_or_directory)
+            throw std::runtime_error("cannot inspect temporary output");
+        if(stageStatus.type()!=std::filesystem::file_type::not_found)
             throw std::runtime_error("temporary output already exists; remove it manually after inspection");
         std::ofstream out(tmp,std::ios::binary|std::ios::trunc);
         ownsTemporary=true;
