@@ -28,15 +28,21 @@ inline Block encode(const std::uint8_t* data, std::size_t size) {
     if (size && !data) throw std::invalid_argument("null input");
     Block out;
     out.decoded_size = size;
+    // Abort RLE as soon as it cannot beat the raw representation.
+    // Avoid the former 2x temporary allocation on incompressible weights.
     std::vector<std::uint8_t> rle;
     for (std::size_t i = 0; i < size;) {
         std::size_t run = 1;
-        while (i + run < size && run < 255 && data[i + run] == data[i]) ++run;
+        while (run < 255 && run < size - i && data[i + run] == data[i]) ++run;
+        if (rle.size() > size - 2) {
+            rle.clear();
+            break;
+        }
         rle.push_back(static_cast<std::uint8_t>(run));
         rle.push_back(data[i]);
         i += run;
     }
-    if (rle.size() < size) {
+    if (!rle.empty() && rle.size() < size) {
         out.payload = std::move(rle);
         out.rle = true;
     } else {
