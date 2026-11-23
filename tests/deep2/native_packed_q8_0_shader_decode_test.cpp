@@ -206,6 +206,22 @@ static void testQ3KSignMaskFixture() {
     assert(loadKQuantShaderModel(bytes, 11u, 0u) == -3.0f);
 }
 
+// Independent Q6_K packed-nibble and sign-extension fixture.
+// GGML uses low nibbles, a separate 2-bit high plane, and signed 8-bit
+// sub-block scales. The expected values below are computed by hand.
+static void testQ6KPackedPlanesFixture() {
+    std::vector<uint8_t> bytes(210u, 0u);
+    put16(bytes.data() + 208u, 0x3c00u); // d = 1
+    bytes[192u] = 2u;    // signed sub-block scale +2
+    bytes[0u] = 0x05u;   // first low nibble = 5
+    bytes[128u] = 0x02u; // first high 2 bits = 2 => q = 5 + 32 - 32 = 5
+    assert(loadKQuantShaderModel(bytes, 14u, 0u) == 10.0f);
+    bytes[128u] = 0u;   // q = 5 - 32 = -27
+    assert(loadKQuantShaderModel(bytes, 14u, 0u) == -54.0f);
+    bytes[192u] = 0xfeu; // signed scale -2, not unsigned 254
+    assert(loadKQuantShaderModel(bytes, 14u, 0u) == 54.0f);
+}
+
 static void testKQuantBlock(uint32_t type) {
     const size_t blockBytes = type == 10u ? 84u : type == 11u ? 110u :
         type == 12u ? 144u : type == 13u ? 176u : type == 14u ? 210u : 292u;
@@ -284,6 +300,7 @@ int main() {
     for (uint32_t type : {2u, 3u, 6u, 7u, 8u, 9u}) testFixedBlock(type);
     for (uint32_t type : {10u, 11u, 12u, 13u, 14u, 15u}) testKQuantBlock(type);
     testQ3KSignMaskFixture();
+    testQ6KPackedPlanesFixture();
     testK4UpperGroupScaleFixture(12u);
     testK4UpperGroupScaleFixture(13u);
     std::cout << "packed Q4/Q5/Q8 and K-quant Vulkan shader decoder parity PASS\n";
