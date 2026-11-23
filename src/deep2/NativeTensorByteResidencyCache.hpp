@@ -65,7 +65,7 @@ public:
         try {
             built = std::make_shared<RawrXD::TensorCompression::ChunkedByteStorage>(
                 RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
-                    byteCount, std::forward<Reader>(reader), chunkBytes, true, buildBudget));
+                    byteCount, std::forward<Reader>(reader), chunkBytes, false, buildBudget));
         } catch (const RawrXD::TensorCompression::SourceReadFailure&) {
             return false; // transient source failures remain retryable
         } catch (const RawrXD::TensorCompression::StorageAdmissionRejected&) {
