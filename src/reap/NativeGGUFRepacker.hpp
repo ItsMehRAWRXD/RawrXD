@@ -158,11 +158,28 @@ inline bool ConvertF64RangeToF16(std::ifstream& in,std::ofstream& out,
             const float intermediate=static_cast<float>(value);
             if(!std::isfinite(intermediate))return false;
             uint32_t fbits=0;std::memcpy(&fbits,&intermediate,4);
-            const uint16_t half=Float32BitsToFloat16(fbits);
-            const uint32_t decoded=Float16ToFloat32Bits(half);
-            float actual=0;std::memcpy(&actual,&decoded,4);
-            if(!std::isfinite(actual) || (value!=0.0 && actual==0.0f))
-                return false;
+            // Compare adjacent F16 values against the original F64
+            // to avoid binary64 -> binary32 -> binary16 double rounding.
+            const uint16_t nearest=Float32BitsToFloat16(fbits);
+            uint16_t half=nearest;
+            double best=std::numeric_limits<double>::infinity();
+            bool valid=false;
+            const uint16_t sign=nearest&0x8000u;
+            const uint16_t magnitude=nearest&0x7fffu;
+            for(int delta=-1;delta<=1;++delta) {
+                const int m=static_cast<int>(magnitude)+delta;
+                if(m<0 || m>0x7bff)continue;
+                const uint16_t candidate=static_cast<uint16_t>(sign|m);
+                const uint32_t decoded=Float16ToFloat32Bits(candidate);
+                float actual=0;std::memcpy(&actual,&decoded,4);
+                if(value!=0.0 && actual==0.0f)continue;
+                const double error=std::abs(value-static_cast<double>(actual));
+                if(!valid || error<best ||
+                   (error==best && !(candidate&1u) && (half&1u))) {
+                    valid=true;best=error;half=candidate;
+                }
+            }
+            if(!valid)return false;
             dst[(i/8)*2]=static_cast<unsigned char>(half);
             dst[(i/8)*2+1]=static_cast<unsigned char>(half>>8);
         }
