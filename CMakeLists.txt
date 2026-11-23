@@ -66,6 +66,10 @@ add_executable(reap_prune_regression tools/reap_prune_regression.cpp)
 target_include_directories(reap_prune_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_test(NAME reap_prune_regression COMMAND reap_prune_regression)
 
+# R04: real-model pruning CLI.
+add_executable(reap_prune_cli tools/reap_prune_cli.cpp)
+target_include_directories(reap_prune_cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
 )

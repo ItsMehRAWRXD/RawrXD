@@ -18,6 +18,9 @@
 
 namespace RawrXD { namespace REAP {
 
+// Parse-phase diagnostics: name the exact failing rule/offset/type.
+#define R04_PARSE_ERR(...) do { std::fprintf(stderr, "[R04_PARSE] " __VA_ARGS__); std::fputc('\n', stderr); std::fflush(stderr); } while (0)
+
 enum class PruneError { None, Input, Format, Unsupported, Overflow, Output, NoExperts };
 
 struct PruneRequest {
@@ -128,8 +131,11 @@ inline PruneError PruneGGUF(const std::string& input,
     if (!ReadU32(in, magic) || !ReadU32(in, version) ||
         !ReadU64(in, tensorCount) || !ReadU64(in, kvCount) ||
         magic != 0x46554747 || (version != 2 && version != 3) ||
-        tensorCount > (1ULL << 20) || kvCount > (1ULL << 20))
+        tensorCount > (1ULL << 20) || kvCount > (1ULL << 20)) {
+        R04_PARSE_ERR("header fail magic=%08x version=%u tensors=%llu kvs=%llu", magic, version,
+                      (unsigned long long)tensorCount, (unsigned long long)kvCount);
         return PruneError::Format;
+    }
 
     uint64_t alignment = 32;
     std::string arch;
@@ -146,10 +152,10 @@ inline PruneError PruneGGUF(const std::string& input,
         PruneKV kv;
         kv.kv_start = static_cast<uint64_t>(kv_start);
         if (!ReadName(in, kv.key) || kv.key.empty() || !keys.insert(kv.key).second ||
-            !ReadU32(in, kv.type)) return PruneError::Format;
+            !ReadU32(in, kv.type)) { R04_PARSE_ERR("kv[%llu] key/type read fail (offset=%lld)", (unsigned long long)i, (long long)kv.kv_start); return PruneError::Format; }
         kv.value_pos = static_cast<uint64_t>(in.tellg());
         uint32_t type = kv.type;
-        if (type > 12) return PruneError::Format;
+        if (type > 12) { R04_PARSE_ERR("kv[%llu] '%s' type=%u unsupported", (unsigned long long)i, kv.key.c_str(), type); return PruneError::Format; }
         if (type == 8) {
             uint64_t n=0; if(!ReadU64(in,n)||n>(1ULL<<26)) return PruneError::Format;
             kv.value_size = 8 + n;
@@ -160,10 +166,25 @@ inline PruneError PruneGGUF(const std::string& input,
             }
         } else if (type == 9) {
             uint32_t elem=0; uint64_t count=0;
-            if(!ReadU32(in,elem)||!ReadU64(in,count)||elem>12||elem==9||count>(1ULL<<24)) return PruneError::Format;
+            if(!ReadU32(in,elem)||!ReadU64(in,count)||elem>12||elem==9||count>(1ULL<<24)) { R04_PARSE_ERR("kv[%llu] '%s' array header fail (elem=%u count=%llu)", (unsigned long long)i, kv.key.c_str(), elem, (unsigned long long)count); return PruneError::Format; }
             kv.value_size = 12;
             for (uint64_t k=0;k<count;++k) {
-                if (elem == 8) { std::string s; uint32_t t0=0; if(!ReadName(in,s)||!ReadU32(in,t0)||t0>12) return PruneError::Format; uint64_t n=0; if(!ReadU64(in,n)||n>(1ULL<<26)) return PruneError::Format; in.seekg(static_cast<std::streamoff>(n), std::ios::cur); kv.value_size += 8 + n + 4 + 8; }
+                // GGUF string-array elements are individually length-prefixed
+                // (u64 len + bytes). Bounds-checked skip via SkipExact (file
+                // size aware); the length is captured for value_size.
+                if (elem == 8) {
+                    const long long epos = (long long)in.tellg();
+                    uint64_t n = 0;
+                    if (!ReadU64(in, n) || n > (1ULL<<26) || !SkipExact(in, n)) {
+                        R04_PARSE_ERR("kv[%llu] '%s' array elem[%llu] skip fail (len=%llu epos=%lld end=%lld)",
+                                      (unsigned long long)i, kv.key.c_str(), (unsigned long long)k,
+                                      (unsigned long long)n, epos, (long long)in.tellg());
+                        return PruneError::Format;
+                    }
+                    if (k < 3) { std::fprintf(stderr, "[R04_KV]   elem[%llu] len=%llu pos=%lld->%lld\n",
+                                               (unsigned long long)k, (unsigned long long)n, epos, (long long)in.tellg()); std::fflush(stderr); }
+                    kv.value_size += 8 + n;
+                }
                 else { if (elem==9 || sizes[elem]==0) return PruneError::Format; in.seekg(sizes[elem], std::ios::cur); kv.value_size += sizes[elem]; }
             }
         } else {
@@ -175,14 +196,22 @@ inline PruneError PruneGGUF(const std::string& input,
                 else { expert_used_old = v; have_expert_used = true; }
             } else in.seekg(static_cast<std::streamsize>(kv.value_size), std::ios::cur);
         }
-        if (!in) return PruneError::Format;
+        if (!in) { R04_PARSE_ERR("kv[%llu] '%s' stream fail after value (type=%u)", (unsigned long long)i, kv.key.c_str(), type); return PruneError::Format; }
         if (kv.key == "general.alignment") {
             uint32_t v = 0;
             in.clear(); in.seekg(static_cast<std::streamoff>(kv.value_pos), std::ios::beg);
-            if (!ReadU32(in, v) || v < 8 || v > 4096 || (v & (v - 1))) return PruneError::Format;
+            if (!ReadU32(in, v) || v < 8 || v > 4096 || (v & (v - 1))) { R04_PARSE_ERR("kv 'general.alignment' invalid value=%u", v); return PruneError::Format; }
             alignment = v;
         }
         if (kv.key == arch + ".expert_count") { have_expert_count = true; }
+        {
+            const long long vend = (long long)in.tellg();
+            std::fprintf(stderr, "[R04_KV] idx=%llu key=%s type=%u start=%lld end=%lld%s\n",
+                         (unsigned long long)i, kv.key.c_str(), type,
+                         (long long)kv.kv_start, vend,
+                         (type == 9) ? " ARRAY" : "");
+            std::fflush(stderr);
+        }
         kvs.push_back(std::move(kv));
     }
     const uint64_t metadataEnd = static_cast<uint64_t>(in.tellg());
@@ -195,14 +224,14 @@ inline PruneError PruneGGUF(const std::string& input,
         PruneTensor t;
         uint32_t nd = 0;
         if (!ReadName(in, t.name) || t.name.empty() || !names.insert(t.name).second ||
-            !ReadU32(in, nd) || nd == 0 || nd > 8) return PruneError::Format;
+            !ReadU32(in, nd) || nd == 0 || nd > 8) { R04_PARSE_ERR("tensor[%llu] name/dims read fail (offset=%lld)", (unsigned long long)i, (long long)in.tellg()); return PruneError::Format; }
         t.dims.resize(nd);
         uint64_t count = 1;
-        for (auto& d : t.dims) if (!ReadU64(in, d) || !d || !CheckedMultiply(count, d, count)) return PruneError::Format;
+        for (auto& d : t.dims) if (!ReadU64(in, d) || !d || !CheckedMultiply(count, d, count)) { R04_PARSE_ERR("tensor[%llu] '%s' dim overflow", (unsigned long long)i, t.name.c_str()); return PruneError::Format; }
         uint64_t block=0, bb=0;
         if (!ReadU32(in, t.type) || !ReadU64(in, t.offset) ||
             !StorageLayout(t.type, block, bb) || count % block ||
-            !CheckedMultiply(count/block, bb, t.bytes)) return PruneError::Unsupported;
+            !CheckedMultiply(count/block, bb, t.bytes)) { R04_PARSE_ERR("tensor[%llu] '%s' type=%u layout fail (count=%llu block=%llu)", (unsigned long long)i, t.name.c_str(), t.type, (unsigned long long)count, (unsigned long long)block); return PruneError::Unsupported; }
         t.old_bytes = t.bytes;
         tensors.push_back(std::move(t));
     }

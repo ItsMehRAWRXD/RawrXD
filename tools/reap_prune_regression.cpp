@@ -86,7 +86,7 @@ static bool LoadGGUF(const std::string& path, LoadedGGUF& g) {
         std::string key; uint32_t type=0;
         if (!rd_name(key) || !in.read(reinterpret_cast<char*>(&type),4)) return false;
         if (type == 8) { uint64_t vn=0; if(!in.read(reinterpret_cast<char*>(&vn),8)||vn>(1ULL<<26)) return false; std::string v(vn,'\0'); if (vn && !in.read(&v[0], vn)) return false; }
-        else if (type == 9) { uint32_t el=0; uint64_t c=0; if(!in.read(reinterpret_cast<char*>(&el),4)||!in.read(reinterpret_cast<char*>(&c),8)||el>12||el==9) return false; if (el==8) { for (uint64_t k=0;k<c;++k) { std::string s; uint32_t t0=0; uint64_t vn=0; if(!rd_name(s)||!in.read(reinterpret_cast<char*>(&t0),4)||!in.read(reinterpret_cast<char*>(&vn),8)||vn>(1ULL<<26)) return false; in.seekg(vn, std::ios::cur); } } else { if (el==9 || !sz[el]) return false; in.seekg(c*sz[el], std::ios::cur); } }
+        else if (type == 9) { uint32_t el=0; uint64_t c=0; if(!in.read(reinterpret_cast<char*>(&el),4)||!in.read(reinterpret_cast<char*>(&c),8)||el>12||el==9) return false; if (el==8) { for (uint64_t k=0;k<c;++k) { std::string s; if(!rd_name(s)) return false; } } else { if (el==9 || !sz[el]) return false; in.seekg(c*sz[el], std::ios::cur); } }
         else { if (type > 12 || !sz[type]) return false; if (type == 4) { uint32_t v=0; in.read(reinterpret_cast<char*>(&v),4); if (key == "llama.expert_count") g.expert_count = v; if (key == "llama.expert_used_count") g.expert_used_count = v; } else in.seekg(sz[type], std::ios::cur); }
         if (!in) return false;
     }
