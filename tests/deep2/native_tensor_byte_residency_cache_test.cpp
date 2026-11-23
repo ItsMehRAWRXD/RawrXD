@@ -236,6 +236,27 @@ int main() {
                             scopeTile.data(), scopeScratch));
     assert(std::all_of(scopeTile.begin(), scopeTile.end(),
                        [](uint8_t b) { return b == 0xE7; }));
+ 
+    // Reopening the same model path must not reuse old equal-sized payloads.
+    scoped.MarkRawFallback("stale.fallback");
+    scoped.Clear();
+    scoped.SetModelIdentity("model-B");
+    assert(!scoped.Contains("shared.key"));
+    assert(!scoped.IsRawFallback("stale.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t samePathReads = 0;
+    assert(scoped.RegisterFromReader("shared.key", modelA.size(),
+        [&](size_t o, size_t n, uint8_t* out) {
+            ++samePathReads;
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(samePathReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, scopeTile.size(),
+                            scopeTile.data(), scopeScratch));
+    assert(std::all_of(scopeTile.begin(), scopeTile.end(),
+                       [](uint8_t b) { return b == 0x11; }));
+
 
     std::cout<<"lossless encoded-byte tensor residency cache PASS\n";
 }
