@@ -352,8 +352,10 @@ bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
                                 uint64_t size, uint8_t* out) const {
     if (!m_pager) return false;
     const ShardManifest& m = m_shards[entry.shardIndex];
+    if (entry.shardIndex >= m_shards.size() || relOffset > entry.byteSize() ||
+        (size && !out)) return false;
     uint64_t avail = entry.byteSize() - relOffset;
-    if (size > avail) size = avail;
+    if (size > avail) return false;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
                               m.dataOffset + entry.offset + relOffset, size, out);
 }
