@@ -9,6 +9,9 @@ on:
       - codex/full-compressed-residency-integration-20261123
     paths:
       - 'src/deep2/compression/**'
+      - 'src/deep2/Deep2Engine_GpuForward.cpp'
+      - 'src/deep2/vulkan_compute.cpp'
+      - 'src/deep2/vulkan_compute.h'
       - 'src/deep2/GGUFLoader.hpp'
       - 'include/native_resident_matvec.hpp'
       - 'tests/compressed_weight_store/**'
