@@ -44,6 +44,11 @@ int main() {
     const auto rejected = codec::inflate(invalid, &ok);
     CHECK(!ok && rejected.isEmpty());
 
+    auto trailing = compressed;
+    trailing.append('x');
+    const auto trailingRejected = codec::inflate(trailing, &ok);
+    CHECK(!ok && trailingRejected.isEmpty());
+
     std::puts("QT_ZLIB_CODEC_ROUNDTRIP=PASS");
     return 0;
 }
