@@ -76,6 +76,9 @@ void PageCache::evictToFit(std::size_t neededBytes) {
 }
 
 Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
+    if (pageNo > 0xFFFFFFFFull ||
+        pageNo > UINT64_MAX / static_cast<uint64_t>(m_pageSize))
+        return nullptr;
     std::lock_guard<std::mutex> lock(m_mutex);
     Key key = makeKey(shard, pageNo);
     auto it = m_index.find(key);
