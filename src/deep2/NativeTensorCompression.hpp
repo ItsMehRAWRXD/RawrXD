@@ -409,6 +409,9 @@ public:
                                              bool require_first_chunk_savings=false,
                                              size_t max_stored_bytes=std::numeric_limits<size_t>::max()) {
         if(!chunk_elements) throw std::invalid_argument("zero chunk size");
+        // Do not scan a model tensor when compressed admission cannot fit.
+        if(count && !max_stored_bytes)
+            throw StorageAdmissionRejected("zero compressed F32 residency budget");
         if(count>std::numeric_limits<size_t>::max()/sizeof(float))
             throw std::length_error("F32 tensor size overflow");
         ChunkedF32Storage result;
