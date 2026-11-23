@@ -7199,23 +7199,14 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
 // ============================================================================
 void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const float* bias, float* output, size_t outDim)
 {
-    // A compressed-only WeightTensor is materialized only for this kernel
-    // invocation. The store remains authoritative; the temporary buffer is
-    // bounded to this tensor and is released after CPU workers/GPU dispatch return.
-    std::vector<std::uint8_t> compressedKernelBytes;
+    // Keep compressed weights authoritative on CPU: LinearW_Range decodes
+    // only each worker's packed output-row slice. Vulkan currently stages one
+    // complete tensor because its existing upload interface accepts a base pointer.
     WeightTensor wtEffective = wt;
-    if (!wtEffective.data && wtEffective.hasCompressedBacking())
-    {
-        compressedKernelBytes.resize(wtEffective.sizeBytes);
-        std::string decodeError;
-        if (!wtEffective.readBytes(0, compressedKernelBytes.data(),
-                                   compressedKernelBytes.size(), &decodeError))
-            throw std::runtime_error("LinearW: compressed weight decode failed for " +
-                                     wt.name + ": " + decodeError);
-        wtEffective.data = compressedKernelBytes.empty() ? nullptr : compressedKernelBytes.data();
-    }
+    std::vector<std::uint8_t> compressedGpuBytes;
 
-    if (!wtEffective.data || !input || !output || outDim == 0)
+    if ((!wtEffective.data && !wtEffective.hasCompressedBacking()) ||
+        !input || !output || outDim == 0)
     {
         throw std::runtime_error(
             "LinearW: invalid arguments: name=" + wt.name +
@@ -7313,7 +7304,18 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     if (!plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
-        if (tryVulkanGEMV(wtEffective, input, output, outDim))
+        WeightTensor gpuWeight = wtEffective;
+        if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+        {
+            compressedGpuBytes.resize(gpuWeight.sizeBytes);
+            std::string decodeError;
+            if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
+                                     compressedGpuBytes.size(), &decodeError))
+                throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
+                                         wt.name + ": " + decodeError);
+            gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+        }
+        if (tryVulkanGEMV(gpuWeight, input, output, outDim))
         {
             ++plannedGpuGemvOps_;
 if (bias)
