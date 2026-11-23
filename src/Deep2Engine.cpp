@@ -198,6 +198,79 @@ bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::Dequanti
     return dequantizeTensor(view, out);
 }
 
+bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
+                                              uint64_t firstElement,
+                                              uint64_t elementCount,
+                                              float* destination) {
+    if (!romMode || entry.type != deep2::TensorType::F32) return false;
+    const uint64_t bytes = entry.byteSize();
+    if ((bytes % sizeof(float)) != 0) return false;
+    const uint64_t totalElements = bytes / sizeof(float);
+    if (firstElement > totalElements || elementCount > totalElements - firstElement ||
+        firstElement > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
+        elementCount > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
+        elementCount > std::numeric_limits<size_t>::max()) return false;
+
+    if (!compressedF32Weights.Contains(entry.name)) {
+        const size_t count = static_cast<size_t>(totalElements);
+        const auto reader = [this, &entry, bytes](size_t offset, size_t n, float* out) {
+            if (offset > bytes / sizeof(float) ||
+                n > bytes / sizeof(float) - offset) return false;
+            const uint64_t byteOffset = static_cast<uint64_t>(offset) * sizeof(float);
+            const uint64_t byteCount = static_cast<uint64_t>(n) * sizeof(float);
+            return rom.readTensorRange(entry, byteOffset, byteCount,
+                                       reinterpret_cast<uint8_t*>(out));
+        };
+        if (!compressedF32Weights.RegisterF32FromReader(
+                entry.name, count, compressedF32MaxAbsError, reader, 4096)) {
+            fprintf(stderr, "[TENSOR_RESIDENCY] unable to retain compressed F32 tensor %s (%llu bytes)\n",
+                    entry.name.c_str(), static_cast<unsigned long long>(bytes));
+            return false;
+        }
+    }
+    return compressedF32Weights.ReadRange(entry.name,
+        static_cast<size_t>(firstElement), static_cast<size_t>(elementCount), destination);
+}
+
+bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* input,
+                                float* output, uint64_t* rowsOut, uint64_t* colsOut,
+                                size_t tileRows) {
+    if (!romMode || !input || !output || entry.dims.size() < 2 || tileRows == 0)
+        return false;
+    const uint64_t cols = entry.dims[0];
+    uint64_t rows = 1;
+    for (size_t i = 1; i < entry.dims.size(); ++i) {
+        if (entry.dims[i] == 0 || rows > std::numeric_limits<uint64_t>::max() / entry.dims[i])
+            return false;
+        rows *= entry.dims[i];
+    }
+    if (rowsOut) *rowsOut = rows;
+    if (colsOut) *colsOut = cols;
+    if (entry.type != deep2::TensorType::F32) {
+        deep2::DequantizedTensor decoded;
+        if (!dequantTensor(entry, decoded)) return false;
+        if (decoded.rows != rows || decoded.cols != cols) return false;
+        return gemvFloat(decoded.data.data(), input, output, rows, cols);
+    }
+    if (cols == 0 || rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
+        return false;
+    std::fill(output, output + static_cast<size_t>(rows), 0.0f);
+    const size_t colsSize = static_cast<size_t>(cols);
+    for (uint64_t firstRow = 0; firstRow < rows;) {
+        const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
+        if (countRows > std::numeric_limits<size_t>::max() / colsSize) return false;
+        const size_t tileElements = static_cast<size_t>(countRows) * colsSize;
+        std::vector<float> tile(tileElements);
+        const uint64_t firstElement = firstRow * cols;
+        if (!readCompressedF32Tile(entry, firstElement, tileElements, tile.data()))
+            return false;
+        if (!gemvFloat(tile.data(), input, output + static_cast<size_t>(firstRow),
+                       countRows, cols)) return false;
+        firstRow += countRows;
+    }
+    return true;
+}
+
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
                             uint64_t rows, uint64_t cols) {
     return deep2::gemvFloat(W, x, y, rows, cols);
