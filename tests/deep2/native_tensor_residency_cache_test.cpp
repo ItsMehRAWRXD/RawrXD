@@ -254,7 +254,7 @@ int main() {
     // its decode/output scratch while the compressed tensor remains immutable.
     std::vector<float> sharedWeights(8192);
     for (size_t i = 0; i < sharedWeights.size(); ++i)
-        sharedWeights[i] = static_cast<float>((i % 16) - 8) * 0.125f;
+        sharedWeights[i] = static_cast<float>(static_cast<int>(i % 16) - 8) * 0.125f;
     Deep2::TensorResidencyCache sharedCache(256 * 1024);
     assert(sharedCache.RegisterF32FromReader("shared.concurrent", sharedWeights.size(),
         0.0f, [&](size_t offset, size_t count, float* out) {
