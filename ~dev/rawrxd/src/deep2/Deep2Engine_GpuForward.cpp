@@ -26,6 +26,9 @@ uint64_t WeightKey(const WeightTensor& wt) {
     uint64_t h = 14695981039346656037ull;
     for (unsigned char c : wt.name) { h ^= c; h *= 1099511628211ull; }
     h ^= ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols ^ (uint64_t)(uint32_t)wt.type;
+    h *= 1099511628211ull;
+    h ^= static_cast<uint64_t>(reinterpret_cast<uintptr_t>(wt.data));
+    h *= 1099511628211ull;
     return h;
 }
 
