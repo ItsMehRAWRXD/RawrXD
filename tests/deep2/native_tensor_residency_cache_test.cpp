@@ -370,5 +370,36 @@ int main() {
     assert(sharedStats.activeReaders == 0);
     assert(sharedStats.cacheHits >= 6 * 128);
 
+
+    // Equal-sized weights with the same key must not cross model boundaries.
+    Deep2::TensorResidencyCache scoped(65536);
+    std::vector<float> modelA(8192, 1.0f), modelB(8192, -3.0f);
+    scoped.SetModelIdentity("model-A");
+    assert(scoped.RegisterF32FromReader("shared.key", modelA.size(), 0.0f,
+        [&](size_t o, size_t n, float* out) {
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    float scopeTile[64] = {};
+    assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
+    assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == 1.0f; }));
+    scoped.MarkRawFallback("old.fallback");
+    scoped.SetModelIdentity("model-A"); // no-op
+    assert(scoped.Contains("shared.key") && scoped.IsRawFallback("old.fallback"));
+    scoped.SetModelIdentity("model-B");
+    assert(scoped.ModelIdentity() == "model-B");
+    assert(!scoped.Contains("shared.key") && !scoped.IsRawFallback("old.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t reboundReads = 0;
+    assert(scoped.RegisterF32FromReader("shared.key", modelB.size(), 0.0f,
+        [&](size_t o, size_t n, float* out) {
+            ++reboundReads;
+            std::copy(modelB.begin()+o, modelB.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(reboundReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
+    assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == -3.0f; }));
+
     std::cout<<"compressed F32 residency cache PASS\n";
 }
