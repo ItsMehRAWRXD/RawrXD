@@ -137,6 +137,21 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
             out[i] = static_cast<float>(value);
         }
         return true;
+    case TensorType::TQ2_0: {
+        const size_t blocks = static_cast<size_t>((n + 255) / 256);
+        for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
+            const uint8_t* block = src.data + blockIndex * 66;
+            const uint8_t* packed = block;
+            const float scale = fp16ToF32(readU16(block + 64));
+            const size_t base = blockIndex * 256;
+            const size_t take = std::min<size_t>(256, static_cast<size_t>(n) - base);
+            for (size_t j = 0; j < take; ++j) {
+                const uint8_t code = (packed[j / 4] >> (2 * (j % 4))) & 0x03u;
+                out[base + j] = scale * static_cast<float>(static_cast<int>(code) - 1);
+            }
+        }
+        return true;
+    }
     case TensorType::NVFP4: {
         const size_t blocks = static_cast<size_t>((n + 63) / 64);
         for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
@@ -339,6 +354,7 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::IQ4_XS:
     case TensorType::MXFP4:
     case TensorType::NVFP4:
+    case TensorType::TQ2_0:
     case TensorType::Q2_K:
     case TensorType::Q3_K:
     case TensorType::Q4_K:
