@@ -16,6 +16,10 @@ on:
       - 'src/Deep2Engine.h'
       - 'CMakeLists.txt'
       - 'tests/compressed_weight_store/**'
+      - 'tests/compression_zlib_smoke/**'
+      - 'tests/compression_zlib_provider_compile_test.cpp'
+      - 'src/codec/compression_core.cpp'
+      - 'include/codec/compression_core.h'
       - '.github/workflows/compressed-weight-store.yml'
   pull_request:
     paths:
@@ -52,3 +56,19 @@ jobs:
         run: cmake --build build/compressed-weight-store --config Release --parallel
       - name: Test
         run: ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
+
+  zlib-provider:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: false
+      - name: Install zlib development headers
+        run: sudo apt-get update && sudo apt-get install -y zlib1g-dev
+      - name: Configure provider-detection smoke
+        run: cmake -S tests/compression_zlib_smoke -B build/zlib-provider -DCMAKE_BUILD_TYPE=Release
+      - name: Build production compression core
+        run: cmake --build build/zlib-provider --config Release --parallel
+      - name: Test zlib public API roundtrip
+        run: ctest --test-dir build/zlib-provider -C Release --output-on-failure
