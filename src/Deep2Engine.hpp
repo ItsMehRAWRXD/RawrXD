@@ -38,6 +38,7 @@ struct Deep2Engine {
         uint64_t f32CacheHits = 0, f32CacheMisses = 0;
         uint64_t encodedCacheHits = 0, encodedCacheMisses = 0;
         uint64_t bytesDecoded = 0, evictions = 0;
+        size_t pagerResidentBytes = 0;
         size_t totalCompressedBytes() const noexcept {
             return encodedCompressedBytes > static_cast<size_t>(-1) - f32CompressedBytes
                 ? static_cast<size_t>(-1) : f32CompressedBytes + encodedCompressedBytes;
@@ -45,6 +46,11 @@ struct Deep2Engine {
         size_t totalLogicalBytes() const noexcept {
             return encodedLogicalBytes > static_cast<size_t>(-1) - f32LogicalBytes
                 ? static_cast<size_t>(-1) : f32LogicalBytes + encodedLogicalBytes;
+        }
+        size_t totalTrackedWeightResidentBytes() const noexcept {
+            const size_t cacheBytes = totalCompressedBytes();
+            return pagerResidentBytes > static_cast<size_t>(-1) - cacheBytes
+                ? static_cast<size_t>(-1) : cacheBytes + pagerResidentBytes;
         }
     };
 
