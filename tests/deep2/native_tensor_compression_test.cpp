@@ -85,6 +85,56 @@ int main() {
         resident[i]=(i%7==0)?float(i)*0.25f:float(int(i%19)-9);
     auto chunked=ChunkedF32Storage::Build(resident.data(),resident.size(),0.0f,1024);
     assert(chunked.size()==resident.size() && chunked.chunkCount()==10);
+    // Production admission streams bounded source tiles, rejects a tensor as
+    // soon as its first chunk cannot be stored smaller, and never stages a
+    // second full F32 copy.
+    size_t streamedReads=0;
+    auto streamed=ChunkedF32Storage::BuildFromReader(
+        resident.size(),0.0f,
+        [&](size_t offset,size_t count,float* out) {
+            ++streamedReads;
+            std::copy(resident.begin()+offset,resident.begin()+offset+count,out);
+            return true;
+        },1024,true,resident.size()*sizeof(float));
+    assert(streamedReads==resident.size()/1024+(resident.size()%1024!=0));
+    assert(streamed.size()==resident.size());
+    assert(streamed.storedBytes()<resident.size()*sizeof(float));
+    std::vector<float> streamedTile(777);
+    streamed.ReadRange(777,streamedTile.size(),streamedTile.data());
+    for(size_t i=0;i<streamedTile.size();++i)
+        assert(streamedTile[i]==resident[777+i]);
+
+    std::vector<float> noisy(8192);
+    uint32_t randomState=0x9e3779b9u;
+    for(float& value:noisy) {
+        randomState^=randomState<<13; randomState^=randomState>>17; randomState^=randomState<<5;
+        value=static_cast<float>(randomState & 0x00ffffffu) / 16777216.0f;
+    }
+    size_t noisyReads=0;
+    bool firstChunkRejected=false;
+    try {
+        (void)ChunkedF32Storage::BuildFromReader(
+            noisy.size(),0.0f,
+            [&](size_t offset,size_t count,float* out) {
+                ++noisyReads;
+                std::copy(noisy.begin()+offset,noisy.begin()+offset+count,out);
+                return true;
+            },1024,true,noisy.size()*sizeof(float));
+    } catch(const std::runtime_error&) { firstChunkRejected=true; }
+    assert(firstChunkRejected && noisyReads==1);
+
+    size_t budgetReads=0;
+    bool budgetRejected=false;
+    try {
+        (void)ChunkedF32Storage::BuildFromReader(
+            resident.size(),0.0f,
+            [&](size_t offset,size_t count,float* out) {
+                ++budgetReads;
+                std::copy(resident.begin()+offset,resident.begin()+offset+count,out);
+                return true;
+            },1024,true,1);
+    } catch(const std::runtime_error&) { budgetRejected=true; }
+    assert(budgetRejected && budgetReads==1);
     assert(chunked.chunkElements()==1024);
     assert(chunked.storedBytes()<=resident.size()*sizeof(float));
     std::vector<float> tile(1500,-999.0f);
