@@ -44,6 +44,7 @@ int main() {
     auto badReader=[](size_t,size_t,float*) { return false; };
     assert(!cache.RegisterF32FromReader("broken",512,0.0f,badReader,128));
     assert(!cache.Contains("broken"));
+    assert(!cache.IsRawFallback("broken")); // transient source read failure is retryable
 
     // A tensor larger than the budget is rejected without evicting a valid
     // entry; eviction only happens when a fitting insertion needs capacity.
