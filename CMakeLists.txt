@@ -554,8 +554,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/compressed_block_codec_adapters_test.cpp")
     add_executable(compressed_block_codec_adapters_test
         tests/compressed_block_codec_adapters_test.cpp
         src/deep2/compression/CompressedWeightStore.cpp)
+    find_package(Threads REQUIRED)
     target_link_libraries(compressed_block_codec_adapters_test
-        PRIVATE rawrxd_compression_core)
+        PRIVATE rawrxd_compression_core Threads::Threads)
     target_include_directories(compressed_block_codec_adapters_test PRIVATE
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/src/deep2/compression")
