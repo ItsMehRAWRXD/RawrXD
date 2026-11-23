@@ -147,6 +147,36 @@ bool encodeQ5Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out[
     for(int j=0;j<4;++j)out[2+j]=uint8_t(highBits>>(8*j));
     return true;
 }
+bool encodeQ41Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out[20]) {
+    float v[32],low=0,high=0;
+    for(int j=0;j<32;++j) {
+        if(type==0) {
+            uint32_t bits=uint32_t(raw[4*j])|(uint32_t(raw[4*j+1])<<8)|
+                          (uint32_t(raw[4*j+2])<<16)|(uint32_t(raw[4*j+3])<<24);
+            v[j]=Float(bits);
+        } else {
+            uint16_t h=uint16_t(raw[2*j])|(uint16_t(raw[2*j+1])<<8);
+            v[j]=type==1?FromHalf(h):Float(uint32_t(h)<<16);
+        }
+        if(!std::isfinite(v[j]))return false;
+        if(!j)low=high=v[j];else {low=std::min(low,v[j]);high=std::max(high,v[j]);}
+    }
+    uint16_t hm=ToHalf(low),hd=ToHalf((high-low)/15.0f);
+    float minimum=FromHalf(hm),scale=FromHalf(hd);
+    if(!std::isfinite(minimum)||!std::isfinite(scale)||(high>low && scale<=0))return false;
+    out[0]=uint8_t(hd);out[1]=uint8_t(hd>>8);
+    out[2]=uint8_t(hm);out[3]=uint8_t(hm>>8);
+    for(int j=0;j<16;++j)out[4+j]=0;
+    for(int j=0;j<32;++j) {
+        float qf=scale?std::round((v[j]-minimum)/scale):0;
+        qf=std::max(0.0f,std::min(15.0f,qf));
+        int q=int(qf);
+        if(!(std::fabs(minimum+scale*q-v[j])<=tolerance))return false;
+        if(j<16)out[4+j]=uint8_t(q);
+        else out[4+j-16]|=uint8_t(q<<4);
+    }
+    return true;
+}
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
@@ -245,6 +275,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ8(ts.size(),false);
         std::vector<bool> streamQ4(ts.size(),false);
         std::vector<bool> streamQ5(ts.size(),false);
+        std::vector<bool> streamQ41(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51))continue;
             if(q8 && t.dims[0]%32==0 && (t.type==0 || t.type==1 || t.type==30)) {
@@ -273,6 +304,20 @@ int main(int argc,char** argv) {
                     if(!encodeQ4Block(block,t.type,tolerance,encoded)){valid=false;break;}
                 }
                 if(valid){streamQ4[i]=true;outputTypes[i]=2;++changed;}
+                continue;
+            }
+            if(q41 && t.dims[0]%32==0 && (t.type==0 || t.type==1 || t.type==30)) {
+                const size_t inputBlock=t.type==0?128:64;
+                if(t.bytes%inputBlock)continue;
+                seek(in,add(dataStart,t.offset));
+                uint8_t block[128],encoded[20];
+                bool valid=true;
+                for(U off=0;off<t.bytes;off+=inputBlock) {
+                    if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
+                        throw std::runtime_error("truncated Q4 streaming preflight");
+                    if(!encodeQ41Block(block,t.type,tolerance,encoded)){valid=false;break;}
+                }
+                if(valid){streamQ41[i]=true;outputTypes[i]=3;++changed;}
                 continue;
             }
             if(q5 && t.dims[0]%32==0 && (t.type==0 || t.type==1 || t.type==30)) {
@@ -467,7 +512,7 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size())))));
+            cursor=add(cursor,streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size()))))));
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
@@ -504,6 +549,18 @@ int main(int argc,char** argv) {
                     if(!encodeQ4Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q4 preflight mismatch");
                     out.write(reinterpret_cast<const char*>(encoded),18);
+                    if(!out)throw std::runtime_error("Q4 streaming write failure");
+                }
+            } else if(streamQ41[i]) {
+                seek(in,add(dataStart,t.offset));
+                const size_t inputBlock=t.type==0?128:64;
+                uint8_t block[128],encoded[20];
+                for(U off=0;off<t.bytes;off+=inputBlock) {
+                    if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
+                        throw std::runtime_error("truncated Q4 streaming payload");
+                    if(!encodeQ41Block(block,t.type,tolerance,encoded))
+                        throw std::runtime_error("Q4 preflight mismatch");
+                    out.write(reinterpret_cast<const char*>(encoded),20);
                     if(!out)throw std::runtime_error("Q4 streaming write failure");
                 }
             } else if(streamQ8[i]) {
