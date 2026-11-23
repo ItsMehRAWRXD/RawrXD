@@ -92,3 +92,7 @@ configuration. The synthetic GGUF and Deep2 model E2E executables use
 explicit runtime checks instead. A green CI run after this change verifies
 that the assertions were actually executed; it does not by itself establish
 production-model or GPU parity.
+
+### Cache key identity and model rebinding
+
+Both the F32 and byte-preserving compressed residency caches now reject a repeated key when the new tensor's logical byte count differs from the resident entry. This prevents a differently shaped tensor from silently aliasing the prior model's weights, without reading or modifying the new source. **Equal-sized but different tensors cannot be distinguished by byte count alone**: callers must namespace cache keys by stable model/shard identity and clear or evict old entries when rebinding models. This guard is not a content hash or a substitute for model lifecycle isolation. Deterministic collision tests run in the native cache test executables, including Release-mode CI.
