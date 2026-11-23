@@ -48,6 +48,11 @@ public:
                             size_t chunkBytes = 64 * 1024) {
         if (key.empty()) return false;
         std::lock_guard<std::mutex> buildLock(buildMutex_);
+        auto rejectAndMemoize = [this, &key]() {
+            std::lock_guard<std::mutex> lock(mutex_);
+            rawFallback_.insert(key);
+            return false;
+        };
         size_t buildBudget;
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -55,22 +60,28 @@ public:
             if (rawFallback_.find(key) != rawFallback_.end()) return false;
             buildBudget = budgetBytes_;
         }
+        if (!buildBudget) return rejectAndMemoize();
         std::shared_ptr<RawrXD::TensorCompression::ChunkedByteStorage> built;
         try {
             built = std::make_shared<RawrXD::TensorCompression::ChunkedByteStorage>(
                 RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
                     byteCount, std::forward<Reader>(reader), chunkBytes, true, buildBudget));
+        } catch (const RawrXD::TensorCompression::SourceReadFailure&) {
+            return false; // transient source failures remain retryable
         } catch (...) {
-            return false;
+            return rejectAndMemoize();
         }
         const size_t stored = built->storedBytes();
-        if (byteCount && stored >= byteCount) return false;
+        if (byteCount && stored >= byteCount) return rejectAndMemoize();
         std::lock_guard<std::mutex> lock(mutex_);
-        if (stored > budgetBytes_) return false;
+        if (stored > budgetBytes_) { rawFallback_.insert(key); return false; }
         auto existing = entries_.find(key);
         if (existing != entries_.end()) { existing->second.lastUse = ++tick_; return true; }
         EvictToFitLocked(stored, key);
-        if (stored > budgetBytes_ - compressedBytes_) return false;
+        if (stored > budgetBytes_ - compressedBytes_) {
+            rawFallback_.insert(key);
+            return false;
+        }
         Entry e;
         e.storage = std::move(built);
         e.compressedBytes = stored;
