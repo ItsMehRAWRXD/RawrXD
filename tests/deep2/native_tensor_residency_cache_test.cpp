@@ -41,7 +41,8 @@ int main() {
 
     // A tensor larger than the budget is rejected without evicting a valid
     // entry; eviction only happens when a fitting insertion needs capacity.
-    std::vector<float> tooLarge(20000,1.0f);
+    std::vector<float> tooLarge(20000);
+    for(size_t i=0;i<tooLarge.size();++i) tooLarge[i]=float(i%1000);
     assert(!cache.RegisterF32FromReader("too.large",tooLarge.size(),0.0f,
         [&](size_t o,size_t n,float* out) {
             std::copy(tooLarge.begin()+o,tooLarge.begin()+o+n,out); return true;
@@ -70,8 +71,8 @@ int main() {
     assert(cache.GetStats().evictions>=1);
 
     // Explicit eviction releases the compressed representation.
-    assert(cache.Evict("layer.0.weight"));
-    assert(!cache.Contains("layer.0.weight"));
+    assert(cache.Evict("layer.1.weight"));
+    assert(!cache.Contains("layer.1.weight"));
     auto finalStats=cache.GetStats();
     assert(finalStats.compressedBytes==0 && finalStats.logicalBytes==0);
     assert(finalStats.evictions>=2);
