@@ -233,13 +233,17 @@ std::size_t PageCache::evictUnleasedRange(uint32_t shard, uint64_t offset, uint6
 
 void PageCache::evictUnleasedAll() {
     std::lock_guard<std::mutex> lock(m_mutex);
-    while (!m_lru.empty()) {
-        Page* victim = m_lru.back();
-        if (victim->leaseCount.load(std::memory_order_acquire) > 0) break;
-        m_lru.pop_back();
-        m_index.erase(makeKey(victim->shard, victim->pageNo));
-        m_residentBytes -= victim->data.size();
-        delete victim;
+    for (auto it = m_index.begin(); it != m_index.end();) {
+        Page* page = it->second;
+        if (page->leaseCount.load(std::memory_order_acquire) == 0) {
+            m_lru.erase(page->lruIt);
+            m_residentBytes -= page->data.size();
+            page->inCache = false;
+            delete page;
+            it = m_index.erase(it);
+        } else {
+            ++it;
+        }
     }
 }
 
