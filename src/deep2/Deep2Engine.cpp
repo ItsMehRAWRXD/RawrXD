@@ -11142,7 +11142,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             modelWeights.keyLength > 0 ? modelWeights.keyLength : headDim;
         qwenGatedAttn =
             keyLen > 0 && lw.wq.rows == 2 * numHeads * keyLen &&
-            lw.attnQNorm.data != nullptr;
+            lw.attnQNorm.hasBacking();
         if (!qwenGatedAttn && (lw.wq.rows % numHeads) != 0)
         {
             fprintf(stderr,
