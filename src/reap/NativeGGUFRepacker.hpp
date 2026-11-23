@@ -29,6 +29,7 @@ struct RepackTensor {
     std::vector<uint64_t> dims;
     uint32_t type = 0;
     uint64_t old_offset = 0, new_offset = 0, bytes = 0, source_bytes = 0;
+    bool convert_f64_to_f32 = false;
     bool convert_f16 = false;
     bool convert_q8_0 = false;
     bool q8_source_f16 = false;
@@ -129,6 +130,35 @@ inline bool IsQualitySensitiveTensor(const std::string& name) {
            lower.find("rope_freq")!=std::string::npos ||
            lower.find("freqs")!=std::string::npos ||
            lower.find("bias")!=std::string::npos;
+}
+// GGML F64 is little-endian IEEE-754 binary64. Stream-convert to F32,
+// rejecting NaN, infinities, overflow and nonzero values rounded to zero.
+inline bool ConvertF64RangeToF32(std::ifstream& in,std::ofstream& out,
+                                 uint64_t from,uint64_t sourceBytes) {
+    if(sourceBytes%8 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char src[8192],dst[4096];
+    while(sourceBytes) {
+        const auto n=static_cast<std::streamsize>(std::min<uint64_t>(sourceBytes,sizeof(src)));
+        if(!in.read(reinterpret_cast<char*>(src),n))return false;
+        for(std::streamsize i=0;i<n;i+=8) {
+            uint64_t bits=0;
+            for(unsigned j=0;j<8;++j)bits|=uint64_t(src[i+j])<<(8*j);
+            double value=0;std::memcpy(&value,&bits,8);
+            if(!std::isfinite(value))return false;
+            const float converted=static_cast<float>(value);
+            if(!std::isfinite(converted)||(value!=0.0 && converted==0.0f))
+                return false;
+            uint32_t packed=0;std::memcpy(&packed,&converted,4);
+            for(unsigned j=0;j<4;++j)
+                dst[(i/8)*4+j]=static_cast<unsigned char>(packed>>(8*j));
+        }
+        if(!out.write(reinterpret_cast<const char*>(dst),n/2))return false;
+        sourceBytes-=static_cast<uint64_t>(n);
+    }
+    return true;
 }
 inline bool ConvertF32RangeToF16(std::ifstream& in, std::ofstream& out,
                                   uint64_t from, uint64_t sourceBytes) {
@@ -705,13 +735,21 @@ inline RepackError RepackGGUF(const std::string& input,
            !CheckedMultiply(count/block,blockBytes,t.bytes))
             return RepackError::Unsupported;
         t.source_bytes=t.bytes;
+        // F64 GGUF tensors are uncommon but can be safely narrowed to F32
+        // in auto mode. Do not cascade this conversion into Q8/Q4.
+        if(auto_compress && t.type==28) {
+            t.convert_f64_to_f32=true;
+            t.type=0;
+            t.bytes/=2;
+        }
         // Auto mode uses FP16 for sensitive F32 tensors rather than aggressively
         // quantizing normalization, embeddings, or output projection weights.
         const bool sensitive=IsQualitySensitiveTensor(t.name);
         // All F32 vectors can shrink to F16, including singleton-row matrices.
         // Only ordinary multi-row matrices are candidates for Q4_0.
         const bool matrix = t.dims.size()>=2 && t.dims[1]>1;
-        if((convert_f32_to_f16 || (auto_compress && (sensitive || t.dims[0]%32!=0))) && t.type==0) {
+        if(!t.convert_f64_to_f32 &&
+           (convert_f32_to_f16 || (auto_compress && (sensitive || t.dims[0]%32!=0))) && t.type==0) {
             t.convert_f16=true;
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
@@ -728,6 +766,7 @@ inline RepackError RepackGGUF(const std::string& input,
         // Repack both to Q8_0 only when the serialized payload shrinks.
         // Ordinary multi-row matrices remain candidates for Q4_0.
         if(auto_compress && (sensitive || !matrix) &&
+           !t.convert_f64_to_f32 &&
            (t.type==9 || t.type==15 ||
             ((t.type==0 || t.type==1) && !sensitive && !matrix)) &&
            q8Bytes<t.bytes &&
@@ -739,7 +778,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8;
             t.bytes=q8Bytes;
         }
-        if(convert_f32_to_q8_0 && !t.convert_f16 && !t.convert_q8_0 &&
+        if(convert_f32_to_q8_0 && !t.convert_f64_to_f32 && !t.convert_f16 && !t.convert_q8_0 &&
            (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
            t.dims[0]%32==0 &&
            // Q8_K is grouped in 256-element superblocks. A row that
@@ -761,7 +800,7 @@ inline RepackError RepackGGUF(const std::string& input,
         if(!CheckedMultiply(count/32,18,q4Bytes))
             return RepackError::Overflow;
         if((convert_q8_0_to_q4_0 || auto_compress) &&
-           !t.convert_f16 && !t.convert_q8_0 && !sensitive &&
+           !t.convert_f64_to_f32 && !t.convert_f16 && !t.convert_q8_0 && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
             t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) &&
             t.dims[0]%32==0 &&
@@ -933,6 +972,9 @@ inline RepackError RepackGGUF(const std::string& input,
                  ConvertQ8_1ToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes) :
                  ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
                                           t.source_bytes,t.q8_source_f16)))
+                return RepackError::Output;
+        } else if(t.convert_f64_to_f32) {
+            if(!ConvertF64RangeToF32(in,out,dataStart+t.old_offset,t.source_bytes))
                 return RepackError::Output;
         } else if(t.convert_f16) {
             if(!ConvertF32RangeToF16(in,out,dataStart+t.old_offset,t.source_bytes))
