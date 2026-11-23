@@ -201,8 +201,9 @@ bool CompressedWeightStore::addTensorF32AsF16FromReader(
  const bool admitted=addTensorFromReader(std::move(name),outputBytes,
   [](void* opaque,std::size_t offset,void* destination,std::size_t length)->bool {
    auto* ctx=static_cast<Context*>(opaque);
+   if(!ctx) return false;
    const std::size_t total=ctx->count*sizeof(std::uint16_t);
-   if(!ctx||(!destination&&length)||offset>total||length>total-offset)
+   if((!destination&&length)||offset>total||length>total-offset)
     return false;
    auto* out=static_cast<std::uint8_t*>(destination);
    const std::size_t end=offset+length;
