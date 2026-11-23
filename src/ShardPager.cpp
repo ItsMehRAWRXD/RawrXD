@@ -146,6 +146,7 @@ bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, s
     if (size == 0) return true;
     if (!out || size > std::numeric_limits<size_t>::max() ||
         offset > UINT64_MAX - (size - 1)) return false;
+    if ((offset + size - 1) / m_pageSize > 0xFFFFFFFFull) return false;
 
     // Acquire/copy/release one page at a time. Holding every page in a large
     // request simultaneously can exceed the configured pager budget because
