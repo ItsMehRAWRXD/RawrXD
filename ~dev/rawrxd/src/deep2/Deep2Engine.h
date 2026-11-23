@@ -130,14 +130,16 @@ struct WeightTensor {
     bool BuildCompressedF32GpuView(uint32_t rowBegin, uint32_t rowCount,
                                    GpuWeightView& out) const noexcept {
         out = {};
-        if (type != 0 || !compressedF32 || !rows || !cols || !rowCount ||
+        if (type != 0 || !rows || !cols || !rowCount ||
             rowBegin >= rows || rowCount > rows - rowBegin ||
+            cols > std::numeric_limits<uint32_t>::max() ||
             cols > std::numeric_limits<size_t>::max() / 2 ||
             rows > std::numeric_limits<size_t>::max() / (cols * 2))
             return false;
         auto payload = std::atomic_load_explicit(
             &gpuF16Payload, std::memory_order_acquire);
         if (!payload) {
+            if (!compressedF32) return false;
             RawrXD::TensorCompression::Encoding encoding{};
             std::vector<uint8_t> bytes;
             if (!compressedF32->ExportUniform16Bit(encoding, bytes) ||
@@ -156,7 +158,8 @@ struct WeightTensor {
             else
                 payload = std::move(expected);
         }
-        if (!payload || (payload->ggmlType != 1 && payload->ggmlType != 30))
+        if (!payload || (payload->ggmlType != 1 && payload->ggmlType != 30) ||
+            payload->bytes.size() != rows * cols * 2)
             return false;
         const size_t rowBytes = cols * 2;
         const size_t offset = static_cast<size_t>(rowBegin) * rowBytes;
