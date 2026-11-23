@@ -47,11 +47,17 @@ public:
                                float maxAbsError,Reader&& reader,
                                size_t chunkElements = 4096) {
         if(key.empty()) return false;
+        size_t buildBudget = 0;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            buildBudget = budgetBytes_;
+        }
         std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> built;
         try {
             built = std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
-                    elementCount,maxAbsError,std::forward<Reader>(reader),chunkElements,true));
+                    elementCount,maxAbsError,std::forward<Reader>(reader),chunkElements,true,
+                    buildBudget));
         } catch (...) {
             return false;
         }
