@@ -552,11 +552,13 @@ endif()
 # Codec-neutral compressed-block adapters: native LZ and optional zlib.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/compressed_block_codec_adapters_test.cpp")
     add_executable(compressed_block_codec_adapters_test
-        tests/compressed_block_codec_adapters_test.cpp)
+        tests/compressed_block_codec_adapters_test.cpp
+        src/deep2/compression/CompressedWeightStore.cpp)
     target_link_libraries(compressed_block_codec_adapters_test
         PRIVATE rawrxd_compression_core)
     target_include_directories(compressed_block_codec_adapters_test PRIVATE
-        "${CMAKE_SOURCE_DIR}/include")
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/src/deep2/compression")
     target_compile_features(compressed_block_codec_adapters_test PRIVATE cxx_std_17)
     if(MSVC)
         target_compile_options(compressed_block_codec_adapters_test PRIVATE /EHsc)
