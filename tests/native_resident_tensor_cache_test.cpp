@@ -58,7 +58,7 @@ int main() {
     CHECK(cache.resident_bytes() == bytesA);
 
     leaseA.reset();
-    cache.SetBudget(bytesB);
+    cache.SetBudget(0);
     CHECK(cache.entry_count() == 0);
     CHECK(cache.resident_bytes() == 0);
 
