@@ -126,8 +126,10 @@ bool VulkanDevice::init() {
 }
 
 void VulkanDevice::shutdown() {
+    // Weight-cache buffers must be released while their owning VkDevice lives.
+    for (auto& g : m_gpus) vkDeviceWaitIdle(g.device);
+    clearCachedWeights();
     for (auto& g : m_gpus) {
-        vkDeviceWaitIdle(g.device);
         vkDestroyCommandPool(g.device, g.pool, nullptr);
         vkDestroyDevice(g.device, nullptr);
     }
@@ -312,6 +314,105 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
 
     cleanup();
     return true;
+}
+
+
+void VulkanDevice::evictCachedWeightsLocked(size_t requiredBytes) {
+    while (m_weightCacheBytes > m_weightCacheBudgetBytes ||
+           requiredBytes > m_weightCacheBudgetBytes - m_weightCacheBytes) {
+        auto victim = m_weightBuffers.end();
+        for (auto it = m_weightBuffers.begin(); it != m_weightBuffers.end(); ++it) {
+            if (victim == m_weightBuffers.end() ||
+                it->second.lastUse < victim->second.lastUse)
+                victim = it;
+        }
+        if (victim == m_weightBuffers.end()) break;
+        if (victim->second.buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(victim->second.owner, victim->second.buffer, nullptr);
+        if (victim->second.memory != VK_NULL_HANDLE)
+            vkFreeMemory(victim->second.owner, victim->second.memory, nullptr);
+        const size_t bytes = static_cast<size_t>(victim->second.size);
+        m_weightCacheBytes = bytes > m_weightCacheBytes ? 0 : m_weightCacheBytes - bytes;
+        m_weightBuffers.erase(victim);
+    }
+}
+
+bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::string& key,
+                                                  const void* data, VkDeviceSize size,
+                                                  size_t budgetBytes, VkBuffer& buffer) {
+    buffer = VK_NULL_HANDLE;
+    if (key.empty() || !data || !size || (size & 3u) != 0u ||
+        size > static_cast<VkDeviceSize>(std::numeric_limits<size_t>::max()))
+        return false;
+
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    m_weightCacheBudgetBytes = budgetBytes;
+    evictCachedWeightsLocked(0);
+
+    const std::string cacheKey =
+        std::to_string(reinterpret_cast<uintptr_t>(gpu.device)) + ":" + key;
+    auto existing = m_weightBuffers.find(cacheKey);
+    if (existing != m_weightBuffers.end()) {
+        if (existing->second.size == size && existing->second.owner == gpu.device) {
+            existing->second.lastUse = ++m_weightCacheTick;
+            buffer = existing->second.buffer;
+            return true;
+        }
+        if (existing->second.buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(existing->second.owner, existing->second.buffer, nullptr);
+        if (existing->second.memory != VK_NULL_HANDLE)
+            vkFreeMemory(existing->second.owner, existing->second.memory, nullptr);
+        const size_t oldBytes = static_cast<size_t>(existing->second.size);
+        m_weightCacheBytes = oldBytes > m_weightCacheBytes ? 0 : m_weightCacheBytes - oldBytes;
+        m_weightBuffers.erase(existing);
+    }
+
+    if (size > budgetBytes) return false;
+    evictCachedWeightsLocked(static_cast<size_t>(size));
+    if (m_weightCacheBytes > budgetBytes ||
+        static_cast<size_t>(size) > budgetBytes - m_weightCacheBytes)
+        return false;
+
+    VkBuffer created = VK_NULL_HANDLE;
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+    const VkBufferUsageFlags usage =
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    if (!createBuffer(gpu, size, usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                      created, memory, nullptr))
+        return false;
+    if (!uploadToBuffer(gpu, created, 0, data, size)) {
+        destroyBuffer(gpu, created, memory);
+        return false;
+    }
+
+    CachedWeightBuffer entry;
+    entry.owner = gpu.device;
+    entry.buffer = created;
+    entry.memory = memory;
+    entry.size = size;
+    entry.lastUse = ++m_weightCacheTick;
+    m_weightBuffers.emplace(cacheKey, entry);
+    m_weightCacheBytes += static_cast<size_t>(size);
+    buffer = created;
+    return true;
+}
+
+size_t VulkanDevice::cachedWeightBytes() const {
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    return m_weightCacheBytes;
+}
+
+void VulkanDevice::clearCachedWeights() {
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    for (auto& item : m_weightBuffers) {
+        auto& entry = item.second;
+        if (entry.buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(entry.owner, entry.buffer, nullptr);
+        if (entry.memory != VK_NULL_HANDLE)
+            vkFreeMemory(entry.owner, entry.memory, nullptr);
+    }
+    m_weightBuffers.clear();
+    m_weightCacheBytes = 0;
 }
 
 bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize offset,
