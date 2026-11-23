@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <vector>
 #include <mutex>
+#include <functional>
+#include <cstdint>
 
 namespace Deep2Rom::Compute {
 
@@ -26,6 +28,11 @@ namespace Deep2Rom::Compute {
 
         bool acquire_staging_buffer(size_t size, StagingSlot& out_slot);
         void release_staging_buffer(StagingSlot& slot);
+
+        // Fill mapped staging memory from a bounded range reader (e.g. TensorROMCompressedView).
+        // The callback must produce exactly byte_count bytes or return false.
+        bool populate_staging_buffer(StagingSlot& slot, size_t byte_count,
+            const std::function<bool(uint8_t*, size_t)>& read_exact);
 
         bool enqueue_asynchronous_dma(
             VkQueue transfer_queue,
