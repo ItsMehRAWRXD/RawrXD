@@ -17,7 +17,7 @@ int main() {
     int f32Reads = 0;
     TensorRangeReader f32Reader = [&](uint64_t offset, uint64_t count, uint8_t* out) {
         ++f32Reads;
-        if (offset != 8 || count != 16) return false;
+        if (offset != static_cast<uint64_t>(8 + (f32Reads - 1) * 8) || count != 8) return false;
         std::memcpy(out, reinterpret_cast<const uint8_t*>(f32.data()) + offset,
                     static_cast<size_t>(count));
         return true;
