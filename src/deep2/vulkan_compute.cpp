@@ -1585,6 +1585,7 @@ bool VulkanCompute::endSubmitWait(
     if (!oneShot_.MarkSubmitted(oneShotTicket)) {
         std::fprintf(stderr, "[GPU] submission ownership acknowledgement failed\n");
         if (globalSerial) g_gpuInFlight.fetch_sub(1);
+        releaseTransientWeightBuffers(); // queue rejected the submission
         return false;
     }
     ++queueSubmitCount_;
@@ -2765,6 +2766,18 @@ void VulkanCompute::accumulateQ4kParitySamples() noexcept {
 bool VulkanCompute::BeginFusedLayer() {
 
     if (fused_ || !initialized_ || !opsPipeline_) return false;
+    // A prior timed-out/failed one-shot submission may have left temporary
+    // buffers quarantined. Reclaim them only after an explicit idle proof.
+    if (!transientWeightBuffers_.empty()) {
+        if (device_ && !lostSeq_.lost) {
+            const VkResult idle = vkDeviceWaitIdle(device_);
+            if (idle != VK_SUCCESS && idle != VK_ERROR_DEVICE_LOST)
+                return false;
+            if (idle == VK_ERROR_DEVICE_LOST)
+                (void)NoteVkResult(static_cast<int>(idle), "transient-weight-drain");
+        }
+        releaseTransientWeightBuffers();
+    }
     if(!ensureReusableFusedSubmitObjects()) return false;
 
     // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: invalidate the stale
@@ -2842,7 +2855,10 @@ bool VulkanCompute::EndFusedLayer() {
                      (int)endRes);
         std::fflush(stderr);
     }
-    if(endRes!=VK_SUCCESS) return false;
+    if(endRes!=VK_SUCCESS) {
+        releaseTransientWeightBuffers(); // command buffer was never submitted
+        return false;
+    }
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END fence_reset_begin\n");
         std::fflush(stderr);
@@ -2853,8 +2869,10 @@ bool VulkanCompute::EndFusedLayer() {
                      (int)resetRes);
         std::fflush(stderr);
     }
-    if(resetRes!=VK_SUCCESS)
+    if(resetRes!=VK_SUCCESS) {
+        releaseTransientWeightBuffers(); // command buffer was never submitted
         return false;
+    }
 
     VkSubmitInfo si{};
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -2985,6 +3003,9 @@ bool VulkanCompute::EndFusedLayer() {
                      (unsigned long long)globalSeq);
         std::fflush(stderr);
     }
+    // The fused fence has completed: all commands that referenced one-shot
+    // compressed tiles are finished, so their device-local buffers can retire.
+    releaseTransientWeightBuffers();
     return true;
 }
 
@@ -7503,6 +7524,7 @@ void VulkanCompute::cleanup() {
     }
     // Device idle or confirmed terminal loss above authorizes these drains.
     if (!resetDownloadRing(true) || !resetAsyncCmdRing(true)) return;
+    releaseTransientWeightBuffers();
 
     clearRecordedQ4K();
     clearRecordedGroups();
