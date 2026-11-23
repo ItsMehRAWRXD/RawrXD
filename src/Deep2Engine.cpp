@@ -65,7 +65,8 @@ Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() c
     snapshot.encodedCacheHits = encoded.hits;
     snapshot.encodedCacheMisses = encoded.misses;
     const auto saturatingAdd = [](uint64_t a, uint64_t b) {
-        return b > UINT64_MAX - a ? UINT64_MAX : a + b;
+        return b > std::numeric_limits<uint64_t>::max() - a
+            ? std::numeric_limits<uint64_t>::max() : a + b;
     };
     snapshot.bytesDecoded = saturatingAdd(f32.bytesDecoded, encoded.bytesDecoded);
     snapshot.evictions = saturatingAdd(f32.evictions, encoded.evictions);
