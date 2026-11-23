@@ -176,7 +176,27 @@ struct BatchStats {
     uint64_t batches_opened = 0;
     uint64_t device_batches_opened = 0;   // real Gpu().BeginQuantDotBatch() calls
 };
-BatchStats g_batch_stats;
+// RAWRXD_DEEP2_ACCOUNTING_OWNER_FIX (Sprint9 B04).
+//
+// Batch accounting must be attributed to the executor that did the work. Every
+// increment happens on the OWNING thread, which is what makes owner-local
+// attribution exact here:
+//   accepted              -> DotBlocked's thread_local queue path
+//   completed / failed    -> EndBatchImpl, called by the owner after it submits
+//                            and waits on the fence (no completion worker exists)
+//   device_batches_opened -> EndBatchImpl, same owner thread
+//   batches_opened        -> BeginBatchImpl, same owner thread
+//
+// Previously this was a plain global, so two concurrent executors each measured
+// a delta that included the other's work: the aggregate balanced while every
+// per-executor figure was wrong. Per-thread scope fixes that.
+//
+// NOTE: a cross-thread AGGREGATE diagnostic is not provided here yet. Summing
+// per-thread counters requires a separate accumulator updated at each increment
+// site (atomics or a dedicated mutex); that is deliberately deferred rather than
+// bolted on as another racy global. Diagnostics that need global totals must not
+// read this variable.
+thread_local BatchStats g_batch_stats;
 uint64_t g_active_batch_count = 0;
 uint64_t g_pending_queued_count = 0;
 
