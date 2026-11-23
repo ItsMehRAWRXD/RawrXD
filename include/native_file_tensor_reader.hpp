@@ -2,6 +2,7 @@
 // Stream compressed weight blocks from a file without materializing full tensors.
 // Source byte ranges are preserved exactly, including GGML quantized payloads.
 #include "native_compressed_tensor.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <limits>
