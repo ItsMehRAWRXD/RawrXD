@@ -19,6 +19,14 @@
 namespace {
 constexpr size_t kResidencyMiB = 1024ull * 1024ull;
 
+// Pipeline handles are process-shared across engine instances, but must be
+// explicitly destroyed before the owning VkDevice is torn down.
+std::mutex g_vulkanProgramMutex;
+deep2::VulkanProgram g_f32VulkanProgram;
+deep2::VulkanProgram g_packed16VulkanProgram;
+VkDevice g_f32VulkanBoundDevice = VK_NULL_HANDLE;
+VkDevice g_packed16VulkanBoundDevice = VK_NULL_HANDLE;
+
 size_t readResidencyMiB(const char* name, size_t fallback) {
     const char* text = std::getenv(name);
     if (!text || !*text) return fallback;
@@ -177,7 +185,23 @@ void Deep2Engine::Shutdown() {
     // compressed-cache leases remain live.
     compressedF32Weights.Clear();
     compressedEncodedWeights.Clear();
-    if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
+    if (vulkan) {
+        std::lock_guard<std::mutex> programLock(g_vulkanProgramMutex);
+        for (size_t i = 0; i < vulkan->gpuCount(); ++i) {
+            const auto* gpu = vulkan->gpu(i);
+            if (!gpu) continue;
+            if (g_f32VulkanBoundDevice == gpu->device) {
+                g_f32VulkanProgram.destroy(gpu->device);
+                g_f32VulkanBoundDevice = VK_NULL_HANDLE;
+            }
+            if (g_packed16VulkanBoundDevice == gpu->device) {
+                g_packed16VulkanProgram.destroy(gpu->device);
+                g_packed16VulkanBoundDevice = VK_NULL_HANDLE;
+            }
+        }
+        vulkan->shutdown();
+        vulkan.reset();
+    }
     rom.Reset();
     vulkanReady = false;
     initialized = false;
@@ -806,8 +830,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
                              const std::string& weightCacheKey) {
     // VulkanProgram owns one descriptor set, fence, and command pool binding.
     // Serialize reuse across inference agents and GPU selection.
-    static std::mutex programDispatchMutex;
-    std::lock_guard<std::mutex> dispatchLock(programDispatchMutex);
+    std::lock_guard<std::mutex> dispatchLock(g_vulkanProgramMutex);
     if (!vulkanReady || !vulkan || !wView.data || !xView.data ||
         xView.type != deep2::TensorType::F32 || !xView.contiguous || !wView.contiguous ||
         wView.dims.size() < 2 || xView.dims.empty())
@@ -859,38 +882,34 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         return false;
     y.assign(static_cast<size_t>(rows), 0.0f);
 
-    static deep2::VulkanProgram f32Program;
-    static deep2::VulkanProgram packed16Program;
-    static VkDevice f32BoundDevice = VK_NULL_HANDLE;
-    static VkDevice packed16BoundDevice = VK_NULL_HANDLE;
     deep2::VulkanProgram* selectedProgram = nullptr;
     uint32_t weightEncoding = 0;
     if (f32Weights) {
-        if (f32BoundDevice != gpu.device) {
-            if (f32BoundDevice != VK_NULL_HANDLE) f32Program.destroy(f32BoundDevice);
+        if (g_f32VulkanBoundDevice != gpu.device) {
+            if (g_f32VulkanBoundDevice != VK_NULL_HANDLE) g_f32VulkanProgram.destroy(g_f32VulkanBoundDevice);
             const std::string spv = exeDir() + "shaders\\gemv_f32.spv";
-            if (!f32Program.init(gpu.device, spv)) {
-                f32Program.destroy(gpu.device);
+            if (!g_f32VulkanProgram.init(gpu.device, spv)) {
+                g_f32VulkanProgram.destroy(gpu.device);
                 fprintf(stderr, "[VULKAN_GEMV] F32 program init failed for %s\n", spv.c_str());
-                f32BoundDevice = VK_NULL_HANDLE;
+                g_f32VulkanBoundDevice = VK_NULL_HANDLE;
                 return false;
             }
-            f32BoundDevice = gpu.device;
+            g_f32VulkanBoundDevice = gpu.device;
         }
-        selectedProgram = &f32Program;
+        selectedProgram = &g_f32VulkanProgram;
     } else {
-        if (packed16BoundDevice != gpu.device) {
-            if (packed16BoundDevice != VK_NULL_HANDLE) packed16Program.destroy(packed16BoundDevice);
+        if (g_packed16VulkanBoundDevice != gpu.device) {
+            if (g_packed16VulkanBoundDevice != VK_NULL_HANDLE) g_packed16VulkanProgram.destroy(g_packed16VulkanBoundDevice);
             const std::string spv = exeDir() + "shaders\\gemv_packed16.spv";
-            if (!packed16Program.init(gpu.device, spv)) {
-                packed16Program.destroy(gpu.device);
+            if (!g_packed16VulkanProgram.init(gpu.device, spv)) {
+                g_packed16VulkanProgram.destroy(gpu.device);
                 fprintf(stderr, "[VULKAN_GEMV] packed16 program init failed for %s\n", spv.c_str());
-                packed16BoundDevice = VK_NULL_HANDLE;
+                g_packed16VulkanBoundDevice = VK_NULL_HANDLE;
                 return false;
             }
-            packed16BoundDevice = gpu.device;
+            g_packed16VulkanBoundDevice = gpu.device;
         }
-        selectedProgram = &packed16Program;
+        selectedProgram = &g_packed16VulkanProgram;
         weightEncoding = f16Weights ? 1u : (bf16Weights ? 2u : 3u);
     }
 
