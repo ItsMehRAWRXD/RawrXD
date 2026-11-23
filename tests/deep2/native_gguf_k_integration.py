@@ -28,7 +28,7 @@ def independent_decode(typ, block):
         d,dm=struct.unpack_from("<ee",block,80)
         for j in range(256):
             g=j//16;within=j%128;lane=within//32;col=within%32
-            q=(block[16+(j//128)*32+col]>>(2*lane))&3
+            q=(block[16+(j//128)*64+(lane//2)*32+col]>>(2*(lane%2)))&3
             out.append(d*(block[g]&15)*q-dm*(block[g]>>4))
     elif typ==11:
         d=struct.unpack_from("<e",block,108)[0]
