@@ -46,7 +46,8 @@ public:
 
     // Register an immutable byte span. No source pointer is retained.
     // Returns false if encoding does not save space or the entry cannot fit.
-    bool Register(const std::string& key, const void* source, size_t bytes,\n                  bool requireCompression = true) {
+    bool Register(const std::string& key, const void* source, size_t bytes,
+                  bool requireCompression = true) {
         if (key.empty() || (bytes && !source)) return false;
         if (!bytes) return false;
 
