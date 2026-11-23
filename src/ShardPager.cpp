@@ -210,12 +210,16 @@ std::size_t PageCache::leaseCount() const {
 
 void PageCache::evictUnleasedAll() {
     std::lock_guard<std::mutex> lock(m_mutex);
-    while (!m_lru.empty()) {
-        Page* victim = m_lru.back();
-        if (victim->leaseCount.load(std::memory_order_acquire) > 0) break;
-        m_lru.pop_back();
+    for (auto it = m_lru.begin(); it != m_lru.end();) {
+        Page* victim = *it;
+        if (victim->leaseCount.load(std::memory_order_acquire) != 0) {
+            ++it;
+            continue;
+        }
+        it = m_lru.erase(it);
         m_index.erase(makeKey(victim->shard, victim->pageNo));
         m_residentBytes -= victim->data.size();
+        victim->inCache = false;
         delete victim;
     }
 }
