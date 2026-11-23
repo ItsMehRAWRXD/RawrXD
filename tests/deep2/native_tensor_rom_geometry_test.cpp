@@ -156,6 +156,7 @@ int main() {
     testValid(9,{32,2},2*36);
     testValid(20,{32,2},2*18); // IQ4_NL
     testValid(23,{256,2},2*136); // IQ4_XS
+    testValid(39,{32,2},2*17); // MXFP4
     testValid(10,{256,2},2*84);
     testValid(11,{256,2},2*110);
     testValid(12,{256,2},2*144);
@@ -165,6 +166,7 @@ int main() {
     testRejected(2,{31,2});   // Q4_0 rows must be block-aligned.
     testRejected(20,{31,2});  // IQ4_NL rows must be block-aligned.
     testRejected(23,{255,2}); // IQ4_XS rows must be block-aligned.
+    testRejected(39,{31,2});  // MXFP4 rows must be block-aligned.
     testRejected(12,{255,2}); // Q4_K rows must be 256-value aligned.
     testRejected(99,{256,2}); // Unknown GGUF types are never assigned guessed strides.
     testRejected(0,{std::numeric_limits<uint64_t>::max(),2}); // Dimension products must not wrap.
