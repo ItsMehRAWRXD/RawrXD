@@ -1894,6 +1894,21 @@ static void fp16GEMV(const uint16_t* weights, const float* input, float* output,
 // Deep2Engine Implementation
 // ============================================================================
 
+static float ReadCompressedF32ToF16MaxAbsError(bool& valid) {
+    valid = true;
+    const char* value = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_MAX_ABS_ERROR");
+    if (!value || !*value)
+        return (std::numeric_limits<float>::infinity)();
+
+    char* end = nullptr;
+    const float parsed = std::strtof(value, &end);
+    if (end == value || *end != '\0' || !std::isfinite(parsed) || parsed < 0.0f) {
+        valid = false;
+        return (std::numeric_limits<float>::infinity)();
+    }
+    return parsed;
+}
+
 Deep2Engine::Deep2Engine() = default;
 
 bool Deep2Engine::configureReapRuntimeInjection(
@@ -3500,12 +3515,16 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 const char* f32ToF16Env = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16");
                 const bool allowF32ToF16 =
                     f32ToF16Env && f32ToF16Env[0] == '1' && f32ToF16Env[1] == '\0';
+                bool validF32Tolerance = true;
+                const float maxF32ToF16AbsError =
+                    ReadCompressedF32ToF16MaxAbsError(validF32Tolerance);
                 const std::size_t originalType = static_cast<std::size_t>(wt.type);
                 const std::size_t originalBytes = wt.sizeBytes;
+                bool precisionRejected = false;
                 bool convertedF32ToF16 = false;
                 bool stored = false;
 
-                if (remaining > 0 && allowF32ToF16 &&
+                if (remaining > 0 && allowF32ToF16 && validF32Tolerance &&
                     wt.type == (int)GGMLType::GGML_TYPE_F32 &&
                     wt.rows <= (std::numeric_limits<std::size_t>::max)() / wt.cols)
                 {
@@ -3516,7 +3535,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     {
                         stored = compressedWeightStore_->addTensorF32AsF16FromReader(
                             name, static_cast<const float*>(t.data), elements,
-                            &compressionError, remaining);
+                            &compressionError, remaining, maxF32ToF16AbsError,
+                            true, &precisionRejected);
                         if (stored)
                         {
                             wt.type = (int)GGMLType::GGML_TYPE_F16;
@@ -6311,10 +6331,14 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
             const char* f32ToF16Env = std::getenv("RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16");
             const bool allowF32ToF16 =
                 f32ToF16Env && f32ToF16Env[0] == '1' && f32ToF16Env[1] == '\0';
+            bool validF32Tolerance = true;
+            const float maxF32ToF16AbsError =
+                ReadCompressedF32ToF16MaxAbsError(validF32Tolerance);
+            bool precisionRejected = false;
             bool stored = false;
             bool convertedF32ToF16 = false;
 
-            if (remainingBudget > 0 && allowF32ToF16 &&
+            if (remainingBudget > 0 && allowF32ToF16 && validF32Tolerance &&
                 originalType == static_cast<int>(GGMLType::GGML_TYPE_F32) &&
                 dst.rows <= (std::numeric_limits<std::size_t>::max)() / dst.cols)
             {
@@ -6325,7 +6349,8 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
                 {
                     stored = compressedWeightStore_->addTensorF32AsF16FromReader(
                         ref->name, static_cast<const float*>(mapping->data),
-                        elements, &compressionError, remainingBudget);
+                        elements, &compressionError, remainingBudget,
+                        maxF32ToF16AbsError, true, &precisionRejected);
                     if (stored)
                     {
                         dst.type = static_cast<int>(GGMLType::GGML_TYPE_F16);
