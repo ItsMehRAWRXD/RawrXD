@@ -501,6 +501,11 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     const size_t hiddenDim = geometry.hiddenDim;
     const size_t numLayers = geometry.numLayers;
     const size_t numHeads = geometry.numHeads;
+    if (!hiddenDim || !numHeads || hiddenDim % numHeads != 0 ||
+        !numLayers || !geometry.intermediateDim) {
+        fprintf(stderr, "[Move 10] Invalid or incomplete model geometry\n");
+        return false;
+    }
     const size_t headDim = hiddenDim / numHeads;
     size_t vocabSize = geometry.vocabSize;
     const size_t intermediateDim = geometry.intermediateDim;
