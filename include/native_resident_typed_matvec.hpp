@@ -114,10 +114,12 @@ inline std::vector<float> resident_q8_0_matvec(
                         if (!std::isfinite(scale))
                             throw std::runtime_error("non-finite Q8_0 scale");
                         const auto first = (firstBlock + b / kBlockBytes) * kValues;
-                        for (std::size_t j = 0; j < kValues; ++j)
+                        for (std::size_t j = 0; j < kValues; ++j) {
+                            std::int8_t quantized = 0;
+                            std::memcpy(&quantized, data + b + 2 + j, sizeof(quantized));
                             sum += static_cast<double>(scale) *
-                                   static_cast<std::int8_t>(data[b + 2 + j]) *
-                                   input[first + j];
+                                   static_cast<double>(quantized) * input[first + j];
+                        }
                     }
                 });
             byte += take;
