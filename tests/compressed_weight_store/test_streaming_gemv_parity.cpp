@@ -1,6 +1,6 @@
 // End-to-end CPU GEMV consuming bounded decoded weight tiles, not full tensors.
 // Dense oracle is independent of CompressedWeightStore's read/decode implementation.
-#include "deep2/compression/CompressedWeightStore.hpp"
+#include "deep2/compression/StreamingWeightMatVec.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -29,19 +29,18 @@ int main() {
     }
     const auto before=store.stats();
     if (before.cached_decoded_bytes!=0) return 2;
-    std::vector<float> tile(tileCols);
-    for (std::size_t r=0;r<rows;++r) {
-        for (std::size_t c=0;c<cols;c+=tileCols) {
-            const auto take=std::min(tileCols,cols-c);
-            const auto byteOffset=(r*cols+c)*sizeof(float);
-            if (!store.readRange("linear.weight",byteOffset,tile.data(),
-                                 take*sizeof(float),&error)) {
-                std::fprintf(stderr,"tile read failed: %s\n",error.c_str());return 3;
-            }
-            for (std::size_t i=0;i<take;++i) actual[r]+=tile[i]*input[c+i];
-            if (store.stats().cached_decoded_bytes>cacheBudget) return 4;
-        }
+    if (!rawrxd::compression::streamingF32MatVec(store,"linear.weight",
+            input.data(),rows,cols,actual.data(),tileCols,&error)) {
+        std::fprintf(stderr,"streaming GEMV failed: %s\n",error.c_str());
+        return 3;
     }
+    if (store.stats().cached_decoded_bytes>cacheBudget) return 4;
+    // Fail-closed dimensions must not overwrite the caller's output.
+    std::vector<float> sentinel(rows,12345.0f);
+    if (rawrxd::compression::streamingF32MatVec(store,"linear.weight",
+            input.data(),rows,cols-1,sentinel.data(),tileCols,&error)) return 8;
+    if (!std::all_of(sentinel.begin(),sentinel.end(),
+                     [](float x){return x==12345.0f;})) return 9;
     float maxAbs=0;
     for (std::size_t r=0;r<rows;++r) {
         if (!std::isfinite(actual[r])) return 5;
