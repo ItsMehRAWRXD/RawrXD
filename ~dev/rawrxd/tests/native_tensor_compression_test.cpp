@@ -39,6 +39,32 @@ int main() {
     for (std::size_t i=0;i<decoded.size()-274;++i)
         CHECK(decoded[i]==values[i+137]);
 
+    // Reader-backed construction is bounded to chunk-sized source requests.
+    std::size_t readerCalls=0,readerElements=0;
+    auto streamed=ChunkedF32Storage::BuildFromReader(
+        values.size(),0.0f,
+        [&values,&readerCalls,&readerElements](std::size_t offset,std::size_t count,float* out) {
+            ++readerCalls;
+            readerElements+=count;
+            std::memcpy(out,values.data()+offset,count*sizeof(float));
+            return true;
+        },256,false,values.size()*2);
+    CHECK(readerCalls==values.size()/256);
+    CHECK(readerElements==values.size());
+    CHECK(streamed.storedBytes()==values.size()*2);
+    bool budgetRejected=false;
+    try {
+        (void)ChunkedF32Storage::BuildFromReader(
+            values.size(),0.0f,
+            [&values](std::size_t offset,std::size_t count,float* out) {
+                std::memcpy(out,values.data()+offset,count*sizeof(float));
+                return true;
+            },256,false,1);
+    } catch (const std::length_error&) {
+        budgetRejected=true;
+    }
+    CHECK(budgetRejected);
+
     // BF16 remains viable when IEEE F16 overflows large finite values.
     const float largeFinite[] = {1000000.0f};
     auto bf16=ChunkedF32Storage::Build(largeFinite,1,1024.0f,1);
