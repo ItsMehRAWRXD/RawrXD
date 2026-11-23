@@ -15,6 +15,12 @@
 #include <set>
 #include <string>
 #include <vector>
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 namespace RawrXD { namespace REAP {
 enum class RepackError { None, Input, Format, Unsupported, Overflow, Output };
@@ -895,11 +901,18 @@ inline RepackError RepackGGUF(const std::string& input,
         return RepackError::Output;
     out.close();
     if(!out)return RepackError::Output;
-    // On platforms where rename cannot replace an existing destination,
-    // report failure and preserve it rather than deleting it first.
+    // Publish the completed file atomically. On Windows std::filesystem::rename
+    // does not replace an existing destination; MoveFileExW does, without
+    // first deleting the previous valid GGUF. No cross-volume copy fallback.
+#ifdef _WIN32
+    if(!MoveFileExW(stage.c_str(),std::filesystem::path(output).c_str(),
+                    MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH))
+        return RepackError::Output;
+#else
     std::error_code renameError;
     std::filesystem::rename(stage,output,renameError);
     if(renameError)return RepackError::Output;
+#endif
     cleanup.committed=true;
     return RepackError::None;
 }
