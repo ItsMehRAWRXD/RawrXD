@@ -193,8 +193,12 @@ namespace Deep2Rom::Compute {
         std::lock_guard<std::mutex> lock(m_pool_mutex);
         for (auto& pooled_slot : m_pool) {
             if (pooled_slot.buffer == src_slot.buffer) {
-                if (pooled_slot.transfer_fence != VK_NULL_HANDLE)
-                    ::vkDestroyFence(m_device, pooled_slot.transfer_fence, nullptr);
+                // A slot cannot be submitted again until its previous transfer is released.
+                if (pooled_slot.transfer_fence != VK_NULL_HANDLE) {
+                    ::vkWaitForFences(m_device, 1, &completion, VK_TRUE, UINT64_MAX);
+                    ::vkDestroyFence(m_device, completion, nullptr);
+                    return false;
+                }
                 pooled_slot.transfer_fence = completion;
                 return true;
             }
