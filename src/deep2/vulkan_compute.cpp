@@ -4188,6 +4188,7 @@ bool VulkanCompute::DispatchGemvDevice(
             destroyBuffer(temporary);
             return false;
         }
+        ++weightUploads_;
         try {
             transientWeightBuffers_.push_back(temporary);
         } catch (...) {
@@ -4282,6 +4283,7 @@ bool VulkanCompute::DispatchGemvQuant(
             destroyBuffer(temporary);
             return fail("WEIGHT_ONESHOT_UPLOAD");
         }
+        ++weightUploads_;
         try {
             transientWeightBuffers_.push_back(temporary);
         } catch (...) {
