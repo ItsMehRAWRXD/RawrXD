@@ -1025,7 +1025,7 @@ inline RepackError RepackGGUF(const std::string& input,
         // All F32 vectors can shrink to F16, including singleton-row matrices.
         // Only ordinary multi-row matrices are candidates for Q4_0.
         const bool matrix = t.dims.size()>=2 && t.dims[1]>1;
-        if(!t.convert_f64_to_f32 &&
+        if(!t.convert_f64_to_f32 && !t.convert_f64_to_f16 &&
            (convert_f32_to_f16 || (auto_compress && (sensitive || t.dims[0]%32!=0))) && t.type==0) {
             t.convert_f16=true;
             t.type=1; // GGML_TYPE_F16
@@ -1047,7 +1047,7 @@ inline RepackError RepackGGUF(const std::string& input,
         // auxiliary metadata, not part of reconstructed tensor values.
         // Apply this reduction to matrices too, without Q4 precision loss.
         if(auto_compress && (t.type==9 || sensitive || !matrix) &&
-           !t.convert_f64_to_f32 &&
+           !t.convert_f64_to_f32 && !t.convert_f64_to_f16 &&
            (t.type==9 || t.type==15 ||
             ((t.type==0 || t.type==1) && !sensitive && !matrix)) &&
            q8Bytes<t.bytes &&
@@ -1059,7 +1059,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=8;
             t.bytes=q8Bytes;
         }
-        if(convert_f32_to_q8_0 && !t.convert_f64_to_f32 && !t.convert_f16 && !t.convert_q8_0 &&
+        if(convert_f32_to_q8_0 && !t.convert_f64_to_f32 && !t.convert_f64_to_f16 && !t.convert_f16 && !t.convert_q8_0 &&
            (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
            t.dims[0]%32==0 &&
            // Q8_K is grouped in 256-element superblocks. A row that
@@ -1081,7 +1081,7 @@ inline RepackError RepackGGUF(const std::string& input,
         if(!CheckedMultiply(count/32,18,q4Bytes))
             return RepackError::Overflow;
         if((convert_q8_0_to_q4_0 || auto_compress) &&
-           !t.convert_f64_to_f32 && !t.convert_f16 && !t.convert_q8_0 && !sensitive &&
+           !t.convert_f64_to_f32 && !t.convert_f64_to_f16 && !t.convert_f16 && !t.convert_q8_0 && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
             t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) &&
             t.dims[0]%32==0 &&
