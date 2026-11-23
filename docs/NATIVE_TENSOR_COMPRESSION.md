@@ -125,6 +125,11 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
 - `gemvTensorROMVulkan` shares the same tile readers and submits one bounded
   F32 weight tile at a time; it publishes output only after all tile calls
   succeed.
+- The native Deep2 Vulkan QGEMV path can retain uniform F16/BF16 compressed
+  F32 weights in device-local storage. Its shader reads packed 16-bit values
+  directly and accumulates in F32; mixed-codec chunks fail closed to the
+  existing F32 path. This is opt-in through compressed-F32 preparation and
+  its numerical-error budget; weights are never silently quantized.
 - F16/BF16 conversion remains opt-in through
   `compressedF32MaxAbsError`; its default is zero, so lossy conversion is
   never silently enabled. Exact F16/BF16 representations and lossless RLE/LZ4
