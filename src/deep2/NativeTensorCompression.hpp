@@ -13,7 +13,7 @@
 #include <utility>
 
 namespace RawrXD { namespace TensorCompression {
-enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4, ShuffleLZ4 = 5, Shuffle16LZ4 = 6, XorDeltaLZ4 = 7 };
+enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4, ShuffleLZ4 = 5, Shuffle16LZ4 = 6, XorDeltaLZ4 = 7, Shuffle8LZ4 = 8 };
 struct Result {
     Encoding encoding = Encoding::Raw;
     uint64_t original_bytes = 0;
@@ -174,6 +174,22 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
             best.payload = std::move(lz4);
         }
     }
+    // Eight-byte lane shuffle can expose repeated metadata/scales and
+    // correlated byte planes in packed quantized blocks. Adaptive selection
+    // prevents growth when the bytes are already high-entropy.
+    if (bytes >= 128 && bytes % 8 == 0) {
+        std::vector<uint8_t> shuffled(bytes);
+        const size_t words = bytes / 8;
+        for (size_t lane = 0; lane < 8; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                shuffled[lane * words + i] = p[i * 8 + lane];
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(shuffled.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::Shuffle8LZ4;
+            best.payload = std::move(packed);
+        }
+    }
     // Bit-exact XOR predictor on consecutive 32-bit words. Unlike
     // arithmetic float prediction, this preserves NaN payloads and signed
     // zero. Correlated words can produce zero-heavy XOR residuals.
@@ -278,6 +294,18 @@ inline void DecodeInto(const Result& r, void* destination, size_t destination_by
     if (destination_bytes!=n) throw std::invalid_argument("destination size mismatch");
     if (n && !destination) throw std::invalid_argument("null decode destination");
     auto* out=static_cast<uint8_t*>(destination);
+    if (r.encoding==Encoding::Shuffle8LZ4) {
+        if (n % 8 != 0) throw std::invalid_argument("shuffled8 LZ4 alignment");
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> shuffled(n);
+        DecodeInto(inner, shuffled.data(), shuffled.size());
+        const size_t words = n / 8;
+        for (size_t lane = 0; lane < 8; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                out[i * 8 + lane] = shuffled[lane * words + i];
+        return;
+    }
     if (r.encoding==Encoding::XorDeltaLZ4) {
         if (n % 4 != 0) throw std::invalid_argument("XOR delta alignment");
         Result inner = r;
