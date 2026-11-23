@@ -49,6 +49,45 @@ int main() {
     check(retained==after,"budget_rejection_preserves_output");
     check(RepackGGUF(source,source)==RepackError::Output,
           "in_place_overwrite_rejected");
+    // A GGUF directory may enumerate tensors in a different order from
+    // their physical locations. The repacker must preserve both payloads.
+    {
+        std::ofstream out(source,std::ios::binary|std::ios::trunc);
+        WriteU32(out,0x46554747);WriteU32(out,3);
+        WriteU64(out,2);WriteU64(out,1);
+        WriteName(out,"general.alignment");WriteU32(out,4);WriteU32(out,32);
+        WriteName(out,"second.weight");WriteU32(out,1);WriteU64(out,4);
+        WriteU32(out,0);WriteU64(out,32);
+        WriteName(out,"first.weight");WriteU32(out,1);WriteU64(out,4);
+        WriteU32(out,0);WriteU64(out,0);
+        PadTo(out,32);
+        for(int i=0;i<16;++i)out.put(static_cast<char>(0x11));
+        for(int i=0;i<16;++i)out.put('\\0');
+        for(int i=0;i<16;++i)out.put(static_cast<char>(0x22));
+    }
+    check(RepackGGUF(source,dest,1024)==RepackError::None,
+          "out_of_order_tensor_directory_repacked");
+    {
+        std::ifstream in(dest,std::ios::binary);
+        uint32_t v=0;uint64_t n=0;
+        ReadU32(in,v);ReadU32(in,v);ReadU64(in,n);ReadU64(in,n);
+        std::string key;ReadName(in,key);ReadU32(in,v);ReadU32(in,v);
+        std::string name;uint64_t offset=0;
+        ReadName(in,name);ReadU32(in,v);ReadU64(in,n);ReadU32(in,v);ReadU64(in,offset);
+        check(name=="second.weight" && offset==0,
+              "first_directory_tensor_relocated_to_zero");
+        ReadName(in,name);ReadU32(in,v);ReadU64(in,n);ReadU32(in,v);ReadU64(in,offset);
+        check(name=="first.weight" && offset==32,
+              "second_directory_tensor_relocated_to_32");
+        const auto dirEnd=static_cast<uint64_t>(in.tellg());
+        const auto dataStart=(dirEnd+31)&~uint64_t(31);
+        in.seekg(static_cast<std::streamoff>(dataStart));
+        char first=0;in.get(first);
+        in.seekg(static_cast<std::streamoff>(dataStart+32));
+        char second=0;in.get(second);
+        check(first==static_cast<char>(0x22) && second==static_cast<char>(0x11),
+              "out_of_order_tensor_payloads_preserved");
+    }
     std::remove(source);std::remove(dest);
     std::cout<<"REAP_REPACK_RESULT="<<(fails?"FAIL":"PASS")
              <<" failures="<<fails<<"\n";
