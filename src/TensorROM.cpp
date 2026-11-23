@@ -98,8 +98,13 @@ static std::string readValueAsString(uint32_t type, std::ifstream& f) {
 // ---------------------------------------------------------------------------
 
 uint64_t TensorEntry::byteSize() const {
+    if (dims.empty()) return 0;
     uint64_t n = 1;
-    for (auto d : dims) n *= d;
+    for (uint64_t d : dims) {
+        if (!d || n > std::numeric_limits<uint64_t>::max() / d)
+            return std::numeric_limits<uint64_t>::max();
+        n *= d;
+    }
     return tensorStorageBytes(n, type);
 }
 
@@ -380,8 +385,13 @@ bool TensorROM::hasTensor(const std::string& name) const {
 }
 
 uint64_t TensorROM::tensorNumValues(const TensorEntry& e) {
+    if (e.dims.empty()) return 0;
     uint64_t n = 1;
-    for (auto d : e.dims) n *= d;
+    for (uint64_t d : e.dims) {
+        if (!d || n > std::numeric_limits<uint64_t>::max() / d)
+            return std::numeric_limits<uint64_t>::max();
+        n *= d;
+    }
     return n;
 }
 
