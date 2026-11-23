@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace rawrxd::compression;
@@ -103,6 +104,21 @@ int main() {
         StoredTensorMatvec(store, "q8", ResidentWeightType::Q8_0,
                            input.data(), output.data(), rows, cols, scratch);
         assert(output == expected);
+    }
+    // Cross-block reads must match the uncompressed source exactly. This
+    // checks offsets crossing the store's 64-byte encoded block boundaries.
+    for (const auto& item : {std::pair<const char*, const std::vector<std::uint8_t>*>{"f16", &weights},
+                             {"q8", &q8}}) {
+        const auto& raw = *item.second;
+        for (std::size_t offset : {std::size_t(0), std::size_t(1), std::size_t(63),
+                                   std::size_t(64), std::size_t(65), std::size_t(127)}) {
+            const std::size_t count = std::min(std::size_t(129), raw.size() - offset);
+            std::vector<std::uint8_t> got(count);
+            std::string readError;
+            if (!store.readRange(item.first, offset, got.data(), count, &readError))
+                throw std::runtime_error(readError);
+            assert(std::equal(got.begin(), got.end(), raw.begin() + offset));
+        }
     }
     const auto finalStats = store.stats();
     assert(finalStats.compressed_bytes < finalStats.raw_bytes);
