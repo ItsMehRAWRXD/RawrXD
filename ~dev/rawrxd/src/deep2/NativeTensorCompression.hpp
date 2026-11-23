@@ -104,10 +104,14 @@ public:
                 // the raw F32 bytes so repeated values/patterns can shrink
                 // without changing a single bit.
                 const std::size_t rawBytes = count * sizeof(float);
-                std::vector<std::uint8_t> lz4 = lz4Compress(
-                    reinterpret_cast<const std::uint8_t*>(sourceChunk.data()),
-                    rawBytes);
-                const bool useLz4 = lz4.size() < rawBytes;
+                std::vector<std::uint8_t> lz4;
+                if (rawBytes <= static_cast<std::size_t>(
+                        std::numeric_limits<std::int64_t>::max())) {
+                    lz4 = lz4Compress(
+                        reinterpret_cast<const std::uint8_t*>(sourceChunk.data()),
+                        rawBytes);
+                }
+                const bool useLz4 = !lz4.empty() && lz4.size() < rawBytes;
                 chunk.encoding = useLz4 ? Encoding::LZ4 : Encoding::F32;
                 chunk.maxAbsError = 0.0f;
                 chunk.payloadBytes = useLz4 ? lz4.size() : rawBytes;
@@ -328,7 +332,7 @@ private:
         }
         constexpr std::uint32_t kHashBits = 16;
         constexpr std::uint32_t kHashSize = 1u << kHashBits;
-        std::vector<std::int32_t> table(kHashSize, -1);
+        std::vector<std::int64_t> table(kHashSize, -1);
         auto hashAt = [&](std::size_t pos) {
             return (load32(source + pos) * 2654435761u) >> (32 - kHashBits);
         };
@@ -336,8 +340,8 @@ private:
         std::size_t pos = 0;
         while (pos <= size - 12) {
             const std::uint32_t hash = hashAt(pos);
-            const std::int32_t reference = table[hash];
-            table[hash] = static_cast<std::int32_t>(pos);
+            const std::int64_t reference = table[hash];
+            table[hash] = static_cast<std::int64_t>(pos);
             if (reference < 0 ||
                 pos - static_cast<std::size_t>(reference) > 65535u ||
                 std::memcmp(source + reference, source + pos, 4) != 0) {
@@ -370,7 +374,7 @@ private:
             for (std::size_t seed =
                      pos > matchLength ? pos - matchLength + 1 : 0;
                  seed + 4 <= pos && seed <= size - 4; ++seed)
-                table[hashAt(seed)] = static_cast<std::int32_t>(seed);
+                table[hashAt(seed)] = static_cast<std::int64_t>(seed);
         }
         const std::size_t literalLength = size - anchor;
         const std::size_t tokenIndex = out.size();
