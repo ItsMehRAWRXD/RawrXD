@@ -2,6 +2,8 @@
 
 #include <cstring>
 #include <cmath>
+#include <limits>
+#include <algorithm>
 
 namespace deep2 {
 
@@ -223,6 +225,85 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         return false;
     }
     return false;
+}
+
+static bool checkedRangeStorageBytes(TensorType type, std::uint64_t elements,
+                                      std::uint64_t& bytes) {
+    std::uint64_t blockValues = 1;
+    std::uint64_t blockBytes = 0;
+    switch (type) {
+    case TensorType::F32: blockBytes = 4; break;
+    case TensorType::F16: blockBytes = 2; break;
+    case TensorType::Q8_0: blockValues = 32; blockBytes = 34; break;
+    case TensorType::Q2_K: blockValues = 256; blockBytes = 82; break;
+    case TensorType::Q3_K_S:
+    case TensorType::Q3_K_M: blockValues = 256; blockBytes = 114; break;
+    case TensorType::Q4_K_S: blockValues = 256; blockBytes = 146; break;
+    case TensorType::Q6_K: blockValues = 256; blockBytes = 210; break;
+    default: return false;
+    }
+    const std::uint64_t blocks = elements / blockValues +
+                                 (elements % blockValues != 0 ? 1u : 0u);
+    if (blocks > std::numeric_limits<std::uint64_t>::max() / blockBytes)
+        return false;
+    bytes = blocks * blockBytes;
+    return true;
+}
+
+bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
+                           const TensorRangeReader& reader,
+                           std::uint64_t firstElement, std::uint64_t elementCount,
+                           std::vector<float>& output,
+                           std::uint64_t chunkElements) {
+    output.clear();
+    if (!reader || firstElement > totalElements ||
+        elementCount > totalElements - firstElement) return false;
+    if (elementCount == 0) return true;
+
+    const std::uint64_t block = static_cast<std::uint64_t>(quantBlockSize(type));
+    if (block == 0 || firstElement % block != 0) return false;
+    if (chunkElements < block) chunkElements = block;
+    chunkElements = (chunkElements / block) * block;
+    if (chunkElements == 0) return false;
+
+    if (elementCount > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max()))
+        return false;
+    output.reserve(static_cast<std::size_t>(elementCount));
+
+    std::uint64_t completed = 0;
+    while (completed < elementCount) {
+        const std::uint64_t take = std::min(chunkElements, elementCount - completed);
+        const std::uint64_t absoluteElement = firstElement + completed;
+        std::uint64_t sourceOffset = 0, sourceBytes = 0;
+        if (!checkedRangeStorageBytes(type, absoluteElement, sourceOffset) ||
+            !checkedRangeStorageBytes(type, take, sourceBytes) ||
+            sourceOffset > std::numeric_limits<std::uint64_t>::max() - sourceBytes ||
+            sourceBytes > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max())) {
+            output.clear();
+            return false;
+        }
+
+        std::vector<std::uint8_t> encoded(static_cast<std::size_t>(sourceBytes));
+        if (!reader(sourceOffset, sourceBytes, encoded.data())) {
+            output.clear();
+            return false;
+        }
+
+        TensorView view;
+        view.type = type;
+        view.data = encoded.data();
+        view.byteSize = encoded.size();
+        view.dims = {take};
+        view.contiguous = true;
+        DequantizedTensor decoded;
+        if (!dequantizeTensor(view, decoded) || decoded.data.size() != take) {
+            output.clear();
+            return false;
+        }
+        output.insert(output.end(), decoded.data.begin(), decoded.data.end());
+        completed += take;
+    }
+    return output.size() == static_cast<std::size_t>(elementCount);
 }
 
 bool gemvFloat(const float* W, const float* x, float* y,

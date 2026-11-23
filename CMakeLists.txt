@@ -47,6 +47,17 @@ add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
 )
 
+# Standalone test for bounded compressed-source dequantization. This target
+# exercises the range decoder without requiring a model file or Vulkan device.
+enable_testing()
+add_executable(test_compressed_range_dequant
+    src/test_compressed_range_dequant.cpp
+    src/quant_kernels.cpp
+)
+target_include_directories(test_compressed_range_dequant PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_test(NAME compressed_range_dequant COMMAND test_compressed_range_dequant)
+
+
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_link_libraries(Deep2Engine_Benchmark PRIVATE ZLIB::ZLIB)
 target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)

@@ -3,6 +3,7 @@
 #include "TensorView.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 namespace deep2 {
@@ -11,6 +12,18 @@ namespace deep2 {
 // Logical shape = reverse of GGUF on-disk dim order.
 // Returns false for unsupported types.
 bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst);
+
+// Decode only a requested logical element range from a compressed/page-backed source.
+// firstElement must be block-aligned for quantized types. The reader receives exact
+// GGUF byte offsets and sizes; only bounded chunks are staged/dequantized at a time.
+using TensorRangeReader = std::function<bool(std::uint64_t byteOffset,
+                                             std::uint64_t byteCount,
+                                             std::uint8_t* destination)>;
+bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
+                           const TensorRangeReader& reader,
+                           std::uint64_t firstElement, std::uint64_t elementCount,
+                           std::vector<float>& output,
+                           std::uint64_t chunkElements = 4096);
 
 // Row-major GEMV: y[rows] = W[rows][cols] * x[cols].
 bool gemvFloat(const float* W, const float* x, float* y,
