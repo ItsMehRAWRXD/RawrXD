@@ -27,6 +27,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Verify native Win32 IDE translation-unit source order
+        shell: pwsh
+        run: |
+          python tests/win32ide_source_order_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Win32 IDE source-order regression failed" }
+
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
 
