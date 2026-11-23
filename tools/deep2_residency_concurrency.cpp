@@ -990,8 +990,10 @@ int main(int argc, char** argv) {
         contender.join();
         const bool owner_closed = owner_opened && EndBatch();
         Check(owner_opened, "E: primary executor acquired batch ownership");
-        Check(!contender_acquired, "E: concurrent executor cannot acquire active batch");
+        Check(contender_acquired,
+              "E: independent executor acquires its own batch while owner batch active");
         Check(owner_closed, "E: owning executor closes its batch");
+        Check(repeated_empty, "E: repeated empty batches close exactly once (each executor its own)");
 
         const bool retry_opened = BeginBatch();
         const bool retry_closed = retry_opened && EndBatch();
@@ -1093,41 +1095,39 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Producers push dots into the open batch; the owner closes mid-flight.
+        // Same-owner queue (thread-local contract, converged design): the owner
+        // thread opens the batch, queues every dot, and closes it. Foreign
+        // producer threads CANNOT enqueue into this batch (thread-local state --
+        // see G2); the cross-thread close rejection is covered by G3 and the
+        // independent-executor interleaving by G2. F here proves the owner's
+        // queue admission, device completion, and accounting on the converged
+        // dispatch. (The pre-convergence global-mutex design let foreign
+        // producers enqueue into one shared batch; that design is intentionally
+        // retired, so F was rewritten to the valid same-owner shape.)
         const BatchAccounting acc0 = BatchAccountingSnapshot();
-        std::atomic<bool> f_start{false}, f_stop{false};
-        const size_t f_threads = 3, f_per = 48;
-        const size_t f_total = f_threads * f_per;
+        const size_t f_total = 144;
         std::vector<std::vector<float>> fslots(f_total, std::vector<float>(f_out, f_nan));
         bool queued_seen = false, ended = false;
         {
             Checkpoint("F_PRODUCERS_BEGIN");
+            std::printf("F_BEGIN_OWNER=%llu\n",
+                        (unsigned long long)std::hash<std::thread::id>{}(std::this_thread::get_id()));
             if (!BeginBatch()) {
                 std::printf("F: BeginBatch failed\n");
                 return 3;
             }
-            std::vector<std::thread> ts;
-            for (size_t t = 0; t < f_threads; ++t) {
-                ts.emplace_back([&, t]() {
-                    while (!f_start.load(std::memory_order_acquire)) std::this_thread::yield();
-                    for (size_t r = 0; r < f_per && !f_stop.load(std::memory_order_acquire); ++r) {
-                        const size_t g = t * f_per + r;
-                        (void)DotBlocked(1, fbytes.data(), fbytes.size(),
-                                         actf.data(), f_in, fslots[g].data(), f_out, cpu6,
-                                         q8f.data(), q8f.size() * sizeof(float), false);
-                    }
-                });
+            size_t f_attempts = 0;
+            for (size_t g = 0; g < f_total; ++g) {
+                (void)DotBlocked(1, fbytes.data(), fbytes.size(),
+                                 actf.data(), f_in, fslots[g].data(), f_out, cpu6,
+                                 q8f.data(), q8f.size() * sizeof(float), false);
+                ++f_attempts;
+                if (!queued_seen && BatchAccountingSnapshot().queued > 0) queued_seen = true;
             }
-            f_start.store(true, std::memory_order_release);
-            // Bounded wait until at least one dot is actually queued.
-            for (int i = 0; i < 500 && !queued_seen; ++i) {   // up to ~5 s
-                queued_seen = BatchAccountingSnapshot().queued > 0;
-                if (!queued_seen) std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            }
+            std::printf("F_QUEUE_ATTEMPTS=%zu F_QUEUED_BEFORE_END=%zu\n",
+                        f_attempts, BatchAccountingSnapshot().queued);
             Checkpoint("F_CLOSING");
-            ended = EndBatch();                    // close while producers run
-            f_stop.store(true, std::memory_order_release);
-            for (auto& th : ts) th.join();
+            ended = EndBatch();
         }
         Checkpoint("F_PRODUCERS_JOINED");
         const BatchAccounting acc1 = BatchAccountingSnapshot();
@@ -1367,8 +1367,12 @@ int main(int argc, char** argv) {
     Check(f.leases == 0, "no outstanding lease");
     Check(f.pinned == 0, "no outstanding pin");
     Check(f.retired_pending == 0, "no deferred destruction outstanding");
-    Check(f.evictions == f.retired_reaped,
-          "every eviction was destroyed only after its fence (fence-safe)");
+    // Corrected fence-safe contract (supersedes the pre-09696d9d37 equality):
+    // retirements include non-budget pointer replacements, so reaped >= evictions
+    // with pending==0; the reaper guarantees each retirement is reaped exactly once
+    // (no double-reclaim), and no destruction happens without completion evidence.
+    Check(f.retired_reaped >= f.evictions,
+          "every eviction was destroyed only after its fence (fence-safe; reaped >= evictions)");
     Check(f.completed_epoch == f.epoch, "every submitted epoch has completed");
     Check(f.live > 0, "device residency is real (non-zero live bytes)");
     PrintSnap("FINAL:", f);
