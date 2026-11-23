@@ -159,7 +159,7 @@ def run(binary):
         subprocess.run([binary,str(inexact),str(auto_inexact),"0","auto"],check=True)
         ib,ins,im,it=parse(auto_inexact)
         assert it["blk.0.attn_q.weight"][0]==0  # no lossy encoding permitted
-        assert ib[ins+it["blk.0.attn_q.weight"][2]:ins+it["blk.0.attn_q.weight"][2]+len(original_raw)]!=original_raw
+        assert struct.unpack_from("<f",ib,ins+it["blk.0.attn_q.weight"][2])[0]==struct.unpack("<f",struct.pack("<f",1.0001))[0]
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
