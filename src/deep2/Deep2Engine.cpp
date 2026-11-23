@@ -6519,19 +6519,46 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     if (dim == 0)
         return;
 
+    // A compressed norm vector is expanded only for this operation's exact
+    // dimension. The backing store remains authoritative after this call.
+    WeightTensor effectiveWeight = normWeight;
+    std::vector<std::uint8_t> compressedNormBytes;
+    if (!effectiveWeight.data && effectiveWeight.hasCompressedBacking())
+    {
+        if (effectiveWeight.type != (int)GGMLType::GGML_TYPE_F32 &&
+            effectiveWeight.type != (int)GGMLType::GGML_TYPE_F16)
+            throw std::runtime_error("RMSNormW: unsupported compressed norm type: " +
+                                     effectiveWeight.name);
+        const size_t elementBytes =
+            effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32
+                ? sizeof(float) : sizeof(uint16_t);
+        if (dim > effectiveWeight.sizeBytes / elementBytes)
+            throw std::runtime_error("RMSNormW: compressed weight tensor is smaller than requested dimension: " +
+                                     effectiveWeight.name);
+        const size_t requiredBytes = dim * elementBytes;
+        compressedNormBytes.resize(requiredBytes);
+        std::string decodeError;
+        if (!effectiveWeight.readBytes(0, compressedNormBytes.data(),
+                                       requiredBytes, &decodeError))
+            throw std::runtime_error("RMSNormW: compressed weight read failed for " +
+                                     effectiveWeight.name + ": " + decodeError);
+        effectiveWeight.data = compressedNormBytes.data();
+        effectiveWeight.sizeBytes = requiredBytes;
+    }
+
     // Refuse short F32/F16 norm views before the SIMD loop can read past the
-    // mapped tensor. Q/K norms may be stored as either one shared head or a
-    // complete [headCount * headDim] table.
-    if (normWeight.data &&
-        (normWeight.type == (int)GGMLType::GGML_TYPE_F32 ||
-         normWeight.type == (int)GGMLType::GGML_TYPE_F16))
+    // mapped or decoded tensor. Q/K norms may be stored as either one shared
+    // head or a complete [headCount * headDim] table.
+    if (effectiveWeight.data &&
+        (effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32 ||
+         effectiveWeight.type == (int)GGMLType::GGML_TYPE_F16))
     {
         const size_t elementBytes =
-            normWeight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t);
-        if (dim > normWeight.sizeBytes / elementBytes)
+            effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t);
+        if (dim > effectiveWeight.sizeBytes / elementBytes)
         {
             throw std::runtime_error("RMSNormW: weight tensor is smaller than requested dimension: " +
-                                     normWeight.name);
+                                     effectiveWeight.name);
         }
     }
 
@@ -6570,11 +6597,11 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     }
 
     // Apply normalization + weight with AVX2
-    if (normWeight.data)
+    if (effectiveWeight.data)
     {
-        if (normWeight.type == (int)GGMLType::GGML_TYPE_F32)
+        if (effectiveWeight.type == (int)GGMLType::GGML_TYPE_F32)
         {
-            const float* w = (const float*)normWeight.data;
+            const float* w = (const float*)effectiveWeight.data;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
@@ -6593,9 +6620,9 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
                 output[i] = ww * input[i] * invRms;
             }
         }
-        else if (normWeight.type == (int)GGMLType::GGML_TYPE_F16)
+        else if (effectiveWeight.type == (int)GGMLType::GGML_TYPE_F16)
         {
-            const uint16_t* w = (const uint16_t*)normWeight.data;
+            const uint16_t* w = (const uint16_t*)effectiveWeight.data;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
