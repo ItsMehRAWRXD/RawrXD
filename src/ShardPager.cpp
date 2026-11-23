@@ -11,7 +11,17 @@ PageCache::PageCache(std::size_t capacityBytes, std::size_t pageSize)
     , m_capacityBytes(capacityBytes) {}
 
 PageCache::~PageCache() {
-    evictUnleasedAll();
+    // All async readers must finish before cache storage and reader are destroyed.
+    {
+        std::lock_guard<std::mutex> lock(m_prefetchMutex);
+        for (auto& future : m_prefetchFutures) future.wait();
+        m_prefetchFutures.clear();
+    }
+    std::lock_guard<std::mutex> lock(m_mutex);
+    for (Page* page : m_lru) delete page;
+    m_lru.clear();
+    m_index.clear();
+    m_residentBytes = 0;
 }
 
 void PageCache::setReader(Reader reader) { m_reader = std::move(reader); }
@@ -251,6 +261,31 @@ TensorLease::TensorLease(PageCache& cache, uint32_t shard, uint64_t offset, uint
         m_pages.push_back(pg);
     }
     m_ok = true;
+}
+
+TensorLease::TensorLease(TensorLease&& other) noexcept
+    : m_cache(other.m_cache), m_shard(other.m_shard),
+      m_offset(other.m_offset), m_size(other.m_size),
+      m_pages(std::move(other.m_pages)), m_ok(other.m_ok) {
+    other.m_pages.clear();
+    other.m_cache = nullptr;
+    other.m_ok = false;
+}
+
+TensorLease& TensorLease::operator=(TensorLease&& other) noexcept {
+    if (this != &other) {
+        if (m_cache) for (Page* page : m_pages) m_cache->release(page);
+        m_cache = other.m_cache;
+        m_shard = other.m_shard;
+        m_offset = other.m_offset;
+        m_size = other.m_size;
+        m_pages = std::move(other.m_pages);
+        m_ok = other.m_ok;
+        other.m_pages.clear();
+        other.m_cache = nullptr;
+        other.m_ok = false;
+    }
+    return *this;
 }
 
 TensorLease::~TensorLease() {
