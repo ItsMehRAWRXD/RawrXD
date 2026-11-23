@@ -665,16 +665,22 @@ int main(int argc,char** argv) {
                 }
             } else if(streamBf16[i]) {
                 seek(in,add(dataStart,t.offset));
-                uint8_t bytes[4],packed[2];
-                for(U off=0;off<t.bytes;off+=4) {
-                    if(!in.read(reinterpret_cast<char*>(bytes),4))
+                // Reuse fixed-size buffers to avoid one write syscall per weight.
+                std::vector<uint8_t> chunk(65536), packed(chunk.size()/2);
+                for(U off=0;off<t.bytes;) {
+                    size_t n=size_t(std::min<U>(t.bytes-off,chunk.size()));
+                    if(!in.read(reinterpret_cast<char*>(chunk.data()),std::streamsize(n)))
                         throw std::runtime_error("truncated BF16 streaming payload");
-                    uint32_t bits=uint32_t(bytes[0])|(uint32_t(bytes[1])<<8)|
-                                  (uint32_t(bytes[2])<<16)|(uint32_t(bytes[3])<<24);
-                    uint16_t h=uint16_t((bits+0x7fffu+((bits>>16)&1u))>>16);
-                    packed[0]=uint8_t(h);packed[1]=uint8_t(h>>8);
-                    out.write(reinterpret_cast<const char*>(packed),2);
+                    for(size_t j=0;j<n;j+=4) {
+                        uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
+                                      (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
+                        uint16_t h=uint16_t((bits+0x7fffu+((bits>>16)&1u))>>16);
+                        packed[j/2]=uint8_t(h);
+                        packed[j/2+1]=uint8_t(h>>8);
+                    }
+                    out.write(reinterpret_cast<const char*>(packed.data()),std::streamsize(n/2));
                     if(!out)throw std::runtime_error("BF16 streaming write failure");
+                    off+=n;
                 }
             } else if(streamHalf[i]) {
                 seek(in,add(dataStart,t.offset));
