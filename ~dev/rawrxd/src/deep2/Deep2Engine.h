@@ -100,6 +100,8 @@ struct WeightTensor {
     // Optional private compressed F32 backing. GGUF wire type and mapped
     // source remain unchanged; CPU inference may opt into row-streamed reads.
     std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> compressedF32;
+    // Original conversion policy; reused when a mixed-codec range is packed for GPU.
+    float compressedF32MaxAbsError = 0.0f;
     // Cache lease pins the canonical compressed payload for this tensor's lifetime.
     Deep2::TensorResidencyCache::Lease compressedF32Lease;
     // Losslessly compressed wire bytes for already-quantized GGUF tensors.
@@ -166,6 +168,7 @@ struct WeightTensor {
                 return false;
             compressedF32=std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 std::move(candidate));
+            compressedF32MaxAbsError = maxAbsError;
             std::atomic_store_explicit(&gpuF16Payload,
                 std::shared_ptr<const GpuCompressedF32Payload>{},
                 std::memory_order_release);
@@ -232,6 +235,45 @@ struct WeightTensor {
             (static_cast<uint64_t>(rowBegin) << 32) ^ rowCount ^
             (static_cast<uint64_t>(payload->ggmlType) << 56);
         return true;
+    }
+
+    // Build a bounded row tile for the packed Vulkan QGEMV shader.
+    // Mixed F16/BF16/F32 source chunks are repacked to one 16-bit type only
+    // when the configured error budget permits it; otherwise exact F32 bytes
+    // are returned. The caller owns the temporary bytes through upload.
+    bool BuildCompressedF32GpuTile(
+        uint32_t rowBegin, uint32_t rowCount,
+        std::vector<uint8_t>& packed, int& ggmlType) const noexcept {
+        packed.clear();
+        ggmlType = -1;
+        if (type != 0 || !compressedF32 || !rows || !cols ||
+            rowBegin >= rows || !rowCount || rowCount > rows - rowBegin ||
+            cols > std::numeric_limits<size_t>::max() / rowCount)
+            return false;
+        const size_t first = static_cast<size_t>(rowBegin) * cols;
+        const size_t elements = static_cast<size_t>(rowCount) * cols;
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
+            return false;
+        try {
+            RawrXD::TensorCompression::Encoding encoding{};
+            if (compressedF32->ExportUniform16BitRange(
+                    first, elements, encoding, packed,
+                    compressedF32MaxAbsError)) {
+                ggmlType = encoding ==
+                    RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
+                return packed.size() == elements * sizeof(uint16_t);
+            }
+            std::vector<float> exact(elements);
+            compressedF32->ReadRange(first, elements, exact.data());
+            packed.resize(elements * sizeof(float));
+            std::memcpy(packed.data(), exact.data(), packed.size());
+            ggmlType = 0;
+            return true;
+        } catch (...) {
+            packed.clear();
+            ggmlType = -1;
+            return false;
+        }
     }
 
     // BP16 / external mapping support

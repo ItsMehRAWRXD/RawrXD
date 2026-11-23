@@ -216,6 +216,64 @@ public:
         return true;
     }
 
+    // Export an arbitrary logical range as one compact F16/BF16 tile.
+    // Mixed source chunks are decoded only for this range. The conversion is
+    // accepted only when every finite value meets the explicit absolute-error
+    // bound; special values or out-of-budget values must use exact F32 upload.
+    bool ExportUniform16BitRange(std::size_t first, std::size_t count,
+                                 Encoding& encoding,
+                                 std::vector<std::uint8_t>& bytes,
+                                 float maxAbsError) const {
+        bytes.clear();
+        if (first > elements_ || count > elements_ - first ||
+            !std::isfinite(maxAbsError) || maxAbsError < 0.0f ||
+            count > std::numeric_limits<std::size_t>::max() / sizeof(float))
+            return false;
+        if (count == 0) { encoding = Encoding::F16; return true; }
+
+        std::vector<float> decoded(count);
+        if (!DecodeRange(first, count, decoded.data())) return false;
+
+        float halfMaxError = 0.0f;
+        float bfloatMaxError = 0.0f;
+        bool halfValid = true;
+        bool bfloatValid = true;
+        for (float value : decoded) {
+            if (!std::isfinite(value)) {
+                halfValid = false;
+                bfloatValid = false;
+                break;
+            }
+            const float halfValue = halfToFloat(floatToHalf(value));
+            const float bfloatValue = bfloatToFloat(floatToBfloat(value));
+            if (!std::isfinite(halfValue) || !std::isfinite(bfloatValue)) {
+                halfValid = halfValid && std::isfinite(halfValue);
+                bfloatValid = bfloatValid && std::isfinite(bfloatValue);
+            }
+            const float halfError = std::fabs(value - halfValue);
+            const float bfloatError = std::fabs(value - bfloatValue);
+            halfMaxError = std::max(halfMaxError, halfError);
+            bfloatMaxError = std::max(bfloatMaxError, bfloatError);
+            halfValid = halfValid && halfError <= maxAbsError;
+            bfloatValid = bfloatValid && bfloatError <= maxAbsError;
+        }
+        if (!halfValid && !bfloatValid) return false;
+
+        encoding = halfValid &&
+            (!bfloatValid || halfMaxError <= bfloatMaxError)
+            ? Encoding::F16 : Encoding::BF16;
+        if (count > std::numeric_limits<std::size_t>::max() / 2)
+            return false;
+        bytes.resize(count * 2);
+        for (std::size_t i = 0; i < count; ++i) {
+            const std::uint16_t bits = encoding == Encoding::F16
+                ? floatToHalf(decoded[i]) : floatToBfloat(decoded[i]);
+            bytes[2 * i] = static_cast<std::uint8_t>(bits);
+            bytes[2 * i + 1] = static_cast<std::uint8_t>(bits >> 8);
+        }
+        return true;
+    }
+
 private:
     static std::uint16_t floatToHalf(float value) noexcept {
         std::uint32_t bits;

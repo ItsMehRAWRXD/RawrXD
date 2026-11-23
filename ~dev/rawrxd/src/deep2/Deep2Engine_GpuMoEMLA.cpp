@@ -67,8 +67,9 @@ void applyMlaRope(float* qFull,float* kPe,
 bool Deep2Engine::tryVulkanHostGEMV(
     const WeightTensor& wt,const float* input,float* output,size_t outDim)
 {
+    const bool compressedF32Only = !wt.data && static_cast<bool>(wt.compressedF32);
     if(!vulkanInitialized_||vulkanDevices_.empty()||
-       !input||!output||!wt.data||wt.rows!=outDim||
+       !input||!output||(!wt.data && !compressedF32Only)||wt.rows!=outDim||
        wt.rows==0||wt.cols==0||
        wt.rows>std::numeric_limits<uint32_t>::max()||
        wt.cols>std::numeric_limits<uint32_t>::max())
@@ -77,7 +78,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
 
     // First preference: true simultaneous independent row partitions.
-    if(vulkanDevices_.size()>=2 && wt.rows>=2){
+    if(wt.data && vulkanDevices_.size()>=2 && wt.rows>=2){
         RowSplitReceipt r{};
         if(Deep2RunDualGpuRowSplit(
                 *vulkanDevices_[0],*vulkanDevices_[1],
@@ -101,12 +102,12 @@ bool Deep2Engine::tryVulkanHostGEMV(
         std::fprintf(stderr,"GEMV_SINGLE getVulkanComputeSlot(0)=null name=%s\n",wt.name.empty()?"null":wt.name.c_str()); std::fflush(stderr);
         return false;
     }
+    const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
     GpuWeightView view{};
-    if(!fullView(wt,view)){
-        std::fprintf(stderr,"GEMV_SINGLE fullView failed name=%s\n",wt.name.empty()?"null":wt.name.c_str()); std::fflush(stderr);
+    if (!compressedF32Only && !fullView(wt,view)) {
+        std::fprintf(stderr,"GEMV_SINGLE fullView failed name=%s\\n",wtn); std::fflush(stderr);
         return false;
     }
-    const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
 
     g->SetWorkEpoch(epoch);
     if(!g->EnsureScratch(30,wt.cols)){
@@ -123,8 +124,51 @@ bool Deep2Engine::tryVulkanHostGEMV(
         std::fprintf(stderr,"GEMV_SINGLE UploadVector failed name=%s\n",wtn); std::fflush(stderr);
         return false;
     }
-    if(!g->DispatchWeight(view,x,y)){
-        std::fprintf(stderr,"GEMV_SINGLE DispatchWeight failed name=%s type=%d rows=%u cols=%u bytes=%zu\n",wtn,view.type,view.rows,view.cols,view.bytes); std::fflush(stderr);
+    if (compressedF32Only) {
+        // Keep conversion scratch bounded independently of model size. Each
+        // tile is uploaded in its native F16/BF16 form when safe, or exact F32
+        // when the configured error budget cannot be met.
+        constexpr size_t kMaxCompressedGpuTileBytes = 256u * 1024u;
+        const size_t rowBytes = wt.cols * sizeof(float);
+        if (!rowBytes) return false;
+        const size_t rowsPerTile = std::max<size_t>(
+            1, kMaxCompressedGpuTileBytes / rowBytes);
+        std::vector<uint8_t> packedTile;
+        for (size_t rowBase = 0; rowBase < wt.rows;) {
+            const size_t tileRows = std::min(wt.rows - rowBase, rowsPerTile);
+            if (tileRows > std::numeric_limits<uint32_t>::max()) return false;
+            int tileType = -1;
+            if (!wt.BuildCompressedF32GpuTile(
+                    static_cast<uint32_t>(rowBase),
+                    static_cast<uint32_t>(tileRows), packedTile, tileType))
+                return false;
+            uint64_t cacheKey = 1469598103934665603ull;
+            for (unsigned char ch : wt.name) {
+                cacheKey ^= ch;
+                cacheKey *= 1099511628211ull;
+            }
+            cacheKey ^= wt.fileOffset + (static_cast<uint64_t>(wt.shardId) << 32);
+            cacheKey *= 1099511628211ull;
+            cacheKey ^= (static_cast<uint64_t>(rowBase) << 16) ^
+                        (static_cast<uint64_t>(tileType) << 56);
+            if (!cacheKey) cacheKey = 1;
+            if (!g->DispatchGemvQuantRows(
+                    tileType, packedTile.data(), packedTile.size(),
+                    x, y, static_cast<uint32_t>(tileRows),
+                    static_cast<uint32_t>(wt.cols),
+                    static_cast<uint32_t>(rowBase), cacheKey)) {
+                std::fprintf(stderr,
+                    "GEMV_COMPRESSED_TILE dispatch failed name=%s type=%d row=%zu count=%zu bytes=%zu\\n",
+                    wtn,tileType,rowBase,tileRows,packedTile.size());
+                return false;
+            }
+            if (tileType == 1) ++gpuFwd_.compressedF16GemvOps;
+            else if (tileType == 30) ++gpuFwd_.compressedBF16GemvOps;
+            gpuFwd_.compressedWeightBytesSubmitted += packedTile.size();
+            rowBase += tileRows;
+        }
+    } else if (!g->DispatchWeight(view,x,y)) {
+        std::fprintf(stderr,"GEMV_SINGLE DispatchWeight failed name=%s type=%d rows=%u cols=%u bytes=%zu\\n",wtn,view.type,view.rows,view.cols,view.bytes); std::fflush(stderr);
         return false;
     }
     if(!g->DownloadVector(y,output,wt.rows)){

@@ -164,6 +164,31 @@ int main() {
     RawrXD::TensorCompression::Encoding mixedEncoding{};
     std::vector<std::uint8_t> mixedPacked;
     CHECK(!mixed.ExportUniform16Bit(mixedEncoding,mixedPacked));
+    // A bounded mixed-chunk row tile may be packed uniformly when the
+    // explicit GPU upload error budget accepts every value.
+    CHECK(mixed.ExportUniform16BitRange(0,4,mixedEncoding,mixedPacked,0.01f));
+    CHECK(mixedPacked.size()==sizeof(mixedValues)/sizeof(float)*2);
+    for (std::size_t i=0;i<4;++i) {
+        const std::uint16_t bits = static_cast<std::uint16_t>(mixedPacked[2*i]) |
+            (static_cast<std::uint16_t>(mixedPacked[2*i+1]) << 8);
+        float restored = 0.0f;
+        if (mixedEncoding == RawrXD::TensorCompression::Encoding::F16) {
+            const uint32_t sign = static_cast<uint32_t>(bits & 0x8000u) << 16;
+            uint32_t exp = (bits >> 10) & 31u, mantissa = bits & 1023u, outBits = 0;
+            if (exp == 0) {
+                if (!mantissa) outBits = sign;
+                else { int e=-14; while ((mantissa & 0x400u)==0) { mantissa <<= 1; --e; }
+                    mantissa &= 0x3ffu; outBits=sign | (static_cast<uint32_t>(e+127)<<23) | (mantissa<<13); }
+            } else if (exp == 31) outBits=sign | 0x7f800000u | (mantissa<<13);
+            else outBits=sign | ((exp+112u)<<23) | (mantissa<<13);
+            std::memcpy(&restored,&outBits,sizeof(restored));
+        } else {
+            const uint32_t outBits = static_cast<uint32_t>(bits) << 16;
+            std::memcpy(&restored,&outBits,sizeof(restored));
+        }
+        CHECK(std::fabs(restored-mixedValues[i])<=0.01f);
+    }
+    CHECK(!mixed.ExportUniform16BitRange(0,4,mixedEncoding,mixedPacked,0.0f));
     float mixedOut[4]{};
     CHECK(mixed.DecodeRange(1,3,mixedOut));
     CHECK(mixedOut[0]==mixedValues[1]);
