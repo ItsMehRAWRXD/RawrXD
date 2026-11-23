@@ -35,6 +35,7 @@ struct Deep2Engine {
     // Persistent compressed views: raw GGUF shard pages are fetched directly,
     // avoiding a second uncompressed PageCache copy.
     std::unordered_map<const deep2::TensorEntry*, std::unique_ptr<deep2::TensorROMCompressedView>> compressedWeightViews;
+    std::mutex compressedWeightViewsMutex;
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
 
