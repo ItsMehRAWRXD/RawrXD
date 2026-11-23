@@ -786,6 +786,8 @@ inline RepackError RepackGGUF(const std::string& input,
         uint64_t block=0,blockBytes=0;
         if(!ReadU32(in,t.type)||!ReadU64(in,t.old_offset)||
            !StorageLayout(t.type,block,blockBytes)||t.dims[0]%block||
+           // Each GGML quantized block must fit within one logical row.
+           // Total element divisibility is insufficient for multi-row GGUF.
            !CheckedMultiply(count/block,blockBytes,t.bytes))
             return RepackError::Unsupported;
         t.source_bytes=t.bytes;
