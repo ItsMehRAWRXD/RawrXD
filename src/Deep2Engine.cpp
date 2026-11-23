@@ -654,9 +654,26 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                         packedType, packedWeights.data(), packedWeights.size(),
                         { countRows, cols }, true
                     };
-                    if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
-                        return false;
-                    dispatched = true;
+                    if (vulkanGemv(gpu, packedView, inputView, tileOutput)) {
+                        dispatched = true;
+                    } else {
+                        // Missing/unsupported packed shader: preserve correctness
+                        // by expanding only this requested tile and using F32 GEMV.
+                        tile.resize(elements);
+                        if (!compressedF32Weights.ReadRange(
+                                cacheKey, static_cast<size_t>(firstElement), elements,
+                                tile.data(), decodeScratch))
+                            return false;
+                        deep2::TensorView fallbackView{
+                            deep2::TensorType::F32,
+                            reinterpret_cast<const uint8_t*>(tile.data()),
+                            elements * sizeof(float),
+                            { countRows, cols }, true
+                        };
+                        if (!vulkanGemv(gpu, fallbackView, inputView, tileOutput))
+                            return false;
+                        dispatched = true;
+                    }
                 }
             }
 
@@ -698,9 +715,25 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 entry.type, encodedScratch.data(), encodedScratch.size(),
                 { countRows, cols }, true
             };
-            if (!vulkanGemv(gpu, packedView, inputView, tileOutput))
-                return false;
-            dispatched = true;
+            if (vulkanGemv(gpu, packedView, inputView, tileOutput)) {
+                dispatched = true;
+            } else {
+                // Retain a compatible fallback for systems without the packed
+                // shader binary; only the current logical tile is expanded.
+                tile.resize(elements);
+                if (!readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
+                                               encodedScratch, decodeScratch))
+                    return false;
+                deep2::TensorView fallbackView{
+                    deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(tile.data()),
+                    elements * sizeof(float),
+                    { countRows, cols }, true
+                };
+                if (!vulkanGemv(gpu, fallbackView, inputView, tileOutput))
+                    return false;
+                dispatched = true;
+            }
         } else {
             tile.resize(elements);
             if (!readDequantizedTensorTile(entry, firstElement, elements, tile.data(),
@@ -761,6 +794,9 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         rows > std::numeric_limits<size_t>::max() / cols)
         return false;
     const size_t elements = static_cast<size_t>(rows * cols);
+    // The shader uses 32-bit element indices and a single packed uint word
+    // array. Reject unaddressable dispatches before allocating GPU resources.
+    if (elements > UINT32_MAX) return false;
     const bool f32Weights = wView.type == deep2::TensorType::F32;
     const bool f16Weights = wView.type == deep2::TensorType::F16;
     const bool bf16Weights = wView.type == deep2::TensorType::BF16;
