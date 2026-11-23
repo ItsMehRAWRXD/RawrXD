@@ -734,7 +734,10 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=2; // GGML_TYPE_Q4_0
             t.bytes=(count/32)*18;
         }
-        if(convert_q6_k_to_q5_0 && t.type==14 && t.dims[0]%256==0) {
+        // Never reinterpret a tensor after another conversion was planned.
+        // Explicit Q6_K -> Q5_0 applies only to original Q6_K payloads.
+        if(convert_q6_k_to_q5_0 && !t.convert_q4_0 && !t.convert_q8_0 &&
+           !t.convert_f16 && t.type==14 && t.dims[0]%256==0) {
             t.convert_q5_0=true;
             t.type=6; // GGML_TYPE_Q5_0: 8 x 22-byte blocks per 256 weights
             t.bytes=(count/256)*176;
