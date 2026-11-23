@@ -78,5 +78,6 @@ int main() {
     testRejected(2,{31,2});   // Q4_0 rows must be block-aligned.
     testRejected(12,{255,2}); // Q4_K rows must be 256-value aligned.
     testRejected(99,{256,2}); // Unknown GGUF types are never assigned guessed strides.
+    testRejected(0,{UINT64_MAX,2}); // Dimension products must not wrap.
     std::cout<<"TensorROM canonical type geometry and bounded range reads PASS\n";
 }
