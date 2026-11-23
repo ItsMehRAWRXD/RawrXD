@@ -83,10 +83,12 @@ int main() {
     // Explicit eviction releases the compressed representation.
     assert(cache.Evict("layer.1.weight"));
     assert(!cache.Contains("layer.1.weight"));
+    assert(cache.IsRawFallback("not.compressible"));
+    cache.Clear();
+    assert(!cache.IsRawFallback("not.compressible")); // Clear() resets fallback memoization
     auto finalStats=cache.GetStats();
     assert(finalStats.compressedBytes==0 && finalStats.logicalBytes==0);
     assert(finalStats.evictions>=2);
-    assert(!cache.IsRawFallback("not.compressible")); // Clear() resets fallback memoization
 
     // Bounds are fail-closed and never write beyond the requested output.
     Deep2::TensorResidencyCache bounded(4096);
