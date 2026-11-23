@@ -45,6 +45,7 @@ bool CompressedWeightStore::decode(const EncodedBlock& b,std::vector<std::uint8_
     if(dist>out.size()||len<kMinMatch||len>b.raw_size-out.size())return false;for(std::size_t i=0;i<len;++i)out.push_back(out[out.size()-dist]);
    }else{if(p>=b.payload.size())return false;out.push_back(b.payload[p++]);}
   }}
+  if(p!=b.payload.size()) return false;
  }
  return out.size()==b.raw_size&&crc32(out.data(),out.size())==b.checksum;
 }
