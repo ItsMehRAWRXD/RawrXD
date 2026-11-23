@@ -418,6 +418,29 @@ public:
         std::vector<uint8_t> scratch;
         ReadRange(first,count,destination,scratch);
     }
+    // Export only when every independently stored chunk is the same native
+    // 16-bit representation. Mixed/RLE/LZ4/raw chunks stay on the CPU path;
+    // callers never reinterpret an unknown per-chunk codec as packed FP16.
+    bool ExportUniform16Bit(Encoding& encoding,
+                            std::vector<uint8_t>& packed) const {
+        packed.clear();
+        if (chunks_.empty()) return false;
+        encoding = chunks_.front().encoding;
+        if (encoding != Encoding::F16 && encoding != Encoding::BF16) return false;
+        size_t total = 0;
+        for (const auto& chunk : chunks_) {
+            if (chunk.encoding != encoding ||
+                chunk.original_bytes % sizeof(float) != 0 ||
+                chunk.payload.size() != chunk.original_bytes / 2 ||
+                chunk.payload.size() > std::numeric_limits<size_t>::max() - total)
+                return false;
+            total += chunk.payload.size();
+        }
+        packed.reserve(total);
+        for (const auto& chunk : chunks_)
+            packed.insert(packed.end(), chunk.payload.begin(), chunk.payload.end());
+        return packed.size() == total;
+    }
     void ReadRange(size_t first,size_t count,float* destination,
                    std::vector<uint8_t>& scratch) const {
         if(first>element_count_ || count>element_count_-first)
