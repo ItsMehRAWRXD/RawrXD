@@ -130,8 +130,11 @@ bool Deep2Engine::tryVulkanHostGEMV(
             if (!device || !sliceRows ||
                 sliceRows > std::numeric_limits<uint32_t>::max() ||
                 !device->EnsureScratch(30, wt.cols) ||
-                !device->EnsureScratch(31, sliceRows) ||
-                !device->UploadVector(30, input, wt.cols))
+                !device->EnsureScratch(31, sliceRows))
+                return false;
+            auto& inputBuffer = device->Scratch(30);
+            auto& outputBuffer = device->Scratch(31);
+            if (!device->UploadVector(inputBuffer, input, wt.cols))
                 return false;
             device->SetWorkEpoch(epoch);
             constexpr size_t kMaxTileBytes = 256u * 1024u;
@@ -175,7 +178,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
                         static_cast<uint32_t>(rowBase - sliceBegin);
                     if (!device->DispatchGemvQuantRows(
                             tileType, packedTile.data(), packedTile.size(),
-                            30, 31, static_cast<uint32_t>(actualRows),
+                            inputBuffer, outputBuffer, static_cast<uint32_t>(actualRows),
                             static_cast<uint32_t>(wt.cols), outputBase, key))
                         return false;
                     if (tileType == 1) ++stats.f16Ops;
@@ -228,7 +231,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
                         static_cast<uint32_t>(rowBase - sliceBegin);
                     if (!device->DispatchGemvQuantRows(
                             wt.type, packedTile.data(), tileBytes,
-                            30, 31, static_cast<uint32_t>(tileRows),
+                            inputBuffer, outputBuffer, static_cast<uint32_t>(tileRows),
                             static_cast<uint32_t>(wt.cols), outputBase, key))
                         return false;
                     if (wt.type == 1) ++stats.f16Ops;
@@ -238,7 +241,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
                 }
             }
             return device->DownloadVector(
-                31, output + sliceBegin, sliceRows);
+                outputBuffer, output + sliceBegin, sliceRows);
         };
 
         if (device0 && device1 && quantGeometryValid) {
