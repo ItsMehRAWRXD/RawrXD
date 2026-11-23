@@ -48,6 +48,7 @@ QByteArray compressWithLevel(const QByteArray& data, int level, bool* success) {
         const int flush = (inputOffset == data.size()) ? Z_FINISH : Z_NO_FLUSH;
         stream.next_out = reinterpret_cast<Bytef*>(chunk);
         stream.avail_out = static_cast<uInt>(sizeof(chunk));
+        const uInt inputBefore = stream.avail_in;
         status = ::deflate(&stream, flush);
         const std::size_t produced = sizeof(chunk) - stream.avail_out;
         if (status != Z_OK && status != Z_STREAM_END) {
@@ -64,6 +65,14 @@ QByteArray compressWithLevel(const QByteArray& data, int level, bool* success) {
         }
         if (produced)
             output.append(chunk, static_cast<ArraySize>(produced));
+        // Avoid a nonterminating loop if the compressor stops making
+        // progress, including when a future zlib provider behaves differently.
+        if (status == Z_OK && produced == 0 &&
+            inputBefore == stream.avail_in) {
+            qWarning() << "[codec] streaming deflate stalled";
+            valid = false;
+            break;
+        }
     }
     const int endResult = deflateEnd(&stream);
     if (!valid || status != Z_STREAM_END || endResult != Z_OK)
