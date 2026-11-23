@@ -571,6 +571,10 @@ int main(int argc,char** argv) {
                 }
                 continue;
             }
+            // The legacy in-memory fallback below consumes F32 words only.
+            // Never reinterpret F64, F16 or BF16 source bytes as F32, even
+            // when a requested target format has no applicable streaming path.
+            if(t.type!=0)continue;
             if(t.bytes>64u*1024u*1024u)continue; // Defensive cap for any remaining non-streamed format
             std::vector<uint8_t> raw(static_cast<size_t>(t.bytes));
             seek(in,add(dataStart,t.offset));
