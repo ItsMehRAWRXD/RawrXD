@@ -236,17 +236,20 @@ inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
         if(!std::isfinite(actualScale) ||
            ((positiveMax!=0.0f || negativeMax!=0.0f) && actualScale==0.0f))
             return false;
-        // FP16 scale rounding can make a quantized endpoint clip.
-        // Evaluate the rounded scale and its next larger finite FP16
-        // neighbor, then retain the candidate with the smaller worst
-        // absolute reconstruction error. No extra storage is needed.
+        // Search both adjacent finite FP16 scales as well as the
+        // nearest one. The smaller neighbor can improve reconstruction
+        // when rounding the scale upward increases error on many weights.
+        // All candidates use the same 34-byte Q8_0 output layout.
         uint16_t chosenHalf=half;
         double bestError=std::numeric_limits<double>::infinity();
         unsigned char chosenCodes[32]={};
-        const uint16_t candidates[2]={half,static_cast<uint16_t>(half+1u)};
-        for(unsigned candidate=0;candidate<2;++candidate) {
+        const uint16_t candidates[3]={
+            half,static_cast<uint16_t>(half-1u),
+            static_cast<uint16_t>(half+1u)};
+        for(unsigned candidate=0;candidate<3;++candidate) {
+            if(candidate==1 && half==0)continue;
+            if(candidate==2 && (half>=0x7bffu || scale64==0.0))continue;
             const uint16_t h=candidates[candidate];
-            if(candidate && (half>=0x7bffu || scale64==0.0))continue;
             const uint32_t fbits=Float16ToFloat32Bits(h);
             float candidateScale=0;
             std::memcpy(&candidateScale,&fbits,4);
