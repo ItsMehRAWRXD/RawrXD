@@ -354,7 +354,10 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     if (vkAllocateDescriptorSets(device, &dsai, &m_set) != VK_SUCCESS) return false;
 
     VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(device, &fci, nullptr, &m_fence);
+    if (vkCreateFence(device, &fci, nullptr, &m_fence) != VK_SUCCESS) {
+        destroy(device);
+        return false;
+    }
     return true;
 }
 
@@ -365,6 +368,16 @@ void VulkanProgram::destroy(VkDevice device) {
     if (m_pipeline) vkDestroyPipeline(device, m_pipeline, nullptr);
     if (m_layout) vkDestroyPipelineLayout(device, m_layout, nullptr);
     if (m_shader) vkDestroyShaderModule(device, m_shader, nullptr);
+    m_fence = VK_NULL_HANDLE;
+    m_pool = VK_NULL_HANDLE;
+    m_set = VK_NULL_HANDLE;
+    m_dsl = VK_NULL_HANDLE;
+    m_pipeline = VK_NULL_HANDLE;
+    m_layout = VK_NULL_HANDLE;
+    m_shader = VK_NULL_HANDLE;
+    m_cmd = VK_NULL_HANDLE;
+    m_queue = VK_NULL_HANDLE;
+    m_device = VK_NULL_HANDLE;
 }
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
