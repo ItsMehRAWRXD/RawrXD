@@ -167,7 +167,7 @@ target_link_libraries(test_native_compressed_gguf_e2e PRIVATE Threads::Threads)
 # Windows integration test: exercise the actual Deep2Engine ROM forward path
 # against a tiny generated Phi-3-compatible GGUF model. It intentionally shares
 # the production engine sources and Vulkan linkage, not a mocked inference API.
-if(MSVC)
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     add_executable(test_deep2_compressed_model_e2e
         tests/deep2/native_deep2_compressed_model_e2e_test.cpp
         src/Deep2Engine.cpp
@@ -208,7 +208,7 @@ add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
 add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
 add_test(NAME NativeCompressedGGUFE2E COMMAND test_native_compressed_gguf_e2e)
-if(MSVC)
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     add_test(NAME Deep2CompressedModelE2E COMMAND test_deep2_compressed_model_e2e)
 endif()
 
