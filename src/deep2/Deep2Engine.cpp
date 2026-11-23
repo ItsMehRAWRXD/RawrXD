@@ -9343,7 +9343,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 }
             }
 
-            if (modelWeights.finalNorm.data)
+            if (modelWeights.finalNorm.hasBacking())
             {
                 RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
             }
