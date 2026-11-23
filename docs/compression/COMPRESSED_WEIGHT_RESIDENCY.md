@@ -27,7 +27,7 @@ F32-to-F16 can change model outputs. It is disabled by default and must be valid
 
 ## What is compressed
 
-The single-shard path selects two-dimensional linear projections routed through `LinearW` (attention/FFN projections and output projection). The standard multi-shard binding path uses the same opt-in admission rules for compatible matrix projections.
+The single-shard path selects two-dimensional linear projections routed through `LinearW` (attention/FFN projections and output projection) plus token embeddings. Token lookup decodes only the requested packed embedding row. The standard multi-shard binding path uses the same opt-in admission rules for compatible matrix projections; its token embeddings continue through the existing shard-row reader.
 
 The payload is stored byte-exactly. GGML type IDs and quantized block layouts are retained; this feature does not quantize Q4/Q5/Q6/F16/F32 tensors and does not silently convert F32 to F16.
 
