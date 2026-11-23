@@ -116,6 +116,10 @@ public:
             result.chunks_.push_back(std::move(chunk));
             first += count;
         }
+        // Release geometric vector over-allocation before publishing a long-lived
+        // compressed tensor. Residency budgets account for capacity, not size.
+        result.payload_.shrink_to_fit();
+        result.chunks_.shrink_to_fit();
         return result;
     }
 
@@ -356,6 +360,9 @@ public:
             first += count;
         }
         result.storedBytes_ = result.payload_.size();
+        // Compression should not retain unused vector capacity indefinitely.
+        result.payload_.shrink_to_fit();
+        result.chunks_.shrink_to_fit();
         return result;
     }
 
