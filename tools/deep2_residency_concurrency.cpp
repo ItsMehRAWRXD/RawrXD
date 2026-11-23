@@ -793,6 +793,200 @@ int main(int argc, char** argv) {
               "F: post-failure residency is fully reaped");
     }
 
+    // =========================================================================
+    // G. B03: per-executor batch ownership (production candidate v2, 7fbf5806ad).
+    //
+    // All mutable dispatch state is thread_local here, so batch ownership is
+    // per-thread. These tests exercise that contract directly rather than
+    // assuming it: same-owner batching, two overlapping executors, cross-thread
+    // misuse, and repeated lifecycle on a reused thread.
+    //
+    // Q8_0 (kind=3) weights are compared GPU-serial vs GPU-batched for the SAME
+    // bytes and activation, so bit-identity is meaningful without introducing an
+    // unverified Q8_0 CPU reference (the harness's only independent reference,
+    // DotQ4, is Q4_K-specific).
+    // =========================================================================
+    std::printf("\n--- G. B03: per-executor batch ownership ---\n");
+    {
+        const size_t G_OUT = 64, G_IN = 1024, G_BLK = 32;
+        const size_t G_NBLK = G_IN / G_BLK;
+        const size_t G_ROWBYTES = G_NBLK * 34;      // Q8_0: fp16 d + 32 x int8
+        const size_t G_BANKS = 4;
+
+        std::vector<std::vector<uint8_t>> w(G_BANKS);
+        uint32_t rng = 0x9e3779b9u;
+        auto next = [&rng]() -> uint32_t {
+            rng = rng * 1664525u + 1013904223u;
+            return (rng >> 8) & 0xffffu;
+        };
+        for (size_t b = 0; b < G_BANKS; ++b) {
+            w[b].assign(G_OUT * G_ROWBYTES, 0);
+            for (size_t r = 0; r < G_OUT; ++r) {
+                uint8_t* row = w[b].data() + r * G_ROWBYTES;
+                for (size_t k = 0; k < G_NBLK; ++k) {
+                    uint8_t* blk = row + k * 34;
+                    blk[0] = 0x00; blk[1] = 0x3C;   // fp16 1.0
+                    for (size_t i = 0; i < 32; ++i)
+                        blk[2 + i] = (uint8_t)(int8_t)(int(next() % 201u) - 100);
+                }
+            }
+        }
+
+        const std::vector<float> q8 = MakeQ8(G_IN, 11);
+        const std::vector<float> act = MakeAct(G_IN, 13);
+
+        auto dot = [&](size_t b, float* out) -> bool {
+            auto cpu = [&act](const uint8_t* row, const void*, size_t rowIndex) -> float {
+                float acc = 0.0f;
+                for (size_t k = 0; k < 32; ++k) {
+                    const uint8_t* blk = row + rowIndex * 1088 + k * 34;
+                    uint16_t d; std::memcpy(&d, blk, sizeof(d));
+                    const float sc = HalfToFloat(d);
+                    float s = 0.0f;
+                    for (size_t i = 0; i < 32; ++i)
+                        s += float((int8_t)blk[2 + i]) * act[k * 32 + i];
+                    acc += s * sc;
+                }
+                return acc;
+            };
+            return DotBlocked(3, w[b].data(), w[b].size(), act.data(), G_IN,
+                              out, G_OUT, cpu, q8.data(), q8.size() * sizeof(float), false);
+        };
+
+        // ---- G1: same-owner batching, one thread owns Begin/Dot/End ----
+        std::vector<float> g1_serial(G_OUT, 0.0f), g1_batched(G_OUT, 0.0f);
+        const bool g1_serial_ok = dot(0, g1_serial.data()) && LastReceipt().used_gpu;
+        const auto g1_before = BatchAccountingSnapshot();
+        bool g1_opened = false, g1_queued = false, g1_closed = false;
+        if (g1_serial_ok) {
+            g1_opened = BeginBatch();
+            if (g1_opened) {
+                g1_queued = dot(0, g1_batched.data());
+                g1_closed = EndBatch();
+            }
+        }
+        const auto g1_after = BatchAccountingSnapshot();
+        const uint64_t g1_acc = g1_after.accepted - g1_before.accepted;
+        const uint64_t g1_cmp = g1_after.completed - g1_before.completed;
+        const uint64_t g1_fail = g1_after.failed - g1_before.failed;
+        const uint64_t g1_dev = g1_after.device_batches_opened - g1_before.device_batches_opened;
+        const bool g1_bits = g1_serial_ok && SameBits(g1_batched, g1_serial);
+        printf("  G1 same-owner: serial=%s opened=%s queued=%s closed=%s bits=%s "
+               "accepted=%llu completed=%llu failed=%llu device_batches=%llu\n",
+               g1_serial_ok ? "ok" : "NO", g1_opened ? "yes" : "NO",
+               g1_queued ? "yes" : "NO", g1_closed ? "yes" : "NO",
+               g1_bits ? "yes" : "NO",
+               (unsigned long long)g1_acc, (unsigned long long)g1_cmp,
+               (unsigned long long)g1_fail, (unsigned long long)g1_dev);
+        Check(g1_serial_ok, "G1: serial Q8_0 baseline ran on the GPU");
+        Check(g1_opened && g1_queued && g1_closed, "G1: same-owner batch opened, queued and closed");
+        Check(g1_bits, "G1: batched output bit-identical to GPU serial");
+        Check(g1_acc == g1_cmp + g1_fail && g1_fail == 0,
+              "G1: accepted == completed + failed, no failures");
+        Check(g1_after.queued == 0 && !g1_after.batch_active,
+              "G1: no pending queue and no active batch after close");
+        Check(g1_dev >= 1 && g1_cmp > 0, "G1: exactly one real device batch, non-vacuous");
+
+        // ---- G2: two independent executors with overlapping batches ----
+        std::atomic<bool> g2_go{false};
+        std::atomic<bool> g2_ok{true};
+        std::atomic<uint64_t> a_acc{0}, a_cmp{0}, a_fail{0}, b_acc{0}, b_cmp{0}, b_fail{0};
+        std::atomic<int> a_open_seen{0}, b_open_seen{0};
+        auto executor = [&](size_t bank, std::atomic<uint64_t>& acc,
+                            std::atomic<uint64_t>& cmp, std::atomic<uint64_t>& fail,
+                            std::atomic<int>& open_seen) {
+            while (!g2_go.load(std::memory_order_acquire)) std::this_thread::yield();
+            std::vector<float> s(G_OUT, 0.0f), b(G_OUT, 0.0f);
+            const bool serial_ok = dot(bank, s.data()) && LastReceipt().used_gpu;
+            const auto before = BatchAccountingSnapshot();
+            const bool opened = serial_ok && BeginBatch();
+            const bool queued = opened && dot(bank, b.data());
+            const bool closed = opened && EndBatch();
+            const auto after = BatchAccountingSnapshot();
+            acc.store(after.accepted - before.accepted);
+            cmp.store(after.completed - before.completed);
+            fail.store(after.failed - before.failed);
+            open_seen.store(after.batch_active ? 0 : 1);
+            const bool bits = serial_ok && SameBits(b, s);
+            const bool balanced = (after.accepted - before.accepted) ==
+                                  (after.completed - before.completed) +
+                                  (after.failed - before.failed);
+            if (!(serial_ok && opened && queued && closed && bits && balanced &&
+                  after.queued == 0 && !after.batch_active))
+                g2_ok.store(false);
+        };
+        std::thread g2t1(executor, 1, std::ref(a_acc), std::ref(a_cmp), std::ref(a_fail),
+                         std::ref(a_open_seen));
+        std::thread g2t2(executor, 2, std::ref(b_acc), std::ref(b_cmp), std::ref(b_fail),
+                         std::ref(b_open_seen));
+        g2_go.store(true);
+        g2t1.join();
+        g2t2.join();
+        printf("  G2 executors: A(accepted=%llu completed=%llu failed=%llu) "
+               "B(accepted=%llu completed=%llu failed=%llu) ok=%s\n",
+               (unsigned long long)a_acc.load(), (unsigned long long)a_cmp.load(),
+               (unsigned long long)a_fail.load(), (unsigned long long)b_acc.load(),
+               (unsigned long long)b_cmp.load(), (unsigned long long)b_fail.load(),
+               g2_ok.load() ? "yes" : "NO");
+        Check(g2_ok.load(), "G2: both independent executors batched correctly");
+        Check(a_acc.load() > 0 && b_acc.load() > 0,
+              "G2: both executors accepted real work (non-vacuous)");
+        Check(a_acc.load() == a_cmp.load() + a_fail.load() &&
+              b_acc.load() == b_cmp.load() + b_fail.load(),
+              "G2: per-executor accounting balanced independently");
+
+        // ---- G3: cross-thread misuse must not close another executor's batch ----
+        bool g3_opened = false, g3_remote_closed = false, g3_closed = false;
+        bool g3_still_active = false;
+        if (BeginBatch()) {
+            g3_opened = true;
+            std::atomic<bool> remote_done{false};
+            std::thread intruder([&]() {
+                g3_remote_closed = EndBatch();   // must fail: this thread owns no batch
+                remote_done.store(true);
+            });
+            intruder.join();
+            g3_still_active = BatchAccountingSnapshot().batch_active;
+            g3_closed = EndBatch();
+        }
+        printf("  G3 cross-thread: opened=%s remote_closed=%s owner_still_active=%s closed=%s\n",
+               g3_opened ? "yes" : "NO", g3_remote_closed ? "YES" : "no",
+               g3_still_active ? "yes" : "NO", g3_closed ? "yes" : "NO");
+        Check(g3_opened, "G3: owner opened a batch");
+        Check(!g3_remote_closed, "G3: a foreign thread could not close the owner's batch");
+        Check(g3_still_active, "G3: owner's batch survived the foreign close attempt");
+        Check(g3_closed && !BatchAccountingSnapshot().batch_active,
+              "G3: owner closed its own batch afterwards");
+
+        // ---- G4: repeated lifecycle on a reused thread ----
+        bool g4_ok = true;
+        int g4_cycles = 0;
+        for (int i = 0; i < 8 && g4_ok; ++i) {
+            std::vector<float> s(G_OUT, 0.0f), b(G_OUT, 0.0f);
+            if (!(dot(3, s.data()) && LastReceipt().used_gpu)) { g4_ok = false; break; }
+            const auto before = BatchAccountingSnapshot();
+            const bool opened = BeginBatch();
+            const bool queued = opened && dot(3, b.data());
+            const bool closed = opened && EndBatch();
+            const auto after = BatchAccountingSnapshot();
+            const bool balanced = (after.accepted - before.accepted) ==
+                                  (after.completed - before.completed) +
+                                  (after.failed - before.failed);
+            if (!(opened && queued && closed && balanced && SameBits(s, b) &&
+                  after.queued == 0 && !after.batch_active)) { g4_ok = false; break; }
+            ++g4_cycles;
+        }
+        printf("  G4 repeated lifecycle: cycles=%d ok=%s\n", g4_cycles, g4_ok ? "yes" : "NO");
+        Check(g4_cycles == 8, "G4: eight sequential batches on one thread all balanced");
+        Check(g4_ok && BatchAccountingSnapshot().queued == 0 &&
+              !BatchAccountingSnapshot().batch_active,
+              "G4: no stale queue, receipt or batch state after reuse");
+
+        const auto g_final = BatchAccountingSnapshot();
+        Check(g_final.queued == 0 && !g_final.batch_active,
+              "G: no leaked batch or pending queue after all B03 tests");
+    }
+
     // ---- final invariants ---------------------------------------------------
     const Snap f = Take();
     std::printf("\n--- final invariants ---\n");
