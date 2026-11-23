@@ -800,14 +800,37 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     const bool f32Weights = wView.type == deep2::TensorType::F32;
     const bool f16Weights = wView.type == deep2::TensorType::F16;
     const bool bf16Weights = wView.type == deep2::TensorType::BF16;
-    if (!f32Weights && !f16Weights && !bf16Weights) return false;
-    if (xView.byteSize < static_cast<size_t>(cols) * sizeof(float)) return false;
+    const bool q8Weights = wView.type == deep2::TensorType::Q8_0;
+    if (!f32Weights && !f16Weights && !bf16Weights && !q8Weights) return false;
+    if (cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        xView.byteSize < static_cast<size_t>(cols) * sizeof(float))
+        return false;
 
-    const size_t logicalWeightBytes = elements * (f32Weights ? sizeof(float) : sizeof(uint16_t));
-    if (wView.byteSize < logicalWeightBytes) return false;
-    const VkDeviceSize weightBufferBytes = f32Weights
-        ? static_cast<VkDeviceSize>(logicalWeightBytes)
-        : static_cast<VkDeviceSize>((logicalWeightBytes + 3u) & ~size_t(3u));
+    size_t logicalWeightBytes = 0;
+    if (f32Weights) {
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(float)) return false;
+        logicalWeightBytes = elements * sizeof(float);
+    } else if (q8Weights) {
+        // Q8_0 stores 32 values in 34 bytes; rows/tiles must preserve block geometry.
+        if ((cols % 32u) != 0u || (elements % 32u) != 0u ||
+            elements / 32u > std::numeric_limits<size_t>::max() / 34u)
+            return false;
+        logicalWeightBytes = (elements / 32u) * 34u;
+    } else {
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(uint16_t)) return false;
+        logicalWeightBytes = elements * sizeof(uint16_t);
+    }
+    if (wView.byteSize < logicalWeightBytes ||
+        logicalWeightBytes > std::numeric_limits<size_t>::max() - 3u)
+        return false;
+    const VkDeviceSize weightBufferBytes =
+        static_cast<VkDeviceSize>((logicalWeightBytes + 3u) & ~size_t(3u));
+    const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
+    const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
+    if (weightBufferBytes > gpu.props.limits.maxStorageBufferRange ||
+        xsize > gpu.props.limits.maxStorageBufferRange ||
+        ysize > gpu.props.limits.maxStorageBufferRange)
+        return false;
     const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
     const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
     y.assign(static_cast<size_t>(rows), 0.0f);
@@ -844,7 +867,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
             packed16BoundDevice = gpu.device;
         }
         selectedProgram = &packed16Program;
-        weightEncoding = f16Weights ? 1u : 2u;
+        weightEncoding = f16Weights ? 1u : (bf16Weights ? 2u : 3u);
     }
 
     VkBuffer Wbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
