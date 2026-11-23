@@ -27,6 +27,7 @@ public:
         std::size_t heads = 1;
         std::size_t head_dim = 0;
         std::size_t max_context = 4096;
+        std::size_t max_kv_cache_bytes = 1024ull * 1024ull * 1024ull;
         float rms_epsilon = 1.0e-5f;
         float rope_theta = 10000.0f;
         int32_t eos_token = -1;
@@ -38,10 +39,14 @@ public:
         if (!model_.loaded()) throw std::invalid_argument("compressed transformer requires a loaded model");
         if (!config_.hidden || !config_.intermediate || !config_.vocabulary ||
             !config_.layers || !config_.heads || !config_.head_dim ||
+            config_.heads > std::numeric_limits<std::size_t>::max() / config_.head_dim ||
             config_.heads * config_.head_dim != config_.hidden ||
-            (config_.head_dim & 1u) != 0 ||
-            !(config_.rms_epsilon > 0.0f) || !(config_.rope_theta > 0.0f))
-            throw std::invalid_argument("invalid decoder-only transformer geometry");
+            (config_.head_dim & 1u) != 0 || !config_.max_context ||
+            !config_.max_kv_cache_bytes ||
+            !(config_.rms_epsilon > 0.0f) || !(config_.rope_theta > 0.0f) ||
+            (config_.eos_token >= 0 &&
+             static_cast<std::size_t>(config_.eos_token) >= config_.vocabulary))
+            throw std::invalid_argument("invalid decoder-only transformer geometry or memory budget");
         validateTensor("token_embd.weight", config_.hidden, config_.vocabulary);
         validateTensor("output_norm.weight", config_.hidden, 1);
         validateTensor("output.weight", config_.hidden, config_.vocabulary);
@@ -69,8 +74,25 @@ public:
             max_new_tokens > config_.max_context - prompt.size())
             throw std::out_of_range("prompt plus generation exceeds transformer context");
         if (max_new_tokens == 0) return {};
+        const std::size_t totalTokens = prompt.size() + max_new_tokens;
+        constexpr std::size_t bytesPerScalar = sizeof(float);
+        if (config_.hidden > std::numeric_limits<std::size_t>::max() /
+                                 (2u * bytesPerScalar) ||
+            totalTokens > std::numeric_limits<std::size_t>::max() /
+                              (config_.hidden * 2u * bytesPerScalar) ||
+            config_.layers > std::numeric_limits<std::size_t>::max() /
+                                 (totalTokens * config_.hidden * 2u * bytesPerScalar))
+            throw std::overflow_error("transformer KV cache geometry overflow");
+        const std::size_t kvBytes = config_.layers * totalTokens *
+                                    config_.hidden * 2u * bytesPerScalar;
+        if (kvBytes > config_.max_kv_cache_bytes)
+            throw std::length_error("transformer KV cache exceeds configured byte budget");
         std::vector<std::vector<std::vector<float>>> keys(
             config_.layers), values(config_.layers);
+        for (std::size_t layer = 0; layer < config_.layers; ++layer) {
+            keys[layer].reserve(totalTokens);
+            values[layer].reserve(totalTokens);
+        }
         std::vector<float> logits;
         std::size_t position = 0;
         for (const auto token : prompt) {
