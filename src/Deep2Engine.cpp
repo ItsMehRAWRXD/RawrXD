@@ -13,7 +13,7 @@
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
-    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); }
+    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); compressedWeightsLru.clear(); compressedWeightsBytes = 0; }
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
     }
@@ -47,6 +47,20 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     return true;
 }
 
+void Deep2Engine::SetCompressedWeightsBudget(std::size_t bytes) {
+    std::lock_guard<std::mutex> lock(compressedWeightsMutex);
+    compressedWeightsBudgetBytes = bytes;
+    while (compressedWeightsBytes > compressedWeightsBudgetBytes &&
+           !compressedWeightsLru.empty()) {
+        const auto key = compressedWeightsLru.back();
+        compressedWeightsLru.pop_back();
+        auto it = compressedWeights.find(key);
+        if (it == compressedWeights.end()) continue;
+        compressedWeightsBytes -= it->second->compressed_bytes();
+        compressedWeights.erase(it);
+    }
+}
+
 bool Deep2Engine::gemvROMCompressedF32(
     const std::string& tensorName, const float* x, float* y,
     std::size_t rows, std::size_t cols,
@@ -67,9 +81,29 @@ bool Deep2Engine::gemvROMCompressedF32(
             if (it == compressedWeights.end()) {
                 auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
                     rom.loadResidentCompressedTensor(*entry, blockBytes));
-                it = compressedWeights.emplace(key, std::move(loaded)).first;
+                const auto bytes = loaded->compressed_bytes();
+                if (bytes <= compressedWeightsBudgetBytes) {
+                    while (compressedWeightsBytes > compressedWeightsBudgetBytes - bytes &&
+                           !compressedWeightsLru.empty()) {
+                        const auto victim = compressedWeightsLru.back();
+                        compressedWeightsLru.pop_back();
+                        auto found = compressedWeights.find(victim);
+                        if (found == compressedWeights.end()) continue;
+                        compressedWeightsBytes -= found->second->compressed_bytes();
+                        compressedWeights.erase(found);
+                    }
+                    compressedWeightsBytes += bytes;
+                    compressedWeightsLru.push_front(key);
+                    it = compressedWeights.emplace(key, std::move(loaded)).first;
+                    resident = it->second;
+                } else {
+                    resident = std::move(loaded);
+                }
+            } else {
+                compressedWeightsLru.remove(key);
+                compressedWeightsLru.push_front(key);
+                resident = it->second;
             }
-            resident = it->second;
         }
         return gemvResidentF32(*resident, x, y, rows, cols, stagingBudgetBytes);
     } catch (const std::exception& e) {
@@ -95,7 +129,7 @@ bool Deep2Engine::gemvResidentF32(
 }
 
 void Deep2Engine::Shutdown() {
-    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); }
+    { std::lock_guard<std::mutex> lock(compressedWeightsMutex); compressedWeights.clear(); compressedWeightsLru.clear(); compressedWeightsBytes = 0; }
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
