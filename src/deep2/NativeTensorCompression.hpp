@@ -286,4 +286,76 @@ private:
     std::vector<Result> chunks_;
 };
 
+
+ // Generic lossless byte storage for non-F32 tensors. Encoded GGUF blocks
+ // remain byte-identical after decode; only independently addressable chunks
+ // are RLE-compressed, and raw chunks are retained only when needed.
+ class ChunkedByteStorage {
+ public:
+     ChunkedByteStorage() = default;
+     template<class Reader>
+     static ChunkedByteStorage BuildFromReader(size_t byteCount, Reader&& reader,
+                                               size_t chunkBytes = 64 * 1024,
+                                               bool requireFirstChunkSavings = true,
+                                               size_t maxStoredBytes = std::numeric_limits<size_t>::max()) {
+         if (!chunkBytes) throw std::invalid_argument("zero byte chunk size");
+         ChunkedByteStorage result;
+         result.byte_count_ = byteCount;
+         result.chunk_bytes_ = chunkBytes;
+         result.chunks_.reserve(byteCount / chunkBytes + (byteCount % chunkBytes != 0));
+         std::vector<uint8_t> tile;
+         size_t stored = 0;
+         for (size_t offset = 0; offset < byteCount;) {
+             const size_t n = std::min(chunkBytes, byteCount - offset);
+             tile.resize(n);
+             if (!reader(offset, n, tile.data()))
+                 throw std::runtime_error("byte tensor source read failed");
+             Result encoded = Encode(tile.data(), n, false, 0.0f, false);
+             if (requireFirstChunkSavings && offset == 0 && encoded.payload.size() >= n)
+                 throw std::runtime_error("first byte chunk has no lossless compression win");
+             if (encoded.payload.size() > maxStoredBytes - stored)
+                 throw std::runtime_error("compressed byte tensor exceeds residency budget");
+             stored += encoded.payload.size();
+             result.chunks_.push_back(std::move(encoded));
+             offset += n;
+         }
+         result.stored_bytes_ = stored;
+         if (byteCount && stored >= byteCount)
+             throw std::runtime_error("byte tensor has no net compression win");
+         return result;
+     }
+
+     size_t size() const noexcept { return byte_count_; }
+     size_t storedBytes() const noexcept { return stored_bytes_; }
+
+     void ReadRange(size_t first, size_t count, uint8_t* destination,
+                    std::vector<uint8_t>& scratch) const {
+         if (first > byte_count_ || count > byte_count_ - first)
+             throw std::out_of_range("compressed byte tensor range");
+         if (count && !destination) throw std::invalid_argument("null byte range destination");
+         if (!count) return;
+         const size_t end = first + count;
+         const size_t firstChunk = first / chunk_bytes_;
+         const size_t lastChunk = (end - 1) / chunk_bytes_;
+         for (size_t ci = firstChunk; ci <= lastChunk; ++ci) {
+             const Result& encoded = chunks_[ci];
+             const size_t chunkFirst = ci * chunk_bytes_;
+             const size_t chunkCount = static_cast<size_t>(encoded.original_bytes);
+             scratch.resize(chunkCount);
+             DecodeInto(encoded, scratch.data(), scratch.size());
+             const size_t copyFirst = std::max(first, chunkFirst);
+             const size_t chunkEnd = chunkFirst + chunkCount;
+             const size_t copyEnd = std::min(end, chunkEnd);
+             const size_t n = copyEnd - copyFirst;
+             std::memcpy(destination + (copyFirst - first),
+                         scratch.data() + (copyFirst - chunkFirst), n);
+         }
+     }
+ private:
+     size_t byte_count_ = 0;
+     size_t chunk_bytes_ = 64 * 1024;
+     size_t stored_bytes_ = 0;
+     std::vector<Result> chunks_;
+ };
+ 
 }} // namespace RawrXD::TensorCompression
