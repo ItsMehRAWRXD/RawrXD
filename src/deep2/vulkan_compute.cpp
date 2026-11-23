@@ -4260,6 +4260,16 @@ bool VulkanCompute::DispatchGemvQuantTile(
         outputOffset > output.size || outputBytes > output.size - outputOffset ||
         inputBytes > input.size || packedBytes > UINT32_MAX)
         return false;
+    // Vulkan storage-buffer descriptor offsets must satisfy the physical
+    // device's minStorageBufferOffsetAlignment. Refuse this tile route on
+    // unusual devices rather than issuing an invalid descriptor update.
+    VkPhysicalDeviceProperties deviceProperties{};
+    vkGetPhysicalDeviceProperties(physical_, &deviceProperties);
+    const VkDeviceSize descriptorAlignment =
+        deviceProperties.limits.minStorageBufferOffsetAlignment;
+    if (descriptorAlignment &&
+        (static_cast<VkDeviceSize>(outputOffset) % descriptorAlignment) != 0)
+        return false;
     const size_t rowBytes = QuantPackedRowBytes(type, cols);
     if (!rowBytes || rowCount > SIZE_MAX / rowBytes ||
         packedBytes != rowBytes * static_cast<size_t>(rowCount))
