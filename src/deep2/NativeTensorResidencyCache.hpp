@@ -67,6 +67,12 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto existing = entries_.find(key);
             if (existing != entries_.end()) {
+                // Reject a key reused for a differently sized model tensor.
+                // Callers must also namespace keys by model identity, since
+                // equal-sized tensors can contain different values.
+                if (elementCount > std::numeric_limits<size_t>::max() / sizeof(float) ||
+                    existing->second.logicalBytes != elementCount * sizeof(float))
+                    return false;
                 existing->second.lastUse = ++tick_;
                 return true;
             }
