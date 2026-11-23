@@ -156,8 +156,8 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         const size_t blocks = static_cast<size_t>((n + 63) / 64);
         for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
             const uint8_t* block = src.data + blockIndex * 18;
-            const uint8_t* packed = block;
-            const float scale = fp16ToF32(readU16(block + 16));
+            const float scale = fp16ToF32(readU16(block));
+            const uint8_t* packed = block + 2;
             const size_t base = blockIndex * 64;
             const size_t take = std::min<size_t>(64, static_cast<size_t>(n) - base);
             for (size_t j = 0; j < take; ++j) {
