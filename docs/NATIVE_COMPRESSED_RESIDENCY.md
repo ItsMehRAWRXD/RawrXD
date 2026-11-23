@@ -23,13 +23,13 @@ This change adds a dependency-free C++17 compressed-weight storage path. It is a
 
 ## Scope boundary
 
-The ROM forward path now routes 2-D QKV, FFN up/down, and output projections of type F32, F16, Q4_0, and Q8_0 through the shared compressed-resident store and bounded CPU GEMV. F32/F16 decode only the requested row fragments; Q4_0/Q8_0 decode only packed quant blocks. Unsupported types retain the explicit dequantization fallback. This is not universal operator coverage: attention/state vectors, embeddings, MoE expert routing, other quantized types, and Vulkan shaders still need typed integration and independent parity tests.
+The ROM forward path now routes 2-D QKV, FFN up/down, and output projections of type F32, F16, Q4_0, and Q8_0 through the shared compressed-resident store and bounded CPU GEMV. The independent dequantization reference now implements the standard GGML Q4_0 layout and standard Q8_0 layout (fp16 scale first, followed by signed int8 values), and converts binary16 subnormals without exponent underflow. F32/F16 decode only the requested row fragments; Q4_0/Q8_0 decode only packed quant blocks. Unsupported types retain the explicit dequantization fallback. This is not universal operator coverage: attention/state vectors, embeddings, MoE expert routing, other quantized types, and Vulkan shaders still need typed integration and independent parity tests.
 
 It also does not claim a fixed memory reduction ratio. Incompressible data remains raw, metadata and vector capacity count toward residency, and the source file mapping may still occupy the OS page cache. Measure compressed payload, retained allocation, process working set, and GPU allocations separately.
 
 ## Build and test
 
-The root CMake project now registers seven dependency-free regression targets:
+The root CMake project now registers nine regression targets, including the quant-kernel reference test:
 - `native_compressed_residency_test`
 - `native_compressed_tensor_test`
 - `native_file_tensor_reader_test`
@@ -37,8 +37,9 @@ The root CMake project now registers seven dependency-free regression targets:
 - `native_bounded_weight_stager_test`
 - `native_resident_f32_matvec_test`
 - `native_resident_typed_matvec_test` (F16/Q4_0/Q8_0 plus GGUF byte-geometry checks)
+- `native_quantized_dequant_test` (independent Q4_0/Q8_0 known answers, F16 subnormal, truncated block, and overflow rejection)
 
-They compile as C++17 and do not require Vulkan, Qt, or model downloads. The dedicated GitHub Actions workflow compiles and runs them directly on Linux and Windows.
+They compile as C++17 and do not require Vulkan, Qt, or model downloads. The dedicated GitHub Actions workflow compiles and runs the header-only residency tests plus the linked quant-kernel reference test directly on Linux and Windows.
 
 ## Next integration gates
 
