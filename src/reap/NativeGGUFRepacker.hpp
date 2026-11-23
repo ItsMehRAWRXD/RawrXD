@@ -528,8 +528,10 @@ inline RepackError RepackGGUF(const std::string& input,
                                t.source_bytes,t.q4_source_type)))
                 return RepackError::Output;
         } else if(t.convert_q8_0) {
-            if(!ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
-                                        t.source_bytes,t.q8_source_f16))
+            if(!(t.q8_source_k ?
+                 ConvertQ8KToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes) :
+                 ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
+                                          t.source_bytes,t.q8_source_f16)))
                 return RepackError::Output;
         } else if(t.convert_f16) {
             if(!ConvertF32RangeToF16(in,out,dataStart+t.old_offset,t.source_bytes))
