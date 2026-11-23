@@ -19,7 +19,7 @@ inline bool AuditF32ToF16(const std::string& input,
                           const std::string& output,
                           uint64_t inputOffset,uint64_t outputOffset,
                           uint64_t elements,F16Accuracy& result) {
-    result={};
+    F16Accuracy measured{};
     if(elements==0 || elements>UINT64_MAX/4 ||
        inputOffset>UINT64_MAX-elements*4 ||
        outputOffset>UINT64_MAX-elements*2 ||
@@ -50,25 +50,26 @@ inline bool AuditF32ToF16(const std::string& input,
             std::memcpy(&original,&bits,4);
             std::memcpy(&reconstructed,&decoded,4);
             if(!std::isfinite(original)) {
-                ++result.nonfinite;
+                ++measured.nonfinite;
                 continue;
             }
             if(!std::isfinite(reconstructed)) {
-                ++result.overflowed;
+                ++measured.overflowed;
                 continue;
             }
             const double absError=std::abs(double(original)-double(reconstructed));
             const double relative=original==0.0f?0.0:absError/std::abs(double(original));
-            result.max_abs=std::max(result.max_abs,absError);
-            result.max_rel=std::max(result.max_rel,relative);
+            measured.max_abs=std::max(measured.max_abs,absError);
+            measured.max_rel=std::max(measured.max_rel,relative);
             sumSquares+=static_cast<long double>(absError)*absError;
-            ++result.finite;
+            ++measured.finite;
         }
-        result.elements+=n;
+        measured.elements+=n;
         remaining-=n;
     }
-    if(result.finite)
-        result.rms_abs=std::sqrt(static_cast<double>(sumSquares/result.finite));
+    if(measured.finite)
+        measured.rms_abs=std::sqrt(static_cast<double>(sumSquares/measured.finite));
+    result=measured; // Publish only after every source/destination element validates.
     return true;
 }
 }} // namespace RawrXD::REAP
