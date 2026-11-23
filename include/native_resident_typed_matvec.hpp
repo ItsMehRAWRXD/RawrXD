@@ -638,11 +638,6 @@ inline std::vector<float> resident_k_matvec(
 }
 
 
-inline std::vector<float> resident_q8_k_row(const ResidentCompressedTensor& w,
-    std::size_t row, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
-    return resident_k_row<292, resident_k_detail::decode_q8>(w, row, rows, cols, budget);
-}
-
 template<std::size_t BlockBytes, void (*Decode)(const std::uint8_t*, float*)>
 inline std::vector<float> resident_k_row(
     const ResidentCompressedTensor& weights, std::size_t rowIndex,
@@ -673,6 +668,11 @@ inline std::vector<float> resident_k_row(
             }
         });
     return output;
+}
+
+inline std::vector<float> resident_q8_k_row(const ResidentCompressedTensor& w,
+    std::size_t row, std::size_t rows, std::size_t cols, std::size_t budget = 64 * 1024) {
+    return resident_k_row<292, resident_k_detail::decode_q8>(w, row, rows, cols, budget);
 }
 
 inline std::vector<float> resident_q2_k_matvec(const ResidentCompressedTensor& w,
