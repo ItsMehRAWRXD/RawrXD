@@ -760,6 +760,16 @@ inline RepackError RepackGGUF(const std::string& input,
         if(t->old_offset<prev)return RepackError::Format;
         prev=t->old_offset+t->source_bytes;
     }
+    // A smaller GGUF alone is not evidence of compression: the input can
+    // contain unused padding or trailing bytes. Require at least one actual
+    // tensor payload reduction before accepting --auto.
+    if(auto_compress) {
+        bool reducedTensor=false;
+        for(const auto& t:tensors) {
+            if(t.bytes<t.source_bytes) {reducedTensor=true;break;}
+        }
+        if(!reducedTensor)return RepackError::Unsupported;
+    }
     uint64_t cursor=0;
     for(auto& t:tensors) {
         if(cursor>UINT64_MAX-(alignment-1))return RepackError::Overflow;
