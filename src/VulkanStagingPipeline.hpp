@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <vector>
 #include <mutex>
+#include <cstddef>
 
 namespace Deep2Rom::Compute {
 
@@ -12,6 +13,9 @@ namespace Deep2Rom::Compute {
         void*          mapped_ptr{ nullptr };
         size_t         capacity{ 0 };
         bool           in_use{ false };
+        // A slot may be released by its CPU owner immediately after submit,
+        // but it is not reusable until this transfer fence signals.
+        VkFence        pending_fence{ VK_NULL_HANDLE };
     };
 
     class VulkanStagingPipeline {
@@ -27,6 +31,8 @@ namespace Deep2Rom::Compute {
         bool acquire_staging_buffer(size_t size, StagingSlot& out_slot);
         void release_staging_buffer(StagingSlot& slot);
 
+        // Submits a copy and associates a fence with the source slot. Releasing
+        // the slot does not make it reusable until the fence has completed.
         bool enqueue_asynchronous_dma(
             VkQueue transfer_queue,
             VkCommandBuffer cmd_buffer,
