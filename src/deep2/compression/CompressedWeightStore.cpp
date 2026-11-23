@@ -43,11 +43,21 @@ std::vector<std::uint8_t> CompressedWeightStore::encode(const std::uint8_t* src,
 }
 bool CompressedWeightStore::decode(const EncodedBlock& b,std::vector<std::uint8_t>& out) {
  if(b.stored_raw)out=b.payload;else{out.clear();out.reserve(b.raw_size);std::size_t p=0;
-  while(p<b.payload.size()&&out.size()<b.raw_size){const auto control=b.payload[p++];for(unsigned bit=0;bit<8&&out.size()<b.raw_size;++bit){
-   if(control&(1u<<bit)){if(p+3>b.payload.size())return false;const auto d=std::size_t(b.payload[p])|(std::size_t(b.payload[p+1])<<8);const auto len=b.payload[p+2];p+=3;const auto dist=d+1;
-    if(dist>out.size()||len<kMinMatch||len>b.raw_size-out.size())return false;for(std::size_t i=0;i<len;++i)out.push_back(out[out.size()-dist]);
-   }else{if(p>=b.payload.size())return false;out.push_back(b.payload[p++]);}
-  }}
+  while(p<b.payload.size()&&out.size()<b.raw_size){
+   const auto control=b.payload[p++];
+   unsigned bit=0;
+   for(;bit<8&&out.size()<b.raw_size;++bit){
+    if(control&(1u<<bit)){if(p+3>b.payload.size())return false;const auto d=std::size_t(b.payload[p])|(std::size_t(b.payload[p+1])<<8);const auto len=b.payload[p+2];p+=3;const auto dist=d+1;
+     if(dist>out.size()||len<kMinMatch||len>b.raw_size-out.size())return false;for(std::size_t i=0;i<len;++i)out.push_back(out[out.size()-dist]);
+    }else{if(p>=b.payload.size())return false;out.push_back(b.payload[p++]);}
+   }
+   // Unused high bits in the final control byte must be zero. Otherwise
+   // malformed token flags can be ignored after the decoded length is met.
+   if(out.size()==b.raw_size&&bit<8){
+    const auto unusedMask=static_cast<std::uint8_t>(0xFFu<<bit);
+    if(control&unusedMask)return false;
+   }
+  }
   // Reject trailing encoded bytes after the declared decoded length.
   if(p!=b.payload.size()) return false;
  }
