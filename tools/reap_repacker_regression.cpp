@@ -89,6 +89,32 @@ int main() {
         check(first==static_cast<char>(0x22) && second==static_cast<char>(0x11),
               "out_of_order_tensor_payloads_preserved");
     }
+    // Malformed GGUF with an overflowing tensor offset must fail closed.
+    {
+        std::ofstream out(source,std::ios::binary|std::ios::trunc);
+        WriteU32(out,0x46554747);WriteU32(out,3);
+        WriteU64(out,1);WriteU64(out,0);
+        WriteName(out,"overflow.weight");WriteU32(out,1);WriteU64(out,4);
+        WriteU32(out,0);WriteU64(out,UINT64_MAX-31);
+        PadTo(out,32);
+        for(int i=0;i<16;++i)out.put(static_cast<char>(i));
+    }
+    check(RepackGGUF(source,dest,1024)==RepackError::Format,
+          "overflowed_tensor_offset_rejected");
+    // Duplicate tensor names must not be accepted as a valid directory.
+    {
+        std::ofstream out(source,std::ios::binary|std::ios::trunc);
+        WriteU32(out,0x46554747);WriteU32(out,3);
+        WriteU64(out,2);WriteU64(out,0);
+        for(int i=0;i<2;++i) {
+            WriteName(out,"duplicate.weight");WriteU32(out,1);
+            WriteU64(out,4);WriteU32(out,0);WriteU64(out,i*32);
+        }
+        PadTo(out,32);
+        for(int i=0;i<64;++i)out.put(static_cast<char>(i));
+    }
+    check(RepackGGUF(source,dest,1024)==RepackError::Format,
+          "duplicate_tensor_names_rejected");
     std::remove(source);std::remove(dest);
     std::cout<<"REAP_REPACK_RESULT="<<(fails?"FAIL":"PASS")
              <<" failures="<<fails<<"\n";
