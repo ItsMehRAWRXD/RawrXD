@@ -577,9 +577,34 @@ public:
             throw std::out_of_range("compressed tensor range");
         if(count && !destination) throw std::invalid_argument("null range destination");
         if(!count) return;
+        if (!chunk_elements_) throw std::runtime_error("zero stored F32 chunk size");
         const size_t end=first+count;
         const size_t first_chunk=first/chunk_elements_;
         const size_t last_chunk=(end-1)/chunk_elements_;
+        if (last_chunk >= chunks_.size())
+            throw std::runtime_error("truncated compressed F32 chunk directory");
+        // Validate the entire directory span before touching destination.
+        // This also prevents overflow when a stored chunk length is corrupt.
+        size_t covered = 0;
+        for(size_t ci=first_chunk;ci<=last_chunk;++ci) {
+            const Result& encoded=chunks_[ci];
+            if (ci > std::numeric_limits<size_t>::max()/chunk_elements_)
+                throw std::runtime_error("compressed F32 chunk offset overflow");
+            const size_t chunk_first=ci*chunk_elements_;
+            if (chunk_first>element_count_ ||
+                encoded.original_bytes%sizeof(float)!=0 ||
+                encoded.original_bytes/sizeof(float)>chunk_elements_ ||
+                encoded.original_bytes/sizeof(float)>element_count_-chunk_first)
+                throw std::runtime_error("invalid compressed F32 chunk length");
+            const size_t chunk_end=chunk_first+static_cast<size_t>(encoded.original_bytes/sizeof(float));
+            const size_t from=std::max(first,chunk_first);
+            const size_t to=std::min(end,chunk_end);
+            if (to<from || to-from>count-covered)
+                throw std::runtime_error("compressed F32 chunk coverage gap");
+            covered+=to-from;
+        }
+        if (covered!=count)
+            throw std::runtime_error("incomplete compressed F32 range");
         for(size_t ci=first_chunk;ci<=last_chunk;++ci) {
             const Result& encoded=chunks_[ci];
             const size_t chunk_first=ci*chunk_elements_;
