@@ -47,3 +47,22 @@ ctest --test-dir build -C Release -R "NativeTensor|NativeCompressedGGUF|Deep2Com
 The standalone synthetic GGUF test covers TensorROM, the shard pager, F32/encoded-byte caches, partial reads, and deterministic toy projection. The Windows `Deep2CompressedModelE2E` test additionally calls the existing Deep2 Phi-3 ROM forward method using a tiny generated model, a 4096x16 F16 output projection spanning two 64 KiB encoded chunks, and the CPU tiled GEMV path. This verifies F16 bytes enter the lossless encoded cache while the F32 layers use the F32 cache; each 16-row output tile requests only its encoded byte interval and the test checks encoded-cache hits, decode accounting, and every output logit against an independent analytic oracle for the synthetic attention/FFN/LayerNorm/output graph. The Vulkan packed-F16 path shares the same encoded-range helper but still requires target-GPU validation.
 
 The current Phi-3 ROM forward method retains its existing simplified V-path attention behavior. Passing the synthetic test is evidence of compressed-residency plumbing through that method, not evidence of complete transformer architecture fidelity, production-model parity, Vulkan numerical parity, or release certification. Those gates require independent reference logits and target-hardware validation.
+
+
+## Residency accounting boundary
+
+The cache's retained-byte budget counts the reserved per-chunk directory
+(`vector<Result>::capacity() * sizeof(Result)`) and each encoded payload's
+actual `vector<uint8_t>::capacity()`, not merely the payload's logical size.
+Admission checks the directory estimate before reserving it, then checks each
+payload allocation before retaining the chunk. This prevents tiny chunk sizes
+from creating an unbounded metadata allocation outside the configured cache
+budget.
+
+The reported compressed-byte total is the cache-owned chunk directory plus
+payload allocation capacity. It is not process RSS or total host/device
+residency: allocator bookkeeping, map nodes, caller-owned decode scratch,
+temporary admission buffers, pager pages, Vulkan staging, and GPU allocations
+are separate measurements and must be reported independently. The cache
+budget is therefore a strict cap on its accounted retained storage, not a
+claim that the entire inference process is capped to that number.
