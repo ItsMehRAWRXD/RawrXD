@@ -1348,8 +1348,11 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (desc->blockElements > 1 && (H % desc->blockElements) != 0)
         return false;
 
+    if (H > std::numeric_limits<size_t>::max() -
+                (desc->blockElements - 1u))
+        return false;
     const size_t blocksPerRow =
-        (H + desc->blockElements - 1) / desc->blockElements;
+        (H + desc->blockElements - 1u) / desc->blockElements;
     if (blocksPerRow >
         std::numeric_limits<size_t>::max() / desc->blockBytes)
         return false;
@@ -1367,7 +1370,10 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (!dequant) return false;
 
     if (wt.compressedBytes) {
-        if (wt.compressedBytes->size() != wt.sizeBytes)
+        if (offset > wt.compressedBytes->size() ||
+            rowBytes > wt.compressedBytes->size() - offset ||
+            (wt.sizeBytes != 0 &&
+             wt.compressedBytes->size() != wt.sizeBytes))
             return false;
         std::vector<uint8_t> encodedRow(rowBytes);
         std::vector<uint8_t> decodeScratch;
