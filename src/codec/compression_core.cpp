@@ -77,6 +77,11 @@ Result compress(const std::uint8_t* data, std::size_t size, int level) {
         return {Status::InvalidInput, {}};
     }
 
+    // Reject invalid levels explicitly instead of reporting a provider fault.
+    if (level < Z_DEFAULT_COMPRESSION || level > Z_BEST_COMPRESSION) {
+        return {Status::InvalidInput, {}};
+    }
+
     uLongf bound = compressBound(static_cast<uLong>(size));
     if (bound == 0) {
         return {Status::BackendError, {}};
