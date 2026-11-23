@@ -704,12 +704,12 @@ bool VulkanCompute::createPipelines() {
 bool VulkanCompute::DispatchGemvQ4KBatch8Row(
     const void* weights,size_t weightBytes,
     DeviceBuf& inputBatch,DeviceBuf& outputBatch,
-    uint32_t rows,uint32_t cols,uint32_t batch)
+    uint32_t rows,uint32_t cols,uint32_t batch, uint64_t stableKey)
 {
     if(!qBatch8RowPipeline_||!weights||!weightBytes||
        !rows||!cols||!batch||batch>4) return false;
     DeviceBuf* wb=nullptr;
-    if(!ensureWeightQuant(12,weights,weightBytes,wb)) return false;
+    if(!ensureWeightQuant(12,weights,weightBytes,wb,stableKey)) return false;
     VkCommandBuffer cmd=fusedCmd_;
     VkQueryPool query=fusedQuery_;
     const bool own=!fused_;
@@ -742,7 +742,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
 VulkanCompute::Q4KBatchTile VulkanCompute::SelectQ4KBatchTile(
     const void* weights,size_t weightBytes,
     DeviceBuf& inputBatch,DeviceBuf& scratchOutput,
-    uint32_t rows,uint32_t cols,uint32_t batch)
+    uint32_t rows,uint32_t cols,uint32_t batch, uint64_t stableKey)
 {
     const char* force=std::getenv("DEEP2_Q4K_FORCE_TILE");
     if(force&&force[0]=='8') return Q4KBatchTile::Eight;
@@ -784,13 +784,13 @@ VulkanCompute::Q4KBatchTile VulkanCompute::SelectQ4KBatchTile(
 bool VulkanCompute::DispatchGemvQ4KBatch4Row(
     const void* weights,size_t weightBytes,
     DeviceBuf& inputBatch,DeviceBuf& outputBatch,
-    uint32_t rows,uint32_t cols,uint32_t batch)
+    uint32_t rows,uint32_t cols,uint32_t batch, uint64_t stableKey)
 {
     if(!qBatch4RowPipeline_||!weights||!weightBytes||
        !rows||!cols||!batch||batch>4)
         return false;
     DeviceBuf* wb=nullptr;
-    if(!ensureWeightQuant(12,weights,weightBytes,wb)) return false;
+    if(!ensureWeightQuant(12,weights,weightBytes,wb,stableKey)) return false;
 
     VkCommandBuffer cmd=fusedCmd_;
     VkQueryPool query=fusedQuery_;
@@ -3121,7 +3121,7 @@ bool VulkanCompute::DispatchGemvQuant(
 bool VulkanCompute::DispatchGemvQ4KBatch(
     const void* weights,size_t weightBytes,
     DeviceBuf& inputBatch,DeviceBuf& outputBatch,
-    uint32_t rows,uint32_t cols,uint32_t batch)
+    uint32_t rows,uint32_t cols,uint32_t batch, uint64_t stableKey)
 {
     if(rows>=4 && qBatch4RowPipeline_) {
         const Q4KBatchTile tile=SelectQ4KBatchTile(
@@ -3143,7 +3143,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
         return false;
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightQuant(12,weights,weightBytes,w)) return false;
+    if(!ensureWeightQuant(12,weights,weightBytes,w,stableKey)) return false;
 
     VkCommandBuffer cmd=fusedCmd_;
     VkQueryPool query=fusedQuery_;
@@ -3294,7 +3294,7 @@ bool VulkanCompute::RunWeightGroupHostBatchQ4K(
         auto& out=Scratch(111u+(unsigned)i);
         if(!DispatchGemvQ4KBatch(
                 weights[i].data,weights[i].bytes,in,out,
-                weights[i].rows,weights[i].cols,batch))
+                weights[i].rows,weights[i].cols,batch,weights[i].key))
             return abort();
         const size_t b=(size_t)batch*weights[i].rows*sizeof(float);
         if(!recordCopy(
