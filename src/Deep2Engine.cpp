@@ -332,6 +332,8 @@ bool Deep2Engine::gemvROMCompressed(
         case deep2::TensorType::F16:
             return gemvROMCompressedF16(tensorName, x, y, rows, cols,
                                         blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::BF16:
+            return runTyped(rawrxd::compression::resident_bf16_matvec);
         case deep2::TensorType::Q4_0:
             return gemvROMCompressedQ4_0(tensorName, x, y, rows, cols,
                                          blockBytes, stagingBudgetBytes);
@@ -384,6 +386,7 @@ bool Deep2Engine::readROMCompressedRow(
             rowBytes = cols * 4u;
             break;
         case deep2::TensorType::F16:
+        case deep2::TensorType::BF16:
             if (cols > (std::numeric_limits<std::size_t>::max)() / 2u) return false;
             rowBytes = cols * 2u;
             break;
@@ -469,6 +472,10 @@ bool Deep2Engine::readROMCompressedRow(
                 break;
             case deep2::TensorType::F16:
                 next = rawrxd::compression::resident_f16_row(
+                    *resident, 0, 1, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::BF16:
+                next = rawrxd::compression::resident_bf16_row(
                     *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
             case deep2::TensorType::Q4_0:
@@ -936,6 +943,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         switch (type) {
             case deep2::TensorType::F32:
             case deep2::TensorType::F16:
+            case deep2::TensorType::BF16:
             case deep2::TensorType::Q4_0:
             case deep2::TensorType::Q4_1:
             case deep2::TensorType::Q5_0:
