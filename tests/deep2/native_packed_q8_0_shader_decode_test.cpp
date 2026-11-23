@@ -151,9 +151,9 @@ static float loadKQuantShaderModel(const std::vector<uint8_t>& bytes,
         const uint32_t chunk = lane >> 7u;
         const uint32_t laneInChunk = (lane & 127u) >> 5u;
         const uint32_t column = lane & 31u;
-        const uint32_t loIndex = chunk * 64u + (laneInChunk >> 1u) * 32u + column;
+        const uint32_t loIndex = chunk * 64u + (laneInChunk & 1u) * 32u + column;
         const uint32_t lo = (loadByte(bytes, block + loIndex) >>
-            ((laneInChunk & 1u) * 4u)) & 15u;
+            ((laneInChunk >> 1u) * 4u)) & 15u;
         const uint32_t hi = (loadByte(bytes, block + 128u + chunk * 32u + column) >>
             (laneInChunk * 2u)) & 3u;
         const int q = int(lo | (hi << 4u)) - 32;
