@@ -329,6 +329,7 @@ int main(int argc,char** argv) {
         std::vector<uint32_t> outputTypes(ts.size());
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
+        std::vector<bool> streamF64toBf16(ts.size(),false);
         std::vector<bool> streamF64toF16(ts.size(),false);
         std::vector<bool> streamF64toF32(ts.size(),false);
         std::vector<bool> streamHalf(ts.size(),false);
@@ -346,6 +347,7 @@ int main(int argc,char** argv) {
                 seek(in,add(dataStart,t.offset));
                 bool valid=true;
                 bool halfValid=automatic;
+                bool bf16Valid=automatic;
                 uint8_t block[65536];
                 for(U off=0;off<t.bytes && valid;) {
                     const size_t n=size_t(std::min<U>(t.bytes-off,sizeof(block)));
@@ -363,6 +365,15 @@ int main(int argc,char** argv) {
                                !(std::fabs(double(half)-original)<=double(tolerance)))
                                 halfValid=false;
                         }
+                        if(bf16Valid) {
+                            uint32_t word;
+                            std::memcpy(&word,&narrowed,4);
+                            const uint32_t rounded=word+0x7fffu+((word>>16)&1u);
+                            const float restored=Float(rounded&0xffff0000u);
+                            if(!std::isfinite(restored) ||
+                               !(std::fabs(double(restored)-original)<=double(tolerance)))
+                                bf16Valid=false;
+                        }
                         if(!std::isfinite(original)||!std::isfinite(narrowed)||
                            !(std::fabs(double(narrowed)-original)<=double(tolerance))) {
                             valid=false;break;
@@ -371,6 +382,7 @@ int main(int argc,char** argv) {
                     off+=n;
                 }
                 if(valid && halfValid){streamF64toF16[i]=true;outputTypes[i]=1;++changed;}
+                else if(valid && bf16Valid){streamF64toBf16[i]=true;outputTypes[i]=30;++changed;}
                 else if(valid){streamF64toF32[i]=true;outputTypes[i]=0;++changed;}
                 continue;
             }
@@ -714,7 +726,7 @@ int main(int argc,char** argv) {
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
             U encodedBytes=t.bytes;
-            if(streamF64toF16[i])encodedBytes=t.bytes/4;
+            if(streamF64toF16[i] || streamF64toBf16[i])encodedBytes=t.bytes/4;
             else if(streamF64toF32[i] || streamBf16[i] || streamHalf[i])encodedBytes=t.bytes/2;
             else if(streamQ4[i])encodedBytes=mul(t.bytes/(t.type==0?128:64),18);
             else if(streamQ41[i])encodedBytes=mul(t.bytes/(t.type==0?128:64),20);
@@ -737,7 +749,30 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamF64toF16[i]) {
+            if(streamF64toBf16[i]) {
+                seek(in,add(dataStart,t.offset));
+                uint8_t source[65536],packed[16384];
+                for(U off=0;off<t.bytes;) {
+                    const size_t n=size_t(std::min<U>(t.bytes-off,sizeof(source)));
+                    if(!in.read(reinterpret_cast<char*>(source),std::streamsize(n)))
+                        throw std::runtime_error("truncated F64 to BF16 streaming payload");
+                    for(size_t j=0;j<n;j+=8) {
+                        uint64_t bits=0;
+                        for(int k=0;k<8;++k)bits|=uint64_t(source[j+k])<<(8*k);
+                        double original;
+                        std::memcpy(&original,&bits,8);
+                        const float narrowed=static_cast<float>(original);
+                        uint32_t word;
+                        std::memcpy(&word,&narrowed,4);
+                        const uint16_t bf=uint16_t((word+0x7fffu+((word>>16)&1u))>>16);
+                        packed[j/4]=uint8_t(bf);
+                        packed[j/4+1]=uint8_t(bf>>8);
+                    }
+                    out.write(reinterpret_cast<const char*>(packed),std::streamsize(n/4));
+                    if(!out)throw std::runtime_error("F64 to BF16 streaming write failure");
+                    off+=n;
+                }
+            } else if(streamF64toF16[i]) {
                 seek(in,add(dataStart,t.offset));
                 uint8_t source[65536],packed[16384];
                 for(U off=0;off<t.bytes;) {
