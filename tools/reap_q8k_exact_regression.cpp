@@ -9,7 +9,7 @@ int main() {
  WriteU32(o,0x46554747);WriteU32(o,3);WriteU64(o,1);WriteU64(o,0);
  WriteName(o,"blk.0.attn_norm.weight");WriteU32(o,1);WriteU64(o,256);WriteU32(o,15);WriteU64(o,0);PadTo(o,32);
  WriteU32(o,0x3f000000);for(int i=0;i<256;++i)o.put(static_cast<char>(i%32==0?-128:i%32-16));
- for(int i=0;i<16;++i)WriteU16(o,static_cast<uint16_t>(i%2?120:-136));}
+ for(int i=0;i<16;++i)WriteU16(o,static_cast<uint16_t>(i%2?120:-248));}
  if(RepackGGUF(src,dst,UINT64_MAX,false,false,false,false,true)!=RepackError::None)++failures;
  else {std::ifstream in(dst,std::ios::binary);uint32_t u=0,nd=0,type=0;uint64_t n=0,off=0;std::string name;
  ReadU32(in,u);ReadU32(in,u);ReadU64(in,n);ReadU64(in,n);ReadName(in,name);ReadU32(in,nd);
