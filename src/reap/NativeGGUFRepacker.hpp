@@ -182,7 +182,7 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
 inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                            uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
     const uint64_t inputBlock=sourceType==0?128:sourceType==1?64:
-        sourceType==8?34:sourceType==9?36:
+        sourceType==8?34:sourceType==9?40:
         sourceType==6?22:sourceType==3?20:sourceType==7?24:0;
     if(!inputBlock || sourceBytes%inputBlock || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
@@ -268,6 +268,51 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
     }
     return true;
 }
+// GGML Q8_K: FP32 d, 256 signed int8 values, then 16 int16 sums.
+// Decode all 256 values, then independently encode eight Q4_0 blocks.
+// No cross-row blocks and no whole-model buffering.
+inline bool ConvertQ8KToQ4_0(std::ifstream& in,std::ofstream& out,
+                              uint64_t from,uint64_t sourceBytes) {
+    if(sourceBytes%292 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char source[292],encoded[18];
+    while(sourceBytes) {
+        if(!in.read(reinterpret_cast<char*>(source),292))return false;
+        const uint32_t scaleBits=uint32_t(source[0])|(uint32_t(source[1])<<8)|
+            (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
+        float scale=0;std::memcpy(&scale,&scaleBits,4);
+        if(!std::isfinite(scale))return false;
+        for(unsigned group=0;group<8;++group) {
+            float values[32],extreme=0;
+            for(unsigned i=0;i<32;++i) {
+                values[i]=scale*static_cast<float>(static_cast<int8_t>(source[4+group*32+i]));
+                if(!std::isfinite(values[i]))return false;
+                if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
+            }
+            const float d=extreme/-8.0f;
+            uint32_t bits=0;std::memcpy(&bits,&d,4);
+            const uint16_t half=Float32BitsToFloat16(bits);
+            const uint32_t decoded=Float16ToFloat32Bits(half);
+            float actual=0;std::memcpy(&actual,&decoded,4);
+            if(extreme!=0 && (!std::isfinite(actual)||actual==0))return false;
+            encoded[0]=static_cast<unsigned char>(half);
+            encoded[1]=static_cast<unsigned char>(half>>8);
+            unsigned char codes[32];
+            for(unsigned i=0;i<32;++i) {
+                const double normalized=actual==0?0.0:static_cast<double>(values[i])/actual;
+                const double q=std::floor(normalized+8.5);
+                codes[i]=static_cast<unsigned char>(std::max(0.0,std::min(15.0,q)));
+            }
+            for(unsigned i=0;i<16;++i)
+                encoded[2+i]=static_cast<unsigned char>(codes[i]|(codes[i+16]<<4));
+            if(!out.write(reinterpret_cast<const char*>(encoded),18))return false;
+        }
+        sourceBytes-=292;
+    }
+    return true;
+}
 inline RepackError RepackGGUF(const std::string& input,
                              const std::string& output,
                              uint64_t max_output_bytes=UINT64_MAX,
@@ -341,7 +386,7 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         if(convert_q8_0_to_q4_0 &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
-            t.type==6 || t.type==3 || t.type==7) && t.dims[0]%32==0) {
+            t.type==6 || t.type==3 || t.type==7 || t.type==15) && t.dims[0]%32==0) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
@@ -429,8 +474,10 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         if(t.old_offset>UINT64_MAX-dataStart)return RepackError::Overflow;
         if(t.convert_q4_0) {
-            if(!ConvertToQ4_0(in,out,dataStart+t.old_offset,
-                              t.source_bytes,t.q4_source_type))
+            if(!(t.q4_source_type==15 ?
+                 ConvertQ8KToQ4_0(in,out,dataStart+t.old_offset,t.source_bytes) :
+                 ConvertToQ4_0(in,out,dataStart+t.old_offset,
+                               t.source_bytes,t.q4_source_type)))
                 return RepackError::Output;
         } else if(t.convert_q8_0) {
             if(!ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
