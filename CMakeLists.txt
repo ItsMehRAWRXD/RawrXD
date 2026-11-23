@@ -50,6 +50,9 @@ target_include_directories(gguf_parser_regression PRIVATE ${CMAKE_CURRENT_SOURCE
 add_executable(reap_planner_regression tools/reap_planner_regression.cpp)
 target_include_directories(reap_planner_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+add_executable(rawrxd_reap_repack tools/reap_repack_cli.cpp)
+target_include_directories(rawrxd_reap_repack PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 add_executable(reap_repacker_regression tools/reap_repacker_regression.cpp)
 target_include_directories(reap_repacker_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
