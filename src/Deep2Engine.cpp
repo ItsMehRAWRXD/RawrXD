@@ -192,8 +192,22 @@ Deep2Engine::TensorHandle Deep2Engine::getTensor(const std::string& name) {
 bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out) {
     if (!romMode) return false;
     const uint64_t size = entry.byteSize();
-    std::vector<uint8_t> staged(size);
-    if (!rom.readTensor(entry, staged.data())) return false;
+    if (size > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) return false;
+    std::vector<uint8_t> staged(static_cast<size_t>(size));
+    deep2::TensorROMCompressedView* compressed = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(compressedWeightViewsMutex);
+        auto it = compressedWeightViews.find(&entry);
+        if (it == compressedWeightViews.end()) {
+            auto view = std::make_unique<deep2::TensorROMCompressedView>(
+                rom, entry, 256 * 1024, 64 * 1024 * 1024);
+            it = compressedWeightViews.emplace(&entry, std::move(view)).first;
+        }
+        compressed = it->second.get();
+    }
+    // The compressed view fetches exact shard ranges directly, bypassing the
+    // raw PageCache. Only this tensor's requested bytes are expanded here.
+    if (!compressed || !compressed->readRange(0, size, staged.data())) return false;
     deep2::TensorView view{ entry.type, staged.data(), size, entry.dims, true };
     return dequantizeTensor(view, out);
 }
