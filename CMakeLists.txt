@@ -570,6 +570,18 @@ if(RAWRXD_BUILD_TESTS AND RAWRXD_ZLIB_ENABLED)
     target_compile_features(compression_zlib_provider_compile_test PRIVATE cxx_std_17)
     add_test(NAME compression_zlib_provider_compile_test
         COMMAND compression_zlib_provider_compile_test)
+    foreach(_zlib_target zlib ZLIB::ZLIB)
+        if(TARGET ${_zlib_target})
+            get_target_property(_zlib_kind ${_zlib_target} TYPE)
+            if(_zlib_kind STREQUAL "SHARED_LIBRARY")
+                add_custom_command(TARGET compression_zlib_provider_compile_test POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "$<TARGET_FILE:${_zlib_target}>"
+                        "$<TARGET_FILE_DIR:compression_zlib_provider_compile_test>"
+                    VERBATIM)
+            endif()
+        endif()
+    endforeach()
 endif()
 
 find_package(CURL QUIET)
