@@ -13,8 +13,8 @@ int main() {
         const float scales[3]={-0.5f,0.0f,0.25f};
         for(unsigned block=0;block<3;++block) {
             uint32_t bits=0;std::memcpy(&bits,&scales[block],4);
-            WriteU32(out,bits);
-            WriteU32(out,0x7fc00000u); // ignored Q8_1 sum (NaN)
+            WriteU16(out,Float32BitsToFloat16(bits));
+            WriteU16(out,0x7e00u); // ignored Q8_1 sum (NaN)
             for(unsigned i=0;i<32;++i)
                 out.put(static_cast<char>(static_cast<int>(i)-16));
         }
@@ -23,7 +23,7 @@ int main() {
     {
         std::ifstream in(src,std::ios::binary);
         std::ofstream out(dst,std::ios::binary);
-        ok=ConvertQ8_1ToQ8_0(in,out,0,120);
+        ok=ConvertQ8_1ToQ8_0(in,out,0,108);
     }
     if(ok) {
         std::ifstream in(dst,std::ios::binary);
