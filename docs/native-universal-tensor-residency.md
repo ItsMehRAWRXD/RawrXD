@@ -134,3 +134,14 @@ A byte-layout review against the upstream `ggml-org/llama.cpp` dequantization ro
 The regression now compares the packed shader mirror with the native range dequantizer for two adjacent blocks of every K-quant type. This catches disagreement between those implementations, but they still share a repository-owned native decoder; it is not a substitute for running a separately compiled upstream GGML reference fixture.
 
 CI now installs `glslc` and `spirv-tools` on Linux and makes packed-shader compilation plus `spirv-val` validation mandatory rather than silently skipping shader validation when the compiler is absent. Vulkan weight-cache hits now validate a payload fingerprint in addition to key, type, and byte geometry; F32 and quantized uploads reject null payloads before hashing, and typed row-tile byte calculations are overflow-checked.
+
+
+## Bounded decode amplification and honest residency telemetry
+
+Encoded-byte residency now uses 16 KiB chunks in the ROM inference path instead of 64 KiB. A narrow row/tile request therefore expands a smaller maximum chunk window before copying only the requested bytes to the caller. The underlying byte-cache API remains chunk-size configurable for tests and other callers.
+
+Both F32 and encoded-byte residency storage expose `DecodedBytesForRange`. Cache telemetry now increments `bytesDecoded` by the full size of compressed chunks actually expanded to satisfy a range, excluding raw chunks, rather than merely counting caller-visible output bytes. This makes decode amplification observable instead of understating temporary CPU work.
+
+Regression coverage now includes a one-float read from a 4 KiB compressed F32 chunk and a one-byte read from a 4 KiB encoded-byte chunk; the reported decompressed byte counts must reflect the full chunks expanded.
+
+The packed-weight shader decoder regression is also registered as a native CMake executable and CTest (`NativePackedWeightShaderDecode`), in addition to the direct compiler invocations in the dedicated CI workflow.
