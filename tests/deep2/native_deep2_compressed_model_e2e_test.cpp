@@ -119,12 +119,12 @@ int main() {
     int rc = 0;
     {
         Deep2Engine engine;
-        if (!engine.ConfigureTensorCompression(1024 * 1024, 1024 * 1024, 0.0f)) {
-            std::cerr << "compression configuration rejected\n";
-            rc = 2;
-        } else if (!engine.Initialize(path.string())) {
+        if (!engine.Initialize(path.string())) {
             std::cerr << "Deep2Engine failed to initialize synthetic GGUF\n";
             rc = 3;
+        } else if (!engine.ConfigureTensorCompression(1024 * 1024, 1024 * 1024, 0.0f)) {
+            std::cerr << "compression configuration rejected\n";
+            rc = 2;
         } else {
             std::vector<float> logits, baseline;
             if (!engine.executePhi3ROMForwardPass({1}, logits, baseline)) {
