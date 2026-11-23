@@ -21,6 +21,8 @@ public:
         size_t budgetBytes = 0;
         // Cached entries held by external leases; excludes evicted leases.
         size_t cachedLeasedBytes = 0;
+        // Includes evicted tiles still pinned by external inference leases.
+        size_t totalLiveDecodedBytes = 0;
         uint64_t hits = 0, misses = 0, evictions = 0;
     };
     explicit DecodedWeightTileCache(TensorResidencyCache& source, size_t budgetBytes)
@@ -44,6 +46,8 @@ public:
         // Serialize same-tile misses; no duplicate decompression or staging.
         auto values = std::make_shared<std::vector<float>>(count);
         if (!source_.ReadRange(key, first, count, values->data())) return {};
+        PruneExpiredLeases();
+        live_.push_back(LiveLease{values, bytes});
         if (bytes <= budget_) {
             while (resident_ > budget_ - bytes && !lru_.empty())
                 EvictOldest();
@@ -86,7 +90,14 @@ public:
                     ? std::numeric_limits<size_t>::max() : leased + bytes;
             }
         }
-        return {resident_, budget_, leased, hits_, misses_, evictions_};
+        size_t liveBytes = 0;
+        for (const auto& tracked : live_) {
+            if (!tracked.values.expired()) {
+                liveBytes = tracked.bytes > std::numeric_limits<size_t>::max() - liveBytes
+                    ? std::numeric_limits<size_t>::max() : liveBytes + tracked.bytes;
+            }
+        }
+        return {resident_, budget_, leased, liveBytes, hits_, misses_, evictions_};
     }
 private:
     struct Key {
@@ -118,6 +129,16 @@ private:
         }
         lru_.pop_back();
     }
+    struct LiveLease {
+        std::weak_ptr<const std::vector<float>> values;
+        size_t bytes;
+    };
+    void PruneExpiredLeases() {
+        live_.erase(std::remove_if(live_.begin(), live_.end(),
+            [](const LiveLease& lease) { return lease.values.expired(); }),
+            live_.end());
+    }
+    std::vector<LiveLease> live_;
     TensorResidencyCache& source_;
     mutable std::mutex mu_;
     size_t budget_, resident_ = 0;
