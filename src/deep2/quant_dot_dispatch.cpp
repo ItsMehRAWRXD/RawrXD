@@ -38,10 +38,10 @@ namespace QuantDot {
 namespace {
 
 bool g_force_cpu = false;
-Receipt g_receipt;
-BackendStats g_backend;
+thread_local Receipt g_receipt;
+thread_local BackendStats g_backend;
 int32_t g_preferred_device = -1;   // STRATA_S05: device pin, applied at first init
-int32_t g_active_device = -1;      // RAWRXD_MULTI_GPU: per-op device override (-1 = default Gpu(); set via SetActiveDevice for split-model dual-GPU). Default keeps single-GPU behaviour byte-identical.
+thread_local int32_t g_active_device = -1; // RAWRXD_MULTI_GPU: per-thread device override (-1 = default Gpu(); set via SetActiveDevice for split-model dual-GPU). Default keeps single-GPU behaviour byte-identical.
 int64_t g_weight_cache_budget = 0;
 static bool g_weight_cache_retention = false; // RAWRXD_G04: residency budget pin, applied at first init
 
