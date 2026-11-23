@@ -159,6 +159,15 @@ add_executable(test_native_tensor_byte_residency_cache tests/deep2/native_tensor
 target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_features(test_native_tensor_byte_residency_cache PRIVATE cxx_std_17)
 
+# Packed Vulkan shader decoder mirror: validates encoded GGUF tiles against
+# the native quantized range decoder for fixed-block and K-quant formats.
+add_executable(test_native_packed_weight_shader_decode
+    tests/deep2/native_packed_q8_0_shader_decode_test.cpp
+    src/quant_kernels.cpp
+)
+target_include_directories(test_native_packed_weight_shader_decode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(test_native_packed_weight_shader_decode PRIVATE cxx_std_17)
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
@@ -167,6 +176,7 @@ enable_testing()
 add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
 add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
+add_test(NAME NativePackedWeightShaderDecode COMMAND test_native_packed_weight_shader_decode)
 
 add_test(NAME QuantizedTensorRange
     COMMAND test_quantized_tensor_range
