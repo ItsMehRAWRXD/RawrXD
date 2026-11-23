@@ -302,9 +302,11 @@ int main() {
     const auto mixedF32Stats = mixedF32Cache.GetStats();
     assert(mixedF32Stats.compressedBytes < mixedF32Stats.logicalBytes);
     assert(mixedF32Stats.compressedBytes <= mixedF32Stats.budgetBytes);
-    std::vector<float> mixedF32Tile(3072);
+    // A one-float read expands only its intersecting 1024-float F16 chunk.
+    std::vector<float> mixedF32Tile(1);
     assert(mixedF32Cache.ReadRange("mixed.f32", 1024, mixedF32Tile.size(), mixedF32Tile.data()));
-    assert(std::all_of(mixedF32Tile.begin(), mixedF32Tile.end(), [](float v) { return v == 0.0f; }));
+    assert(mixedF32Tile[0] == 0.0f);
+    assert(mixedF32Cache.GetStats().bytesDecoded == 1024u * sizeof(float));
 
     // A fitting insertion evicts the least-recently-used compressed tensor.
     std::vector<float> second(10003);
