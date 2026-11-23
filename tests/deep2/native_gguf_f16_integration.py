@@ -95,6 +95,20 @@ def run(binary):
         assert ut["blk.0.attn_q.weight"][0]==0
         assert ub[us+ut["blk.0.attn_q.weight"][2]:us+ut["blk.0.attn_q.weight"][2]+4]==struct.pack("<f",1.0001)
         assert ut["blk.0.attn_k.weight"][0]==6
+        # Nonfinite source weights must never be silently quantized.  Every
+        # format must retain the original tensor type and exact F32 payload.
+        nonfinite=root/"nonfinite.gguf"
+        broken=bytearray(original)
+        struct.pack_into("<I",broken,orig_start,0x7fc00001)
+        nonfinite.write_bytes(broken)
+        for fmt in ("f16","q8_0","q5_1","q5_0","q4_1","q4_0"):
+            dest=root/("nonfinite-"+fmt+".gguf")
+            subprocess.run([binary,str(nonfinite),str(dest),"10000",fmt],check=True)
+            nb,ns,nm,nt=parse(dest)
+            assert nt["blk.0.attn_q.weight"][0]==0
+            off=nt["blk.0.attn_q.weight"][2]
+            assert nb[ns+off:ns+off+len(values)*4]==broken[orig_start:orig_start+len(values)*4]
+            assert nt["blk.0.attn_k.weight"][0]==6
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
