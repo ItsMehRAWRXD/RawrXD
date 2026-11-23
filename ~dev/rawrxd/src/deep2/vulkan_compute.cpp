@@ -2948,14 +2948,21 @@ bool VulkanCompute::ensureWeightF32(
             static_cast<unsigned long long>(key));
 #endif
     }
+    if (!weights || !bytes) return false;
+    const uint64_t contentHash = quantWeightPayloadHash(weights, bytes);
     auto it = weightCache_.find(key);
     if (it != weightCache_.end()) {
+        // A pointer-derived or caller-supplied key is an identity hint, not
+        // proof that the underlying payload is unchanged.
+        if (it->second.bytes != bytes || it->second.type != 0 ||
+            (it->second.contentHash != 0 &&
+             it->second.contentHash != contentHash))
+            return false;
         ++weightHits_;
         it->second.lastUse = weightUseClock_++;
         out = &it->second.buffer;
         return true;
     }
-    if (!weights || !bytes) return false;
     if (weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
         fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
                 static_cast<unsigned long long>(key), weightCacheBytes_, bytes, weightBudgetBytes_);
@@ -2981,7 +2988,8 @@ bool VulkanCompute::ensureWeightF32(
         destroyBuffer(e.buffer);
         return false;
     }
-    e.bytes=bytes; e.type=0; e.lastUse=weightUseClock_++;
+    e.bytes=bytes; e.type=0; e.contentHash=contentHash;
+    e.lastUse=weightUseClock_++;
     auto ins = weightCache_.emplace(key,std::move(e)).first;
     weightCacheBytes_ += bytes;
     ++weightUploads_;
@@ -3003,6 +3011,7 @@ bool VulkanCompute::ensureWeightQuant(
             residentDispatchDepth_, type);
 #endif
     }
+    if (!weights || !bytes) return false;
     const uint64_t key = cacheKey ? cacheKey
         : quantWeightKey(weights,bytes,type);
     const uint64_t contentHash = quantWeightPayloadHash(weights, bytes);
@@ -3023,10 +3032,6 @@ bool VulkanCompute::ensureWeightQuant(
         it->second.lastUse = weightUseClock_++;
         out=&it->second.buffer;
         return true;
-    }
-    if(!weights||!bytes) {
-        fprintf(stderr,"[EWB_Q4K] FAIL1 weights=%p bytes=%zu\n",weights,bytes);
-        return false;
     }
     if(weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
         fprintf(stderr,"[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
