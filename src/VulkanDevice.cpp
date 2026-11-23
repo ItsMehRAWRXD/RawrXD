@@ -420,7 +420,8 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
     const uint32_t pc[3] = {rows, cols, weightEncoding};
-    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 12, pc);
+    const uint32_t pushBytes = weightEncoding == 0u ? 8u : 12u;
+    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, pushBytes, pc);
     const uint32_t groups = rows / 256u + ((rows % 256u) != 0u ? 1u : 0u);
     vkCmdDispatch(cmd, groups, 1, 1);
 
