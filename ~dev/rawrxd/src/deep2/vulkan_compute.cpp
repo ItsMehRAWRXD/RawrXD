@@ -41,6 +41,16 @@ bool mulOverflow(size_t a, size_t b, size_t& out) {
     return false;
 }
 
+uint64_t quantWeightPayloadHash(const void* data, size_t bytes) noexcept {
+    const auto* p = static_cast<const uint8_t*>(data);
+    uint64_t hash = 14695981039346656037ull;
+    for (size_t i = 0; i < bytes; ++i) {
+        hash ^= p[i];
+        hash *= 1099511628211ull;
+    }
+    return hash ? hash : 1ull;
+}
+
 uint64_t quantWeightKey(const void* p, size_t bytes, int type) {
     uint64_t x = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(p));
     x ^= static_cast<uint64_t>(bytes) * 0x9E3779B185EBCA87ull;
@@ -2995,12 +3005,14 @@ bool VulkanCompute::ensureWeightQuant(
     }
     const uint64_t key = cacheKey ? cacheKey
         : quantWeightKey(weights,bytes,type);
+    const uint64_t contentHash = quantWeightPayloadHash(weights, bytes);
     auto it=weightCache_.find(key);
     if(it!=weightCache_.end()){
         // Explicit row-tile keys are part of the residency contract. Never
         // return a cached buffer whose type or byte geometry differs from the
         // current request; a collision must fail closed, not feed stale data.
-        if (it->second.type != type || it->second.bytes != bytes) {
+        if (it->second.type != type || it->second.bytes != bytes ||
+            it->second.contentHash != contentHash) {
             std::fprintf(stderr,
                 "[WEIGHT_CACHE_KEY_COLLISION] key=%llu cached_type=%d requested_type=%d cached_bytes=%zu requested_bytes=%zu\\n",
                 static_cast<unsigned long long>(key), it->second.type, type,
@@ -3080,7 +3092,8 @@ bool VulkanCompute::ensureWeightQuant(
         fprintf(stderr,"[EWB_Q4K] FAIL5 uploadToBuffer padded=%zu\n",padded);
         destroyBuffer(e.buffer); return false;
     }
-    e.bytes=bytes; e.type=type; e.lastUse=weightUseClock_++;
+    e.bytes=bytes; e.type=type; e.contentHash=contentHash;
+    e.lastUse=weightUseClock_++;
 
     auto ins=weightCache_.emplace(key,std::move(e)).first;
     weightCacheBytes_+=bytes;
