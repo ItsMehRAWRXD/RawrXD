@@ -370,8 +370,9 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
         hashWeightPayload(data, static_cast<size_t>(size));
     std::lock_guard<std::mutex> lock(m_weightCacheMutex);
     m_weightCacheBudgetBytes = budgetBytes;
-    evictCachedWeightsLocked(0);
-
+    // Preserve an existing matching tile long enough to acquire its lease.
+    // Evicting before lookup can discard the exact tile requested when the
+    // budget is lowered, forcing a redundant upload or uncached fallback.
     const std::string cacheKey =
         std::to_string(reinterpret_cast<std::uintptr_t>(gpu.device)) + ":" + key;
     auto existing = m_weightBuffers.find(cacheKey);
@@ -399,7 +400,10 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
         m_weightBuffers.erase(existing);
     }
 
-    if (size > budgetBytes) return false;
+    if (size > budgetBytes) {
+        evictCachedWeightsLocked(0);
+        return false;
+    }
     evictCachedWeightsLocked(static_cast<size_t>(size));
     if (m_weightCacheBytes > budgetBytes ||
         static_cast<size_t>(size) > budgetBytes - m_weightCacheBytes)
