@@ -615,6 +615,11 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             return false;
 
         const uint64_t firstElement = firstRow * cols;
+        const std::string tensorIdentity = std::to_string(entry.shardIndex) + ":" +
+            std::to_string(entry.offset) + ":" + entry.name;
+        const std::string gpuTileKey = tensorIdentity + ":tile:" +
+            std::to_string(firstElement) + ":" + std::to_string(elements) +
+            ":source-type:" + std::to_string(static_cast<unsigned>(entry.type));
         deep2::TensorView inputView{
             deep2::TensorType::F32,
             reinterpret_cast<const uint8_t*>(input),
@@ -654,7 +659,9 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                         packedType, packedWeights.data(), packedWeights.size(),
                         { countRows, cols }, true
                     };
-                    if (vulkanGemv(gpu, packedView, inputView, tileOutput)) {
+                    const std::string packedGpuKey = gpuTileKey + ":encoding:" +
+                        std::to_string(static_cast<unsigned>(encoding));
+                    if (vulkanGemv(gpu, packedView, inputView, tileOutput, packedGpuKey)) {
                         dispatched = true;
                     } else {
                         // Missing/unsupported packed shader: preserve correctness
@@ -728,7 +735,7 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 entry.type, encodedScratch.data(), encodedScratch.size(),
                 { countRows, cols }, true
             };
-            if (vulkanGemv(gpu, packedView, inputView, tileOutput)) {
+            if (vulkanGemv(gpu, packedView, inputView, tileOutput, gpuTileKey)) {
                 dispatched = true;
             } else {
                 // F32 fallback expands only this requested tile when packed
