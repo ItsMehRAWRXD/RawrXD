@@ -2,11 +2,12 @@
 // Adapter from the actual compressed in-memory block store to the bounded
 // matrix/vector kernel. Only requested block spans are decoded by readRange.
 #include "CompressedWeightStore.hpp"
-#include "native_resident_matvec.hpp"
+#include "../../../include/native_resident_matvec.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace rawrxd::compression {
 class StoredTensorReader {
