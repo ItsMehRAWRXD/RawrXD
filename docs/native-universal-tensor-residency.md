@@ -154,3 +154,8 @@ The ROM-backed F32 GEMV path now separates compressed-cache admission from tile 
 If the requested range is mixed-codec/raw, packed export is unavailable, or the packed shader cannot dispatch, the engine expands only the requested tile and uses the established F32 Vulkan path. If compression admission is rejected or a transient source read fails, the raw ROM tile fallback remains available.
 
 A residency-cache regression verifies that exporting a uniform F16 range does not increment host decompression-byte telemetry. This is the behavior required to ensure packed F32 weights stay packed from cache through the GPU upload boundary whenever the selected range and shader support it.
+
+
+## Vulkan packed-weight cache lifetime safety
+
+Packed-weight cache eviction and replacement now wait for the owning Vulkan device to become idle before destroying the cached VkBuffer/VkDeviceMemory allocation. This protects in-flight dispatches from use-after-free when the LRU budget is exceeded or a key is reused with different contents. Cache hits do not wait; synchronization occurs only on eviction or replacement. The device-wide wait is a conservative correctness measure and may introduce stalls under VRAM pressure. A future fence-tracked retirement queue can reduce those stalls without weakening ownership safety. The full concurrent GPU stress test and Windows driver validation remain pending.
