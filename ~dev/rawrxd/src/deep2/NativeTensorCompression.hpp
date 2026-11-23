@@ -415,12 +415,21 @@ public:
                             packed + sourceOffset, copyBytes);
                 continue;
             }
-            decodeScratch.resize(chunk.count);
-            if (!lz4Decompress(packed, chunk.payloadBytes,
-                               decodeScratch.data(), chunk.count))
-                throw std::runtime_error("ChunkedByteStorage LZ4 block is corrupt");
-            std::memcpy(destination + destinationOffset,
-                        decodeScratch.data() + sourceOffset, copyBytes);
+            // Full-chunk reads can decode directly into the caller's output.
+            // Partial reads still use bounded scratch because LZ4 block decoding
+            // requires the complete independently compressed source chunk.
+            if (sourceOffset == 0 && copyBytes == chunk.count) {
+                if (!lz4Decompress(packed, chunk.payloadBytes,
+                                   destination + destinationOffset, chunk.count))
+                    throw std::runtime_error("ChunkedByteStorage LZ4 block is corrupt");
+            } else {
+                decodeScratch.resize(chunk.count);
+                if (!lz4Decompress(packed, chunk.payloadBytes,
+                                   decodeScratch.data(), chunk.count))
+                    throw std::runtime_error("ChunkedByteStorage LZ4 block is corrupt");
+                std::memcpy(destination + destinationOffset,
+                            decodeScratch.data() + sourceOffset, copyBytes);
+            }
         }
     }
 
