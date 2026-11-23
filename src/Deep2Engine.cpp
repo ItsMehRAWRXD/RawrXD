@@ -886,33 +886,38 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
-    // Load only the selected embedding row from compressed backing. The
-    // original GGUF tensor remains encoded; no full vocabulary F32 matrix is
-    // materialized for F32/F16/Q4_0/Q8_0 embeddings.
     if (inputTokens.empty()) return false;
-    uint32_t firstToken = inputTokens[0];
     const bool tokenEmbResident = tokenEmb->dims.size() == 2 &&
         tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0 &&
         compressedResidentType(tokenEmb->type);
-    if (tokenEmbResident) {
-        if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
-        std::vector<float> embeddingRow;
-        if (!readROMCompressedRow("token_embd.weight", firstToken, embeddingRow) ||
-            embeddingRow.size() != hiddenDim) return false;
-        std::copy(embeddingRow.begin(), embeddingRow.end(), hiddenStates.begin());
-    } else {
-        deep2::DequantizedTensor tokenEmbDq;
-        if (!dequantTensor(*tokenEmb, tokenEmbDq)) return false;
-        if (firstToken >= tokenEmbDq.rows) firstToken = 0;
-        if (hiddenDim && static_cast<size_t>(firstToken) + 1 > tokenEmbDq.data.size() / hiddenDim) return false;
-        std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
-                    hiddenDim * sizeof(float));
-    }
-    std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
+    // Keep the compressed path row-scoped. The compatibility fallback may
+    // materialize the legacy tensor once, but it is not repeated per token.
+    deep2::DequantizedTensor tokenEmbDq;
+    if (!tokenEmbResident && !dequantTensor(*tokenEmb, tokenEmbDq))
+        return false;
 
-    // Process each token position
+    // Process each token position. Every position starts from its own token
+    // embedding; carrying the prior token's final hidden state forward here
+    // silently skipped all subsequent input embeddings.
     for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
         std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
+        std::fill(hiddenStates.begin(), hiddenStates.end(), 0.0f);
+        uint32_t token = inputTokens[tokenPos];
+        if (tokenEmbResident) {
+            if (token >= tokenEmb->dims[1]) token = 0;
+            std::vector<float> embeddingRow;
+            if (!readROMCompressedRow("token_embd.weight", token, embeddingRow) ||
+                embeddingRow.size() != hiddenDim) return false;
+            std::copy(embeddingRow.begin(), embeddingRow.end(), hiddenStates.begin());
+        } else {
+            if (token >= tokenEmbDq.rows) token = 0;
+            if (!hiddenDim || static_cast<std::size_t>(token) + 1 >
+                                  tokenEmbDq.data.size() / hiddenDim)
+                return false;
+            std::memcpy(hiddenStates.data(),
+                        &tokenEmbDq.data[static_cast<std::size_t>(token) * hiddenDim],
+                        hiddenDim * sizeof(float));
+        }
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
         deep2::DequantizedTensor qkvDq;
