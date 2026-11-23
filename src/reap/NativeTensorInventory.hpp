@@ -25,7 +25,7 @@ struct Inventory {
     uint64_t alignment = 32;
 };
 enum class InventoryError { None, InvalidDimensions, Overflow, UnsupportedType,
-                            TruncatedTensor, InvalidAlignment };
+                            TruncatedTensor, InvalidAlignment, OverlappingTensors };
 
 inline bool CheckedMultiply(uint64_t a, uint64_t b, uint64_t& out) {
     if (b && a > std::numeric_limits<uint64_t>::max() / b) return false;
@@ -90,6 +90,21 @@ inline InventoryError BuildInventory(const EngineContext& ctx, Inventory& out) {
     }
     std::sort(next.tensors.begin(),next.tensors.end(),
               [](const TensorRecord& a,const TensorRecord& b){return a.name<b.name;});
+    // A portable GGUF cannot have intersecting tensor storage extents.
+    // Gaps for alignment are allowed; overlapping tensors are not.
+    std::vector<const TensorRecord*> by_offset;
+    by_offset.reserve(next.tensors.size());
+    for (const auto& record : next.tensors) by_offset.push_back(&record);
+    std::sort(by_offset.begin(), by_offset.end(),
+              [](const TensorRecord* a, const TensorRecord* b) {
+                  return a->data_offset < b->data_offset;
+              });
+    uint64_t previous_end = 0;
+    for (const auto* record : by_offset) {
+        if (record->data_offset < previous_end)
+            return InventoryError::OverlappingTensors;
+        previous_end = record->data_offset + record->storage_bytes;
+    }
     out = std::move(next);
     return InventoryError::None;
 }
