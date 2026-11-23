@@ -1,5 +1,6 @@
 #include "../../src/deep2/compression/StoredTensorMatvec.hpp"
 #include <cmath>
+#include <numeric>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -17,6 +18,10 @@ static bool run(const char* name, ResidentWeightType type,
     std::vector<float> input(32, 1.0f), output(1, 0.0f);
     StoredTensorMatvec(store, name, type, input.data(), output.data(), 1, 32, 1);
     if (std::fabs(output[0] - expected) > 1e-5f) return false;
+    std::vector<float> decodedRow(32, 0.0f);
+    StoredTensorReadRow(store, name, type, 0, decodedRow.data(), decodedRow.size());
+    const float decodedSum = std::accumulate(decodedRow.begin(), decodedRow.end(), 0.0f);
+    if (std::fabs(decodedSum - expected) > 1e-5f) return false;
     std::vector<std::uint8_t> restored(bytes.size());
     if (!store.readRange(name, 0, restored.data(), restored.size(), &error) ||
         restored != bytes) return false;
