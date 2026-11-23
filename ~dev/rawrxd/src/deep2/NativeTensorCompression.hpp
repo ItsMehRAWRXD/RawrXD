@@ -30,17 +30,24 @@ public:
         float maxAbsError = 0.0f;
     };
 
-    static ChunkedF32Storage Build(const float* source, std::size_t elements,
-                                   float maxAbsError, std::size_t chunkElements = 4096) {
-        if ((!source && elements) || !std::isfinite(maxAbsError) || maxAbsError < 0.0f ||
+    template <class Reader>
+    static ChunkedF32Storage BuildFromReader(
+        std::size_t elements, float maxAbsError, Reader&& reader,
+        std::size_t chunkElements = 4096, bool /*reservedPolicy*/ = false,
+        std::size_t maxStoredBytes = std::numeric_limits<std::size_t>::max()) {
+        if (!reader || !std::isfinite(maxAbsError) || maxAbsError < 0.0f ||
             chunkElements == 0 ||
             elements > std::numeric_limits<std::size_t>::max() / sizeof(float))
-            throw std::invalid_argument("invalid ChunkedF32Storage input");
+            throw std::invalid_argument("invalid ChunkedF32Storage reader input");
         ChunkedF32Storage result;
         result.elements_ = elements;
         result.chunkElements_ = chunkElements;
+        std::vector<float> sourceChunk;
         for (std::size_t first = 0; first < elements;) {
             const std::size_t count = std::min(chunkElements, elements - first);
+            sourceChunk.resize(count);
+            if (!reader(first, count, sourceChunk.data()))
+                throw std::runtime_error("ChunkedF32Storage source read failed");
             Chunk chunk;
             chunk.first = first;
             chunk.count = count;
@@ -48,7 +55,7 @@ public:
             float halfError = 0.0f, bfloatError = 0.0f;
             bool halfValid = true, bfloatValid = true;
             for (std::size_t i = 0; i < count; ++i) {
-                const float value = source[first + i];
+                const float value = sourceChunk[i];
                 half[i] = floatToHalf(value);
                 bfloat[i] = floatToBfloat(value);
                 const float h = halfToFloat(half[i]);
@@ -65,7 +72,6 @@ public:
             halfValid = halfValid && halfError <= maxAbsError;
             bfloatValid = bfloatValid && bfloatError <= maxAbsError;
             if (halfValid || bfloatValid) {
-                // Select the representation with the smaller observed error.
                 chunk.encoding = (halfValid && (!bfloatValid || halfError <= bfloatError))
                     ? Encoding::F16 : Encoding::BF16;
                 chunk.maxAbsError = chunk.encoding == Encoding::F16 ? halfError : bfloatError;
@@ -73,6 +79,8 @@ public:
                 chunk.payloadBytes = count * sizeof(std::uint16_t);
                 chunk.payloadOffset = result.payload_.size();
                 const std::size_t oldSize = result.payload_.size();
+                if (chunk.payloadBytes > maxStoredBytes - oldSize)
+                    throw std::length_error("compressed tensor exceeds storage budget");
                 result.payload_.resize(oldSize + chunk.payloadBytes);
                 std::memcpy(result.payload_.data() + oldSize, encoded.data(), chunk.payloadBytes);
             } else {
@@ -81,8 +89,10 @@ public:
                 chunk.payloadBytes = count * sizeof(float);
                 chunk.payloadOffset = result.payload_.size();
                 const std::size_t oldSize = result.payload_.size();
+                if (chunk.payloadBytes > maxStoredBytes - oldSize)
+                    throw std::length_error("compressed tensor exceeds storage budget");
                 result.payload_.resize(oldSize + chunk.payloadBytes);
-                std::memcpy(result.payload_.data() + oldSize, source + first, chunk.payloadBytes);
+                std::memcpy(result.payload_.data() + oldSize, sourceChunk.data(), chunk.payloadBytes);
             }
             result.storedBytes_ = result.payload_.size();
             result.maxAbsError_ = std::max(result.maxAbsError_, chunk.maxAbsError);
@@ -90,6 +100,17 @@ public:
             first += count;
         }
         return result;
+    }
+
+    static ChunkedF32Storage Build(const float* source, std::size_t elements,
+                                   float maxAbsError, std::size_t chunkElements = 4096) {
+        if (!source && elements)
+            throw std::invalid_argument("null ChunkedF32Storage source");
+        return BuildFromReader(elements, maxAbsError,
+            [source](std::size_t offset, std::size_t count, float* destination) {
+                if (count) std::memcpy(destination, source + offset, count * sizeof(float));
+                return true;
+            }, chunkElements, false);
     }
 
     std::size_t elements() const noexcept { return elements_; }
