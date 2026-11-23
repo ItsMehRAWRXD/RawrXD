@@ -33,6 +33,9 @@ on:
       - 'tests/deep2/native_gguf_f16_integration.py'
       - 'tools/native_gguf_f16.cpp'
       - '.github/workflows/native-tensor-compression.yml'
+concurrency:
+  group: native-tensor-compression-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     strategy:
