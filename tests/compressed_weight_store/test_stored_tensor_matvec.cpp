@@ -1,6 +1,8 @@
 #include "../../src/deep2/compression/StoredTensorMatvec.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
+#include <iostream>
 #include <stdexcept>
 #include <cmath>
 #include <cstdint>
@@ -25,8 +27,11 @@ int main() {
         }
     }
     std::string error;
-    assert(store.addTensor("f16", weights.data(), weights.size(), &error,
-                           GGML_TYPE_F16, true));
+    if (!store.addTensor("f16", weights.data(), weights.size(), &error,
+                         GGML_TYPE_F16, true)) {
+        std::cerr << "F16 compression failed: " << error << "\\n";
+        return EXIT_FAILURE;
+    }
     const auto before = store.stats();
     assert(before.compressed_bytes < before.raw_bytes);
     std::vector<float> input(cols, 0.f), output(rows, 0.f);
@@ -64,7 +69,10 @@ int main() {
         q8[row * 34 + 1] = 0x3c; // FP16 scale 1.0
         q8[row * 34 + 2] = 2;    // first signed Q8 weight
     }
-    assert(store.addTensor("q8", q8.data(), q8.size(), &error, 8u, true));
+    if (!store.addTensor("q8", q8.data(), q8.size(), &error, 8u, true)) {
+        std::cerr << "Q8_0 compression failed: " << error << "\\n";
+        return EXIT_FAILURE;
+    }
     std::fill(output.begin(), output.end(), 0.f);
     StoredTensorMatvec(store, "q8", ResidentWeightType::Q8_0,
                        input.data(), output.data(), rows, cols, 1);
