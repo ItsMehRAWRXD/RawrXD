@@ -301,6 +301,21 @@ def run(binary):
             assert result.returncode!=0
             assert source.read_bytes()==before
             assert partial.is_symlink()
+        # Dangling staging symlinks are directory entries even though
+        # Path.exists() reports false. Never follow or replace them.
+        dangling=root/"dangling-output.gguf.partial"
+        try:
+            dangling.symlink_to(root/"not-created.gguf")
+        except (OSError, NotImplementedError):
+            dangling=None
+        if dangling is not None:
+            assert dangling.is_symlink()
+            result=subprocess.run([binary,str(source),str(root/"dangling-output.gguf"),"0","f16"],
+                                  capture_output=True)
+            assert result.returncode!=0
+            assert dangling.is_symlink()
+            assert not (root/"not-created.gguf").exists()
+            assert not (root/"dangling-output.gguf").exists()
         # Exercise the >64 MiB F32 streaming path without allocating a
         # Python list of millions of floats.
         huge=root/"huge.gguf"
