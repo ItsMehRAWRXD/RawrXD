@@ -72,6 +72,23 @@ int main() {
               row[2] == 4.f && row[3] == 5.f);
     }
 
+    // BF16 uses the upper 16 bits of IEEE F32, not the IEEE F16 exponent
+    // layout. Exercise both compressed matrix-vector and one-row decoding.
+    {
+        const std::vector<std::uint8_t> bytes = {
+            0x80,0x3f, 0x00,0x40, 0x40,0x40, 0x80,0x40,
+            0x80,0xbf, 0x00,0x3f, 0x00,0x00, 0x00,0x40
+        };
+        auto tensor = load_bytes(bytes, path, 4);
+        const auto y = resident_bf16_matvec(tensor, x4, 2, 4, 4);
+        CHECK(y.size() == 2);
+        CHECK(std::fabs(y[0] - 30.f) < 1e-6f);
+        CHECK(std::fabs(y[1] - 8.f) < 1e-6f);
+        const auto row = resident_bf16_row(tensor, 1, 2, 4, 4);
+        CHECK(row.size() == 4 && row[0] == -1.f && row[1] == 0.5f &&
+              row[2] == 0.f && row[3] == 2.f);
+    }
+
     const float ones[32] = {
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
