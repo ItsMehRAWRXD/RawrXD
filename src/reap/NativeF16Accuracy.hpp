@@ -58,6 +58,8 @@ inline bool AuditF32ToF16(const std::string& input,
                 continue;
             }
             const double absError=std::abs(double(original)-double(reconstructed));
+            // Relative error is undefined for a nonzero input rounded to zero only
+            // if the input itself is zero; preserve its full loss (1.0).
             const double relative=original==0.0f?0.0:absError/std::abs(double(original));
             measured.max_abs=std::max(measured.max_abs,absError);
             measured.max_rel=std::max(measured.max_rel,relative);
