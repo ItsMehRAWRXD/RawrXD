@@ -22,7 +22,10 @@ QByteArray deflate(const QByteArray& data, bool* success = nullptr);
 QByteArray inflate(const QByteArray& data, bool* success = nullptr);
 
 /**
- * @brief Compress data using MASM-optimized deflate
+ * @brief Compatibility entry point for zlib level-9 deflate compression.
+ *
+ * The function name is retained for source compatibility; this implementation
+ * does not guarantee that an assembly kernel is selected.
  * @param data Input data to compress
  * @param success Optional pointer to receive success status
  * @return Compressed data as QByteArray
