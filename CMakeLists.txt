@@ -153,6 +153,7 @@ rawrxd_add_compression_test(native_bounded_weight_stager_test tests/native_bound
 rawrxd_add_compression_test(native_resident_f32_matvec_test tests/native_resident_f32_matvec_test.cpp)
 
 rawrxd_add_compression_test(native_resident_typed_matvec_test tests/native_resident_typed_matvec_test.cpp)
+rawrxd_add_compression_test(native_resident_tensor_cache_test tests/native_resident_tensor_cache_test.cpp)
 
 add_executable(native_quantized_dequant_test
     tests/native_quantized_dequant_test.cpp
