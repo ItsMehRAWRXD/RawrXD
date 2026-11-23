@@ -19,6 +19,14 @@ struct Result {
     uint64_t original_bytes = 0;
     std::vector<uint8_t> payload;
 };
+// Distinguish transient source I/O failure from a deterministic decision not
+// to retain this tensor in compressed residency.
+class SourceReadFailure : public std::runtime_error {
+public: using std::runtime_error::runtime_error;
+};
+class StorageAdmissionRejected : public std::runtime_error {
+public: using std::runtime_error::runtime_error;
+};
 inline uint32_t Bits(float x) { uint32_t u; std::memcpy(&u, &x, 4); return u; }
 inline float Float(uint32_t u) { float f; std::memcpy(&f, &u, 4); return f; }
 // IEEE-754 binary32 -> binary16, round-to-nearest ties-to-even; preserve NaN.
@@ -376,16 +384,16 @@ public:
             const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
             tile.resize(n);
             if(!reader(offset,n,tile.data()))
-                throw std::runtime_error("F32 tensor source read failed");
+                throw SourceReadFailure("F32 tensor source read failed");
             Result encoded = EncodeAdaptiveF32(tile.data(),n,max_abs_error);
             // The residency cache can reject obviously non-compressible tensors
             // after the first bounded read, avoiding a full-model scan before
             // falling back to direct raw tile reads.
             if(require_first_chunk_savings && offset==0 &&
                encoded.payload.size()>=n*sizeof(float))
-                throw std::runtime_error("first F32 chunk has no smaller safe encoding");
+                throw StorageAdmissionRejected("first F32 chunk has no smaller safe encoding");
             if(encoded.payload.size()>max_stored_bytes-storedBytes)
-                throw std::runtime_error("compressed F32 tensor exceeds residency budget");
+                throw StorageAdmissionRejected("compressed F32 tensor exceeds residency budget");
             storedBytes+=encoded.payload.size();
             result.chunks_.push_back(std::move(encoded));
             offset+=n;
@@ -463,19 +471,19 @@ private:
              const size_t n = std::min(chunkBytes, byteCount - offset);
              tile.resize(n);
              if (!reader(offset, n, tile.data()))
-                 throw std::runtime_error("byte tensor source read failed");
+                 throw SourceReadFailure("byte tensor source read failed");
              Result encoded = Encode(tile.data(), n, false, 0.0f, false);
              if (requireFirstChunkSavings && offset == 0 && encoded.payload.size() >= n)
-                 throw std::runtime_error("first byte chunk has no lossless compression win");
+                 throw StorageAdmissionRejected("first byte chunk has no lossless compression win");
              if (encoded.payload.size() > maxStoredBytes - stored)
-                 throw std::runtime_error("compressed byte tensor exceeds residency budget");
+                 throw StorageAdmissionRejected("compressed byte tensor exceeds residency budget");
              stored += encoded.payload.size();
              result.chunks_.push_back(std::move(encoded));
              offset += n;
          }
          result.stored_bytes_ = stored;
          if (byteCount && stored >= byteCount)
-             throw std::runtime_error("byte tensor has no net compression win");
+             throw StorageAdmissionRejected("byte tensor has no net compression win");
          return result;
      }
 
