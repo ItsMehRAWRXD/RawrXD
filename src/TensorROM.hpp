@@ -33,6 +33,7 @@ struct ShardManifest {
     uint64_t kvCount = 0;
     uint64_t dataOffset = 0;   // absolute file offset of the tensor payload section (64-bit)
     uint64_t dataSize = 0;     // payload bytes from dataOffset to EOF
+    uint32_t alignment = 32;   // GGUF general.alignment (default 32)
     std::vector<TensorEntry> tensors;   // offsets are relative to dataOffset
     std::unique_ptr<std::ifstream> file; // kept open for paged reads
 };
@@ -78,6 +79,10 @@ public:
 
     TensorROM(const TensorROM&) = delete;
     TensorROM& operator=(const TensorROM&) = delete;
+
+    // Release all shard handles, pager pages, indexes and model metadata.
+    // Call only after inference leases have been joined.
+    void Reset();
 
     // Open and index one GGUF shard (header + tensor directory only).
     bool addShard(const std::string& path);
