@@ -30,6 +30,21 @@ int main() {
     stats=cache.GetStats();
     assert(stats.hits==1);
     assert(stats.bytesDecoded==decoded.size());
+    std::vector<uint8_t> patterned(96*1024);
+    for(size_t i=0;i<patterned.size();++i)
+        patterned[i]=static_cast<uint8_t>((i%251)^((i/251)&7));
+    size_t patternReads=0;
+    assert(cache.RegisterFromReader("shard0:patterned",patterned.size(),
+        [&](size_t offset,size_t count,uint8_t* out) {
+            ++patternReads;
+            std::copy(patterned.begin()+offset,patterned.begin()+offset+count,out);
+            return true;
+        },4096));
+    assert(patternReads==(patterned.size()+4095)/4096);
+    std::vector<uint8_t> patternTile(12000);
+    assert(cache.ReadRange("shard0:patterned",17000,patternTile.size(),
+                           patternTile.data(),scratch));
+    assert(std::equal(patternTile.begin(),patternTile.end(),patterned.begin()+17000));
 
     // An incompressible first chunk is rejected immediately; raw pager reads
     // remain the correct fallback and are memoized by the engine.
