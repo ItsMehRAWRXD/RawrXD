@@ -3147,14 +3147,26 @@ bool VulkanCompute::DispatchGemvQuantRows(
        static_cast<uint64_t>(cols) * sizeof(float) > input.size)
         return false;
     if (weightBytes > std::numeric_limits<uint32_t>::max()) return false;
-    if ((type == 1 || type == 30) &&
-        (cols > std::numeric_limits<uint32_t>::max() / 2u ||
-         weightBytes != static_cast<size_t>(rows) * static_cast<size_t>(cols) * 2u))
-        return false;
-    if (type == 0 &&
-        (cols > std::numeric_limits<uint32_t>::max() / 4u ||
-         weightBytes != static_cast<size_t>(rows) * static_cast<size_t>(cols) * 4u))
-        return false;
+    if (type == 1 || type == 30) {
+        if (cols > std::numeric_limits<uint32_t>::max() / 2u ||
+            static_cast<size_t>(rows) >
+                std::numeric_limits<size_t>::max() / static_cast<size_t>(cols))
+            return false;
+        const size_t elements = static_cast<size_t>(rows) * cols;
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(uint16_t) ||
+            weightBytes != elements * sizeof(uint16_t))
+            return false;
+    }
+    if (type == 0) {
+        if (cols > std::numeric_limits<uint32_t>::max() / 4u ||
+            static_cast<size_t>(rows) >
+                std::numeric_limits<size_t>::max() / static_cast<size_t>(cols))
+            return false;
+        const size_t elements = static_cast<size_t>(rows) * cols;
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(float) ||
+            weightBytes != elements * sizeof(float))
+            return false;
+    }
 
     DeviceBuf* w=nullptr;
     if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) return false;
