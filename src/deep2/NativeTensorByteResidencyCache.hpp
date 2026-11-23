@@ -68,8 +68,12 @@ public:
                     byteCount, std::forward<Reader>(reader), chunkBytes, true, buildBudget));
         } catch (const RawrXD::TensorCompression::SourceReadFailure&) {
             return false; // transient source failures remain retryable
+        } catch (const RawrXD::TensorCompression::StorageAdmissionRejected&) {
+            return rejectAndMemoize(); // deterministic no-win/budget rejection
         } catch (...) {
-            return rejectAndMemoize();
+            // Allocation failures and unexpected exceptions are not proof
+            // that the source tensor cannot be compressed; allow a retry.
+            return false;
         }
         const size_t stored = built->storedBytes();
         if (byteCount && stored >= byteCount) return rejectAndMemoize();
