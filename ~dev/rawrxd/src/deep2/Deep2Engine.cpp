@@ -2774,25 +2774,44 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
     if (t->shape.size() == 1) {
         wt.rows = static_cast<size_t>(t->shape[0]);
         wt.cols = 1;
-        return true;
+    } else if (t->shape.size() >= 2) {
+        wt.cols = static_cast<size_t>(t->shape[0]);
+        size_t rows = 1;
+        for (size_t i = 1; i < t->shape.size(); ++i) {
+            const size_t d = static_cast<size_t>(t->shape[i]);
+            if (d != 0 && rows > std::numeric_limits<size_t>::max() / d)
+                return false;
+            rows *= d;
+        }
+        wt.rows = rows;
+    } else {
+        return false;
     }
 
-    wt.cols = static_cast<size_t>(t->shape[0]);
-    size_t rows = 1;
-    for (size_t i = 1; i < t->shape.size(); ++i) {
-        const size_t d = static_cast<size_t>(t->shape[i]);
-        if (d != 0 && rows > std::numeric_limits<size_t>::max() / d)
-            return false;
-        rows *= d;
-    }
-    wt.rows = rows;
     if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
-        const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
-        if (setting && *setting) {
-            char* end=nullptr;
-            const float tolerance=std::strtof(setting,&end);
-            if (end && *end=='\\0' && std::isfinite(tolerance) && tolerance>=0.0f)
-                wt.EnableCompressedF32(tolerance,wt.cols);
+        const char* enabled = std::getenv("RAWRXD_COMPRESS_F32");
+        const bool compress = !enabled ||
+            (enabled[0] == '1' && enabled[1] == '\\0');
+        float tolerance = 0.0f;
+        bool valid = compress;
+        if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR")) {
+            char* end = nullptr;
+            tolerance = std::strtof(setting, &end);
+            valid = valid && end != setting && *end == '\\0' &&
+                    std::isfinite(tolerance) && tolerance >= 0.0f;
+        }
+        size_t budget = 512ull * 1024ull * 1024ull;
+        if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_BUDGET_MB")) {
+            char* end = nullptr;
+            const unsigned long long mb = std::strtoull(setting, &end, 10);
+            valid = valid && *setting && *setting != '-' &&
+                    end != setting && *end == '\\0' &&
+                    mb <= std::numeric_limits<size_t>::max() / (1024ull * 1024ull);
+            if (valid) budget = static_cast<size_t>(mb) * 1024ull * 1024ull;
+        }
+        if (valid && budget && wt.rows && wt.cols) {
+            const size_t chunk = wt.cols > 1 ? wt.cols : 4096u;
+            (void)wt.EnableCompressedF32(tolerance, chunk, budget);
         }
     }
     return true;
