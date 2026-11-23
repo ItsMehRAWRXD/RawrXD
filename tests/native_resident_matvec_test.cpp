@@ -16,7 +16,8 @@ struct Resident {
     }
 };
 int main() {
-    assert(DecodeHalfLE((const std::uint8_t*)"\\x00\\x3c") == 1.f);
+    const std::uint8_t one[2] = {0, 0x3c};
+    assert(DecodeHalfLE(one) == 1.f);
     const std::uint8_t subnormal[2] = {1, 0};
     assert(std::fabs(DecodeHalfLE(subnormal) - std::ldexp(1.f,-24)) < 1e-12f);
     const std::uint8_t neg[2] = {0, 0xbc};
