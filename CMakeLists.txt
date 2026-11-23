@@ -138,3 +138,7 @@ add_test(NAME MetadataParity_Phi3
 add_executable(native_compressed_residency_test tests/native_compressed_residency_test.cpp)
 target_include_directories(native_compressed_residency_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_test(NAME NativeCompressedResidency COMMAND native_compressed_residency_test)
+
+add_executable(native_compressed_tensor_test tests/native_compressed_tensor_test.cpp)
+target_include_directories(native_compressed_tensor_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME NativeCompressedTensor COMMAND native_compressed_tensor_test)
