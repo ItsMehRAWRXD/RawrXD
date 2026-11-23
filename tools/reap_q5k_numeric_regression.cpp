@@ -19,7 +19,11 @@ int main() {
             // Q5_K: d=1, dmin=0, 8 six-bit scales=1,
             // 8 six-bit minima=0, qh=0, packed qs=8.
             WriteU16(out,0x3c00u);WriteU16(out,0u);
-            for(int i=0;i<12;++i)out.put(static_cast<char>(i<8?1:0));
+            // GGML Q5_K scale/min packing: groups 0..3 read their
+            // scales from bytes 0..3; groups 4..7 read low nibbles
+            // of bytes 8..11. All minima remain zero.
+            for(int i=0;i<12;++i)
+                out.put(static_cast<char>((i<4 || i>=8)?1:0));
             for(int i=0;i<32;++i)out.put(0);
             for(int i=0;i<128;++i)out.put(static_cast<char>(0x88));
         }
