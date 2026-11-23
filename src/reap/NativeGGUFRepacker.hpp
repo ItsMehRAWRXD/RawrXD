@@ -1120,7 +1120,10 @@ inline RepackError RepackGGUF(const std::string& input,
     }
     if(auto_compress) {
         for(auto& t:tensors) {
-            if(!t.q5_source_q5_1 || !IsQualitySensitiveTensor(t.name))continue;
+            // Q5_1 -> Q5_0 discards an affine minimum. For vectors,
+            // not just named sensitive tensors, require bit-exact
+            // reconstruction before allowing automatic conversion.
+            if(!t.q5_source_q5_1)continue;
             if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
             if(!IsExactQ5_1ToQ5_0(in,dataStart+t.old_offset,t.source_bytes)) {
                 t.convert_q5_0=false;
