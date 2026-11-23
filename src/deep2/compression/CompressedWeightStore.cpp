@@ -56,9 +56,22 @@ bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::si
   if(error)*error="tensor size cannot be safely partitioned";return false;
  }
  const auto* src=static_cast<const std::uint8_t*>(bytes);Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
- for(std::size_t off=0;off<size;){const auto take=std::min(block_bytes_,size-off);EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(src+off,take);b.payload=encode(src+off,take,b.stored_raw);tensor.blocks.emplace_back(std::move(b));off+=take;}
- std::size_t encoded_size=0;for(const auto& b:tensor.blocks){if(b.payload.size()>max_encoded_bytes-std::min(encoded_size,max_encoded_bytes)){if(error)*error="encoded tensor exceeds residency budget";return false;}encoded_size+=b.payload.size();}
- if(encoded_size>max_encoded_bytes||(require_savings&&encoded_size>=size)){if(error)*error=require_savings?"compression did not reduce tensor size":"encoded tensor exceeds residency budget";return false;}
+ std::size_t encoded_size=0;
+ for(std::size_t off=0;off<size;){
+  const auto take=std::min(block_bytes_,size-off);
+  EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);
+  b.checksum=crc32(src+off,take);
+  b.payload=encode(src+off,take,b.stored_raw);
+  // Enforce admission incrementally: do not retain a full encoded tensor
+  // when a configured residency ceiling has already been exceeded.
+  if(encoded_size>max_encoded_bytes||b.payload.size()>max_encoded_bytes-encoded_size){
+   if(error)*error="encoded tensor exceeds residency budget";return false;
+  }
+  encoded_size+=b.payload.size();
+  tensor.blocks.emplace_back(std::move(b));
+  off+=take;
+ }
+ if(require_savings&&encoded_size>=size){if(error)*error="compression did not reduce tensor size";return false;}
  std::lock_guard<std::mutex> lock(mutex_);if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
  counters_.raw_bytes+=size;for(const auto& b:tensor.blocks)counters_.compressed_bytes+=b.payload.size();counters_.blocks+=tensor.blocks.size();++counters_.tensors;tensors_.emplace(std::move(name),std::move(tensor));return true;
 }
