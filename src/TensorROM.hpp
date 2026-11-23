@@ -2,6 +2,7 @@
 
 #include "TensorView.hpp"
 #include "ShardPager.hpp"
+#include "../include/native_file_tensor_reader.hpp"
 
 #include <cstdint>
 #include <cstddef>
@@ -10,6 +11,9 @@
 #include <unordered_map>
 #include <memory>
 #include <fstream>
+#include <limits>
+#include <stdexcept>
+#include <utility>
 
 namespace deep2 {
 
@@ -99,6 +103,23 @@ public:
 
     // Lease a tensor's pages for the lifetime of the returned object (Move 4).
     TensorLease leaseTensor(const TensorEntry& entry) const;
+
+    // Stream compressed blocks directly from an indexed GGUF tensor.
+    // The caller persists each block or forwards it to a bounded staging pipeline.
+    template<class Sink>
+    void streamCompressedTensor(const TensorEntry& entry, std::size_t blockBytes, Sink&& sink) const {
+        if (entry.shardIndex >= m_shards.size())
+            throw std::out_of_range("invalid tensor shard");
+        const auto& shard = m_shards[entry.shardIndex];
+        const std::uint64_t bytes = entry.byteSize();
+        if (entry.offset > shard.dataSize || bytes > shard.dataSize - entry.offset)
+            throw std::out_of_range("tensor exceeds shard payload");
+        if (shard.dataOffset > std::numeric_limits<std::uint64_t>::max() - entry.offset)
+            throw std::overflow_error("tensor file offset overflow");
+        rawrxd::compression::FileTensorReader reader(
+            shard.path, shard.dataOffset + entry.offset, bytes);
+        reader.for_each_compressed_block(blockBytes, std::forward<Sink>(sink));
+    }
 
     // Shard inventory: presence/byte counts per shard (Moves 13/14 gates).
     struct ShardStatus {
