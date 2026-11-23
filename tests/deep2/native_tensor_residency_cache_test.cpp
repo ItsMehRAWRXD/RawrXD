@@ -79,6 +79,25 @@ int main() {
         },2));
     assert(repeatedProbeReads==0);
     assert(!cache.Contains("not.compressible"));
+    cache.SetBudget(cache.GetStats().budgetBytes); // unchanged budget preserves memoization
+    size_t unchangedBudgetReads=0;
+    assert(!cache.RegisterF32FromReader("not.compressible",arbitrary.size(),0.0f,
+        [&](size_t o,size_t n,float* out) {
+            ++unchangedBudgetReads;
+            std::copy(arbitrary.begin()+o,arbitrary.begin()+o+n,out);
+            return true;
+        },2));
+    assert(unchangedBudgetReads==0);
+    cache.SetBudget(cache.GetStats().budgetBytes+1); // new capacity permits a fresh probe
+    size_t newBudgetReads=0;
+    assert(!cache.RegisterF32FromReader("not.compressible",arbitrary.size(),0.0f,
+        [&](size_t o,size_t n,float* out) {
+            ++newBudgetReads;
+            std::copy(arbitrary.begin()+o,arbitrary.begin()+o+n,out);
+            return true;
+        },2));
+    assert(newBudgetReads==1);
+    cache.MarkRawFallback("not.compressible");
 
     // A fitting insertion evicts the least-recently-used compressed tensor.
     std::vector<float> second(10003);
