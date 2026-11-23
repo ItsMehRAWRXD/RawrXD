@@ -676,6 +676,179 @@ int main(int argc, char** argv) {
         Check(retry_opened && retry_closed, "E: ownership is reusable after close");
     }
 
+    // =========================================================================
+    // F. G04-F: Q8_0 queued accounting and close-race (Sprint9).
+    //
+    // The harness's only independent CPU reference is Q4_K-specific (DotQ4
+    // reads the interleaved Q8 activation with a 273-float stride), so there is
+    // no trustworthy Q8_0 reference. This section therefore compares GPU-serial
+    // against GPU-batched for the SAME Q8_0 weights and the SAME activation:
+    // both sides run the identical kernel, so bit-identity is a legitimate
+    // expectation and no unverified CPU model is introduced. Receipts and cache
+    // submit counters prove both sides really executed on the device.
+    // =========================================================================
+    std::printf("\n--- F. Q8_0 queued accounting and close race ---\n");
+    {
+        const size_t F_OUT = 64, F_IN = 1024, F_BLK = 32;
+        const size_t F_NBLK = F_IN / F_BLK;          // 32 blocks per row
+        const size_t F_ROWBYTES = F_NBLK * 34;       // Q8_0: fp16 d + 32 x int8
+        const size_t F_BANKS = 8;
+        const size_t F_PRODUCERS = 3;
+        const size_t F_PER = 4;
+
+        // Deterministic Q8_0 weights. d = 1.0 (fp16 0x3C00) so the GPU
+        // dequantises to small integers and nothing overflows to Inf/NaN.
+        std::vector<std::vector<uint8_t>> w(F_BANKS);
+        uint32_t rng = 0x9e3779b9u;
+        auto next = [&rng]() -> uint32_t {
+            rng = rng * 1664525u + 1013904223u;
+            return (rng >> 8) & 0xffffu;
+        };
+        for (size_t b = 0; b < F_BANKS; ++b) {
+            w[b].assign(F_OUT * F_ROWBYTES, 0);
+            for (size_t r = 0; r < F_OUT; ++r) {
+                uint8_t* row = w[b].data() + r * F_ROWBYTES;
+                for (size_t k = 0; k < F_NBLK; ++k) {
+                    uint8_t* blk = row + k * 34;
+                    blk[0] = 0x00; blk[1] = 0x3C;    // fp16 1.0
+                    for (size_t i = 0; i < 32; ++i)
+                        blk[2 + i] = (uint8_t)(int8_t)(int(next() % 201u) - 100);
+                }
+            }
+        }
+
+        const std::vector<float> q8 = MakeQ8(F_IN, 11);
+        const std::vector<float> act = MakeAct(F_IN, 13);
+        // Only used if the GPU path falls back; kept sane so a fallback cannot
+        // be mistaken for a crash.
+        auto cpuRef = [&act](const uint8_t* row, const void*, size_t rowIndex) -> float {
+            float acc = 0.0f;
+            for (size_t k = 0; k < 32; ++k) {
+                const uint8_t* blk = row + rowIndex * 1088 + k * 34;
+                uint16_t d; std::memcpy(&d, blk, sizeof(d));
+                const float sc = HalfToFloat(d);
+                float s = 0.0f;
+                for (size_t i = 0; i < 32; ++i)
+                    s += float((int8_t)blk[2 + i]) * act[k * 32 + i];
+                acc += s * sc;
+            }
+            return acc;
+        };
+
+        const uint64_t sub0 = GetCacheStats().submits;
+
+        // ---- serial GPU baseline (no batch open) ----
+        std::vector<std::vector<float>> serial(F_BANKS, std::vector<float>(F_OUT, 0.0f));
+        bool serial_ok = true, serial_gpu = true;
+        for (size_t b = 0; b < F_BANKS && serial_ok; ++b) {
+            if (!DotBlocked(3, w[b].data(), w[b].size(), act.data(), F_IN,
+                            serial[b].data(), F_OUT, cpuRef,
+                            q8.data(), q8.size() * sizeof(float), false)) {
+                serial_ok = false;
+                break;
+            }
+            if (!LastReceipt().used_gpu) serial_gpu = false;
+        }
+        const uint64_t sub1 = GetCacheStats().submits;
+        printf("  F serial: ok=%s gpu=%s submits=%llu\n",
+               serial_ok ? "yes" : "NO", serial_gpu ? "yes" : "NO",
+               (unsigned long long)(sub1 - sub0));
+        Check(serial_ok && serial_gpu && sub1 > sub0,
+              "F: Q8_0 serial baseline ran on the GPU");
+
+        bool f_ok = serial_ok && serial_gpu;
+
+        // ---- batched pass with concurrent producers and a close race ----
+        std::vector<std::vector<float>> batched(F_BANKS, std::vector<float>(F_OUT, 0.0f));
+        std::vector<std::vector<float>> post(F_PRODUCERS, std::vector<float>(F_OUT, 0.0f));
+        std::atomic<bool> go{false};
+        std::atomic<bool> close_seen{false};
+        std::atomic<int> enqueued{0};
+        std::atomic<bool> prod_ok{true};
+
+        const auto before = BatchAccountingSnapshot();
+
+        bool opened = false;
+        if (f_ok) {
+            opened = BeginBatch();
+            Check(opened, "F: owner opened a production batch");
+        }
+
+        std::vector<std::thread> prods;
+        if (opened) {
+            for (size_t p = 0; p < F_PRODUCERS; ++p) {
+                prods.emplace_back([&, p]() {
+                    while (!go.load(std::memory_order_acquire)) std::this_thread::yield();
+                    for (size_t b = p; b < F_BANKS && prod_ok.load(); b += F_PRODUCERS) {
+                        if (!DotBlocked(3, w[b].data(), w[b].size(), act.data(), F_IN,
+                                        batched[b].data(), F_OUT, cpuRef,
+                                        q8.data(), q8.size() * sizeof(float), false))
+                            prod_ok.store(false);
+                        enqueued.fetch_add(1);
+                    }
+                    // Wait until the owner has actually closed. Without this the
+                    // producer races EndBatch and its "post-close" dot is queued
+                    // into the still-open batch, which silently inflates
+                    // `accepted` and stops testing the intended path.
+                    while (!close_seen.load(std::memory_order_acquire))
+                        std::this_thread::yield();
+                    // Post-close submission: the batch is closed by now, so this
+                    // MUST execute synchronously rather than being discarded.
+                    if (!DotBlocked(3, w[p].data(), w[p].size(), act.data(), F_IN,
+                                    post[p].data(), F_OUT, cpuRef,
+                                    q8.data(), q8.size() * sizeof(float), false))
+                        prod_ok.store(false);
+                });
+            }
+            go.store(true);
+            // Wait for every producer to finish enqueueing while the owner is
+            // still alive, then close underneath them.
+            while (enqueued.load() < (int)(F_BANKS)) std::this_thread::yield();
+            Check(true, "F: producers enqueued concurrently into the shared batch");
+        }
+
+        const bool closed = opened && EndBatch();
+        close_seen.store(true, std::memory_order_release);
+        if (opened) Check(closed, "F: owner closed the batch while producers were active");
+
+        for (auto& t : prods) t.join();
+
+        const auto after = BatchAccountingSnapshot();
+        const uint64_t accepted  = after.accepted  - before.accepted;
+        const uint64_t completed = after.completed - before.completed;
+        const uint64_t failed    = after.failed    - before.failed;
+
+        // ---- outputs ----
+        bool bits = true;
+        for (size_t b = 0; b < F_BANKS; ++b)
+            if (!SameBits(batched[b], serial[b])) bits = false;
+        bool post_bits = true;
+        for (size_t p = 0; p < F_PRODUCERS; ++p)
+            if (!SameBits(post[p], serial[p])) post_bits = false;
+
+        printf("  F accounting: accepted=%llu completed=%llu failed=%llu queued=%zu active=%d "
+               "device_batches=%llu\n",
+               (unsigned long long)accepted, (unsigned long long)completed,
+               (unsigned long long)failed, after.queued, (int)after.batch_active,
+               (unsigned long long)(after.device_batches_opened - before.device_batches_opened));
+
+        Check(prod_ok.load(), "F: every producer dot was accepted by the GPU path");
+        Check(accepted == completed + failed, "F: accepted == completed + failed");
+        Check(failed == 0, "F: no accepted operation failed");
+        Check(after.queued == 0, "F: pending queue is zero after all producers joined");
+        Check(!after.batch_active, "F: no batch is active after the close");
+        Check(after.device_batches_opened > before.device_batches_opened,
+              "F: at least one real device batch was submitted");
+        Check(completed > 0, "F: completed work is non-zero (non-vacuous)");
+        Check(bits, "F: batched Q8_0 output bit-identical to GPU serial");
+        Check(post_bits, "F: post-close submissions executed synchronously and match");
+        Check(f_ok && bits && post_bits && prod_ok.load() &&
+              accepted == completed + failed && failed == 0 && after.queued == 0 &&
+              !after.batch_active &&
+              after.device_batches_opened > before.device_batches_opened,
+              "F: G04-F accounting and close-race contract holds");
+    }
+
     // ---- final invariants ---------------------------------------------------
     const Snap f = Take();
     std::printf("\n--- final invariants ---\n");
