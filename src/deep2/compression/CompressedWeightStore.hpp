@@ -62,6 +62,12 @@ public:
                                    std::size_t encoded_residency_budget=(std::numeric_limits<std::size_t>::max)());
     CompressedWeightStore(const CompressedWeightStore&)=delete;
     CompressedWeightStore& operator=(const CompressedWeightStore&)=delete;
+    using TensorReadCallback = bool (*)(void* context, std::size_t offset, void* destination, std::size_t length);
+    bool addTensorFromReader(std::string name, std::size_t size, TensorReadCallback reader,
+                   void* context, std::string* error=nullptr,
+                   std::uint32_t ggml_type=GGML_TYPE_OPAQUE,
+                   bool require_savings=false,
+                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     bool addTensor(std::string name,const void* bytes,std::size_t size,std::string* error=nullptr,
                    std::uint32_t ggml_type=GGML_TYPE_OPAQUE,
                    bool require_savings=false,
