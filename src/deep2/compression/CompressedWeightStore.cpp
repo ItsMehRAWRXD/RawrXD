@@ -24,7 +24,7 @@ std::uint32_t CompressedWeightStore::crc32(const std::uint8_t* p,std::size_t n) 
 }
 // Independent LZ tokens: control byte, then up to eight literals or (distance-1:u16,length:u8) matches.
 std::vector<std::uint8_t> CompressedWeightStore::encode(const std::uint8_t* src,std::size_t n,bool& stored_raw) {
- std::vector<std::uint8_t> out;out.reserve(n);std::vector<std::int32_t> last(1u<<16,-1);std::size_t pos=0;
+ if(n==0){stored_raw=true;return{};}\n std::vector<std::uint8_t> out;out.reserve(n);std::vector<std::int32_t> last(1u<<16,-1);std::size_t pos=0;
  while(pos<n){const auto cp=out.size();out.push_back(0);std::uint8_t control=0;
   for(unsigned bit=0;bit<8&&pos<n;++bit){std::size_t len=0,dist=0;
    if(pos+kMinMatch<=n){const auto h=hash4(src+pos);const auto candidate=last[h];last[h]=static_cast<std::int32_t>(pos);
