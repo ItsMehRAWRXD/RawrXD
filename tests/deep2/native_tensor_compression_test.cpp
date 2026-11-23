@@ -233,6 +233,30 @@ int main() {
     try { auto bad=r; bad.payload[0]=0; (void)Decode(bad); } catch(const std::invalid_argument&) {rejected=true;}
     assert(rejected);
 
+    // storedBytes() includes the retained chunk directory, not only payload
+    // lengths. Four small chunks must account for at least four Result slots.
+    std::vector<float> accountingF32(1024, 0.0f);
+    auto accountingF32Storage = ChunkedF32Storage::BuildFromReader(
+        accountingF32.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            std::copy(accountingF32.begin() + offset,
+                      accountingF32.begin() + offset + count, out);
+            return true;
+        }, 256);
+    assert(accountingF32Storage.storedBytes() >= 4 * sizeof(Result));
+    assert(accountingF32Storage.storedBytes() < accountingF32.size() * sizeof(float));
+
+    std::vector<uint8_t> accountingBytes(1024, 0x6b);
+    auto accountingByteStorage = ChunkedByteStorage::BuildFromReader(
+        accountingBytes.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(accountingBytes.begin() + offset,
+                      accountingBytes.begin() + offset + count, out);
+            return true;
+        }, 256, false);
+    assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
+    assert(accountingByteStorage.storedBytes() < accountingBytes.size());
+
     // Count the retained per-chunk directory against the hard budget before
     // source I/O. Tiny chunks cannot create unbounded metadata outside the cap.
     size_t f32MetadataReads = 0;
