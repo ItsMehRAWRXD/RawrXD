@@ -114,6 +114,32 @@ def run(binary):
                     assert abs(scale*(nib-8)-values[block*32+j])<=10000
             qoff4=tt["blk.0.attn_k.weight"][2]
             assert bb[bs+qoff4:bs+qoff4+32]==quant
+        # BF16 (GGML type 30) source: independent BF16 payload construction.
+        bf=root/"bf16.gguf"
+        bfraw=b"".join(struct.pack("<H",struct.unpack("<I",struct.pack("<f",v))[0]>>16) for v in values)
+        kv=S("general.architecture")+U32(8)+S("llama")
+        kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+        header=b"GGUF"+U32(3)+U64(2)+U64(2)+kv
+        header+=S("blk.0.attn_q.weight")+U32(1)+U64(len(values))+U32(30)+U64(0)
+        header+=S("blk.0.attn_k.weight")+U32(1)+U64(32)+U32(6)+U64(len(bfraw))
+        bf.write_bytes(pad(header)+bfraw+quant)
+        for fmt,typ,block_bytes,limit in (("q8_0",8,34,300),("q4_0",2,18,10000)):
+            dest=root/("bf16-"+fmt+".gguf")
+            subprocess.run([binary,str(bf),str(dest),str(limit),fmt],check=True)
+            cb,cs,cm,ct=parse(dest)
+            assert cm==metadata
+            assert ct["blk.0.attn_q.weight"][0]==typ
+            assert ct["blk.0.attn_k.weight"][0]==6
+            off=ct["blk.0.attn_q.weight"][2]
+            for block in range(len(values)//32):
+                p=cs+off+block*block_bytes
+                scale=struct.unpack_from("<e",cb,p)[0]
+                if fmt=="q8_0":
+                    decoded=struct.unpack_from("<32b",cb,p+2)
+                else:
+                    packed=cb[p+2:p+18]
+                    decoded=tuple((packed[j]&15)-8 if j<16 else (packed[j-16]>>4)-8 for j in range(32))
+                assert all(abs(scale*q-values[block*32+j])<=limit for j,q in enumerate(decoded))
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
