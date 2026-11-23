@@ -75,6 +75,7 @@ int main() {
     fp32[20] = std::numeric_limits<float>::infinity();
     fp32[21] = -std::numeric_limits<float>::infinity();
     fp32[22] = std::numeric_limits<float>::quiet_NaN();
+    fp32[23] = 5.960464477539063e-8f; // smallest positive binary16 subnormal
     CHECK(cache.RegisterF32AsF16("fp32.norm", fp32.data(), fp32.size()));
     std::vector<float> fp16Decoded(17);
     CHECK(cache.ReadF32Range("fp32.norm", 509, fp16Decoded.size(),
@@ -85,6 +86,12 @@ int main() {
         else if (std::isinf(expected)) CHECK(fp16Decoded[i] == expected);
         else CHECK(std::fabs(fp16Decoded[i] - expected) < 0.002f);
     }
+    float special[4] = {};
+    CHECK(cache.ReadF32Range("fp32.norm", 20, 4, special));
+    CHECK(std::isinf(special[0]) && special[0] > 0.0f);
+    CHECK(std::isinf(special[1]) && special[1] < 0.0f);
+    CHECK(std::isnan(special[2]));
+    CHECK(special[3] == 5.960464477539063e-8f);
     const auto fpStats = cache.GetStats();
     CHECK(fpStats.logicalBytes >= fp32.size() * sizeof(uint16_t));
     CHECK(fpStats.storedBytes < fpStats.logicalBytes + source.size());
