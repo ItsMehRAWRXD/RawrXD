@@ -42,6 +42,15 @@ int main() {
     second.reset();
     third.reset();
     assert(tiles.GetStats().totalLiveDecodedBytes == 0);
+    // Strict live budget includes externally pinned tiles after eviction.
+    tiles.SetHardLiveBudget(512 * sizeof(float));
+    auto pinned = tiles.Acquire("w", 0, 512);
+    assert(pinned);
+    assert(!tiles.Acquire("w", 1024, 512));
+    assert(tiles.GetStats().admissionRejections >= 1);
+    assert(tiles.GetStats().totalLiveDecodedBytes <= 512 * sizeof(float));
+    pinned.reset();
+    assert(tiles.Acquire("w", 1024, 512));
     assert(!tiles.Acquire("missing", 0, 64));
     assert(!tiles.Acquire("w", weights.size(), 1));
     std::cout << "DECODED_TILE_REUSE=PASS\n";
