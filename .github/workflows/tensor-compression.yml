@@ -60,7 +60,8 @@ jobs:
       - name: Install zlib using vcpkg
         shell: pwsh
         run: |
-          vcpkg install zlib:x64-windows
+          if (-not $env:VCPKG_INSTALLATION_ROOT) { throw 'VCPKG_INSTALLATION_ROOT is not set' }
+          & "$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe" install zlib:x64-windows
       - name: Compile and run C++17 compression tests with MSVC
         shell: cmd
         run: |
