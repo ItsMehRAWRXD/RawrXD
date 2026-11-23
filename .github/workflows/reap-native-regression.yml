@@ -38,8 +38,8 @@ jobs:
           fi
           # Two FP32 values: 1.0 and 1.00048828125 (halfway to next half).
           # Both convert to FP16 1.0, so max_abs and rms_abs are nonzero.
-          printf '\\x00\\x00\\x80\\x3f\\x00\\x10\\x80\\x3f' > reap-test-bin/audit-source.bin
-          printf '\\x00\\x3c\\x00\\x3c' > reap-test-bin/audit-half.bin
+          printf '\x00\x00\x80\x3f\x00\x10\x80\x3f' > reap-test-bin/audit-source.bin
+          printf '\x00\x3c\x00\x3c' > reap-test-bin/audit-half.bin
           audit="reap-test-bin/reap_f16_audit_cli"
           if [[ "$RUNNER_OS" == "Windows" ]]; then audit="$audit.exe"; fi
           "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-half.bin 0 0 2 --max-abs 0.001 --max-rel 0.001 --max-rms 0.001
@@ -53,8 +53,8 @@ jobs:
             echo "FAIL: strict RMS-error threshold accepted"; exit 1
           fi
           # Reject byte corruption, short output, malformed limits, and duplicate flags.
-          printf '\\x01\\x3c\\x00\\x3c' > reap-test-bin/audit-corrupt.bin
-          printf '\\x00\\x3c' > reap-test-bin/audit-short.bin
+          printf '\x01\x3c\x00\x3c' > reap-test-bin/audit-corrupt.bin
+          printf '\x00\x3c' > reap-test-bin/audit-short.bin
           if "$audit" reap-test-bin/audit-source.bin reap-test-bin/audit-corrupt.bin 0 0 2 >/dev/null 2>&1; then
             echo "FAIL: corrupt FP16 payload accepted"; exit 1
           fi
