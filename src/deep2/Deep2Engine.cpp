@@ -3460,12 +3460,30 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             // RMSNorm weights are small one-dimensional F32/F16 vectors. Their
             // consumer is range-aware below, so they can remain compressed too.
             // Do not admit biases or unrelated vectors through this route.
-            const bool normVectorName = name.find("norm") != std::string::npos;
+            const auto hasSuffix = [&name](const char* suffix) {
+                const std::size_t suffixLength = std::strlen(suffix);
+                return name.size() >= suffixLength &&
+                    name.compare(name.size() - suffixLength, suffixLength, suffix) == 0;
+            };
+            // Only vectors consumed by RMSNormW may be detached from the
+            // mapping. Q/K head norms and SSM channel norms still have direct
+            // pointer consumers and must remain mapped.
+            const bool rmsNormVectorName =
+                hasSuffix("attn_norm.weight") ||
+                hasSuffix("input_layernorm.weight") ||
+                hasSuffix("ffn_norm.weight") ||
+                hasSuffix("post_attention_layernorm.weight") ||
+                hasSuffix("post_attn_norm.weight") ||
+                hasSuffix("post_attention_norm.weight") ||
+                hasSuffix("post_ffw_norm.weight") ||
+                name == "output_norm.weight" ||
+                name == "norm.weight" ||
+                name == "final_norm.weight";
             const std::size_t normElementBytes =
                 wt.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
                 wt.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
             const bool eligibleCompressedNorm =
-                compressedModeEnabled && normVectorName &&
+                compressedModeEnabled && rmsNormVectorName &&
                 t.dimensions.size() == 1 && normElementBytes != 0 &&
                 wt.cols > 0 &&
                 wt.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
@@ -6266,8 +6284,11 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         const std::size_t normElementBytes =
             dst.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
             dst.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
-        const bool compressNormVector = compressedModeEnabled && bindingIsNormOrBias &&
-            bindingLabel.find("norm") != std::string::npos &&
+        const bool rmsNormBinding =
+            bindingLabel == "final norm" ||
+            bindingLabel == "attention norm" ||
+            bindingLabel == "FFN norm";
+        const bool compressNormVector = compressedModeEnabled && rmsNormBinding &&
             ref->shape.size() == 1 && normElementBytes != 0 && dst.cols > 0 &&
             dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
             dst.cols * normElementBytes == dst.sizeBytes;
