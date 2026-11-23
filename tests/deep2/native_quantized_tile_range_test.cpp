@@ -88,8 +88,8 @@ static void testQ1Q2Ranges() {
     assert(deep2::tensorStorageBytes(64, deep2::TensorType::Q2_0) == 18);
     std::vector<uint8_t> q2(2 * 18, 0);
     for (int block = 0; block < 2; ++block) {
-        for (int j = 0; j < 16; ++j) q2[block * 18 + j] = 0xE4;
-        put16(q2.data() + block * 18 + 16, 0x3c00);
+        put16(q2.data() + block * 18, 0x3c00);
+        for (int j = 0; j < 16; ++j) q2[block * 18 + 2 + j] = 0xE4;
     }
     float q2Tile[4]{};
     assert(deep2::dequantizeTensorRange(deep2::TensorType::Q2_0,
