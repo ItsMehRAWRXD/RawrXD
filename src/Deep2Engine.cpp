@@ -915,6 +915,32 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     size_t vocabSize = geometry.vocabSize;
     const size_t intermediateDim = geometry.intermediateDim;
 
+    // Every tensor type with a bounded compressed row reader and typed
+    // compressed GEMV kernel must stay on the resident path. Keep this list
+    // centralized so K-quants do not silently fall back to full F32
+    // materialization in one of the model's projection/embedding consumers.
+    const auto compressedResidentType = [](deep2::TensorType type) {
+        switch (type) {
+            case deep2::TensorType::F32:
+            case deep2::TensorType::F16:
+            case deep2::TensorType::Q4_0:
+            case deep2::TensorType::Q4_1:
+            case deep2::TensorType::Q5_0:
+            case deep2::TensorType::Q5_1:
+            case deep2::TensorType::Q8_0:
+            case deep2::TensorType::Q8_1:
+            case deep2::TensorType::Q2_K:
+            case deep2::TensorType::Q3_K:
+            case deep2::TensorType::Q4_K:
+            case deep2::TensorType::Q5_K:
+            case deep2::TensorType::Q6_K:
+            case deep2::TensorType::Q8_K:
+                return true;
+            default:
+                return false;
+        }
+    };
+
     std::cout << "[Move 10] Model geometry: layers=" << numLayers
               << " hidden=" << hiddenDim << " heads=" << numHeads
               << " vocab=" << vocabSize << " intermediate=" << intermediateDim << "\n" << std::flush;
@@ -941,14 +967,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     uint32_t firstToken = inputTokens[0];
     const bool tokenEmbResident = tokenEmb->dims.size() == 2 &&
         tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0 &&
-        (tokenEmb->type == deep2::TensorType::F32 ||
-         tokenEmb->type == deep2::TensorType::F16 ||
-         tokenEmb->type == deep2::TensorType::Q4_0 ||
-         tokenEmb->type == deep2::TensorType::Q4_1 ||
-         tokenEmb->type == deep2::TensorType::Q5_0 ||
-         tokenEmb->type == deep2::TensorType::Q5_1 ||
-         tokenEmb->type == deep2::TensorType::Q8_0 ||
-         tokenEmb->type == deep2::TensorType::Q8_1);
+        compressedResidentType(tokenEmb->type);
     if (tokenEmbResident) {
         if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
         std::vector<float> embeddingRow;
@@ -990,14 +1009,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             // F32/F16/Q4_0/Q8_0 projections retain exact GGUF bytes in
             // compressed residency and decode only bounded row fragments.
             const bool qkvResident = qkv->dims.size() == 2 &&
-                (qkv->type == deep2::TensorType::F32 ||
-                 qkv->type == deep2::TensorType::F16 ||
-                 qkv->type == deep2::TensorType::Q4_0 ||
-                 qkv->type == deep2::TensorType::Q4_1 ||
-                 qkv->type == deep2::TensorType::Q5_0 ||
-                 qkv->type == deep2::TensorType::Q5_1 ||
-                 qkv->type == deep2::TensorType::Q8_0 ||
-                 qkv->type == deep2::TensorType::Q8_1);
+                compressedResidentType(qkv->type);
             if (qkvResident) {
                 qkvCols = static_cast<size_t>(qkv->dims[0]);
                 qkvRows = static_cast<size_t>(qkv->dims[1]);
@@ -1044,14 +1056,10 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            const auto residentType = [](deep2::TensorType type) {
-                return type == deep2::TensorType::F32 || type == deep2::TensorType::F16 ||
-                       type == deep2::TensorType::Q4_0 || type == deep2::TensorType::Q4_1 ||
-                       type == deep2::TensorType::Q5_0 || type == deep2::TensorType::Q5_1 ||
-                       type == deep2::TensorType::Q8_0 || type == deep2::TensorType::Q8_1;
-            };
-            const bool upResident = upEntry->dims.size() == 2 && residentType(upEntry->type);
-            const bool downResident = downEntry->dims.size() == 2 && residentType(downEntry->type);
+            const bool upResident = upEntry->dims.size() == 2 &&
+                compressedResidentType(upEntry->type);
+            const bool downResident = downEntry->dims.size() == 2 &&
+                compressedResidentType(downEntry->type);
             if (!upResident && !dequantTensor(*upEntry, upDq)) return false;
             if (!downResident && !dequantTensor(*downEntry, downDq)) return false;
 
@@ -1105,14 +1113,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         }
 
         const bool outputResident = outputEntry->dims.size() == 2 &&
-            (outputEntry->type == deep2::TensorType::F32 ||
-             outputEntry->type == deep2::TensorType::F16 ||
-             outputEntry->type == deep2::TensorType::Q4_0 ||
-             outputEntry->type == deep2::TensorType::Q4_1 ||
-             outputEntry->type == deep2::TensorType::Q5_0 ||
-             outputEntry->type == deep2::TensorType::Q5_1 ||
-             outputEntry->type == deep2::TensorType::Q8_0 ||
-             outputEntry->type == deep2::TensorType::Q8_1);
+            compressedResidentType(outputEntry->type);
         if (!outputResident && !dequantTensor(*outputEntry, outputDq)) return false;
         outputLogits.resize(vocabSize, 0.0f);
         if (outputResident) {
