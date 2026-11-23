@@ -732,21 +732,15 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     }
     uint32_t firstToken = inputTokens[0];
     if (firstToken >= embeddingRows) firstToken = 0;
-    if (tokenEmb->type == deep2::TensorType::F32) {
-        const uint64_t firstElement = uint64_t(firstToken) * hiddenDim;
-        if (!readCompressedF32Tile(*tokenEmb, firstElement, hiddenDim, hiddenStates.data())) {
-            fprintf(stderr, "[Move 10] Failed to read compressed embedding row\n");
-            return false;
-        }
-    } else {
-        deep2::DequantizedTensor tokenEmbDq;
-        if (!dequantTensor(*tokenEmb, tokenEmbDq) ||
-            firstToken >= tokenEmbDq.rows || tokenEmbDq.cols != hiddenDim) {
-            fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
-            return false;
-        }
-        std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
-                    hiddenDim * sizeof(float));
+    const uint64_t embeddingFirstElement = uint64_t(firstToken) * hiddenDim;
+    const bool embeddingRead = tokenEmb->type == deep2::TensorType::F32
+        ? readCompressedF32Tile(*tokenEmb, embeddingFirstElement, hiddenDim,
+                                hiddenStates.data())
+        : readDequantizedTensorTile(*tokenEmb, embeddingFirstElement, hiddenDim,
+                                    hiddenStates.data());
+    if (!embeddingRead) {
+        fprintf(stderr, "[Move 10] Failed to read bounded token embedding row\n");
+        return false;
     }
     std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
 
