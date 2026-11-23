@@ -39,8 +39,7 @@ int main() {
     try { DecodeInto(malformedLz,untouchedLz,sizeof(untouchedLz)); }
     catch(const std::invalid_argument&) { malformedLzRejected=true; }
     assert(malformedLzRejected);
-    assert(std::all_of(std::begin(untouchedLz),std::end(untouchedLz),
-                       [](uint8_t x){return x==0xa5;}));
+    for(uint8_t value:untouchedLz) assert(value==0xa5);
     std::vector<uint8_t> direct(repeated.size(),0);
     DecodeInto(r,direct.data(),direct.size());
     assert(direct==repeated);
