@@ -205,6 +205,15 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
                                               uint64_t firstElement,
                                               uint64_t elementCount,
                                               float* destination) {
+    std::vector<uint8_t> decodeScratch;
+    return readCompressedF32Tile(entry,firstElement,elementCount,destination,decodeScratch);
+}
+
+bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
+                                              uint64_t firstElement,
+                                              uint64_t elementCount,
+                                              float* destination,
+                                              std::vector<uint8_t>& decodeScratch) {
     if (!romMode || entry.type != deep2::TensorType::F32) return false;
     const uint64_t bytes = entry.byteSize();
     if ((bytes % sizeof(float)) != 0) return false;
@@ -234,9 +243,9 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
                                        reinterpret_cast<uint8_t*>(destination));
         }
     }
-    }
     return compressedF32Weights.ReadRange(entry.name,
-        static_cast<size_t>(firstElement), static_cast<size_t>(elementCount), destination);
+        static_cast<size_t>(firstElement), static_cast<size_t>(elementCount), destination,
+        decodeScratch);
 }
 
 bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* input,
@@ -260,13 +269,15 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
         return false;
     std::fill(output, output + static_cast<size_t>(rows), 0.0f);
     const size_t colsSize = static_cast<size_t>(cols);
+    std::vector<float> tile;
+    std::vector<uint8_t> decodeScratch;
     for (uint64_t firstRow = 0; firstRow < rows;) {
         const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
         if (countRows > std::numeric_limits<size_t>::max() / colsSize) return false;
         const size_t tileElements = static_cast<size_t>(countRows) * colsSize;
-        std::vector<float> tile(tileElements);
+        tile.resize(tileElements);
         const uint64_t firstElement = firstRow * cols;
-        if (!readCompressedF32Tile(entry, firstElement, tileElements, tile.data()))
+        if (!readCompressedF32Tile(entry, firstElement, tileElements, tile.data(),decodeScratch))
             return false;
         if (!gemvFloat(tile.data(), input, output + static_cast<size_t>(firstRow),
                        countRows, cols)) return false;
