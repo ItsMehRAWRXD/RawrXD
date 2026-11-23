@@ -154,6 +154,9 @@ bool Deep2Engine::tryVulkanHostGEMV(
             }
             cacheKey ^= wt.fileOffset + (static_cast<uint64_t>(wt.shardId) << 32);
             cacheKey *= 1099511628211ull;
+            cacheKey ^= static_cast<uint64_t>(
+                reinterpret_cast<uintptr_t>(wt.compressedF32.get()));
+            cacheKey *= 1099511628211ull;
             cacheKey ^= (static_cast<uint64_t>(rowBase) << 16) ^
                         (static_cast<uint64_t>(tileType) << 56);
             if (!cacheKey) cacheKey = 1;
@@ -225,6 +228,9 @@ bool Deep2Engine::tryVulkanHostGEMV(
             }
             cacheKey ^= wt.fileOffset +
                 (static_cast<uint64_t>(wt.shardId) << 32);
+            cacheKey *= 1099511628211ull;
+            cacheKey ^= static_cast<uint64_t>(
+                reinterpret_cast<uintptr_t>(wt.compressedBytes.get()));
             cacheKey *= 1099511628211ull;
             cacheKey ^= (static_cast<uint64_t>(rowBase) << 16) ^
                         (static_cast<uint64_t>(wt.type) << 48);

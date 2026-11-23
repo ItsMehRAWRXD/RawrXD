@@ -63,10 +63,16 @@ The native test target `rawrxd-native-tensor-compression-test` currently contain
 
 ## Compressed-only inference entry points
 
-`WeightTensor::hasBacking()` treats raw mappings, chunked F32 backing, and losslessly compressed quantized-byte backing as valid tensor ownership. CPU `LinearW`, embeddings, RMSNorm, attention/FFN dispatch, MoE expert paths, and logits validation accept compressed-only tensors. When the source pointer is absent, `LinearW` deliberately bypasses GPU routes that still require a raw source pointer and uses bounded row/range decoding instead. GPU cache identity and stream-size accounting include compressed backing ownership.
+`WeightTensor::hasBacking()` treats raw mappings, chunked F32 backing, and losslessly compressed quantized-byte backing as valid tensor ownership. CPU `LinearW`, embeddings, RMSNorm, attention/FFN dispatch, MoE expert paths, and logits validation accept compressed-only tensors.
 
-This is an enabling correctness change, not a claim that GGUF mappings are already released. The current loader still retains shard mappings, and some auxiliary/state/attention paths still consume direct mapped pointers. Source mapping reclamation remains gated on migrating every consumer and introducing per-tensor mapping ownership.
+The production host-bound Vulkan GEMV path now prefers compressed backing even when the original GGUF mapping is still present:
+
+- F32 row chunks with matching source encodings are coalesced into bounded GPU tiles. F16/BF16 tiles are uploaded in their compact representation when the configured absolute-error budget is met; rows that cannot meet it are uploaded as exact F32. Each dispatch writes directly to its final output-row window.
+- Losslessly compressed quantized-byte tensors are expanded only for bounded row tiles on the host, then uploaded in their original GGML packed block representation. The existing Vulkan shader performs native packed decoding for F16, BF16, Q8_0, Q2_K, Q4_K, and Q6_K. Unsupported quant types fail the GPU attempt and retain the existing CPU dequantization fallback when strict mode is disabled.
+- Tile cache keys include tensor/backing identity, file/shard identity, row range, and type. The Vulkan cache validates a payload fingerprint and byte geometry before reusing a tile, failing closed on collisions.
+
+This is bounded host-side decompression followed by GPU-native arithmetic; it is not device-side LZ4 decompression. It avoids whole-tensor F32/quantized expansion, but the original GGUF mapping remains alive. Some fused/state/attention paths still consume direct mapped pointers, and source mapping reclamation remains gated on migrating every consumer and introducing per-tensor mapping ownership.
 
 ## Strict GPU execution contract
 
-When `vulkanStrictNoCpuFallback_` is enabled, Deep2 rejects unsupported compressed-only weight execution instead of silently falling back to CPU range decoding. Fused Vulkan paths requiring raw mapped pointers remain explicitly gated until owner-backed compressed-tile GPU uploads are implemented and independently validated. This preserves strict-mode semantics but does not constitute GPU compressed-only parity or GGUF mapping reclamation.
+When `vulkanStrictNoCpuFallback_` is enabled, Deep2 rejects unsupported compressed-only weight execution instead of silently falling back to CPU range decoding. The host-bound GEMV path can now consume compressed F32 and supported compressed quantized tiles, but fused Vulkan paths requiring raw mapped pointers remain gated until their owner-backed compressed-tile routes are migrated and independently validated. This does not yet establish full-model compressed-only GPU parity or GGUF mapping reclamation.
