@@ -267,11 +267,51 @@ Deep2Engine::TensorHandle Deep2Engine::getTensor(const std::string& name) {
 
 bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out) {
     if (!romMode) return false;
-    const uint64_t size = entry.byteSize();
-    std::vector<uint8_t> staged(size);
-    if (!rom.readTensor(entry, staged.data())) return false;
-    deep2::TensorView view{ entry.type, staged.data(), size, entry.dims, true };
+    // Stage 4: read the tensor bytes through the compressed residency cache
+    // (bounded range decode), falling back to the ROM pager on cache miss or
+    // rejection. This keeps the compressed store authoritative while the ROM
+    // remains the safe fallback.
+    std::vector<uint8_t> staged;
+    if (!readTensorResident(entry, staged)) return false;
+    if (staged.size() != entry.byteSize()) return false;
+    deep2::TensorView view{ entry.type, staged.data(), staged.size(), entry.dims, true };
     return dequantizeTensor(view, out);
+}
+
+bool Deep2Engine::readTensorResident(const deep2::TensorEntry& entry,
+                                           std::vector<uint8_t>& out) {
+    const uint64_t size = entry.byteSize();
+    if (size == 0) { out.clear(); return true; }
+    out.assign(static_cast<size_t>(size), 0);
+
+    // Fast path: if the cache already holds this tensor, bounded ReadRange.
+    {
+        std::vector<uint8_t> scratch;
+        if (compressedEncodedWeights.ReadRange(entry.name, 0, out.size(), out.data(), scratch))
+            return true;
+        // fall through to registration/ROM on miss
+    }
+
+    // Register (stream) the tensor into the cache from the ROM pager. The
+    // reader is called with (offset, n, dst) per chunk, so the full tensor is
+    // never materialised during registration.
+    bool registered = false;
+    try {
+        registered = compressedEncodedWeights.RegisterFromReader(
+            entry.name, static_cast<size_t>(size),
+            [&entry, this](uint64_t offset, size_t n, uint8_t* dst) -> bool {
+                return this->rom.readTensorRange(entry, offset, n, dst);
+            });
+    } catch (...) { registered = false; }
+
+    if (registered) {
+        std::vector<uint8_t> scratch;
+        if (compressedEncodedWeights.ReadRange(entry.name, 0, out.size(), out.data(), scratch))
+            return true;
+    }
+
+    // Fallback: direct ROM read (cache miss, rejection, or decode failure).
+    return rom.readTensor(entry, out.data());
 }
 
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,

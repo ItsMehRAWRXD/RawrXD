@@ -93,6 +93,11 @@ struct Deep2Engine {
     TensorHandle getTensor(const std::string& name);
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
+    // Stage 4: residency-aware byte read. Registers the tensor with the
+    // compressed byte cache (streaming from ROM) and reads the requested range
+    // through it; falls back to the ROM pager on cache miss/rejection. Returns
+    // the bytes read into `out`. Used by dequantTensor and getTensor.
+    bool readTensorResident(const deep2::TensorEntry& entry, std::vector<uint8_t>& out);
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
