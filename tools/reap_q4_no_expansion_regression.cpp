@@ -18,9 +18,12 @@ int main() {
         WriteU64(out,256);WriteU64(out,2);
         WriteU32(out,10);WriteU64(out,288);
         PadTo(out,32);
-        for(unsigned i=0;i<144;++i)out.put(0);
-        for(unsigned i=144;i<288;++i)out.put(0);
-        for(unsigned i=0;i<168;++i)out.put(0);
+        // Two Q4_K blocks followed by two Q2_K blocks.
+        // Distinct nonzero bytes catch accidental copies from wrong offsets.
+        for(unsigned i=0;i<288;++i)
+            out.put(static_cast<char>((i*37u+11u)&255u));
+        for(unsigned i=0;i<168;++i)
+            out.put(static_cast<char>((i*19u+73u)&255u));
     }
     bool ok=RepackGGUF(src,dst,UINT64_MAX,false,false,true)==RepackError::None;
     if(ok) {
@@ -42,10 +45,13 @@ int main() {
               original.tellg()==repacked.tellg();
         if(ok) {
             const uint64_t start=(static_cast<uint64_t>(in.tellg())+31)&~uint64_t(31);
-            in.seekg(static_cast<std::streamoff>(start+288));
-            unsigned char bytes[168]={};
+            in.seekg(static_cast<std::streamoff>(start));
+            unsigned char bytes[456]={};
             ok &= bool(in.read(reinterpret_cast<char*>(bytes),sizeof(bytes)));
-            for(unsigned char v:bytes)ok &= v==0;
+            for(unsigned i=0;i<288;++i)
+                ok &= bytes[i]==static_cast<unsigned char>((i*37u+11u)&255u);
+            for(unsigned i=0;i<168;++i)
+                ok &= bytes[288+i]==static_cast<unsigned char>((i*19u+73u)&255u);
         }
     }
     std::remove(src);std::remove(dst);
