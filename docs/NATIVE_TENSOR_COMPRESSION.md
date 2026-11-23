@@ -78,6 +78,10 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
 - `TensorResidencyCache` retains only encodings that actually reduce bytes,
   enforces a configurable memory budget, tracks hits/misses/decoded bytes and
   evicts least-recently-used entries.
+- The dependency-free block-local LZ codec uses bounded 64 KiB history and a
+  64-candidate search cap; it is selected only when the encoded chunk is
+  smaller than both the raw and RLE representations. Its decoder validates
+  the complete token stream and output geometry before writing any bytes.
 - Range reads decompress only the chunks intersecting the requested range
   into caller-owned output memory. A caller can reuse a scratch buffer; the
   cache does not retain an expanded F32 copy.
