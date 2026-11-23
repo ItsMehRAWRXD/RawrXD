@@ -692,6 +692,36 @@ private:
                              encoded.payload.data() + (copyFirst - chunkFirst), n);
                  continue;
              }
+             if (encoded.encoding == Encoding::RLE) {
+                 // Validate the complete RLE stream before touching the output,
+                 // then expand only the requested byte window directly.
+                 if (encoded.payload.size() % 2)
+                     throw std::invalid_argument("malformed RLE chunk");
+                 size_t decoded = 0;
+                 for (size_t i = 0; i < encoded.payload.size(); i += 2) {
+                     const size_t run = encoded.payload[i];
+                     if (!run || run > chunkCount - decoded)
+                         throw std::invalid_argument("RLE chunk overflow");
+                     decoded += run;
+                 }
+                 if (decoded != chunkCount)
+                     throw std::invalid_argument("RLE chunk size mismatch");
+                 const size_t localFirst = copyFirst - chunkFirst;
+                 const size_t localEnd = copyEnd - chunkFirst;
+                 size_t cursor = 0;
+                 for (size_t i = 0; i < encoded.payload.size(); i += 2) {
+                     const size_t runEnd = cursor + encoded.payload[i];
+                     const size_t begin = std::max(cursor, localFirst);
+                     const size_t finish = std::min(runEnd, localEnd);
+                     if (begin < finish)
+                         std::memset(destination + (copyFirst - first) +
+                                     (begin - localFirst),
+                                     encoded.payload[i + 1], finish - begin);
+                     cursor = runEnd;
+                     if (cursor >= localEnd) break;
+                 }
+                 continue;
+             }
              scratch.resize(chunkCount);
              DecodeInto(encoded, scratch.data(), scratch.size());
              std::memcpy(destination + (copyFirst - first),
