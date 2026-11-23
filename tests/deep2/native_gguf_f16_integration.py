@@ -71,6 +71,20 @@ def run(binary):
         off=tensors["blk.0.attn_k.weight"][2]
         assert b[start+off:start+off+32]==quant
         assert len(b)<len(original)
+        q8path=root/"q8.gguf"
+        subprocess.run([binary,str(source),str(q8path),"0.01","q8_0"],check=True)
+        qb,qs,qmeta,qt=parse(q8path)
+        assert qmeta==metadata
+        assert qt["blk.0.attn_q.weight"][:2]==(8,(len(values),))
+        qoff=qt["blk.0.attn_q.weight"][2]
+        for block in range(len(values)//32):
+            start_block=qs+qoff+block*34
+            scale=struct.unpack_from("<e",qb,start_block)[0]
+            qsamples=struct.unpack_from("<32b",qb,start_block+2)
+            for j,q in enumerate(qsamples):
+                assert abs(scale*q-values[block*32+j])<=0.01
+        assert qt["blk.0.attn_k.weight"][0]==6
+        assert qb[qs+qt["blk.0.attn_k.weight"][2]:qs+qt["blk.0.attn_k.weight"][2]+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
