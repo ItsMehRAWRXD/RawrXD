@@ -52,6 +52,8 @@ void configureTensorResidencyBudgets(Deep2Engine& engine) {
 } // namespace
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    // Reinitialization is a full lifecycle boundary; discard prior model state.
+    Shutdown();
     configureTensorResidencyBudgets(*this);
     // Lossy F32->F16/BF16 residency is opt-in and bounded by a caller-supplied
     // absolute-error tolerance. The default remains bit-exact/lossless.
@@ -151,9 +153,13 @@ Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() c
 }
 
 void Deep2Engine::Shutdown() {
+    // Caller must stop/join inference workers before shutdown so no page or
+    // compressed-cache leases remain live.
     compressedF32Weights.Clear();
     compressedEncodedWeights.Clear();
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
+    rom.Reset();
+    vulkanReady = false;
     initialized = false;
 }
 
