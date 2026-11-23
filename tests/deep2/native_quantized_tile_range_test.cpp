@@ -1,5 +1,6 @@
 #include "../../src/quant_kernels.hpp"
 #include "../../src/deep2/NativeKQuant.hpp"
+#include "../../src/deep2/NativeTensorByteResidencyCache.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -69,7 +70,37 @@ static void testFixedBlockRange(uint32_t type) {
     }
 }
 
+static void testLosslessByteResidency() {
+    Deep2::TensorByteResidencyCache cache(4096);
+    std::vector<uint8_t> sparse(512, 0);
+    for (size_t i = 0; i < sparse.size(); i += 64) sparse[i] = uint8_t(i / 64 + 1);
+    auto reader = [&](size_t offset, size_t count, uint8_t* out) {
+        if (offset > sparse.size() || count > sparse.size() - offset) return false;
+        std::memcpy(out, sparse.data() + offset, count);
+        return true;
+    };
+    assert(cache.RegisterFromReader("sparse", sparse.size(), reader, 128));
+    auto stats = cache.GetStats();
+    assert(stats.tensorCount == 1 && stats.compressedBytes < stats.logicalBytes);
+    uint8_t actual[190]{};
+    std::vector<uint8_t> scratch;
+    assert(cache.ReadRange("sparse", 117, sizeof(actual), actual, scratch));
+    assert(std::memcmp(actual, sparse.data() + 117, sizeof(actual)) == 0);
+    assert(cache.GetStats().hits == 1);
+
+    std::vector<uint8_t> dense(256);
+    for (size_t i = 0; i < dense.size(); ++i) dense[i] = uint8_t(i);
+    auto denseReader = [&](size_t offset, size_t count, uint8_t* out) {
+        std::memcpy(out, dense.data() + offset, count);
+        return true;
+    };
+    assert(!cache.RegisterFromReader("dense", dense.size(), denseReader, 128));
+    cache.MarkRawFallback("dense");
+    assert(cache.IsRawFallback("dense"));
+}
+
 int main() {
+    testLosslessByteResidency();
     for(uint32_t type=10;type<=15;++type) testKBlockRange(type);
     for(uint32_t type:{2u,3u,6u,7u,8u,9u}) testFixedBlockRange(type);
     std::cout<<"canonical GGML fixed/K quantized range dequantization PASS\n";
