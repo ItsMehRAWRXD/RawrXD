@@ -162,6 +162,21 @@ int main() {
     catch (const std::out_of_range&) { rejectedContext=true; }
     assert(rejectedContext);
 
+    auto cacheBounded=config;
+    cacheBounded.max_kv_cache_bytes=1;
+    rawrxd::compression::CompressedTransformerRuntime cacheBoundedRuntime(model,cacheBounded);
+    bool rejectedCacheBudget=false;
+    try { (void)cacheBoundedRuntime.generate(prompt,1); }
+    catch (const std::length_error&) { rejectedCacheBudget=true; }
+    assert(rejectedCacheBudget);
+
+    auto invalidEos=config;
+    invalidEos.eos_token=static_cast<int32_t>(vocab);
+    bool rejectedEos=false;
+    try { rawrxd::compression::CompressedTransformerRuntime badEos(model,invalidEos); }
+    catch (const std::invalid_argument&) { rejectedEos=true; }
+    assert(rejectedEos);
+
     const auto stats=model.stats();
     assert(stats.tensors==owned.size());
     assert(stats.compressed_bytes>0 && stats.raw_bytes>0);
