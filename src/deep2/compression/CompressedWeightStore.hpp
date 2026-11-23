@@ -14,6 +14,7 @@ namespace rawrxd::compression {
 // GGML-compatible IDs for common scalar formats. Other GGML IDs are retained verbatim.
 constexpr std::uint32_t GGML_TYPE_F32 = 0;
 constexpr std::uint32_t GGML_TYPE_F16 = 1;
+constexpr std::uint32_t GGML_TYPE_BF16 = 30;
 constexpr std::uint32_t GGML_TYPE_OPAQUE = 0xFFFFFFFFu;
 
 inline std::uint16_t floatToHalfRNE(float value) noexcept {
