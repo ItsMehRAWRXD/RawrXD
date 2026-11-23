@@ -286,7 +286,12 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
         return false;
     }
 
-    const uint64_t totalElements = deep2::TensorROM::tensorNumValues(entry);
+    uint64_t totalElements = 1;
+    for (const uint64_t dimension : entry.dims) {
+        if (!dimension || totalElements > std::numeric_limits<uint64_t>::max() / dimension)
+            return false;
+        totalElements *= dimension;
+    }
     if (firstElement > totalElements || elementCount > totalElements - firstElement)
         return false;
     if (!elementCount) return true;
@@ -307,8 +312,16 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
     if (alignedEnd < alignedFirst) return false;
     const uint64_t alignedCount = alignedEnd - alignedFirst;
 
-    const uint64_t byteOffset = deep2::tensorStorageBytes(alignedFirst, entry.type);
-    const uint64_t byteCount = deep2::tensorStorageBytes(alignedCount, entry.type);
+    const uint64_t bytesPerBlock = deep2::tensorStorageBytes(blockValues, entry.type);
+    const uint64_t alignedBlockCount = alignedFirst / blockValues;
+    const uint64_t requestedBlockCount =
+        alignedCount / blockValues + (alignedCount % blockValues != 0);
+    if (!bytesPerBlock ||
+        alignedBlockCount > std::numeric_limits<uint64_t>::max() / bytesPerBlock ||
+        requestedBlockCount > std::numeric_limits<uint64_t>::max() / bytesPerBlock)
+        return false;
+    const uint64_t byteOffset = alignedBlockCount * bytesPerBlock;
+    const uint64_t byteCount = requestedBlockCount * bytesPerBlock;
     const uint64_t tensorBytes = entry.byteSize();
     if (byteOffset > tensorBytes || byteCount > tensorBytes - byteOffset ||
         byteCount > std::numeric_limits<size_t>::max())
