@@ -164,6 +164,24 @@ def run(binary):
                     assert abs(scale*(code-16)-values[block*32+j])<=500
             offq=tt["blk.0.attn_k.weight"][2]
             assert bb[bs+offq:bs+offq+32]==quant
+        # Independently decode Q4_1: half delta, half minimum, packed nibbles.
+        for qsource in (source,target,bf):
+            dest=root/(qsource.stem+"-q41.gguf")
+            subprocess.run([binary,str(qsource),str(dest),"10000","q4_1"],check=True)
+            bb,bs,mm,tt=parse(dest)
+            assert mm==metadata
+            assert tt["blk.0.attn_q.weight"][0]==3
+            off=tt["blk.0.attn_q.weight"][2]
+            for block in range(len(values)//32):
+                p=bs+off+block*20
+                delta,minimum=struct.unpack_from("<ee",bb,p)
+                packed=bb[p+4:p+20]
+                assert len(packed)==16
+                for j in range(32):
+                    code=(packed[j]&15) if j<16 else (packed[j-16]>>4)
+                    assert abs(minimum+delta*code-values[block*32+j])<=10000
+            offq=tt["blk.0.attn_k.weight"][2]
+            assert bb[bs+offq:bs+offq+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
