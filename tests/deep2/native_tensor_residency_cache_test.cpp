@@ -57,10 +57,13 @@ int main() {
     // With a zero error budget, arbitrary F32 values must not be stored as a
     // same-size raw duplicate. The engine then reads raw pager tiles directly.
     const std::vector<float> arbitrary={1.0001f,2.0001f,3.0001f,4.0001f};
+    size_t arbitraryReads=0;
     assert(!cache.RegisterF32FromReader("not.compressible",arbitrary.size(),0.0f,
         [&](size_t o,size_t n,float* out) {
+            ++arbitraryReads;
             std::copy(arbitrary.begin()+o,arbitrary.begin()+o+n,out); return true;
         },2));
+    assert(arbitraryReads==1); // only the probe chunk was read
     assert(!cache.Contains("not.compressible"));
 
     // A fitting insertion evicts the least-recently-used compressed tensor.
