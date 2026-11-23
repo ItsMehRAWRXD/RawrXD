@@ -132,7 +132,7 @@ public:
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
             if (decoded) {
-                const uint64_t n = static_cast<uint64_t>(count);
+                const uint64_t n = storage->DecodedBytesForRange(first, count);
                 bytesDecoded_ = n > UINT64_MAX - bytesDecoded_ ? UINT64_MAX : bytesDecoded_ + n;
             }
             EvictToFitLocked(0, std::string());
