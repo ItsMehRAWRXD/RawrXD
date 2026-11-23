@@ -7356,6 +7356,8 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
         reg.GetBatch21Counters().kernelInvocations.fetch_add(1, std::memory_order_relaxed);
         size_t blocksPerRow = (cols + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
         size_t rowBytes = blocksPerRow * geom.blockSize;
+        if (!compressedRows.empty() && rowBytes != packedRowBytes)
+            throw std::runtime_error("LinearW_Range: registry/packed-row geometry mismatch for " + wt.name);
         const uint8_t* rowWeights = weightData + (compressedRows.empty() ? startRow * rowBytes : 0);
         // ── VAL-051.7: Q4_0 dispatch telemetry (capped) ─────────────
         if (wt.type == (int)GGMLType::GGML_TYPE_Q4_0)
