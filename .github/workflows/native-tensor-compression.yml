@@ -5,6 +5,10 @@ on:
   pull_request:
     paths:
       - 'src/deep2/NativeTensorCompression.hpp'
+      - 'src/deep2/NativeTensorResidencyCache.hpp'
+      - 'tests/deep2/native_tensor_residency_cache_test.cpp'
+      - 'src/Deep2Engine.hpp'
+      - 'src/Deep2Engine.cpp'
       - 'src/deep2/NativeKQuant.hpp'
       - 'tests/deep2/native_k_quant_test.cpp'
       - 'tests/deep2/native_gguf_k_integration.py'
@@ -32,6 +36,8 @@ jobs:
         run: |
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
           ./tensor_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_residency_cache_test.cpp -o residency_cache_test
+          ./residency_cache_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_k_quant_test.cpp -o native_k_test
           ./native_k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_loader_k_geometry_test.cpp -o native_loader_k_test
@@ -58,6 +64,10 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_compression_test.cpp /Fe:tensor_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\tensor_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_residency_cache_test.cpp /Fe:residency_cache_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\residency_cache_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_k_quant_test.cpp /Fe:native_k_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
