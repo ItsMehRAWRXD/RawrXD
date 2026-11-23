@@ -67,7 +67,8 @@ CompressedWeightStore::BlockLease CompressedWeightStore::acquireBlock(const std:
  return lease;
 }
 bool CompressedWeightStore::readRange(const std::string& name,std::size_t offset,void* dst,std::size_t length,std::string* error) {
- if(!contains(name)){if(error)*error="unknown tensor";return false;}\n const auto total=tensorBytes(name);if((!dst&&length)||offset>total||length>total-offset){if(error)*error="range outside tensor bounds";return false;}
+ if(!contains(name)){if(error)*error="unknown tensor";return false;}
+ const auto total=tensorBytes(name);if((!dst&&length)||offset>total||length>total-offset){if(error)*error="range outside tensor bounds";return false;}
  auto* out=static_cast<std::uint8_t*>(dst);while(length){const auto block=offset/block_bytes_,within=offset%block_bytes_;auto lease=acquireBlock(name,block,error);if(!lease||within>=lease->size())return false;const auto take=std::min(length,lease->size()-within);std::memcpy(out,lease->data()+within,take);out+=take;offset+=take;length-=take;}return true;
 }
 void CompressedWeightStore::evictToBudgetLocked(){
