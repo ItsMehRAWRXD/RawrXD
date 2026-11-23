@@ -121,7 +121,7 @@ The packed Vulkan shader now has encodings for all six GGML K-quant formats. The
 The K-quant decoder implementation is mirrored from `NativeKQuant::DecodeBlock`; the expanded CPU regression checks the shader's byte-address calculations against that decoder for two adjacent blocks per format. This establishes CPU decoder agreement, not independent upstream GGML validation or GPU numerical parity. Shader compilation, Vulkan execution, full-model operator coverage, and memory/latency measurements remain required before release certification.
 
 
-The Deep2 row-tile QGEMV shader now also accepts a typed F32 tile (4-byte values) so mixed-codec F32 chunks and registered quant formats without native packed shader decoding can still execute on GPU without expanding a full matrix. CI compiles this shader with `glslc` on SDK-equipped Linux and Windows runners. This is bounded CPU decompression followed by GPU F32 GEMV, not GPU-side RLE/LZ4 decompression.
+The dispatch selector keeps the native packed shader path first for Q8_0, Q2_K, Q4_K, and Q6_K; registered formats such as Q3_K/Q5_K that do not have a matching QGEMV shader use bounded CPU dequantization to F32 row tiles instead. This avoids accidentally routing supported packed formats through the slower generic decode path. The Deep2 row-tile QGEMV shader now also accepts a typed F32 tile (4-byte values) so mixed-codec F32 chunks and registered quant formats without native packed shader decoding can still execute on GPU without expanding a full matrix. CI compiles this shader with `glslc` on SDK-equipped Linux and Windows runners. This is bounded CPU decompression followed by GPU F32 GEMV, not GPU-side RLE/LZ4 decompression.
 
 
 ## Upstream GGML layout audit — Q4_K/Q5_K and Q6_K
@@ -133,4 +133,4 @@ A byte-layout review against the upstream `ggml-org/llama.cpp` dequantization ro
 
 The regression now compares the packed shader mirror with the native range dequantizer for two adjacent blocks of every K-quant type. This catches disagreement between those implementations, but they still share a repository-owned native decoder; it is not a substitute for running a separately compiled upstream GGML reference fixture.
 
-CI now installs `glslc` and `spirv-tools` on Linux and makes packed-shader compilation plus `spirv-val` validation mandatory rather than silently skipping shader validation when the compiler is absent.
+CI now installs `glslc` and `spirv-tools` on Linux and makes packed-shader compilation plus `spirv-val` validation mandatory rather than silently skipping shader validation when the compiler is absent. Vulkan weight-cache hits now validate a payload fingerprint in addition to key, type, and byte geometry; F32 and quantized uploads reject null payloads before hashing, and typed row-tile byte calculations are overflow-checked.
