@@ -36,3 +36,13 @@ jobs:
           else
             g++ -std=c++17 -O2 -Wall -Wextra "tools/reap_f16_audit_cli.cpp" -o "reap-test-bin/reap_f16_audit_cli"
           fi
+          # Invalid invocation must fail closed with a nonzero exit status.
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            if "./reap-test-bin/reap_f16_audit_cli.exe" >/dev/null 2>&1; then
+              echo "FAIL: missing audit arguments accepted"; exit 1
+            fi
+          else
+            if "./reap-test-bin/reap_f16_audit_cli" >/dev/null 2>&1; then
+              echo "FAIL: missing audit arguments accepted"; exit 1
+            fi
+          fi
