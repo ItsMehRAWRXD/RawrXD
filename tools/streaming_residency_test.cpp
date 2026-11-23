@@ -36,6 +36,15 @@ int main() {
             require(whole==plain, "whole==plain");
             require(cache.peak_resident_bytes()<=2048, "cache.peak_resident_bytes()<=2048");
             require(cache.evictions()>0, "cache.evictions()>0");
+            std::vector<uint8_t> staged(1500);
+            cache.read_into(500,staged.data(),staged.size());
+            require(std::equal(staged.begin(),staged.end(),plain.begin()+500),
+                    "read_into byte parity");
+            require(cache.resident_bytes()<=2048,"read_into cache budget");
+            bool null_rejected=false;
+            try { cache.read_into(0,nullptr,1); }
+            catch (const std::out_of_range&) { null_rejected=true; }
+            require(null_rejected,"null destination must be rejected");
             auto cross=cache.read(990,90);
             require(std::equal(cross.begin(),cross.end(),plain.begin()+990), "std::equal(cross.begin(),cross.end(),plain.begin()+990)");
             cache.get(0);
