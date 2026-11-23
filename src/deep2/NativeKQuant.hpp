@@ -1,5 +1,5 @@
 #pragma once
-// Independent, native GGML-compatible Q3_K/Q4_K/Q5_K/Q6_K block codec.
+// Independent, native GGML-compatible Q2_K through Q6_K block codec.
 // Wire layout follows ggml-common.h, NOT the legacy custom TensorView K layouts.
 // Two-pass GGUF writer uses the same encoder for preflight and emission.
 #include "NativeTensorCompression.hpp"
@@ -16,6 +16,7 @@ using RawrXD::TensorCompression::ToHalf;
 
 inline size_t BlockBytes(uint32_t type) {
     switch(type) {
+        case 10: return 84;   // Q2_K: scales16, qs64, d2, dmin2
         case 11: return 110;  // Q3_K: hmask32, qs64, scales12, d2
         case 12: return 144;  // Q4_K: d2, dmin2, scales12, qs128
         case 13: return 176;  // Q5_K: d2, dmin2, scales12, qh32, qs128
@@ -37,6 +38,17 @@ inline int RoundClamp(double x,int lo,int hi) {
 // Decode using GGML's actual byte ordering. No guessed bitstream packing.
 inline bool DecodeBlock(uint32_t type,const uint8_t* b,double v[256]) {
     if(!b || !v || !BlockBytes(type))return false;
+    if(type==10) {
+        const double d=FromHalf(Half(b+80)), dm=FromHalf(Half(b+82));
+        for(int j=0;j<256;++j) {
+            const int g=j/16;
+            const unsigned sc=b[g]&15, mn=b[g]>>4;
+            const int within=j%128, lane=within/32, col=within%32;
+            const unsigned q=(b[16+(j/128)*32+(within%32)]>>(2*lane))&3;
+            v[j]=d*sc*q-dm*mn;
+        }
+        return true;
+    }
     if(type==11) {
         const double d=FromHalf(Half(b+108));
         for(int j=0;j<256;++j) {
@@ -104,7 +116,37 @@ inline bool EncodeBlock(uint32_t type,const double v[256],float tolerance,uint8_
     if(!bytes || !out || !v || !std::isfinite(tolerance) || tolerance<0)return false;
     for(int j=0;j<256;++j)if(!std::isfinite(v[j]))return false;
     std::memset(out,0,bytes);
-    if(type==11 || type==14) {
+    if(type==10) {
+        double scale[16]={},minimum[16]={},maxScale=0,maxMinimum=0;
+        for(int g=0;g<16;++g) {
+            double lo=v[g*16],hi=lo;
+            for(int k=1;k<16;++k) {
+                lo=std::min(lo,v[g*16+k]);
+                hi=std::max(hi,v[g*16+k]);
+            }
+            scale[g]=std::max(0.0,(hi-lo)/3.0);
+            minimum[g]=std::max(0.0,-lo);
+            maxScale=std::max(maxScale,scale[g]);
+            maxMinimum=std::max(maxMinimum,minimum[g]);
+        }
+        const uint16_t hd=ToHalf(float(maxScale/15.0));
+        const uint16_t hm=ToHalf(float(maxMinimum/15.0));
+        const double d=FromHalf(hd),dm=FromHalf(hm);
+        if((maxScale>0 && !(d>0)) || (maxMinimum>0 && !(dm>0)))return false;
+        SetHalf(out+80,hd);SetHalf(out+82,hm);
+        for(int g=0;g<16;++g) {
+            const int sc=d>0?RoundClamp(scale[g]/d,0,15):0;
+            const int mn=dm>0?RoundClamp(minimum[g]/dm,0,15):0;
+            out[g]=uint8_t(sc|(mn<<4));
+            const double ds=d*sc, ms=dm*mn;
+            for(int k=0;k<16;++k) {
+                const int j=g*16+k;
+                const int q=ds>0?RoundClamp((v[j]+ms)/ds,0,3):0;
+                const int within=j%128,lane=within/32,col=within%32;
+                out[16+(j/128)*32+col]|=uint8_t(q<<(2*lane));
+            }
+        }
+    } else if(type==11 || type==14) {
         constexpr int groups=16;
         const int levels=type==11?31:127;
         const int divisor=type==11?31:127;
