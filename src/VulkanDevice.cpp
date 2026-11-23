@@ -152,7 +152,9 @@ bool VulkanDevice::pickMemoryType(const Gpu& gpu, uint32_t typeBits,
 bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsageFlags usage,
                                 VkMemoryPropertyFlags memProps, VkBuffer& buf,
                                 VkDeviceMemory& mem, void** mapped) {
-    buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
+    buf = VK_NULL_HANDLE;
+    mem = VK_NULL_HANDLE;
+    if (mapped) *mapped = nullptr;
     if (size == 0) return true;
 
     VkBufferCreateInfo bci{};
