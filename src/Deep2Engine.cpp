@@ -248,6 +248,15 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
             const uint64_t byteCount = elementCount * sizeof(float);
             return rom.readTensorRange(entry, byteOffset, byteCount,
                                        reinterpret_cast<uint8_t*>(destination));
+        } else if (rom.pager() && entry.shardIndex < rom.shards().size()) {
+            // The compressed cache now owns the useful representation. Evict
+            // the corresponding unleased raw file pages to avoid double
+            // residency of both full F32 payloads.
+            const auto& shard = rom.shards()[entry.shardIndex];
+            const uint64_t tensorBytes = entry.byteSize();
+            if (shard.dataOffset <= UINT64_MAX - entry.offset)
+                rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
+                    shard.dataOffset + entry.offset, tensorBytes);
         }
     }
     if (compressedF32Weights.IsRawFallback(cacheKey)) {
