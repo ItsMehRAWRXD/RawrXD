@@ -115,6 +115,15 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
     }
     return best;
 }
+// Per-tensor adaptive F32 storage: lossless RLE is always considered;
+// F16 is preferred when valid, with BF16 as the wider-exponent fallback.
+// The original bytes remain the fallback whenever neither meets the budget.
+inline Result EncodeAdaptiveF32(const float* values,size_t count,float max_abs_error) {
+    if(count && !values) throw std::invalid_argument("null F32 tensor");
+    if(count>std::numeric_limits<size_t>::max()/sizeof(float))
+        throw std::length_error("F32 tensor size overflow");
+    return Encode(values,count*sizeof(float),true,max_abs_error,true);
+}
 inline std::vector<uint8_t> Decode(const Result& r) {
     if (r.original_bytes>std::numeric_limits<size_t>::max()) throw std::length_error("size overflow");
     size_t n=static_cast<size_t>(r.original_bytes);
