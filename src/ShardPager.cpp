@@ -73,21 +73,8 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
         return page;
     }
 
-    // We need to compute fileOffset here: pageNo is relative to shard data section,
-    // but the reader callback receives absolute file offsets. The caller (TensorROM)
-    // passes pageNo relative to data section... To keep this layer generic, the reader
-    // callback is responsible for translating; here pageNo is stored and fileOffset
-    // is filled by loadPage through the reader? We need fileOffset before reading.
-    // Simplest: caller computes absolute file offset and stores it... Page.fileOffset
-    // is set by TensorROM when creating pages via a custom path. Instead, compute here
-    // requires dataOffset knowledge. Store dataOffset per shard outside? Keep simple:
-    // pageNo IS the absolute page index into the file for the reader when reader uses
-    // TensorROM's helper (fileOffset = shardDataOffset + pageNo*pageSize). To honor that,
-    // TensorROM wraps acquire with absolute offset computation. But PageCache.acquire
-    // signature only takes pageNo. Set fileOffset = pageNo * pageSize here and let the
-    // reader callback add the shard data base (closure captures ROM). Convention:
-    // PageCache.pageNo is an opaque page index; fileOffset = pageNo * pageSize is the
-    // default mapping, overridden by readers that need shard bases.
+    // Page numbers are absolute file page indices; reject multiplication overflow.
+    if (pageNo > UINT64_MAX / m_pageSize) return nullptr;
     Page* page = new Page();
     page->shard = shard;
     page->pageNo = pageNo;
@@ -142,12 +129,12 @@ bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, s
 
 void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
     if (size == 0 || !m_reader || offset > UINT64_MAX - (size - 1)) return;
-    std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
-    std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
+    uint64_t firstPage = offset / m_pageSize;
+    uint64_t lastPage = (offset + size - 1) / m_pageSize;
 
     auto work = [this, shard, firstPage, lastPage]() {
         // Throttle concurrency by joining the oldest futures opportunistically.
-        for (std::size_t p = firstPage; p <= lastPage; ++p) {
+        for (uint64_t p = firstPage;; ++p) {
             Page tmp; // not inserted; just issue the read into a scratch page
             tmp.shard = shard;
             tmp.pageNo = static_cast<uint64_t>(p);
@@ -174,6 +161,7 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
                     m_index[key] = page;
                 }
             }
+            if (p == lastPage) break;
         }
     };
 
