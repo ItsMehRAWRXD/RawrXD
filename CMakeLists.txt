@@ -119,11 +119,27 @@ elseif(APPLE)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
+# Native compressed tensor residency: standalone C++17 tests; no Qt or Vulkan linkage.
+add_executable(test_native_tensor_compression tests/deep2/native_tensor_compression_test.cpp)
+target_compile_features(test_native_tensor_compression PRIVATE cxx_std_17)
+target_include_directories(test_native_tensor_compression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+add_executable(test_native_tensor_residency_cache tests/deep2/native_tensor_residency_cache_test.cpp)
+target_compile_features(test_native_tensor_residency_cache PRIVATE cxx_std_17)
+target_include_directories(test_native_tensor_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+add_executable(test_native_tensor_byte_residency_cache tests/deep2/native_tensor_byte_residency_cache_test.cpp)
+target_compile_features(test_native_tensor_byte_residency_cache PRIVATE cxx_std_17)
+target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
 # Enable testing
 enable_testing()
+add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
+add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
+add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
