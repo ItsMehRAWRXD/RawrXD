@@ -73,6 +73,29 @@ int main() {
                            untouched.size(), untouched.data(), scratch));
     assert(std::equal(untouched.begin(), untouched.end(),
                       source.end()-untouched.size()));
+    // Boundary-spanning decode is compared byte-for-byte against an independent
+    // source window. Successful zero-byte reads are hits but decode no bytes;
+    // missing keys are misses and must leave the destination untouched.
+    std::vector<uint8_t> crossChunk(8200, 0);
+    const auto beforeBoundary = cache.GetStats();
+    assert(cache.ReadRange("shard0:weight0", 4093, crossChunk.size(),
+                           crossChunk.data(), scratch));
+    assert(std::equal(crossChunk.begin(), crossChunk.end(),
+                      source.begin() + 4093));
+    assert(cache.ReadRange("shard0:weight0", source.size(), 0,
+                           nullptr, scratch));
+    const auto afterBoundary = cache.GetStats();
+    assert(afterBoundary.hits == beforeBoundary.hits + 2);
+    assert(afterBoundary.misses == beforeBoundary.misses);
+    assert(afterBoundary.bytesDecoded ==
+           beforeBoundary.bytesDecoded + crossChunk.size());
+    std::vector<uint8_t> missingDestination(32, 0xC3);
+    assert(!cache.ReadRange("missing.tensor", 0, missingDestination.size(),
+                            missingDestination.data(), scratch));
+    assert(std::all_of(missingDestination.begin(), missingDestination.end(),
+                       [](uint8_t b) { return b == 0xC3; }));
+    assert(cache.GetStats().misses == afterBoundary.misses + 1);
+
     std::vector<uint8_t> patterned(96*1024);
     for(size_t i=0;i<patterned.size();++i)
         patterned[i]=static_cast<uint8_t>((i%251)^((i/251)&7));
