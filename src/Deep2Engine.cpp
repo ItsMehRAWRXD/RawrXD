@@ -273,6 +273,18 @@ bool Deep2Engine::gemvROMCompressed(
     if (!entry || entry->dims.size() != 2 ||
         entry->dims[0] != cols || entry->dims[1] != rows)
         return false;
+    const auto runTyped = [&](auto kernel) {
+        if (!initialized || !romMode || (cols && !x) || (rows && !y)) return false;
+        try {
+            auto resident = getResidentCompressedTensor(*this, *entry, blockBytes);
+            const auto result = kernel(*resident, x, rows, cols, stagingBudgetBytes);
+            if (rows) std::copy(result.begin(), result.end(), y);
+            return true;
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "[ROM_COMPRESSED_TYPED_GEMV] %s\\n", e.what());
+            return false;
+        }
+    };
     switch (entry->type) {
         case deep2::TensorType::F32:
             return gemvROMCompressedF32(tensorName, x, y, rows, cols,
@@ -284,20 +296,16 @@ bool Deep2Engine::gemvROMCompressed(
             return gemvROMCompressedQ4_0(tensorName, x, y, rows, cols,
                                          blockBytes, stagingBudgetBytes);
         case deep2::TensorType::Q4_1:
-            return gemvROMCompressedTypedQ4_1(tensorName, x, y, rows, cols,
-                                              blockBytes, stagingBudgetBytes);
+            return runTyped(rawrxd::compression::resident_q4_1_matvec);
         case deep2::TensorType::Q5_0:
-            return gemvROMCompressedTypedQ5_0(tensorName, x, y, rows, cols,
-                                              blockBytes, stagingBudgetBytes);
+            return runTyped(rawrxd::compression::resident_q5_0_matvec);
         case deep2::TensorType::Q5_1:
-            return gemvROMCompressedTypedQ5_1(tensorName, x, y, rows, cols,
-                                              blockBytes, stagingBudgetBytes);
+            return runTyped(rawrxd::compression::resident_q5_1_matvec);
         case deep2::TensorType::Q8_0:
             return gemvROMCompressedQ8_0(tensorName, x, y, rows, cols,
                                          blockBytes, stagingBudgetBytes);
         case deep2::TensorType::Q8_1:
-            return gemvROMCompressedTypedQ8_1(tensorName, x, y, rows, cols,
-                                              blockBytes, stagingBudgetBytes);
+            return runTyped(rawrxd::compression::resident_q8_1_matvec);
         default:
             return false;
     }
