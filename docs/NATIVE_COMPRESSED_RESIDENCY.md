@@ -66,3 +66,7 @@ temporary admission buffers, pager pages, Vulkan staging, and GPU allocations
 are separate measurements and must be reported independently. The cache
 budget is therefore a strict cap on its accounted retained storage, not a
 claim that the entire inference process is capped to that number.
+
+## Bounded packed GPU staging primitive
+
+`ChunkedF32Storage::CopyUniform16BitRange(first, count, encoding, destination, destinationBytes)` copies only the requested F16/BF16 range into a caller-owned staging allocation. It validates the complete intersecting chunk span and destination capacity before writing. The destination remains unchanged on invalid ranges, mixed codecs, insufficient capacity, or missing storage. It supports windows crossing chunk boundaries without allocating or concatenating a whole-tensor packed buffer. The caller owns staging lifetime and must retain it through the GPU fence; this method alone does not dispatch a Vulkan kernel or prove GPU numerical parity.
