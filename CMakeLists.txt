@@ -182,8 +182,8 @@ add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_ca
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
 add_test(NAME NativeCompressedGGUFE2E COMMAND test_native_compressed_gguf_e2e)
 
-# Validate the x64 MASM gzip writer against zlib's independent gzip decoder.
-if(MSVC)
+# Validate the x64-only MASM gzip writer against zlib's independent decoder.
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     enable_language(ASM_MASM)
     find_package(ZLIB QUIET)
     if(ZLIB_FOUND)
