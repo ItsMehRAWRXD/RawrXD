@@ -46,9 +46,9 @@ ROM F32, floating and supported quantized 2-D projection weights use bounded row
 
 The standalone ROM GEMV path now has a typed packed-weight shader for:
 - F16 and BF16 weights, including F32 source tensors admitted to exact or explicitly error-bounded 16-bit residency.
-- Native GGUF Q8_0 blocks (32 signed values plus one F16 scale per 34-byte block).
+- Native GGUF Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, and Q8_1 fixed blocks (32 values per canonical block).
 
-The shader consumes those compact bytes directly and accumulates products in F32. Q8_0 is decoded from its canonical GGUF block layout; a CPU mirror regression compares the shader's byte/scale interpretation with the canonical dequantizer across adjacent blocks. Other GGUF quant formats continue through the bounded CPU F32-tile fallback.
+The shader consumes those compact bytes directly and accumulates products in F32. Q4/Q5/Q8 blocks are decoded from their canonical GGUF byte layouts; a CPU mirror regression compares the shader's nibble, high-bit, signed-byte, and F16-scale interpretation with the canonical dequantizer across adjacent blocks. Other GGUF quant formats continue through the bounded CPU F32-tile fallback.
 
 Compact weight tiles are uploaded through a completion-backed staging transfer into device-local Vulkan buffers. Transfer-to-compute and compute-to-host memory barriers make the dataflow explicit. Vulkan copy sizes are padded to the required four-byte alignment without changing logical tensor geometry. The staging resources are released only after a successful fence wait (or a safe device-idle recovery); uncertain completion fails closed.
 
@@ -107,8 +107,8 @@ The CPU LinearW fallback uses the registered GGML block geometry and dequantizer
 
 ## Packed Q8_0 and persistent device-local tile cache
 
-The gemv_packed16.comp shader now accepts encoding 3 for canonical GGUF Q8_0. Each block is decoded as a little-endian F16 scale followed by 32 signed int8 values; block stride is 34 bytes. The ROM path reads only the block-aligned byte range for the current row tile. The Vulkan GEMV preflight checks block geometry, element-index limits, byte-size overflow, and the device's maxStorageBufferRange.
+The gemv_packed16.comp shader now accepts encodings 3 through 8 for canonical GGUF Q8_0, Q4_0, Q4_1, Q5_0, Q5_1, and Q8_1. Each format is decoded using its canonical 32-value block stride and F16 scale/minimum metadata. The ROM path reads only the block-aligned byte range for the current row tile. The Vulkan GEMV preflight checks block geometry, element-index limits, byte-size overflow, and the device's maxStorageBufferRange.
 
-F16, BF16, Q8_0, and eligible F32-derived 16-bit tiles are uploaded in their compact byte representation to device-local storage. A per-device LRU cache retains those immutable buffers under DEEP2_GPU_WEIGHT_RESIDENCY_MB; uncacheable or over-budget tiles use an ephemeral device-local buffer and are released after synchronous dispatch. Pipeline objects are cached independently per VkDevice and destroyed before their device, avoiding cross-GPU pipeline reinitialization and stale handles.
+F16, BF16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1, and eligible F32-derived 16-bit tiles are uploaded in their compact byte representation to device-local storage. A per-device LRU cache retains those immutable buffers under DEEP2_GPU_WEIGHT_RESIDENCY_MB; uncacheable or over-budget tiles use an ephemeral device-local buffer and are released after synchronous dispatch. Pipeline objects are cached independently per VkDevice and destroyed before their device, avoiding cross-GPU pipeline reinitialization and stale handles.
 
-CI now includes a CPU mirror of the packed Q8_0 shader decoder against the canonical GGUF dequantizer, plus optional glslc compilation when the compiler is installed. The full native Vulkan engine build, shader validation on an SDK-equipped runner, GPU parity, device-cache stress/eviction, and measured host/VRAM savings remain release gates.
+CI now includes a CPU mirror of the packed Q4/Q5/Q8 shader decoders against the canonical GGUF dequantizer, plus optional glslc compilation when the compiler is installed. The full native Vulkan engine build, shader validation on an SDK-equipped runner, GPU parity, device-cache stress/eviction, and measured host/VRAM savings remain release gates.
