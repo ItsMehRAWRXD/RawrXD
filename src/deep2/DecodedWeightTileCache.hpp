@@ -19,6 +19,8 @@ public:
     struct Stats {
         size_t residentBytes = 0;
         size_t budgetBytes = 0;
+        // Cached bytes only: external leases can outlive eviction.
+        size_t leasedBytes = 0;
         uint64_t hits = 0, misses = 0, evictions = 0;
     };
     explicit DecodedWeightTileCache(TensorResidencyCache& source, size_t budgetBytes)
@@ -76,7 +78,15 @@ public:
     }
     Stats GetStats() const {
         std::lock_guard<std::mutex> lock(mu_);
-        return {resident_, budget_, hits_, misses_, evictions_};
+        size_t leased = 0;
+        for (const auto& entry : entries_) {
+            if (entry.second.values.use_count() > 1) {
+                const size_t bytes = entry.second.bytes;
+                leased = bytes > std::numeric_limits<size_t>::max() - leased
+                    ? std::numeric_limits<size_t>::max() : leased + bytes;
+            }
+        }
+        return {resident_, budget_, leased, hits_, misses_, evictions_};
     }
 private:
     struct Key {
