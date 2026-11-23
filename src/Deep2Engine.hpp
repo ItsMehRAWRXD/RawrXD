@@ -7,6 +7,7 @@
 #include "VulkanDeviceAllocator.hpp"
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
+#include "native_resident_f32_matvec.hpp"
 
 #include <vector>
 #include <string>
@@ -67,6 +68,11 @@ struct Deep2Engine {
     TensorHandle getTensor(const std::string& name);
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
+
+    // Bounded compressed-resident CPU GEMV (no full weight-matrix expansion).
+    bool gemvResidentF32(const rawrxd::compression::ResidentCompressedTensor& weights,
+                         const float* x, float* y, std::size_t rows, std::size_t cols,
+                         std::size_t stagingBudgetBytes = 64 * 1024);
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
