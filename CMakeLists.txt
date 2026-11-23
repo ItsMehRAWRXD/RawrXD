@@ -133,3 +133,19 @@ add_test(NAME MetadataParity_Phi3
     COMMAND test_metadata_parity "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+
+# Native compressed-residency primitives: independent C++17 regression targets.
+# These tests do not require Vulkan, Qt, or a model download.
+function(rawrxd_add_compression_test target source)
+    add_executable(${target} ${source})
+    target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    add_test(NAME ${target} COMMAND ${target})
+endfunction()
+
+rawrxd_add_compression_test(native_compressed_residency_test tests/native_compressed_residency_test.cpp)
+rawrxd_add_compression_test(native_compressed_tensor_test tests/native_compressed_tensor_test.cpp)
+rawrxd_add_compression_test(native_file_tensor_reader_test tests/native_file_tensor_reader_test.cpp)
+rawrxd_add_compression_test(native_resident_compressed_tensor_test tests/native_resident_compressed_tensor_test.cpp)
+rawrxd_add_compression_test(native_bounded_weight_stager_test tests/native_bounded_weight_stager_test.cpp)
+rawrxd_add_compression_test(native_resident_f32_matvec_test tests/native_resident_f32_matvec_test.cpp)
