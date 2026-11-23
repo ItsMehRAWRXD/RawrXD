@@ -25,10 +25,10 @@ int main() {
         ReadName(in,name);ReadU32(in,nd);
         for(uint32_t i=0;i<nd;++i)ReadU64(in,n);
         ReadU32(in,type);ReadU64(in,offset);
-        if(!in||type!=0||offset!=0)++failures;
+        if(!in||type!=1||offset!=0)++failures;
     }
     std::remove(source);std::remove(target);
-    std::cout<<"REAP_AUTO_SINGLETON="<<(failures?"FAIL":"PASS")
+    std::cout<<"REAP_AUTO_SINGLETON_F16="<<(failures?"FAIL":"PASS")
              <<" failures="<<failures<<"\n";
     return failures?1:0;
 }
