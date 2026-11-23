@@ -258,6 +258,7 @@ void PageCache::evictUnleasedAll() {
 TensorLease::TensorLease(PageCache& cache, uint32_t shard, uint64_t offset, uint64_t size)
     : m_cache(&cache), m_shard(shard), m_offset(offset), m_size(size) {
     if (size == 0) { m_ok = true; return; }
+    if (offset > UINT64_MAX - (size - 1)) return;
     uint64_t firstPage = offset / m_cache->pageSize();
     uint64_t lastPage = (offset + size - 1) / m_cache->pageSize();
     for (uint64_t p = firstPage; p <= lastPage; ++p) {
@@ -278,18 +279,21 @@ TensorLease::~TensorLease() {
 
 bool TensorLease::read(uint64_t relOffset, std::uint64_t size, std::uint8_t* out) const {
     if (!m_ok || size == 0) return true;
-    if (relOffset + size > m_size) return false;
-    uint64_t absOffset = m_offset + relOffset;
+    if (relOffset > m_size || size > m_size - relOffset ||
+        m_offset > UINT64_MAX - relOffset) return false;
+    const uint64_t absOffset = m_offset + relOffset;
     return m_cache->readRange(m_shard, absOffset, size, out);
 }
 
 const std::uint8_t* TensorLease::direct(uint64_t relOffset, std::uint64_t size) const {
-    if (!m_ok || size == 0 || relOffset + size > m_size) return nullptr;
+    if (!m_ok || size == 0 || relOffset > m_size || size > m_size - relOffset ||
+        m_offset > UINT64_MAX - relOffset) return nullptr;
     if (m_pages.size() != 1) return nullptr;
     Page* pg = m_pages[0];
-    uint64_t pageBase = m_offset + relOffset;
-    uint64_t pageStart = pg->pageNo * m_cache->pageSize();
-    uint64_t pageEnd = pageStart + pg->data.size();
+    const uint64_t pageBase = m_offset + relOffset;
+    if (pageBase > UINT64_MAX - size) return nullptr;
+    const uint64_t pageStart = pg->pageNo * m_cache->pageSize();
+    const uint64_t pageEnd = pageStart + pg->data.size();
     if (pageBase < pageStart || pageBase + size > pageEnd) return nullptr;
     return pg->data.data() + (pageBase - pageStart);
 }
