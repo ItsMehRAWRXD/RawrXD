@@ -304,6 +304,22 @@ inline bool AffineCodesBitExact(float d,float m,unsigned midpoint,unsigned codes
     }
     return true;
 }
+// Exactness only depends on codes actually present in a block. Checking
+// unused code points rejects valid lossless conversions unnecessarily.
+inline bool AffineBlockCodesBitExact(float d,float m,unsigned midpoint,
+                                     const unsigned char* packed,
+                                     bool fiveBit) {
+    if(!std::isfinite(d)||!std::isfinite(m))return false;
+    for(unsigned i=0;i<32;++i) {
+        const unsigned nibble=i<16?(packed[i]&15u):(packed[i-16]>>4);
+        const unsigned q=fiveBit?(nibble|(((packed[16+i/8]>>(i%8))&1u)<<4)):nibble;
+        const float affine=d*static_cast<float>(q)+m;
+        const float symmetric=d*static_cast<float>(static_cast<int>(q)-static_cast<int>(midpoint));
+        uint32_t a=0,b=0;std::memcpy(&a,&affine,4);std::memcpy(&b,&symmetric,4);
+        if(a!=b)return false;
+    }
+    return true;
+}
 inline bool IsExactQ4_1ToQ4_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
     if(bytes%20 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
