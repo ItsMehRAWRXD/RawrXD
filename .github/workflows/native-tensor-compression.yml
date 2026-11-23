@@ -9,6 +9,10 @@ on:
       - 'tests/deep2/native_tensor_residency_cache_test.cpp'
       - 'src/Deep2Engine.hpp'
       - 'src/Deep2Engine.cpp'
+      - 'src/TensorView.hpp'
+      - 'src/quant_kernels.hpp'
+      - 'src/quant_kernels.cpp'
+      - 'tests/deep2/native_quantized_tile_range_test.cpp'
       - 'src/deep2/NativeKQuant.hpp'
       - 'tests/deep2/native_k_quant_test.cpp'
       - 'tests/deep2/native_gguf_k_integration.py'
@@ -44,6 +48,8 @@ jobs:
           ./native_loader_k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_q5k_runtime_layout_test.cpp -o native_q5k_test
           ./native_q5k_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp -o quantized_tile_range_test
+          ./quantized_tile_range_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_gguf_f16.cpp -o native_gguf_f16
           python3 tests/deep2/native_gguf_f16_integration.py ./native_gguf_f16
           python3 tests/deep2/native_gguf_k_integration.py ./native_gguf_f16
@@ -80,6 +86,10 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_q5k_runtime_layout_test.cpp /Fe:native_q5k_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .\native_q5k_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 /Isrc tests/deep2/native_quantized_tile_range_test.cpp src/quant_kernels.cpp /Fe:quantized_tile_range_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\quantized_tile_range_test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 tools/native_gguf_f16.cpp /Fe:native_gguf_f16.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
