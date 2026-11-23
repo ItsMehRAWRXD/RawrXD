@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
                     " [--f16 | --q8-0 | --q4-0 | --q5-0 | --auto] [--max-bytes POSITIVE_INTEGER]\n"
                     "  --q4-0 requantizes eligible FP32/FP16 and quantized tensors.\n"
                     "  --q5-0 requantizes Q6_K tensors only; other types are preserved.\n"
-                    "  --auto uses Q4_0 on eligible shrinking tensors and F16 on sensitive F32 tensors.\n";
+                    "  --auto uses Q4_0 on eligible matrices and F16 on F32 vectors/sensitive tensors.\n";
         return 2;
     }
     uint64_t budget=UINT64_MAX;
