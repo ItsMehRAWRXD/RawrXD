@@ -142,6 +142,7 @@ Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() c
     };
     snapshot.bytesDecoded = saturatingAdd(f32.bytesDecoded, encoded.bytesDecoded);
     snapshot.evictions = saturatingAdd(f32.evictions, encoded.evictions);
+    snapshot.pagerResidentBytes = rom.pager() ? rom.pager()->residentBytes() : 0;
     return snapshot;
 }
 
