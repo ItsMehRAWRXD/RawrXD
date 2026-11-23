@@ -6,6 +6,7 @@
 #endif
 #include "../../src/deep2/NativeTensorResidencyCache.hpp"
 #include <cassert>
+#include <limits>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -426,6 +427,47 @@ int main() {
     assert(reboundReads > 0);
     assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
     assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == -3.0f; }));
+
+    // Invalid numerical tolerances must fail closed for both first admission
+    // and an already-cached key, without touching the source reader or
+    // poisoning a future valid admission. This also guards NaN comparisons,
+    // which otherwise make a stricter reuse check silently evaluate false.
+    Deep2::TensorResidencyCache toleranceCache(65536);
+    std::vector<float> toleranceSource(4096, 1.0f);
+    size_t toleranceReads = 0;
+    auto toleranceReader = [&](size_t o, size_t n, float* out) {
+        ++toleranceReads;
+        std::copy(toleranceSource.begin()+o, toleranceSource.begin()+o+n, out);
+        return true;
+    };
+    const float invalidTolerances[] = {
+        -0.01f, -std::numeric_limits<float>::infinity(),
+        std::numeric_limits<float>::infinity(),
+        std::numeric_limits<float>::quiet_NaN()
+    };
+    for (float invalid : invalidTolerances) {
+        assert(!toleranceCache.RegisterF32FromReader(
+            "tolerance.weight", toleranceSource.size(), invalid,
+            toleranceReader, 1024));
+        assert(toleranceReads == 0);
+        assert(!toleranceCache.IsRawFallback("tolerance.weight"));
+        assert(!toleranceCache.Contains("tolerance.weight"));
+    }
+    assert(toleranceCache.RegisterF32FromReader(
+        "tolerance.weight", toleranceSource.size(), 0.0f,
+        toleranceReader, 1024));
+    const size_t validReads = toleranceReads;
+    assert(validReads == 4);
+    for (float invalid : invalidTolerances) {
+        assert(!toleranceCache.RegisterF32FromReader(
+            "tolerance.weight", toleranceSource.size(), invalid,
+            toleranceReader, 1024));
+        assert(toleranceReads == validReads);
+    }
+    float toleranceOutput[16] = {};
+    assert(toleranceCache.ReadRange("tolerance.weight", 0, 16, toleranceOutput));
+    assert(std::all_of(toleranceOutput, toleranceOutput+16,
+                       [](float value) { return value == 1.0f; }));
 
     // Reopening the same model path can load different bytes (atomic GGUF
     // replacement). Deep2 must clear the cache even when identity is unchanged.
