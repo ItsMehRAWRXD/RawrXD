@@ -32,12 +32,19 @@ int main(){
           accuracy.nonfinite==1 && accuracy.overflowed==1 &&
           accuracy.max_abs>0 && accuracy.rms_abs>0,
           "f16_accuracy_and_nonfinite_accounting");
+    // Failed audits must leave the caller's prior certified measurement intact.
+    const F16Accuracy baseline=accuracy;
     {
         std::fstream out(target,std::ios::binary|std::ios::in|std::ios::out);
         out.seekp(0);out.put('\x01');
     }
     check(!AuditF32ToF16(source,target,0,0,6,accuracy),
           "corrupted_conversion_rejected");
+    check(accuracy.elements==baseline.elements &&
+          accuracy.finite==baseline.finite &&
+          accuracy.max_abs==baseline.max_abs &&
+          accuracy.rms_abs==baseline.rms_abs,
+          "corrupt_audit_preserves_previous_result");
     check(!AuditF32ToF16(source,target,0,0,7,accuracy),
           "truncated_tensor_rejected");
     check(!AuditF32ToF16(source,target,UINT64_MAX,0,1,accuracy),
