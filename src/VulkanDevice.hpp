@@ -64,6 +64,8 @@ public:
     bool getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::string& key,
                                        const void* data, VkDeviceSize size,
                                        size_t budgetBytes, VkBuffer& buffer);
+    // Every successful cache acquisition pins its buffer until released after dispatch.
+    void releaseCachedWeightBuffer(VkBuffer buffer);
     size_t cachedWeightBytes() const;
     size_t weightCacheBudgetBytes() const;
 
@@ -75,6 +77,7 @@ private:
         VkDeviceSize size = 0;
         uint64_t contentHash = 0;
         uint64_t lastUse = 0;
+        size_t activeLeases = 0;
     };
     void evictCachedWeightsLocked(size_t requiredBytes);
     void clearCachedWeights();
