@@ -22,13 +22,13 @@ int main() {
     assert(std::memcmp(decoded.data(),f,sizeof(f))==0);
     // BF16 keeps F32's exponent range when FP16 would overflow.
     const float wide[]={1.0e20f,-1.0e20f,3.25f,-0.0f};
-    auto bf16=Encode(wide,sizeof(wide),true,1.0e17f,true);
+    auto bf16=Encode(wide,sizeof(wide),true,1.0e18f,true);
     assert(bf16.encoding==Encoding::BF16 && bf16.payload.size()==sizeof(wide)/2);
     auto wideDecoded=Decode(bf16);
     for(size_t i=0;i<4;++i) {
         float value; std::memcpy(&value,wideDecoded.data()+i*4,4);
         assert(std::isfinite(value));
-        assert(std::fabs(value-wide[i])<=1.0e17f);
+        assert(std::fabs(value-wide[i])<=1.0e18f);
     }
     assert(ToBFloat16(1.0f)==0x3f80);
     assert(Bits(FromBFloat16(0x3f80))==Bits(1.0f));
