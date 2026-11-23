@@ -238,7 +238,13 @@ int main(int argc,char** argv) {
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
         const bool quantized=q8||q4||q5||q41||q51;
-        float tolerance=std::stof(argv[3]);if(!std::isfinite(tolerance)||tolerance<0)throw std::runtime_error("invalid tolerance");
+        // Require the complete argument to be a finite nonnegative number.
+        // std::stof alone accepts trailing garbage (e.g. "0.1oops").
+        const std::string toleranceArg(argv[3]);
+        size_t toleranceEnd=0;
+        float tolerance=std::stof(toleranceArg,&toleranceEnd);
+        if(toleranceEnd!=toleranceArg.size() || !std::isfinite(tolerance) || tolerance<0)
+            throw std::runtime_error("invalid tolerance");
         std::ifstream in(argv[1],std::ios::binary|std::ios::ate);
         if(!in)throw std::runtime_error("cannot open input");
         U fileSize=pos(in);seek(in,0);
