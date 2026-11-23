@@ -30,40 +30,37 @@ QByteArray deflate(const QByteArray& data, bool* success) {
 }
 
 QByteArray inflate(const QByteArray& data, bool* success) {
+    if (success) *success = false;
     if (data.isEmpty()) {
         if (success) *success = true;
-        return QByteArray();
+        return {};
     }
-    
-    // Estimate decompressed size (4x compression ratio)
-    uLongf decompressedSize = data.size() * 4;
-    QByteArray decompressed(decompressedSize, Qt::Uninitialized);
-    
-    int result = uncompress(reinterpret_cast<Bytef*>(decompressed.data()), &decompressedSize,
-                           reinterpret_cast<const Bytef*>(data.constData()), data.size());
-    
-    if (result == Z_OK) {
-        decompressed.resize(decompressedSize);
-        if (success) *success = true;
-        return decompressed;
-    } else {
-        // Try with larger buffer if first attempt failed
-        decompressedSize = data.size() * 10;
-        decompressed.resize(decompressedSize);
-        
-        result = uncompress(reinterpret_cast<Bytef*>(decompressed.data()), &decompressedSize,
-                           reinterpret_cast<const Bytef*>(data.constData()), data.size());
-        
-        if (result == Z_OK) {
-            decompressed.resize(decompressedSize);
-            if (success) *success = true;
-            return decompressed;
-        } else {
-            if (success) *success = false;
-            qWarning() << "Inflate decompression failed with error:" << result;
-            return QByteArray();
-        }
+
+    z_stream stream{};
+    stream.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(data.constData()));
+    stream.avail_in = static_cast<uInt>(data.size());
+    if (inflateInit(&stream) != Z_OK) return {};
+
+    QByteArray output;
+    constexpr int chunkSize = 64 * 1024;
+    int status = Z_OK;
+    do {
+        const auto offset = output.size();
+        output.resize(offset + chunkSize);
+        stream.next_out = reinterpret_cast<Bytef*>(output.data() + offset);
+        stream.avail_out = chunkSize;
+        status = ::inflate(&stream, Z_NO_FLUSH);
+        output.resize(offset + chunkSize - static_cast<int>(stream.avail_out));
+        if (status != Z_OK && status != Z_STREAM_END) break;
+    } while (status != Z_STREAM_END);
+
+    inflateEnd(&stream);
+    if (status != Z_STREAM_END) {
+        qWarning() << "Inflate failed with error:" << status;
+        return {};
     }
+    if (success) *success = true;
+    return output;
 }
 
 QByteArray deflate_brutal_masm(const QByteArray& data, bool* success) {
