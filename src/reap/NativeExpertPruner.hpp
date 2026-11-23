@@ -253,6 +253,9 @@ inline PruneError PruneGGUF(const std::string& input,
         for (size_t d = 0; d + 1 < t.dims.size(); ++d) slice_elems *= t.dims[d];
         uint64_t block=0, bb=0;
         StorageLayout(t.type, block, bb);
+        // Fail closed: an expert slice that does not fill whole quantization
+        // blocks cannot be pruned physically (silent truncation would corrupt).
+        if (slice_elems % block) return PruneError::Unsupported;
         t.slice_bytes = (slice_elems / block) * bb;
         uint64_t after_bytes = 0;
         for (uint32_t e : order) {
@@ -280,7 +283,9 @@ inline PruneError PruneGGUF(const std::string& input,
         for (const auto& o : tensors) if (o.name == gate_name) { gate = &o; break; }
         if (!gate || !gate->pruned) continue;
         const uint32_t esz = (t.type == 0) ? 4u : (t.type == 1 ? 2u : 0u);
-        if (!esz) continue;   // only F32/F16 routers are compacted; others fail closed below
+        // Fail closed: a pruned layer's router must be compactable (F32/F16);
+        // silently keeping a 4-output router over 2 experts is inconsistent.
+        if (!esz) return PruneError::Unsupported;
         t.slice_bytes = t.dims[0] * esz;
         uint64_t after_bytes = 0;
         for (uint32_t e : gate->kept) {
