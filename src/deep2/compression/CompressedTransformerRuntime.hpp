@@ -147,14 +147,27 @@ private:
         if (!model_.contains(name))
             throw std::invalid_argument("compressed transformer missing tensor: " + name);
         const std::uint32_t type = model_.tensorType(name);
-        const std::size_t scalar =
-            (type == GGML_TYPE_F16 || type == GGML_TYPE_BF16) ? 2u :
-            type == GGML_TYPE_F32 ? 4u : 0u;
-        if (!scalar) throw std::invalid_argument("unsupported transformer tensor type: " + name);
-        if (cols && rows > std::numeric_limits<std::size_t>::max() / cols)
+        std::size_t rowBytes = 0;
+        if (type == GGML_TYPE_Q8_0) {
+            // GGML Q8_0 is 32 signed values plus a two-byte F16 scale
+            // per block. Never interpret its payload as scalar F16/F32.
+            if (cols % 32u != 0u)
+                throw std::invalid_argument("Q8_0 transformer tensor width must be block aligned: " + name);
+            if (cols / 32u > std::numeric_limits<std::size_t>::max() / 34u)
+                throw std::overflow_error("Q8_0 transformer tensor row overflow: " + name);
+            rowBytes = (cols / 32u) * 34u;
+        } else {
+            const std::size_t scalar =
+                (type == GGML_TYPE_F16 || type == GGML_TYPE_BF16) ? 2u :
+                type == GGML_TYPE_F32 ? 4u : 0u;
+            if (!scalar) throw std::invalid_argument("unsupported transformer tensor type: " + name);
+            if (cols > std::numeric_limits<std::size_t>::max() / scalar)
+                throw std::overflow_error("transformer tensor row overflow: " + name);
+            rowBytes = cols * scalar;
+        }
+        if (rowBytes && rows > std::numeric_limits<std::size_t>::max() / rowBytes)
             throw std::overflow_error("transformer tensor geometry overflow: " + name);
-        if (cols * rows > std::numeric_limits<std::size_t>::max() / scalar ||
-            model_.tensorBytes(name) != cols * rows * scalar)
+        if (model_.tensorBytes(name) != rows * rowBytes)
             throw std::invalid_argument("transformer tensor byte geometry mismatch: " + name);
     }
 
