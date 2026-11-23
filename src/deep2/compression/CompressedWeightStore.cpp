@@ -237,8 +237,7 @@ StoreStats CompressedWeightStore::stats()const {
  std::lock_guard<std::mutex> lock(mutex_);
  auto s=counters_;
  s.cached_decoded_bytes=cache_bytes_;
- const auto add=[](std::uint64_t& total,std::size_t amount) {
-  const auto value=static_cast<std::uint64_t>(amount);
+ const auto add=[](std::uint64_t& total,std::uint64_t value) {
   if(value>(std::numeric_limits<std::uint64_t>::max)()-total)
    total=(std::numeric_limits<std::uint64_t>::max)();
   else total+=value;
@@ -266,8 +265,8 @@ StoreStats CompressedWeightStore::stats()const {
  add(s.metadata_bytes_estimate,lru_.size()*(sizeof(std::string)+sizeof(void*)*2));
  for(const auto& key:lru_) add(s.metadata_bytes_estimate,key.capacity()+1);
  s.resident_bytes_estimate=s.encoded_capacity_bytes;
- add(s.resident_bytes_estimate,static_cast<std::size_t>(s.metadata_bytes_estimate));
- add(s.resident_bytes_estimate,static_cast<std::size_t>(s.cached_decoded_bytes));
+ add(s.resident_bytes_estimate,s.metadata_bytes_estimate);
+ add(s.resident_bytes_estimate,s.cached_decoded_bytes);
  return s;
 }
 void CompressedWeightStore::setDecodedCacheBudget(std::size_t n){std::lock_guard<std::mutex>l(mutex_);cache_budget_=n;evictToBudgetLocked();}
