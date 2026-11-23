@@ -476,7 +476,10 @@ bool Deep2Engine::readCompressedEncodedRange(const deep2::TensorEntry& entry,
                 cacheKey, static_cast<size_t>(tensorBytes), reader, kEncodedResidencyChunkBytes)) {
             if (rom.pager() && entry.shardIndex < rom.shards().size()) {
                 const auto& shard = rom.shards()[entry.shardIndex];
-                if (shard.dataOffset <= UINT64_MAX - entry.offset)
+                // Reject wrapped source ranges before asking the pager to
+                // reclaim pages; tensor offsets are untrusted GGUF metadata.
+                if (shard.dataOffset <= UINT64_MAX - entry.offset &&
+                    tensorBytes <= UINT64_MAX - (shard.dataOffset + entry.offset))
                     rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
                         shard.dataOffset + entry.offset, tensorBytes);
             }
