@@ -365,12 +365,50 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
     return readCompressedF32Tile(entry,firstElement,elementCount,destination,decodeScratch);
 }
 
+bool Deep2Engine::ensureCompressedF32Tensor(const deep2::TensorEntry& entry) {
+    if (!romMode || entry.type != deep2::TensorType::F32) return false;
+    const uint64_t bytes = entry.byteSize();
+    if ((bytes % sizeof(float)) != 0) return false;
+    const uint64_t totalElements = bytes / sizeof(float);
+    if (totalElements > std::numeric_limits<size_t>::max()) return false;
+
+    // GGUF tensor names are not a sufficient cache identity across shards.
+    const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+        std::to_string(entry.offset) + ":" + entry.name;
+    if (compressedF32Weights.Contains(cacheKey) ||
+        compressedF32Weights.IsRawFallback(cacheKey))
+        return true;
+
+    const auto reader = [this, &entry, bytes](size_t offset, size_t count, float* out) {
+        if (offset > bytes / sizeof(float) ||
+            count > bytes / sizeof(float) - offset) return false;
+        const uint64_t byteOffset = static_cast<uint64_t>(offset) * sizeof(float);
+        const uint64_t byteCount = static_cast<uint64_t>(count) * sizeof(float);
+        return rom.readTensorRange(entry, byteOffset, byteCount,
+                                   reinterpret_cast<uint8_t*>(out));
+    };
+    if (!compressedF32Weights.RegisterF32FromReader(
+            cacheKey, static_cast<size_t>(totalElements),
+            compressedF32MaxAbsError.load(std::memory_order_relaxed), reader, 4096))
+        return compressedF32Weights.IsRawFallback(cacheKey);
+
+    // The compressed cache now owns the useful representation. Evict the
+    // corresponding unleased raw file pages to avoid duplicate residency.
+    if (rom.pager() && entry.shardIndex < rom.shards().size()) {
+        const auto& shard = rom.shards()[entry.shardIndex];
+        if (shard.dataOffset <= UINT64_MAX - entry.offset)
+            rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
+                shard.dataOffset + entry.offset, bytes);
+    }
+    return true;
+}
+
 bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
                                               uint64_t firstElement,
                                               uint64_t elementCount,
                                               float* destination,
                                               std::vector<uint8_t>& decodeScratch) {
-    if (!romMode || entry.type != deep2::TensorType::F32) return false;
+    if (!romMode || entry.type != deep2::TensorType::F32 || !destination) return false;
     const uint64_t bytes = entry.byteSize();
     if ((bytes % sizeof(float)) != 0) return false;
     const uint64_t totalElements = bytes / sizeof(float);
@@ -380,40 +418,15 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         elementCount > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
         elementCount > std::numeric_limits<size_t>::max()) return false;
 
-    // GGUF tensor names are not a sufficient cache identity across shards.
+    if (!ensureCompressedF32Tensor(entry)) {
+        const uint64_t byteOffset = firstElement * sizeof(float);
+        const uint64_t byteCount = elementCount * sizeof(float);
+        return rom.readTensorRange(entry, byteOffset, byteCount,
+                                   reinterpret_cast<uint8_t*>(destination));
+    }
+
     const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
         std::to_string(entry.offset) + ":" + entry.name;
-    if (!compressedF32Weights.Contains(cacheKey) &&
-        !compressedF32Weights.IsRawFallback(cacheKey)) {
-        const size_t count = static_cast<size_t>(totalElements);
-        const auto reader = [this, &entry, bytes](size_t offset, size_t n, float* out) {
-            if (offset > bytes / sizeof(float) ||
-                n > bytes / sizeof(float) - offset) return false;
-            const uint64_t byteOffset = static_cast<uint64_t>(offset) * sizeof(float);
-            const uint64_t byteCount = static_cast<uint64_t>(n) * sizeof(float);
-            return rom.readTensorRange(entry, byteOffset, byteCount,
-                                       reinterpret_cast<uint8_t*>(out));
-        };
-        if (!compressedF32Weights.RegisterF32FromReader(
-                cacheKey, count, compressedF32MaxAbsError.load(std::memory_order_relaxed), reader, 4096)) {
-            // Deterministic no-win/budget rejections are memoized atomically
-            // inside RegisterF32FromReader. A source-read failure is not
-            // memoized, so a later request can retry transient I/O failures.
-            const uint64_t byteOffset = firstElement * sizeof(float);
-            const uint64_t byteCount = elementCount * sizeof(float);
-            return rom.readTensorRange(entry, byteOffset, byteCount,
-                                       reinterpret_cast<uint8_t*>(destination));
-        } else if (rom.pager() && entry.shardIndex < rom.shards().size()) {
-            // The compressed cache now owns the useful representation. Evict
-            // the corresponding unleased raw file pages to avoid double
-            // residency of both full F32 payloads.
-            const auto& shard = rom.shards()[entry.shardIndex];
-            const uint64_t tensorBytes = entry.byteSize();
-            if (shard.dataOffset <= UINT64_MAX - entry.offset)
-                rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
-                    shard.dataOffset + entry.offset, tensorBytes);
-        }
-    }
     if (compressedF32Weights.IsRawFallback(cacheKey)) {
         const uint64_t byteOffset = firstElement * sizeof(float);
         const uint64_t byteCount = elementCount * sizeof(float);
