@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <vector>
 
 #include "brutal_gzip.h"
@@ -38,11 +39,9 @@ using Bytes = std::vector<uint8_t>;
  */
 inline Bytes compress(const Bytes& in)
 {
-    if (in.empty()) return {};
-
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(
-        reinterpret_cast<const void*>(in.data()),
+        in.empty() ? nullptr : reinterpret_cast<const void*>(in.data()),
         in.size(),
         &packedSz
     );
@@ -61,7 +60,7 @@ inline Bytes compress(const Bytes& in)
 #if !defined(QT_CORE_LIB)
 inline Bytes compress(const void* data, std::size_t size)
 {
-    if (!data || size == 0) return {};
+    if (!data && size != 0) return {};
 
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(data, size, &packedSz);
@@ -84,8 +83,12 @@ inline Bytes compress(const void* data, std::size_t size)
  */
 inline std::size_t maxCompressedSize(std::size_t rawSize)
 {
-    std::size_t blockCount = (rawSize + 65534) / 65535;
-    return 10 + (blockCount * 5) + rawSize + 8;
+    constexpr std::size_t overhead = 18;
+    const std::size_t limit = (std::numeric_limits<std::size_t>::max)();
+    if (rawSize > limit - overhead) return limit;
+    const std::size_t blockCount = rawSize / 65535 + (rawSize % 65535 != 0 ? 1 : 0);
+    if (blockCount > (limit - overhead - rawSize) / 5) return limit;
+    return rawSize + blockCount * 5 + overhead;
 }
 
 /**
@@ -95,35 +98,47 @@ inline std::size_t maxCompressedSize(std::size_t rawSize)
  * instead of reading past the end of the buffer (the previous implementation
  * read data[header_size + 1] and walked NUL terminators without any bounds).
  */
+inline uint32_t gzipCrc32(const uint8_t* data, std::size_t len)
+{
+    uint32_t crc = 0xffffffffu;
+    for (std::size_t i = 0; i < len; ++i) {
+        crc ^= data[i];
+        for (unsigned bit = 0; bit < 8; ++bit)
+            crc = (crc >> 1) ^ (0xedb88320u & (0u - (crc & 1u)));
+    }
+    return ~crc;
+}
+
 inline std::size_t gzipHeaderSize(const uint8_t* data, std::size_t len)
 {
     if (!data || len < 10) return 0;
-    if (data[0] != 0x1f || data[1] != 0x8b) return 0;   // bad magic
-    if (data[2] != 8) return 0;                          // not DEFLATE
+    if (data[0] != 0x1f || data[1] != 0x8b) return 0;
+    if (data[2] != 8) return 0;
 
     const uint8_t flg = data[3];
+    if (flg & 0xe0) return 0; // RFC 1952 reserved bits must be zero.
     std::size_t pos = 10;
 
-    if (flg & 0x04) {                                    // FEXTRA
-        if (pos + 2 > len) return 0;
+    if (flg & 0x04) {
+        if (len - pos < 2) return 0;
         const std::size_t xlen = static_cast<std::size_t>(data[pos]) |
                                  (static_cast<std::size_t>(data[pos + 1]) << 8);
         pos += 2;
-        if (xlen > len - pos) return 0;                  // bounds, no overflow
+        if (xlen > len - pos) return 0;
         pos += xlen;
     }
-    if (flg & 0x08) {                                    // FNAME
+    if (flg & 0x08) {
         while (pos < len && data[pos] != 0) ++pos;
-        if (pos >= len) return 0;                        // unterminated
+        if (pos >= len) return 0;
         ++pos;
     }
-    if (flg & 0x10) {                                    // FCOMMENT
+    if (flg & 0x10) {
         while (pos < len && data[pos] != 0) ++pos;
-        if (pos >= len) return 0;                        // unterminated
+        if (pos >= len) return 0;
         ++pos;
     }
-    if (flg & 0x02) {                                    // FHCRC
-        if (pos + 2 > len) return 0;
+    if (flg & 0x02) {
+        if (len - pos < 2) return 0;
         pos += 2;
     }
     return pos;
@@ -138,7 +153,8 @@ inline std::size_t gzipHeaderSize(const uint8_t* data, std::size_t len)
  * stream (bad header, non-stored block, truncated deflate data, missing
  * 8-byte gzip trailer).
  */
-inline Bytes decompress(const Bytes& compressed)
+inline Bytes decompress(const Bytes& compressed,
+                       std::size_t maxOutputBytes = (std::size_t(1) << 34))
 {
     if (compressed.empty()) return {};
 
@@ -147,6 +163,15 @@ inline Bytes decompress(const Bytes& compressed)
 
     const std::size_t header = gzipHeaderSize(data, len);
     if (header == 0) return {};
+
+    // Validate optional header CRC16 (the low 16 bits of the header CRC32).
+    if (data[3] & 0x02) {
+        const std::uint16_t expectedHeaderCrc =
+            static_cast<std::uint16_t>(data[header - 2]) |
+            static_cast<std::uint16_t>(static_cast<std::uint16_t>(data[header - 1]) << 8);
+        if (static_cast<std::uint16_t>(gzipCrc32(data, header - 2)) != expectedHeaderCrc)
+            return {};
+    }
 
     std::size_t pos = header;
     Bytes out;
@@ -157,14 +182,18 @@ inline Bytes decompress(const Bytes& compressed)
         if (blockHeader & 0x06) return {};               // not BTYPE=stored
 
         // Stored blocks skip to the next byte boundary.
-        if (pos + 4 > len) return {};                    // truncated LEN/NLEN
+        if (len - pos < 4) return {};                    // truncated LEN/NLEN
         const std::size_t blockLen = static_cast<std::size_t>(data[pos]) |
                                      (static_cast<std::size_t>(data[pos + 1]) << 8);
+        const std::size_t inverseLen = static_cast<std::size_t>(data[pos + 2]) |
+                                       (static_cast<std::size_t>(data[pos + 3]) << 8);
+        if ((blockLen ^ inverseLen) != 0xffffu) return {};
         pos += 4;
-        if (blockLen == 0) {
-            // Empty final block: no payload, trailer follows immediately.
-        } else {
-            if (blockLen > len - pos) return {};         // truncated payload
+        if (blockLen != 0) {
+            if (blockLen > len - pos) return {};
+            if (out.size() > maxOutputBytes ||
+                blockLen > maxOutputBytes - out.size() ||
+                blockLen > out.max_size() - out.size()) return {};
             const std::size_t oldSize = out.size();
             out.resize(oldSize + blockLen);
             std::memcpy(out.data() + oldSize, data + pos, blockLen);
@@ -173,14 +202,20 @@ inline Bytes decompress(const Bytes& compressed)
         if (blockHeader & 0x01) break;                   // BFINAL
     }
 
-    // Gzip trailer: CRC32 + ISIZE (8 bytes).
-    if (pos + 8 > len) return {};
-
-    const std::size_t isize = static_cast<std::size_t>(data[pos + 4]) |
-                              (static_cast<std::size_t>(data[pos + 5]) << 8) |
-                              (static_cast<std::size_t>(data[pos + 6]) << 16) |
-                              (static_cast<std::size_t>(data[pos + 7]) << 24);
-    if (isize != out.size()) return {};                  // corrupt ISIZE
+    // A single gzip member must end exactly after its eight-byte trailer.
+    if (len - pos != 8) return {};
+    const uint32_t expectedCrc =
+        static_cast<uint32_t>(data[pos]) |
+        (static_cast<uint32_t>(data[pos + 1]) << 8) |
+        (static_cast<uint32_t>(data[pos + 2]) << 16) |
+        (static_cast<uint32_t>(data[pos + 3]) << 24);
+    const uint32_t expectedSize =
+        static_cast<uint32_t>(data[pos + 4]) |
+        (static_cast<uint32_t>(data[pos + 5]) << 8) |
+        (static_cast<uint32_t>(data[pos + 6]) << 16) |
+        (static_cast<uint32_t>(data[pos + 7]) << 24);
+    if (gzipCrc32(out.data(), out.size()) != expectedCrc) return {};
+    if (static_cast<uint32_t>(out.size()) != expectedSize) return {};
 
     return out;
 }
@@ -194,8 +229,6 @@ inline Bytes decompress(const Bytes& compressed)
  */
 inline QByteArray compress(const QByteArray& in)
 {
-    if (in.isEmpty()) return {};
-
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(
         reinterpret_cast<const void*>(in.constData()),
@@ -204,6 +237,10 @@ inline QByteArray compress(const QByteArray& in)
     );
 
     if (!p) return {};  // malloc failure
+    if (packedSz > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+        std::free(p);
+        return {};
+    }
 
     QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
     std::free(p);
@@ -216,7 +253,7 @@ inline QByteArray compress(const QByteArray& in)
 #if defined(QT_CORE_LIB) || defined(Q_QDOC)
 inline QByteArray compress(const void* data, std::size_t size)
 {
-    if (!data || size == 0) return {};
+    if (!data && size != 0) return {};
 
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(data, size, &packedSz);
