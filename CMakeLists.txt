@@ -470,12 +470,17 @@ target_compile_features(rawrxd_compression_core PUBLIC cxx_std_17)
 if(ZLIB_FOUND AND TARGET ZLIB::ZLIB)
     target_link_libraries(rawrxd_compression_core PUBLIC ZLIB::ZLIB)
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
-elseif(ZLIB_FOUND AND ZLIB_LIBRARIES AND ZLIB_INCLUDE_DIRS)
+elseif(ZLIB_FOUND AND ZLIB_LIBRARIES AND (ZLIB_INCLUDE_DIRS OR ZLIB_INCLUDE_DIR))
     # Older FindZLIB providers can report FOUND without exporting an imported
-    # target. Honor their actual link/include results instead of silently
+    # target, and some expose only the singular ZLIB_INCLUDE_DIR variable.
+    # Honor the provider's actual link/include results instead of silently
     # compiling the unsupported codec branch.
     target_link_libraries(rawrxd_compression_core PUBLIC ${ZLIB_LIBRARIES})
-    target_include_directories(rawrxd_compression_core PUBLIC ${ZLIB_INCLUDE_DIRS})
+    if(ZLIB_INCLUDE_DIRS)
+        target_include_directories(rawrxd_compression_core PUBLIC ${ZLIB_INCLUDE_DIRS})
+    else()
+        target_include_directories(rawrxd_compression_core PUBLIC ${ZLIB_INCLUDE_DIR})
+    endif()
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
 elseif(TARGET zlib)
     # FetchContent fallback (FETCHCONTENT_ZLIB=ON) defines a plain `zlib` target
@@ -487,8 +492,10 @@ elseif(TARGET zlib)
         "${CMAKE_BINARY_DIR}/_deps/zlib-src"
         "${CMAKE_BINARY_DIR}/_deps/zlib-build")
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
-    elseif(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h" OR
-           EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zconf.h")
+    elseif((EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zlib.h" AND
+            EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h") OR
+           (EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zlib.h" AND
+            EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zconf.h"))
         # Local zlib-src fallback. zconf.h is generated beside zlib.h, so a tree
         # holding zlib.h without zconf.h cannot compile; requiring BOTH stops the
         # branch from claiming a zlib provider it cannot build. One resolved
