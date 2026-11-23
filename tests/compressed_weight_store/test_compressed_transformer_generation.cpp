@@ -311,7 +311,7 @@ int main() {
             converted.push_back(static_cast<std::uint8_t>(bf16 >> 8));
         }
         tensor.bytes.swap(converted);
-        tensor.type = 30u; // GGML_TYPE_BF16
+        tensor.type = rawrxd::compression::GGML_TYPE_BF16;
     }
     auto bf16Tensors = descriptors(bf16Owned);
     rawrxd::compression::CompressedGGUFModel bf16Model(storeOptions);
