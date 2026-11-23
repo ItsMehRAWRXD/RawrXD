@@ -252,20 +252,28 @@ int main(int argc,char** argv) {
                 converted[i]=std::move(r.payload);outputTypes[i]=1;++changed;
             }
         }
+        // Preserve original tensor ordering by physical offset, even when
+        // the GGUF descriptor table uses a different order.
         U cursor=0;
-        for(auto& t:ts) {
-            cursor=align(cursor,alignment);t.newOffset=cursor;
-            size_t i=size_t(&t-ts.data());
+        for(size_t i:order) {
+            auto& t=ts[i];
+            cursor=align(cursor,alignment);
+            t.newOffset=cursor;
             cursor=add(cursor,converted[i].empty()?t.bytes:converted[i].size());
+        }
+        for(size_t i=0;i<ts.size();++i) {
+            const auto& t=ts[i];
             write(out,t.name.size(),8);out.write(t.name.data(),std::streamsize(t.name.size()));
             write(out,t.dims.size(),4);for(U d:t.dims)write(out,d,8);
             write(out,outputTypes[i],4);write(out,t.newOffset,8);
         }
         U outStart=align(U(out.tellp()),alignment);
         while(U(out.tellp())<outStart)out.put(0);
-        for(size_t i=0;i<ts.size();++i) {
+        for(size_t i:order) {
             const auto& t=ts[i];
-            while(U(out.tellp())<add(outStart,t.newOffset))out.put(0);
+            U destination=add(outStart,t.newOffset);
+            if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
+            while(U(out.tellp())<destination)out.put(0);
             if(!converted[i].empty())out.write(reinterpret_cast<const char*>(converted[i].data()),std::streamsize(converted[i].size()));
             else {seek(in,add(dataStart,t.offset));copy(in,out,t.bytes);}
         }
