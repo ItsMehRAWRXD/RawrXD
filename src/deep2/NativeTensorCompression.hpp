@@ -217,6 +217,43 @@ inline Result EncodeAdaptiveF32(const float* values,size_t count,float max_abs_e
         throw std::length_error("F32 tensor size overflow");
     return Encode(values,count*sizeof(float),true,max_abs_error,true);
 }
+
+// Build a uniform device-consumable 16-bit F32 representation directly from
+// the mapped source. Unlike EncodeAdaptiveF32 this intentionally does not
+// select RLE/LZ4: the Vulkan QGEMV shader needs a fixed two-byte stride for
+// every element. F16 is preferred; BF16 is the wider-exponent fallback.
+inline bool EncodeUniform16BitF32(const float* values, size_t count,
+                                  float max_abs_error, Encoding& encoding,
+                                  std::vector<uint8_t>& packed) {
+    packed.clear();
+    if ((count && !values) || !std::isfinite(max_abs_error) ||
+        max_abs_error < 0.0f ||
+        count > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+        return false;
+    auto tryEncoding = [&](Encoding candidate) {
+        std::vector<uint8_t> bytes(count * sizeof(uint16_t));
+        for (size_t i = 0; i < count; ++i) {
+            const float value = values[i];
+            const uint32_t bits = Bits(value);
+            if ((bits & 0x7f800000u) == 0x7f800000u) return false;
+            const uint16_t h = candidate == Encoding::F16
+                ? ToHalf(value) : ToBFloat16(value);
+            const float reconstructed = candidate == Encoding::F16
+                ? FromHalf(h) : FromBFloat16(h);
+            if (!std::isfinite(reconstructed) ||
+                std::fabs(reconstructed - value) > max_abs_error)
+                return false;
+            bytes[i * 2] = static_cast<uint8_t>(h);
+            bytes[i * 2 + 1] = static_cast<uint8_t>(h >> 8);
+        }
+        packed.swap(bytes);
+        encoding = candidate;
+        return true;
+    };
+    if (tryEncoding(Encoding::F16)) return true;
+    packed.clear();
+    return tryEncoding(Encoding::BF16);
+}
 // Decode directly into caller-owned storage. This avoids an intermediate
 // allocation when a runtime must materialize one tile/row into an existing
 // scratch buffer. The destination is unchanged on all preflight failures.
