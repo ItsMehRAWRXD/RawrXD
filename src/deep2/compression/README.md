@@ -86,3 +86,21 @@ limits, oversized single rows, invalid geometry, and overflow. This is a
 bounded staging implementation for the existing GEMV path; it is not yet a
 claim that all Vulkan operators or every tensor consumer use block-resident
 weights.
+
+## Q4_1, Q5_0 and Q5_1 compressed-resident CPU kernels
+
+The bounded CPU matvec reader now also understands the GGML block layouts for
+Q4_1 (20 bytes per 32 values), Q5_0 (22 bytes), and Q5_1 (24 bytes):
+
+- Q4_1 reads binary16 scale and minimum followed by 16 packed nibble bytes.
+- Q5_0 reads binary16 scale, four high-bit bytes, and 16 packed nibble bytes;
+  it reconstructs signed 5-bit values with the GGML -16 offset.
+- Q5_1 reads binary16 scale and minimum, four high-bit bytes, and 16 packed
+  nibble bytes; it reconstructs affine unsigned 5-bit values.
+- The stored GGML type IDs (3, 6 and 7) are checked before dispatch.
+- The packed source bytes remain unchanged in compressed residency.
+
+A dedicated CTest exercises the two nibble lanes, Q5 high-bit extraction,
+scale/minimum application, and exact stored-byte roundtrips. This extends the
+standalone CPU resident matvec adapter; it does not yet route every production
+Deep2 operator or Vulkan shader for these types through the compressed reader.
