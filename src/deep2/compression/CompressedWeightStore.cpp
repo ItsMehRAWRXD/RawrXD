@@ -71,38 +71,84 @@ bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::si
    return true;
   },const_cast<void*>(bytes),error,ggml_type,require_savings,max_encoded_bytes);
 }
-bool CompressedWeightStore::addTensorFromReader(std::string name,std::size_t size,TensorReadCallback reader,void* context,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
+bool CompressedWeightStore::addTensorFromReader(
+    std::string name,std::size_t size,TensorReadCallback reader,void* context,
+    std::string* error,std::uint32_t ggml_type,bool require_savings,
+    std::size_t max_encoded_bytes) {
  if(name.empty()||!reader){if(error)*error="name and tensor reader are required";return false;}
- if(size && size > std::numeric_limits<std::size_t>::max() - (block_bytes_ - 1)){if(error)*error="tensor size cannot be safely partitioned";return false;}
- std::lock_guard<std::mutex> lock(mutex_);
- if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
- const auto resident=static_cast<std::size_t>(counters_.compressed_bytes);
- if(resident>encoded_residency_budget_){if(error)*error="encoded residency accounting exceeds budget";return false;}
- const auto admission_limit=std::min(max_encoded_bytes,encoded_residency_budget_-resident);
- Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
- std::size_t encoded_size=0;
+ if(size && size > std::numeric_limits<std::size_t>::max()-(block_bytes_-1)){
+  if(error)*error="tensor size cannot be safely partitioned";return false;
+ }
+
+ // Reserve an admission ceiling under lock, then perform potentially slow file
+ // reads and codec work without blocking inference readers or other admissions.
+ std::size_t admissionSnapshot=0;
+ {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if(tensors_.find(name)!=tensors_.end()){
+   if(error)*error="tensor already exists";return false;
+  }
+  const auto resident=static_cast<std::size_t>(counters_.compressed_bytes);
+  if(resident>encoded_residency_budget_){
+   if(error)*error="encoded residency accounting exceeds budget";return false;
+  }
+  admissionSnapshot=std::min(max_encoded_bytes,encoded_residency_budget_-resident);
+ }
+
+ Tensor tensor;
+ tensor.raw_size=size;
+ tensor.ggml_type=ggml_type;
+ std::size_t encodedSize=0;
  try {
   std::vector<std::uint8_t> scratch(block_bytes_);
-  for(std::size_t off=0;off<size;){
-   const auto take=std::min(block_bytes_,size-off);
-   if(!reader(context,off,scratch.data(),take)){if(error)*error="tensor reader failed before completing requested range";return false;}
-   EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(scratch.data(),take);
-   b.payload=encode(scratch.data(),take,codec_,b.stored_raw);
-   if(encoded_size>admission_limit||b.payload.size()>admission_limit-encoded_size){if(error)*error="encoded tensor exceeds residency budget";return false;}
-   encoded_size+=b.payload.size();tensor.blocks.emplace_back(std::move(b));off+=take;
+  for(std::size_t offset=0;offset<size;) {
+   const auto count=std::min(block_bytes_,size-offset);
+   if(!reader(context,offset,scratch.data(),count)){
+    if(error)*error="tensor reader failed before completing requested range";
+    return false;
+   }
+   EncodedBlock block;
+   block.raw_size=static_cast<std::uint32_t>(count);
+   block.checksum=crc32(scratch.data(),count);
+   block.payload=encode(scratch.data(),count,codec_,block.stored_raw);
+   if(encodedSize>admissionSnapshot||
+      block.payload.size()>admissionSnapshot-encodedSize){
+    if(error)*error="encoded tensor exceeds residency budget";
+    return false;
+   }
+   encodedSize+=block.payload.size();
+   tensor.blocks.emplace_back(std::move(block));
+   offset+=count;
   }
-  if(require_savings&&encoded_size>=size){if(error)*error="compression did not reduce tensor size";return false;}
-  if(encoded_size>std::numeric_limits<std::uint64_t>::max()-counters_.compressed_bytes ||
-     size>std::numeric_limits<std::uint64_t>::max()-counters_.raw_bytes ||
+  if(require_savings&&encodedSize>=size){
+   if(error)*error="compression did not reduce tensor size";
+   return false;
+  }
+
+  // Publish atomically. Re-check the shared encoded budget because another
+  // writer may have committed while this tensor was being encoded.
+  std::lock_guard<std::mutex> lock(mutex_);
+  if(tensors_.find(name)!=tensors_.end()){
+   if(error)*error="tensor publication conflict";return false;
+  }
+  const auto resident=static_cast<std::size_t>(counters_.compressed_bytes);
+  if(resident>encoded_residency_budget_||
+     encodedSize>std::min(max_encoded_bytes,encoded_residency_budget_-resident)){
+   if(error)*error="encoded residency budget changed during admission";
+   return false;
+  }
+  if(encodedSize>std::numeric_limits<std::uint64_t>::max()-counters_.compressed_bytes||
+     size>std::numeric_limits<std::uint64_t>::max()-counters_.raw_bytes||
      tensor.blocks.size()>std::numeric_limits<std::uint64_t>::max()-counters_.blocks){
-   if(error)*error="compressed residency counters would overflow";return false;
+   if(error)*error="compressed residency counters would overflow";
+   return false;
   }
-  const std::size_t block_count=tensor.blocks.size();
+  const std::size_t blockCount=tensor.blocks.size();
   const auto inserted=tensors_.emplace(std::move(name),std::move(tensor));
   if(!inserted.second){if(error)*error="tensor publication conflict";return false;}
   counters_.raw_bytes+=size;
-  counters_.compressed_bytes+=encoded_size;
-  counters_.blocks+=block_count;
+  counters_.compressed_bytes+=encodedSize;
+  counters_.blocks+=blockCount;
   ++counters_.tensors;
   return true;
  } catch(const std::bad_alloc&) {
