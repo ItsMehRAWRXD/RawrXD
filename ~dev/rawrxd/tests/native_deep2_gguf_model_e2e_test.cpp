@@ -101,7 +101,10 @@ TensorDef makeQ8Embedding() {
             tensor.bytes[blockOffset] = 0x00;
             tensor.bytes[blockOffset + 1] = 0x3C; // F16(1.0)
         }
-        tensor.bytes[row * kQ8RowBytes + block * 34 + 2 + inBlock] = 1;
+        if (dim != 1 || row == 1) {
+            tensor.bytes[row * kQ8RowBytes + block * 34 + 2 + inBlock] =
+                row == 1 ? 127 : 1;
+        }
     }
     return tensor;
 }
