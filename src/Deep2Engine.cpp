@@ -900,7 +900,11 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 (qkv->type == deep2::TensorType::F32 ||
                  qkv->type == deep2::TensorType::F16 ||
                  qkv->type == deep2::TensorType::Q4_0 ||
-                 qkv->type == deep2::TensorType::Q8_0);
+                 qkv->type == deep2::TensorType::Q4_1 ||
+                 qkv->type == deep2::TensorType::Q5_0 ||
+                 qkv->type == deep2::TensorType::Q5_1 ||
+                 qkv->type == deep2::TensorType::Q8_0 ||
+                 qkv->type == deep2::TensorType::Q8_1);
             if (qkvResident) {
                 qkvCols = static_cast<size_t>(qkv->dims[0]);
                 qkvRows = static_cast<size_t>(qkv->dims[1]);
@@ -949,7 +953,9 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
 
             const auto residentType = [](deep2::TensorType type) {
                 return type == deep2::TensorType::F32 || type == deep2::TensorType::F16 ||
-                       type == deep2::TensorType::Q4_0 || type == deep2::TensorType::Q8_0;
+                       type == deep2::TensorType::Q4_0 || type == deep2::TensorType::Q4_1 ||
+                       type == deep2::TensorType::Q5_0 || type == deep2::TensorType::Q5_1 ||
+                       type == deep2::TensorType::Q8_0 || type == deep2::TensorType::Q8_1;
             };
             const bool upResident = upEntry->dims.size() == 2 && residentType(upEntry->type);
             const bool downResident = downEntry->dims.size() == 2 && residentType(downEntry->type);
