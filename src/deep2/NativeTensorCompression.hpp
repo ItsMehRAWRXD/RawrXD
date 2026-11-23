@@ -205,7 +205,8 @@ public:
     // is never materialized in an intermediate allocation.
     template<class Reader>
     static ChunkedF32Storage BuildFromReader(size_t count,float max_abs_error,
-                                             Reader&& reader,size_t chunk_elements=4096) {
+                                             Reader&& reader,size_t chunk_elements=4096,
+                                             bool require_first_chunk_savings=false) {
         if(!chunk_elements) throw std::invalid_argument("zero chunk size");
         if(count>std::numeric_limits<size_t>::max()/sizeof(float))
             throw std::length_error("F32 tensor size overflow");
@@ -219,7 +220,14 @@ public:
             tile.resize(n);
             if(!reader(offset,n,tile.data()))
                 throw std::runtime_error("F32 tensor source read failed");
-            result.chunks_.push_back(EncodeAdaptiveF32(tile.data(),n,max_abs_error));
+            Result encoded = EncodeAdaptiveF32(tile.data(),n,max_abs_error);
+            // The residency cache can reject obviously non-compressible tensors
+            // after the first bounded read, avoiding a full-model scan before
+            // falling back to direct raw tile reads.
+            if(require_first_chunk_savings && offset==0 &&
+               encoded.payload.size()>=n*sizeof(float))
+                throw std::runtime_error("first F32 chunk has no smaller safe encoding");
+            result.chunks_.push_back(std::move(encoded));
             offset+=n;
         }
         return result;
