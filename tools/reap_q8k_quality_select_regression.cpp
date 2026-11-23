@@ -24,7 +24,9 @@ int main() {
         ok=ConvertQ8KToQ8_0(in,out,0,292);
     }
     if(ok) {
-        std::ifstream in(dst,std::ios::binary);
+        std::ifstream in(dst,std::ios::binary|std::ios::ate);
+        ok &= in && in.tellg()==std::streamoff(272);
+        in.seekg(0);
         double maxError=0;
         bool sawNegative128=false;
         for(unsigned group=0;group<8;++group) {
