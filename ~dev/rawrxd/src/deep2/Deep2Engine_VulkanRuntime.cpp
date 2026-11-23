@@ -114,25 +114,23 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
             storedBytes >= budgetBytes)
             return;
         const size_t remaining = budgetBytes - storedBytes;
-        const bool hadCompressedBacking = static_cast<bool>(tensor.compressedF32);
-        // Avoid a candidate whose temporary raw-source bound is far beyond
-        // the remaining compressed-residency allowance.
-        if (!hadCompressedBacking &&
-            remaining <= std::numeric_limits<size_t>::max() / 8u &&
-            tensor.sizeBytes > remaining * 8u)
-            return;
-        if (!hadCompressedBacking &&
-            !tensor.EnableCompressedF32(tolerance, 4096u, remaining)) {
+        if (!tensor.sizeBytes || tensor.sizeBytes % sizeof(float) != 0 ||
+            tensor.cols > std::numeric_limits<size_t>::max() / tensor.rows ||
+            tensor.rows * tensor.cols != tensor.sizeBytes / sizeof(float)) {
             ++rejectedTensors;
             return;
         }
+        const size_t expectedBytes = tensor.sizeBytes / 2u;
+        if (expectedBytes > remaining) return;
+        // This encoder intentionally bypasses RLE/LZ4 selection. The Vulkan
+        // QGEMV descriptor requires a fixed 16-bit stride, so every source
+        // element must satisfy the configured F16/BF16 error bound.
         RawrXD::TensorCompression::Encoding encoding{};
         std::vector<uint8_t> packed;
-        const size_t expectedBytes = tensor.sizeBytes / 2u;
-        if (!tensor.compressedF32 ||
-            !tensor.compressedF32->ExportUniform16Bit(encoding, packed) ||
+        if (!RawrXD::TensorCompression::EncodeUniform16BitF32(
+                static_cast<const float*>(tensor.data),
+                tensor.sizeBytes / sizeof(float), tolerance, encoding, packed) ||
             packed.size() != expectedBytes || packed.size() > remaining) {
-            if (!hadCompressedBacking) tensor.compressedF32.reset();
             ++rejectedTensors;
             return;
         }
