@@ -58,8 +58,11 @@ void ResidentMatvec(const Reader& weights, ResidentWeightType type,
         throw std::invalid_argument("invalid matvec arguments");
     const std::size_t rowBytes = ResidentRowBytes(type, cols);
     if (rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
-        weights.size() < rows * rowBytes)
-        throw std::out_of_range("resident matrix extent exceeds storage");
+        weights.size() != rows * rowBytes)
+        throw std::out_of_range("resident matrix extent differs from storage");
+    for (std::size_t i = 0; i < cols; ++i)
+        if (!std::isfinite(x[i]))
+            throw std::domain_error("nonfinite matvec activation");
     const std::size_t elementBytes = type == ResidentWeightType::Q8_0 ? 34 :
                                      type == ResidentWeightType::F16 ? 2 : 4;
     const std::size_t valuesPerElement = type == ResidentWeightType::Q8_0 ? 32 : 1;
@@ -93,6 +96,9 @@ void ResidentMatvec(const Reader& weights, ResidentWeightType type,
             }
             offset += bytes;
         }
+        if (!std::isfinite(sum) ||
+            std::fabs(sum) > std::numeric_limits<float>::max())
+            throw std::overflow_error("nonfinite resident matvec result");
         y[row] = static_cast<float>(sum);
     }
 }
