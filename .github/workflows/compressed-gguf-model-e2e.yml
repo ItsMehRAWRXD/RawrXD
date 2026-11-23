@@ -69,6 +69,8 @@ jobs:
           ./streaming_tile_residency
           "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_streaming_gemv_parity.cpp -o streaming_gemv_parity
           ./streaming_gemv_parity
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_streaming_multitoken_decode.cpp -o streaming_multitoken_decode
+          ./streaming_multitoken_decode
 
       - name: Compile and run Qt/zlib codec regression (Linux)
         if: runner.os == 'Linux'
@@ -110,7 +112,8 @@ jobs:
             @{ Name = 'stored_tensor_matvec'; Source = 'tests/compressed_weight_store/test_stored_tensor_matvec.cpp' },
             @{ Name = 'gguf_compressed_residency'; Source = 'tests/compressed_weight_store/test_gguf_compressed_residency.cpp' },
             @{ Name = 'streaming_tile_residency'; Source = 'tests/compressed_weight_store/test_streaming_tile_residency.cpp' },
-            @{ Name = 'streaming_gemv_parity'; Source = 'tests/compressed_weight_store/test_streaming_gemv_parity.cpp' }
+            @{ Name = 'streaming_gemv_parity'; Source = 'tests/compressed_weight_store/test_streaming_gemv_parity.cpp' },
+            @{ Name = 'streaming_multitoken_decode'; Source = 'tests/compressed_weight_store/test_streaming_multitoken_decode.cpp' }
           )
           foreach ($case in $cases) {
             & cl.exe @common $store $case.Source ("/Fe:" + $case.Name + ".exe")
