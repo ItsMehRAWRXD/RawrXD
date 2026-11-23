@@ -15,7 +15,7 @@ int main() {
         WriteU64(out,32);WriteU64(out,1);WriteU32(out,9);WriteU64(out,0);
         PadTo(out,32);
         for(int block=0;block<1;++block) {
-            WriteU32(out,0x3f800000u);WriteU32(out,0u);
+            WriteU32(out,0x3f800000u);WriteU32(out,0xc1800000u);
             for(int i=0;i<32;++i)out.put(static_cast<char>(i-16));
         }
     }
