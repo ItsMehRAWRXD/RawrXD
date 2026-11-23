@@ -50,6 +50,7 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 
 void Deep2Engine::Shutdown() {
     compressedF32Weights.Clear();
+    compressedEncodedWeights.Clear();
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
