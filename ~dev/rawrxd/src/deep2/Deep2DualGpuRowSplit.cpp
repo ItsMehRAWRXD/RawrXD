@@ -340,6 +340,9 @@ bool Deep2RunDualGpuColumnSplitBatch4(
     const float* inputBatch,float* outputBatch,
     uint32_t batch,uint64_t epoch)
 {
+    auto apiLease0 = g0.AcquireApiLock();
+    auto apiLease1 = g1.AcquireApiLock();
+
     if(!inputBatch||!outputBatch||!batch||batch>4) return false;
     const Q4KColumnSlices* s=q4kColumnSlices(wt);
     if(!s) return false;
@@ -406,6 +409,9 @@ bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
     const WeightTensor* const* weights,float* const* outputs,size_t weightCount,
     const float* inputBatch,uint32_t batch,uint64_t epoch)
 {
+    auto apiLease0 = g0.AcquireApiLock();
+    auto apiLease1 = g1.AcquireApiLock();
+
     if(!weights||!outputs||!inputBatch||weightCount<2||weightCount>3||
        !batch||batch>4) return false;
     RowSplitPlan plans[3];
@@ -740,6 +746,9 @@ bool Deep2RunDualGpuRowSplit(
     const WeightTensor& wt,const float* input,float* output,
     uint64_t epoch,RowSplitReceipt* receipt)
 {
+    auto apiLease0 = g0.AcquireApiLock();
+    auto apiLease1 = g1.AcquireApiLock();
+
     const auto totalStart = std::chrono::steady_clock::now();
     if(receipt) *receipt={};
     if(!input||!output||wt.rows<2||!wt.cols||!supportedGpuType(wt.type))
@@ -887,6 +896,9 @@ bool Deep2RunDualGpuRowSplitGroup(
     const float* input,uint32_t inputCount,uint64_t epoch,
     RowSplitReceipt* receipt)
 {
+    auto apiLease0 = g0.AcquireApiLock();
+    auto apiLease1 = g1.AcquireApiLock();
+
     const auto totalStart = std::chrono::steady_clock::now();
     if(receipt) *receipt={};
     if(!weights||!outputs||!input||!inputCount||count<2||count>3)
@@ -1064,6 +1076,9 @@ bool Deep2RunDualGpuRowSplitBatch4(
     uint32_t batch,uint64_t epoch,
     RowSplitReceipt* receipt)
 {
+    auto apiLease0 = g0.AcquireApiLock();
+    auto apiLease1 = g1.AcquireApiLock();
+
     if(receipt) *receipt={};
     if(!inputBatch||!outputBatch||batch==0||batch>4||
        wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||
@@ -1152,6 +1167,9 @@ bool Deep2RunDualGpuRowSplitBatchTop1(
     const float* inputBatch,uint32_t batch,
     uint32_t* outToken,float* outValue,uint64_t epoch)
 {
+    auto apiLease0 = g0.AcquireApiLock();
+    auto apiLease1 = g1.AcquireApiLock();
+
     if(!inputBatch||!outToken||!outValue||!batch||batch>4||
        wt.type!=(int)GGMLType::GGML_TYPE_Q4_K) return false;
     RowSplitPlan p=cachedThroughputSplit(wt,g0,g1);
@@ -1204,6 +1222,9 @@ bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
     VulkanCompute::DeviceBuf& primaryOutput,
     uint32_t batch,uint64_t epoch)
 {
+    auto apiLease0 = primary.AcquireApiLock();
+    auto apiLease1 = secondary.AcquireApiLock();
+
     if(!inputBatch||!primaryOutput||!batch||batch>4) return false;
     const Q4KColumnSlices* s=q4kColumnSlices(wt);
     if(!s) return false;
@@ -1267,6 +1288,9 @@ bool Deep2RunDualGpuRowSplitBatch4PrimaryAssembled(
     uint32_t batch,uint64_t epoch,
     VulkanCompute::DeviceBuf** fullOutput)
 {
+    auto apiLease0 = primary.AcquireApiLock();
+    auto apiLease1 = secondary.AcquireApiLock();
+
     if(!inputBatch||!batch||batch>4) return false;
     const CachedDualRowPlan* cp=
         Deep2GetCachedDualRowPlan(wt,primary,secondary);
@@ -1338,6 +1362,9 @@ bool Deep2RunDualGpuRowSplitBatch4Async(
     float* outputBatch,uint32_t batch,uint64_t epoch,
     uint64_t* overlapNs,uint64_t* wallNs)
 {
+    auto apiLease0 = g0.AcquireApiLock();
+    auto apiLease1 = g1.AcquireApiLock();
+
     if(overlapNs) *overlapNs=0;
     if(wallNs) *wallNs=0;
     if(!inputBatch||!outputBatch||!batch||batch>4) return false;
