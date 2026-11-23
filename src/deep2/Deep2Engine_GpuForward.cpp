@@ -128,23 +128,6 @@ const float* ensureF32(
 }
 
 
-float halfToFloat(uint16_t h) noexcept {
-    const float sign = (h & 0x8000u) ? -1.0f : 1.0f;
-    const uint16_t exponent = static_cast<uint16_t>((h >> 10) & 0x1fu);
-    const uint16_t mantissa = static_cast<uint16_t>(h & 0x03ffu);
-    if (exponent == 0) {
-        if (mantissa == 0) return std::copysign(0.0f, sign);
-        return sign * std::ldexp(static_cast<float>(mantissa), -24);
-    }
-    if (exponent == 0x1fu) {
-        if (mantissa == 0) return std::copysign(
-            std::numeric_limits<float>::infinity(), sign);
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-    return sign * std::ldexp(
-        static_cast<float>(1024u + mantissa),
-        static_cast<int>(exponent) - 25);
-}
 
 bool denseLayerReady(const LayerWeights& lw) noexcept {
     const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
@@ -529,7 +512,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                                 std::memcpy(&half,
                                             tile.bytes.data() + i * sizeof(uint16_t),
                                             sizeof(half));
-                                f32Tile[i] = halfToFloat(half);
+                                f32Tile[i] = rawrxd::compression::DecodeHalfToFloat(half);
                             }
                         }
                         dispatched = gpu->DispatchGemvDevice(
