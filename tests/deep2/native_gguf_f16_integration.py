@@ -320,7 +320,6 @@ def run(binary):
         # sixteen int16 subgroup sums (292 bytes total).
         kvalues=[((i%31)-15)/8.0 for i in range(256)]
         kraw=struct.pack("<"+"d"*256,*kvalues)
-        kh=bytearray(header if False else b"")
         kmeta=S("general.architecture")+U32(8)+S("llama")
         kmeta+=S("general.alignment")+U32(4)+U32(ALIGN)
         khdr=b"GGUF"+U32(3)+U64(1)+U64(2)+kmeta
