@@ -628,7 +628,7 @@ int main(int argc,char** argv) {
                     if(!encodeQ5Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q5 preflight mismatch");
                     buffered.insert(buffered.end(),encoded,encoded+22);
-                    if(buffered.size()+22>65536) {
+                    if(buffered.size()>=65536-22) {
                         out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
                         buffered.clear();
                     }
@@ -649,7 +649,7 @@ int main(int argc,char** argv) {
                     if(!encodeQ4Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q4 preflight mismatch");
                     buffered.insert(buffered.end(),encoded,encoded+18);
-                    if(buffered.size()+18>65536) {
+                    if(buffered.size()>=65536-18) {
                         out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
                         buffered.clear();
                     }
@@ -670,7 +670,7 @@ int main(int argc,char** argv) {
                     if(!encodeQ41Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q4 preflight mismatch");
                     buffered.insert(buffered.end(),encoded,encoded+20);
-                    if(buffered.size()+20>65536) {
+                    if(buffered.size()>=65536-20) {
                         out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
                         buffered.clear();
                     }
@@ -691,7 +691,7 @@ int main(int argc,char** argv) {
                     if(!encodeQ51Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q5_1 preflight mismatch");
                     buffered.insert(buffered.end(),encoded,encoded+24);
-                    if(buffered.size()+24>65536) {
+                    if(buffered.size()>=65536-24) {
                         out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
                         buffered.clear();
                     }
@@ -712,7 +712,7 @@ int main(int argc,char** argv) {
                     if(!encodeQ8Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q8 preflight mismatch");
                     buffered.insert(buffered.end(),encoded,encoded+34);
-                    if(buffered.size()+34>65536) {
+                    if(buffered.size()>=65536-34) {
                         out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
                         buffered.clear();
                     }
