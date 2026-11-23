@@ -9,7 +9,7 @@ layout(set = 0, binding = 2, std430) writeonly buffer OutputValues { float value
 layout(push_constant) uniform Parameters {
     uint rows;
     uint cols;
-    uint weightEncoding; // 0=F32, 1=F16, 2=BF16, 3=Q8_0, 4=Q4_0, 5=Q4_1, 6=Q5_0, 7=Q5_1, 8=Q8_1
+    uint weightEncoding; // 0=F32, 1=F16, 2=BF16, 3=Q8_0, 4=Q4_0, 5=Q4_1, 6=Q5_0, 7=Q5_1, 8=Q8_1, 9=Q2_K, 10=Q3_K, 11=Q4_K, 12=Q5_K, 13=Q6_K, 14=Q8_K
 } params;
 
 uint loadByte(uint byteOffset) {
@@ -22,6 +22,103 @@ float loadWeight(uint index) {
         return uintBitsToFloat(weights.words[index]);
     }
     uint lane = index & 31u;
+    if (params.weightEncoding >= 9u) {
+        // Canonical GGML K-quant blocks (256 values). Layout mirrors the
+        // independently tested NativeKQuant::DecodeBlock byte mapping.
+        uint kLane = index & 255u;
+        uint blockBytes = params.weightEncoding == 9u ? 84u :
+                          params.weightEncoding == 10u ? 110u :
+                          params.weightEncoding == 11u ? 144u :
+                          params.weightEncoding == 12u ? 176u :
+                          params.weightEncoding == 13u ? 210u : 292u;
+        uint blockOffset = (index >> 8u) * blockBytes;
+        if (params.weightEncoding == 9u) {
+            uint dBits = loadByte(blockOffset + 80u) |
+                         (loadByte(blockOffset + 81u) << 8u);
+            uint dmBits = loadByte(blockOffset + 82u) |
+                          (loadByte(blockOffset + 83u) << 8u);
+            float d = unpackHalf2x16(dBits).x;
+            float dm = unpackHalf2x16(dmBits).x;
+            uint group = kLane >> 4u;
+            uint packedOffset = blockOffset + 16u + (group >> 3u) * 32u +
+                                ((group & 7u) & 1u) * 16u + (kLane & 15u);
+            uint shift = 2u * ((group & 7u) >> 1u);
+            uint q = (loadByte(packedOffset) >> shift) & 3u;
+            uint sm = loadByte(blockOffset + group);
+            return d * float(sm & 15u) * float(q) -
+                   dm * float(sm >> 4u);
+        }
+        if (params.weightEncoding == 10u) {
+            uint dBits = loadByte(blockOffset + 108u) |
+                         (loadByte(blockOffset + 109u) << 8u);
+            float d = unpackHalf2x16(dBits).x;
+            uint group = kLane >> 4u;
+            uint scaleByte = loadByte(blockOffset + 96u + (group & 7u));
+            uint code = group < 8u ? (scaleByte & 15u) : (scaleByte >> 4u);
+            uint high = (loadByte(blockOffset + 104u + (group & 3u)) >>
+                         (2u * (group >> 2u))) & 3u;
+            int scale = int(code | (high << 4u)) - 32;
+            uint chunk = kLane >> 7u;
+            uint laneInChunk = (kLane & 127u) >> 5u;
+            uint column = kLane & 31u;
+            uint low = (loadByte(blockOffset + 32u + chunk * 32u + column) >>
+                        (2u * laneInChunk)) & 3u;
+            uint highBit = (loadByte(blockOffset + (kLane & 31u)) >>
+                            (kLane >> 5u)) & 1u;
+            return d * float(scale) * float(int(low) - (highBit != 0u ? 0 : 4));
+        }
+        if (params.weightEncoding == 11u || params.weightEncoding == 12u) {
+            uint dBits = loadByte(blockOffset) | (loadByte(blockOffset + 1u) << 8u);
+            uint mBits = loadByte(blockOffset + 2u) | (loadByte(blockOffset + 3u) << 8u);
+            float d = unpackHalf2x16(dBits).x;
+            float m = unpackHalf2x16(mBits).x;
+            uint group = kLane >> 5u;
+            uint s0 = loadByte(blockOffset + 4u + group);
+            uint s1 = loadByte(blockOffset + 4u + group + 4u);
+            uint is = group < 4u ? (s0 & 63u) :
+                      ((s1 & 15u) | ((s0 >> 6u) << 4u));
+            uint im = group < 4u ? (s1 & 63u) :
+                      ((loadByte(blockOffset + group) >> 6u) |
+                       ((s1 >> 4u) << 4u));
+            uint lowOffset = params.weightEncoding == 11u ? 16u : 48u;
+            uint packed = loadByte(blockOffset + lowOffset +
+                                   (group >> 1u) * 32u + (kLane & 31u));
+            uint q = (group & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
+            if (params.weightEncoding == 12u) {
+                uint high = (loadByte(blockOffset + 16u + (kLane & 31u)) >>
+                             (2u * (group >> 1u) + (group & 1u))) & 1u;
+                q |= high << 4u;
+            }
+            return d * float(is) * float(q) - m * float(im);
+        }
+        if (params.weightEncoding == 13u) {
+            uint dBits = loadByte(blockOffset + 208u) |
+                         (loadByte(blockOffset + 209u) << 8u);
+            float d = unpackHalf2x16(dBits).x;
+            uint group = kLane >> 4u;
+            uint chunk = kLane >> 7u;
+            uint laneInChunk = (kLane & 127u) >> 5u;
+            uint column = kLane & 31u;
+            uint loIndex = chunk * 64u + (laneInChunk >> 1u) * 32u + column;
+            uint lo = (loadByte(blockOffset + loIndex) >>
+                       ((laneInChunk & 1u) * 4u)) & 15u;
+            uint hi = (loadByte(blockOffset + 128u + chunk * 32u + column) >>
+                       (laneInChunk * 2u)) & 3u;
+            int q = int(lo | (hi << 4u)) - 32;
+            uint scaleByte = loadByte(blockOffset + 192u + group);
+            int scale = scaleByte >= 128u ? int(scaleByte) - 256 : int(scaleByte);
+            return d * float(scale) * float(q);
+        }
+        // Q8_K: F32 block scale followed by 256 signed int8 values.
+        uint dBits = loadByte(blockOffset) |
+                     (loadByte(blockOffset + 1u) << 8u) |
+                     (loadByte(blockOffset + 2u) << 16u) |
+                     (loadByte(blockOffset + 3u) << 24u);
+        float d = uintBitsToFloat(dBits);
+        uint qByte = loadByte(blockOffset + 4u + kLane);
+        int q = qByte >= 128u ? int(qByte) - 256 : int(qByte);
+        return d * float(q);
+    }
     if (params.weightEncoding >= 3u) {
         // Fixed GGML blocks, each containing 32 values. All byte offsets are
         // derived from canonical block strides; no host-side F32 expansion.
