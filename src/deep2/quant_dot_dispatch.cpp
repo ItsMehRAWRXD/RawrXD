@@ -206,7 +206,16 @@ bool EndBatchImpl()
     g_batch_device = -1;
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);
-    if (qs.empty()) return true;
+    if (qs.empty()) {
+        // BeginBatch already opened a device command buffer. Close it even
+        // when no dot was admitted, otherwise the next batch cannot begin.
+        std::lock_guard<std::mutex> lk(g_gpu_mutex);
+        try { return (device >= 0 ? GpuFor(device) : Gpu()).EndQuantDotBatch(); }
+        catch (const std::exception&) { return false; }
+    }
+    // Restoring pointers here also covers CPU replay after device initialization
+    // or submission failure; the owned storage survived vector relocations.
+    for (auto& q : qs) q.q8 = q.q8_storage.data();
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     // The same Vulkan context owns Begin, Queue, and End. Never mix queues
