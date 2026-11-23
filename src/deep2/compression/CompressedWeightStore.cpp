@@ -229,7 +229,10 @@ bool CompressedWeightStore::addTensorF32AsF16FromReader(
      }else if(exp==31) restoredBits=sign|0x7f800000u|(mant<<13);
      else restoredBits=sign|((exp+112u)<<23)|(mant<<13);
      float restored=0.0f;std::memcpy(&restored,&restoredBits,sizeof(restored));
-     if(std::fabs(value-restored)>ctx->max_abs_error){
+     // A finite F32 value that overflows to F16 infinity is never an
+     // acceptable lossy admission, even when the caller leaves the error
+     // threshold unbounded.
+     if(!std::isfinite(restored)||std::fabs(value-restored)>ctx->max_abs_error){
       if(ctx->precision_rejected) *ctx->precision_rejected=true;
       return false;
      }
