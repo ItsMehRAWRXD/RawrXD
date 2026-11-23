@@ -15,3 +15,10 @@ add_executable(rawrxd_codec_zlib_test test_codec_zlib.cpp ../../src/codec/compre
 target_include_directories(rawrxd_codec_zlib_test PRIVATE ../../include)
 target_link_libraries(rawrxd_codec_zlib_test PRIVATE ${QT_CORE} ZLIB::ZLIB)
 add_test(NAME codec_zlib_streaming COMMAND rawrxd_codec_zlib_test)
+
+# Keep assert-based regression checks enabled in Release builds.
+if(MSVC)
+    target_compile_options(rawrxd_codec_zlib_test PRIVATE /UNDEBUG)
+else()
+    target_compile_options(rawrxd_codec_zlib_test PRIVATE -UNDEBUG)
+endif()
