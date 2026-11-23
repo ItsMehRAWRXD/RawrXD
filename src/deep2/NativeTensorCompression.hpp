@@ -215,6 +215,11 @@ public:
     // Read [first, first+count) into caller-owned F32 memory. Only intersecting
     // chunks are decoded; out-of-range requests fail before writing anything.
     void ReadRange(size_t first,size_t count,float* destination) const {
+        std::vector<uint8_t> scratch;
+        ReadRange(first,count,destination,scratch);
+    }
+    void ReadRange(size_t first,size_t count,float* destination,
+                   std::vector<uint8_t>& scratch) const {
         if(first>element_count_ || count>element_count_-first)
             throw std::out_of_range("compressed tensor range");
         if(count && !destination) throw std::invalid_argument("null range destination");
@@ -222,7 +227,6 @@ public:
         const size_t end=first+count;
         const size_t first_chunk=first/chunk_elements_;
         const size_t last_chunk=(end-1)/chunk_elements_;
-        std::vector<uint8_t> scratch;
         for(size_t ci=first_chunk;ci<=last_chunk;++ci) {
             const Result& encoded=chunks_[ci];
             const size_t chunk_first=ci*chunk_elements_;
