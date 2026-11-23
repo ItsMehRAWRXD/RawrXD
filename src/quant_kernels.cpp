@@ -225,6 +225,63 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     return false;
 }
 
+bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
+                           std::uint64_t firstElement, std::uint64_t elementCount,
+                           const std::uint8_t* source, std::size_t sourceBytes,
+                           float* destination) {
+    if (firstElement > totalElements || elementCount > totalElements - firstElement)
+        return false;
+    if (elementCount && (!source || !destination)) return false;
+    if (!elementCount) return true;
+
+    // Only formats with independently decodable blocks in this implementation
+    // are accepted. Unknown layouts fail closed instead of guessing a stride.
+    switch (type) {
+    case TensorType::F32:
+    case TensorType::F16:
+    case TensorType::Q8_0:
+    case TensorType::Q2_K:
+    case TensorType::Q3_K_S:
+    case TensorType::Q3_K_M:
+    case TensorType::Q4_K_S:
+    case TensorType::Q6_K:
+        break;
+    default:
+        return false;
+    }
+
+    const std::uint64_t blockValues = quantBlockSize(type);
+    if (!blockValues) return false;
+    const std::uint64_t firstBlock = firstElement / blockValues;
+    const std::uint64_t alignedFirst = firstBlock * blockValues;
+    const std::uint64_t endElement = firstElement + elementCount;
+    const std::uint64_t lastBlock = (endElement - 1) / blockValues;
+    if (lastBlock == std::numeric_limits<std::uint64_t>::max()) return false;
+    const std::uint64_t blockEnd = lastBlock + 1;
+    if (blockEnd > std::numeric_limits<std::uint64_t>::max() / blockValues)
+        return false;
+    const std::uint64_t alignedEnd = std::min(totalElements, blockEnd * blockValues);
+    if (alignedEnd < alignedFirst) return false;
+    const std::uint64_t alignedCount = alignedEnd - alignedFirst;
+    const std::uint64_t requiredBytes = tensorStorageBytes(alignedCount, type);
+    if (requiredBytes > std::numeric_limits<std::size_t>::max() ||
+        sourceBytes != static_cast<std::size_t>(requiredBytes))
+        return false;
+
+    TensorView view{ type, source, sourceBytes, { alignedCount }, true };
+    DequantizedTensor decoded;
+    if (!dequantizeTensor(view, decoded) || decoded.data.size() != alignedCount)
+        return false;
+
+    const std::uint64_t withinBlockSlice = firstElement - alignedFirst;
+    if (withinBlockSlice > decoded.data.size() ||
+        elementCount > decoded.data.size() - withinBlockSlice)
+        return false;
+    std::memcpy(destination, decoded.data.data() + static_cast<std::size_t>(withinBlockSlice),
+                static_cast<std::size_t>(elementCount) * sizeof(float));
+    return true;
+}
+
 bool gemvFloat(const float* W, const float* x, float* y,
                std::uint64_t rows, std::uint64_t cols) {
     if (!W || !x || !y || rows == 0 || cols == 0) return false;
