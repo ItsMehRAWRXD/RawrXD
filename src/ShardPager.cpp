@@ -240,8 +240,28 @@ TensorLease::TensorLease(PageCache& cache, uint32_t shard, uint64_t offset, uint
     m_ok = true;
 }
 
+TensorLease::TensorLease(TensorLease&& other) noexcept
+    : m_cache(std::exchange(other.m_cache, nullptr)),
+      m_shard(other.m_shard), m_offset(other.m_offset), m_size(other.m_size),
+      m_pages(std::move(other.m_pages)), m_ok(std::exchange(other.m_ok, false)) {
+    other.m_pages.clear();
+}
+
+TensorLease& TensorLease::operator=(TensorLease&& other) noexcept {
+    if (this == &other) return *this;
+    if (m_cache) for (Page* pg : m_pages) m_cache->release(pg);
+    m_cache = std::exchange(other.m_cache, nullptr);
+    m_shard = other.m_shard;
+    m_offset = other.m_offset;
+    m_size = other.m_size;
+    m_pages = std::move(other.m_pages);
+    m_ok = std::exchange(other.m_ok, false);
+    other.m_pages.clear();
+    return *this;
+}
+
 TensorLease::~TensorLease() {
-    for (Page* pg : m_pages) m_cache->release(pg);
+    if (m_cache) for (Page* pg : m_pages) m_cache->release(pg);
 }
 
 bool TensorLease::read(uint64_t relOffset, std::uint64_t size, std::uint8_t* out) const {
