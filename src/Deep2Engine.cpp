@@ -294,6 +294,71 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
     return true;
 }
 
+bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
+                                            const deep2::TensorEntry& entry,
+                                            const float* input, float* output,
+                                            size_t tileRows) {
+    if (!romMode || !vulkanReady || !vulkan || !input || !output ||
+        entry.type != deep2::TensorType::F32 || entry.dims.size() != 2 ||
+        tileRows == 0 || tileRows > UINT32_MAX)
+        return false;
+
+    // GGUF matrix dimensions are [columns, rows]. The Vulkan GEMV view uses
+    // [rows, columns], matching its shader's row-major contract.
+    const uint64_t cols = entry.dims[0];
+    const uint64_t rows = entry.dims[1];
+    if (!rows || !cols || rows > UINT32_MAX || cols > UINT32_MAX ||
+        cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
+        return false;
+
+    const size_t colsSize = static_cast<size_t>(cols);
+    std::vector<float> tile;
+    std::vector<float> tileOutput;
+    std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
+    std::vector<uint8_t> decodeScratch;
+
+    for (uint64_t firstRow = 0; firstRow < rows;) {
+        const uint64_t countRows = std::min<uint64_t>(tileRows, rows - firstRow);
+        if (countRows > std::numeric_limits<size_t>::max() / colsSize)
+            return false;
+        const size_t elements = static_cast<size_t>(countRows) * colsSize;
+        if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
+            return false;
+
+        tile.resize(elements);
+        if (!readCompressedF32Tile(entry, firstRow * cols, elements,
+                                   tile.data(), decodeScratch))
+            return false;
+
+        deep2::TensorView weightTile{
+            deep2::TensorType::F32,
+            reinterpret_cast<const uint8_t*>(tile.data()),
+            elements * sizeof(float),
+            { countRows, cols },
+            true
+        };
+        deep2::TensorView inputView{
+            deep2::TensorType::F32,
+            reinterpret_cast<const uint8_t*>(input),
+            colsSize * sizeof(float),
+            { cols },
+            true
+        };
+        if (!vulkanGemv(gpu, weightTile, inputView, tileOutput) ||
+            tileOutput.size() != static_cast<size_t>(countRows))
+            return false;
+
+        std::copy(tileOutput.begin(), tileOutput.end(),
+                  completed.begin() + static_cast<size_t>(firstRow));
+        firstRow += countRows;
+    }
+
+    // Publish only after every tile has completed successfully.
+    std::copy(completed.begin(), completed.end(), output);
+    return true;
+}
+
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
                             uint64_t rows, uint64_t cols) {
     return deep2::gemvFloat(W, x, y, rows, cols);
