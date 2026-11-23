@@ -117,6 +117,7 @@ namespace Deep2Rom::Compute {
         for (auto& pooled_slot : m_pool) {
             if (pooled_slot.buffer == slot.buffer) {
                 pooled_slot.in_use = false;
+                slot.in_use = false;
                 break;
             }
         }
@@ -166,6 +167,11 @@ namespace Deep2Rom::Compute {
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &cmd_buffer;
 
-        return ::vkQueueSubmit(transfer_queue, 1, &submit_info, VK_NULL_HANDLE) == VK_SUCCESS;
+        const VkResult submitted = ::vkQueueSubmit(transfer_queue, 1, &submit_info, VK_NULL_HANDLE);
+        if (submitted != VK_SUCCESS) {
+            std::cerr << "[VulkanStaging] vkQueueSubmit failed: " << submitted << "\\n";
+            return false;
+        }
+        return true;
     }
 }
