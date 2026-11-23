@@ -201,9 +201,13 @@ inline RepackError RepackGGUF(const std::string& input,
         if(t.new_offset>UINT64_MAX-newData)return RepackError::Overflow;
         const uint64_t target=newData+t.new_offset;
         if(absolute>target)return RepackError::Format;
-        while(static_cast<uint64_t>(out.tellp())<target) {
-            out.put('\0');
-            if(!out)return RepackError::Output;
+        uint64_t padding=target-absolute;
+        const char zeros[4096]={};
+        while(padding) {
+            const auto chunk=static_cast<std::streamsize>(
+                std::min<uint64_t>(padding,sizeof(zeros)));
+            if(!out.write(zeros,chunk))return RepackError::Output;
+            padding-=static_cast<uint64_t>(chunk);
         }
         if(!CopyRange(in,out,dataStart+t.old_offset,t.bytes))
             return RepackError::Output;
