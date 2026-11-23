@@ -141,14 +141,19 @@ inline void DecodeInto(const Result& r, void* destination, size_t destination_by
     }
     if (r.encoding==Encoding::RLE) {
         if (r.payload.size()%2) throw std::invalid_argument("malformed RLE");
+        size_t total=0;
+        for(size_t i=0;i<r.payload.size();i+=2) {
+            const size_t count=r.payload[i];
+            if (!count || count>n-total) throw std::invalid_argument("RLE overflow");
+            total+=count;
+        }
+        if(total!=n) throw std::invalid_argument("RLE decoded size mismatch");
         size_t written=0;
         for(size_t i=0;i<r.payload.size();i+=2) {
             const size_t count=r.payload[i];
-            if (!count || count>n-written) throw std::invalid_argument("RLE overflow");
             std::memset(out+written,r.payload[i+1],count);
             written+=count;
         }
-        if(written!=n) throw std::invalid_argument("RLE decoded size mismatch");
         return;
     }
     if (r.encoding==Encoding::F16 || r.encoding==Encoding::BF16) {
