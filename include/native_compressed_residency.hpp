@@ -18,6 +18,8 @@ struct Block {
     std::vector<std::uint8_t> payload;
     std::size_t decoded_size = 0;
     bool rle = false;
+    // Immutable content generation; callers must change it when a block is replaced.
+    std::uint64_t generation = 0;
 };
 
 // Byte RLE is deliberately conservative: incompressible data is stored verbatim.
@@ -71,8 +73,13 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         auto found = entries_.find(id);
         if (found != entries_.end()) {
-            order_.splice(order_.begin(), order_, found->second.position);
-            return found->second.bytes;
+            if (found->second.generation == block.generation) {
+                order_.splice(order_.begin(), order_, found->second.position);
+                return found->second.bytes;
+            }
+            used_ -= found->second.bytes.size();
+            order_.erase(found->second.position);
+            entries_.erase(found);
         }
         auto bytes = decode(block);
         if (bytes.size() > capacity_) return bytes;
@@ -85,7 +92,7 @@ public:
         }
         order_.push_front(id);
         used_ += bytes.size();
-        entries_.emplace(id, Entry{bytes, order_.begin()});
+        entries_.emplace(id, Entry{bytes, order_.begin(), block.generation});
         return bytes;
     }
     void clear() {
@@ -102,6 +109,7 @@ private:
     struct Entry {
         std::vector<std::uint8_t> bytes;
         std::list<std::uint64_t>::iterator position;
+        std::uint64_t generation;
     };
     const std::size_t capacity_;
     mutable std::mutex mutex_;
