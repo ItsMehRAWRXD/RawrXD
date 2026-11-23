@@ -7133,7 +7133,11 @@ static bool ValidateQ6KAsm(const block_q6_K* blocks, const float* input, float* 
 static size_t LinearW_RowBytes(int type, size_t cols)
 {
     const auto packed = [cols](size_t blockElements, size_t blockBytes) -> size_t {
-        const size_t blocks = cols / blockElements + (cols % blockElements != 0 ? 1u : 0u);
+        // GGML quantized rows are block-aligned. Reject malformed geometry
+        // rather than admitting a padded byte stride that a kernel may read
+        // past the declared logical row.
+        if (blockElements == 0 || cols % blockElements != 0) return 0;
+        const size_t blocks = cols / blockElements;
         if (blocks > (std::numeric_limits<size_t>::max)() / blockBytes) return 0;
         return blocks * blockBytes;
     };
