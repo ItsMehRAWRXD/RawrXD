@@ -153,6 +153,15 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = entries_.find(key);
             if (it == entries_.end()) { ++misses_; return false; }
+            // Reject malformed windows before acquiring a lease or recording a
+            // successful cache hit. Subtraction avoids first+count overflow.
+            // In particular, a null destination must never reach a decoder.
+            if (first > it->second.logicalBytes ||
+                count > it->second.logicalBytes - first ||
+                (count != 0 && destination == nullptr)) {
+                ++misses_;
+                return false;
+            }
             it->second.lastUse = ++tick_;
             ++it->second.activeReaders;
             ++hits_;
