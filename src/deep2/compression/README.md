@@ -176,7 +176,10 @@ by RMSNormW, including per-head Q/K normalization vectors. Per-head Q/K norms ar
 one head at a time through RMSNormW. SSM channel norms use the dedicated
 Mamba-2 vector materializer rather than the RMSNorm consumer.
 
-The single-shard GGUF binder additionally admits eligible Mamba-2 tensors:
+The single-shard GGUF binder additionally admits eligible attention-bias
+vectors and Mamba-2 tensors:
+- F32/F16 attention Q/K/V bias vectors are read through a request-local
+  projection-bias resolver; the Q/K/V LinearW calls retain the existing ABI.
 - ssm_in and ssm_out matrices use the existing LinearW compressed row-range
   path.
 - ssm_conv1d matrices and the ssm_a, ssm_d, ssm_dt_bias,
@@ -198,7 +201,9 @@ This expands consumer coverage but does not establish complete Deep2 model
 parity. The native engine build, Mamba-2 reference comparisons, long-context
 decode, and Vulkan parity still require execution on the target build matrix.
 Per-head Q/K normalization vectors are also admitted when their tensor names
-match the Q/K norm bindings. WeightTensor subviews carry a checked byte offset
+match the Q/K norm bindings. Attention Q/K/V bias vectors are admitted only
+for the three projection consumers that now materialize compressed ranges.
+WeightTensor subviews carry a checked byte offset
 into the compressed source tensor, allowing each head's F32/F16 prefix to be
 read independently. The Q-norm diagnostic path uses an explicit range read
 when the source is compressed and avoids assuming a second head exists in a
