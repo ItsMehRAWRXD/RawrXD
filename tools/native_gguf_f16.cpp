@@ -836,6 +836,13 @@ int main(int argc,char** argv) {
                 out.write(reinterpret_cast<const char*>(converted[i].data()),std::streamsize(converted[i].size()));
             else {seek(in,add(dataStart,t.offset));copy(in,out,t.bytes);}
         }
+        // The tensor table advertises exactly 'cursor' bytes of aligned data.
+        // Reject a short or overlong payload rather than publishing a GGUF
+        // whose offsets disagree with its actual file length.
+        const U expectedEnd=add(outStart,cursor);
+        const auto finalPosition=out.tellp();
+        if(finalPosition<0 || U(finalPosition)!=expectedEnd)
+            throw std::runtime_error("GGUF payload size disagrees with tensor descriptors");
         out.flush();if(!out)throw std::runtime_error("output write failure");
         out.close();in.close();
         // Report actual on-disk savings, including GGUF headers, tensor
