@@ -1,0 +1,74 @@
+name: Tensor-aware lossless compression
+on:
+  push:
+    paths:
+      - 'src/deep2/TensorAwareLossless.hpp'
+      - 'src/deep2/DecodedBlockCache.hpp'
+      - 'src/deep2/TensorWeightStorage.hpp'
+      - 'tests/tensor_aware_lossless_test.cpp'
+      - 'tests/decoded_block_cache_test.cpp'
+      - 'tests/tensor_weight_storage_test.cpp'
+      - 'tools/weight_block_benchmark.cpp'
+      - 'src/deep2/CompressedMatVecReference.hpp'
+      - 'tests/compressed_matvec_reference_test.cpp'
+      - '.github/workflows/tensor-compression.yml'
+  pull_request:
+    paths:
+      - 'src/deep2/TensorAwareLossless.hpp'
+      - 'src/deep2/DecodedBlockCache.hpp'
+      - 'src/deep2/TensorWeightStorage.hpp'
+      - 'tests/tensor_aware_lossless_test.cpp'
+      - 'tests/decoded_block_cache_test.cpp'
+      - 'tests/tensor_weight_storage_test.cpp'
+      - 'tools/weight_block_benchmark.cpp'
+      - 'src/deep2/CompressedMatVecReference.hpp'
+      - 'tests/compressed_matvec_reference_test.cpp'
+      - '.github/workflows/tensor-compression.yml'
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run standalone C++17 compression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test in tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test compressed_matvec_reference_test; do
+            g++ -std=c++17 -O2 -Wall -Wextra -Werror -I. "tests/${test}.cpp" -lz -o "/tmp/${test}"
+            "/tmp/${test}"
+          done
+      - name: Compile and smoke-test weight benchmark on non-repetitive bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror -I. tools/weight_block_benchmark.cpp -lz -o /tmp/weight_bench
+          python3 - <<'PY'
+          import random
+          random.seed(20261123)
+          with open('/tmp/weights.bin', 'wb') as f:
+              f.write(random.randbytes(65537))
+          PY
+          /tmp/weight_bench /tmp/weights.bin 2 4096
+  windows-native:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install zlib using vcpkg
+        shell: pwsh
+        run: |
+          if (-not $env:VCPKG_INSTALLATION_ROOT) { throw 'VCPKG_INSTALLATION_ROOT is not set' }
+          & "$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe" install zlib:x64-windows
+      - name: Compile and run C++17 compression tests with MSVC
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          for %%T in (tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test compressed_matvec_reference_test) do (
+            cl /nologo /std:c++17 /EHsc /O2 /W4 /I. /I"C:\vcpkg\installed\x64-windows\include" tests\%%T.cpp /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" zlib.lib /OUT:%%T.exe
+            if errorlevel 1 exit /b 1
+            %%T.exe
+            if errorlevel 1 exit /b 1
+          )
