@@ -46,6 +46,11 @@ int main() {
                                     deep2::TensorType::F32) ==
           (std::numeric_limits<std::uint64_t>::max)());
 
+    // GGML pads each fastest-dimension row independently to quant block size.
+    CHECK(deep2::tensorStorageBytesForShape({33, 2}, deep2::TensorType::Q4_0) == 72);
+    CHECK(deep2::tensorStorageBytesForShape({256, 2}, deep2::TensorType::Q2_K) == 168);
+    CHECK(deep2::tensorStorageBytesForShape({33, 2}, deep2::TensorType::F32) == 264);
+
     // Row-only reads return the selected F32 row from compressed backing.
     {
         const float matrix[] = {1.f,2.f,3.f,4.f,5.f,6.f,7.f,8.f};
