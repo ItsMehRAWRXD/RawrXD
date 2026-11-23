@@ -247,6 +247,26 @@ def run(binary):
             dest=root/("narrow-"+fmt+".gguf")
             subprocess.run([binary,str(narrow),str(dest),"10000",fmt],check=True)
             assert dest.read_bytes()==narrow.read_bytes()
+        # Reject a destination alias to the source without modifying the model.
+        alias=root/"input-alias.gguf"
+        try:
+            alias.symlink_to(source)
+        except (OSError, NotImplementedError):
+            alias=None  # Symlink creation can require privileges on Windows.
+        if alias is not None:
+            before=source.read_bytes()
+            result=subprocess.run([binary,str(source),str(alias),"0","f16"],
+                                  capture_output=True)
+            assert result.returncode!=0
+            assert source.read_bytes()==before
+            # Also guard against a pre-existing .partial symlink to input.
+            partial=root/"alias-dest.gguf.partial"
+            partial.symlink_to(source)
+            result=subprocess.run([binary,str(source),str(root/"alias-dest.gguf"),"0","f16"],
+                                  capture_output=True)
+            assert result.returncode!=0
+            assert source.read_bytes()==before
+            assert partial.is_symlink()
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
