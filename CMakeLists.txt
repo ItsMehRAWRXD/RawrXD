@@ -6647,3 +6647,11 @@ add_subdirectory(src/deep2/compression)
 if(TARGET deep2_engine_lib)
     target_link_libraries(deep2_engine_lib PUBLIC rawrxd_compressed_weight_store)
 endif()
+
+# Bounded compressed-resident CPU inference kernel smoke (no Vulkan dependency).
+if(RAWRXD_BUILD_TESTS)
+    add_executable(native_resident_matvec_test tests/native_resident_matvec_test.cpp)
+    target_include_directories(native_resident_matvec_test PRIVATE "${CMAKE_SOURCE_DIR}/include")
+    target_compile_features(native_resident_matvec_test PRIVATE cxx_std_20)
+    add_test(NAME native_resident_matvec_test COMMAND native_resident_matvec_test)
+endif()
