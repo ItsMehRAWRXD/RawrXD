@@ -365,10 +365,17 @@ def run(binary):
         header=b"GGUF"+U32(3)+U64(1)+U64(2)+kv
         header+=S("blk.0.attn_q.weight")+U32(2)+U64(16)+U64(4)+U32(0)+U64(0)
         narrow.write_bytes(pad(header)+raw)
-        for fmt in ("q8_0","q5_0","q5_1","q4_0","q4_1"):
+        for fmt in ("q8_0","q5_0","q5_1","q4_0","q4_1","auto"):
             dest=root/("narrow-"+fmt+".gguf")
             subprocess.run([binary,str(narrow),str(dest),"10000",fmt],check=True)
-            assert dest.read_bytes()==narrow.read_bytes()
+            if fmt=="auto":
+                # Auto can still reduce F32 to F16, but must not flatten
+                # 16-element rows into an invalid GGML 32-element block.
+                narrowed,ns,nm,nt=parse(dest)
+                assert nt["blk.0.attn_q.weight"][0]==1
+                assert len(narrowed)-ns==len(values)*2
+            else:
+                assert dest.read_bytes()==narrow.read_bytes()
         # Reject a destination alias to the source without modifying the model.
         alias=root/"input-alias.gguf"
         try:
