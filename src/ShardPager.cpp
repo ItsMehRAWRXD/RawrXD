@@ -106,12 +106,13 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
     page->fileOffset = pageNo * m_pageSize;
     page->leaseCount.store(1, std::memory_order_release);
 
+    // Reserve capacity before loadPage() increments residentBytes. Evicting
+    // after loading and passing m_pageSize again double-counted the new page.
+    evictToFit(m_pageSize);
     if (!loadPage(page)) {
         delete page;
         return nullptr;
     }
-
-    evictToFit(m_pageSize);  // make room for the page we just loaded (overshoot ok)
 
     m_lru.push_front(page);
     page->lruIt = m_lru.begin();
