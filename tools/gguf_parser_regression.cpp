@@ -57,6 +57,17 @@ int main() {
           "invalid_tensor_offset_rejected");
     check(Fixture(file,32,false,false,false) && LoadUniversalBlob(file,&ctx) &&
           ctx.tensors.size()==1,"recovery_after_failure");
+    const auto previousBytes = ctx.tensorWeightsPool;
+    const auto previousAlignment = ctx.cfg.ggufAlignment;
+    check(Fixture(file,32,false,true,false) && !LoadUniversalBlob(file,&ctx) &&
+          ctx.tensorWeightsPool==previousBytes &&
+          ctx.cfg.ggufAlignment==previousAlignment,
+          "failed_load_preserves_prior_context");
+    check(Fixture(file,16,false,false,false) && LoadUniversalBlob(file,&ctx) &&
+          ctx.cfg.ggufAlignment==16, "alignment_16_supported");
+    check(Fixture(file,32,false,false,false) && LoadUniversalBlob(file,&ctx) &&
+          ctx.tensors.at("test.weight").dataData==ctx.tensorWeightsPool.data(),
+          "tensor_pointer_matches_owned_storage");
     std::remove(file);
     std::cout<<"GGUF_PARSER_RESULT="<<(failures?"FAIL":"PASS")
              <<" failures="<<failures<<"\n";
