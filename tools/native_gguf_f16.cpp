@@ -183,21 +183,20 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ8(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51))continue;
-            if(t.bytes>64u*1024u*1024u) {
-                if(q8 && t.dims[0]%32==0 && (t.type==0 || t.type==1 || t.type==30)) {
-                    const size_t inputBlock=t.type==0?128:64;
-                    if(t.bytes%inputBlock)continue;
-                    seek(in,add(dataStart,t.offset));
-                    uint8_t block[128],encoded[34];
-                    bool valid=true;
-                    for(U off=0;off<t.bytes;off+=inputBlock) {
-                        if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
-                            throw std::runtime_error("truncated Q8 streaming preflight");
-                        if(!encodeQ8Block(block,t.type,tolerance,encoded)){valid=false;break;}
-                    }
-                    if(valid){streamQ8[i]=true;outputTypes[i]=8;++changed;}
-                    continue;
+            if(q8 && t.dims[0]%32==0 && (t.type==0 || t.type==1 || t.type==30)) {
+                const size_t inputBlock=t.type==0?128:64;
+                if(t.bytes%inputBlock)continue;
+                seek(in,add(dataStart,t.offset));
+                uint8_t block[128],encoded[34];
+                bool valid=true;
+                for(U off=0;off<t.bytes;off+=inputBlock) {
+                    if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
+                        throw std::runtime_error("truncated Q8 streaming preflight");
+                    if(!encodeQ8Block(block,t.type,tolerance,encoded)){valid=false;break;}
                 }
+                if(valid){streamQ8[i]=true;outputTypes[i]=8;++changed;}
+                continue;
+            }            if(t.bytes>64u*1024u*1024u) {
                 if(t.type!=0 || quantized)continue;
                 // First pass: validate every F32 weight before changing its type.
                 // The second pass emits the same half values using fixed memory.
