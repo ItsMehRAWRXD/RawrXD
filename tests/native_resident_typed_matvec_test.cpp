@@ -83,7 +83,7 @@ int main() {
         std::vector<std::uint8_t> bytes(2 * 18);
         for (std::size_t row = 0; row < 2; ++row) {
             bytes[row * 18] = 0x00; bytes[row * 18 + 1] = 0x3c;
-            const std::uint8_t q = row ? 0xAAu : 0x99u;
+            const std::uint8_t q = static_cast<std::uint8_t>(row ? 0xAAu : 0x99u);
             for (std::size_t i = 0; i < 16; ++i) bytes[row * 18 + 2 + i] = q;
         }
         auto tensor = load_bytes(bytes, path, 9);
