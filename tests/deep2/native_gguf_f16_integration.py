@@ -218,7 +218,7 @@ def run(binary):
         subprocess.run([binary,str(f64),str(f64_explicit),"0","f32"],check=True)
         ed,es,em,et=parse(f64_explicit)
         assert et["blk.0.attn_q.weight"][0]==0
-        assert ed[es:]==fd[fs:]
+        assert ed[es:]==struct.pack("<"+"f"*len(doubles),*doubles)
         f32_unchanged=root/"explicit-f32-preserves-f32.gguf"
         subprocess.run([binary,str(source),str(f32_unchanged),"300","f32"],check=True)
         assert f32_unchanged.read_bytes()==source.read_bytes()
@@ -269,10 +269,20 @@ def run(binary):
         ad,az,am,at=parse(accepted_bf16)
         assert at["blk.0.attn_q.weight"][0]==30
         assert struct.unpack_from("<H",ad,az)[0]==0x7180
-        # Explicit Q4/Q5/Q8 requests must never reinterpret F64 as F32.
-        # Until F64-to-quantized conversion is implemented, preserve F64
-        # payloads byte-for-byte, including when their row width is 32.
-        for mode in ("q4_0","q4_1","q5_0","q5_1","q8_0"):
+        # Explicit Q8_0 now quantizes F64 with an error gate against
+        # original double values, not merely the intermediate F32 values.
+        q8_f64=root/"f64-q8.gguf"
+        subprocess.run([binary,str(f64),str(q8_f64),"10000","q8_0"],check=True)
+        qd,qs,qm,qt=parse(q8_f64)
+        assert qt["blk.0.attn_q.weight"][0]==8
+        assert len(qd)-qs==(len(doubles)//32)*34
+        # Zero tolerance cannot represent these mixed-magnitude values in Q8.
+        q8_exact=root/"f64-q8-exact.gguf"
+        subprocess.run([binary,str(f64),str(q8_exact),"0","q8_0"],check=True)
+        assert q8_exact.read_bytes()==f64.read_bytes()
+        # Other explicit quantizers preserve F64 until their native F64
+        # paths have independent decoder validation.
+        for mode in ("q4_0","q4_1","q5_0","q5_1"):
             dest=root/("f64-preserve-"+mode+".gguf")
             subprocess.run([binary,str(f64),str(dest),"10000",mode],check=True)
             assert dest.read_bytes()==f64.read_bytes()
