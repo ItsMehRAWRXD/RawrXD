@@ -546,11 +546,11 @@ bool Deep2Engine::forwardLayerGpuResident(
         
         // Upload K_b and V_b weights and K_pe to GPU
         // K_pe is embedded in attnKV_a_mqa tensor (last 64 elements)
-        if (lw.attnK_b.data && lw.attnV_b.data) {
-            if (!gpu->UploadBuf(gpu->MlaKb(), 
-                               static_cast<const float*>(lw.attnK_b.data), nHeads * nope) ||
-                !gpu->UploadBuf(gpu->MlaVb(), 
-                               static_cast<const float*>(lw.attnV_b.data), nHeads * 128)) {
+        const float* mlaKb = ensureF32(lw.attnK_b, vulkanWeightF32_);
+        const float* mlaVb = ensureF32(lw.attnV_b, vulkanWeightF32_);
+        if (mlaKb && mlaVb) {
+            if (!gpu->UploadBuf(gpu->MlaKb(), mlaKb, nHeads * nope) ||
+                !gpu->UploadBuf(gpu->MlaVb(), mlaVb, nHeads * 128)) {
                 gpuForwardTrace("layer fail: MLA KV upload");
             } else {
                 const float scale = 1.0f / std::sqrt(static_cast<float>(192));
