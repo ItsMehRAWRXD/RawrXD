@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <stdexcept>
 #include <limits>
 #include <string>
 #include <vector>
