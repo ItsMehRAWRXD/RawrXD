@@ -137,9 +137,11 @@ add_test(NAME MetadataParity_Phi3
 
 # Native compressed-residency primitives: independent C++17 regression targets.
 # These tests do not require Vulkan, Qt, or a model download.
+find_package(Threads REQUIRED)
 function(rawrxd_add_compression_test target source)
     add_executable(${target} ${source})
     target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(${target} PRIVATE Threads::Threads)
     add_test(NAME ${target} COMMAND ${target})
 endfunction()
 
