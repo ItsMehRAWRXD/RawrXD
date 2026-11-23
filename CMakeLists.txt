@@ -42,6 +42,7 @@ add_executable(test_metadata_parity
 
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
+    src/VulkanStagingPipeline.cpp
 )
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
@@ -63,6 +64,7 @@ endif()
 
 # Enable deep hardware optimization flags dynamically based on active toolchain mappings
 if(MSVC)
+    target_compile_definitions(Deep2Engine_Benchmark PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
     if(MSVC_VERSION GREATER_EQUAL 1910)
         target_compile_options(Deep2Engine_Benchmark PRIVATE 
             $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
