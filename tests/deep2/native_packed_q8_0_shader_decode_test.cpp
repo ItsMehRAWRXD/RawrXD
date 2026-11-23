@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "../../src/quant_kernels.hpp"
 #include "../../src/deep2/NativeKQuant.hpp"
 #include <cassert>
