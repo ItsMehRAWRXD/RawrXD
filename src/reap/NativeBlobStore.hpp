@@ -45,7 +45,8 @@ inline BlobVerifyError VerifyGGUFBlob(const std::string& modelRoot,
 }
 inline BlobResult StoreRepackedGGUFBlob(const std::string& source,
                                         const std::string& modelRoot,
-                                        uint64_t budget=UINT64_MAX) {
+                                        uint64_t budget=UINT64_MAX,
+                                        bool convert_f32_to_f16=false) {
     namespace fs=std::filesystem;
     BlobResult result;
     if(source.empty()||modelRoot.empty()) {
@@ -74,7 +75,7 @@ inline BlobResult StoreRepackedGGUFBlob(const std::string& source,
         ~Cleanup(){std::error_code ignored;fs::remove_all(path,ignored);}
     } cleanup{stageDir};
     const fs::path stage=stageDir/"model.gguf";
-    result.repack_error=RepackGGUF(source,stage.string(),budget);
+    result.repack_error=RepackGGUF(source,stage.string(),budget,convert_f32_to_f16);
     if(result.repack_error!=RepackError::None) {
         result.error=BlobError::RepackFailure;return result;
     }
