@@ -209,7 +209,6 @@ public:
         if(!chunk_elements) throw std::invalid_argument("zero chunk size");
         if(count>std::numeric_limits<size_t>::max()/sizeof(float))
             throw std::length_error("F32 tensor size overflow");
-        if(!reader) throw std::invalid_argument("empty tensor reader");
         ChunkedF32Storage result;
         result.element_count_=count;
         result.chunk_elements_=chunk_elements;
