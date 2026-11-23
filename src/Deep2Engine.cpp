@@ -7,6 +7,7 @@
 #include "MasmCoreKernels.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -260,6 +261,21 @@ bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry,
     return true;
 }
 
+CompressedWeightResidencyStats Deep2Engine::compressedWeightResidencyStats() const {
+    CompressedWeightResidencyStats total;
+    std::lock_guard<std::mutex> lock(compressedWeightViewsMutex);
+    for (const auto& item : compressedWeightViews) {
+        if (!item.second) continue;
+        const auto page = item.second->stats();
+        total.logicalBytes += page.logicalBytes;
+        total.residentEncodedBytes += page.residentBytes;
+        total.compressedPages += page.compressedPages;
+        total.rawPages += page.rawPages;
+        total.cacheMisses += page.cacheMisses;
+    }
+    return total;
+}
+
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
                             uint64_t rows, uint64_t cols) {
     return deep2::gemvFloat(W, x, y, rows, cols);
@@ -347,8 +363,13 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
 bool Deep2Engine::vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
                                        const deep2::TensorEntry& weight,
                                        const float* x, uint64_t xCount,
-                                       std::vector<float>& y, uint32_t tileRows) {
+                                       std::vector<float>& y, uint32_t tileRows,
+                                       VulkanCompressedGemvStats* stats) {
     y.clear();
+    if (stats) {
+        *stats = VulkanCompressedGemvStats{};
+        stats->encodedResidentBytesBefore = compressedWeightResidencyStats().residentEncodedBytes;
+    }
     if (!vulkanReady || !vulkan || !x || tileRows == 0 ||
         weight.dims.size() < 2 || gpu.device == VK_NULL_HANDLE) return false;
 
@@ -361,6 +382,7 @@ bool Deep2Engine::vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
         rows > std::numeric_limits<size_t>::max() / sizeof(float) ||
         cols > std::numeric_limits<size_t>::max() / sizeof(float)) return false;
 
+    if (stats) { stats->matrixRows = rows; stats->matrixCols = cols; }
     const uint64_t block = static_cast<uint64_t>(deep2::quantBlockSize(weight.type));
     if (block == 0 || (cols % block) != 0) {
         fprintf(stderr, "[VULKAN_COMPRESSED_GEMV] row width %llu is not aligned to quant block %llu\n",
@@ -437,6 +459,13 @@ bool Deep2Engine::vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
             y.clear();
             return false;
         }
+        const uint64_t decodedBytes = static_cast<uint64_t>(decodedTile.size()) * sizeof(float);
+        if (stats) {
+            ++stats->tileCount;
+            stats->decodedWeightBytes += decodedBytes;
+            stats->uploadedWeightBytes += decodedBytes;
+            stats->peakDecodedTileBytes = std::max(stats->peakDecodedTileBytes, decodedBytes);
+        }
         const VkDeviceSize activeWBytes = static_cast<VkDeviceSize>(count) * sizeof(float);
         const VkDeviceSize activeYBytes = static_cast<VkDeviceSize>(activeRows) * sizeof(float);
         std::memcpy(wMapped, decodedTile.data(), static_cast<size_t>(activeWBytes));
@@ -452,6 +481,8 @@ bool Deep2Engine::vulkanGemvCompressed(const deep2::VulkanDevice::Gpu& gpu,
     }
 
     cleanup();
+    if (stats)
+        stats->encodedResidentBytesAfter = compressedWeightResidencyStats().residentEncodedBytes;
     return true;
 }
 
@@ -512,8 +543,9 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
         for (size_t gi = 0; gi < engine.vulkan->gpuCount(); ++gi) {
             const auto* g = engine.vulkan->gpu(gi);
             std::vector<float> yVulkan;
+            VulkanCompressedGemvStats gemvStats;
             const bool ok = engine.vulkanGemvCompressed(
-                *g, *qkv, x.data(), cols, yVulkan, 16);
+                *g, *qkv, x.data(), cols, yVulkan, 16, &gemvStats);
             float vs = 0.0f;
             bool parity = ok && yVulkan.size() == rows;
             if (parity) {
@@ -529,7 +561,11 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
             std::cout << "[VERIFY] compressed Vulkan GEMV on " << g->name
                       << ": " << (ok ? "OK" : "FAILED")
                       << " | first-row-window sum = " << vs
-                      << " | CPU parity = " << (parity ? "PASS" : "FAIL") << "\n";
+                      << " | CPU parity = " << (parity ? "PASS" : "FAIL")
+                      << " | tiles = " << gemvStats.tileCount
+                      << " | peak decoded tile = " << gemvStats.peakDecodedTileBytes
+                      << " bytes | encoded cache = " << gemvStats.encodedResidentBytesAfter
+                      << " bytes\n";
         }
     }
     std::cout << "[STATUS] ROM execution bridge complete\n";
