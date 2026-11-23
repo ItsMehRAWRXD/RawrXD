@@ -3660,7 +3660,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             $<$<BOOL:${ENABLE_VULKAN}>:ENABLE_VULKAN=1>
         )
         target_compile_options(RawrXD-Win32IDE-Native PRIVATE
-            /EHsc $<$<CONFIG:Release>:/O2>
+            /EHsc /FS $<$<CONFIG:Release>:/O2>
         )
         # RichEdit 2.0 ("RichEdit20A" / RICHEDIT_CLASSA) is used by the editor,
         # terminal and PowerShell-panel controls. The IDE reaches it only as a

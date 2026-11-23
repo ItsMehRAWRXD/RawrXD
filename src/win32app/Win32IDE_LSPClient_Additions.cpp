@@ -467,13 +467,17 @@ void Win32IDE::cmdLSPImplementation()
     if (m_currentFile.empty())
         return;
 
-    HWND hEditor = GetFocus();
+    HWND hEditor = m_hwndEditor;
     if (!hEditor)
         return;
 
-    int lineIndex, column;
-    // Get cursor position from editor
-    // (Assuming this works like cmdLSPGotoDefinition)
+    CHARRANGE sel = {};
+    SendMessageA(hEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    int lineIndex = (int)SendMessageA(hEditor, EM_EXLINEFROMCHAR, 0, sel.cpMin);
+    int lineStart = (int)SendMessageA(hEditor, EM_LINEINDEX, lineIndex, 0);
+    if (lineIndex < 0 || lineStart < 0 || sel.cpMin < lineStart)
+        return;
+    int column = sel.cpMin - lineStart;
     
     std::string uri = filePathToUri(m_currentFile);
     auto locations = lspImplementation(uri, lineIndex, column);
@@ -560,12 +564,17 @@ void Win32IDE::cmdLSPTypeDefinition()
     if (m_currentFile.empty())
         return;
 
-    HWND hEditor = GetFocus();
+    HWND hEditor = m_hwndEditor;
     if (!hEditor)
         return;
 
-    int lineIndex, column;
-    // Get cursor position from editor
+    CHARRANGE sel = {};
+    SendMessageA(hEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    int lineIndex = (int)SendMessageA(hEditor, EM_EXLINEFROMCHAR, 0, sel.cpMin);
+    int lineStart = (int)SendMessageA(hEditor, EM_LINEINDEX, lineIndex, 0);
+    if (lineIndex < 0 || lineStart < 0 || sel.cpMin < lineStart)
+        return;
+    int column = sel.cpMin - lineStart;
     
     std::string uri = filePathToUri(m_currentFile);
     auto locations = lspTypeDefinition(uri, lineIndex, column);
