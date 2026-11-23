@@ -228,6 +228,19 @@ static void testQ6KPackedPlanesFixture() {
     assert(loadKQuantShaderModel(bytes, 14u, 0u) == 54.0f);
 }
 
+// GGML Q2_K independently computed 2-bit payload and scale/min fixture.
+// Each 16-value sub-block uses a low-nibble scale and high-nibble minimum.
+static void testQ2KPackedScaleMinFixture() {
+    std::vector<uint8_t> bytes(84u, 0u);
+    put16(bytes.data() + 80u, 0x3c00u); // d = 1
+    put16(bytes.data() + 82u, 0x3800u); // dmin = 0.5
+    bytes[0u] = 0x23u; // scale=3, minimum=2 => subtract 1
+    bytes[16u] = 0x02u; // first quantized code = 2
+    assert(loadKQuantShaderModel(bytes, 10u, 0u) == 5.0f);
+    bytes[16u] = 0u;
+    assert(loadKQuantShaderModel(bytes, 10u, 0u) == -1.0f);
+}
+
 static void testKQuantBlock(uint32_t type) {
     const size_t blockBytes = type == 10u ? 84u : type == 11u ? 110u :
         type == 12u ? 144u : type == 13u ? 176u : type == 14u ? 210u : 292u;
@@ -305,6 +318,7 @@ static void testFixedBlock(uint32_t type) {
 int main() {
     for (uint32_t type : {2u, 3u, 6u, 7u, 8u, 9u}) testFixedBlock(type);
     for (uint32_t type : {10u, 11u, 12u, 13u, 14u, 15u}) testKQuantBlock(type);
+    testQ2KPackedScaleMinFixture();
     testQ3KSignMaskFixture();
     testQ6KPackedPlanesFixture();
     testK4UpperGroupScaleFixture(12u);
