@@ -6,6 +6,7 @@
 #include <zlib.h>
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -31,15 +32,13 @@ public:
     bool read(uint64_t offset, uint64_t size, uint8_t* out) {
         if ((!out && size) || offset > logicalSize_ || size > logicalSize_ - offset ||
             pageSize_ == 0 || pageSize_ > std::numeric_limits<uInt>::max()) return false;
-        std::lock_guard<std::mutex> lock(mutex_);
         uint64_t copied=0;
-        std::vector<uint8_t> scratch;
         while(copied<size) {
             const uint64_t absolute=offset+copied, pageNo=absolute/pageSize_;
             const std::size_t inPage=static_cast<std::size_t>(absolute%pageSize_);
             const std::size_t rawSize=static_cast<std::size_t>(
                 std::min<uint64_t>(pageSize_, logicalSize_-pageNo*pageSize_));
-            Page* page=getPage(pageNo,rawSize);
+            std::shared_ptr<Page> page=getPage(pageNo,rawSize);
             if(!page) return false;
             const std::size_t n=std::min<std::size_t>(
                 static_cast<std::size_t>(size-copied), rawSize-inPage);
@@ -106,7 +105,7 @@ public:
     Stats stats() const {
         std::lock_guard<std::mutex> lock(mutex_);
         Stats s; s.logicalBytes=logicalSize_; s.residentBytes=residentBytes_; s.cacheMisses=misses_;
-        for(const auto& kv:pages_) (kv.second.compressed?s.compressedPages:s.rawPages)++;
+        for(const auto& kv:pages_) (kv.second->compressed?s.compressedPages:s.rawPages)++;
         return s;
     }
     void clear() {
@@ -115,34 +114,68 @@ public:
     }
 private:
     struct Page { std::vector<uint8_t> bytes; bool compressed=false; std::list<uint64_t>::iterator lru; };
-    Page* getPage(uint64_t number,std::size_t rawSize) {
-        auto it=pages_.find(number);
-        if(it!=pages_.end()) { lru_.erase(it->second.lru); lru_.push_front(number); it->second.lru=lru_.begin(); return &it->second; }
-        ++misses_;
+    std::shared_ptr<Page> getPage(uint64_t number,std::size_t rawSize) {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it=pages_.find(number);
+            if(it!=pages_.end()) {
+                lru_.erase(it->second->lru);
+                lru_.push_front(number);
+                it->second->lru=lru_.begin();
+                return it->second;
+            }
+            ++misses_;
+        }
         if(!reader_) return nullptr;
+
+        // Source I/O and compression happen outside the cache lock. Concurrent
+        // readers can prepare different pages without serializing each other.
         std::vector<uint8_t> raw(rawSize);
         if(!reader_(number*pageSize_,rawSize,raw.data())) return nullptr;
-        Page page; page.bytes.resize(static_cast<std::size_t>(compressBound(static_cast<uLong>(rawSize))));
-        uLongf packed=static_cast<uLongf>(page.bytes.size());
-        if(compress2(page.bytes.data(),&packed,raw.data(),static_cast<uLong>(rawSize),Z_BEST_SPEED)!=Z_OK) return nullptr;
-        if(packed<rawSize) { page.bytes.resize(static_cast<std::size_t>(packed)); page.compressed=true; }
-        else { page.bytes.swap(raw); page.compressed=false; }
-        const std::size_t cost=page.bytes.size();
-        if(cost>budget_) return nullptr;
-        while(residentBytes_>budget_-cost && !lru_.empty()) {
-            const auto victim=lru_.back(); lru_.pop_back();
-            auto vi=pages_.find(victim); if(vi!=pages_.end()) { residentBytes_-=vi->second.bytes.size(); pages_.erase(vi); }
+        auto candidate=std::make_shared<Page>();
+        candidate->bytes.resize(static_cast<std::size_t>(compressBound(static_cast<uLong>(rawSize))));
+        uLongf packed=static_cast<uLongf>(candidate->bytes.size());
+        if(compress2(candidate->bytes.data(),&packed,raw.data(),
+                     static_cast<uLong>(rawSize),Z_BEST_SPEED)!=Z_OK) return nullptr;
+        if(packed<rawSize) {
+            candidate->bytes.resize(static_cast<std::size_t>(packed));
+            candidate->compressed=true;
+        } else {
+            candidate->bytes.swap(raw);
+            candidate->compressed=false;
         }
-        lru_.push_front(number); page.lru=lru_.begin();
-        auto inserted=pages_.emplace(number,std::move(page));
-        residentBytes_+=inserted.first->second.bytes.size();
-        return &inserted.first->second;
+
+        const std::size_t cost=candidate->bytes.size();
+        if(cost>budget_) return nullptr;
+        std::lock_guard<std::mutex> lock(mutex_);
+        // Another reader may have populated this page while we were encoding it.
+        auto existing=pages_.find(number);
+        if(existing!=pages_.end()) {
+            lru_.erase(existing->second->lru);
+            lru_.push_front(number);
+            existing->second->lru=lru_.begin();
+            return existing->second;
+        }
+        while(residentBytes_>budget_-cost && !lru_.empty()) {
+            const auto victim=lru_.back();
+            lru_.pop_back();
+            auto vi=pages_.find(victim);
+            if(vi!=pages_.end()) {
+                residentBytes_-=vi->second->bytes.size();
+                pages_.erase(vi); // in-flight readers retain their shared_ptr
+            }
+        }
+        lru_.push_front(number);
+        candidate->lru=lru_.begin();
+        pages_.emplace(number,candidate);
+        residentBytes_+=candidate->bytes.size();
+        return candidate;
     }
     const uint64_t logicalSize_;
     Reader reader_;
     const std::size_t pageSize_,budget_;
     mutable std::mutex mutex_;
-    std::unordered_map<uint64_t,Page> pages_;
+    std::unordered_map<uint64_t,std::shared_ptr<Page>> pages_;
     std::list<uint64_t> lru_;
     std::size_t residentBytes_=0;
     uint64_t misses_=0;
