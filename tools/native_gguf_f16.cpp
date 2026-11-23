@@ -103,6 +103,12 @@ int main(int argc,char** argv) {
             U next=j+1<order.size()?ts[order[j+1]].offset:fileSize-dataStart;
             if(t.offset>next || add(dataStart,next)>fileSize)throw std::runtime_error("invalid tensor offsets");
             if(t.offset%alignment)throw std::runtime_error("unaligned tensor offset");
+            if(t.type==0 || t.type==1 || t.type==30) {
+                U expected=1;
+                for(U d:t.dims)expected=mul(expected,d);
+                expected=mul(expected,t.type==0?4:2);
+                if(t.bytes!=expected)throw std::runtime_error("invalid floating tensor length");
+            }
             if(j && t.offset==ts[order[j-1]].offset)throw std::runtime_error("overlapping tensor offsets");
             U span=next-t.offset;
             if(t.bytes && t.bytes>span)throw std::runtime_error("tensor exceeds span");
@@ -121,7 +127,7 @@ int main(int argc,char** argv) {
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4))continue;
             if(t.bytes>64u*1024u*1024u)continue;
-            std::vector<uint8_t> raw(size_t(t.bytes));
+            std::vector<uint8_t> raw(static_cast<size_t>(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
             Result r;
@@ -206,7 +212,7 @@ int main(int argc,char** argv) {
         out.flush();if(!out)throw std::runtime_error("output write failure");
         out.close();in.close();
         if(std::rename(tmp.c_str(),argv[2]))throw std::runtime_error("rename failed");
-        std::cout<<"converted F32 tensors: "<<changed<<"/"<<ts.size()<<"\n";
+        std::cout<<"converted tensors: "<<changed<<"/"<<ts.size()<<"\n";
         return 0;
     } catch(const std::exception& e) {std::remove(tmp.c_str());std::cerr<<e.what()<<"\n";return 1;}
 }
