@@ -24,6 +24,8 @@ int main() {
         values[i]=static_cast<float>(static_cast<int>(i%127)-63) * 0.25f;
     auto compact=ChunkedF32Storage::Build(values.data(),values.size(),0.0f,1024);
     CHECK(compact.storedBytes()==values.size()*2);
+    CHECK(compact.residentBytes()>=compact.storedBytes());
+    CHECK(compact.residentBytes()<compact.originalBytes());
     RawrXD::TensorCompression::Encoding encoding{};
     std::vector<std::uint8_t> packed;
     CHECK(compact.ExportUniform16Bit(encoding,packed));
@@ -99,6 +101,7 @@ int main() {
             return true;
         },64u*1024u,false,byteSource.size());
     CHECK(byteStore.storedBytes()<byteStore.size());
+    CHECK(byteStore.residentBytes()<byteStore.size());
     std::vector<std::uint8_t> byteOut(5000),byteScratch;
     byteStore.ReadRange(61337,byteOut.size(),byteOut.data(),byteScratch);
     CHECK(std::memcmp(byteOut.data(),byteSource.data()+61337,byteOut.size())==0);
