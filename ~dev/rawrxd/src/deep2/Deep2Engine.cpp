@@ -1452,6 +1452,11 @@ void Deep2Engine::computeLogitsBatch(
         !modelWeights.lmHead.compressedBytes))
         throw std::runtime_error("computeLogitsBatch: model tensors missing");
 
+    if (count > std::numeric_limits<size_t>::max() / H ||
+        count > std::numeric_limits<size_t>::max() / V ||
+        count * H > std::numeric_limits<size_t>::max() / sizeof(float) ||
+        count * V > std::numeric_limits<size_t>::max() / sizeof(float))
+        throw std::runtime_error("computeLogitsBatch: batch span overflow");
     std::vector<float> normed(count*H);
     for(size_t b=0;b<count;++b)
         RMSNormW(modelWeights.finalNorm,
