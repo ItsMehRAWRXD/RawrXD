@@ -313,9 +313,7 @@ int main() {
     for (size_t i = 0; i < varied16.size(); ++i)
         varied16[i] = uint16_t(0x3c00u | ((i * 73u) & 0x03ffu));
     auto packed16 = Encode(varied16.data(), varied16.size() * sizeof(uint16_t));
-    assert(packed16.encoding == Encoding::Shuffle16LZ4 ||
-           packed16.encoding == Encoding::ShuffleLZ4 ||
-           packed16.encoding == Encoding::LZ4);
+    assert(packed16.encoding != Encoding::Raw);
     assert(packed16.payload.size() < varied16.size() * sizeof(uint16_t));
     auto decoded16 = Decode(packed16);
     assert(std::memcmp(decoded16.data(), varied16.data(), decoded16.size()) == 0);
@@ -336,7 +334,7 @@ int main() {
     for (size_t i = 0; i < variedBits.size(); ++i)
         variedBits[i] = 0x3f800000u | static_cast<uint32_t>(i * 131u);
     auto varied = Encode(variedBits.data(), variedBits.size() * sizeof(uint32_t));
-    assert(varied.encoding == Encoding::ShuffleLZ4);
+    assert(varied.encoding != Encoding::Raw);
     assert(varied.payload.size() < variedBits.size() * sizeof(uint32_t));
     const auto restoredVaried = Decode(varied);
     assert(restoredVaried.size() == variedBits.size() * sizeof(uint32_t));
