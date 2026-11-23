@@ -2486,7 +2486,7 @@ bool VulkanCompute::SubmitRecordedResidentQ4K(
         return false;
     const Q4KBatchTile tile=SelectQ4KBatchTile(
         weight.data,weight.bytes,input,output,
-        weight.rows,weight.cols,batch);
+        weight.rows,weight.cols,batch,weight.key);
     const uint32_t tileN=(uint32_t)tile;
     RecordedQ4KKey key{
         wb->buffer,input.buffer,output.buffer,
@@ -2609,7 +2609,7 @@ bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
             const Q4KBatchTile tile=SelectQ4KBatchTile(
                 weights[i].data,weights[i].bytes,
                 residentBatchInput_,residentGroupOutputs_[i],
-                weights[i].rows,cols,batch);
+                weights[i].rows,cols,batch,weights[i].key);
             VkPipeline pipe=tile==Q4KBatchTile::Eight
                 ? qBatch8RowPipeline_:qBatch4RowPipeline_;
             VkPipelineLayout layout=tile==Q4KBatchTile::Eight
@@ -3235,7 +3235,7 @@ bool VulkanCompute::RunWeightHostBatchQ4K(
             weight.data,weight.bytes,in,out,
             weight.rows,weight.cols,batch,weight.key)) {
         fprintf(stderr,"[RWHB_Q4K] FAIL7 DispatchGemvQ4KBatch rows=%u cols=%u batch=%u\n",
-            weight.rows,weight.cols,batch);
+            weight.rows,weight.cols,batch,weight.key);
         return abort();
     }
     if(!recordCopy(fusedCmd_,out,*downStage,outBytes)) {
@@ -6439,7 +6439,7 @@ bool VulkanCompute::BeginQ4KResidentAsync(
 
     Q4KBatchTile tile=SelectQ4KBatchTile(
         weight.data,weight.bytes,input,output,
-        weight.rows,weight.cols,batch);
+        weight.rows,weight.cols,batch,weight.key);
     VkPipeline pipe=tile==Q4KBatchTile::Eight
         ? qBatch8RowPipeline_:qBatch4RowPipeline_;
     VkPipelineLayout layout=tile==Q4KBatchTile::Eight
@@ -6544,7 +6544,7 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
         return false;
     const Q4KBatchTile tile=SelectQ4KBatchTile(
         weight.data,weight.bytes,input,output,
-        weight.rows,weight.cols,batch);
+        weight.rows,weight.cols,batch,weight.key);
     VkPipeline pipe=tile==Q4KBatchTile::Eight
         ? qBatch8RowPipeline_:qBatch4RowPipeline_;
     VkPipelineLayout layout=tile==Q4KBatchTile::Eight
