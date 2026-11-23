@@ -61,6 +61,47 @@ void Deep2Engine::SetCompressedWeightsBudget(std::size_t bytes) {
     }
 }
 
+namespace {
+std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>
+getResidentCompressedTensor(Deep2Engine& engine, const deep2::TensorEntry& entry,
+                           std::size_t blockBytes) {
+    const std::string key = entry.name + ":" + std::to_string(entry.shardIndex) +
+        ":" + std::to_string(entry.offset) + ":" + std::to_string(entry.byteSize()) +
+        ":" + std::to_string(blockBytes);
+    std::lock_guard<std::mutex> lock(engine.compressedWeightsMutex);
+    auto it = engine.compressedWeights.find(key);
+    if (it != engine.compressedWeights.end()) {
+        engine.compressedWeightsLru.remove(key);
+        engine.compressedWeightsLru.push_front(key);
+        return it->second;
+    }
+
+    auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
+        engine.rom.loadResidentCompressedTensor(entry, blockBytes));
+    const auto bytes = loaded->resident_bytes();
+    if (bytes > engine.compressedWeightsBudgetBytes)
+        return loaded; // Request-scoped residency; do not exceed the shared budget.
+
+    while (engine.compressedWeightsBytes >
+               engine.compressedWeightsBudgetBytes - bytes &&
+           !engine.compressedWeightsLru.empty()) {
+        const auto victim = engine.compressedWeightsLru.back();
+        engine.compressedWeightsLru.pop_back();
+        auto found = engine.compressedWeights.find(victim);
+        if (found == engine.compressedWeights.end()) continue;
+        const auto residentBytes = found->second->resident_bytes();
+        engine.compressedWeightsBytes =
+            residentBytes > engine.compressedWeightsBytes
+                ? 0 : engine.compressedWeightsBytes - residentBytes;
+        engine.compressedWeights.erase(found);
+    }
+    engine.compressedWeightsBytes += bytes;
+    engine.compressedWeightsLru.push_front(key);
+    auto inserted = engine.compressedWeights.emplace(key, loaded);
+    return inserted.first->second;
+}
+} // namespace
+
 bool Deep2Engine::gemvROMQ8_0(
     const std::string& tensorName, const float* x, float* y,
     std::size_t rows, std::size_t cols) {
@@ -113,43 +154,73 @@ bool Deep2Engine::gemvROMCompressedF32(
     if (entry->dims.size() != 2 ||
         entry->dims[0] != cols || entry->dims[1] != rows) return false;
     try {
-        // Keep the compressed payload resident between token evaluations.
-        // Lock also serializes first construction to avoid duplicate full stores.
-        std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor> resident;
-        {
-            std::lock_guard<std::mutex> lock(compressedWeightsMutex);
-            const auto key = tensorName + ":" + std::to_string(blockBytes);
-            auto it = compressedWeights.find(key);
-            if (it == compressedWeights.end()) {
-                auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
-                    rom.loadResidentCompressedTensor(*entry, blockBytes));
-                const auto bytes = loaded->resident_bytes();
-                if (bytes <= compressedWeightsBudgetBytes) {
-                    while (compressedWeightsBytes > compressedWeightsBudgetBytes - bytes &&
-                           !compressedWeightsLru.empty()) {
-                        const auto victim = compressedWeightsLru.back();
-                        compressedWeightsLru.pop_back();
-                        auto found = compressedWeights.find(victim);
-                        if (found == compressedWeights.end()) continue;
-                        compressedWeightsBytes -= found->second->resident_bytes();
-                        compressedWeights.erase(found);
-                    }
-                    compressedWeightsBytes += bytes;
-                    compressedWeightsLru.push_front(key);
-                    it = compressedWeights.emplace(key, std::move(loaded)).first;
-                    resident = it->second;
-                } else {
-                    resident = std::move(loaded);
-                }
-            } else {
-                compressedWeightsLru.remove(key);
-                compressedWeightsLru.push_front(key);
-                resident = it->second;
-            }
-        }
+        auto resident = getResidentCompressedTensor(*this, *entry, blockBytes);
         return gemvResidentF32(*resident, x, y, rows, cols, stagingBudgetBytes);
     } catch (const std::exception& e) {
         std::fprintf(stderr, "[ROM_COMPRESSED_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
+bool Deep2Engine::gemvROMCompressedF16(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols,
+    std::size_t blockBytes, std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode || (cols && !x) || (rows && !y)) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::F16 ||
+        entry->dims.size() != 2 || entry->dims[0] != cols || entry->dims[1] != rows)
+        return false;
+    try {
+        auto resident = getResidentCompressedTensor(*this, *entry, blockBytes);
+        const auto result = rawrxd::compression::resident_f16_matvec(
+            *resident, x, rows, cols, stagingBudgetBytes);
+        std::copy(result.begin(), result.end(), y);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_F16_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
+bool Deep2Engine::gemvROMCompressedQ4_0(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols,
+    std::size_t blockBytes, std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode || !x || !y) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::Q4_0 ||
+        entry->dims.size() != 2 || entry->dims[0] != cols || entry->dims[1] != rows)
+        return false;
+    try {
+        auto resident = getResidentCompressedTensor(*this, *entry, blockBytes);
+        const auto result = rawrxd::compression::resident_q4_0_matvec(
+            *resident, x, rows, cols, stagingBudgetBytes);
+        std::copy(result.begin(), result.end(), y);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_Q4_0_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
+bool Deep2Engine::gemvROMCompressedQ8_0(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols,
+    std::size_t blockBytes, std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode || !x || !y) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::Q8_0 ||
+        entry->dims.size() != 2 || entry->dims[0] != cols || entry->dims[1] != rows)
+        return false;
+    try {
+        auto resident = getResidentCompressedTensor(*this, *entry, blockBytes);
+        const auto result = rawrxd::compression::resident_q8_0_matvec(
+            *resident, x, rows, cols, stagingBudgetBytes);
+        std::copy(result.begin(), result.end(), y);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_Q8_0_GEMV] %s\\n", e.what());
         return false;
     }
 }
