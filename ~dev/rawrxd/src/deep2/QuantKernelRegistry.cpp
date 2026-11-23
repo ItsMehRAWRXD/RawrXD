@@ -1465,34 +1465,45 @@ static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
+    // Canonical ggml dequantize_row_q5_K layout:
+    // each 64-value span shares 32 ql bytes; low/high nibbles form
+    // consecutive 32-value groups, while qh contributes bits 2*g and 2*g+1.
     const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
+    const size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        float dmin = f16_to_f32(blocks[b].dmin);
-        if (!std::isfinite(d))    d    = 0.0f;
-        if (!std::isfinite(dmin)) dmin = 0.0f;
-        for (int sb = 0; sb < 8; ++sb) {
-            uint8_t scale, min;
-            get_scale_min_k4(sb, blocks[b].scales, scale, min);
-            float s = d * scale;
-            float m = dmin * min;
-            for (int i = 0; i < 32; ++i) {
-                int idx = sb * 32 + i;
-                size_t globalIdx = b * 256 + idx;
-                if (globalIdx >= n) return;
-                int qsIdx = idx / 2;
-                int qsShift = (idx % 2) * 4;
-                uint8_t low4 = (blocks[b].qs[qsIdx] >> qsShift) & 0x0F;
-                int qhIdx = idx / 8;
-                int qhShift = idx % 8;
-                uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
-                uint8_t q = low4 | (high1 << 4);
-                dst[globalIdx] = s * q - m;
+        const float d = f16_to_f32(blocks[b].d);
+        const float dmin = f16_to_f32(blocks[b].dmin);
+        const uint8_t* ql = blocks[b].qs;
+        const uint8_t* qh = blocks[b].qh;
+        uint8_t u1 = 1, u2 = 2;
+        int is = 0;
+        float* y = dst + b * 256;
+        for (int j = 0; j < 256; j += 64) {
+            uint8_t scale1, min1, scale2, min2;
+            get_scale_min_k4(is + 0, blocks[b].scales, scale1, min1);
+            get_scale_min_k4(is + 1, blocks[b].scales, scale2, min2);
+            const float d1 = d * static_cast<float>(scale1);
+            const float m1 = dmin * static_cast<float>(min1);
+            const float d2 = d * static_cast<float>(scale2);
+            const float m2 = dmin * static_cast<float>(min2);
+            for (int l = 0; l < 32; ++l) {
+                const size_t i0 = static_cast<size_t>(j + l);
+                const size_t i1 = static_cast<size_t>(j + 32 + l);
+                const uint8_t q0 = static_cast<uint8_t>((ql[l] & 0x0F) |
+                    ((qh[l] & u1) ? 0x10 : 0));
+                const uint8_t q1 = static_cast<uint8_t>((ql[l] >> 4) |
+                    ((qh[l] & u2) ? 0x10 : 0));
+                if (b * 256 + i0 < n) y[i0] = d1 * q0 - m1;
+                if (b * 256 + i1 < n) y[i1] = d2 * q1 - m2;
             }
+            ql += 32;
+            is += 2;
+            u1 = static_cast<uint8_t>(u1 << 2);
+            u2 = static_cast<uint8_t>(u2 << 2);
         }
     }
 }
+
 static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
     // Must match ggml dequantize_row_q6_K / rxd_q6k_dequant_block (not flat nibble layout).
     const size_t numBlocks = (n + 255) / 256;
@@ -1700,42 +1711,23 @@ static void gemv_q5_k_scalar(
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
+    // Keep the product path on the canonical scalar dequantizer until a
+    // separately measured Q5_K x Q8_K dot kernel passes reference parity.
+    const size_t blocksPerRow = (cols + 255) / 256;
     const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
     for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
+        double acc = 0.0;
         const block_q5_K* rowBlocks = blocks + r * blocksPerRow;
         for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q5_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float dmin = f16_to_f32(blk.dmin);
-            size_t elemsInBlock = (b == blocksPerRow - 1)
-                ? (cols - b * 256)
-                : 256;
-            if (elemsInBlock == 0) break;
-
-            for (int sb = 0; sb < 8; ++sb) {
-                uint8_t scale, min;
-                get_scale_min_k4(sb, blk.scales, scale, min);
-                float s = d * scale;
-                float m = dmin * min;
-                float blockAcc = 0.0f;
-                for (int i = 0; i < 32; ++i) {
-                    int idx = sb * 32 + i;
-                    if ((size_t)idx >= elemsInBlock) break;
-                    int qsIdx = idx / 2;
-                    int qsShift = (idx % 2) * 4;
-                    uint8_t low4 = (blk.qs[qsIdx] >> qsShift) & 0x0F;
-                    int qhIdx = idx / 8;
-                    int qhShift = idx % 8;
-                    uint8_t high1 = (blk.qh[qhIdx] >> qhShift) & 0x01;
-                    uint8_t q = low4 | (high1 << 4);
-                    blockAcc += (s * q - m) * x[b * 256 + idx];
-                }
-                acc += blockAcc;
-            }
+            float decoded[256];
+            dequant_q5_k(reinterpret_cast<const uint8_t*>(rowBlocks + b),
+                         decoded, 256);
+            const size_t count = std::min<size_t>(256, cols - b * 256);
+            for (size_t i = 0; i < count; ++i)
+                acc += static_cast<double>(decoded[i]) *
+                       static_cast<double>(x[b * 256 + i]);
         }
-        y[r] += acc;
+        y[r] += static_cast<float>(acc);
     }
 }
 
