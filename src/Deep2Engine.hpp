@@ -118,6 +118,13 @@ struct Deep2Engine {
     bool readCompressedF32Tile(const deep2::TensorEntry& entry, uint64_t firstElement,
                                uint64_t elementCount, float* destination,
                                std::vector<uint8_t>& decodeScratch);
+    // Read an arbitrary encoded GGUF byte range through bounded lossless
+    // residency. This also covers native F16/BF16 Vulkan tiles, not just CPU
+    // dequantization paths.
+    bool readCompressedEncodedRange(const deep2::TensorEntry& entry,
+                                    uint64_t byteOffset, uint64_t byteCount,
+                                    uint8_t* destination,
+                                    std::vector<uint8_t>& decodeScratch);
     // Read and dequantize only the encoded blocks intersecting a logical tile.
     bool readDequantizedTensorTile(const deep2::TensorEntry& entry,
                                    uint64_t firstElement, uint64_t elementCount,
