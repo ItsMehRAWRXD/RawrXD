@@ -4,6 +4,7 @@
 #endif
 #include <cassert>
 #include <cstdint>
+#include <algorithm>
 #include <vector>
 
 int main() {
@@ -33,5 +34,32 @@ int main() {
         corrupt.data(), corrupt.size(), input.size());
     assert(!rejected);
     assert(rejected.status == rawrxd::compression::Status::CorruptData);
+    // Incompressible binary data exercises the codec's expansion path.
+    std::vector<std::uint8_t> binary(131072);
+    std::uint32_t state = 0x12345678u;
+    for (auto& byte : binary) {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        byte = static_cast<std::uint8_t>(state);
+    }
+    const auto binaryEncoded = rawrxd::compression::compress(binary.data(), binary.size());
+    assert(binaryEncoded);
+    const auto binaryDecoded = rawrxd::compression::decompress(
+        binaryEncoded.bytes.data(), binaryEncoded.bytes.size(), binary.size());
+    assert(binaryDecoded && binaryDecoded.bytes == binary);
+
+    // A truncated stream must not be accepted as a complete tensor block.
+    auto truncated = binaryEncoded.bytes;
+    truncated.resize(truncated.size() / 2);
+    const auto truncatedResult = rawrxd::compression::decompress(
+        truncated.data(), truncated.size(), binary.size());
+    assert(!truncatedResult);
+    assert(truncatedResult.status == rawrxd::compression::Status::CorruptData);
+
+    // The output ceiling is exact: a single byte less must be rejected.
+    const auto binaryCapped = rawrxd::compression::decompress(
+        binaryEncoded.bytes.data(), binaryEncoded.bytes.size(), binary.size() - 1);
+    assert(binaryCapped.status == rawrxd::compression::Status::OutputLimitExceeded);
     return 0;
 }
