@@ -236,15 +236,43 @@ inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
         if(!std::isfinite(actualScale) ||
            ((positiveMax!=0.0f || negativeMax!=0.0f) && actualScale==0.0f))
             return false;
-        encoded[0]=static_cast<unsigned char>(half);
-        encoded[1]=static_cast<unsigned char>(half>>8);
-        for(unsigned i=0;i<32;++i) {
-            const double normalized=actualScale==0.0f?0.0:
-                static_cast<double>(values[i])/actualScale;
-            const double rounded=std::round(normalized);
-            const int q=static_cast<int>(std::max(-128.0,std::min(127.0,rounded)));
-            encoded[2+i]=static_cast<unsigned char>(static_cast<int8_t>(q));
+        // FP16 scale rounding can make a quantized endpoint clip.
+        // Evaluate the rounded scale and its next larger finite FP16
+        // neighbor, then retain the candidate with the smaller worst
+        // absolute reconstruction error. No extra storage is needed.
+        uint16_t chosenHalf=half;
+        double bestError=std::numeric_limits<double>::infinity();
+        unsigned char chosenCodes[32]={};
+        const uint16_t candidates[2]={half,static_cast<uint16_t>(half+1u)};
+        for(unsigned candidate=0;candidate<2;++candidate) {
+            const uint16_t h=candidates[candidate];
+            if(candidate && (half>=0x7bffu || scale64==0.0))continue;
+            const uint32_t fbits=Float16ToFloat32Bits(h);
+            float candidateScale=0;
+            std::memcpy(&candidateScale,&fbits,4);
+            if(!std::isfinite(candidateScale) ||
+               (scale64!=0.0 && candidateScale==0.0f))continue;
+            double error=0;
+            unsigned char codes[32];
+            for(unsigned i=0;i<32;++i) {
+                const double normalized=candidateScale==0.0f?0.0:
+                    static_cast<double>(values[i])/candidateScale;
+                const double rounded=std::round(normalized);
+                const int q=static_cast<int>(std::max(-128.0,std::min(127.0,rounded)));
+                codes[i]=static_cast<unsigned char>(static_cast<int8_t>(q));
+                error=std::max(error,std::abs(static_cast<double>(values[i])-
+                                              static_cast<double>(candidateScale)*q));
+            }
+            if(error<bestError) {
+                bestError=error;
+                chosenHalf=h;
+                std::memcpy(chosenCodes,codes,32);
+            }
         }
+        if(!std::isfinite(bestError))return false;
+        encoded[0]=static_cast<unsigned char>(chosenHalf);
+        encoded[1]=static_cast<unsigned char>(chosenHalf>>8);
+        std::memcpy(encoded+2,chosenCodes,32);
         if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
         sourceBytes-=inputBlock;
     }
