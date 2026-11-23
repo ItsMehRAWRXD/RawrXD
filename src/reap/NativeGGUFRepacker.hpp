@@ -26,7 +26,6 @@ struct RepackTensor {
     bool convert_q8_0 = false;
     bool q8_source_f16 = false;
     bool q8_source_k = false;
-    bool q8_source_q6k = false;
     bool convert_q4_0 = false;
     uint32_t q4_source_type = 0;
 };
@@ -413,54 +412,6 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
     }
     return true;
 }
-inline bool ConvertQ6KToQ8_0(std::ifstream& in,std::ofstream& out,
-                              uint64_t from,uint64_t sourceBytes) {
-    if(sourceBytes%210 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
-        return false;
-    in.clear();in.seekg(static_cast<std::streamoff>(from));
-    if(!in)return false;
-    unsigned char source[210],encoded[34];
-    while(sourceBytes) {
-        if(!in.read(reinterpret_cast<char*>(source),210))return false;
-        const uint16_t half=uint16_t(source[208])|(uint16_t(source[209])<<8);
-        const uint32_t bits=Float16ToFloat32Bits(half);
-        float scale=0;std::memcpy(&scale,&bits,4);
-        if(!std::isfinite(scale))return false;
-        for(unsigned group=0;group<8;++group) {
-            float values[32],maxAbs=0;
-            for(unsigned i=0;i<32;++i) {
-                const unsigned half=group/4,quarter=group%4,lane=i;
-                const unsigned low=(source[half*64+(quarter%2)*32+lane]>>
-                                    (quarter>=2?4:0))&15;
-                const unsigned high=(source[128+half*32+lane]>>(quarter*2))&3;
-                const int quantized=static_cast<int>(low|(high<<4))-32;
-                const int multiplier=static_cast<int8_t>(
-                    source[192+half*8+quarter*2+lane/16]);
-                values[i]=scale*static_cast<float>(quantized*multiplier);
-                if(!std::isfinite(values[i]))return false;
-                maxAbs=std::max(maxAbs,std::abs(values[i]));
-            }
-            const float d=maxAbs/127.0f;
-            uint32_t dbits=0;std::memcpy(&dbits,&d,4);
-            const uint16_t half=Float32BitsToFloat16(dbits);
-            const uint32_t decoded=Float16ToFloat32Bits(half);
-            float actual=0;std::memcpy(&actual,&decoded,4);
-            if(maxAbs!=0 && (!std::isfinite(actual)||actual==0))return false;
-            encoded[0]=static_cast<unsigned char>(half);
-            encoded[1]=static_cast<unsigned char>(half>>8);
-            for(unsigned i=0;i<32;++i) {
-                const double normalized=actual==0?0.0:
-                    static_cast<double>(values[i])/actual;
-                const double q=std::round(normalized);
-                const int value=static_cast<int>(std::max(-127.0,std::min(127.0,q)));
-                encoded[2+i]=static_cast<unsigned char>(static_cast<int8_t>(value));
-            }
-            if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
-        }
-        sourceBytes-=210;
-    }
-    return true;
-}
 inline RepackError RepackGGUF(const std::string& input,
                              const std::string& output,
                              uint64_t max_output_bytes=UINT64_MAX,
@@ -526,12 +477,11 @@ inline RepackError RepackGGUF(const std::string& input,
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
         }
-        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1 || t.type==14 || t.type==15) &&
+        if(convert_f32_to_q8_0 && (t.type==0 || t.type==1 || t.type==15) &&
            t.dims[0]%32==0) {
             t.convert_q8_0=true;
             t.q8_source_f16=(t.type==1);
             t.q8_source_k=(t.type==15);
-            t.q8_source_q6k=(t.type==14);
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
             t.bytes=(count/32)*34;
         }
@@ -635,8 +585,6 @@ inline RepackError RepackGGUF(const std::string& input,
         } else if(t.convert_q8_0) {
             if(!(t.q8_source_k ?
                  ConvertQ8KToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes) :
-                 t.q8_source_q6k ?
-                 ConvertQ6KToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes) :
                  ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
                                           t.source_bytes,t.q8_source_f16)))
                 return RepackError::Output;
