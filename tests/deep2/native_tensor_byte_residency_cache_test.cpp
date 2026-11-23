@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdint>
 #include <iostream>
+#include <thread>
+#include <atomic>
 #include <stdexcept>
 #include <vector>
 
@@ -148,6 +150,42 @@ int main() {
     }
     assert(transientAttempts == 2);
     assert(!cache.IsRawFallback("transient"));
+
+    // Concurrent partial reads model multiple inference agents sharing the
+    // same immutable compressed quantized-weight payload.
+    std::vector<uint8_t> sharedBytes(128 * 1024);
+    for (size_t i = 0; i < sharedBytes.size(); ++i)
+        sharedBytes[i] = static_cast<uint8_t>((i / 64) & 0x0f);
+    Deep2::TensorByteResidencyCache sharedCache(256 * 1024);
+    assert(sharedCache.RegisterFromReader("shared.quantized", sharedBytes.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(sharedBytes.begin() + offset,
+                      sharedBytes.begin() + offset + count, out);
+            return true;
+        }, 4096));
+    std::atomic<bool> concurrentOk{true};
+    std::vector<std::thread> workers;
+    for (size_t worker = 0; worker < 6; ++worker) {
+        workers.emplace_back([&, worker] {
+            std::vector<uint8_t> tile(2048), decodeScratch;
+            for (size_t iteration = 0; iteration < 128; ++iteration) {
+                const size_t first = (worker * 4093 + iteration * 977) %
+                    (sharedBytes.size() - tile.size());
+                if (!sharedCache.ReadRange("shared.quantized", first,
+                                           tile.size(), tile.data(), decodeScratch) ||
+                    !std::equal(tile.begin(), tile.end(),
+                                sharedBytes.begin() + first)) {
+                    concurrentOk.store(false, std::memory_order_relaxed);
+                    return;
+                }
+            }
+        });
+    }
+    for (auto& worker : workers) worker.join();
+    const auto sharedStats = sharedCache.GetStats();
+    assert(concurrentOk.load(std::memory_order_relaxed));
+    assert(sharedStats.activeReaders == 0);
+    assert(sharedStats.hits >= 6 * 128);
 
     std::cout<<"lossless encoded-byte tensor residency cache PASS\n";
 }
