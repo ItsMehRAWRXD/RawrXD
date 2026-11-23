@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr, "cache check failed at %d: %s\\n", __LINE__, #x); return 1; } } while (false)
@@ -41,6 +42,7 @@ int main() {
     ResidentTensorCache cache(bytesA + bytesB);
     auto leaseA = cache.GetOrLoad("a", [&] { return sourceA; });
     CHECK(leaseA && cache.entry_count() == 1);
+    sourceA.reset(); // Only the cache and the inference lease retain A.
     CHECK(cache.resident_bytes() == bytesA);
 
     // Shrinking the budget cannot erase accounting while a request owns A.
@@ -50,6 +52,7 @@ int main() {
 
     // A second miss remains request-scoped when all cached bytes are leased.
     auto requestB = cache.GetOrLoad("b", [&] { return sourceB; });
+    sourceB.reset();
     CHECK(requestB && requestB->size() == repeatedB.size());
     CHECK(cache.entry_count() == 1);
     CHECK(cache.resident_bytes() == bytesA);
@@ -61,7 +64,9 @@ int main() {
 
     // Once capacity is available, B is admitted and remains accurately sized.
     cache.SetBudget(bytesB);
-    auto cachedB = cache.GetOrLoad("b", [&] { return sourceB; });
+    auto sourceB2 = make_tensor(repeatedB, pathB);
+    auto cachedB = cache.GetOrLoad("b", [&] { return sourceB2; });
+    sourceB2.reset();
     CHECK(cachedB);
     CHECK(cache.entry_count() == 1);
     CHECK(cache.resident_bytes() == bytesB);
@@ -69,8 +74,6 @@ int main() {
 
     cachedB.reset();
     requestB.reset();
-    sourceA.reset();
-    sourceB.reset();
     cache.Clear();
     CHECK(cache.entry_count() == 0);
     CHECK(cache.resident_bytes() == 0);
