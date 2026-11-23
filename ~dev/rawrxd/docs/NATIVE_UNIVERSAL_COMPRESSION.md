@@ -51,15 +51,15 @@ A valid runtime-memory claim must report packed payload bytes, retained host all
 
 ## Supported and unsupported representations
 
-- F32 is the current lossy precision-reduction input type.
+- F32 is the precision-reduction input type: F16/BF16 is selected only when the configured error bound is met; otherwise each raw F32 chunk is tried with lossless LZ4 and retained in that encoding only when it is smaller than the original bytes.
 - Existing GGML quantized tensors (Q2_K through Q8_K and other supported formats) keep their original GGML type and packed bytes. Optional lossless LZ4 chunk storage is used only when it reduces bytes; CPU/GPU paths restore bounded tiles before invoking the existing dequantization/GPU kernels. No lossy requantization is applied.
 - F16/BF16 tensors are already 16-bit and are not converted by this path.
 - F64 and integer tensors are not converted by this path.
-- Mixed per-chunk GPU descriptors, device-side streaming decompression for nonuniform chunks, and per-tensor GGUF unmapping are not yet implemented.
+- F32 LZ4 chunks are decompressed on the host only for the requested row/range before GPU upload; device-side LZ4/RLE decoding, mixed-codec descriptors in fused command recording, and per-tensor GGUF unmapping are not yet implemented.
 
 ## Regression target
 
-The native test target `rawrxd-native-tensor-compression-test` currently contains 53 explicit checks covering exact 16-bit compaction, zero-copy packed views, reader-bounded construction, absolute/relative error selection, NaN/infinity preservation, exact F32 fallback, mixed chunk encodings, LZ4 round trips, raw-byte fallback, range boundaries, storage budgets, and lease-aware cache admission/eviction. The model-load cache insertion/lease wiring is integrated but still requires a full Deep2 build and model-load runtime validation. A Windows CI workflow is configured to compile and run this standalone test with MSVC; no successful workflow receipt has yet been recorded. Full model numerical parity, end-to-end Vulkan inference, and process working-set measurements remain separate release gates.
+The native test target `rawrxd-native-tensor-compression-test` currently contains 63 explicit checks covering exact 16-bit compaction, zero-copy packed views, reader-bounded construction, absolute/relative error selection, NaN/infinity preservation, exact F32 fallback, mixed chunk encodings, LZ4 round trips, raw-byte fallback, range boundaries, storage budgets, and lease-aware cache admission/eviction. The model-load cache insertion/lease wiring is integrated but still requires a full Deep2 build and model-load runtime validation. A Windows CI workflow is configured to compile and run this standalone test with MSVC; no successful workflow receipt has yet been recorded. Full model numerical parity, end-to-end Vulkan inference, and process working-set measurements remain separate release gates.
 
 ## Compressed-only inference entry points
 
