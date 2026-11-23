@@ -69,6 +69,12 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   tensor in an intermediate buffer. The cache probes the first bounded chunk
   and rejects a non-compressible tensor immediately rather than scanning the
   entire model before falling back to raw tile reads.
+- `TensorByteResidencyCache` independently stores losslessly RLE-compressed
+  chunks of already-encoded GGUF payloads when they are smaller. Deep2 uses it
+  for F16/BF16, fixed-block quantized and K-quant tensor bytes. Once a complete
+  compressed representation is admitted, the corresponding unleased raw
+  TensorROM pages are evicted so the pager and compressed cache do not retain
+  duplicate full payloads.
 - `TensorResidencyCache` retains only encodings that actually reduce bytes,
   enforces a configurable memory budget, tracks hits/misses/decoded bytes and
   evicts least-recently-used entries.
@@ -96,6 +102,10 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   `compressedF32MaxAbsError`; its default is zero, so lossy conversion is
   never silently enabled. Exact F16/BF16 representations and lossless RLE
   may still be retained when they reduce storage.
+
+Deep2 exposes `GetTensorResidencySnapshot()` with per-cache logical bytes,
+compressed bytes, budgets, tensor counts, hit/miss counts, decoded bytes and
+evictions for measuring actual residency.
 
 This is an in-memory runtime cache, not a change to GGUF wire types. Existing
 quantized weights remain encoded in the TensorROM pager; only the requested
