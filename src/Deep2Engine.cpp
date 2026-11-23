@@ -762,6 +762,17 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
 bool Deep2Engine::validateLogitsParity(const std::vector<float>& romLogits,
                                        const std::vector<float>& baselineLogits,
                                        float tolerance) {
+    if (romLogits.empty() || baselineLogits.empty() ||
+        !std::isfinite(tolerance) || tolerance < 0.0f) {
+        fprintf(stderr, "[Move 10] Parity requires independent nonempty logits and finite tolerance\n");
+        return false;
+    }
+    for (size_t i = 0; i < romLogits.size(); ++i) {
+        if (!std::isfinite(romLogits[i])) return false;
+    }
+    for (size_t i = 0; i < baselineLogits.size(); ++i) {
+        if (!std::isfinite(baselineLogits[i])) return false;
+    }
     if (romLogits.size() != baselineLogits.size()) {
         fprintf(stderr, "[Move 10] Logits size mismatch: %zu vs %zu\n", romLogits.size(), baselineLogits.size());
         return false;
