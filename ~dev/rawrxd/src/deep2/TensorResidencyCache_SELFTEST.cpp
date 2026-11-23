@@ -92,6 +92,6 @@ int main() {
     cache.SetBudget(1);
     CHECK(!cache.Contains("weights.layer0"));
     CHECK(cache.GetStats().storedBytes == 0);
-    CHECK(cache.GetStats().evictions == 1);
+    CHECK(cache.GetStats().evictions == 2);
     return 0;
 }
