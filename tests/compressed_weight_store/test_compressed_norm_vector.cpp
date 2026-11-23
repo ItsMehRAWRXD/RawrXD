@@ -32,6 +32,19 @@ int main() {
                             f16Prefix.size(), &error));
     REQUIRE(std::memcmp(f16Prefix.data(), f16.data(), f16Prefix.size()) == 0);
 
+    // Mamba-2's custom selective-scan consumers use F32 vectors. They
+    // retain the same exact-range contract while their consumer-side adapter
+    // materializes only the current invocation's working vector.
+    std::vector<float> ssmNorm(1024, 0.75f);
+    REQUIRE(store.addTensor("blk.0.ssm_norm", ssmNorm.data(),
+                            ssmNorm.size() * sizeof(float), &error, 0u, true));
+    std::vector<std::uint8_t> ssmPrefix(128 * sizeof(float));
+    REQUIRE(store.readRange("blk.0.ssm_norm", 64 * sizeof(float),
+                            ssmPrefix.data(), ssmPrefix.size(), &error));
+    REQUIRE(std::memcmp(ssmPrefix.data(),
+                        reinterpret_cast<const std::uint8_t*>(ssmNorm.data()) + 64 * sizeof(float),
+                        ssmPrefix.size()) == 0);
+
     // Read a nonzero range to ensure offset-based lazy access works for norm
     // vectors, not just their first block.
     std::vector<std::uint8_t> tail(32 * sizeof(float));
@@ -42,7 +55,7 @@ int main() {
                         tailOffset, tail.size()) == 0);
 
     const auto stats = store.stats();
-    REQUIRE(stats.tensors == 2);
+    REQUIRE(stats.tensors == 3);
     REQUIRE(stats.compressed_bytes < stats.raw_bytes);
     REQUIRE(stats.cached_decoded_bytes == 0);
     return 0;
