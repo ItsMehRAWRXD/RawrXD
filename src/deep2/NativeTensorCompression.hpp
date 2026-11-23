@@ -124,40 +124,51 @@ inline Result EncodeAdaptiveF32(const float* values,size_t count,float max_abs_e
         throw std::length_error("F32 tensor size overflow");
     return Encode(values,count*sizeof(float),true,max_abs_error,true);
 }
-inline std::vector<uint8_t> Decode(const Result& r) {
-    if (r.original_bytes>std::numeric_limits<size_t>::max()) throw std::length_error("size overflow");
-    size_t n=static_cast<size_t>(r.original_bytes);
+// Decode directly into caller-owned storage. This avoids an intermediate
+// allocation when a runtime must materialize one tile/row into an existing
+// scratch buffer. The destination is unchanged on all preflight failures.
+inline void DecodeInto(const Result& r, void* destination, size_t destination_bytes) {
+    if (r.original_bytes>std::numeric_limits<size_t>::max())
+        throw std::length_error("size overflow");
+    const size_t n=static_cast<size_t>(r.original_bytes);
+    if (destination_bytes!=n) throw std::invalid_argument("destination size mismatch");
+    if (n && !destination) throw std::invalid_argument("null decode destination");
+    auto* out=static_cast<uint8_t*>(destination);
     if (r.encoding==Encoding::Raw) {
         if (r.payload.size()!=n) throw std::invalid_argument("raw size mismatch");
-        return r.payload;
+        if(n) std::memcpy(out,r.payload.data(),n);
+        return;
     }
-    std::vector<uint8_t> out;
     if (r.encoding==Encoding::RLE) {
         if (r.payload.size()%2) throw std::invalid_argument("malformed RLE");
-        out.reserve(n);
+        size_t written=0;
         for(size_t i=0;i<r.payload.size();i+=2) {
-            size_t count=r.payload[i];
-            if (!count || count>n-out.size()) throw std::invalid_argument("RLE overflow");
-            out.insert(out.end(),count,r.payload[i+1]);
+            const size_t count=r.payload[i];
+            if (!count || count>n-written) throw std::invalid_argument("RLE overflow");
+            std::memset(out+written,r.payload[i+1],count);
+            written+=count;
         }
-    } else if (r.encoding==Encoding::F16) {
-        if (n%4 || r.payload.size()!=n/2) throw std::invalid_argument("half size mismatch");
-        out.resize(n);
+        if(written!=n) throw std::invalid_argument("RLE decoded size mismatch");
+        return;
+    }
+    if (r.encoding==Encoding::F16 || r.encoding==Encoding::BF16) {
+        if (n%4 || r.payload.size()!=n/2)
+            throw std::invalid_argument("16-bit float size mismatch");
         for(size_t i=0;i<n/4;++i) {
-            uint16_t h=uint16_t(r.payload[2*i])|(uint16_t(r.payload[2*i+1])<<8);
-            float f=FromHalf(h);
-            std::memcpy(out.data()+4*i,&f,4);
+            const uint16_t h=uint16_t(r.payload[2*i])|
+                             (uint16_t(r.payload[2*i+1])<<8);
+            const float f=r.encoding==Encoding::F16?FromHalf(h):FromBFloat16(h);
+            std::memcpy(out+4*i,&f,4);
         }
-    } else if (r.encoding==Encoding::BF16) {
-        if (n%4 || r.payload.size()!=n/2) throw std::invalid_argument("bfloat16 size mismatch");
-        out.resize(n);
-        for(size_t i=0;i<n/4;++i) {
-            const uint16_t h=uint16_t(r.payload[2*i])|(uint16_t(r.payload[2*i+1])<<8);
-            const float f=FromBFloat16(h);
-            std::memcpy(out.data()+4*i,&f,4);
-        }
-    } else throw std::invalid_argument("unknown encoding");
-    if (out.size()!=n) throw std::invalid_argument("decoded size mismatch");
+        return;
+    }
+    throw std::invalid_argument("unknown encoding");
+}
+inline std::vector<uint8_t> Decode(const Result& r) {
+    if (r.original_bytes>std::numeric_limits<size_t>::max())
+        throw std::length_error("size overflow");
+    std::vector<uint8_t> out(static_cast<size_t>(r.original_bytes));
+    DecodeInto(r,out.data(),out.size());
     return out;
 }
 }} // namespace RawrXD::TensorCompression
