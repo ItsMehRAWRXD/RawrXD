@@ -1,0 +1,75 @@
+#pragma once
+// Native staged publisher for GGUF artifacts. Does not overwrite an existing
+// destination; the caller must choose a new artifact name.
+#include "NativeGGUFRepacker.hpp"
+#include <atomic>
+#include <chrono>
+#include <filesystem>
+#include <string>
+#include <system_error>
+
+namespace RawrXD { namespace REAP {
+enum class PublishError {
+    None, InvalidPath, DestinationExists, StageCreation,
+    RepackFailed, VerificationFailed, CommitFailed
+};
+struct PublishResult {
+    PublishError error = PublishError::None;
+    RepackError repack_error = RepackError::None;
+    uint64_t published_bytes = 0;
+};
+inline PublishResult PublishRepackedGGUF(const std::string& source,
+                                         const std::string& destination,
+                                         uint64_t max_bytes=UINT64_MAX) {
+    namespace fs=std::filesystem;
+    PublishResult result;
+    std::error_code ec;
+    const fs::path target(destination), input(source);
+    if(source.empty()||destination.empty()||!target.has_filename()||
+       !fs::exists(input,ec)||ec) {
+        result.error=PublishError::InvalidPath;return result;
+    }
+    if(fs::exists(target,ec)||ec) {
+        result.error=PublishError::DestinationExists;return result;
+    }
+    const auto parent=target.has_parent_path()?target.parent_path():fs::path(".");
+    if(!fs::exists(parent,ec)||ec) {
+        result.error=PublishError::InvalidPath;return result;
+    }
+    static std::atomic<uint64_t> serial{0};
+    const auto tick=std::chrono::steady_clock::now().time_since_epoch().count();
+    fs::path stage;
+    // The temporary is in the destination directory, so commit is a
+    // same-filesystem rename. Refuse if a collision cannot be avoided.
+    bool found=false;
+    for(unsigned attempt=0;attempt<32;++attempt) {
+        stage=parent/(target.filename().string()+".reap-part-"+
+              std::to_string(tick)+"-"+std::to_string(serial.fetch_add(1)));
+        if(!fs::exists(stage,ec)&&!ec){found=true;break;}
+        if(ec)break;
+    }
+    if(!found){result.error=PublishError::StageCreation;return result;}
+    struct Cleanup {
+        fs::path path;
+        ~Cleanup(){std::error_code ignored;std::filesystem::remove(path,ignored);}
+    } cleanup{stage};
+    result.repack_error=RepackGGUF(source,stage.string(),max_bytes);
+    if(result.repack_error!=RepackError::None) {
+        result.error=PublishError::RepackFailed;return result;
+    }
+    const uint64_t bytes=fs::file_size(stage,ec);
+    if(ec||bytes>max_bytes||bytes<24) {
+        result.error=PublishError::VerificationFailed;return result;
+    }
+    // Re-check the target before commit. This does not provide a
+    // race-free no-replace guarantee on every platform; callers must
+    // serialize publication to the same destination.
+    if(fs::exists(target,ec)||ec) {
+        result.error=PublishError::DestinationExists;return result;
+    }
+    fs::rename(stage,target,ec);
+    if(ec){result.error=PublishError::CommitFailed;return result;}
+    result.published_bytes=bytes;
+    return result;
+}
+}} // namespace RawrXD::REAP
