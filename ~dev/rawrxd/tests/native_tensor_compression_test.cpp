@@ -187,5 +187,12 @@ int main() {
     lease=Deep2::TensorResidencyCache::Lease{};
     CHECK(cache.Trim(0)==residentBytes);
     CHECK(cache.GetStats().residentBytes==0);
+    CHECK(cache.GetStats().peakResidentBytes==residentBytes);
+    CHECK(cache.GetStats().entries==0);
+    // A failed insertion must not alter the existing high-water mark.
+    CHECK(!cache.Insert("",secondPayload));
+    CHECK(cache.GetStats().peakResidentBytes==residentBytes);
+    CHECK(!cache.Acquire("layer0.weight"));
+    CHECK(cache.GetStats().misses==1);
     return 0;
 }
