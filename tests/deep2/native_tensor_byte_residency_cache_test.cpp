@@ -175,5 +175,18 @@ int main() {
     assert(transientAttempts == 2);
     assert(!cache.IsRawFallback("transient"));
 
+    // A one-byte range expands only its intersecting compressed 4 KiB chunk.
+    Deep2::TensorByteResidencyCache decodeMetrics(16 * 1024);
+    std::vector<uint8_t> metricSource(8192, 0x6d);
+    assert(decodeMetrics.RegisterFromReader("decode.metrics", metricSource.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(metricSource.begin() + offset, metricSource.begin() + offset + count, out);
+            return true;
+        }, 4096));
+    uint8_t oneByte = 0;
+    assert(decodeMetrics.ReadRange("decode.metrics", 4096 + 17, 1, &oneByte, scratch));
+    assert(oneByte == 0x6d);
+    assert(decodeMetrics.GetStats().bytesDecoded == 4096);
+
     std::cout<<"lossless encoded-byte tensor residency cache PASS\n";
 }
