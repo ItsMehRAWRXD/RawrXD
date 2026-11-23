@@ -1,7 +1,10 @@
 name: Native tensor compression
 on:
   push:
-    branches: [feat/native-tensor-compression-20261122]
+    branches:
+      - feat/native-tensor-compression-20261122
+      - feat/native-universal-compression-expansion-20261123
+      - feat/native-universal-compression-expansion-20261123-v2
   pull_request:
     paths:
       - 'src/deep2/NativeTensorCompression.hpp'
@@ -9,6 +12,7 @@ on:
       - 'src/deep2/NativeTensorByteResidencyCache.hpp'
       - 'tests/deep2/native_tensor_byte_residency_cache_test.cpp'
       - 'tests/deep2/native_tensor_residency_cache_test.cpp'
+      - 'tests/deep2/native_tensor_compression_test.cpp'
       - 'src/Deep2Engine.hpp'
       - 'src/Deep2Engine.cpp'
       - 'src/TensorView.hpp'
@@ -22,15 +26,14 @@ on:
       - 'src/quant_kernels.cpp'
       - 'src/deep2/NativeKQuant.hpp'
       - 'tests/deep2/native_k_quant_test.cpp'
-      - 'tests/deep2/native_gguf_k_integration.py'
       - 'tests/deep2/native_loader_k_geometry_test.cpp'
       - 'tests/deep2/native_q5k_runtime_layout_test.cpp'
       - '~dev/rawrxd/src/deep2/NativeQ5KDecode.hpp'
       - '~dev/rawrxd/src/deep2/QuantKernelRegistry.cpp'
       - '~dev/rawrxd/src/deep2/GGUFLoader.hpp'
       - 'tools/native_tensor_pack.cpp'
-      - 'tests/deep2/native_tensor_compression_test.cpp'
       - 'tests/deep2/native_gguf_f16_integration.py'
+      - 'tests/deep2/native_gguf_k_integration.py'
       - 'tools/native_gguf_f16.cpp'
       - '.github/workflows/native-tensor-compression.yml'
 jobs:
@@ -123,9 +126,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -c "from pathlib import Path; Path('input.bin').write_bytes(bytes(range(256))*4096 + b'Z'*100000)"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          .\tensor_pack.exe pack input.bin compressed.rxtc
+          .\\tensor_pack.exe pack input.bin compressed.rxtc
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          .\tensor_pack.exe unpack compressed.rxtc restored.bin
+          .\\tensor_pack.exe unpack compressed.rxtc restored.bin
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ((Get-FileHash input.bin).Hash -ne (Get-FileHash restored.bin).Hash) { exit 1 }
           python -c "from pathlib import Path; p=Path('compressed.rxtc'); b=bytearray(p.read_bytes()); b[35]^=1; Path('corrupt.rxtc').write_bytes(b)"
