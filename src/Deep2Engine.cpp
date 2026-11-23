@@ -518,7 +518,7 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
             rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
             return false;
         const size_t colsSize = static_cast<size_t>(cols);
-        std::fill(output, output + static_cast<size_t>(rows), 0.0f);
+        std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
         std::vector<float> tile;
         std::vector<uint8_t> encodedScratch;
         std::vector<uint8_t> decodeScratch;
@@ -530,16 +530,17 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
             tile.resize(elements);
             if (!readDequantizedTensorTile(entry, firstRow * cols, elements, tile.data(),
                                           encodedScratch, decodeScratch) ||
-                !gemvFloat(tile.data(), input, output + static_cast<size_t>(firstRow),
+                !gemvFloat(tile.data(), input, completed.data() + static_cast<size_t>(firstRow),
                            countRows, cols))
                 return false;
             firstRow += countRows;
         }
+        std::copy(completed.begin(), completed.end(), output);
         return true;
     }
     if (cols == 0 || rows > std::numeric_limits<size_t>::max() / sizeof(float) / cols)
         return false;
-    std::fill(output, output + static_cast<size_t>(rows), 0.0f);
+    std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
     const size_t colsSize = static_cast<size_t>(cols);
     std::vector<float> tile;
     std::vector<uint8_t> decodeScratch;
@@ -551,7 +552,7 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
         const uint64_t firstElement = firstRow * cols;
         if (!readCompressedF32Tile(entry, firstElement, tileElements, tile.data(),decodeScratch))
             return false;
-        if (!gemvFloat(tile.data(), input, output + static_cast<size_t>(firstRow),
+        if (!gemvFloat(tile.data(), input, completed.data() + static_cast<size_t>(firstRow),
                        countRows, cols)) return false;
         firstRow += countRows;
     }
