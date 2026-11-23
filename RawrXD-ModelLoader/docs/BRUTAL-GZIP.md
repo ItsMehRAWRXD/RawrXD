@@ -24,8 +24,9 @@ The validator is independent of the encoder's CRC implementation. The same
 test is compiled against MASM on Windows and NEON on AArch64.
 
 The Windows GitHub Actions workflow assembles the MASM object with ML64,
-compiles the CRC helper, runs the roundtrip/corruption tests, and only then
-runs the benchmark. The benchmark reports packaging latency and expansion
+compiles the CRC helper, runs the roundtrip/corruption tests, independently
+decompresses a generated fixture with Python's standard-library gzip module,
+and only then runs the benchmark. The benchmark reports packaging latency and expansion
 ratio; it does not compare stored-block copying against a compression codec.
 
 ## Previous benchmark claims

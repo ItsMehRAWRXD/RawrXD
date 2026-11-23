@@ -5,6 +5,8 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <fstream>
+#include "gzip_crc32.h"
 
 #if defined(RAWRXD_BRUTAL_NEON)
 extern "C" void* deflate_brutal_neon(const void*, std::size_t, std::size_t*);
@@ -46,6 +48,13 @@ static bool runCase(std::size_t size, bool repetitive) {
 }
 
 int main() {
+    const char* crcVector = "123456789";
+    if (rawrxd_gzip_crc32(crcVector, 9) != 0xCBF43926u ||
+        rawrxd_test::gzipCrc32(
+            reinterpret_cast<const std::uint8_t*>(crcVector), 9) != 0xCBF43926u) {
+        std::fprintf(stderr, "FAIL IEEE CRC32 known-answer test\\n");
+        return 1;
+    }
     std::size_t invalidLength = 123;
     if (DEFLATE_BRUTAL(nullptr, 1, &invalidLength) != nullptr ||
         invalidLength != 0 || DEFLATE_BRUTAL(nullptr, 0, nullptr) != nullptr) {
@@ -64,9 +73,29 @@ int main() {
             return 1;
         }
     }
-    std::puts("BRUTAL_MASM_GZIP_ROUNDTRIP=PASS");
-    std::puts("BRUTAL_MASM_GZIP_CORRUPTION=PASS");
-    std::puts("BRUTAL_MASM_GZIP_EMPTY_INPUT=PASS");
-    std::puts("BRUTAL_MASM_GZIP_BOUNDARY_SIZES=PASS");
+    // Emit a deterministic fixture for an independent platform gzip decoder.
+    std::vector<std::uint8_t> fixture(1048576);
+    for (std::size_t i = 0; i < fixture.size(); ++i)
+        fixture[i] = static_cast<std::uint8_t>((i * 131u + (i >> 5u)) & 0xFFu);
+    std::size_t fixtureSize = 0;
+    void* fixtureGzip = DEFLATE_BRUTAL(
+        fixture.data(), fixture.size(), &fixtureSize);
+    if (!fixtureGzip) return 1;
+    std::ofstream sourceFile("brutal_gzip_fixture.bin", std::ios::binary);
+    std::ofstream gzipFile("brutal_gzip_fixture.gz", std::ios::binary);
+    sourceFile.write(reinterpret_cast<const char*>(fixture.data()),
+                     static_cast<std::streamsize>(fixture.size()));
+    gzipFile.write(static_cast<const char*>(fixtureGzip),
+                   static_cast<std::streamsize>(fixtureSize));
+    const bool filesOk = sourceFile.good() && gzipFile.good();
+    std::free(fixtureGzip);
+    if (!filesOk) return 1;
+
+    std::puts("BRUTAL_GZIP_ROUNDTRIP=PASS");
+    std::puts("BRUTAL_GZIP_CORRUPTION=PASS");
+    std::puts("BRUTAL_GZIP_EMPTY_INPUT=PASS");
+    std::puts("BRUTAL_GZIP_BOUNDARY_SIZES=PASS");
+    std::puts("BRUTAL_GZIP_CRC32_KNOWN_ANSWER=PASS");
+    std::puts("BRUTAL_GZIP_INTEROP_FIXTURE=READY");
     return 0;
 }

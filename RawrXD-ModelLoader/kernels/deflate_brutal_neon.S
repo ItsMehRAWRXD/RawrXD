@@ -71,12 +71,12 @@ deflate_brutal_neon:
     b       .Lafter_blocks
 
 .Lblock_loop:
-    mov     x10, x20                // remaining bytes
+    mov     x26, x20                // remaining bytes (preserved across memcpy)
 .Lnext_block:
-    cbz     x10, .Lafter_blocks
+    cbz     x26, .Lafter_blocks
     mov     x11, #65535
-    cmp     x10, x11
-    csel    x25, x10, x11, ls       // chunk, preserved across memcpy
+    cmp     x26, x11
+    csel    x25, x26, x11, ls       // chunk, preserved across memcpy
     cmp     x10, x25
     cset    w12, eq                 // BFINAL
     strb    w12, [x23], #1
@@ -91,7 +91,7 @@ deflate_brutal_neon:
     bl      memcpy
     add     x23, x23, x25
     add     x24, x24, x25
-    sub     x10, x10, x25
+    sub     x26, x26, x25
     b       .Lnext_block
 
 .Lafter_blocks:

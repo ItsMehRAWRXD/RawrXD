@@ -6,6 +6,10 @@ on:
       - feat/native-universal-compression-expansion-20261123-v2
     paths:
       - 'RawrXD-ModelLoader/kernels/deflate_brutal_masm.asm'
+      - 'RawrXD-ModelLoader/docs/BRUTAL-GZIP.md'
+      - 'RawrXD-ModelLoader/include/brutal_gzip.h'
+      - 'RawrXD-ModelLoader/CMakeLists.txt'
+      - 'RawrXD-ModelLoader/kernels/deflate_brutal_neon.S'
       - 'RawrXD-ModelLoader/src/gzip_crc32.cpp'
       - 'RawrXD-ModelLoader/tests/gzip_stored_validator.hpp'
       - 'RawrXD-ModelLoader/tests/test_deflate_brutal_gzip.cpp'
@@ -41,6 +45,10 @@ jobs:
           if errorlevel 1 exit /b %errorlevel%
           "%RUNNER_TEMP%\test_deflate_brutal_gzip.exe"
           if errorlevel 1 exit /b %errorlevel%
+      - name: Validate gzip with independent Python decoder
+        shell: pwsh
+        run: |
+          python -c "import gzip,pathlib; src=pathlib.Path('brutal_gzip_fixture.bin').read_bytes(); out=gzip.decompress(pathlib.Path('brutal_gzip_fixture.gz').read_bytes()); assert out == src; print('PYTHON_GZIP_INTEROP=PASS')"
       - name: Run validated throughput benchmark
         shell: cmd
         run: |
