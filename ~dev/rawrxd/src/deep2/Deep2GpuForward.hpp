@@ -47,6 +47,9 @@ struct GpuForwardCounters {
     uint64_t q4kPackedOps = 0;
     uint64_t q6kPackedOps = 0;
     uint64_t q2kPackedOps = 0;
+    uint64_t compressedF16GemvOps = 0;
+    uint64_t compressedBF16GemvOps = 0;
+    uint64_t compressedWeightBytesSubmitted = 0;
     uint64_t cpuF32Expands = 0;
     uint64_t dualRowSplitOps = 0;
     uint64_t dualArithmeticOverlapNs = 0;
