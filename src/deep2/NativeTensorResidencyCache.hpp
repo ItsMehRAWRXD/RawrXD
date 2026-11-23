@@ -183,6 +183,40 @@ public:
         return decoded;
     }
 
+    // Export compact F16/BF16 bytes for a chunk-aligned range. A successful
+    // call pins the entry against eviction for the duration of the copy. The
+    // returned bytes remain in the cache's native 16-bit representation.
+    bool ExportUniform16BitRange(const std::string& key, size_t first, size_t count,
+                                 RawrXD::TensorCompression::Encoding& encoding,
+                                 std::vector<uint8_t>& packed) {
+        std::shared_ptr<const RawrXD::TensorCompression::ChunkedF32Storage> storage;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = entries_.find(key);
+            if (it == entries_.end()) { ++cacheMisses_; packed.clear(); return false; }
+            it->second.lastUse = ++tick_;
+            ++it->second.activeReaders;
+            ++cacheHits_;
+            storage = it->second.storage;
+        }
+        bool exported = false;
+        try {
+            exported = storage->ExportUniform16BitRange(first, count, encoding, packed);
+        } catch (...) {
+            packed.clear();
+            exported = false;
+        }
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = entries_.find(key);
+            if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
+            EvictToFitLocked(0, std::string());
+            readersDrained_.notify_all();
+        }
+        if (!exported) packed.clear();
+        return exported;
+    }
+
     bool Evict(const std::string& key) {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it=entries_.find(key);
