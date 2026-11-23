@@ -37,6 +37,7 @@ struct Deep2Engine {
         size_t f32CompressedBytes = 0, encodedCompressedBytes = 0;
         size_t f32LogicalBytes = 0, encodedLogicalBytes = 0;
         size_t f32TensorCount = 0, encodedTensorCount = 0;
+        size_t f32ActiveReaders = 0, encodedActiveReaders = 0;
         uint64_t f32CacheHits = 0, f32CacheMisses = 0;
         uint64_t encodedCacheHits = 0, encodedCacheMisses = 0;
         uint64_t bytesDecoded = 0, evictions = 0;
