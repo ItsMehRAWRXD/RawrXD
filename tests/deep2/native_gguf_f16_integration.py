@@ -290,6 +290,17 @@ def run(binary):
         for i in (0, 16383, 16384, 16385, n-1):
             assert struct.unpack_from("<e",data,ds+2*i)[0]==1.0
         assert len(data)-ds==n*2
+        # A pre-existing staging file belongs to another invocation.
+        # A rejected conversion must leave it byte-for-byte unchanged.
+        staged=root/"already-staged.gguf.partial"
+        sentinel=b"PREEXISTING STAGING DATA"
+        staged.write_bytes(sentinel)
+        dest=root/"already-staged.gguf"
+        result=subprocess.run([binary,str(source),str(dest),"0","f16"],
+                              capture_output=True)
+        assert result.returncode!=0
+        assert staged.read_bytes()==sentinel
+        assert not dest.exists()
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
