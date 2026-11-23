@@ -108,12 +108,13 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
 
 void PageCache::release(Page* page) {
     if (!page) return;
-    uint32_t prev = page->leaseCount.fetch_sub(1, std::memory_order_acq_rel);
-    if (prev <= 1) {
-        // Last lease dropped: page remains resident (cached) but is now evictable.
-        std::lock_guard<std::mutex> lock(m_mutex);
-        touch(page);
-    }
+    // Hold the cache mutex across decrement and LRU update. Otherwise
+    // eviction can delete the page between fetch_sub and touch().
+    std::lock_guard<std::mutex> lock(m_mutex);
+    const uint32_t leases = page->leaseCount.load(std::memory_order_relaxed);
+    if (!leases) return;
+    page->leaseCount.store(leases - 1, std::memory_order_release);
+    if (leases == 1) touch(page);
 }
 
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
