@@ -1,6 +1,7 @@
 #include "VulkanStagingPipeline.hpp"
 #include <iostream>
 #include <algorithm>
+#include <cstdint>
 
 namespace Deep2Rom::Compute {
 
