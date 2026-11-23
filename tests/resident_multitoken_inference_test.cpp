@@ -14,8 +14,8 @@ int main() {
     std::vector<float> w1(width * width), w2(width * width);
     for (std::size_t r = 0; r < width; ++r)
         for (std::size_t c = 0; c < width; ++c) {
-            w1[r * width + c] = r == c ? 0.50f : 0.0f;
-            w2[r * width + c] = r == c ? 0.75f : 0.0f;
+            w1[r * width + c] = r == c ? 0.50f : (int((r + c) % 7) - 3) * 0.0001f;
+            w2[r * width + c] = r == c ? 0.75f : (int((r * 3 + c) % 11) - 5) * 0.0001f;
         }
     ChunkedResidentBytes a, b;
     auto status = a.assign(reinterpret_cast<const std::uint8_t*>(w1.data()),
@@ -28,23 +28,27 @@ int main() {
                     w2.size() * sizeof(float), 4096) == Status::Ok);
     assert(a.compressedBytes() + b.compressedBytes() <
            (w1.size() + w2.size()) * sizeof(float));
-    std::vector<float> state(width), ref(width), tmp(width), next(width);
+    std::vector<float> state(width), ref(width), tmp(width), next(width), refMid(width), refNext(width);
     for (std::size_t i = 0; i < width; ++i)
         state[i] = ref[i] = static_cast<float>(int(i % 13) - 6) / 13.0f;
     for (std::size_t token = 0; token < tokens; ++token) {
         assert(residentF32Matvec(a, width, width, state.data(), tmp.data()) == Status::Ok);
         assert(residentF32Matvec(b, width, width, tmp.data(), next.data()) == Status::Ok);
+        // Independent dense F32 reference, including cross-channel mixing.
         for (std::size_t i = 0; i < width; ++i) {
-            float intermediate = 0.0f;
+            float sum = 0.0f;
             for (std::size_t j = 0; j < width; ++j)
-                intermediate += w1[i * width + j] * ref[j];
-            float expected = 0.0f;
-            for (std::size_t j = 0; j < width; ++j)
-                expected += w2[i * width + j] * (j == i ? intermediate : 0.5f * ref[j]);
-            // w2 is diagonal; the j!=i terms are exactly zero.
-            assert(std::fabs(next[i] - expected) < 1e-5f);
-            ref[i] = expected;
+                sum += w1[i * width + j] * ref[j];
+            refMid[i] = sum;
         }
+        for (std::size_t i = 0; i < width; ++i) {
+            float sum = 0.0f;
+            for (std::size_t j = 0; j < width; ++j)
+                sum += w2[i * width + j] * refMid[j];
+            refNext[i] = sum;
+            assert(std::fabs(next[i] - refNext[i]) < 1e-5f);
+        }
+        ref.swap(refNext);
         state.swap(next);
     }
     return 0;
