@@ -127,7 +127,9 @@ bool Deep2Engine::tryVulkanHostGEMV(
         auto runCompressedSlice = [&](VulkanCompute* device,
                                       size_t sliceBegin, size_t sliceRows,
                                       TileStats& stats) -> bool {
-            if (!device || !sliceRows ||
+            if (!device) return false;
+            auto apiLease = device->AcquireApiLock();
+            if (!sliceRows ||
                 sliceRows > std::numeric_limits<uint32_t>::max() ||
                 !device->EnsureScratch(30, wt.cols) ||
                 !device->EnsureScratch(31, sliceRows))
@@ -306,6 +308,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
         std::fprintf(stderr,"GEMV_SINGLE getVulkanComputeSlot(0)=null name=%s\n",wt.name.empty()?"null":wt.name.c_str()); std::fflush(stderr);
         return false;
     }
+    auto singleDeviceLease = g->AcquireApiLock();
     const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
     GpuWeightView view{};
     if (!compressedF32Path && !compressedBytesPath && !fullView(wt,view)) {

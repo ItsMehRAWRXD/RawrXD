@@ -1311,6 +1311,13 @@ public:
         weightBudgetBytes_ = budgetBytes;
     }
 
+    // Hold the device API mutex across a complete upload/dispatch/download
+    // transaction. Individual methods lock recursively, while this outer
+    // lease prevents another agent from reusing shared scratch buffers.
+    std::unique_lock<std::recursive_mutex> AcquireApiLock() {
+        return std::unique_lock<std::recursive_mutex>(apiMu_);
+    }
+
 private:
     struct WeightCacheEntry {
         DeviceBuf buffer{};
