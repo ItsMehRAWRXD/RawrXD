@@ -270,6 +270,7 @@ bool Deep2Engine::tryVulkanHostGEMVBatch4(
 {
     if(!vulkanInitialized_||vulkanDevices_.size()<2||
        !inputBatch||!outputBatch||count==0||count>4||
+       wt.compressedF32||wt.compressedBytes||
        wt.rows!=outDim||wt.type!=(int)GGMLType::GGML_TYPE_Q4_K)
         return false;
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
@@ -296,6 +297,15 @@ bool Deep2Engine::tryVulkanHostGEMVGroup(
        !weights||!outputs||!input||count<2||count>3||
        inputCount==0||inputCount>UINT32_MAX)
         return false;
+
+    // Grouped dual-row upload still consumes raw GGUF pointers. If any member
+    // has private compressed backing, force the caller through LinearW so each
+    // matrix uses its compressed bounded-row Vulkan uploader instead.
+    for (size_t i = 0; i < count; ++i) {
+        if (!weights[i] || !weights[i]->data ||
+            weights[i]->compressedF32 || weights[i]->compressedBytes)
+            return false;
+    }
 
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
     RowSplitReceipt r{};

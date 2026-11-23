@@ -2037,8 +2037,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             ? reinterpret_cast<const float*>(lw.bv.data) : nullptr;
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvY[3]={qProj,kProj,vProj};
-        // Grouped Vulkan upload still requires all raw mapped pointers.
-        // Compressed-only weights use the bounded per-tensor LinearW path.
+        // Grouped Vulkan upload is used only for raw-only tensors; compressed
+        // members are routed through their bounded per-tensor LinearW tiles.
         const bool grouped=lw.wq.data && lw.wk.data && lw.wv.data &&
             tryVulkanHostGEMVGroup(qkvW,qkvY,3,input,H);
         if(grouped){
