@@ -776,16 +776,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 wt.fileOffset = t->fileOffset + static_cast<uint64_t>(byteOffset);
                 wt.hasFileBacking = true;
                 if (deep2CompressedResidencyEnabled()) {
-                    const std::string residencyKey = wt.name + "@" +
-                        std::to_string(wt.shardId) + ":" +
-                        std::to_string(wt.fileOffset);
-                    if (tensorResidencyCache_.Register(
-                            residencyKey, t->data + byteOffset,
-                            sliceBytes, true)) {
-                        wt.residencyCache = &tensorResidencyCache_;
-                        wt.residencyKey = residencyKey;
-                        wt.residencyType = wt.type;
-                    }
+                    GGUFTensor expertTensor = *t;
+                    expertTensor.data = t->data + byteOffset;
+                    expertTensor.sizeBytes = sliceBytes;
+                    expertTensor.name = wt.name;
+                    expertTensor.fileOffset = wt.fileOffset;
+                    expertTensor.shape = { t->shape[0], t->shape[1] };
+                    attachCompressedResidency(
+                        wt, expertTensor, tensorResidencyCache_);
                 }
             }
             return true;
