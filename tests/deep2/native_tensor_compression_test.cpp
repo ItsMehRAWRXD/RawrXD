@@ -13,6 +13,28 @@ int main() {
     auto r=Encode(repeated.data(),repeated.size());
     assert(r.encoding==Encoding::RLE && r.payload.size()<repeated.size());
     assert(Decode(r)==repeated);
+    // Partial RLE reads must expand only the intersecting runs, without
+    // allocating a decoded chunk or overwriting adjacent output sentinels.
+    std::vector<uint8_t> runs(8192);
+    std::fill(runs.begin(), runs.begin() + 4096, 0x11);
+    std::fill(runs.begin() + 4096, runs.end(), 0x22);
+    auto runStorage = ChunkedByteStorage::BuildFromReader(
+        runs.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(runs.begin() + offset, runs.begin() + offset + count, out);
+            return true;
+        }, 8192, true);
+    std::vector<uint8_t> runScratch;
+    std::vector<uint8_t> runWindow(18, 0xA5);
+    runStorage.ReadRange(4092, 16, runWindow.data() + 1, runScratch);
+    assert(runWindow.front() == 0xA5 && runWindow.back() == 0xA5);
+    assert(std::equal(runWindow.begin() + 1, runWindow.end() - 1,
+                      runs.begin() + 4092));
+    assert(runScratch.empty());
+    std::vector<uint8_t> runWindowSimple(16);
+    runStorage.ReadRange(4092, runWindowSimple.size(), runWindowSimple.data());
+    assert(std::equal(runWindowSimple.begin(), runWindowSimple.end(),
+                      runs.begin() + 4092));
     // LZ4-block compression captures repeated multi-byte patterns that
     // byte-run RLE cannot represent compactly.
     std::vector<uint8_t> patterned(64 * 1024);
