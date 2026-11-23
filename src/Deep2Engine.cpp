@@ -769,8 +769,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             std::vector<float> hiddenStatesCopy(hiddenDim);
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
             std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
-            if (!runProjection(*qkv, hiddenStatesCopy.data(), qkvOut.data(),
-                               &qkvRows, &qkvCols)) {
+            if (!runProjection(*qkv, hiddenStatesCopy.data(), qkvOut.data())) {
                 fprintf(stderr, "[Move 10] Layer %zu: tiled QKV GEMV failed\n", layer);
                 return false;
             }
