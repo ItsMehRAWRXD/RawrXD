@@ -1538,7 +1538,15 @@ inline RepackError RepackGGUF(const std::string& input,
     // consists entirely of values exactly representable in F16.
     if(auto_compress) {
         for(auto& t:tensors) {
-            if(!t.convert_q4_0 || t.q4_source_type!=0)continue;
+            // Include untouched F32 matrices with non-Q4-aligned rows.
+            // Never override a previously selected unrelated conversion.
+            const bool plannedQ4FromF32=
+                t.convert_q4_0 && t.q4_source_type==0;
+            const bool untouchedF32=
+                t.type==0 && !t.convert_f16 && !t.convert_q8_0 &&
+                !t.convert_q4_0 && !t.convert_q5_0 &&
+                !t.convert_f64_to_f32 && !t.convert_f64_to_f16;
+            if(!plannedQ4FromF32 && !untouchedF32)continue;
             if(dataStart>UINT64_MAX-t.old_offset)
                 return RepackError::Overflow;
             if(IsExactF32ToF16(in,dataStart+t.old_offset,t.source_bytes)) {
