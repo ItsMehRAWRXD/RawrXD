@@ -166,6 +166,7 @@ int main() {
            bf16Staging[80] == 0x6b);
     assert(bf16Cache.GetStats().activeReaders == 0);
 
+    const auto beforeF32Reads = cache.GetStats();
     std::vector<float> tile(1537,-999.0f);
     assert(cache.ReadRange("layer.0.weight",900,tile.size(),tile.data()));
     for(size_t i=0;i<tile.size();++i) assert(tile[i]==source[900+i]);
@@ -175,9 +176,10 @@ int main() {
     for(size_t i=0;i<tile2.size();++i) assert(tile2[i]==source[2048+i]);
 
     auto after=cache.GetStats();
-    assert(after.cacheHits==2);
+    assert(after.cacheHits == beforeF32Reads.cacheHits + 2);
     assert(after.activeReaders==0);
-    assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
+    assert(after.bytesDecoded == beforeF32Reads.bytesDecoded +
+           (tile.size()+tile2.size())*sizeof(float));
 
     // F32 range validation must match the encoded-byte cache: an invalid
     // tile must not acquire a lease, change the caller buffer, or increment
