@@ -747,19 +747,36 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             }
         } else if (entry.type == deep2::TensorType::F16 ||
                    entry.type == deep2::TensorType::BF16 ||
-                   entry.type == deep2::TensorType::Q8_0) {
-            // F16/BF16 and Q8_0 are already compact in GGUF. Read the exact
-            // requested encoded range and keep it packed through GPU dispatch.
+                   entry.type == deep2::TensorType::Q4_0 ||
+                   entry.type == deep2::TensorType::Q4_1 ||
+                   entry.type == deep2::TensorType::Q5_0 ||
+                   entry.type == deep2::TensorType::Q5_1 ||
+                   entry.type == deep2::TensorType::Q8_0 ||
+                   entry.type == deep2::TensorType::Q8_1) {
+            // F16/BF16 and fixed GGML Q4/Q5/Q8 blocks are already compact.
+            // Read only the requested encoded range and keep it packed on GPU.
             uint64_t byteOffset = 0;
             uint64_t byteCount = 0;
-            if (entry.type == deep2::TensorType::Q8_0) {
+            const bool fixedQuant = entry.type == deep2::TensorType::Q4_0 ||
+                entry.type == deep2::TensorType::Q4_1 ||
+                entry.type == deep2::TensorType::Q5_0 ||
+                entry.type == deep2::TensorType::Q5_1 ||
+                entry.type == deep2::TensorType::Q8_0 ||
+                entry.type == deep2::TensorType::Q8_1;
+            if (fixedQuant) {
+                const uint64_t blockBytes =
+                    entry.type == deep2::TensorType::Q4_0 ? 18u :
+                    entry.type == deep2::TensorType::Q4_1 ? 20u :
+                    entry.type == deep2::TensorType::Q5_0 ? 22u :
+                    entry.type == deep2::TensorType::Q5_1 ? 24u :
+                    entry.type == deep2::TensorType::Q8_0 ? 34u : 36u;
                 if ((cols % 32u) != 0u || (firstElement % 32u) != 0u ||
                     (elements % 32u) != 0u ||
-                    firstElement / 32u > UINT64_MAX / 34u ||
-                    elements / 32u > UINT64_MAX / 34u)
+                    firstElement / 32u > UINT64_MAX / blockBytes ||
+                    elements / 32u > UINT64_MAX / blockBytes)
                     return false;
-                byteOffset = (firstElement / 32u) * 34u;
-                byteCount = (static_cast<uint64_t>(elements) / 32u) * 34u;
+                byteOffset = (firstElement / 32u) * blockBytes;
+                byteCount = (static_cast<uint64_t>(elements) / 32u) * blockBytes;
             } else {
                 if (firstElement > UINT64_MAX / sizeof(uint16_t) ||
                     elements > UINT64_MAX / sizeof(uint16_t))
