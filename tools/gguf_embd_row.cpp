@@ -103,14 +103,22 @@ void dequantQ4K(const uint8_t* b, float* out) {
     for (int g = 0; g < 4; ++g) {
         scales[g]   = sc[g] & 0x3F;
         mins[g]     = sc[g+4] & 0x3F;
-        scales[g+4] = ((sc[g] >> 6) & 0x3) | ((sc[g+4] >> 2) & 0x30);
-        mins[g+4]   = ((sc[g+4] >> 6) & 0x3) | ((sc[g] >> 2) & 0x30);
+        // Match GGML get_scale_min_k4() for j >= 4.  The upper four
+        // scale low nibbles are in q[j+4] and their high bits are in
+        // q[j-4]; the upper four minimum low nibbles are in q[j+4]
+        // and their high bits are in q[j].
+        scales[g+4] = (sc[g+8] & 0x0F) | ((sc[g]   >> 6) << 4);
+        mins[g+4]   = (sc[g+8] >> 4)   | ((sc[g+4] >> 6) << 4);
     }
-    const uint8_t* qs = b + 12;
+    // block_q4_K layout is: d[2], dmin[2], scales[12], qs[128].
+    // The nibble payload therefore begins at byte 16, not byte 12.
+    const uint8_t* qs = b + 16;
     for (int g = 0; g < 8; ++g) {
         const float sc_g = d * scales[g], mn_g = dmin * mins[g];
+        const uint8_t* qg = qs + (g / 2) * 32;
+        const unsigned shift = (g & 1) != 0 ? 4u : 0u;
         for (int i = 0; i < 32; ++i) {
-            const uint8_t q = (qs[g*32 + i/2] >> (4*(i%2))) & 0xF;
+            const uint8_t q = static_cast<uint8_t>((qg[i] >> shift) & 0xF);
             out[g*32 + i] = sc_g * q - mn_g;
         }
     }
