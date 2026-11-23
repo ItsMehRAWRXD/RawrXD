@@ -97,6 +97,8 @@ add_executable(reap_auto_sensitive_q8_regression tools/reap_auto_sensitive_q8_re
 target_include_directories(reap_auto_sensitive_q8_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_auto_q8k_regression tools/reap_auto_q8k_regression.cpp)
 target_include_directories(reap_auto_q8k_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(reap_auto_unaligned_f32_regression tools/reap_auto_unaligned_f32_regression.cpp)
+target_include_directories(reap_auto_unaligned_f32_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_auto_regression tools/reap_auto_regression.cpp)
 target_include_directories(reap_auto_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_row_alignment_regression tools/reap_row_alignment_regression.cpp)
@@ -206,6 +208,7 @@ add_test(NAME REAP_Auto_Singleton_Regression COMMAND reap_auto_singleton_regress
 add_test(NAME REAP_Auto_No_Shrink_Regression COMMAND reap_auto_no_shrink_regression)
 add_test(NAME REAP_Auto_Sensitive_Q8_Regression COMMAND reap_auto_sensitive_q8_regression)
 add_test(NAME REAP_Auto_Q8K_Regression COMMAND reap_auto_q8k_regression)
+add_test(NAME REAP_Auto_Unaligned_F32_Regression COMMAND reap_auto_unaligned_f32_regression)
 add_test(NAME REAP_Auto_Regression COMMAND reap_auto_regression)
 add_test(NAME REAP_Row_Alignment_Regression COMMAND reap_row_alignment_regression)
 add_test(NAME Deep2Engine_SmokeTest
