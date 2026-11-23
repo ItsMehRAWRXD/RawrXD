@@ -24,8 +24,8 @@ The byte residency cache is deliberately lossless: a quantized payload is never 
 - `DEEP2_F32_MAX_ABS_ERROR`: optional finite, nonnegative absolute error allowance for F32-to-F16/BF16 private residency. Default is `0` (lossless only). This setting does not alter GGUF files.
 - `DEEP2_F32_CACHE_BYTES`: F32 compressed residency budget (default 2 GiB).
 - `DEEP2_ENCODED_CACHE_BYTES`: lossless encoded-byte residency budget (default 512 MiB).
-- F32 compressed residency budget: 2 GiB by default.
-- Lossless encoded-byte residency budget: 512 MiB by default.
+- F32 and encoded-byte residency budgets are selected from currently available physical RAM at engine initialization (F32: one eighth, capped at 2 GiB; encoded bytes: one thirty-second, capped at 512 MiB, with conservative minimums).
+- `DEEP2_F32_RESIDENCY_MB` and `DEEP2_ENCODED_RESIDENCY_MB` override the respective budgets in MiB. Invalid or overflowing values are ignored in favor of the computed default.
 
 The engine exposes `GetTensorResidencySnapshot()` for compressed/logical bytes, budgets, tensor counts, cache hits/misses, decoded bytes and evictions.
 
