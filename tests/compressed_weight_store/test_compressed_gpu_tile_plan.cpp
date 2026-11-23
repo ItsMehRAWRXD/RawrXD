@@ -1,4 +1,7 @@
 #include "../../src/deep2/compression/CompressedGpuTilePlan.hpp"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <cstddef>
 #include <limits>
