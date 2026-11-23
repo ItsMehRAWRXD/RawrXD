@@ -441,11 +441,10 @@ public:
             packed.insert(packed.end(), chunk.payload.begin(), chunk.payload.end());
         return packed.size() == total;
     }
-    // Export only complete, independently encoded F16/BF16 chunks intersecting
-    // [first, first+count). The range must start on a chunk boundary and end
-    // on a chunk boundary (or at tensor end). This lets a device kernel consume
-    // the compact representation without first expanding it to F32 on the CPU.
-    // Mixed encodings and partial chunks fail closed; the caller may use ReadRange.
+    // Export any logical range whose intersecting chunks all use the same
+    // native F16/BF16 representation. Chunk boundaries are an implementation
+    // detail: slicing is performed directly on the compact payload, without
+    // decoding an intermediate F32 tile. Mixed codecs fail closed.
     bool ExportUniform16BitRange(size_t first, size_t count, Encoding& encoding,
                                  std::vector<uint8_t>& packed) const {
         packed.clear();
@@ -454,28 +453,44 @@ public:
             encoding = Encoding::Raw;
             return true;
         }
-        if (first % chunk_elements_ != 0) return false;
-        const size_t end = first + count;
-        if (end != element_count_ && end % chunk_elements_ != 0) return false;
+        if (!chunk_elements_) return false;
+        const size_t end = first + count; // bounded by element_count_ above
         const size_t firstChunk = first / chunk_elements_;
         const size_t lastChunk = (end - 1) / chunk_elements_;
         if (lastChunk >= chunks_.size()) return false;
         const Encoding selected = chunks_[firstChunk].encoding;
         if (selected != Encoding::F16 && selected != Encoding::BF16) return false;
-        size_t total = 0;
+
+        size_t totalBytes = 0;
         for (size_t i = firstChunk; i <= lastChunk; ++i) {
             const auto& chunk = chunks_[i];
-            const size_t expected = static_cast<size_t>(chunk.original_bytes / 2);
-            if (chunk.encoding != selected || chunk.original_bytes % sizeof(float) != 0 ||
-                chunk.payload.size() != expected ||
-                expected > std::numeric_limits<size_t>::max() - total)
+            if (chunk.encoding != selected ||
+                chunk.original_bytes % sizeof(float) != 0 ||
+                chunk.payload.size() != chunk.original_bytes / 2)
                 return false;
-            total += expected;
+            const size_t chunkFirst = i * chunk_elements_;
+            const size_t chunkElements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            if (chunkElements > element_count_ - chunkFirst) return false;
+            const size_t copyFirst = std::max(first, chunkFirst);
+            const size_t copyEnd = std::min(end, chunkFirst + chunkElements);
+            const size_t copyBytes = (copyEnd - copyFirst) * sizeof(uint16_t);
+            if (copyBytes > std::numeric_limits<size_t>::max() - totalBytes) return false;
+            totalBytes += copyBytes;
         }
-        packed.reserve(total);
-        for (size_t i = firstChunk; i <= lastChunk; ++i)
-            packed.insert(packed.end(), chunks_[i].payload.begin(), chunks_[i].payload.end());
-        if (packed.size() != total) {
+
+        packed.reserve(totalBytes);
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const auto& chunk = chunks_[i];
+            const size_t chunkFirst = i * chunk_elements_;
+            const size_t chunkElements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            const size_t copyFirst = std::max(first, chunkFirst);
+            const size_t copyEnd = std::min(end, chunkFirst + chunkElements);
+            const size_t sourceOffset = (copyFirst - chunkFirst) * sizeof(uint16_t);
+            const size_t copyBytes = (copyEnd - copyFirst) * sizeof(uint16_t);
+            packed.insert(packed.end(), chunk.payload.begin() + sourceOffset,
+                          chunk.payload.begin() + sourceOffset + copyBytes);
+        }
+        if (packed.size() != totalBytes || totalBytes != count * sizeof(uint16_t)) {
             packed.clear();
             return false;
         }
