@@ -54,6 +54,8 @@ public:
         } catch (...) {
             return false;
         }
+        if (elementCount > std::numeric_limits<size_t>::max()/sizeof(float))
+            return false;
         const size_t stored = built->storedBytes();
         const size_t logical = elementCount * sizeof(float);
         // A raw fallback is not a compression win. Do not duplicate an F32
@@ -85,6 +87,12 @@ public:
     }
 
     bool ReadRange(const std::string& key,size_t first,size_t count,float* destination) {
+        std::vector<uint8_t> decodeScratch;
+        return ReadRange(key,first,count,destination,decodeScratch);
+    }
+
+    bool ReadRange(const std::string& key,size_t first,size_t count,float* destination,
+                   std::vector<uint8_t>& decodeScratch) {
         std::shared_ptr<const RawrXD::TensorCompression::ChunkedF32Storage> storage;
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -95,7 +103,7 @@ public:
             storage=it->second.storage;
         }
         try {
-            storage->ReadRange(first,count,destination);
+            storage->ReadRange(first,count,destination,decodeScratch);
         } catch (...) {
             return false;
         }
