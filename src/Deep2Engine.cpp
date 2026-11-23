@@ -244,13 +244,10 @@ bool Deep2Engine::gemvTensorROM(const deep2::TensorEntry& entry, const float* in
                                 size_t tileRows) {
     if (!romMode || !input || !output || entry.dims.size() < 2 || tileRows == 0)
         return false;
+    if (entry.dims.size() != 2) return false;
     const uint64_t cols = entry.dims[0];
-    uint64_t rows = 1;
-    for (size_t i = 1; i < entry.dims.size(); ++i) {
-        if (entry.dims[i] == 0 || rows > std::numeric_limits<uint64_t>::max() / entry.dims[i])
-            return false;
-        rows *= entry.dims[i];
-    }
+    const uint64_t rows = entry.dims[1];
+    if (rows == 0 || cols == 0) return false;
     if (rowsOut) *rowsOut = rows;
     if (colsOut) *colsOut = cols;
     if (entry.type != deep2::TensorType::F32) {
@@ -503,14 +500,8 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     const size_t intermediateDim = geometry.intermediateDim;
 
     auto matrixRows = [](const deep2::TensorEntry& entry) -> uint64_t {
-        if (entry.dims.size() < 2) return 0;
-        uint64_t rows = 1;
-        for (size_t i = 1; i < entry.dims.size(); ++i) {
-            if (!entry.dims[i] || rows > std::numeric_limits<uint64_t>::max() / entry.dims[i])
-                return 0;
-            rows *= entry.dims[i];
-        }
-        return rows;
+        if (entry.dims.size() != 2) return 0;
+        return entry.dims[1];
     };
     auto matrixCols = [](const deep2::TensorEntry& entry) -> uint64_t {
         return entry.dims.empty() ? 0 : entry.dims[0];
@@ -567,11 +558,6 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
-        deep2::DequantizedTensor qkvDq;
-        deep2::DequantizedTensor upDq;
-        deep2::DequantizedTensor downDq;
-        deep2::DequantizedTensor outputDq;
-
         // Process through all layers
         for (size_t layer = 0; layer < numLayers; ++layer) {
             std::cout << "[Move 10] Starting layer " << layer << "\n" << std::flush;
@@ -586,7 +572,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
 
             qkvRows = matrixRows(*qkv);
             qkvCols = matrixCols(*qkv);
-            if (!qkvRows || !qkvCols) return false;
+            if (qkvRows < 3 * hiddenDim || qkvCols != hiddenDim) return false;
 
             // --- ATTENTION COMPUTATION ---
             std::vector<float> hiddenStatesCopy(hiddenDim);
@@ -628,7 +614,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             const uint64_t upCols = matrixCols(*upEntry);
             const uint64_t downRows = matrixRows(*downEntry);
             const uint64_t downCols = matrixCols(*downEntry);
-            if (!upRows || !upCols || !downRows || !downCols) return false;
+            if (!upRows || upCols != hiddenDim || downRows != hiddenDim || downCols != upRows) return false;
 
             // FFN: hidden = down(gelu(up(hidden)))
             std::vector<float> upOut(static_cast<size_t>(upRows), 0.0f);
