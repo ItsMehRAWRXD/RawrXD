@@ -21,8 +21,10 @@ inline bool quantizedMatVec(const uint8_t* weights, size_t weightBytes,
     const size_t rowBytes = blocksPerRow * blockBytes;
     if (rows > SIZE_MAX / rowBytes || rows * rowBytes != weightBytes ||
         cols > SIZE_MAX / sizeof(float)) return false;
+    // A chunk is a multiple of one 32-value GGUF block (128 decoded bytes).
     const size_t chunkElements = std::min(cols, (maxScratchBytes / 128) * 32);
     std::vector<float> scratch(chunkElements);
+    // Decode is performed once per chunk and discarded before the next chunk.
     GGUFDecoderContext context{format};
     for (size_t r = 0; r < rows; ++r) {
         const uint8_t* row = weights + r * rowBytes;
