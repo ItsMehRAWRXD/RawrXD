@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <utility>
@@ -78,7 +79,12 @@ public:
     bool RegisterF32FromReader(const std::string& key,size_t elementCount,
                                float maxAbsError,Reader&& reader,
                                size_t chunkElements = 4096) {
-        if(key.empty()) return false;
+        // NaN, infinities and negative tolerances must not bypass the
+        // stricter-cache-reuse check or enter the compression encoder.
+        // Invalid requests are not a property of the tensor: never memoize
+        // them as raw fallback or invoke the source reader.
+        if (key.empty() || !std::isfinite(maxAbsError) || maxAbsError < 0.0f)
+            return false;
         // Serialize first-touch construction. Concurrent inference agents must
         // not create duplicate temporary compressed copies of one tensor.
         std::lock_guard<std::mutex> buildLock(buildMutex_);
