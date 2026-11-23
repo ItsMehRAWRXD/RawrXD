@@ -1,0 +1,80 @@
+#version 450
+// ============================================================================
+// q4_k_matvec.comp -- native GGUF Q4_K matvec (Stage 6I). Consumes Q4_K
+// superblocks DIRECTLY (256 values, 144 bytes each) with packed 6-bit
+// scale/min metadata and asymmetric reconstruction:
+//   w = d*scale[j]*q - dmin*min[j]
+// No F32 intermediate. Bindings: 0=Q4_K blocks (uint), 1=input x, 2=output y,
+// 3=dims (rows, cols, blocks_per_row where blocks_per_row = cols/256).
+// One workgroup per row (256 threads), shared-memory reduction.
+// ============================================================================
+layout(local_size_x = 256) in;
+
+layout(set = 0, binding = 0) readonly  buffer Q4K { uint q4k[]; };  // 144-byte superblocks
+layout(set = 0, binding = 1) readonly  buffer InputX  { float x[]; };
+layout(set = 0, binding = 2) writeonly buffer OutputY { float y[]; };
+layout(set = 0, binding = 3) uniform  Dims { uint rows; uint cols; uint bpr; };
+
+shared float s_partial[256];
+
+float half_to_float(uint h) {
+    uint sign = (h & 0x8000u) << 16;
+    uint exp  = (h >> 10) & 0x1fu;
+    uint man  = h & 0x3ffu;
+    int bits;
+    if (exp == 0) {
+        if (man == 0) { bits = int(sign); }
+        else { int e = -14; while ((man & 0x400u) == 0u) { man <<= 1; e--; } man &= 0x3ffu; bits = int(sign | (uint(e + 127) << 23) | (man << 13)); }
+    } else if (exp == 31) { bits = int(sign | 0x7f800000u | (man << 13)); }
+    else { bits = int(sign | ((exp + 112u) << 23) | (man << 13)); }
+    return intBitsToFloat(bits);
+}
+
+uint read_byte(uint offset) {
+    uint word = q4k[offset >> 2u];
+    return (word >> ((offset & 3u) * 8u)) & 0xffu;
+}
+
+// ggml get_scale_min_k4: packed 6-bit scale/min from scales[12] at base+4.
+int scale_d(int j, uint base) {
+    if (j < 4) return int(read_byte(base + 4u + uint(j)) & 63u);
+    return int((read_byte(base + 4u + uint(j) + 4u) & 0x0fu) | ((read_byte(base + 4u + uint(j) - 4u) >> 6) << 4));
+}
+int scale_m(int j, uint base) {
+    if (j < 4) return int(read_byte(base + 4u + uint(j) + 4u) & 63u);
+    return int((read_byte(base + 4u + uint(j) + 4u) >> 4) | ((read_byte(base + 4u + uint(j)) >> 6) << 4));
+}
+
+void main() {
+    uint row = gl_WorkGroupID.x;
+    if (row >= rows) return;
+    uint tid = gl_LocalInvocationID.x;        // 0..255 (element within superblock)
+
+    float acc = 0.0;
+    // Stream every 256-value superblock of this row.
+    for (uint cb = 0; cb < bpr; ++cb) {
+        uint blk = row * bpr + cb;
+        uint base = blk * 144u;               // 144 bytes per Q4_K superblock
+        float d = half_to_float(read_byte(base) | (read_byte(base + 1u) << 8u));
+        float dmin = half_to_float(read_byte(base + 2u) | (read_byte(base + 3u) << 8u));
+
+        uint e = tid;                          // element 0..255
+        uint j = e / 64u;                      // group 0..3
+        uint l = e % 64u;                      // 0..63
+        uint is = 2u * j;                      // scale index base
+        uint si = (l < 32u) ? is : (is + 1u);  // scale index for this half
+        uint qi = j * 32u + ((l < 32u) ? l : (l - 32u)); // qs byte index 0..127
+        uint qbyte = read_byte(base + 16u + qi);
+        uint nib = (l < 32u) ? (qbyte & 0x0fu) : ((qbyte >> 4) & 0x0fu);
+
+        float w = float(int(nib)) * (d * float(scale_d(int(si), base))) - dmin * float(scale_m(int(si), base));
+        acc += w * x[cb * 256u + e];
+    }
+    s_partial[tid] = acc;
+    barrier();
+    for (uint stride = 128; stride > 0; stride >>= 1) {
+        if (tid < stride) s_partial[tid] += s_partial[tid + stride];
+        barrier();
+    }
+    if (tid == 0) y[row] = s_partial[0];
+}
