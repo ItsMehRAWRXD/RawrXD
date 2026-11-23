@@ -6199,6 +6199,18 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
                  modelWeights.numLayers, modelWeights.numExperts, modelWeights.numExpertsPerToken,
                  modelWeights.numSharedExperts, modelWeights.moeIntermediateDim,
                  standardMultiShardMappingKeys_.size());
+    if (compressedWeightStore_)
+    {
+        const auto compressionStats = compressedWeightStore_->stats();
+        std::fprintf(stderr,
+                     "[COMPRESSED_RESIDENCY] tensors=%llu raw_bytes=%llu encoded_bytes=%llu "
+                     "decoded_cache_bytes=%llu budget_bytes=%u\n",
+                     static_cast<unsigned long long>(compressionStats.tensors),
+                     static_cast<unsigned long long>(compressionStats.raw_bytes),
+                     static_cast<unsigned long long>(compressionStats.compressed_bytes),
+                     static_cast<unsigned long long>(compressionStats.cached_decoded_bytes),
+                     512u * 1024u * 1024u);
+    }
     std::fflush(stderr);
     return true;
 }
