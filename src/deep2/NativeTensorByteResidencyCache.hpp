@@ -84,6 +84,9 @@ public:
         return entries_.find(key) != entries_.end();
     }
     void MarkRawFallback(const std::string& key) {
+        // Match the builder lock order (buildMutex_ -> mutex_) so a fallback
+        // cannot race a concurrent first-touch admission.
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
         rawFallback_.insert(key);
     }
