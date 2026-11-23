@@ -152,6 +152,16 @@ add_executable(test_native_tensor_byte_residency_cache tests/deep2/native_tensor
 target_compile_features(test_native_tensor_byte_residency_cache PRIVATE cxx_std_17)
 target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# Synthetic GGUF -> TensorROM pager -> compressed F32/Q4_K residency -> tiled inference.
+find_package(Threads REQUIRED)
+add_executable(test_native_compressed_gguf_e2e
+    tests/deep2/native_compressed_gguf_e2e_test.cpp
+    src/TensorROM.cpp
+    src/ShardPager.cpp)
+target_compile_features(test_native_compressed_gguf_e2e PRIVATE cxx_std_17)
+target_include_directories(test_native_compressed_gguf_e2e PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(test_native_compressed_gguf_e2e PRIVATE Threads::Threads)
+
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
@@ -170,6 +180,7 @@ endif()
 add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
 add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
+add_test(NAME NativeCompressedGGUFE2E COMMAND test_native_compressed_gguf_e2e)
 
 # Validate the x64 MASM gzip writer against zlib's independent gzip decoder.
 if(MSVC)
