@@ -138,6 +138,7 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
             Page tmp; // not inserted; just issue the read into a scratch page
             tmp.shard = shard;
             tmp.pageNo = static_cast<uint64_t>(p);
+            if (tmp.pageNo > UINT64_MAX / m_pageSize) break;
             tmp.fileOffset = tmp.pageNo * m_pageSize;
             tmp.data.assign(m_pageSize, 0);
             if (m_reader(shard, tmp.pageNo, tmp.data.data(), m_pageSize)) {
@@ -220,7 +221,7 @@ TensorLease::TensorLease(PageCache& cache, uint32_t shard, uint64_t offset, uint
     if (offset > UINT64_MAX - (size - 1)) return;
     uint64_t firstPage = offset / m_cache->pageSize();
     uint64_t lastPage = (offset + size - 1) / m_cache->pageSize();
-    for (uint64_t p = firstPage; p <= lastPage; ++p) {
+    for (uint64_t p = firstPage;; ++p) {
         Page* pg = m_cache->acquire(shard, p);
         if (!pg) {
             for (Page* rel : m_pages) m_cache->release(rel);
@@ -228,6 +229,7 @@ TensorLease::TensorLease(PageCache& cache, uint32_t shard, uint64_t offset, uint
             return;
         }
         m_pages.push_back(pg);
+        if (p == lastPage) break;
     }
     m_ok = true;
 }
