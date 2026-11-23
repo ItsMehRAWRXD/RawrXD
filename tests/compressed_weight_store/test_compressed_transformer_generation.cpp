@@ -58,7 +58,7 @@ std::vector<Deep2::GGUFTensor> descriptors(std::vector<OwnedTensor>& owned) {
 int main() {
     constexpr std::size_t hidden=4, intermediate=8, vocab=8;
     std::vector<OwnedTensor> owned;
-    owned.reserve(16);
+    owned.reserve(24);
 
     std::vector<float> embedding(vocab*hidden);
     for (std::size_t r=0;r<vocab;++r) {
@@ -75,27 +75,32 @@ int main() {
             output[r*hidden+c]=0.05f*float(int((r*3+c*5)%11)-5);
     addMatrix(owned,"output.weight",vocab,hidden,output);
 
-    const std::string p="blk.0.";
-    addVector(owned,p+"attn_norm.weight",std::vector<float>(hidden,1.0f));
-    addMatrix(owned,p+"attn_q.weight",hidden,hidden,diagonal(hidden,0.75f));
-    addMatrix(owned,p+"attn_k.weight",hidden,hidden,diagonal(hidden,0.50f));
-    addMatrix(owned,p+"attn_v.weight",hidden,hidden,diagonal(hidden,1.0f));
-    addMatrix(owned,p+"attn_output.weight",hidden,hidden,diagonal(hidden,1.0f));
-    addVector(owned,p+"ffn_norm.weight",std::vector<float>(hidden,1.0f));
+    // Two complete pre-norm decoder blocks, each with multi-head causal
+    // self-attention, RoPE, residual paths, SwiGLU and a second residual.
+    for (std::size_t layer=0; layer<2; ++layer) {
+        const std::string p="blk."+std::to_string(layer)+".";
+        const float layerScale = layer==0 ? 1.0f : 0.8f;
+        addVector(owned,p+"attn_norm.weight",std::vector<float>(hidden,1.0f));
+        addMatrix(owned,p+"attn_q.weight",hidden,hidden,diagonal(hidden,0.75f*layerScale));
+        addMatrix(owned,p+"attn_k.weight",hidden,hidden,diagonal(hidden,0.50f*layerScale));
+        addMatrix(owned,p+"attn_v.weight",hidden,hidden,diagonal(hidden,1.0f));
+        addMatrix(owned,p+"attn_output.weight",hidden,hidden,diagonal(hidden,1.0f));
+        addVector(owned,p+"ffn_norm.weight",std::vector<float>(hidden,1.0f));
 
-    std::vector<float> gate(intermediate*hidden), up(intermediate*hidden);
-    for(std::size_t r=0;r<intermediate;++r)
-        for(std::size_t c=0;c<hidden;++c) {
-            gate[r*hidden+c]=0.04f*float(1+((r+c)%4));
-            up[r*hidden+c]=0.10f*float(1+((2*r+c)%3));
-        }
-    addMatrix(owned,p+"ffn_gate.weight",intermediate,hidden,gate);
-    addMatrix(owned,p+"ffn_up.weight",intermediate,hidden,up);
-    std::vector<float> down(hidden*intermediate,0.0f);
-    for(std::size_t r=0;r<hidden;++r)
-        for(std::size_t c=0;c<intermediate;++c)
-            down[r*intermediate+c]=(c%hidden==r)?0.25f:0.025f;
-    addMatrix(owned,p+"ffn_down.weight",hidden,intermediate,down);
+        std::vector<float> gate(intermediate*hidden), up(intermediate*hidden);
+        for(std::size_t r=0;r<intermediate;++r)
+            for(std::size_t col=0;col<hidden;++col) {
+                gate[r*hidden+col]=0.04f*layerScale*float(1+((r+col)%4));
+                up[r*hidden+col]=0.10f*float(1+((2*r+col+layer)%3));
+            }
+        addMatrix(owned,p+"ffn_gate.weight",intermediate,hidden,gate);
+        addMatrix(owned,p+"ffn_up.weight",intermediate,hidden,up);
+        std::vector<float> down(hidden*intermediate,0.0f);
+        for(std::size_t r=0;r<hidden;++r)
+            for(std::size_t col=0;col<intermediate;++col)
+                down[r*intermediate+col]=(col%hidden==r)?0.25f:0.025f;
+        addMatrix(owned,p+"ffn_down.weight",hidden,intermediate,down);
+    }
 
     auto tensors=descriptors(owned);
     rawrxd::compression::CompressedGGUFModel::Options storeOptions;
@@ -112,9 +117,9 @@ int main() {
     config.hidden=hidden;
     config.intermediate=intermediate;
     config.vocabulary=vocab;
-    config.layers=1;
-    config.heads=1;
-    config.head_dim=hidden;
+    config.layers=2;
+    config.heads=2;
+    config.head_dim=hidden/2;
     config.rms_epsilon=1.0e-5f;
     config.rope_theta=10000.0f;
 
