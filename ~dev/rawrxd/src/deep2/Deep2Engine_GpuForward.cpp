@@ -353,6 +353,82 @@ bool Deep2Engine::forwardLayerGpuResident(
             return true;
         }
 
+        // Generic registered-quant fallback: formats without a native
+        // packed shader (Q3_K/Q5_K/Q8_K, IQ-family when registered, etc.)
+        // remain compressed in host residency. Reconstruct only a bounded
+        // group of rows, then submit those F32 rows through the typed shader's
+        // F32 mode. Unknown geometries/dequantizers stay on the established
+        // raw-mapping fallback below.
+        if (wt.compressedBytes && !vc->FusedRecording()) {
+            const auto geometry =
+                QuantKernelRegistry::Instance().GetGeometry(wt.type);
+            const auto dequant =
+                QuantKernelRegistry::Instance().GetDequant(wt.type);
+            if (geometry.blockBytes && geometry.blockElements && dequant &&
+                rows == wt.rows && cols == wt.cols &&
+                (cols % geometry.blockElements) == 0) {
+                const size_t blocksPerRow = cols / geometry.blockElements;
+                if (blocksPerRow <= std::numeric_limits<size_t>::max() /
+                                        geometry.blockBytes) {
+                    const size_t encodedRowBytes =
+                        blocksPerRow * geometry.blockBytes;
+                    const size_t decodedRowBytes =
+                        static_cast<size_t>(cols) * sizeof(float);
+                    if (encodedRowBytes && decodedRowBytes &&
+                        rows <= std::numeric_limits<size_t>::max() /
+                                    encodedRowBytes &&
+                        rows * encodedRowBytes == wt.sizeBytes &&
+                        wt.compressedBytes->size() == wt.sizeBytes) {
+                        constexpr size_t kMaxTileBytes = 256u * 1024u;
+                        const size_t encodedRows = std::max<size_t>(
+                            1, kMaxTileBytes / encodedRowBytes);
+                        const size_t decodedRows = std::max<size_t>(
+                            1, kMaxTileBytes / decodedRowBytes);
+                        const size_t rowsPerTile = std::max<size_t>(
+                            1, std::min(encodedRows, decodedRows));
+                        std::vector<uint8_t> encodedTile;
+                        std::vector<uint8_t> decodeScratch;
+                        std::vector<float> decodedTile;
+                        for (uint32_t rowBase = 0; rowBase < rows;) {
+                            const uint32_t tileRows = static_cast<uint32_t>(
+                                std::min<size_t>(rows - rowBase, rowsPerTile));
+                            const size_t encodedBytes =
+                                static_cast<size_t>(tileRows) * encodedRowBytes;
+                            const size_t decodedElements =
+                                static_cast<size_t>(tileRows) * cols;
+                            encodedTile.resize(encodedBytes);
+                            decodedTile.resize(decodedElements);
+                            wt.compressedBytes->ReadRange(
+                                static_cast<size_t>(rowBase) * encodedRowBytes,
+                                encodedBytes, encodedTile.data(), decodeScratch);
+                            for (uint32_t localRow = 0; localRow < tileRows; ++localRow) {
+                                dequant(encodedTile.data() +
+                                            static_cast<size_t>(localRow) * encodedRowBytes,
+                                        decodedTile.data() +
+                                            static_cast<size_t>(localRow) * cols,
+                                        cols);
+                            }
+                            uint64_t tileKey = WeightKey(wt) ^
+                                (static_cast<uint64_t>(rowBase) *
+                                    0x9E3779B185EBCA87ull) ^
+                                (static_cast<uint64_t>(tileRows) << 23) ^
+                                (static_cast<uint64_t>(wt.type) << 51) ^
+                                0xa0761d6478bd642full;
+                            if (!tileKey) tileKey = 1;
+                            if (!vc->DispatchGemvQuantRows(
+                                    0, decodedTile.data(),
+                                    decodedElements * sizeof(float),
+                                    in, out, tileRows, cols, rowBase, tileKey))
+                                return false;
+                            rowBase += tileRows;
+                        }
+                        ++c.cpuF32Expands;
+                        return true;
+                    }
+                }
+            }
+        }
+
         if (PackedQuant(wt)) {
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
