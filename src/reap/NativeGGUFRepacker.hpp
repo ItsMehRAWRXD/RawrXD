@@ -695,10 +695,14 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
                 positiveMax=std::max(positiveMax,values[i]);
                 negativeMax=std::max(negativeMax,-values[i]);
             }
-            // Q8_0 stores signed codes in [-128,127]. Account for
-            // the asymmetric endpoints when selecting the FP16 scale:
-            // negative peaks have one additional representable step.
-            const float d=std::max(positiveMax/127.0f,negativeMax/128.0f);
+            // Q8_0 stores signed codes in [-128,127]. Use the
+            // asymmetric endpoint that corresponds to each sign.
+            // Computing in double avoids intermediate FP32 overflow
+            // when a finite source value is near FLT_MAX.
+            const double d64=std::max(
+                static_cast<double>(positiveMax)/127.0,
+                static_cast<double>(negativeMax)/128.0);
+            const float d=static_cast<float>(d64);
             uint32_t dbits=0;std::memcpy(&dbits,&d,4);
             const uint16_t half=Float32BitsToFloat16(dbits);
             const uint32_t decoded=Float16ToFloat32Bits(half);
