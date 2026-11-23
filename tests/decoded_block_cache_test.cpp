@@ -17,6 +17,8 @@ int main() {
     const auto first = cache.read(100, 1500);
     assert(std::equal(first.begin(), first.end(), source.begin() + 100));
     assert(cache.resident_bytes() <= 2048);
+    assert(cache.peak_resident_bytes() <= 2048);
+    assert(cache.compressed_payload_bytes() > 0);
     const size_t previous_hits = cache.hits();
     const auto second = cache.read(1100, 200);
     assert(std::equal(second.begin(), second.end(), source.begin() + 1100));
@@ -34,7 +36,11 @@ int main() {
     try { (void)too_small.read(0, 1); }
     catch (const std::length_error&) { rejected = true; }
     assert(rejected);
+    assert(cache.decoded_bytes_total() >= 2048);
+    assert(cache.evictions() > 0);
+    const size_t peak = cache.peak_resident_bytes();
     cache.clear();
+    assert(cache.peak_resident_bytes() == peak);
     assert(cache.resident_bytes() == 0);
     std::cout << "PASS cache range/hit/eviction/budget/corruption boundaries\n";
 }
