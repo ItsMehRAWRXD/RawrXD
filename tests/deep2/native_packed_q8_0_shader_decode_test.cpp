@@ -169,6 +169,28 @@ static float loadKQuantShaderModel(const std::vector<uint8_t>& bytes,
     return d * float(q);
 }
 
+// Hand-computed GGML Q4_K/Q5_K upper-group scale/minimum fixture.
+// This does not use RawrXD's reference dequantizer for the expected result.
+static void testK4UpperGroupScaleFixture(uint32_t type) {
+    const size_t bytesPerBlock = type == 12u ? 144u : 176u;
+    std::vector<uint8_t> bytes(bytesPerBlock, 0);
+    put16(bytes.data(), 0x3c00u);      // d = 1
+    put16(bytes.data() + 2u, 0x3c00u); // dmin = 1
+    // group 4: scale=(scales[8]&15)|((scales[0]>>6)<<4) = 3|32 = 35
+    //          min=(scales[8]>>4)|((scales[4]>>6)<<4) = 5|16 = 21
+    bytes[4u + 0u] = 0x80u;
+    bytes[4u + 4u] = 0x40u;
+    bytes[4u + 8u] = 0x53u;
+    const uint32_t lane = 4u * 32u;
+    // q=0, so output must equal -min = -21 irrespective of high-bit plane.
+    const float decoded = loadKQuantShaderModel(bytes, type, lane);
+    assert(decoded == -21.0f);
+    // group 4, q=1: expected scale-min = 14.
+    const size_t lowOffset = type == 12u ? 16u : 48u;
+    bytes[lowOffset + 2u * 32u] = 0x01u;
+    assert(loadKQuantShaderModel(bytes, type, lane) == 14.0f);
+}
+
 static void testKQuantBlock(uint32_t type) {
     const size_t blockBytes = type == 10u ? 84u : type == 11u ? 110u :
         type == 12u ? 144u : type == 13u ? 176u : type == 14u ? 210u : 292u;
@@ -246,5 +268,7 @@ static void testFixedBlock(uint32_t type) {
 int main() {
     for (uint32_t type : {2u, 3u, 6u, 7u, 8u, 9u}) testFixedBlock(type);
     for (uint32_t type : {10u, 11u, 12u, 13u, 14u, 15u}) testKQuantBlock(type);
+    testK4UpperGroupScaleFixture(12u);
+    testK4UpperGroupScaleFixture(13u);
     std::cout << "packed Q4/Q5/Q8 and K-quant Vulkan shader decoder parity PASS\n";
 }
