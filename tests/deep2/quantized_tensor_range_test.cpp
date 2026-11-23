@@ -27,9 +27,9 @@ int main() {
     // the two intersecting blocks, not the remaining tensor blocks.
     std::vector<std::uint8_t> q8(2 * 34);
     for (int block = 0; block < 2; ++block) {
+        putU16(q8.data() + block * 34, 0x3c00); // fp16 scale = 1
         for (int i = 0; i < 32; ++i)
-            q8[block * 34 + i] = static_cast<std::uint8_t>(static_cast<std::int8_t>(i - 16));
-        putU16(q8.data() + block * 34 + 32, 0x3c00); // fp16 scale = 1
+            q8[block * 34 + 2 + i] = static_cast<std::uint8_t>(static_cast<std::int8_t>(i - 16));
     }
     float q8Out[40] = {};
     assert(deep2::dequantizeTensorRange(deep2::TensorType::Q8_0, 64, 10, 40,
