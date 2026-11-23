@@ -1198,6 +1198,7 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize) {
 }
 
 void Deep2Engine::unloadModel() {
+    tensorResidencyCache_.Clear();
     deallocateBuffers();
     delete[] reinterpret_cast<uint8_t*>(weights);
     weights = nullptr;
@@ -1242,7 +1243,12 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (!wt.data || wt.rows != V || wt.cols != H || H == 0)
         return false;
 
-    const auto* desc = LookupQuantType(static_cast<uint32_t>(wt.type));
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    const int sourceType = compressedAvailable ? wt.residencyType : wt.type;
+    const auto* desc = LookupQuantType(static_cast<uint32_t>(sourceType));
     if (!desc || desc->blockBytes == 0 || desc->blockElements == 0)
         return false;
 
@@ -1261,14 +1267,24 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
         return false;
 
     const size_t offset = row * rowBytes;
-    if (wt.sizeBytes != 0 &&
+    if (!compressedAvailable && wt.sizeBytes != 0 &&
         (offset > wt.sizeBytes || rowBytes > wt.sizeBytes - offset))
         return false;
 
-    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
+    auto dequant = QuantKernelRegistry::Instance().GetDequant(sourceType);
     if (!dequant) return false;
 
-    const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
+    std::vector<uint8_t> rowTile;
+    const uint8_t* src = nullptr;
+    if (compressedAvailable) {
+        try { rowTile.resize(rowBytes); } catch (...) { return false; }
+        if (!wt.residencyCache->ReadRange(
+                wt.residencyKey, offset, rowBytes, rowTile.data()))
+            return false;
+        src = rowTile.data();
+    } else {
+        src = static_cast<const uint8_t*>(wt.data) + offset;
+    }
     dequant(src, output, H);
     parityEmit(ParityCheckpoint::Embed, output, H);
     return finiteVector(output, H);
@@ -1599,23 +1615,42 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
     if (!normWeight.data) {
         for (size_t i = 0; i < dim; ++i) output[i] = input[i] * invRms;
     } else {
-        const auto* desc = LookupQuantType(static_cast<uint32_t>(normWeight.type));
+        const bool compressedAvailable =
+            normWeight.residencyCache && !normWeight.residencyKey.empty() &&
+            normWeight.residencyType >= 0 &&
+            normWeight.residencyCache->Contains(normWeight.residencyKey);
+        const int sourceType =
+            compressedAvailable ? normWeight.residencyType : normWeight.type;
+        const auto* desc = LookupQuantType(static_cast<uint32_t>(sourceType));
         if (!desc || desc->blockBytes == 0 || desc->blockElements == 0) {
             throw std::runtime_error("RMSNormW: unsupported weight type");
         }
         const size_t required =
             ((dim + desc->blockElements - 1) / desc->blockElements) *
             desc->blockBytes;
-        if (normWeight.sizeBytes != 0 && required > normWeight.sizeBytes) {
+        if (!compressedAvailable && normWeight.sizeBytes != 0 &&
+            required > normWeight.sizeBytes) {
             throw std::runtime_error("RMSNormW: norm tensor too small");
         }
 
         std::vector<float> w(dim);
-        auto dequant = QuantKernelRegistry::Instance().GetDequant(normWeight.type);
+        auto dequant = QuantKernelRegistry::Instance().GetDequant(sourceType);
         if (!dequant) {
             throw std::runtime_error("RMSNormW: no dequant kernel");
         }
-        dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
+        std::vector<uint8_t> packedTile;
+        const uint8_t* packed = static_cast<const uint8_t*>(normWeight.data);
+        if (compressedAvailable) {
+            try { packedTile.resize(required); } catch (...) {
+                throw std::runtime_error("RMSNormW: compressed tile allocation failed");
+            }
+            if (!normWeight.residencyCache->ReadRange(
+                    normWeight.residencyKey, 0, required, packedTile.data())) {
+                throw std::runtime_error("RMSNormW: compressed tile read failed");
+            }
+            packed = packedTile.data();
+        }
+        dequant(packed, w.data(), dim);
         if (!finiteVector(w.data(), dim)) {
             throw std::runtime_error("RMSNormW: non-finite norm weights");
         }
