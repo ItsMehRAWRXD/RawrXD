@@ -40,6 +40,10 @@ inline GpuWeightFormat DetectFormat(uint32_t gguf_type) {
     }
 }
 
+// Custom INT4 (RawrXD packed nibbles + F16 scales) -- used after requantizing
+// F32/F16 tensors; not a GGUF type but a RawrXD internal format.
+inline bool IsCustomInt4(GpuWeightFormat f) { return f == GpuWeightFormat::INT4; }
+
 // Values per block for each format (for geometry).
 inline uint32_t ValuesPerBlock(GpuWeightFormat f) {
     switch (f) {
@@ -60,7 +64,9 @@ inline uint32_t BlockBytes(GpuWeightFormat f) {
     }
 }
 
-// A single compute program (one shader).
+// A single compute program (one shader). Two descriptor layouts:
+//   int4Layout=false (Q4_0/Q4_K): 0=weights, 1=x, 2=y (storage), 3=dims (uniform)
+//   int4Layout=true  (INT4):      0=W, 1=scales, 2=x, 3=y (storage), 4=dims (uniform)
 struct GpuProgram {
     VkDevice dev = VK_NULL_HANDLE;
     VkShaderModule shader = VK_NULL_HANDLE;
@@ -71,7 +77,7 @@ struct GpuProgram {
     VkDescriptorSet set = VK_NULL_HANDLE;
     VkFence fence = VK_NULL_HANDLE;
 
-    bool init(VkDevice d, const std::string& spv) {
+    bool init(VkDevice d, const std::string& spv, bool int4Layout = false) {
         dev = d;
         std::ifstream sf(spv, std::ios::binary | std::ios::ate);
         if (!sf) return false;
@@ -80,16 +86,19 @@ struct GpuProgram {
         VkShaderModuleCreateInfo smi{}; smi.sType=VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO; smi.codeSize=buf.size(); smi.pCode=(const uint32_t*)buf.data();
         if (vkCreateShaderModule(d,&smi,nullptr,&shader)!=VK_SUCCESS) return false;
         VkPipelineShaderStageCreateInfo ssi{}; ssi.sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO; ssi.stage=VK_SHADER_STAGE_COMPUTE_BIT; ssi.module=shader; ssi.pName="main";
+        const uint32_t nStorage = int4Layout ? 4u : 3u; // INT4 has 4 storage buffers; Q4_0/Q4_K have 3
+        const uint32_t dimsBinding = int4Layout ? 4u : 3u; // dims uniform binding index
+        const uint32_t totalBindings = int4Layout ? 5u : 4u;
         VkDescriptorSetLayoutBinding b[5]; std::memset(b,0,sizeof(b));
-        for (int i=0;i<4;++i){ b[i].binding=(uint32_t)i; b[i].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; b[i].descriptorCount=1; b[i].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT; }
-        b[4].binding=4; b[4].descriptorType=VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; b[4].descriptorCount=1; b[4].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT;
-        VkDescriptorSetLayoutCreateInfo dl{}; dl.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO; dl.bindingCount=5; dl.pBindings=b;
+        for (uint32_t i=0;i<nStorage;++i){ b[i].binding=i; b[i].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; b[i].descriptorCount=1; b[i].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT; }
+        b[dimsBinding].binding=dimsBinding; b[dimsBinding].descriptorType=VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; b[dimsBinding].descriptorCount=1; b[dimsBinding].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT;
+        VkDescriptorSetLayoutCreateInfo dl{}; dl.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO; dl.bindingCount=totalBindings; dl.pBindings=b;
         if (vkCreateDescriptorSetLayout(d,&dl,nullptr,&dsl)!=VK_SUCCESS) return false;
         VkPipelineLayoutCreateInfo pl{}; pl.sType=VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO; pl.setLayoutCount=1; pl.pSetLayouts=&dsl;
         if (vkCreatePipelineLayout(d,&pl,nullptr,&layout)!=VK_SUCCESS) return false;
         VkComputePipelineCreateInfo cp{}; cp.sType=VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO; cp.layout=layout; cp.stage=ssi;
         if (vkCreateComputePipelines(d,nullptr,1,&cp,nullptr,&pipe)!=VK_SUCCESS) return false;
-        VkDescriptorPoolSize ps[2]={{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,4},{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1}};
+        VkDescriptorPoolSize ps[2]={{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,nStorage},{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1}};
         VkDescriptorPoolCreateInfo dp{}; dp.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO; dp.maxSets=1; dp.poolSizeCount=2; dp.pPoolSizes=ps;
         if (vkCreateDescriptorPool(d,&dp,nullptr,&pool)!=VK_SUCCESS) return false;
         VkDescriptorSetAllocateInfo da{}; da.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO; da.descriptorPool=pool; da.descriptorSetCount=1; da.pSetLayouts=&dsl;
