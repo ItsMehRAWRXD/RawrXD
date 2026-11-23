@@ -71,8 +71,17 @@ int main() {
     // BF16 fallback: values outside the finite F16 range but exactly
     // representable in BF16 must remain packed and round-trip exactly.
     std::vector<float> bf16Source(2048);
-    for (size_t i = 0; i < bf16Source.size(); ++i)
-        bf16Source[i] = (i & 1u) ? 131072.0f : 65536.0f;
+    uint32_t bf16Seed = 0x85ebca6bu;
+    for (size_t i = 0; i < bf16Source.size(); ++i) {
+        bf16Seed ^= bf16Seed << 13;
+        bf16Seed ^= bf16Seed >> 17;
+        bf16Seed ^= bf16Seed << 5;
+        // BF16-exact values with exponent outside finite F16 range.
+        // Vary both exponent and mantissa to prevent LZ4 from beating BF16.
+        const uint32_t bits = ((uint32_t(143u + (bf16Seed % 12u))) << 23) |
+                              ((bf16Seed >> 12) & 0x7fu) << 16;
+        std::memcpy(&bf16Source[i], &bits, sizeof(float));
+    }
     Deep2::TensorResidencyCache bf16Cache(8192);
     assert(bf16Cache.RegisterF32FromReader("bf16.exact", bf16Source.size(), 0.0f,
         [&](size_t offset, size_t count, float* out) {
