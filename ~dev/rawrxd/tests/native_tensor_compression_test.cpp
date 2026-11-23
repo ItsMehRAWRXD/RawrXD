@@ -93,6 +93,13 @@ int main() {
     CHECK(!compact.DecodeRange(compact.elements()-1,2,untouched));
     CHECK(untouched[0]==7.0f && untouched[1]==8.0f);
 
+    // Reader mode can explicitly apply a relative-error tolerance.
+    auto relative=ChunkedF32Storage::BuildFromReader(
+        1,0.001f,
+        [](std::size_t,std::size_t,float* out) { out[0]=1000000.0f; return true; },
+        1,true,2);
+    CHECK(relative.chunks()[0].encoding==RawrXD::TensorCompression::Encoding::BF16);
+
     // Lossless fallback must preserve values that are not representable in 16 bits.
     const float difficult[] = {1.0001234f, -3.1415927f, 1.0e-20f, 65520.0f};
     auto exact=ChunkedF32Storage::Build(difficult,4,0.0f,4);
