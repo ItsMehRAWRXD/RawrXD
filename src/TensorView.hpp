@@ -7,7 +7,9 @@
 
 namespace deep2 {
 
-// GGUF quantization type codes (match the GGUF/ggml enum: F32=0, F16=1, Q4_0=2 ... Q6_K=18).
+// Canonical GGML/GGUF tensor type IDs. Legacy *_S/_M/_L names remain aliases
+// for source compatibility; a GGUF type ID does not encode a model-specific
+// "small/medium/large" K-quant layout.
 enum class TensorType : uint32_t {
     F32   = 0,
     F16   = 1,
@@ -18,102 +20,139 @@ enum class TensorType : uint32_t {
     Q8_0  = 8,
     Q8_1  = 9,
     Q2_K  = 10,
-    Q3_K_S= 11,
-    Q3_K_M= 12,
-    Q3_K_L= 13,
-    Q4_K_S= 14,
-    Q4_K_M= 15,
-    Q5_K_S= 16,
-    Q5_K_M= 17,
-    Q6_K  = 18,
+    Q3_K  = 11,
+    Q3_K_S = Q3_K,
+    Q3_K_M = Q3_K,
+    Q3_K_L = Q3_K,
+    Q4_K  = 12,
+    Q4_K_S = Q4_K,
+    Q4_K_M = Q4_K,
+    Q5_K  = 13,
+    Q5_K_S = Q5_K,
+    Q5_K_M = Q5_K,
+    Q6_K  = 14,
+    Q8_K  = 15,
+    I8    = 24,
+    I16   = 25,
+    I32   = 26,
+    I64   = 27,
+    F64   = 28,
+    BF16  = 30,
 };
 
 inline const char* tensorTypeName(TensorType t) {
     switch (t) {
-        case TensorType::F32:   return "F32";
-        case TensorType::F16:   return "F16";
-        case TensorType::Q4_0:  return "Q4_0";
-        case TensorType::Q4_1:  return "Q4_1";
-        case TensorType::Q5_0:  return "Q5_0";
-        case TensorType::Q5_1:  return "Q5_1";
-        case TensorType::Q8_0:  return "Q8_0";
-        case TensorType::Q8_1:  return "Q8_1";
-        case TensorType::Q2_K:  return "Q2_K";
-        case TensorType::Q3_K_S:return "Q3_K_S";
-        case TensorType::Q3_K_M:return "Q3_K_M";
-        case TensorType::Q3_K_L:return "Q3_K_L";
-        case TensorType::Q4_K_S:return "Q4_K_S";
-        case TensorType::Q4_K_M:return "Q4_K_M";
-        case TensorType::Q5_K_S:return "Q5_K_S";
-        case TensorType::Q5_K_M:return "Q5_K_M";
-        case TensorType::Q6_K:  return "Q6_K";
-        default:                return "UNKNOWN";
-    }
-}
-
-// Bytes of storage per single value for fixed-width types; quantized K-types return the
-// block-average (e.g. Q4_K_S ~ 0.56 bytes/value including overhead).
-inline double tensorTypeBytesPerValue(TensorType t) {
-    switch (t) {
-        case TensorType::F32: return 4.0;
-        case TensorType::F16: return 2.0;
-        case TensorType::Q8_0: return 1.0;
-        case TensorType::Q4_0:
-        case TensorType::Q4_1: return 0.5;
-        case TensorType::Q2_K: return 0.25;
-        case TensorType::Q3_K_S:
-        case TensorType::Q3_K_M:
-        case TensorType::Q3_K_L: return 0.375;
-        case TensorType::Q4_K_S:
-        case TensorType::Q4_K_M: return 0.5;
-        case TensorType::Q5_K_S:
-        case TensorType::Q5_K_M: return 0.625;
-        case TensorType::Q6_K: return 0.75;
-        default: return 1.0;
-    }
-}
-
-// Quantized block size (values per quant block) for K-quants and Q8_0.
-inline std::size_t quantBlockSize(TensorType t) {
-    switch (t) {
-        case TensorType::Q8_0: return 32;
-        case TensorType::Q2_K:
-        case TensorType::Q3_K_S:
-        case TensorType::Q3_K_M:
-        case TensorType::Q3_K_L:
-        case TensorType::Q4_K_S:
-        case TensorType::Q4_K_M:
-        case TensorType::Q5_K_S:
-        case TensorType::Q5_K_M:
-        case TensorType::Q6_K: return 256;
-        default: return 1;
+        case TensorType::F32: return "F32";
+        case TensorType::F16: return "F16";
+        case TensorType::Q4_0: return "Q4_0";
+        case TensorType::Q4_1: return "Q4_1";
+        case TensorType::Q5_0: return "Q5_0";
+        case TensorType::Q5_1: return "Q5_1";
+        case TensorType::Q8_0: return "Q8_0";
+        case TensorType::Q8_1: return "Q8_1";
+        case TensorType::Q2_K: return "Q2_K";
+        case TensorType::Q3_K: return "Q3_K";
+        case TensorType::Q4_K: return "Q4_K";
+        case TensorType::Q5_K: return "Q5_K";
+        case TensorType::Q6_K: return "Q6_K";
+        case TensorType::Q8_K: return "Q8_K";
+        case TensorType::I8: return "I8";
+        case TensorType::I16: return "I16";
+        case TensorType::I32: return "I32";
+        case TensorType::I64: return "I64";
+        case TensorType::F64: return "F64";
+        case TensorType::BF16: return "BF16";
+        default: return "UNKNOWN";
     }
 }
 
 inline bool isQuantized(TensorType t) {
-    return t != TensorType::F32 && t != TensorType::F16;
+    switch (t) {
+        case TensorType::Q4_0:
+        case TensorType::Q4_1:
+        case TensorType::Q5_0:
+        case TensorType::Q5_1:
+        case TensorType::Q8_0:
+        case TensorType::Q8_1:
+        case TensorType::Q2_K:
+        case TensorType::Q3_K:
+        case TensorType::Q4_K:
+        case TensorType::Q5_K:
+        case TensorType::Q6_K:
+        case TensorType::Q8_K:
+            return true;
+        default:
+            return false;
+    }
 }
 
-// Storage bytes required for a tensor of `numValues` values of type `t` (block-aligned).
-inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
-    if (!isQuantized(t)) {
-        return numValues * static_cast<std::uint64_t>(tensorTypeBytesPerValue(t));
-    }
-    const std::size_t bsz = quantBlockSize(t);
-    const std::uint64_t blocks = (numValues + bsz - 1) / bsz;
-    // storage bytes per block (includes scales/super-scale; block-aligned in GGUF)
+// Exact average storage bytes per logical value, including per-block scales.
+inline double tensorTypeBytesPerValue(TensorType t) {
     switch (t) {
-        case TensorType::Q8_0:   return blocks * 34;   // 32 x int8 + fp16 d
-        case TensorType::Q2_K:   return blocks * 82;   // 64 qs + 16 scales + fp16 d
-        case TensorType::Q3_K_S:
-        case TensorType::Q3_K_M:
-        case TensorType::Q3_K_L: return blocks * 114;  // 96 qs + 16 scales + fp16 d
-        case TensorType::Q4_K_S:
-        case TensorType::Q4_K_M: return blocks * 146;  // 128 qs + 16 scales + fp16 d
-        case TensorType::Q5_K_S:
-        case TensorType::Q5_K_M: return blocks * 178;  // 160 qs + 16 scales + fp16 d
-        case TensorType::Q6_K:   return blocks * 210;  // 192 qs + 16 scales + fp16 d
-        default: return numValues;
+        case TensorType::F32: return 4.0;
+        case TensorType::F16:
+        case TensorType::BF16: return 2.0;
+        case TensorType::F64:
+        case TensorType::I64: return 8.0;
+        case TensorType::I32: return 4.0;
+        case TensorType::I16: return 2.0;
+        case TensorType::I8: return 1.0;
+        case TensorType::Q4_0: return 18.0 / 32.0;
+        case TensorType::Q4_1: return 20.0 / 32.0;
+        case TensorType::Q5_0: return 22.0 / 32.0;
+        case TensorType::Q5_1: return 24.0 / 32.0;
+        case TensorType::Q8_0: return 34.0 / 32.0;
+        case TensorType::Q8_1: return 40.0 / 32.0;
+        case TensorType::Q2_K: return 84.0 / 256.0;
+        case TensorType::Q3_K: return 110.0 / 256.0;
+        case TensorType::Q4_K: return 144.0 / 256.0;
+        case TensorType::Q5_K: return 176.0 / 256.0;
+        case TensorType::Q6_K: return 210.0 / 256.0;
+        case TensorType::Q8_K: return 292.0 / 256.0;
+        default: return 0.0;
+    }
+}
+
+inline std::size_t quantBlockSize(TensorType t) {
+    switch (t) {
+        case TensorType::Q4_0:
+        case TensorType::Q4_1:
+        case TensorType::Q5_0:
+        case TensorType::Q5_1:
+        case TensorType::Q8_0:
+        case TensorType::Q8_1:
+            return 32;
+        case TensorType::Q2_K:
+        case TensorType::Q3_K:
+        case TensorType::Q4_K:
+        case TensorType::Q5_K:
+        case TensorType::Q6_K:
+        case TensorType::Q8_K:
+            return 256;
+        default:
+            return 1;
+    }
+}
+
+// Storage bytes for GGUF tensor payloads. Quantized rows must be block aligned;
+// the GGUF loader validates that condition before calling this helper.
+inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
+    const std::size_t blockValues = quantBlockSize(t);
+    const std::uint64_t blocks = (numValues + blockValues - 1) / blockValues;
+    switch (t) {
+        case TensorType::Q4_0: return blocks * 18;
+        case TensorType::Q4_1: return blocks * 20;
+        case TensorType::Q5_0: return blocks * 22;
+        case TensorType::Q5_1: return blocks * 24;
+        case TensorType::Q8_0: return blocks * 34;
+        case TensorType::Q8_1: return blocks * 40;
+        case TensorType::Q2_K: return blocks * 84;
+        case TensorType::Q3_K: return blocks * 110;
+        case TensorType::Q4_K: return blocks * 144;
+        case TensorType::Q5_K: return blocks * 176;
+        case TensorType::Q6_K: return blocks * 210;
+        case TensorType::Q8_K: return blocks * 292;
+        default: return numValues * static_cast<std::uint64_t>(tensorTypeBytesPerValue(t));
     }
 }
 
@@ -138,8 +177,8 @@ struct TensorView {
 struct DequantizedTensor {
     std::vector<float> data;
     std::vector<std::uint64_t> dims;   // logical shape (reverse of GGUF storage order)
-    std::uint64_t rows = 0;            // for 2-D weight matrices: logical rows
-    std::uint64_t cols = 0;            // logical columns
+    std::uint64_t rows = 0;
+    std::uint64_t cols = 0;
 };
 
 } // namespace deep2
