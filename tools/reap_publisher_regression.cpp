@@ -24,6 +24,9 @@ int main() {
         PadTo(out,32);
         for(int i=0;i<16;++i)out.put(static_cast<char>(i));
     }
+    const auto self=PublishRepackedGGUF(src.string(),src.string(),1024);
+    check(self.error==PublishError::InvalidPath && fs::exists(src),
+          "source_destination_alias_rejected");
     const auto first=PublishRepackedGGUF(src.string(),dst.string(),1024);
     check(first.error==PublishError::None&&first.published_bytes>16,
           "publish_new_artifact");
