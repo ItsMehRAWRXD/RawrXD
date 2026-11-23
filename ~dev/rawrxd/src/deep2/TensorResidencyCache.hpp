@@ -90,29 +90,49 @@ public:
     // path (not lossless compression); callers must explicitly choose it.
     // The source is copied and converted before admission, so no mmap pointer
     // is retained. Range reads convert only requested values back to FP32.
+    bool RegisterF16(const std::string& key, const uint16_t* source,
+                     size_t elementCount) {
+        if (!source || !elementCount ||
+            elementCount > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+            return false;
+        return Register(key, source, elementCount * sizeof(uint16_t), false);
+    }
+
     bool RegisterF32AsF16(const std::string& key, const float* source,
                           size_t elementCount) {
         if (!source || !elementCount ||
             elementCount > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
             return false;
-        std::vector<uint16_t> half(elementCount);
-        for (size_t i = 0; i < elementCount; ++i)
-            half[i] = FloatToHalf(source[i]);
-        return Register(key, half.data(), half.size() * sizeof(uint16_t), false);
+        try {
+            std::vector<uint16_t> half(elementCount);
+            for (size_t i = 0; i < elementCount; ++i)
+                half[i] = FloatToHalf(source[i]);
+            return RegisterF16(key, half.data(), half.size());
+        } catch (...) {
+            return false;
+        }
+    }
+
+    // Exact half-bit range for consumers such as GPU staging/upload paths.
+    // No FP32 expansion or full-tensor materialization is performed.
+    bool ReadF16Range(const std::string& key, size_t elementOffset,
+                      size_t elementCount, uint16_t* destination) {
+        if (elementOffset > std::numeric_limits<size_t>::max() / sizeof(uint16_t) ||
+            elementCount > std::numeric_limits<size_t>::max() / sizeof(uint16_t) ||
+            elementOffset > std::numeric_limits<size_t>::max() - elementCount ||
+            (elementCount && !destination))
+            return false;
+        return ReadRange(key, elementOffset * sizeof(uint16_t),
+                         elementCount * sizeof(uint16_t), destination);
     }
 
     bool ReadF32Range(const std::string& key, size_t elementOffset,
                       size_t elementCount, float* destination) {
-        if (elementOffset > std::numeric_limits<size_t>::max() / sizeof(uint16_t) ||
-            elementCount > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
-            return false;
-        const size_t byteOffset = elementOffset * sizeof(uint16_t);
-        const size_t byteCount = elementCount * sizeof(uint16_t);
-        if (elementOffset > std::numeric_limits<size_t>::max() - elementCount)
-            return false;
-        std::vector<uint16_t> half(elementCount);
-        if (!ReadRange(key, byteOffset, byteCount, half.data())) return false;
         if (elementCount && !destination) return false;
+        std::vector<uint16_t> half;
+        try { half.resize(elementCount); } catch (...) { return false; }
+        if (!ReadF16Range(key, elementOffset, elementCount, half.data()))
+            return false;
         for (size_t i = 0; i < elementCount; ++i)
             destination[i] = HalfToFloat(half[i]);
         return true;
