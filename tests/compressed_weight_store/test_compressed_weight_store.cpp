@@ -44,8 +44,13 @@ int main(){
  for(std::size_t i=0;i<input.size();++i)input[i]=static_cast<std::uint8_t>((i/97)%13);
  std::string error;REQUIRE(store.addTensor("layer.0.weight",input.data(),input.size(),&error));
  REQUIRE(!store.addTensor("layer.0.weight",input.data(),input.size(),&error));REQUIRE(store.tensorBlocks("layer.0.weight")==9);
- std::vector<std::uint8_t> output(input.size());REQUIRE(store.readRange("layer.0.weight",997,output.data()+997,7000,&error));
- REQUIRE(std::equal(input.begin()+997,input.end(),output.begin()+997));
+ std::vector<std::uint8_t> output(input.size());
+ constexpr std::size_t range_offset = 997;
+ constexpr std::size_t range_length = 7000;
+ REQUIRE(store.readRange("layer.0.weight",range_offset,output.data()+range_offset,range_length,&error));
+ REQUIRE(std::equal(input.begin()+range_offset,
+                    input.begin()+range_offset+range_length,
+                    output.begin()+range_offset));
  auto lease=store.acquireBlock("layer.0.weight",0,&error);REQUIRE(lease&&lease->size()==1024);store.setDecodedCacheBudget(0);REQUIRE((*lease)[0]==input[0]);
  REQUIRE(!store.readRange("layer.0.weight",input.size(),output.data(),1,&error));
  std::vector<std::uint8_t> random_data(4096);std::mt19937 rng(7);for(auto& b:random_data)b=static_cast<std::uint8_t>(rng());
