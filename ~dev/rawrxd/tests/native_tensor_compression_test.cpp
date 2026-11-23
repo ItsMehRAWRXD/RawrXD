@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 using RawrXD::TensorCompression::ChunkedF32Storage;
