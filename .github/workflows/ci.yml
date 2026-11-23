@@ -74,16 +74,23 @@ jobs:
         working-directory: services
         shell: pwsh
         run: |
-          Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow
+          $swarm = Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow -PassThru
           try {
-            do {
+            $deadline = [DateTime]::UtcNow.AddSeconds(90)
+            $healthy = $false
+            while ([DateTime]::UtcNow -lt $deadline) {
+              if ($swarm.HasExited) { throw "HexMag swarm exited early (exit code $($swarm.ExitCode))" }
+              try {
+                $healthy = (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode -eq 200
+              } catch { $healthy = $false }
+              if ($healthy) { break }
               Start-Sleep -Seconds 1
-              $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
-            } while ($r -ne 200)
+            }
+            if (!$healthy) { throw "HexMag swarm health timeout (90 seconds)" }
             Write-Host "Swarm healthy on :8001"
             python test_smoke.py
             if ($LASTEXITCODE -ne 0) { throw "HexMag smoke tests failed" }
           } finally {
-            Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-            Write-Host "Swarm cleanup done"
+            if (!$swarm.HasExited) { Stop-Process -Id $swarm.Id -Force -ErrorAction SilentlyContinue }
+            Write-Host "Swarm cleanup done (PID $($swarm.Id))"
           }
