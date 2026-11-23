@@ -3,12 +3,34 @@
 // tensor. The reader is expected to decompress only the requested byte range.
 #include <cstddef>
 #include <cstdint>
+#include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
 namespace rawrxd::compression {
+
+// IEEE-754 binary16 to binary32 conversion for one decoded tile element.
+// Handles signed zero, subnormals, infinities, and NaNs without relying on
+// compiler-specific half types or GPU extensions.
+inline float DecodeHalfToFloat(std::uint16_t h) noexcept {
+    const float sign = (h & 0x8000u) ? -1.0f : 1.0f;
+    const std::uint16_t exponent = static_cast<std::uint16_t>((h >> 10) & 0x1fu);
+    const std::uint16_t mantissa = static_cast<std::uint16_t>(h & 0x03ffu);
+    if (exponent == 0) {
+        if (mantissa == 0) return std::copysign(0.0f, sign);
+        return sign * std::ldexp(static_cast<float>(mantissa), -24);
+    }
+    if (exponent == 0x1fu) {
+        if (mantissa == 0) return std::copysign(
+            std::numeric_limits<float>::infinity(), sign);
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    return sign * std::ldexp(
+        static_cast<float>(1024u + mantissa),
+        static_cast<int>(exponent) - 25);
+}
 
 struct CompressedWeightTile {
     std::size_t first_row = 0;
