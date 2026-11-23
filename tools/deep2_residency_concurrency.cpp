@@ -898,11 +898,11 @@ int main(int argc, char** argv) {
             while (!g2_go.load(std::memory_order_acquire)) std::this_thread::yield();
             std::vector<float> s(G_OUT, 0.0f), b(G_OUT, 0.0f);
             const bool serial_ok = dot(bank, s.data()) && LastReceipt().used_gpu;
-            const auto before = BatchAccountingSnapshot();
+            const auto before = ThreadAccountingSnapshot();
             const bool opened = serial_ok && BeginBatch();
             const bool queued = opened && dot(bank, b.data());
             const bool closed = opened && EndBatch();
-            const auto after = BatchAccountingSnapshot();
+            const auto after = ThreadAccountingSnapshot();
             acc.store(after.accepted - before.accepted);
             cmp.store(after.completed - before.completed);
             fail.store(after.failed - before.failed);
