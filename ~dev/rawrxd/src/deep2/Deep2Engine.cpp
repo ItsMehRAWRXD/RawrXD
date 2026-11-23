@@ -1518,17 +1518,19 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     if (deep2ForwardTraceEnabled()) {
         std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
     }
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
     const int cpuWeightType =
-        (wt.residencyCache && !wt.residencyKey.empty() &&
-         wt.residencyType >= 0) ? wt.residencyType : wt.type;
+        compressedAvailable ? wt.residencyType : wt.type;
     auto kernel = QuantKernelRegistry::Instance().GetGEMV(cpuWeightType);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
     }
 
     std::memset(output, 0, outDim * sizeof(float));
-    if (wt.residencyCache && !wt.residencyKey.empty() &&
-        wt.residencyType >= 0) {
+    if (compressedAvailable) {
         // Decode exactly one matrix row at a time. Transient decompression
         // memory is bounded to one packed row, never the full tensor.
         const size_t cachedBytes =
