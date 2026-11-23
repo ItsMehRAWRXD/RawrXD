@@ -115,7 +115,8 @@ struct WeightTensor {
                         std::memcpy(destination, source + offset, count);
                         return true;
                     }, chunkBytes, false, maxStoredBytes);
-            if (!candidate.storedBytes() || candidate.storedBytes() >= sizeBytes)
+            if (!candidate.storedBytes() || candidate.storedBytes() >= sizeBytes ||
+                candidate.residentBytes() >= sizeBytes)
                 return false;
             compressedBytes =
                 std::make_shared<RawrXD::TensorCompression::ChunkedByteStorage>(
@@ -155,7 +156,9 @@ struct WeightTensor {
                     std::memcpy(destination,source+offset,count*sizeof(float));
                     return true;
                 },chunkElements,false,maxStoredBytes);
-            if (candidate.storedBytes() >= sizeBytes) return false;
+            if (candidate.storedBytes() >= sizeBytes ||
+                candidate.residentBytes() >= sizeBytes)
+                return false;
             compressedF32=std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 std::move(candidate));
             std::atomic_store_explicit(&gpuF16Payload,
