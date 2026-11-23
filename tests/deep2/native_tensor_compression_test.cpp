@@ -257,6 +257,28 @@ int main() {
     assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
 
+    // Non-repeating F32 weights can still have compressible exponent lanes.
+    // This lossless shuffled representation must beat raw without relying on
+    // repeated whole float values, and must roundtrip bit-for-bit.
+    std::vector<uint32_t> variedBits(4096);
+    for (size_t i = 0; i < variedBits.size(); ++i)
+        variedBits[i] = 0x3f800000u | static_cast<uint32_t>(i * 131u);
+    auto varied = Encode(variedBits.data(), variedBits.size() * sizeof(uint32_t));
+    assert(varied.encoding == Encoding::ShuffleLZ4);
+    assert(varied.payload.size() < variedBits.size() * sizeof(uint32_t));
+    const auto restoredVaried = Decode(varied);
+    assert(restoredVaried.size() == variedBits.size() * sizeof(uint32_t));
+    assert(std::memcmp(restoredVaried.data(), variedBits.data(), restoredVaried.size()) == 0);
+    auto damagedVaried = varied;
+    damagedVaried.payload.clear();
+    std::vector<uint8_t> intactVaried(restoredVaried.size(), 0x7e);
+    bool rejectedVaried = false;
+    try { DecodeInto(damagedVaried, intactVaried.data(), intactVaried.size()); }
+    catch (const std::invalid_argument&) { rejectedVaried = true; }
+    assert(rejectedVaried);
+    assert(std::all_of(intactVaried.begin(), intactVaried.end(),
+                       [](uint8_t byte) { return byte == 0x7e; }));
+
     // Direct packed row-window staging: no intermediate whole-tensor buffer.
     // Vary every value so RLE cannot beat packed F16. Generate a
     // deterministic high-entropy sequence of exactly representable halves.
