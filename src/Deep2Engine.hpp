@@ -114,6 +114,7 @@ struct Deep2Engine {
     TensorHandle getTensor(const std::string& name);
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
+    bool ensureCompressedF32Tensor(const deep2::TensorEntry& entry);
     // Read an F32 element range from compressed resident storage. The first
     // access streams source chunks from the ROM pager; subsequent reads decode
     // only the chunks intersecting the requested range.
