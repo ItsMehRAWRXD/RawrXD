@@ -69,6 +69,30 @@ int main() {
     StoredTensorMatvec(store, "q8", ResidentWeightType::Q8_0,
                        input.data(), output.data(), rows, cols, 1);
     for (float v : output) assert(v == 6.f);
+    // Differential parity: the compressed store and direct GGUF byte reader
+    // must produce identical outputs for both supported resident formats.
+    struct DirectReader {
+        const std::vector<std::uint8_t>& bytes;
+        std::size_t size() const { return bytes.size(); }
+        void read(std::size_t offset, std::uint8_t* out, std::size_t count) const {
+            if (offset > bytes.size() || count > bytes.size() - offset)
+                throw std::out_of_range("direct tensor bounds");
+            std::memcpy(out, bytes.data() + offset, count);
+        }
+    };
+    for (std::size_t scratch : {std::size_t(1), std::size_t(34), std::size_t(65536)}) {
+        std::vector<float> expected(rows);
+        ResidentMatvec(DirectReader{weights}, ResidentWeightType::F16,
+                       input.data(), expected.data(), rows, cols, scratch);
+        StoredTensorMatvec(store, "f16", ResidentWeightType::F16,
+                           input.data(), output.data(), rows, cols, scratch);
+        assert(output == expected);
+        ResidentMatvec(DirectReader{q8}, ResidentWeightType::Q8_0,
+                       input.data(), expected.data(), rows, cols, scratch);
+        StoredTensorMatvec(store, "q8", ResidentWeightType::Q8_0,
+                           input.data(), output.data(), rows, cols, scratch);
+        assert(output == expected);
+    }
     const auto finalStats = store.stats();
     assert(finalStats.compressed_bytes < finalStats.raw_bytes);
     assert(finalStats.cached_decoded_bytes == 0);
