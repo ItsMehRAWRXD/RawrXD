@@ -682,7 +682,7 @@ inline RepackError RepackGGUF(const std::string& input,
         // physically larger than Q8_0 (40->34 and 292->272 bytes).
         // Keep their FP32/F16 scaling semantics in the dedicated decoders.
         if(auto_compress && sensitive && (t.type==9 || t.type==15) &&
-           t.dims[0]%256==0) {
+           t.dims[0]%(t.type==15?256ULL:32ULL)==0) {
             t.convert_q8_0=true;
             t.q8_source_k=(t.type==15);
             t.q8_source_q8_1=(t.type==9);
