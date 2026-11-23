@@ -197,6 +197,14 @@ int main() {
                 const bool repeatParity = repeatOk &&
                     repeatedLogits == logits && repeatedBaseline == baseline &&
                     repeatedLogits.size() == outputRows &&
+                    // A warm request must not silently accumulate duplicate
+                    // compressed copies of the same model tensors.
+                    repeatedStats.f32TensorCount == beforeRepeat.f32TensorCount &&
+                    repeatedStats.encodedTensorCount == beforeRepeat.encodedTensorCount &&
+                    repeatedStats.f32CompressedBytes == beforeRepeat.f32CompressedBytes &&
+                    repeatedStats.encodedCompressedBytes == beforeRepeat.encodedCompressedBytes &&
+                    repeatedStats.f32LogicalBytes == beforeRepeat.f32LogicalBytes &&
+                    repeatedStats.encodedLogicalBytes == beforeRepeat.encodedLogicalBytes &&
                     repeatedStats.f32CacheHits > beforeRepeat.f32CacheHits &&
                     repeatedStats.encodedCacheHits > beforeRepeat.encodedCacheHits &&
                     repeatedStats.f32ActiveReaders == 0 &&
