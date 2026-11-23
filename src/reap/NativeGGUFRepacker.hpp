@@ -754,6 +754,28 @@ inline bool ConvertQ8_1ToQ8_0(std::ifstream& in,std::ofstream& out,
     }
     return true;
 }
+// Q8_K stores one F32 scale for 256 signed codes. Q8_0 can reuse
+// those codes without loss only if the scale is exactly FP16 representable.
+// Check every source superblock before changing a sensitive tensor's type.
+inline bool IsExactQ8KToQ8_0(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%292 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char scaleBytes[4];
+    while(bytes) {
+        if(!in.read(reinterpret_cast<char*>(scaleBytes),4))return false;
+        const uint32_t bits=uint32_t(scaleBytes[0])|(uint32_t(scaleBytes[1])<<8)|
+            (uint32_t(scaleBytes[2])<<16)|(uint32_t(scaleBytes[3])<<24);
+        float d=0;std::memcpy(&d,&bits,4);
+        if(!std::isfinite(d) ||
+           Float16ToFloat32Bits(Float32BitsToFloat16(bits))!=bits)return false;
+        in.seekg(288,std::ios::cur);
+        if(!in)return false;
+        bytes-=292;
+    }
+    return true;
+}
 inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
                               uint64_t from,uint64_t sourceBytes) {
     if(sourceBytes%292 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -1100,6 +1122,22 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.convert_q5_0=false;
                 t.q5_source_q5_1=false;
                 t.type=7;
+                t.bytes=t.source_bytes;
+            }
+        }
+    }
+    // Sensitive Q8_K tensors must never be silently requantized.
+    // Their Q8_0 conversion is allowed only when every FP32 scale
+    // survives the FP16 storage change bit-for-bit.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_q8_0 || !t.q8_source_k ||
+               !IsQualitySensitiveTensor(t.name))continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(!IsExactQ8KToQ8_0(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q8_0=false;
+                t.q8_source_k=false;
+                t.type=15;
                 t.bytes=t.source_bytes;
             }
         }
