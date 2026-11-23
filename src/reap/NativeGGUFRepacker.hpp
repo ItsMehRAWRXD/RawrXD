@@ -664,7 +664,10 @@ inline RepackError RepackGGUF(const std::string& input,
         // Auto mode uses FP16 for sensitive F32 tensors rather than aggressively
         // quantizing normalization, embeddings, or output projection weights.
         const bool sensitive=IsQualitySensitiveTensor(t.name);
-        if((convert_f32_to_f16 || (auto_compress && sensitive)) && t.type==0) {
+        // All F32 vectors can shrink to F16, including singleton-row matrices.
+        // Only ordinary multi-row matrices are candidates for Q4_0.
+        const bool matrix = t.dims.size()>=2 && t.dims[1]>1;
+        if((convert_f32_to_f16 || (auto_compress && (sensitive || !matrix))) && t.type==0) {
             t.convert_f16=true;
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
@@ -682,7 +685,6 @@ inline RepackError RepackGGUF(const std::string& input,
         // nor expand a tensor that is already more compact than Q4_0.
         // A two-dimensional GGUF tensor with a singleton second axis is
         // still a vector; require at least two logical rows.
-        const bool matrix = t.dims.size()>=2 && t.dims[1]>1;
         const uint64_t q4Bytes = (count/32)*18;
         if((convert_q8_0_to_q4_0 || auto_compress) && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
