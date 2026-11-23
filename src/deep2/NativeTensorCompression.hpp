@@ -3,6 +3,7 @@
 // Lossless byte RLE is a private storage representation, not a GGUF quantization.
 // F32->F16/BF16 are lossy; callers opt in and supply a maximum absolute error.
 #include <cstdint>
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <vector>
@@ -74,8 +75,7 @@ inline std::vector<uint8_t> EncodeLZ(const uint8_t* p,size_t bytes) {
     std::vector<uint8_t> out;
     if (!bytes) return out;
     const size_t none=std::numeric_limits<size_t>::max();
-    size_t head[65536];
-    std::fill(head,head+65536,none);
+    std::vector<size_t> head(65536,none);
     std::vector<size_t> previous(bytes,none);
     std::vector<uint8_t> literals;
     literals.reserve(128);
