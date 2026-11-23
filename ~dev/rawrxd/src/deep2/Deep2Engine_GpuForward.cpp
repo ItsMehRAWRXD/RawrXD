@@ -283,6 +283,71 @@ bool Deep2Engine::forwardLayerGpuResident(
     auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
                     CPUInference::VulkanCompute::DeviceBuf& out,
                     uint32_t rows, uint32_t cols) -> bool {
+        // Losslessly compressed GGUF quantized bytes are streamed to
+        // Vulkan in independently addressable row tiles. The original GGML
+        // quant block format is reconstructed only for the rows consumed by
+        // this dispatch; no full quantized tensor copy is created.
+        if (wt.compressedBytes && !vc->FusedRecording() &&
+            (wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
+             wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
+             wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
+             wt.type == (int)GGMLType::GGML_TYPE_Q6_K)) {
+            if (prefetch && vc->WeightStreamActive() &&
+                !vc->FlushWeightComputes())
+                return false;
+            uint64_t blocksPerRow = 0;
+            uint64_t bytesPerBlock = 0;
+            if (wt.type == (int)GGMLType::GGML_TYPE_Q8_0) {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 31u) / 32u;
+                bytesPerBlock = 34u;
+            } else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 255u) / 256u;
+                bytesPerBlock = 84u;
+            } else if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 255u) / 256u;
+                bytesPerBlock = 144u;
+            } else {
+                blocksPerRow = (static_cast<uint64_t>(cols) + 255u) / 256u;
+                bytesPerBlock = 210u;
+            }
+            if (!blocksPerRow || !bytesPerBlock ||
+                blocksPerRow > std::numeric_limits<size_t>::max() / bytesPerBlock)
+                return false;
+            const size_t rowBytes = static_cast<size_t>(blocksPerRow * bytesPerBlock);
+            if (rows != wt.rows || cols != wt.cols ||
+                rows > std::numeric_limits<size_t>::max() / rowBytes ||
+                rows * rowBytes != wt.sizeBytes ||
+                wt.compressedBytes->size() != wt.sizeBytes)
+                return false;
+
+            constexpr size_t kMaxQuantTileBytes = 256u * 1024u;
+            const size_t rowsPerTile = std::max<size_t>(
+                1, kMaxQuantTileBytes / rowBytes);
+            std::vector<uint8_t> quantizedTile;
+            std::vector<uint8_t> decodeScratch;
+            for (uint32_t rowBase = 0; rowBase < rows;) {
+                const uint32_t tileRows = static_cast<uint32_t>(
+                    std::min<size_t>(rows - rowBase, rowsPerTile));
+                const size_t tileBytes = static_cast<size_t>(tileRows) * rowBytes;
+                quantizedTile.resize(tileBytes);
+                wt.compressedBytes->ReadRange(
+                    static_cast<size_t>(rowBase) * rowBytes, tileBytes,
+                    quantizedTile.data(), decodeScratch);
+                uint64_t tileKey = WeightKey(wt) ^
+                    (static_cast<uint64_t>(rowBase) * 0x9E3779B185EBCA87ull) ^
+                    (static_cast<uint64_t>(tileRows) << 21) ^
+                    (static_cast<uint64_t>(wt.type) << 57) ^
+                    0xd6e8feb86659fd93ull;
+                if (!tileKey) tileKey = 1;
+                if (!vc->DispatchGemvQuantRows(
+                        wt.type, quantizedTile.data(), tileBytes,
+                        in, out, tileRows, cols, rowBase, tileKey))
+                    return false;
+                rowBase += tileRows;
+            }
+            return true;
+        }
+
         if (PackedQuant(wt)) {
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
