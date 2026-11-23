@@ -339,7 +339,8 @@ bool Deep2Engine::forwardLayerGpuResident(
         // fixed-stride F16/BF16, and dispatch it into the corresponding output
         // window. This keeps RLE/LZ4/raw chunks compressed between kernel calls
         // and never materializes the full F32 weight matrix.
-        if (wt.type == (int)GGMLType::GGML_TYPE_F32 && wt.compressedF32) {
+        if (wt.type == (int)GGMLType::GGML_TYPE_F32 && wt.compressedF32 &&
+            !vc->FusedRecording()) {
             if (prefetch && vc->WeightStreamActive() &&
                 !vc->FlushWeightComputes())
                 return false;
