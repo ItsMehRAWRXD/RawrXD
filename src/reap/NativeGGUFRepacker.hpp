@@ -1356,10 +1356,14 @@ inline RepackError RepackGGUF(const std::string& input,
             if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
             if(!CanNarrowF64(in,dataStart+t.old_offset,t.source_bytes,
                              t.convert_f64_to_f16)) {
-                t.convert_f64_to_f32=false;
+                // An F64 vector may overflow F16 yet fit F32. Prefer
+                // the narrower safe representation over preserving F64.
+                const bool fallbackF32=t.convert_f64_to_f16 &&
+                    CanNarrowF64(in,dataStart+t.old_offset,t.source_bytes,false);
                 t.convert_f64_to_f16=false;
-                t.type=28;
-                t.bytes=t.source_bytes;
+                t.convert_f64_to_f32=fallbackF32;
+                t.type=fallbackF32?0u:28u;
+                t.bytes=fallbackF32?t.source_bytes/2:t.source_bytes;
             }
         }
     }
