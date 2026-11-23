@@ -12,7 +12,7 @@
 #include <utility>
 
 namespace RawrXD { namespace TensorCompression {
-enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3 };
+enum class Encoding : uint8_t { Raw = 0, RLE = 1, LZ = 2, F16 = 3, BF16 = 4 };
 struct Result {
     Encoding encoding = Encoding::Raw;
     uint64_t original_bytes = 0;
@@ -65,6 +65,114 @@ inline float FromHalf(uint16_t h) {
     }
     return Float(sign|((e+112u)<<23)|(m<<13));
 }
+
+// Dependency-free LZ block codec. Literals use [0..127][1..128 bytes];
+// matches use [0x80..0xff][distance_lo][distance_hi], with lengths 3..130.
+// The codec is deliberately block-local so callers can decompress only the
+// independently indexed tensor chunk intersecting an inference tile.
+inline std::vector<uint8_t> EncodeLZ(const uint8_t* p,size_t bytes) {
+    std::vector<uint8_t> out;
+    if (!bytes) return out;
+    const size_t none=std::numeric_limits<size_t>::max();
+    size_t head[65536];
+    std::fill(head,head+65536,none);
+    std::vector<size_t> previous(bytes,none);
+    std::vector<uint8_t> literals;
+    literals.reserve(128);
+    auto flush=[&]() {
+        size_t at=0;
+        while(at<literals.size()) {
+            const size_t n=std::min<size_t>(128,literals.size()-at);
+            out.push_back(uint8_t(n-1));
+            out.insert(out.end(),literals.begin()+at,literals.begin()+at+n);
+            at+=n;
+        }
+        literals.clear();
+    };
+    auto insert=[&](size_t pos) {
+        if(pos+2>=bytes) return;
+        const uint32_t key=(uint32_t(p[pos])*251u+
+                            uint32_t(p[pos+1])*31u+p[pos+2])&0xffffu;
+        previous[pos]=head[key];
+        head[key]=pos;
+    };
+    for(size_t i=0;i<bytes;) {
+        size_t bestLength=0,bestDistance=0;
+        if(i+2<bytes) {
+            const uint32_t key=(uint32_t(p[i])*251u+
+                                uint32_t(p[i+1])*31u+p[i+2])&0xffffu;
+            size_t candidate=head[key];
+            previous[i]=candidate;
+            head[key]=i;
+            unsigned probes=0;
+            while(candidate!=none && i-candidate<=65535 && probes++<64) {
+                size_t length=0;
+                while(length<130 && i+length<bytes &&
+                      p[candidate+length]==p[i+length]) ++length;
+                if(length>=3 && length>bestLength) {
+                    bestLength=length;
+                    bestDistance=i-candidate;
+                    if(length==130) break;
+                }
+                candidate=previous[candidate];
+            }
+        }
+        if(bestLength>=3) {
+            flush();
+            out.push_back(uint8_t(0x80u | uint8_t(bestLength-3)));
+            out.push_back(uint8_t(bestDistance));
+            out.push_back(uint8_t(bestDistance>>8));
+            for(size_t k=1;k<bestLength;++k) insert(i+k);
+            i+=bestLength;
+        } else {
+            literals.push_back(p[i]);
+            if(literals.size()==128) flush();
+            ++i;
+        }
+    }
+    flush();
+    return out;
+}
+inline void ValidateLZ(const std::vector<uint8_t>& payload,size_t expectedBytes) {
+    size_t input=0,output=0;
+    while(input<payload.size()) {
+        const uint8_t token=payload[input++];
+        if(token&0x80u) {
+            if(payload.size()-input<2) throw std::invalid_argument("truncated LZ match");
+            const size_t length=size_t(token&0x7fu)+3;
+            const size_t distance=size_t(payload[input])|(size_t(payload[input+1])<<8);
+            input+=2;
+            if(!distance || distance>output || length>expectedBytes-output)
+                throw std::invalid_argument("invalid LZ match");
+            output+=length;
+        } else {
+            const size_t length=size_t(token)+1;
+            if(length>payload.size()-input || length>expectedBytes-output)
+                throw std::invalid_argument("invalid LZ literal");
+            input+=length;
+            output+=length;
+        }
+    }
+    if(output!=expectedBytes) throw std::invalid_argument("LZ decoded size mismatch");
+}
+inline void DecodeLZ(const std::vector<uint8_t>& payload,uint8_t* out) {
+    size_t input=0,output=0;
+    while(input<payload.size()) {
+        const uint8_t token=payload[input++];
+        if(token&0x80u) {
+            const size_t length=size_t(token&0x7fu)+3;
+            const size_t distance=size_t(payload[input])|(size_t(payload[input+1])<<8);
+            input+=2;
+            for(size_t k=0;k<length;++k) out[output+k]=out[output+k-distance];
+            output+=length;
+        } else {
+            const size_t length=size_t(token)+1;
+            std::memcpy(out+output,payload.data()+input,length);
+            input+=length;
+            output+=length;
+        }
+    }
+}
 inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, float max_abs_error=0.0f, bool allow_bf16=false) {
     if (bytes && !data) throw std::invalid_argument("null tensor");
     if (!std::isfinite(max_abs_error) || max_abs_error<0) throw std::invalid_argument("invalid tolerance");
@@ -81,6 +189,13 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
             if (rle.size()>=best.payload.size()) break;
         }
         if (rle.size()<best.payload.size()) { best.encoding=Encoding::RLE; best.payload=std::move(rle); }
+    }
+    if (bytes>3) {
+        std::vector<uint8_t> lz=EncodeLZ(p,bytes);
+        if(lz.size()<best.payload.size()) {
+            best.encoding=Encoding::LZ;
+            best.payload=std::move(lz);
+        }
     }
     if (allow_fp16 && bytes%4==0 && bytes/2<best.payload.size()) {
         std::vector<uint8_t> half(bytes/2);
@@ -155,6 +270,11 @@ inline void DecodeInto(const Result& r, void* destination, size_t destination_by
             std::memset(out+written,r.payload[i+1],count);
             written+=count;
         }
+        return;
+    }
+    if (r.encoding==Encoding::LZ) {
+        ValidateLZ(r.payload,n);
+        if(n) DecodeLZ(r.payload,out);
         return;
     }
     if (r.encoding==Encoding::F16 || r.encoding==Encoding::BF16) {
