@@ -6,6 +6,16 @@
 #include <string>
 
 int main(int argc,char** argv) {
+    if(argc==4 && std::string(argv[1])=="--verify") {
+        std::string verified;
+        const auto status=RawrXD::REAP::VerifyGGUFBlob(argv[2],argv[3],verified);
+        if(status!=RawrXD::REAP::BlobVerifyError::None) {
+            std::cerr<<"REAP_BLOB_VERIFY=FAIL error="<<static_cast<int>(status)<<"\n";
+            return 1;
+        }
+        std::cout<<"REAP_BLOB_VERIFY=PASS path="<<verified<<"\n";
+        return 0;
+    }
     if(argc!=3&&argc!=5) {
         std::cerr<<"Usage: rawrxd-reap-blob INPUT.gguf MODEL_ROOT"
                     " [--max-bytes POSITIVE_INTEGER]\n";
