@@ -1,3 +1,6 @@
+#include "NativeTensorCompression.hpp"
+#include <limits>
+#include <stdexcept>
 // ============================================================================
 // QuantKernelRegistry.cpp - Implementation of the quantization-agnostic
 // kernel dispatch table.
@@ -2060,6 +2063,30 @@ void QuantKernelRegistry::PrintBatch21Report() const {
                 batch21_.scalarFallbacks.load() == 0 &&
                 batch21_.kernelInvocations.load() > 0;
     printf("status=%s\n", pass ? "PASS" : "FAIL");
+}
+
+// ---------------------------------------------------------------------------
+// Compressed F32 GEMV: weights remain chunked/compressed between calls.
+// Each output row is streamed into one reusable scratch buffer; the complete
+// matrix is never expanded into a second resident F32 allocation.
+void GEMVChunkedF32(
+    const RawrXD::TensorCompression::ChunkedF32Storage& weights,
+    const float* input, float* output, size_t rows, size_t cols) {
+    if (rows && cols > std::numeric_limits<size_t>::max() / rows)
+        throw std::length_error("compressed GEMV geometry overflow");
+    if (weights.size() != rows * cols)
+        throw std::invalid_argument("compressed GEMV tensor geometry mismatch");
+    if ((rows && !output) || (cols && !input))
+        throw std::invalid_argument("null compressed GEMV operand");
+    std::vector<float> row(cols);
+    std::vector<uint8_t> decodeScratch;
+    for (size_t r = 0; r < rows; ++r) {
+        weights.ReadRange(r * cols, cols, row.data(), decodeScratch);
+        float acc = 0.0f;
+        for (size_t c = 0; c < cols; ++c)
+            acc += row[c] * input[c];
+        output[r] = acc;
+    }
 }
 
 } // namespace Deep2
