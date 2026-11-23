@@ -5,6 +5,7 @@
 
 #include <climits>
 #include <cstdint>
+#include <limits>
 
 namespace codec {
 namespace {
@@ -16,6 +17,13 @@ QByteArray CompressWithLevel(const QByteArray& data, int level, bool* success) {
         return QByteArray();
     }
 
+    // zlib's uLong is 32-bit on Win64. Do not truncate a Qt 6 QByteArray
+    // length before handing it to the zlib ABI.
+    if (static_cast<std::uint64_t>(data.size()) >
+        static_cast<std::uint64_t>(std::numeric_limits<uLong>::max())) {
+        qWarning() << "[codec] input exceeds zlib uLong capacity";
+        return QByteArray();
+    }
     const uLong sourceSize = static_cast<uLong>(data.size());
     const uLong bound = compressBound(sourceSize);
     if (bound > static_cast<uLong>(INT_MAX)) {
@@ -48,6 +56,14 @@ QByteArray inflate(const QByteArray& data, bool* success) {
     if (success) *success = false;
     if (data.isEmpty()) {
         if (success) *success = true;
+        return QByteArray();
+    }
+
+    // z_stream::avail_in is uInt even when Qt 6 uses a wider qsizetype.
+    // Reject oversized input rather than silently truncating the stream.
+    if (static_cast<std::uint64_t>(data.size()) >
+        static_cast<std::uint64_t>(std::numeric_limits<uInt>::max())) {
+        qWarning() << "[codec] input exceeds zlib avail_in capacity";
         return QByteArray();
     }
 
