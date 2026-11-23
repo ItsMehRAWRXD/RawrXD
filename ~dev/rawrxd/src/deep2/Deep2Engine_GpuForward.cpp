@@ -288,6 +288,29 @@ bool Deep2Engine::forwardLayerGpuResident(
             /* DualStick armed: prefer in-process 84-byte packed Q2_K (never 72-byte MASM). */
             return vc->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes, in, out, rows, cols);
         }
+        // Uniform F16/BF16-compressed F32 weights stay packed through
+        // the resident forward path. The QGEMV shader expands each 16-bit
+        // element in registers and accumulates in F32; do not materialize a
+        // host F32 matrix or upload a duplicate 4-byte-per-weight buffer.
+        if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+            GpuWeightView packed{};
+            if (wt.BuildCompressedF32GpuView(0, rows, packed)) {
+                if (packed.cols != cols || packed.rows != rows ||
+                    (packed.type != 1 && packed.type != 30) ||
+                    packed.bytes != static_cast<size_t>(rows) *
+                                    static_cast<size_t>(cols) * 2u)
+                    return false;
+                if (prefetch && vc->WeightStreamActive()) {
+                    if (!vc->FlushWeightComputes()) return false;
+                    uint32_t sl = 0;
+                    if (!vc->PrefetchWeight(packed.data, packed.bytes, sl)) return false;
+                    return vc->SubmitGemvPrefetch(
+                        sl, in, out, rows, cols, packed.bytes, packed.type);
+                }
+                return vc->DispatchGemvQuant(
+                    packed.type, packed.data, packed.bytes, in, out, rows, cols);
+            }
+        }
         /* Product decode: Q2_K must not host-Expand F32 / 72-byte MASM. */
         if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
             const char* pd = std::getenv("RAWRXD_Q2K_PRODUCT_DECODE");
