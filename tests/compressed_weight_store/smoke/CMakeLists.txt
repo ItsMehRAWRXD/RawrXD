@@ -92,6 +92,15 @@ endif()
 target_compile_features(rawrxd_compression_core_test PRIVATE cxx_std_17)
 add_test(NAME rawrxd_zlib_compression_core COMMAND rawrxd_compression_core_test)
 
+add_executable(rawrxd_chunked_resident_bytes_test
+    "${RAWRXD_ROOT}/tests/chunked_resident_bytes_test.cpp")
+target_link_libraries(rawrxd_chunked_resident_bytes_test PRIVATE rawrxd_compression_core)
+target_compile_features(rawrxd_chunked_resident_bytes_test PRIVATE cxx_std_17)
+if(RAWRXD_SMOKE_REQUIRE_ZLIB)
+    target_compile_definitions(rawrxd_chunked_resident_bytes_test PRIVATE RAWRXD_TEST_REQUIRE_ZLIB=1)
+endif()
+add_test(NAME rawrxd_chunked_resident_bytes COMMAND rawrxd_chunked_resident_bytes_test)
+
 if(ZLIB_FOUND)
     add_executable(brutal_gzip_portable_contract_test
         "${RAWRXD_ROOT}/tests/brutal_gzip_portable_contract_test.cpp")
