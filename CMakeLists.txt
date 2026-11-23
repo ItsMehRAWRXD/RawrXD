@@ -4467,8 +4467,30 @@ if(MSVC)
 
     # Brutal MASM benchmark
     if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
-        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+        add_executable(bench_deflate_brutal
+            tests/bench_deflate_brutal.cpp
+            src/codec/brutal_gzip_masm_adapter.cpp
+            kernels/deflate_brutal_masm.asm)
+        target_include_directories(bench_deflate_brutal PRIVATE "${CMAKE_SOURCE_DIR}/include")
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    endif()
+
+    # A speed-only benchmark cannot establish a valid gzip member. Gate the
+    # MASM encoder with an independent zlib decoder across empty, block-edge,
+    # and 1 MiB inputs whenever the zlib provider is enabled.
+    if(RAWRXD_BUILD_TESTS AND RAWRXD_ZLIB_ENABLED AND
+       EXISTS "${CMAKE_SOURCE_DIR}/tests/test_brutal_masm_gzip_roundtrip.cpp")
+        add_executable(test_brutal_masm_gzip_roundtrip
+            tests/test_brutal_masm_gzip_roundtrip.cpp
+            src/codec/brutal_gzip_masm_adapter.cpp
+            kernels/deflate_brutal_masm.asm)
+        target_include_directories(test_brutal_masm_gzip_roundtrip PRIVATE
+            "${CMAKE_SOURCE_DIR}/include")
+        target_link_libraries(test_brutal_masm_gzip_roundtrip PRIVATE
+            rawrxd_compression_core)
+        target_compile_features(test_brutal_masm_gzip_roundtrip PRIVATE cxx_std_17)
+        add_test(NAME brutal_masm_gzip_roundtrip
+            COMMAND test_brutal_masm_gzip_roundtrip)
     endif()
 
 endif()
