@@ -401,5 +401,25 @@ int main() {
     assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
     assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == -3.0f; }));
 
+    // Reopening the same model path can load different bytes (atomic GGUF
+    // replacement). Deep2 must clear the cache even when identity is unchanged.
+    scoped.MarkRawFallback("stale.fallback");
+    scoped.Clear();
+    scoped.SetModelIdentity("model-B");
+    assert(!scoped.Contains("shared.key"));
+    assert(!scoped.IsRawFallback("stale.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t samePathReads = 0;
+    assert(scoped.RegisterF32FromReader("shared.key", modelA.size(), 0.0f,
+        [&](size_t o, size_t n, float* out) {
+            ++samePathReads;
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(samePathReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, 64, scopeTile));
+    assert(std::all_of(scopeTile, scopeTile+64, [](float v) { return v == 1.0f; }));
+
+
     std::cout<<"compressed F32 residency cache PASS\n";
 }
