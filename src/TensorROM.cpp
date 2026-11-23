@@ -1,6 +1,7 @@
 #include "TensorROM.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <sstream>
