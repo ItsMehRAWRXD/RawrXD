@@ -191,6 +191,21 @@ static void testK4UpperGroupScaleFixture(uint32_t type) {
     assert(loadKQuantShaderModel(bytes, type, lane) == 14.0f);
 }
 
+// Independently calculated Q3_K GGML block fixture: scale 1, q=1,
+// and an enabled high mask bit produce +1; a cleared bit produces -3.
+static void testQ3KSignMaskFixture() {
+    std::vector<uint8_t> bytes(110u, 0u);
+    put16(bytes.data() + 108u, 0x3c00u); // d = 1
+    // group 0: 6-bit scale = 33, biased by -32 -> 1.
+    bytes[96u] = 0x01u;
+    bytes[104u] = 0x02u; // upper scale bits for group 0
+    bytes[32u] = 0x01u;  // q = 1 at lane 0
+    bytes[0u] = 0x01u;   // high mask enabled at lane 0
+    assert(loadKQuantShaderModel(bytes, 11u, 0u) == 1.0f);
+    bytes[0u] = 0u;
+    assert(loadKQuantShaderModel(bytes, 11u, 0u) == -3.0f);
+}
+
 static void testKQuantBlock(uint32_t type) {
     const size_t blockBytes = type == 10u ? 84u : type == 11u ? 110u :
         type == 12u ? 144u : type == 13u ? 176u : type == 14u ? 210u : 292u;
@@ -268,6 +283,7 @@ static void testFixedBlock(uint32_t type) {
 int main() {
     for (uint32_t type : {2u, 3u, 6u, 7u, 8u, 9u}) testFixedBlock(type);
     for (uint32_t type : {10u, 11u, 12u, 13u, 14u, 15u}) testKQuantBlock(type);
+    testQ3KSignMaskFixture();
     testK4UpperGroupScaleFixture(12u);
     testK4UpperGroupScaleFixture(13u);
     std::cout << "packed Q4/Q5/Q8 and K-quant Vulkan shader decoder parity PASS\n";
