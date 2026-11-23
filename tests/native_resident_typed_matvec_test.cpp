@@ -162,6 +162,83 @@ int main() {
         for (float value : row) CHECK(value == 1.f);
     }
 
+
+    // K-quants are 256-value superblocks. These fixtures encode an exact
+    // constant-one block so each decoder can be checked against a scalar sum.
+    CHECK(deep2::tensorStorageBytes(256, deep2::TensorType::Q2_K) == 84);
+    CHECK(deep2::tensorStorageBytes(256, deep2::TensorType::Q3_K) == 110);
+    CHECK(deep2::tensorStorageBytes(256, deep2::TensorType::Q4_K) == 144);
+    CHECK(deep2::tensorStorageBytes(256, deep2::TensorType::Q5_K) == 176);
+    CHECK(deep2::tensorStorageBytes(256, deep2::TensorType::Q6_K) == 210);
+    const float ones256[256] = {
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+    };
+    {
+        std::vector<std::uint8_t> bytes(84, 0);
+        std::fill(bytes.begin(), bytes.begin() + 16, 0x01); // scale=1,min=0
+        std::fill(bytes.begin() + 16, bytes.begin() + 80, 0x55); // q=1
+        bytes[80] = 0x00; bytes[81] = 0x3c; // d=1
+        auto tensor = load_bytes(bytes, path, 21);
+        const auto y = resident_q2_k_matvec(tensor, ones256, 1, 256, 84);
+        CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(110, 0);
+        std::fill(bytes.begin(), bytes.begin() + 32, 0xff); // high bit set: q=1
+        std::fill(bytes.begin() + 32, bytes.begin() + 96, 0x55); // low q=1
+        for (std::size_t i = 0; i < 8; ++i) bytes[96 + i] = 0x11; // biased scale 33
+        std::fill(bytes.begin() + 104, bytes.begin() + 108, 0xaa); // upper scale bits
+        bytes[108] = 0x00; bytes[109] = 0x3c; // d=1
+        auto tensor = load_bytes(bytes, path, 22);
+        const auto y = resident_q3_k_matvec(tensor, ones256, 1, 256, 110);
+        CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(144, 0);
+        bytes[0] = 0x00; bytes[1] = 0x3c; // d=1, dmin=0
+        for (std::size_t i = 0; i < 4; ++i) bytes[4 + i] = 1;
+        for (std::size_t i = 8; i < 12; ++i) bytes[4 + i] = 1;
+        std::fill(bytes.begin() + 16, bytes.end(), 0x11);
+        auto tensor = load_bytes(bytes, path, 24);
+        const auto y = resident_q4_k_matvec(tensor, ones256, 1, 256, 144);
+        CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(176, 0);
+        bytes[0] = 0x00; bytes[1] = 0x3c; // d=1, dmin=0
+        for (std::size_t i = 0; i < 4; ++i) bytes[4 + i] = 1;
+        for (std::size_t i = 8; i < 12; ++i) bytes[4 + i] = 1;
+        std::fill(bytes.begin() + 48, bytes.end(), 0x11);
+        auto tensor = load_bytes(bytes, path, 32);
+        const auto y = resident_q5_k_matvec(tensor, ones256, 1, 256, 176);
+        CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+    }
+    {
+        std::vector<std::uint8_t> bytes(210, 0);
+        std::fill(bytes.begin(), bytes.begin() + 128, 0x11); // low nibbles=1
+        std::fill(bytes.begin() + 128, bytes.begin() + 192, 0xaa); // upper bits=2
+        std::fill(bytes.begin() + 192, bytes.begin() + 208, 1); // subscales=1
+        bytes[208] = 0x00; bytes[209] = 0x3c; // d=1
+        auto tensor = load_bytes(bytes, path, 35);
+        const auto y = resident_q6_k_matvec(tensor, ones256, 1, 256, 210);
+        CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+    }
+
     bool rejected = false;
     try {
         std::vector<std::uint8_t> bytes(18, 0);
