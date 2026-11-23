@@ -105,7 +105,7 @@ inline bool EncodeLZ4Block(const uint8_t* input, size_t size,
 
         const size_t matchStart = cursor;
         size_t matchLength = 4;
-        while (matchStart + matchLength < size - 5 &&
+        while (matchLength < size - 5 - matchStart &&
                input[static_cast<size_t>(previous) + matchLength] ==
                    input[matchStart + matchLength])
             ++matchLength;
