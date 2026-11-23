@@ -19,6 +19,9 @@ on:
       - '~dev/rawrxd/tests/native_tensor_compression_test.cpp'
       - '~dev/rawrxd/tests/native_compressed_inference_e2e_test.cpp'
       - '~dev/rawrxd/CMakeLists.txt'
+      - 'src/codec/compression.cpp'
+      - 'include/codec/compression.h'
+      - 'tests/native_zlib_codec_smoke.cpp'
       - '.github/workflows/native-compressed-residency.yml'
   pull_request:
     paths:
@@ -36,6 +39,9 @@ on:
       - '~dev/rawrxd/tests/native_tensor_compression_test.cpp'
       - '~dev/rawrxd/tests/native_compressed_inference_e2e_test.cpp'
       - '~dev/rawrxd/CMakeLists.txt'
+      - 'src/codec/compression.cpp'
+      - 'include/codec/compression.h'
+      - 'tests/native_zlib_codec_smoke.cpp'
       - '.github/workflows/native-compressed-residency.yml'
   workflow_dispatch:
 
@@ -63,3 +69,21 @@ jobs:
           if errorlevel 1 exit /b %errorlevel%
           "%RUNNER_TEMP%\rawrxd_compressed_inference_e2e.exe"
           if errorlevel 1 exit /b %errorlevel%
+
+  zlib-qt6-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Qt6 Core and zlib development headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev zlib1g-dev pkg-config
+      - name: Compile production zlib codec and run smoke tests
+        run: |
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -fPIC -Iinclude \
+            $(pkg-config --cflags Qt6Core zlib) \
+            src/codec/compression.cpp tests/native_zlib_codec_smoke.cpp \
+            $(pkg-config --libs Qt6Core zlib) \
+            -o native_zlib_codec_smoke
+          ./native_zlib_codec_smoke
