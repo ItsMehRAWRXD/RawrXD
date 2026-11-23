@@ -31,7 +31,8 @@ public:
         if (tensor.shardIndex > std::numeric_limits<std::uint32_t>::max())
             throw std::overflow_error("shard identifier overflow");
         const auto key = CompressedResidencyCache::Key{
-            tensor.offset, encodedOffset, static_cast<std::uint64_t>(tensor.shardIndex)};
+            tensor.offset, encodedOffset, static_cast<std::uint64_t>(tensor.shardIndex),
+            static_cast<std::uint64_t>(encodedSize)};
         return cache_.acquireOrLoad(
             key, decodedSize,
             [&]() {
