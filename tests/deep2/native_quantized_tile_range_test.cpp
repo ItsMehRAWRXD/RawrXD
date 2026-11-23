@@ -8,7 +8,6 @@
 #include <vector>
 
 static void put16(uint8_t* p,uint16_t v){p[0]=uint8_t(v);p[1]=uint8_t(v>>8);}
-static void putFloat(uint8_t* p,float v){std::memcpy(p,&v,sizeof(v));}
 
 static void testKBlockRange(uint32_t type) {
     const size_t blockBytes=RawrXD::NativeKQuant::BlockBytes(type);
