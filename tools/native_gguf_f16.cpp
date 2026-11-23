@@ -713,7 +713,16 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,streamF64toF16[i]?t.bytes/4:(streamF64toF32[i]?t.bytes/2:(streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size())))))))))));
+            U encodedBytes=t.bytes;
+            if(streamF64toF16[i])encodedBytes=t.bytes/4;
+            else if(streamF64toF32[i] || streamBf16[i] || streamHalf[i])encodedBytes=t.bytes/2;
+            else if(streamQ4[i])encodedBytes=mul(t.bytes/(t.type==0?128:64),18);
+            else if(streamQ41[i])encodedBytes=mul(t.bytes/(t.type==0?128:64),20);
+            else if(streamQ5[i])encodedBytes=mul(t.bytes/(t.type==0?128:64),22);
+            else if(streamQ51[i])encodedBytes=mul(t.bytes/(t.type==0?128:64),24);
+            else if(streamQ8[i])encodedBytes=mul(t.bytes/(t.type==0?128:64),34);
+            else if(!converted[i].empty())encodedBytes=converted[i].size();
+            cursor=add(cursor,encodedBytes);
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
