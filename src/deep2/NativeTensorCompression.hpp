@@ -563,12 +563,22 @@ public:
             const Result& encoded=chunks_[ci];
             const size_t chunk_first=ci*chunk_elements_;
             const size_t chunk_count=static_cast<size_t>(encoded.original_bytes/sizeof(float));
-            scratch.resize(static_cast<size_t>(encoded.original_bytes));
-            DecodeInto(encoded,scratch.data(),scratch.size());
             const size_t copy_first=first>chunk_first?first:chunk_first;
             const size_t chunk_end=chunk_first+chunk_count;
             const size_t copy_end=end<chunk_end?end:chunk_end;
             const size_t n=copy_end-copy_first;
+            // A raw chunk is already the original F32 byte representation.
+            // Copy only the requested span; do not allocate/decode a full chunk.
+            if (encoded.encoding == Encoding::Raw) {
+                if (encoded.payload.size() != encoded.original_bytes)
+                    throw std::invalid_argument("raw F32 chunk size mismatch");
+                std::memcpy(destination+(copy_first-first),
+                            encoded.payload.data()+(copy_first-chunk_first)*sizeof(float),
+                            n*sizeof(float));
+                continue;
+            }
+            scratch.resize(static_cast<size_t>(encoded.original_bytes));
+            DecodeInto(encoded,scratch.data(),scratch.size());
             std::memcpy(destination+(copy_first-first),
                         scratch.data()+(copy_first-chunk_first)*sizeof(float),
                         n*sizeof(float));
@@ -651,12 +661,21 @@ private:
              const Result& encoded = chunks_[ci];
              const size_t chunkFirst = ci * chunk_bytes_;
              const size_t chunkCount = static_cast<size_t>(encoded.original_bytes);
-             scratch.resize(chunkCount);
-             DecodeInto(encoded, scratch.data(), scratch.size());
              const size_t copyFirst = std::max(first, chunkFirst);
              const size_t chunkEnd = chunkFirst + chunkCount;
              const size_t copyEnd = std::min(end, chunkEnd);
              const size_t n = copyEnd - copyFirst;
+             // Raw chunks need neither a full-chunk scratch allocation nor
+             // decompression: copy the requested byte window directly.
+             if (encoded.encoding == Encoding::Raw) {
+                 if (encoded.payload.size() != chunkCount)
+                     throw std::invalid_argument("raw byte chunk size mismatch");
+                 std::memcpy(destination + (copyFirst - first),
+                             encoded.payload.data() + (copyFirst - chunkFirst), n);
+                 continue;
+             }
+             scratch.resize(chunkCount);
+             DecodeInto(encoded, scratch.data(), scratch.size());
              std::memcpy(destination + (copyFirst - first),
                          scratch.data() + (copyFirst - chunkFirst), n);
          }
