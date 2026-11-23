@@ -4,6 +4,7 @@
 #endif
 #include <cassert>
 #include <cstdint>
+#include <future>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -138,6 +139,13 @@ int main() {
     // Request-local KV state must reset between generations.
     const auto repeated=runtime.generate(prompt,6);
     assert(repeated==generated);
+
+    // Independent requests share immutable compressed weights but never share
+    // KV state or scratch readers. Exercise concurrent autoregressive decode.
+    auto requestA = std::async(std::launch::async, [&] { return runtime.generate(prompt, 6); });
+    auto requestB = std::async(std::launch::async, [&] { return runtime.generate(prompt, 6); });
+    assert(requestA.get() == generated);
+    assert(requestB.get() == generated);
 
     // Grouped-query attention: two query heads share one compact KV head.
     // K/V tensors therefore contain kv_heads * head_dim rows rather than
