@@ -178,6 +178,16 @@ int main() {
     CHECK(std::memcmp(specialValues, specialDecoded, sizeof(specialValues)) == 0);
     CHECK(special.chunks()[0].encoding == RawrXD::TensorCompression::Encoding::F32);
 
+    // A permissive finite-value tolerance must not silently canonicalize
+    // NaN signs or payloads: NaN has no defined numerical error metric.
+    auto specialLossy = ChunkedF32Storage::Build(specialValues, 3, 1.0f, 3);
+    float specialLossyDecoded[3]{};
+    CHECK(specialLossy.DecodeRange(0, 3, specialLossyDecoded));
+    std::uint32_t lossyNaNBits[3]{};
+    std::memcpy(lossyNaNBits, specialLossyDecoded, sizeof(lossyNaNBits));
+    CHECK(lossyNaNBits[1] == specialBits[1]);
+    CHECK(lossyNaNBits[2] == specialBits[2]);
+
     // Mixed chunks retain exact F32 only where the configured bound requires it.
     const float mixedValues[] = {1.0f, 1.5f, 1.0001234f, 2.345678f};
     auto mixed=ChunkedF32Storage::Build(mixedValues,4,0.0f,2);
