@@ -138,6 +138,14 @@ public:
             throw std::out_of_range("ChunkedF32Storage::ReadRange outside tensor");
     }
     std::size_t storedBytes() const noexcept { return storedBytes_; }
+    std::size_t residentBytes() const noexcept {
+        const std::size_t payloadCapacity = payload_.capacity();
+        const std::size_t chunkCapacity = chunks_.capacity();
+        if (chunkCapacity > (std::numeric_limits<std::size_t>::max() - payloadCapacity) /
+                                sizeof(Chunk))
+            return std::numeric_limits<std::size_t>::max();
+        return payloadCapacity + chunkCapacity * sizeof(Chunk);
+    }
     std::size_t originalBytes() const noexcept { return elements_ * sizeof(float); }
     std::size_t chunkCount() const noexcept { return chunks_.size(); }
     float maxAbsError() const noexcept { return maxAbsError_; }
@@ -352,6 +360,14 @@ public:
 
     std::size_t size() const noexcept { return size_; }
     std::size_t storedBytes() const noexcept { return storedBytes_; }
+    std::size_t residentBytes() const noexcept {
+        const std::size_t payloadCapacity = payload_.capacity();
+        const std::size_t chunkCapacity = chunks_.capacity();
+        if (chunkCapacity > (std::numeric_limits<std::size_t>::max() - payloadCapacity) /
+                                sizeof(Chunk))
+            return std::numeric_limits<std::size_t>::max();
+        return payloadCapacity + chunkCapacity * sizeof(Chunk);
+    }
     std::size_t chunkCount() const noexcept { return chunks_.size(); }
     const std::vector<Chunk>& chunks() const noexcept { return chunks_; }
 
