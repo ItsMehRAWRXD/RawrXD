@@ -76,7 +76,7 @@ float loadWeight(uint index) {
             uint s0 = loadByte(blockOffset + 4u + group);
             uint s1 = loadByte(blockOffset + 4u + group + 4u);
             uint is = group < 4u ? (s0 & 63u) :
-                      ((s1 & 15u) | ((s0 >> 6u) << 4u));
+                      ((s1 & 15u) | ((loadByte(blockOffset + group) >> 6u) << 4u));
             uint im = group < 4u ? (s1 & 63u) :
                       ((s1 >> 4u) | ((s0 >> 6u) << 4u));
             uint lowOffset = params.weightEncoding == 11u ? 16u : 48u;
