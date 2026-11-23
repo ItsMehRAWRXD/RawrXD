@@ -11,12 +11,12 @@ The runtime must never select an encoding unless its decoder is implemented and 
 | Source type | Resident representation | Inference materialization |
 |---|---|---|
 | F32 | Bounded chunked adaptive representation (lossless RLE by default; optional error-bounded F16/BF16) | Requested F32 chunk/tile |
-| F16, BF16, F64 | Original encoded bytes in the bounded ROM pager; optional lossless RLE byte residency when a chunk wins | Requested F32 tile |
+| F16, BF16, F64 | Original encoded bytes in the bounded ROM pager; optional lossless RLE/LZ4 byte residency when a chunk wins | Requested F32 tile |
 | Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1 | Canonical GGML blocks; optional lossless RLE byte residency only when smaller | Requested block-aligned F32 tile |
 | Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K | Canonical GGML super-blocks; optional lossless RLE byte residency only when smaller | Requested 256-value-block-aligned F32 tile |
 | I8, I16, I32, I64 | Original exact integer bytes; optional lossless RLE byte residency when smaller | Requested F32 tile for current floating-point inference kernels |
 
-The byte residency cache is deliberately lossless: a quantized payload is never quantized a second time merely to make it smaller. Chunks that do not produce a net saving stay on the source pager path. After successful cache admission, corresponding unleased source pages are evicted to avoid retaining a duplicate raw copy.
+The encoded-byte residency cache uses lossless RLE/LZ4 chunks and is deliberately lossless: a quantized payload is never quantized a second time merely to make it smaller. Chunks that do not produce a net saving stay on the source pager path. After successful cache admission, corresponding unleased source pages are evicted to avoid retaining a duplicate raw copy.
 
 ## Configuration
 
