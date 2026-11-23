@@ -545,14 +545,14 @@ static bool deriveAttentionGeometry(const ModelWeights &mw, AttentionGeometry &g
         // SSM-only and Qwen3.5 gated attn_qkv hybrids do not expose classic
         // Q/K/V geometry. Treating gated wqkv as fused QKV invents bogus
         // kvHeads (e.g. 24) and fails GQA against metadata heads.
-        if (lw.hasSSM && !lw.wq.data)
+        if (lw.hasSSM && !lw.wq.hasBacking())
             continue;
 
-        size_t qRows = lw.wq.data ? lw.wq.rows : 0;
-        size_t kRows = lw.wk.data ? lw.wk.rows : 0;
-        size_t vRows = lw.wv.data ? lw.wv.rows : 0;
+        size_t qRows = lw.wq.hasBacking() ? lw.wq.rows : 0;
+        size_t kRows = lw.wk.hasBacking() ? lw.wk.rows : 0;
+        size_t vRows = lw.wv.hasBacking() ? lw.wv.rows : 0;
 
-        if (lw.wqkv.data && !lw.hasSSM)
+        if (lw.wqkv.hasBacking() && !lw.hasSSM)
         {
             // Fused QKV: rows = hiddenDim + 2*kvDim.
             if (lw.wqkv.rows <= mw.hiddenDim ||
@@ -731,7 +731,7 @@ static bool configureKVCacheFor(ModelWeights &mw, EngineConfig &cfg,
             continue; // Qwen GDN recurrence — no KV slots
         if (lw.hasSSM && !lw.wq.data)
             continue; // gated SSM hybrid is not a KV-cache attention layer
-        if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
+        if (lw.wq.hasBacking() || lw.wk.hasBacking() || lw.wv.hasBacking() || lw.wqkv.hasBacking())
             ++attnLayers;
     }
     if (attnLayers == 0)
@@ -10229,11 +10229,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     const bool isNemotronSsm = IsNemotronSsmLayer(lw);
     const bool hasAttention =
         (isGdn || !lw.hasSSM) &&
-        (lw.wq.data || lw.wqkv.data ||
-         (modelWeights.useMLA && lw.attnQ_a.data && lw.attnQ_b.data) ||
-         (modelWeights.useMLA && lw.wq.data && lw.attnKV_a_mqa.data && lw.attnK_b.data));
+        (lw.wq.hasBacking() || lw.wqkv.hasBacking() ||
+         (modelWeights.useMLA && lw.attnQ_a.hasBacking() && lw.attnQ_b.hasBacking()) ||
+         (modelWeights.useMLA && lw.wq.hasBacking() && lw.attnKV_a_mqa.hasBacking() && lw.attnK_b.hasBacking());
     const bool hasMoEFFN = lw.moeRouter.data && lw.moeRouter.sizeBytes > 0;
-    const bool hasDenseFFN = lw.wGate.data || lw.wUp.data || lw.wDown.data;
+    const bool hasDenseFFN = lw.wGate.hasBacking() || lw.wUp.hasBacking() || lw.wDown.hasBacking();
     const bool hasMixer = isNemotronSsm || hasMoEFFN || hasDenseFFN;
     const bool hasDedicatedMixerNorm = lw.ffnNorm.hasBacking();
     if (Deep2DebugEnabled()) {
@@ -10781,10 +10781,10 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // Gate on modelWeights.useMLA + real tensors: per-layer lw.useMLA was
     // historically never propagated from modelWeights, which skipped MLA.
     const bool mlaFull =
-        modelWeights.useMLA && lw.attnQ_a.data && lw.attnQ_b.data && lw.attnKV_a_mqa.data &&
-        lw.attnK_b.data;
+        modelWeights.useMLA && lw.attnQ_a.hasBacking() && lw.attnQ_b.hasBacking() && lw.attnKV_a_mqa.hasBacking() &&
+        lw.attnK_b.hasBacking();
     const bool mlaLite =
-        modelWeights.useMLA && !lw.attnQ_a.data && lw.wq.data && lw.attnKV_a_mqa.data &&
+        modelWeights.useMLA && !lw.attnQ_a.hasBacking() && lw.wq.hasBacking() && lw.attnKV_a_mqa.hasBacking() &&
         lw.attnK_b.data;
     if (mlaFull || mlaLite)
     {
@@ -10804,7 +10804,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         const size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
         const size_t headDim = modelWeights.headDim;
         const size_t numHeads = config.numHeads;
-        const bool fusedKvB = lw.attnK_b.data && !lw.attnV_b.data;
+        const bool fusedKvB = lw.attnK_b.hasBacking() && !lw.attnV_b.hasBacking();
 
         // ── Q path ─────────────────────────────────────────────────────────
         if (mlaFull)
@@ -11020,7 +11020,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             }
             LinearW(*attnOutWeight, attnOutPadded.data(), nullptr, output, hiddenDim);
         }
-        else if (lw.wo.data)
+        else if (lw.wo.hasBacking())
         {
             // Fallback to wo [hiddenDim, hiddenDim] = [2048, 2048]
             // Use attention output directly (no padding needed)
@@ -11079,7 +11079,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // No K/V projections → no standard attention. The 8192 output is split into
     // two 4096 halves: first half is the projection, second half is the gate.
     // Output = projection * silu(gate), then attn_gate projects to hiddenDim.
-    else if (lw.wqkv.data && lw.hasSSM)
+    else if (lw.wqkv.hasBacking() && lw.hasSSM)
     {
         // Project input to 8192 via attn_qkv
         size_t qDim = numHeads * headDim;  // 8192 = 32 × 256
@@ -11102,7 +11102,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // Output projection via attn_gate (mapped to attnO): [4096] -> [4096]
-        if (lw.attnO.data)
+        if (lw.attnO.hasBacking())
         {
             memset(output, 0, hiddenDim * sizeof(float));
             LinearW(lw.attnO, proj, nullptr, output, hiddenDim);
@@ -11120,12 +11120,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         return;
     }
     // ── Standard MHA / GQA path ────────────────────────────────────────
-    else if (lw.wq.data)
+    else if (lw.wq.hasBacking())
     {
         // Guard: weight matrix rows must not exceed projection buffer sizes
         // (kProj/vProj are sized hiddenDim in allocateBuffers()).  A mismatch
         // between model metadata and engine config would overflow the heap.
-        if (!lw.wk.data || !lw.wv.data || lw.wq.rows == 0 || lw.wk.rows == 0 || lw.wv.rows == 0 ||
+        if (!lw.wk.hasBacking() || !lw.wv.hasBacking() || lw.wq.rows == 0 || lw.wk.rows == 0 || lw.wv.rows == 0 ||
             numHeads == 0)
         {
             fprintf(stderr,
@@ -12100,11 +12100,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     const size_t preOWorkspace =
         (attnConcat > hiddenDim) ? attnConcat : hiddenDim;
     size_t preOCount = (attnConcat > 0) ? attnConcat : hiddenDim;
-    if (lw.useMLA && lw.attnO.data != nullptr && lw.attnO.cols > 0)
+    if (lw.useMLA && lw.attnO.hasBacking() && lw.attnO.cols > 0)
         preOCount = lw.attnO.cols;
-    else if (lw.wo.data != nullptr && lw.wo.cols > 0)
+    else if (lw.wo.hasBacking() && lw.wo.cols > 0)
         preOCount = lw.wo.cols;
-    else if (lw.attnO.data != nullptr && lw.attnO.cols > 0)
+    else if (lw.attnO.hasBacking() && lw.attnO.cols > 0)
         preOCount = lw.attnO.cols;
     if (preOCount == 0 || preOCount > preOWorkspace)
         preOCount = (attnConcat > 0 && attnConcat <= preOWorkspace)
@@ -12133,11 +12133,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         std::snprintf(key, sizeof(key), "ATTN_PRE_O_%zu", layer);
         B3_StageDigest(key, tokPos, output, preOCount);
     }
-    const auto* attnOutWeight = (lw.useMLA && lw.attnO.data != nullptr) ? &lw.attnO
-                                : (lw.wo.data != nullptr)               ? &lw.wo
-                                : (lw.attnO.data != nullptr)            ? &lw.attnO
+    const auto* attnOutWeight = (lw.useMLA && lw.attnO.hasBacking()) ? &lw.attnO
+                                : (lw.wo.hasBacking())               ? &lw.wo
+                                : (lw.attnO.hasBacking())            ? &lw.attnO
                                                                         : nullptr;
-    if (attnOutWeight == nullptr || attnOutWeight->data == nullptr)
+    if (attnOutWeight == nullptr || !attnOutWeight->hasBacking())
     {
         // No output projection: pass through unchanged (already correct size)
         if (layer == 0)
@@ -12239,18 +12239,18 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     // ── Phi-3 / self-gating SwiGLU: no separate gate tensor ──────────────
     // Some models (e.g. Phi-3) store only ffn_up and ffn_down, using the up
     // projection as both gate and up in SwiGLU: silu(up) * up.
-    bool hasGate = (lw.wGate.data != nullptr && lw.wGate.sizeBytes > 0);
+    bool hasGate = (lw.wGate.hasBacking() && lw.wGate.sizeBytes > 0);
 
     // FFN requires both up and down projections. If up is missing but gate
     // exists, use gate as up (self-gating SwiGLU: silu(gate) * gate).
-    bool hasUp   = (lw.wUp.data   != nullptr && lw.wUp.sizeBytes   > 0);
+    bool hasUp   = (lw.wUp.hasBacking()   && lw.wUp.sizeBytes   > 0);
     const WeightTensor* upWt = &lw.wUp;
-    if (!hasUp && hasGate && lw.wGate.data)
+    if (!hasUp && hasGate && lw.wGate.hasBacking())
     {
         upWt = &lw.wGate;
         hasUp = true;
     }
-    bool hasDown = (lw.wDown.data != nullptr && lw.wDown.sizeBytes > 0);
+    bool hasDown = (lw.wDown.hasBacking() && lw.wDown.sizeBytes > 0);
 
     // Nemotron-H stores mixer and MLP blocks as separate GGUF blocks.  An
     // attention-only block has a valid Q/K/V/O path but intentionally has no
@@ -12259,8 +12259,8 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     // The FFN contribution for such a block is exactly zero; the attention
     // residual has already been produced by forwardLayer().
     const bool hasAttentionMixer = !lw.hasSSM &&
-                                   (lw.wq.data || lw.wqkv.data || lw.attnQ_a.data ||
-                                    lw.attnQ_b.data || lw.attnO.data || lw.wo.data);
+                                   (lw.wq.hasBacking() || lw.wqkv.hasBacking() || lw.attnQ_a.hasBacking() ||
+                                    lw.attnQ_b.hasBacking() || lw.attnO.hasBacking() || lw.wo.hasBacking());
     const bool hasMoERouter = lw.moeRouter.data != nullptr && lw.moeRouter.sizeBytes > 0;
     if (!hasUp && !hasDown && !hasGate && !hasMoERouter && hasAttentionMixer)
     {
@@ -12317,8 +12317,9 @@ if (hasGate)
     // DIAGNOSTIC: Compare Q6_K FFN projections with FP32 reference at layer 21
     if (layer == 21 && B3_ProbeEnabled())
     {
-        // Compare gate projection if hasGate
-        if (hasGate)
+        // This reference-only diagnostic still requires a raw pointer. The
+        // production projection above is compressed-range aware via LinearW.
+        if (hasGate && lw.wGate.data)
         {
             std::vector<float> gateRef(intermediateDim, 0.0f);
             auto cpuKernel = QuantKernelRegistry::Instance().GetGEMV(lw.wGate.type);
