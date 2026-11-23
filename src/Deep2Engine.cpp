@@ -752,7 +752,13 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                    entry.type == deep2::TensorType::Q5_0 ||
                    entry.type == deep2::TensorType::Q5_1 ||
                    entry.type == deep2::TensorType::Q8_0 ||
-                   entry.type == deep2::TensorType::Q8_1) {
+                   entry.type == deep2::TensorType::Q8_1 ||
+                   entry.type == deep2::TensorType::Q2_K ||
+                   entry.type == deep2::TensorType::Q3_K ||
+                   entry.type == deep2::TensorType::Q4_K ||
+                   entry.type == deep2::TensorType::Q5_K ||
+                   entry.type == deep2::TensorType::Q6_K ||
+                   entry.type == deep2::TensorType::Q8_K) {
             // F16/BF16 and fixed GGML Q4/Q5/Q8 blocks are already compact.
             // Read only the requested encoded range and keep it packed on GPU.
             uint64_t byteOffset = 0;
@@ -763,6 +769,12 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 entry.type == deep2::TensorType::Q5_1 ||
                 entry.type == deep2::TensorType::Q8_0 ||
                 entry.type == deep2::TensorType::Q8_1;
+            const bool kQuant = entry.type == deep2::TensorType::Q2_K ||
+                entry.type == deep2::TensorType::Q3_K ||
+                entry.type == deep2::TensorType::Q4_K ||
+                entry.type == deep2::TensorType::Q5_K ||
+                entry.type == deep2::TensorType::Q6_K ||
+                entry.type == deep2::TensorType::Q8_K;
             if (fixedQuant) {
                 const uint64_t blockBytes =
                     entry.type == deep2::TensorType::Q4_0 ? 18u :
@@ -777,6 +789,20 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                     return false;
                 byteOffset = (firstElement / 32u) * blockBytes;
                 byteCount = (static_cast<uint64_t>(elements) / 32u) * blockBytes;
+            } else if (kQuant) {
+                const uint64_t blockBytes =
+                    entry.type == deep2::TensorType::Q2_K ? 84u :
+                    entry.type == deep2::TensorType::Q3_K ? 110u :
+                    entry.type == deep2::TensorType::Q4_K ? 144u :
+                    entry.type == deep2::TensorType::Q5_K ? 176u :
+                    entry.type == deep2::TensorType::Q6_K ? 210u : 292u;
+                if ((cols % 256u) != 0u || (firstElement % 256u) != 0u ||
+                    (elements % 256u) != 0u ||
+                    firstElement / 256u > UINT64_MAX / blockBytes ||
+                    elements / 256u > UINT64_MAX / blockBytes)
+                    return false;
+                byteOffset = (firstElement / 256u) * blockBytes;
+                byteCount = (static_cast<uint64_t>(elements) / 256u) * blockBytes;
             } else {
                 if (firstElement > UINT64_MAX / sizeof(uint16_t) ||
                     elements > UINT64_MAX / sizeof(uint16_t))
