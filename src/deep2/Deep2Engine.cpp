@@ -6341,6 +6341,7 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
 
             if (remainingBudget > 0 && allowF32ToF16 && validF32Tolerance &&
                 originalType == static_cast<int>(GGMLType::GGML_TYPE_F32) &&
+                dst.cols != 0 &&
                 dst.rows <= (std::numeric_limits<std::size_t>::max)() / dst.cols)
             {
                 const std::size_t elements = dst.rows * dst.cols;
