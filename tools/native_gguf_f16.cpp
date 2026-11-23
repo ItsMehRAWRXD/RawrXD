@@ -88,7 +88,7 @@ int main(int argc,char** argv) {
             U elements=1;
             for(U d=0;d<nd;++d) {U dim=read(in,8);if(!dim)throw std::runtime_error("zero dimension");t.dims.push_back(dim);elements=mul(elements,dim);}
             t.type=uint32_t(read(in,4));t.offset=read(in,8);
-            t.convert=(t.type==0 && elements<=std::numeric_limits<size_t>::max()/4);
+            t.convert=((t.type==0 || t.type==1) && elements<=std::numeric_limits<size_t>::max()/4);
             t.bytes=t.type==0?mul(elements,4):(t.type==1?mul(elements,2):0);
             ts.push_back(std::move(t));
         }
@@ -115,19 +115,24 @@ int main(int argc,char** argv) {
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert)continue;
+            auto& t=ts[i];if(!t.convert || (t.type==1 && !q8))continue;
             std::vector<uint8_t> raw(size_t(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
-            auto r=Encode(raw.data(),raw.size(),true,tolerance);
-            if(q8 && t.dims[0]%32==0 && raw.size()%128==0) {
+            Result r;
+            if(!q8 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
+            if(q8 && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
                 std::vector<uint8_t> blocks;
-                blocks.reserve(raw.size()/128*34);
+                blocks.reserve(raw.size()/(t.type==0?128:64)*34);
                 bool valid=true;
-                for(size_t off=0;off<raw.size();off+=128) {
+                for(size_t off=0;off<raw.size();off+=(t.type==0?128:64)) {
                     float values[32];float maxAbs=0;
                     for(int j=0;j<32;++j) {
-                        std::memcpy(&values[j],raw.data()+off+4*j,4);
+                        if(t.type==0) std::memcpy(&values[j],raw.data()+off+4*j,4);
+                        else {
+                            const uint16_t h=uint16_t(raw[off+2*j])|(uint16_t(raw[off+2*j+1])<<8);
+                            values[j]=FromHalf(h);
+                        }
                         if(!std::isfinite(values[j])) {valid=false;break;}
                         maxAbs=std::max(maxAbs,std::fabs(values[j]));
                     }
