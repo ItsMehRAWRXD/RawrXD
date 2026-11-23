@@ -222,6 +222,18 @@ def run(binary):
                     assert abs(minimum+delta*code-values[block*32+j])<=10000
             offq=tt["blk.0.attn_k.weight"][2]
             assert bb[bs+offq:bs+offq+32]==quant
+        # A strict zero-error budget must never silently fall back to FP16
+        # while the caller requested a quantized format.
+        for fmt in ("q4_1","q5_1"):
+            dest=root/("strict-"+fmt+".gguf")
+            subprocess.run([binary,str(source),str(dest),"0",fmt],check=True)
+            data,ds,meta,desc=parse(dest)
+            assert meta==metadata
+            assert desc["blk.0.attn_q.weight"][0]==0
+            off=desc["blk.0.attn_q.weight"][2]
+            assert data[ds+off:ds+off+len(values)*4]==struct.pack("<"+"f"*len(values),*values)
+            offq=desc["blk.0.attn_k.weight"][2]
+            assert data[ds+offq:ds+offq+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
