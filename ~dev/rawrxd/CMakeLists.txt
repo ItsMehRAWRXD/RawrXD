@@ -5516,8 +5516,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/inference/ai_model_caller_real.cpp
         src/inference/inference_engine_real.cpp
         src/gguf_masm_weight_bridge.cpp
-        src/codec/brutal_gzip.cpp
-        src/codec/gzip_brutal_inflate.cpp
     )
 
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
@@ -6042,9 +6040,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/AdvancedAgentCoordinator.cpp
         src/modules/autonomous_agentic_orchestrator.cpp
         src/core/native_gguf_loader_link_impl.cpp
-        src/codec/compression.cpp
-        src/codec/brutal_gzip.cpp
-        src/codec/gzip_brutal_inflate.cpp
         src/core/ssot_handlers.cpp
         src/core/ssot_handlers_ext_isolated.cpp
         # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
@@ -7319,8 +7314,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(REMOVE_ITEM _WIN32IDE_ASM
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
+    if(ZLIB_FOUND AND Qt6_FOUND)
+        list(APPEND WIN32IDE_SOURCES
+            "${CMAKE_CURRENT_SOURCE_DIR}/../../src/codec/compression.cpp")
+    endif()
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
+    if(ZLIB_FOUND AND Qt6_FOUND)
+        target_include_directories(RawrXD-Win32IDE PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
+        target_link_libraries(RawrXD-Win32IDE PRIVATE ZLIB::ZLIB Qt6::Core)
+    endif()
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
     set_property(TARGET RawrXD-Win32IDE PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
