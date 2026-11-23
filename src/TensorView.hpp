@@ -170,6 +170,24 @@ inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
     }
     return blocks > max / bytesPerBlock ? max : blocks * bytesPerBlock;
 }
+
+// Compute GGML tensor storage from its actual dimensions. Quantized row padding
+// is applied to ne[0] for every outer row; flattening all elements first is wrong
+// whenever the fastest dimension is not block-aligned.
+inline std::uint64_t tensorStorageBytesForShape(
+    const std::vector<std::uint64_t>& dims, TensorType t) {
+    if (dims.empty()) return tensorStorageBytes(1, t);
+    const auto max = (std::numeric_limits<std::uint64_t>::max)();
+    const auto rowBytes = tensorStorageBytes(dims[0], t);
+    if (rowBytes == max) return max;
+    std::uint64_t rows = 1;
+    for (std::size_t i = 1; i < dims.size(); ++i) {
+        if (dims[i] && rows > max / dims[i]) return max;
+        rows *= dims[i];
+    }
+    if (rowBytes && rows > max / rowBytes) return max;
+    return rows * rowBytes;
+}
 // Non-owning view over raw tensor storage (quantized, f16 or f32). The backing memory
 // is owned by the ROM pager; a TensorView is only valid while its TensorLease is alive.
 struct TensorView {
