@@ -639,6 +639,10 @@ private:
                                                bool requireFirstChunkSavings = true,
                                                size_t maxStoredBytes = std::numeric_limits<size_t>::max()) {
          if (!chunkBytes) throw std::invalid_argument("zero byte chunk size");
+         // Reject impossible admission without reading the GGUF tensor or
+         // allocating a potentially enormous per-chunk metadata vector.
+         if (byteCount && !maxStoredBytes)
+             throw StorageAdmissionRejected("zero compressed byte residency budget");
          ChunkedByteStorage result;
          result.byte_count_ = byteCount;
          result.chunk_bytes_ = chunkBytes;
