@@ -24,7 +24,7 @@ Admission is streamed from TensorROM. Candidate construction is bounded by the c
 - `DEEP2_ENCODED_CACHE_BYTES`: byte-level override for the encoded-byte cache.
 - `DEEP2_F32_MAX_ABS_ERROR`: optional finite nonnegative absolute-error bound that permits F32-to-F16/BF16 chunks. Default is `0`, preserving exact F32 values.
 
-The byte-level settings are applied during engine initialization. The explicit `ConfigureTensorCompression` API can override both budgets and the F32 tolerance after initialization. Set a tolerance only after comparing full-model logits and task quality against an independent reference.
+All non-F32 encoded tensors use the same range-reader for cache admission and partial decode, including the packed F16/BF16 Vulkan GEMV path; this avoids bypassing compressed residency for already-compact source weights. The byte-level settings are applied during engine initialization. The explicit `ConfigureTensorCompression` API can override both budgets and the F32 tolerance after initialization. Set a tolerance only after comparing full-model logits and task quality against an independent reference.
 
 ## Observability
 
@@ -44,6 +44,6 @@ Configure and build with the repository's normal Windows CMake toolchain, then r
 ctest --test-dir build -C Release -R "NativeTensor|NativeCompressedGGUF|Deep2CompressedModelE2E|ZlibAutoDetectSmoke|BrutalGzipRoundtrip" --output-on-failure
 ```
 
-The standalone synthetic GGUF test covers TensorROM, the shard pager, F32/encoded-byte caches, partial reads, and deterministic toy projection. The Windows `Deep2CompressedModelE2E` test additionally calls the existing Deep2 Phi-3 ROM forward method using a tiny generated model and the CPU tiled GEMV path.
+The standalone synthetic GGUF test covers TensorROM, the shard pager, F32/encoded-byte caches, partial reads, and deterministic toy projection. The Windows `Deep2CompressedModelE2E` test additionally calls the existing Deep2 Phi-3 ROM forward method using a tiny generated model, a 16x16 F16 output projection, and the CPU tiled GEMV path. This verifies F16 bytes enter the lossless encoded cache while the F32 layers use the F32 cache. The Vulkan packed-F16 path shares the same encoded-range helper but still requires target-GPU validation.
 
 The current Phi-3 ROM forward method retains its existing simplified V-path attention behavior. Passing the synthetic test is evidence of compressed-residency plumbing through that method, not evidence of complete transformer architecture fidelity, production-model parity, Vulkan numerical parity, or release certification. Those gates require independent reference logits and target-hardware validation.
