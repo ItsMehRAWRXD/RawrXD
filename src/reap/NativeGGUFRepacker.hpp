@@ -38,6 +38,11 @@ inline bool ReadU32(std::istream& in, uint32_t& v) {
 inline bool ReadU64(std::istream& in, uint64_t& v) {
     return static_cast<bool>(in.read(reinterpret_cast<char*>(&v),8));
 }
+inline bool WriteU16(std::ostream& out, uint16_t v) {
+    const unsigned char bytes[2]={
+        static_cast<unsigned char>(v),static_cast<unsigned char>(v>>8)};
+    return static_cast<bool>(out.write(reinterpret_cast<const char*>(bytes),2));
+}
 inline bool WriteU32(std::ostream& out, uint32_t v) {
     return static_cast<bool>(out.write(reinterpret_cast<const char*>(&v),4));
 }
