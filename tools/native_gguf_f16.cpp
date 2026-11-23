@@ -397,13 +397,13 @@ int main(int argc,char** argv) {
             // and automatic per-tensor precision selection. Candidate order is
             // smallest storage first; one failed block rejects that format for
             // the entire tensor and leaves the original payload untouched.
-            if((q2k||q3k||q4k||q5k||q6k||automatic) &&
+            if((q2k||q3k||q4k||q5k||q6k||q8k||automatic) &&
                t.dims[0]%256==0) {
                 const size_t stride=t.type==28?8:(t.type==0?4:2);
                 const U rawBlockBytes=mul(256,stride);
                 if(t.bytes%rawBlockBytes==0) {
-                    const uint32_t first=automatic?10u:(q2k?10u:q3k?11u:q4k?12u:q5k?13u:14u);
-                    const uint32_t last=automatic?14u:first;
+                    const uint32_t first=automatic?10u:(q2k?10u:q3k?11u:q4k?12u:q5k?13u:q6k?14u:15u);
+                    const uint32_t last=automatic?15u:first;
                     for(uint32_t type=first;type<=last;++type) {
                         seek(in,add(dataStart,t.offset));
                         std::vector<uint8_t> raw(size_t(rawBlockBytes));
@@ -412,7 +412,7 @@ int main(int argc,char** argv) {
                             if(!in.read(reinterpret_cast<char*>(raw.data()),
                                         std::streamsize(raw.size())))
                                 throw std::runtime_error("truncated native K-quant preflight");
-                            double values[256];uint8_t encoded[210];
+                            double values[256];uint8_t encoded[292];
                             if(!RawrXD::NativeKQuant::ReadFloatingBlock(raw.data(),t.type,values) ||
                                !RawrXD::NativeKQuant::EncodeBlock(type,values,tolerance,encoded)) {
                                 valid=false;break;
@@ -428,7 +428,7 @@ int main(int argc,char** argv) {
                 }
                 if(streamNativeK[i] || !automatic)continue;
             }
-            if(q2k||q3k||q4k||q5k||q6k)continue;
+            if(q2k||q3k||q4k||q5k||q6k||q8k)continue;
             // The remaining formats use their dedicated GGML block encoders.
             
                 const size_t stride=t.type==28?8:(t.type==0?4:2);
@@ -441,7 +441,7 @@ int main(int argc,char** argv) {
                         if(!in.read(reinterpret_cast<char*>(raw.data()),
                                     std::streamsize(raw.size())))
                             throw std::runtime_error("truncated Q5_K/Q6_K preflight");
-                        double values[256];uint8_t encoded[210];
+                        double values[256];uint8_t encoded[292];
                         if(!RawrXD::NativeKQuant::ReadFloatingBlock(raw.data(),t.type,values) ||
                            !RawrXD::NativeKQuant::EncodeBlock(type,values,tolerance,encoded)) {
                             valid=false;break;
