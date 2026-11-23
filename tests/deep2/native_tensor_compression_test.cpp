@@ -50,6 +50,22 @@ int main() {
                        std::numeric_limits<float>::quiet_NaN(),true); }
     catch(const std::invalid_argument&) { badTolerance=true; }
     assert(badTolerance);
+    // Public adaptive API selects one representation for the entire tensor.
+    const float adaptiveExact[]={1.0f,-2.0f,0.5f,4.0f};
+    auto adaptive=EncodeAdaptiveF32(adaptiveExact,4,0.0f);
+    assert(adaptive.encoding==Encoding::F16);
+    assert(Decode(adaptive).size()==sizeof(adaptiveExact));
+    const float adaptiveWide[]={1.0e20f,-1.0e20f,3.25f,4.0f};
+    auto adaptiveBf=EncodeAdaptiveF32(adaptiveWide,4,1.0e18f);
+    assert(adaptiveBf.encoding==Encoding::BF16);
+    const float adaptiveReject[]={1.0001f,2.0001f};
+    auto adaptiveRaw=EncodeAdaptiveF32(adaptiveReject,2,0.0f);
+    assert(adaptiveRaw.encoding==Encoding::Raw);
+    assert(Decode(adaptiveRaw).size()==sizeof(adaptiveReject));
+    bool nullTensor=false;
+    try { (void)EncodeAdaptiveF32(nullptr,1,0.1f); }
+    catch(const std::invalid_argument&) { nullTensor=true; }
+    assert(nullTensor);
     const float not_exact[]={1.0001f,2.0001f};
     auto preserved=Encode(not_exact,sizeof(not_exact),true,0.0f);
     assert(preserved.encoding!=Encoding::F16);
