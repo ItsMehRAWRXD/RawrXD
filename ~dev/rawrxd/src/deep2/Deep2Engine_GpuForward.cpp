@@ -359,7 +359,8 @@ bool Deep2Engine::forwardLayerGpuResident(
         // group of rows, then submit those F32 rows through the typed shader's
         // F32 mode. Unknown geometries/dequantizers stay on the established
         // raw-mapping fallback below.
-        if (wt.compressedBytes && !vc->FusedRecording()) {
+        if (wt.compressedBytes && !PackedQuant(wt) &&
+            !vc->FusedRecording()) {
             const auto geometry =
                 QuantKernelRegistry::Instance().GetGeometry(wt.type);
             const auto dequant =
