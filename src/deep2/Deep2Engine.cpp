@@ -6050,9 +6050,16 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
             if (!compressedWeightStore_)
                 compressedWeightStore_ = std::make_shared<rawrxd::compression::CompressedWeightStore>();
             std::string compressionError;
-            if (compressedWeightStore_->addTensor(
+            constexpr std::size_t kCompressedModelBudget = 512u * 1024u * 1024u;
+            const auto beforeCompression = compressedWeightStore_->stats();
+            const std::size_t remainingBudget =
+                beforeCompression.compressed_bytes < kCompressedModelBudget
+                    ? kCompressedModelBudget - static_cast<std::size_t>(beforeCompression.compressed_bytes)
+                    : 0;
+            if (remainingBudget > 0 &&
+                compressedWeightStore_->addTensor(
                     ref->name, mapping->data, dst.sizeBytes, &compressionError,
-                    static_cast<std::uint32_t>(dst.type)) &&
+                    static_cast<std::uint32_t>(dst.type), true, remainingBudget) &&
                 dst.attachCompressedBacking(compressedWeightStore_, ref->name))
             {
                 // The compressed store now owns the authoritative bytes.
