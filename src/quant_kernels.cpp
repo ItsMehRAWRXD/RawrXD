@@ -87,6 +87,31 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         }
         return true;
     }
+    case TensorType::I8:
+        for (uint64_t i = 0; i < n; ++i)
+            out[i] = static_cast<float>(reinterpret_cast<const int8_t*>(src.data)[i]);
+        return true;
+    case TensorType::I16:
+        for (uint64_t i = 0; i < n; ++i) {
+            int16_t value;
+            std::memcpy(&value, src.data + static_cast<size_t>(i) * sizeof(value), sizeof(value));
+            out[i] = static_cast<float>(value);
+        }
+        return true;
+    case TensorType::I32:
+        for (uint64_t i = 0; i < n; ++i) {
+            int32_t value;
+            std::memcpy(&value, src.data + static_cast<size_t>(i) * sizeof(value), sizeof(value));
+            out[i] = static_cast<float>(value);
+        }
+        return true;
+    case TensorType::I64:
+        for (uint64_t i = 0; i < n; ++i) {
+            int64_t value;
+            std::memcpy(&value, src.data + static_cast<size_t>(i) * sizeof(value), sizeof(value));
+            out[i] = static_cast<float>(value);
+        }
+        return true;
     case TensorType::Q4_0:
     case TensorType::Q4_1:
     case TensorType::Q5_0:
@@ -188,6 +213,10 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::F16:
     case TensorType::BF16:
     case TensorType::F64:
+    case TensorType::I8:
+    case TensorType::I16:
+    case TensorType::I32:
+    case TensorType::I64:
     case TensorType::Q4_0:
     case TensorType::Q4_1:
     case TensorType::Q5_0:
