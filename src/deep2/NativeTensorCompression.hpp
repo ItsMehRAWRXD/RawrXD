@@ -417,7 +417,7 @@ public:
         ChunkedF32Storage result;
         result.element_count_=count;
         result.chunk_elements_=chunk_elements;
-        result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
+        // Incrementally grow metadata as source chunks are actually admitted.
         std::vector<float> tile;
         size_t storedBytes=0;
         for(size_t offset=0;offset<count;) {
@@ -649,7 +649,7 @@ private:
          ChunkedByteStorage result;
          result.byte_count_ = byteCount;
          result.chunk_bytes_ = chunkBytes;
-         result.chunks_.reserve(byteCount / chunkBytes + (byteCount % chunkBytes != 0));
+         // Avoid allocating model-wide metadata before first source access.
          std::vector<uint8_t> tile;
          size_t stored = 0;
          for (size_t offset = 0; offset < byteCount;) {
