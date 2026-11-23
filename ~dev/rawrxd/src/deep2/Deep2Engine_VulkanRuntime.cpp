@@ -40,6 +40,13 @@ bool isDeep2RequiredNativeGpu(const VulkanPhysicalInfo& d) {
 
 uint64_t tensorResidentBytes(const WeightTensor& w) {
     if (!w.data) return 0;
+    // Device residency planning must charge the actual packed representation
+    // when a uniform F16/BF16 GPU payload is active, not the original F32
+    // source size. The raw host source remains the CPU fallback.
+    const auto packed = std::atomic_load_explicit(
+        &w.gpuF16Payload, std::memory_order_acquire);
+    if (packed && !packed->bytes.empty())
+        return static_cast<uint64_t>(packed->bytes.size());
     if (w.sizeBytes) return static_cast<uint64_t>(w.sizeBytes);
     const uint64_t n = static_cast<uint64_t>(w.numElements());
     return n > UINT64_MAX / sizeof(float) ? 0 : n * sizeof(float);
