@@ -59,7 +59,7 @@ A valid runtime-memory claim must report packed payload bytes, retained host all
 
 ## Regression target
 
-The native test target `rawrxd-native-tensor-compression-test` currently contains 66 explicit checks covering exact 16-bit compaction, zero-copy packed views, reader-bounded construction, absolute/relative error selection, NaN/infinity preservation, exact F32 fallback, mixed chunk encodings, LZ4 round trips, raw-byte fallback, range boundaries, storage budgets, and lease-aware cache admission/eviction. The model-load cache insertion/lease wiring is integrated but still requires a full Deep2 build and model-load runtime validation. A Windows CI workflow is configured to compile and run this standalone test with MSVC; no successful workflow receipt has yet been recorded. Full model numerical parity, end-to-end Vulkan inference, and process working-set measurements remain separate release gates.
+The native test target `rawrxd-native-tensor-compression-test` currently contains 69 explicit checks covering exact 16-bit compaction, zero-copy packed views, reader-bounded construction, absolute/relative error selection, NaN/infinity preservation, exact F32 fallback, mixed chunk encodings, LZ4 round trips, raw-byte fallback, range boundaries, storage budgets, and lease-aware cache admission/eviction. The model-load cache insertion/lease wiring is integrated but still requires a full Deep2 build and model-load runtime validation. A Windows CI workflow is configured to compile and run this standalone test with MSVC; no successful workflow receipt has yet been recorded. Full model numerical parity, end-to-end Vulkan inference, and process working-set measurements remain separate release gates.
 
 ## Compressed-only inference entry points
 
@@ -67,7 +67,7 @@ The native test target `rawrxd-native-tensor-compression-test` currently contain
 
 The production host-bound Vulkan GEMV path now prefers compressed backing even when the original GGUF mapping is still present:
 
-- F32 row chunks with matching source encodings are coalesced into bounded GPU tiles. F16/BF16 tiles are uploaded in their compact representation when the configured absolute-error budget is met; rows that cannot meet it are uploaded as exact F32. Each dispatch writes directly to its final output-row window.
+- F32 row chunks with matching source encodings are coalesced into bounded GPU tiles. Existing F16/BF16 payload bytes are copied without re-quantization, preserving the original error bound; F32/LZ4 rows are expanded exactly. Each dispatch writes directly to its final output-row window.
 - Losslessly compressed quantized-byte tensors are expanded only for bounded row tiles on the host, then uploaded in their original GGML packed block representation. The existing Vulkan shader performs native packed decoding for F16, BF16, Q8_0, Q2_K, Q4_K, and Q6_K. Unsupported quant types fail the GPU attempt and retain the existing CPU dequantization fallback when strict mode is disabled.
 - Tile cache keys include tensor/backing identity, file/shard identity, row range, and type. The Vulkan cache validates a payload fingerprint and byte geometry before reusing a tile, failing closed on collisions.
 
