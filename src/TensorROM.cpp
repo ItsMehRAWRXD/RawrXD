@@ -205,6 +205,7 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
 }
 
 bool TensorROM::addShard(const std::string& path) {
+    if (m_shards.empty()) m_kvStrings.clear(); // Do not inherit prior-model alignment metadata.
     auto file = std::make_unique<std::ifstream>(path, std::ios::binary);
     if (!file->is_open()) {
         fprintf(stderr, "[ROM] cannot open shard: %s\n", path.c_str());
