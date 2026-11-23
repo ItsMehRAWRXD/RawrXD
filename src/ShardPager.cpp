@@ -30,7 +30,6 @@ bool PageCache::loadPage(Page* page) {
         page->data.clear();
         return false;
     }
-    m_residentBytes += m_pageSize;
     return true;
 }
 
@@ -91,12 +90,21 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
     page->fileOffset = pageNo * m_pageSize;
     page->leaseCount.store(1, std::memory_order_release);
 
+    if (m_pageSize > m_capacityBytes) {
+        delete page;
+        return nullptr;
+    }
+    evictToFit(m_pageSize);
+    if (m_residentBytes > m_capacityBytes - m_pageSize) {
+        delete page;
+        return nullptr; // pinned pages exhaust the hard budget
+    }
     if (!loadPage(page)) {
         delete page;
         return nullptr;
     }
 
-    evictToFit(m_pageSize);  // make room for the page we just loaded (overshoot ok)
+    m_residentBytes += page->data.size();
 
     m_lru.push_front(page);
     page->lruIt = m_lru.begin();
@@ -106,12 +114,9 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
 
 void PageCache::release(Page* page) {
     if (!page) return;
-    uint32_t prev = page->leaseCount.fetch_sub(1, std::memory_order_acq_rel);
-    if (prev <= 1) {
-        // Last lease dropped: page remains resident (cached) but is now evictable.
-        std::lock_guard<std::mutex> lock(m_mutex);
-        touch(page);
-    }
+    std::lock_guard<std::mutex> lock(m_mutex);
+    const uint32_t prev = page->leaseCount.fetch_sub(1, std::memory_order_acq_rel);
+    if (prev == 1) touch(page);
 }
 
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
