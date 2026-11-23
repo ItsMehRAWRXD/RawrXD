@@ -7794,15 +7794,15 @@ void Deep2Engine::unloadModel()
     // been reset. This also drops the decoded-block cache and its LRU leases.
     compressedWeightStore_.reset();
 
-    std::fprintf(stderr, "[LIFE] unloadModel FreeTensorData ggufResult (%zu tensors)\n", ggufResult.tensors.size());
+    // TensorInfo::data aliases GGUFLoader's mapped shard, it is not an
+    // individually allocated VirtualAlloc/malloc payload. FreeTensorData on
+    // these interior mapping pointers is invalid (and can crash on POSIX).
+    // Clear aliases first, then let the loader's RAII MappedFile close/unmap.
+    std::fprintf(stderr, "[LIFE] unloadModel release mapped GGUF loader (%zu tensor views)\n",
+                 ggufResult.tensors.size());
     std::fflush(stderr);
-    for (auto& t : ggufResult.tensors)
-    {
-        if (!t.data) continue;
-        GGUFLoader::FreeTensorData(t.data);
-        t.data = nullptr;
-    }
     ggufResult.tensors.clear();
+    ggufResult.loader.reset();
     ggufResult.success = false;
 
     std::fprintf(stderr, "[LIFE] unloadModel reset kvCache\n");
