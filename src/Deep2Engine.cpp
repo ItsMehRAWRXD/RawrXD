@@ -46,6 +46,22 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     return true;
 }
 
+bool Deep2Engine::gemvResidentF32(
+    const rawrxd::compression::ResidentCompressedTensor& weights,
+    const float* x, float* y, std::size_t rows, std::size_t cols,
+    std::size_t stagingBudgetBytes) {
+    if (rows && !y) return false;
+    try {
+        const auto result = rawrxd::compression::resident_f32_matvec(
+            weights, x, rows, cols, stagingBudgetBytes);
+        if (rows) std::copy(result.begin(), result.end(), y);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[COMPRESSED_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
 void Deep2Engine::Shutdown() {
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
