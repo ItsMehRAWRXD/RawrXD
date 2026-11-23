@@ -729,7 +729,7 @@ static bool configureKVCacheFor(ModelWeights &mw, EngineConfig &cfg,
     {
         if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
             continue; // Qwen GDN recurrence — no KV slots
-        if (lw.hasSSM && !lw.wq.data)
+        if (lw.hasSSM && !lw.wq.hasBacking())
             continue; // gated SSM hybrid is not a KV-cache attention layer
         if (lw.wq.hasBacking() || lw.wk.hasBacking() || lw.wv.hasBacking() || lw.wqkv.hasBacking())
             ++attnLayers;
@@ -805,9 +805,9 @@ static bool validateKVCacheGeometryFor(const ModelWeights &mw,
     {
         if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
             continue; // Qwen GDN recurrence — no KV slots
-        if (lw.hasSSM && !lw.wq.data)
+        if (lw.hasSSM && !lw.wq.hasBacking())
             continue; // gated SSM hybrid is not a KV-cache attention layer
-        if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
+        if (lw.wq.hasBacking() || lw.wk.hasBacking() || lw.wv.hasBacking() || lw.wqkv.hasBacking())
             ++attnLayers;
     }
     if (attnLayers == 0)
@@ -10785,7 +10785,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         lw.attnK_b.hasBacking();
     const bool mlaLite =
         modelWeights.useMLA && !lw.attnQ_a.hasBacking() && lw.wq.hasBacking() && lw.attnKV_a_mqa.hasBacking() &&
-        lw.attnK_b.data;
+        lw.attnK_b.hasBacking();
     if (mlaFull || mlaLite)
     {
         const size_t pos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
@@ -11054,7 +11054,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
 
     // ── Fused QKV path (Phi-3, etc.) ────────────────────────────────────
-    if (lw.wqkv.data && !lw.hasSSM)
+    if (lw.wqkv.hasBacking() && !lw.hasSSM)
     {
         // For fused QKV (Phi-3 etc.), lw.wqkv is set but lw.wk/lw.wv are null.
         // Use hiddenDim as kvDim so qkvDim = 3*hiddenDim covers Q+K+V.
