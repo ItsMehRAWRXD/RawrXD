@@ -535,7 +535,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         if (!wt.EnableCompressedF32(f32CompressionTolerance,
                                    chunkElements, remaining))
             return;
-        const size_t stored = wt.compressedF32->storedBytes();
+        const size_t stored = wt.compressedF32->residentBytes();
         if (!stored || stored > remaining) {
             wt.compressedF32.reset();
             return;
@@ -572,7 +572,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             return;
         if (!wt.EnableCompressedBytes(64u * 1024u, remaining))
             return;
-        const size_t stored = wt.compressedBytes->storedBytes();
+        const size_t stored = wt.compressedBytes->residentBytes();
         if (!stored || stored > remaining) {
             wt.compressedBytes.reset();
             return;
