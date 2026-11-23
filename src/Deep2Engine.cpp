@@ -411,7 +411,8 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
                                               uint64_t elementCount,
                                               float* destination,
                                               std::vector<uint8_t>& decodeScratch) {
-    if (!romMode || entry.type != deep2::TensorType::F32 || !destination) return false;
+    if (!romMode || entry.type != deep2::TensorType::F32 ||
+        (elementCount && !destination)) return false;
     const uint64_t bytes = entry.byteSize();
     if ((bytes % sizeof(float)) != 0) return false;
     const uint64_t totalElements = bytes / sizeof(float);
@@ -420,6 +421,9 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         firstElement > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
         elementCount > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
         elementCount > std::numeric_limits<size_t>::max()) return false;
+    // Empty tile reads must not trigger an expensive full-tensor compression
+    // build or source pager activity. They also accept a null destination.
+    if (!elementCount) return true;
 
     if (!ensureCompressedF32Tensor(entry)) {
         const uint64_t byteOffset = firstElement * sizeof(float);
