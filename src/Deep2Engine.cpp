@@ -542,8 +542,9 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
         for (size_t gi = 0; gi < engine.vulkan->gpuCount(); ++gi) {
             const auto* g = engine.vulkan->gpu(gi);
             std::vector<float> yVulkan;
+            VulkanCompressedGemvStats gemvStats;
             const bool ok = engine.vulkanGemvCompressed(
-                *g, *qkv, x.data(), cols, yVulkan, 16);
+                *g, *qkv, x.data(), cols, yVulkan, 16, &gemvStats);
             float vs = 0.0f;
             bool parity = ok && yVulkan.size() == rows;
             if (parity) {
@@ -559,7 +560,11 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
             std::cout << "[VERIFY] compressed Vulkan GEMV on " << g->name
                       << ": " << (ok ? "OK" : "FAILED")
                       << " | first-row-window sum = " << vs
-                      << " | CPU parity = " << (parity ? "PASS" : "FAIL") << "\n";
+                      << " | CPU parity = " << (parity ? "PASS" : "FAIL")
+                      << " | tiles = " << gemvStats.tileCount
+                      << " | peak decoded tile = " << gemvStats.peakDecodedTileBytes
+                      << " bytes | encoded cache = " << gemvStats.encodedResidentBytesAfter
+                      << " bytes\n";
         }
     }
     std::cout << "[STATUS] ROM execution bridge complete\n";
