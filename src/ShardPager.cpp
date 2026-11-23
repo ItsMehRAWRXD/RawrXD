@@ -210,20 +210,22 @@ std::size_t PageCache::evictUnleasedRange(uint32_t shard, uint64_t offset, uint6
     const uint64_t lastPage = (offset + size - 1) / m_pageSize;
     std::lock_guard<std::mutex> lock(m_mutex);
     std::size_t evicted = 0;
-    for (uint64_t pageNo = firstPage;; ++pageNo) {
-        auto it = m_index.find(makeKey(shard, pageNo));
-        if (it != m_index.end()) {
-            Page* page = it->second;
-            if (page->leaseCount.load(std::memory_order_acquire) == 0) {
-                m_lru.erase(page->lruIt);
-                m_index.erase(it);
-                m_residentBytes -= page->data.size();
-                page->inCache = false;
-                delete page;
-                ++evicted;
-            }
+    // Iterate resident pages, not every page in the tensor's (potentially
+    // multi-terabyte) range. The page index is already bounded by the cache.
+    for (auto it = m_index.begin(); it != m_index.end();) {
+        Page* page = it->second;
+        if (page->shard == shard && page->pageNo >= firstPage &&
+            page->pageNo <= lastPage &&
+            page->leaseCount.load(std::memory_order_acquire) == 0) {
+            m_lru.erase(page->lruIt);
+            m_residentBytes -= page->data.size();
+            page->inCache = false;
+            delete page;
+            it = m_index.erase(it);
+            ++evicted;
+        } else {
+            ++it;
         }
-        if (pageNo == lastPage) break;
     }
     return evicted;
 }
