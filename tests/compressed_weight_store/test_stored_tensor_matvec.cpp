@@ -1,5 +1,7 @@
-#include "../src/deep2/compression/StoredTensorMatvec.hpp"
+#include "../../src/deep2/compression/StoredTensorMatvec.hpp"
+#include <algorithm>
 #include <cassert>
+#include <stdexcept>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
