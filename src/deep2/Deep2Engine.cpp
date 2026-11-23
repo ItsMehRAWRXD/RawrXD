@@ -3481,6 +3481,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 hasSuffix("attn_norm.weight") ||
                 hasSuffix("attn_q_norm.weight") ||
                 hasSuffix("attn_k_norm.weight") ||
+                hasSuffix("attn_q_a_norm.weight") ||
+                hasSuffix("attn_kv_a_norm.weight") ||
                 hasSuffix("input_layernorm.weight") ||
                 hasSuffix("ffn_norm.weight") ||
                 hasSuffix("post_attention_layernorm.weight") ||
