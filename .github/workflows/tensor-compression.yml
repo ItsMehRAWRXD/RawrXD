@@ -1,0 +1,36 @@
+name: Tensor-aware lossless compression
+on:
+  push:
+    paths:
+      - 'src/deep2/TensorAwareLossless.hpp'
+      - 'src/deep2/DecodedBlockCache.hpp'
+      - 'src/deep2/TensorWeightStorage.hpp'
+      - 'tests/tensor_aware_lossless_test.cpp'
+      - 'tests/decoded_block_cache_test.cpp'
+      - 'tests/tensor_weight_storage_test.cpp'
+      - '.github/workflows/tensor-compression.yml'
+  pull_request:
+    paths:
+      - 'src/deep2/TensorAwareLossless.hpp'
+      - 'src/deep2/DecodedBlockCache.hpp'
+      - 'src/deep2/TensorWeightStorage.hpp'
+      - 'tests/tensor_aware_lossless_test.cpp'
+      - 'tests/decoded_block_cache_test.cpp'
+      - 'tests/tensor_weight_storage_test.cpp'
+      - '.github/workflows/tensor-compression.yml'
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run standalone C++17 compression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test in tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test; do
+            g++ -std=c++17 -O2 -Wall -Wextra -Werror -I. "tests/${test}.cpp" -lz -o "/tmp/${test}"
+            "/tmp/${test}"
+          done
