@@ -134,6 +134,18 @@ int main() {
             assert(std::equal(got.begin(), got.end(), raw.begin() + offset));
         }
     }
+    // One decoded lease per 64-byte block, not one decode per scalar.
+    CompressedWeightStore leaseStore(0, 64);
+    if (!leaseStore.addTensor("lease", weights.data(), weights.size(), &error,
+                              GGML_TYPE_F16, true))
+        throw std::runtime_error("lease fixture compression failed: " + error);
+    const auto missBefore = leaseStore.stats().cache_misses;
+    StoredTensorMatvec(leaseStore, "lease", ResidentWeightType::F16,
+                       input.data(), output.data(), rows, cols, 1);
+    const auto missAfter = leaseStore.stats().cache_misses;
+    assert(missAfter - missBefore == leaseStore.tensorBlocks("lease"));
+    assert(leaseStore.stats().cached_decoded_bytes == 0);
+
     const auto finalStats = store.stats();
     assert(finalStats.compressed_bytes < finalStats.raw_bytes);
     assert(finalStats.cached_decoded_bytes == 0);
