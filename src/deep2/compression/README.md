@@ -47,3 +47,17 @@ Set `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY=1` before loading a standard multi-shard
 - Leaves norm/vector tensors mapped because their consumers have not all been migrated to range reads.
 
 The default is OFF until full product validation completes. It currently applies to the standard multi-shard binder only, not the single-file GGUF path or every tensor consumer. The Vulkan GEMV adapter still requires one contiguous tensor pointer and therefore stages a full tensor for GPU dispatch. This is an implementation milestone, not a claim of universal compressed residency.
+
+## Q4_0 compressed-resident CPU kernel
+
+The bounded resident matvec now supports GGML Q4_0 in addition to F32, F16,
+and Q8_0. Q4_0 rows are consumed as native 18-byte blocks (binary16 scale plus
+16 packed nibble bytes); the kernel maps low nibbles to columns 0-15 and high
+nibbles to columns 16-31, then applies the GGML signed offset of -8. The
+compressed store retains the original Q4_0 payload and GGML type ID. No
+dequantized full matrix is allocated.
+
+A dedicated CTest fixture checks both nibble lanes, nonuniform activations,
+byte-exact packed roundtrip, wrong-type rejection, and invalid column geometry.
+This is a CPU operator implementation only; it does not imply that every
+Q4_0 Deep2 dispatch path or Vulkan shader has been redirected to this reader.
