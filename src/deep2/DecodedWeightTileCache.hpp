@@ -44,6 +44,23 @@ public:
         }
         ++misses_;
         // Serialize same-tile misses; no duplicate decompression or staging.
+        // Optional strict cap includes leases that survived cache eviction.
+        // Reclaim unpinned entries before rejecting a new decoded tile.
+        if (hardLiveBudget_ != std::numeric_limits<size_t>::max()) {
+            PruneExpiredLeases();
+            size_t liveBytes = LiveBytes();
+            while ((bytes > hardLiveBudget_ ||
+                    liveBytes > hardLiveBudget_ - bytes) && !lru_.empty()) {
+                EvictOldest();
+                PruneExpiredLeases();
+                liveBytes = LiveBytes();
+            }
+            if (bytes > hardLiveBudget_ ||
+                liveBytes > hardLiveBudget_ - bytes) {
+                ++admissionRejections_;
+                return {};
+            }
+        }
         auto values = std::make_shared<std::vector<float>>(count);
         if (!source_.ReadRange(key, first, count, values->data())) return {};
         PruneExpiredLeases();
@@ -75,6 +92,12 @@ public:
         lru_.clear();
         resident_ = 0;
     }
+    // Strict live-memory admission limit; pinned tiles count even after
+    // eviction. Default disabled to preserve existing callers' semantics.
+    void SetHardLiveBudget(size_t bytes) {
+        std::lock_guard<std::mutex> lock(mu_);
+        hardLiveBudget_ = bytes;
+    }
     void SetBudget(size_t bytes) {
         std::lock_guard<std::mutex> lock(mu_);
         budget_ = bytes;
@@ -90,6 +113,11 @@ public:
                     ? std::numeric_limits<size_t>::max() : leased + bytes;
             }
         }
+        const size_t liveBytes = LiveBytes();
+        return {resident_, budget_, leased, liveBytes, hardLiveBudget_, admissionRejections_, hits_, misses_, evictions_};
+    }
+private:
+    size_t LiveBytes() const {
         size_t liveBytes = 0;
         for (const auto& tracked : live_) {
             if (!tracked.values.expired()) {
@@ -97,9 +125,8 @@ public:
                     ? std::numeric_limits<size_t>::max() : liveBytes + tracked.bytes;
             }
         }
-        return {resident_, budget_, leased, liveBytes, hits_, misses_, evictions_};
+        return liveBytes;
     }
-private:
     struct Key {
         std::string tensor;
         size_t first, count;
@@ -142,6 +169,8 @@ private:
     TensorResidencyCache& source_;
     mutable std::mutex mu_;
     size_t budget_, resident_ = 0;
+    size_t hardLiveBudget_ = std::numeric_limits<size_t>::max();
+    uint64_t admissionRejections_ = 0;
     uint64_t hits_ = 0, misses_ = 0, evictions_ = 0;
     std::list<Key> lru_;
     std::unordered_map<Key, Entry, Hash> entries_;
