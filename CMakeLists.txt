@@ -42,6 +42,7 @@ add_executable(test_metadata_parity
 
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
+    src/VulkanStagingPipeline.cpp
 )
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
@@ -63,6 +64,7 @@ endif()
 
 # Enable deep hardware optimization flags dynamically based on active toolchain mappings
 if(MSVC)
+    target_compile_definitions(Deep2Engine_Benchmark PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
     if(MSVC_VERSION GREATER_EQUAL 1910)
         target_compile_options(Deep2Engine_Benchmark PRIVATE 
             $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
@@ -107,15 +109,22 @@ endif()
 find_program(RAWRXD_GLSLC NAMES glslc
     HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin")
 if(RAWRXD_GLSLC)
+    set(RAWRXD_PACKED_SHADER_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders")
     add_custom_target(RawrXD_PackedWeightShader ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory
-                "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders"
+                "${RAWRXD_PACKED_SHADER_OUTPUT_DIR}"
         COMMAND ${RAWRXD_GLSLC} --target-env=vulkan1.2 -O
                 "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
-                -o "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/gemv_packed16.spv"
+                -o "${RAWRXD_PACKED_SHADER_OUTPUT_DIR}/gemv_packed16.spv"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
         COMMENT "Compiling native packed F16/BF16/Q4/Q5/Q8 Vulkan GEMV shader")
     add_dependencies(Deep2Engine_Benchmark RawrXD_PackedWeightShader)
+    add_custom_command(TARGET Deep2Engine_Benchmark POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${RAWRXD_PACKED_SHADER_OUTPUT_DIR}/gemv_packed16.spv"
+                "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/gemv_packed16.spv")
 else()
     message(WARNING "[BUILD] glslc not found; packed F16/BF16/Q4/Q5/Q8 Vulkan dispatch will be unavailable")
 endif()
