@@ -43,7 +43,7 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
 
     const uint64_t n = src.totalElements();
     if (n == 0) return true;
-    if (!src.data || n > static_cast<uint64_t>(SIZE_MAX / sizeof(float))) return false;
+    if (!src.data || n > static_cast<uint64_t>((std::numeric_limits<std::size_t>::max)() / sizeof(float))) return false;
     const uint64_t requiredBytes = tensorStorageBytes(n, src.type);
     if (requiredBytes == (std::numeric_limits<uint64_t>::max)() ||
         src.byteSize < requiredBytes) return false;
