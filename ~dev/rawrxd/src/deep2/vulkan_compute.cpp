@@ -3105,6 +3105,7 @@ bool VulkanCompute::DispatchGemvQuant(
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;
+    if (weightBytes > std::numeric_limits<uint32_t>::max()) return false;
     if ((type == 1 || type == 30) &&
         (cols > std::numeric_limits<uint32_t>::max() / 2u ||
          weightBytes != static_cast<size_t>(rows) * static_cast<size_t>(cols) * 2u))
@@ -3115,7 +3116,6 @@ bool VulkanCompute::DispatchGemvQuant(
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
-    if(weightBytes>std::numeric_limits<uint32_t>::max()) return false;
     p.weightBytes=static_cast<uint32_t>(weightBytes);
     bool ok=dispatchQuant(*w,input,output,p);
     if(ok) ++gemvSuccess_;
