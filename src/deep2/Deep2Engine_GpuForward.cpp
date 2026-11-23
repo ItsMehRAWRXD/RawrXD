@@ -444,18 +444,22 @@ bool Deep2Engine::forwardLayerGpuResident(
         const bool compressedOnly = !wt.data && wt.hasCompressedBacking();
 
         // A compressed tensor must never be expanded into a whole host or
-        // device allocation on this canonical path. The fused layer is split
-        // at the projection boundary: first finish the producer of 'input',
-        // then execute bounded one-shot row tiles and publish the complete
-        // activation only after every tile succeeds, then resume fusion.
+        // device allocation on this canonical path. Finish the current fused
+        // command buffer at the projection boundary so the producer of 'input'
+        // is ready, execute bounded one-shot row tiles, then reopen fusion for
+        // the caller. This also works when an outer multi-layer path owns the
+        // recording: its later EndFusedLayer closes the reopened command buffer.
         if (compressedOnly) {
-            if (!ownRecording || !rows || !cols ||
-                !gpu->EndFusedLayer())
+            if (!rows || !cols || !gpu->EndFusedLayer())
                 return false;
+            const auto resumeFused = [&]() -> bool {
+                return gpu->BeginFusedLayer();
+            };
 
             constexpr std::size_t kCompressedGpuTileRows = 32;
             if (!gpu->EnsureScratch(172, kCompressedGpuTileRows) ||
                 !gpu->EnsureScratch(173, rows)) {
+                (void)resumeFused();
                 return false;
             }
             DeviceBuf& tileOutput = gpu->Scratch(172);
@@ -472,12 +476,15 @@ bool Deep2Engine::forwardLayerGpuResident(
                     return false;
                 rowBytes = static_cast<std::size_t>(cols) * sizeof(uint16_t);
             } else {
+                (void)resumeFused();
                 return false;
             }
             if (!rowBytes || wt.rows != rows || wt.cols != cols ||
                 rows > std::numeric_limits<std::size_t>::max() / rowBytes ||
-                wt.sizeBytes < static_cast<std::size_t>(rows) * rowBytes)
+                wt.sizeBytes < static_cast<std::size_t>(rows) * rowBytes) {
+                (void)resumeFused();
                 return false;
+            }
 
             bool tiledOk = true;
             for (std::size_t firstRow = 0; firstRow < rows;
@@ -554,9 +561,9 @@ bool Deep2Engine::forwardLayerGpuResident(
 
             if (tiledOk)
                 tiledOk = gpu->CopyVector(stagedOutput, output, rows);
-            // Reopen the caller-owned fused layer even after a tile failure so
-            // its established failure/cleanup path remains valid.
-            if (!gpu->BeginFusedLayer())
+            // Reopen the current fused recording even after a tile failure so
+            // the outer layer/range owner retains its established cleanup path.
+            if (!resumeFused())
                 return false;
             if (!tiledOk) return false;
 
