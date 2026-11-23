@@ -159,5 +159,10 @@ int main(){
  }
  REQUIRE(store.addTensor("empty",nullptr,0,&error));REQUIRE(store.tensorBlocks("empty")==0);REQUIRE(store.readRange("empty",0,nullptr,0,&error));
  const auto s=store.stats();REQUIRE(s.tensors==6&&s.raw_bytes==input.size()+random_data.size()+sizeof(q4_payload)+14+slowData.size());REQUIRE(s.compressed_bytes<s.raw_bytes);
- std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\n';
+ REQUIRE(s.encoded_capacity_bytes>=s.compressed_bytes);
+ REQUIRE(s.metadata_bytes_estimate>0);
+ REQUIRE(s.resident_bytes_estimate>=s.encoded_capacity_bytes);
+ REQUIRE(s.resident_bytes_estimate>=s.metadata_bytes_estimate);
+ REQUIRE(s.resident_bytes_estimate==s.encoded_capacity_bytes+s.metadata_bytes_estimate+s.cached_decoded_bytes);
+ std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<" resident_estimate="<<s.resident_bytes_estimate<<'\n';
 }
