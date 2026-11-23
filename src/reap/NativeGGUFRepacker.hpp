@@ -677,11 +677,12 @@ inline RepackError RepackGGUF(const std::string& input,
         // Preserve the original tensor when a requested conversion
         // does not strictly reduce its serialized payload.
         const uint64_t q8Bytes = (count/32)*34;
-        // For quality-sensitive Q8_1 and Q8_K tensors, prefer the existing
-        // Q8_0 converter over aggressive Q4_0. Both source formats are
-        // physically larger than Q8_0 (40->34 and 292->272 bytes).
-        // Keep their FP32/F16 scaling semantics in the dedicated decoders.
-        if(auto_compress && sensitive && (t.type==9 || t.type==15) &&
+        // Q8_1 and Q8_K vectors have no eligible Q4_0 path, while
+        // sensitive matrices must not be aggressively requantized.
+        // Repack both to Q8_0 only when the serialized payload shrinks.
+        // Ordinary multi-row matrices remain candidates for Q4_0.
+        if(auto_compress && (sensitive || !matrix) &&
+           (t.type==9 || t.type==15) && q8Bytes<t.bytes &&
            t.dims[0]%(t.type==15?256ULL:32ULL)==0) {
             t.convert_q8_0=true;
             t.q8_source_k=(t.type==15);
