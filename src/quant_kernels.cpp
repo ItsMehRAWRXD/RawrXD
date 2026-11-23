@@ -158,11 +158,9 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
                 const int8_t* qs = reinterpret_cast<const int8_t*>(block + 2);
                 for (size_t j = 0; j < take; ++j)
                     out[base + j] = d * float(qs[j]);
-            } else { // Q8_1: fp32 scale + fp32 block sum + 32 signed bytes.
-                float d = 0.0f;
-                std::memcpy(&d, block, sizeof(d));
-                if (!std::isfinite(d)) return false;
-                const int8_t* qs = reinterpret_cast<const int8_t*>(block + 8);
+            } else { // Q8_1: fp16 scale + fp16 block sum + 32 signed bytes.
+                const float d = fp16ToF32(readU16(block));
+                const int8_t* qs = reinterpret_cast<const int8_t*>(block + 4);
                 for (size_t j = 0; j < take; ++j)
                     out[base + j] = d * float(qs[j]);
             }
