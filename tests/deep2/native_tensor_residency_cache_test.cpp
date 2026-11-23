@@ -30,6 +30,11 @@ int main() {
     std::vector<float> tile(1537,-999.0f);
     assert(cache.ReadRange("layer.0.weight",900,tile.size(),tile.data()));
     for(size_t i=0;i<tile.size();++i) assert(tile[i]==source[900+i]);
+    std::vector<uint8_t> reusableScratch;
+    std::vector<float> tile2(777,-123.0f);
+    assert(cache.ReadRange("layer.0.weight",2048,tile2.size(),tile2.data(),reusableScratch));
+    for(size_t i=0;i<tile2.size();++i) assert(tile2[i]==source[2048+i]);
+
     auto after=cache.GetStats();
     assert(after.cacheHits==1);
     assert(after.bytesDecoded==tile.size()*sizeof(float));
