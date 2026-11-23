@@ -47,8 +47,11 @@ public:
 
     bool grow() {
         if (buf_.size() >= cap_) return false;
-        std::size_t next = buf_.empty() ? 4096 : buf_.size() * 2;
-        next = std::min(next, cap_);
+        // Saturating growth avoids size_t overflow for caller-provided caps.
+        const std::size_t current = buf_.size();
+        const std::size_t next = current == 0
+            ? std::min<std::size_t>(4096, cap_)
+            : (current > cap_ / 2 ? cap_ : current * 2);
         try {
             buf_.resize(next);
         } catch (...) {
