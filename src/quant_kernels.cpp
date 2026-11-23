@@ -108,6 +108,87 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         return true;
     }
 
+    case TensorType::Q4_1: {
+        // GGML block_q4_1: fp16 d, fp16 m, then 16 low/high nibble bytes.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const float m = fp16ToF32(readU16(p + 2));
+            const uint8_t* qs = p + 4;
+            const uint64_t take = (n - v > 32) ? 32 : (n - v);
+            for (uint64_t k = 0; k < take; ++k) {
+                const uint8_t packed = qs[k & 15u];
+                const uint8_t q = (k < 16) ? (packed & 0x0fu) : (packed >> 4);
+                out[v + k] = static_cast<float>(q) * d + m;
+            }
+            v += take;
+            p += 20;
+        }
+        return true;
+    }
+
+    case TensorType::Q5_0: {
+        // GGML block_q5_0: fp16 d, 4 high-bit bytes, 16 low/high nibble bytes.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const uint8_t* qh = p + 2;
+            const uint8_t* qs = p + 6;
+            const uint64_t take = (n - v > 32) ? 32 : (n - v);
+            for (uint64_t k = 0; k < take; ++k) {
+                const uint8_t packed = qs[k & 15u];
+                const uint8_t nibble = (k < 16) ? (packed & 0x0fu) : (packed >> 4);
+                const uint8_t high = (qh[k >> 3] >> (k & 7u)) & 1u;
+                out[v + k] = (static_cast<float>(nibble | (high << 4)) - 16.0f) * d;
+            }
+            v += take;
+            p += 22;
+        }
+        return true;
+    }
+
+    case TensorType::Q5_1: {
+        // GGML block_q5_1: fp16 d, fp16 m, 4 high-bit bytes, 16 nibble bytes.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const float m = fp16ToF32(readU16(p + 2));
+            const uint8_t* qh = p + 4;
+            const uint8_t* qs = p + 8;
+            const uint64_t take = (n - v > 32) ? 32 : (n - v);
+            for (uint64_t k = 0; k < take; ++k) {
+                const uint8_t packed = qs[k & 15u];
+                const uint8_t nibble = (k < 16) ? (packed & 0x0fu) : (packed >> 4);
+                const uint8_t high = (qh[k >> 3] >> (k & 7u)) & 1u;
+                out[v + k] = static_cast<float>(nibble | (high << 4)) * d + m;
+            }
+            v += take;
+            p += 24;
+        }
+        return true;
+    }
+
+    case TensorType::Q8_1: {
+        // GGML block_q8_1: fp16 d, fp16 s (dot-product sum), then 32 signed bytes.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const uint64_t take = (n - v > 32) ? 32 : (n - v);
+            for (uint64_t k = 0; k < take; ++k) {
+                int8_t q = 0;
+                std::memcpy(&q, p + 4 + k, sizeof(q));
+                out[v + k] = static_cast<float>(q) * d;
+            }
+            v += take;
+            p += 40;
+        }
+        return true;
+    }
+
     case TensorType::Q4_K_S: {
         // Block: qs[128] nibbles, scales[16] int8, d fp16 (146 bytes).
         const uint8_t* p = src.data;
@@ -236,12 +317,8 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q4_K_M:
-    case TensorType::Q4_1:
     case TensorType::Q5_K_S:
     case TensorType::Q5_K_M:
-    case TensorType::Q5_0:
-    case TensorType::Q5_1:
-    case TensorType::Q8_1:
     case TensorType::Q3_K_L:
         // Layouts not yet implemented in this milestone.
         return false;
