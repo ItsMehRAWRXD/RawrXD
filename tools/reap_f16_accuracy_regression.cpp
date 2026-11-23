@@ -32,6 +32,29 @@ int main(){
           accuracy.nonfinite==1 && accuracy.overflowed==1 &&
           accuracy.max_abs>0 && accuracy.rms_abs>0,
           "f16_accuracy_and_nonfinite_accounting");
+    // A finite nonzero F32 value below half-subnormal range must
+    // report 100% relative error when it rounds to FP16 zero.
+    {
+        const char* underflowSource="reap_f16_underflow_source.bin";
+        const char* underflowTarget="reap_f16_underflow_target.bin";
+        {
+            std::ofstream out(underflowSource,std::ios::binary);
+            const uint32_t bits=0x33000000u; // 2^-25, ties to zero
+            for(unsigned shift=0;shift<32;shift+=8)
+                out.put(static_cast<char>(bits>>shift));
+        }
+        {
+            std::ofstream out(underflowTarget,std::ios::binary);
+            out.put('\0');out.put('\0');
+        }
+        F16Accuracy underflow;
+        check(AuditF32ToF16(underflowSource,underflowTarget,0,0,1,underflow)
+              && underflow.finite==1 && underflow.max_rel==1.0
+              && underflow.max_abs>0.0,
+              "underflow_reports_full_relative_error");
+        std::remove(underflowSource);
+        std::remove(underflowTarget);
+    }
     // Failed audits must leave the caller's prior certified measurement intact.
     const F16Accuracy baseline=accuracy;
     {
