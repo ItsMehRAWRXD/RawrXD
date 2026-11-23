@@ -23,6 +23,26 @@ static inline bool e8m0HalfScale(uint8_t exponent, float& scale) {
     return std::isfinite(scale);
 }
 
+static inline bool e8m0Scale(uint8_t exponent, float& scale) {
+    if (exponent == 0xff) return false;
+    const int unbiased = exponent == 0 ? -127 : static_cast<int>(exponent) - 127;
+    scale = std::ldexp(1.0f, unbiased);
+    return std::isfinite(scale);
+}
+
+static inline float f8E4M3FNToFloat(uint8_t value) {
+    const bool negative = (value & 0x80u) != 0;
+    const unsigned exponent = (value >> 3) & 0x0fu;
+    const unsigned mantissa = value & 0x07u;
+    if (exponent == 0x0fu && mantissa == 0x07u)
+        return std::numeric_limits<float>::quiet_NaN();
+    float decoded = exponent == 0
+        ? std::ldexp(static_cast<float>(mantissa), -9)
+        : std::ldexp(1.0f + static_cast<float>(mantissa) / 8.0f,
+                     static_cast<int>(exponent) - 7);
+    return negative ? -decoded : decoded;
+}
+
 static inline float ue4m3HalfScale(uint8_t value) {
     if (value == 0 || value == 0x7f) return 0.0f;
     const int exponent = (value >> 3) & 0x0f;
@@ -137,6 +157,23 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
             out[i] = static_cast<float>(value);
         }
         return true;
+    case TensorType::F8_E4M3: {
+        const size_t blocks = static_cast<size_t>((n + 127) / 128);
+        for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
+            const uint8_t* block = src.data + blockIndex * 129;
+            float scale = 0.0f;
+            if (!e8m0Scale(block[0], scale)) return false;
+            const size_t base = blockIndex * 128;
+            const size_t take = std::min<size_t>(128, static_cast<size_t>(n) - base);
+            for (size_t j = 0; j < take; ++j) {
+                const float value = f8E4M3FNToFloat(block[1 + j]);
+                if (!std::isfinite(value)) return false;
+                out[base + j] = scale * value;
+                if (!std::isfinite(out[base + j])) return false;
+            }
+        }
+        return true;
+    }
     case TensorType::Q1_0: {
         const size_t blocks = static_cast<size_t>((n + 127) / 128);
         for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
@@ -426,6 +463,7 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::TQ2_0:
     case TensorType::Q1_0:
     case TensorType::Q2_0:
+    case TensorType::F8_E4M3:
     case TensorType::Q2_K:
     case TensorType::Q3_K:
     case TensorType::Q4_K:
