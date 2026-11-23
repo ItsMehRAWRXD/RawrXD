@@ -848,6 +848,48 @@ def run(binary):
                 low=(packed[j]&15) if j<16 else (packed[j-16]>>4)
                 code=low|(((high>>j)&1)<<4)
                 assert abs(minimum+scale*code-1.0)<=1
+        # Native Q5_K via the shared reference-layout codec. Use F64 source
+        # so the path validates original doubles, then independently decode
+        # with the canonical GGML ql/qh and packed scale/min traversal.
+        k5vals=[((i%41)-20)/32.0 for i in range(256)]
+        k5raw=struct.pack("<"+"d"*256,*k5vals)
+        k5meta=S("general.architecture")+U32(8)+S("llama")
+        k5meta+=S("general.alignment")+U32(4)+U32(ALIGN)
+        k5hdr=b"GGUF"+U32(3)+U64(1)+U64(2)+k5meta
+        k5hdr+=S("blk.0.attn_q.weight")+U32(1)+U64(256)+U32(28)+U64(0)
+        k5src=root/"f64-q5k-source.gguf";k5src.write_bytes(pad(k5hdr)+k5raw)
+        k5out=root/"f64-q5k-output.gguf"
+        subprocess.run([binary,str(k5src),str(k5out),"1","q5_k"],check=True)
+        k5b,k5s,k5m,k5t=parse(k5out)
+        assert k5m==k5meta and k5t["blk.0.attn_q.weight"][:2]==(13,(256,))
+        assert len(k5b)-k5s==176
+        p=k5s+k5t["blk.0.attn_q.weight"][2]
+        def k5_scale_min(g):
+            s=k5b[p+4:p+16]
+            if g<4:return s[g],s[g+4]
+            return (s[g+4]&15)|((s[g-4]>>6)<<4),(s[g+4]>>4)|((s[g]>>6)<<4)
+        d,dm=struct.unpack_from("<ee",k5b,p)
+        qh=k5b[p+16:p+48];ql=k5b[p+48:p+176]
+        decoded=[]
+        for base in range(0,256,64):
+            isub=base//32
+            s0,m0=k5_scale_min(isub);s1,m1=k5_scale_min(isub+1)
+            for lane in range(32):
+                a=ql[(base//64)*32+lane]
+                hi0=16 if (qh[lane] & (1 << (2*(base//64)))) else 0
+                hi1=16 if (qh[lane] & (1 << (2*(base//64)+1))) else 0
+                decoded.append(d*s0*((a&15)+hi0)-dm*m0)
+            for lane in range(32):
+                a=ql[(base//64)*32+lane]
+                hi=16 if (qh[lane] & (1 << (2*(base//64)+1))) else 0
+                decoded.append(d*s1*((a>>4)+hi)-dm*m1)
+        assert len(decoded)==256
+        assert max(abs(a-b) for a,b in zip(decoded,k5vals))<=1
+        k5strict=root/"f64-q5k-strict.gguf"
+        subprocess.run([binary,str(k5src),str(k5strict),"0","q5_k"],check=True)
+        sb,ss,sm,st=parse(k5strict)
+        assert st["blk.0.attn_q.weight"][0]==28
+        assert sb[ss:ss+len(k5raw)]==k5raw
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
