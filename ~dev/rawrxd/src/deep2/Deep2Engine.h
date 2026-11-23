@@ -265,16 +265,21 @@ struct WeightTensor {
                    size_t position) {
                     return chunk.first + chunk.count <= position;
                 });
-            if (it == chunks.end() || it->first != first || it->count != cols)
-                return false;
-            const auto sourceEncoding = it->encoding;
             size_t runRows = 0;
-            for (; it != chunks.end() && runRows < maxRowCount; ++it) {
-                const size_t expectedFirst = first + runRows * cols;
-                if (it->first != expectedFirst || it->count != cols ||
-                    it->encoding != sourceEncoding)
-                    break;
-                ++runRows;
+            if (it != chunks.end() && it->first == first && it->count == cols) {
+                const auto sourceEncoding = it->encoding;
+                for (; it != chunks.end() && runRows < maxRowCount; ++it) {
+                    const size_t expectedFirst = first + runRows * cols;
+                    if (it->first != expectedFirst || it->count != cols ||
+                        it->encoding != sourceEncoding)
+                        break;
+                    ++runRows;
+                }
+            } else {
+                // Vector tensors and unusual chunk geometries can split rows
+                // across source chunks. Keep the same bounded tile and let the
+                // range decoder/exporter handle those boundaries safely.
+                runRows = maxRowCount;
             }
             if (!runRows || runRows > std::numeric_limits<uint32_t>::max() ||
                 runRows > std::numeric_limits<size_t>::max() / cols)
