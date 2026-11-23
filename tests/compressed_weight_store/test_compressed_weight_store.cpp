@@ -88,10 +88,20 @@ int main(){
    },
    &slowContext,&slowWriterError,rawrxd::compression::GGML_TYPE_OPAQUE,false);
  });
+ bool slowReaderEntered=false;
  {
   std::unique_lock<std::mutex> lock(slowContext.mutex);
-  REQUIRE(slowContext.cv.wait_for(lock,std::chrono::seconds(5),
-                                  [&]{return slowContext.entered;}));
+  slowReaderEntered=slowContext.cv.wait_for(
+   lock,std::chrono::seconds(5),[&]{return slowContext.entered;});
+ }
+ if(!slowReaderEntered) {
+  {
+   std::lock_guard<std::mutex> lock(slowContext.mutex);
+   slowContext.release=true;
+  }
+  slowContext.cv.notify_all();
+  slowWriter.join();
+  REQUIRE(slowReaderEntered);
  }
  std::vector<std::uint8_t> concurrentRead(range_length);
  auto readFuture=std::async(std::launch::async,[&] {
