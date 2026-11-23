@@ -4858,10 +4858,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/gguf_tensor_loader.cpp
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
-    # Codec implementations (deflate/inflate/compress)
-    src/codec/compression.cpp
-    src/codec/brutal_gzip.cpp
-    src/codec/gzip_brutal_inflate.cpp
+    # Qt/zlib codec adapter is appended from the repository-level source tree
+    # only when both optional development packages are available.
     # Deep2 core ÎÃÃ¶ unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
     src/deep2/lavapath/GgufDynamicGeometry_io.cpp
@@ -5196,11 +5194,11 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
 endif()
 
-if(NOT (ZLIB_FOUND AND Qt6_FOUND))
-    # This adapter is Qt/zlib-specific; native inference remains available through
-    # RawrXD_Compression's runtime-loaded implementation when either is absent.
-    list(REMOVE_ITEM INFERENCE_ENGINE_SOURCES src/codec/compression.cpp)
-    message(STATUS "[Compression] Skipping legacy Qt/zlib adapter; runtime zlib loader remains enabled")
+if(ZLIB_FOUND AND Qt6_FOUND)
+    list(APPEND INFERENCE_ENGINE_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../src/codec/compression.cpp")
+else()
+    message(STATUS "[Compression] Qt/zlib adapter omitted; runtime zlib loader remains enabled")
 endif()
 
 set(INFERENCE_ENGINE_LIBRARY_SOURCES ${INFERENCE_ENGINE_SOURCES})
@@ -5213,6 +5211,8 @@ list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
 if(ZLIB_FOUND AND Qt6_FOUND)
+    target_include_directories(InferenceEngine PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
     target_link_libraries(InferenceEngine PUBLIC ZLIB::ZLIB Qt6::Core)
     target_compile_definitions(InferenceEngine PRIVATE RAWRXD_HAS_QT_ZLIB_ADAPTER=1)
 endif()
