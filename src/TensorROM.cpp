@@ -174,9 +174,23 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         return false;
     }
 
-    // Align to 64 bytes: payload starts here (GGUF spec).
+    // GGUF payload alignment defaults to 32 bytes and may be overridden by
+    // general.alignment in the metadata directory.
+    uint64_t alignment = 32;
+    const auto alignmentIt = m_kvStrings.find("general.alignment");
+    if (alignmentIt != m_kvStrings.end()) {
+        try { alignment = std::stoull(alignmentIt->second); }
+        catch (...) { return false; }
+    }
+    if (alignment == 0 || (alignment & (alignment - 1)) != 0 ||
+        alignment > (1ull << 20)) {
+        fprintf(stderr, "[ROM] %s: invalid GGUF alignment %llu\\n",
+                manifest.path.c_str(), static_cast<unsigned long long>(alignment));
+        return false;
+    }
     uint64_t pos = static_cast<uint64_t>(f.tellg());
-    uint64_t aligned = (pos + 63) & ~63ull;
+    if (pos > std::numeric_limits<uint64_t>::max() - (alignment - 1)) return false;
+    uint64_t aligned = (pos + alignment - 1) & ~(alignment - 1);
     manifest.dataOffset = aligned;
     f.seekg(0, std::ios::end);
     uint64_t end = static_cast<uint64_t>(f.tellg());
