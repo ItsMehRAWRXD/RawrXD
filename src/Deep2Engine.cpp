@@ -772,7 +772,7 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 byteCount > std::numeric_limits<size_t>::max())
                 return false;
             encodedScratch.resize(static_cast<size_t>(byteCount));
-            if (!rom.readTensorRange(entry, byteOffset, byteCount, encodedScratch.data()))
+            if (!readCompressedEncodedRange(entry, byteOffset, byteCount, encodedScratch.data(), decodeScratch))
                 return false;
             deep2::TensorView packedView{
                 entry.type, encodedScratch.data(), encodedScratch.size(),
