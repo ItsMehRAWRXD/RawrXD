@@ -122,3 +122,21 @@ payloads byte-for-byte, but a tensor is admitted to this LinearW path only when
 its row format has a known packed stride and the logical row width is aligned
 to that format's block size. Invalid/non-aligned geometry now rejects
 compressed admission rather than rounding up and risking a kernel over-read.
+
+## Compressed-resident row dequantization and synthetic model E2E
+
+`StoredTensorReadRow` now performs one-row embedding-style lookup directly
+from compressed backing for F32, F16, Q4_0, Q4_1, Q5_0, Q5_1 and Q8_0. It
+validates the stored GGML type, matrix row geometry and bounds, reads only the
+selected packed row, and dequantizes that row into the caller's activation
+buffer. The Q4/Q5 fixtures check decoded row sums as well as matvec parity.
+
+The synthetic GGUF v3 acceptance fixture now contains an embedding matrix, a
+Q4_0 attention projection and an output/logit matrix. It exercises actual
+mapped GGUF parsing, whole-model compressed admission, closes the source mmap,
+performs a selected-token embedding lookup, runs the resident projection and
+output head, compares both operations with the direct uncompressed reader,
+selects the next token by greedy argmax, and rejects a truncated model. This is
+a deterministic miniature loader-to-logits-to-token-selection path; it is not
+a claim of full production transformer architecture coverage or language
+quality.
