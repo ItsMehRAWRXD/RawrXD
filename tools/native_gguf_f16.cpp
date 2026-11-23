@@ -197,8 +197,7 @@ int main(int argc,char** argv) {
                 if(valid){streamQ8[i]=true;outputTypes[i]=8;++changed;}
                 continue;
             }
-            if(t.bytes>64u*1024u*1024u) {
-                if(t.type!=0 || quantized)continue;
+            if(t.type==0 && !quantized) {
                 // First pass: validate every F32 weight before changing its type.
                 // The second pass emits the same half values using fixed memory.
                 seek(in,add(dataStart,t.offset));
@@ -222,6 +221,7 @@ int main(int argc,char** argv) {
                 if(valid){streamHalf[i]=true;outputTypes[i]=1;++changed;}
                 continue;
             }
+            if(t.bytes>64u*1024u*1024u)continue; // Q4/Q5 large-tensor streaming pending
             std::vector<uint8_t> raw(static_cast<size_t>(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
