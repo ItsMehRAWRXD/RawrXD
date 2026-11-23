@@ -70,9 +70,11 @@ remain alive until the readers finish. The cache may temporarily report an
 over-budget state during that lease window, but it rejects new admissions
 without unsigned-size underflow and retries them after leases drain. A
 temporary capacity miss is not memoized as an intrinsically uncompressible
-tensor. Once active leases have drained, the configured budget is enforced
-against the cache's accounted retained storage; it is not a cap on total
-process memory.
+tensor. The same guarded admission rule is applied to both the F32
+`TensorResidencyCache` and the byte-preserving
+`TensorByteResidencyCache`. Once active leases have drained, the configured
+budget is enforced against the cache's accounted retained storage; it is not
+a cap on total process memory.
 
 ## Bounded packed GPU staging primitive
 
