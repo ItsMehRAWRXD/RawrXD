@@ -4,7 +4,7 @@
 option(RAWRXD_BUILD_NATIVE_GGUF_COMPRESSOR "Build native GGUF precision-gated compressor" ON)
 if(RAWRXD_BUILD_NATIVE_GGUF_COMPRESSOR)
     get_filename_component(RAWRXD_TENSOR_REPO_ROOT
-        "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+        "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
     set(RAWRXD_NATIVE_GGUF_COMPRESSOR_SOURCE
         "${RAWRXD_TENSOR_REPO_ROOT}/tools/native_gguf_f16.cpp")
     if(NOT EXISTS "${RAWRXD_NATIVE_GGUF_COMPRESSOR_SOURCE}")
