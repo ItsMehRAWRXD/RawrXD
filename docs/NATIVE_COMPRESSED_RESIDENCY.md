@@ -48,3 +48,11 @@ The native residency tests compile as C++17 without Vulkan, Qt, or model downloa
 3. Migrate additional embedding tables, norms, attention/state vectors, and MoE expert consumers to bounded typed range reads.
 4. Add Vulkan upload ownership with completion-backed staging and device-local cache eviction for each supported quant type.
 5. Add independent teacher-forced logits parity, multi-agent concurrency, cancellation, corruption, and measured host/VRAM tests before promoting the path.
+
+## Lease-aware runtime cache
+
+The Deep2 model cache uses `ResidentTensorCache`. Each returned immutable `shared_ptr` is a request lease. LRU admission and budget reduction may evict only entries whose cache map is the sole owner; an entry held by an active inference request remains in the cache and remains included in the resident-byte accounting. If all eligible entries are leased, an incoming tensor is returned as request-scoped storage instead of being admitted and silently exceeding the shared-cache budget.
+
+Tensor construction and file reads occur outside the cache mutex. Concurrent misses may construct duplicate candidates, but the second admission check returns the already-admitted object and discards the duplicate. Model reloads increment a generation included in each tensor and embedding-range cache key, so a new model cannot accidentally reuse a previous model's same-name/same-offset tensor. Clearing at reload removes unleased entries while old in-flight leases remain valid and accounted until released.
+
+`native_resident_tensor_cache_test` verifies that pinned entries survive a budget reduction, oversized/unadmittable request data stays out of the shared cache, released entries become evictable, and resident-byte accounting returns to zero after release and clear.
