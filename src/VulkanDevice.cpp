@@ -325,6 +325,7 @@ void VulkanDevice::evictCachedWeightsLocked(size_t requiredBytes) {
            requiredBytes > m_weightCacheBudgetBytes - m_weightCacheBytes) {
         auto victim = m_weightBuffers.end();
         for (auto it = m_weightBuffers.begin(); it != m_weightBuffers.end(); ++it) {
+            if (it->second.activeLeases != 0) continue;
             if (victim == m_weightBuffers.end() ||
                 it->second.lastUse < victim->second.lastUse)
                 victim = it;
@@ -375,9 +376,12 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
             existing->second.owner == gpu.device &&
             existing->second.contentHash == contentHash) {
             existing->second.lastUse = ++m_weightCacheTick;
+            ++existing->second.activeLeases;
             buffer = existing->second.buffer;
             return true;
         }
+        // Do not replace an allocation still held by another CPU dispatch.
+        if (existing->second.activeLeases != 0) return false;
         // Replacement also invalidates the old VkBuffer handle. Drain
         // outstanding device submissions before destroying that allocation.
         if (vkDeviceWaitIdle(existing->second.owner) != VK_SUCCESS)
@@ -416,10 +420,22 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
     entry.size = size;
     entry.contentHash = contentHash;
     entry.lastUse = ++m_weightCacheTick;
+    entry.activeLeases = 1;
     m_weightBuffers.emplace(cacheKey, entry);
     m_weightCacheBytes += static_cast<size_t>(size);
     buffer = created;
     return true;
+}
+
+void VulkanDevice::releaseCachedWeightBuffer(VkBuffer buffer) {
+    if (buffer == VK_NULL_HANDLE) return;
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    for (auto& item : m_weightBuffers) {
+        if (item.second.buffer == buffer) {
+            if (item.second.activeLeases != 0) --item.second.activeLeases;
+            return;
+        }
+    }
 }
 
 size_t VulkanDevice::cachedWeightBytes() const {
