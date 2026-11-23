@@ -14,8 +14,9 @@ int main() {
         WriteU32(out,0x46554747);WriteU32(out,3);
         WriteU64(out,1);WriteU64(out,0);
         WriteName(out,"weight");WriteU32(out,2);
-        WriteU64(out,256);WriteU64(out,1);
+        WriteU64(out,512);WriteU64(out,1);
         WriteU32(out,14);WriteU64(out,0);PadTo(out,32);
+        for(unsigned superblock=0;superblock<2;++superblock) {
         unsigned char ql[128]={},qh[64]={};
         for(unsigned i=0;i<256;++i) {
             const unsigned half=i/128,quarter=(i%128)/32,lane=i%32;
@@ -30,6 +31,7 @@ int main() {
         const float one=1.0f;uint32_t bits=0;std::memcpy(&bits,&one,4);
         const uint16_t h=Float32BitsToFloat16(bits);
         out.put(static_cast<char>(h));out.put(static_cast<char>(h>>8));
+        }
     }
     bool correct=RepackGGUF(source,target,UINT64_MAX,false,false,false,true)==RepackError::None;
     if(correct) {
@@ -42,7 +44,7 @@ int main() {
         const uint64_t start=(static_cast<uint64_t>(in.tellg())+31)&~uint64_t(31);
         in.seekg(static_cast<std::streamoff>(start));
         correct &= type==6&&offset==0;
-        for(unsigned block=0;block<8;++block) {
+        for(unsigned block=0;block<16;++block) {
             unsigned char bytes[22]={};
             in.read(reinterpret_cast<char*>(bytes),22);
             const uint16_t h=uint16_t(bytes[0])|(uint16_t(bytes[1])<<8);
