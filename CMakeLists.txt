@@ -27,29 +27,16 @@ add_executable(Deep2Engine_Benchmark
     src/VulkanStagingPipeline.cpp
 )
 
-add_executable(gguf2rom
-    src/gguf2rom.cpp
-)
-
-add_executable(gguf2rom_ms
-    src/gguf2rom_ms.cpp
-)
-
-add_executable(test_metadata_parity
-    src/test_metadata_parity.cpp
-    src/GGUFLoader.cpp
-)
-
-add_executable(production_smoke_test
-    src/tools/production_smoke_test.cpp
-)
+add_executable(gguf2rom src/gguf2rom.cpp)
+add_executable(gguf2rom_ms src/gguf2rom_ms.cpp)
+add_executable(test_metadata_parity src/test_metadata_parity.cpp src/GGUFLoader.cpp)
+add_executable(production_smoke_test src/tools/production_smoke_test.cpp)
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
-# Deploy GLSL compute shaders (SPIR-V) next to the executable for the Vulkan path.
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
     file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
     foreach(shader ${SHADER_FILES})
@@ -61,23 +48,19 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
     endforeach()
 endif()
 
-# Enable deep hardware optimization flags dynamically based on active toolchain mappings
 if(MSVC)
     if(MSVC_VERSION GREATER_EQUAL 1910)
-        target_compile_options(Deep2Engine_Benchmark PRIVATE 
-            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
-        )
-        message(STATUS "[BUILD] MSVC compiler target assigned to native AVX2 (256-bit YMM) for Zen 4 / 7800X3D.")
+        target_compile_options(Deep2Engine_Benchmark PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>)
+        message(STATUS "[BUILD] MSVC compiler target assigned to native AVX2.")
     else()
-        target_compile_options(Deep2Engine_Benchmark PRIVATE 
-            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /arch:AVX2>
-        )
-        message(STATUS "[BUILD] Standard AVX2 micro-architectural fallbacks configured.")
+        target_compile_options(Deep2Engine_Benchmark PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /arch:AVX2>)
+        message(STATUS "[BUILD] Standard MSVC AVX2 fallbacks configured.")
     endif()
 else()
-    target_compile_options(Deep2Engine_Benchmark PRIVATE 
-        $<$<COMPILE_LANGUAGE:CXX>:-O3 -Wall -Wextra -ffast-math -pthread>
-    )
+    target_compile_options(Deep2Engine_Benchmark PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:-O3 -Wall -Wextra -ffast-math -pthread>)
     include(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("-mavx512f" HAS_AVX512F)
     CHECK_CXX_COMPILER_FLAG("-mavx512bw" HAS_AVX512BW)
@@ -87,30 +70,22 @@ else()
         if(HAS_AVX512VNNI)
             target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512vnni>)
         endif()
-        message(STATUS "[BUILD] GCC/Clang: AVX-512 vectorization enabled (F, BW, DQ, VNNI)")
+        message(STATUS "[BUILD] GCC/Clang: AVX-512 vectorization enabled.")
     else()
-        message(STATUS "[BUILD] GCC/Clang: AVX-512 not fully supported, using AVX2 fallback")
+        message(STATUS "[BUILD] GCC/Clang: AVX2 fallback.")
         target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma>)
     endif()
 endif()
 
-# Vulkan linkage for multi-GPU support
 find_package(Vulkan REQUIRED)
 if(Vulkan_FOUND)
     target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
-    message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
+    message(STATUS "[BUILD] Vulkan libraries enabled.")
 endif()
 
-# Link libraries
 if(MSVC)
-    target_link_libraries(Deep2Engine_Benchmark 
-        PRIVATE Vulkan::Vulkan
-        kernel32.lib user32.lib advapi32.lib
-    )
-    target_link_libraries(production_smoke_test
-        PRIVATE Vulkan::Vulkan
-        kernel32.lib user32.lib advapi32.lib
-    )
+    target_link_libraries(Deep2Engine_Benchmark PRIVATE Vulkan::Vulkan kernel32.lib user32.lib advapi32.lib)
+    target_link_libraries(production_smoke_test PRIVATE Vulkan::Vulkan kernel32.lib user32.lib advapi32.lib)
 elseif(UNIX AND NOT APPLE)
     target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
@@ -119,17 +94,26 @@ elseif(APPLE)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
-# Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
-# Enable testing
 enable_testing()
-add_test(NAME Deep2Engine_SmokeTest
-    COMMAND Deep2Engine_Benchmark --help
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+add_test(NAME Deep2Engine_SmokeTest COMMAND Deep2Engine_Benchmark --help WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_test(NAME MetadataParity_Phi3 COMMAND test_metadata_parity "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf" WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
-add_test(NAME MetadataParity_Phi3
-    COMMAND test_metadata_parity "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+# Optional Qt6/zlib adapter smoke test. The core engine does not depend on
+# either library; compile the production adapter whenever both are detected.
+find_package(ZLIB QUIET)
+find_package(Qt6 COMPONENTS Core QUIET)
+if(ZLIB_FOUND AND Qt6_FOUND)
+    add_library(rawrxd_qt_zlib_codec STATIC src/codec/compression.cpp)
+    target_include_directories(rawrxd_qt_zlib_codec PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_compile_features(rawrxd_qt_zlib_codec PUBLIC cxx_std_17)
+    target_link_libraries(rawrxd_qt_zlib_codec PUBLIC Qt6::Core ZLIB::ZLIB)
+
+    add_executable(qt_zlib_codec_test tests/qt_zlib_codec_test.cpp)
+    target_link_libraries(qt_zlib_codec_test PRIVATE rawrxd_qt_zlib_codec)
+    add_test(NAME qt_zlib_codec_test COMMAND qt_zlib_codec_test)
+    message(STATUS "[CODEC] Qt6 Core and ZLIB detected; zlib adapter test enabled")
+else()
+    message(STATUS "[CODEC] Qt6 Core or ZLIB missing; optional adapter test skipped")
+endif()
