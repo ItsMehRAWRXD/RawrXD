@@ -266,6 +266,18 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
     region.dstOffset = dstOffset;
     region.size = size;
     vkCmdCopyBuffer(command, staging, dst, 1, &region);
+    VkBufferMemoryBarrier uploadBarrier{};
+    uploadBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    uploadBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    uploadBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    uploadBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uploadBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uploadBarrier.buffer = dst;
+    uploadBarrier.offset = dstOffset;
+    uploadBarrier.size = size;
+    vkCmdPipelineBarrier(command, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+                         0, nullptr, 1, &uploadBarrier, 0, nullptr);
     if (vkEndCommandBuffer(command) != VK_SUCCESS) {
         cleanup();
         return false;
@@ -475,6 +487,18 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, pushBytes, pc);
     const uint32_t groups = rows / 256u + ((rows % 256u) != 0u ? 1u : 0u);
     vkCmdDispatch(cmd, groups, 1, 1);
+    VkBufferMemoryBarrier outputBarrier{};
+    outputBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    outputBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    outputBarrier.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
+    outputBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    outputBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    outputBarrier.buffer = y;
+    outputBarrier.offset = 0;
+    outputBarrier.size = VK_WHOLE_SIZE;
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                         VK_PIPELINE_STAGE_HOST_BIT, 0,
+                         0, nullptr, 1, &outputBarrier, 0, nullptr);
 
     if (vkEndCommandBuffer(cmd) != VK_SUCCESS) {
         vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
