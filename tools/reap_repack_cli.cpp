@@ -1,4 +1,4 @@
-#include "../src/reap/NativeGGUFRepacker.hpp"
+#include "../src/reap/NativeGGUFPublisher.hpp"
 #include <cerrno>
 #include <cstdint>
 #include <cstdlib>
@@ -28,10 +28,10 @@ int main(int argc, char** argv) {
         }
         budget = static_cast<uint64_t>(value);
     }
-    const auto result = RawrXD::REAP::RepackGGUF(argv[1], argv[2], budget);
-    if (result != RawrXD::REAP::RepackError::None) {
+    const auto result = RawrXD::REAP::PublishRepackedGGUF(argv[1], argv[2], budget);
+    if (result.error != RawrXD::REAP::PublishError::None) {
         std::cerr << "REAP_REPACK_RESULT=FAIL error="
-                  << static_cast<int>(result) << "\n";
+                  << static_cast<int>(result.error) << " repack_error=" << static_cast<int>(result.repack_error) << "\n";
         return 1;
     }
     std::cout << "REAP_REPACK_RESULT=PASS output=" << argv[2] << "\n";
