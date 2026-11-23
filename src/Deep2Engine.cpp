@@ -12,9 +12,24 @@
 #include <cstring>
 #include <fstream>
 #include <limits>
+#include <cstdlib>
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    // Lossy F32->F16/BF16 residency is opt-in and bounded by a caller-supplied
+    // absolute-error tolerance. The default remains bit-exact/lossless.
+    if (const char* tolerance = std::getenv("DEEP2_F32_MAX_ABS_ERROR")) {
+        char* end = nullptr;
+        const float parsed = std::strtof(tolerance, &end);
+        if (end == tolerance || *end != '\\0' || !std::isfinite(parsed) || parsed < 0.0f) {
+            fprintf(stderr, "[ROM] invalid DEEP2_F32_MAX_ABS_ERROR; expected finite nonnegative float\\n");
+            return false;
+        }
+        compressedF32MaxAbsError = parsed;
+    }
+    fprintf(stderr, "[ROM] F32 compressed residency absolute-error budget: %.9g\\n",
+            compressedF32MaxAbsError);
+
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
     }
