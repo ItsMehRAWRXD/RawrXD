@@ -11,7 +11,7 @@
 #include <zlib.h>
 
 namespace rawrxd::weights {
-enum class BlockCodec : uint8_t { Raw = 0, Zlib = 1, ByteShuffleZlib = 2 };
+enum class BlockCodec : uint8_t { Raw = 0, Zlib = 1, ByteShuffleZlib = 2, DeltaShuffleZlib = 3 };
 struct Block {
     BlockCodec codec = BlockCodec::Raw;
     uint32_t plain_size = 0;
@@ -40,6 +40,31 @@ inline std::vector<uint8_t> unshuffle(const uint8_t* p, size_t n, size_t stride)
         for (size_t i = 0; i < count; ++i)
             out[i * stride + lane] = p[lane * count + i];
     std::copy(p + count * stride, p + n, out.begin() + count * stride);
+    return out;
+}
+// Reversible per-lane byte delta coding. Useful for correlated floating-point
+// exponent/sign bytes and structured quantization metadata; never lossy.
+inline std::vector<uint8_t> delta_lanes(const uint8_t* p, size_t n, size_t stride) {
+    std::vector<uint8_t> out(n);
+    for (size_t lane=0; lane<stride; ++lane) {
+        uint8_t prev=0;
+        for (size_t i=lane; i<n; i+=stride) {
+            const uint8_t cur=p[i];
+            out[i]=static_cast<uint8_t>(cur-prev);
+            prev=cur;
+        }
+    }
+    return out;
+}
+inline std::vector<uint8_t> undelta_lanes(const uint8_t* p, size_t n, size_t stride) {
+    std::vector<uint8_t> out(n);
+    for (size_t lane=0; lane<stride; ++lane) {
+        uint8_t prev=0;
+        for (size_t i=lane; i<n; i+=stride) {
+            prev=static_cast<uint8_t>(prev+p[i]);
+            out[i]=prev;
+        }
+    }
     return out;
 }
 inline uint32_t checksum(const uint8_t* p, size_t n) {
@@ -81,6 +106,13 @@ inline Tensor encode(const uint8_t* data, size_t size,
             b.payload = std::move(compressed);
         }
         if (element_bytes > 1) {
+            auto delta = delta_lanes(p, n, element_bytes);
+            auto delta_shuffled = shuffle(delta.data(), delta.size(), element_bytes);
+            compressed = zcompress(delta_shuffled.data(), delta_shuffled.size());
+            if (compressed.size() < b.payload.size()) {
+                b.codec = BlockCodec::DeltaShuffleZlib;
+                b.payload = std::move(compressed);
+            }
             auto transposed = shuffle(p, n, element_bytes);
             compressed = zcompress(transposed.data(), transposed.size());
             if (compressed.size() < b.payload.size()) {
@@ -106,14 +138,16 @@ inline std::vector<uint8_t> decode_block(const Tensor& t, size_t index) {
         if (b.payload.size() != b.plain_size)
             throw std::runtime_error("raw block size mismatch");
         out = b.payload;
-    } else if (b.codec == BlockCodec::Zlib || b.codec == BlockCodec::ByteShuffleZlib) {
+    } else if (b.codec == BlockCodec::Zlib || b.codec == BlockCodec::ByteShuffleZlib || b.codec == BlockCodec::DeltaShuffleZlib) {
         uLongf decoded = b.plain_size;
         if (uncompress(out.data(), &decoded, b.payload.data(),
                        static_cast<uLong>(b.payload.size())) != Z_OK ||
             decoded != b.plain_size)
             throw std::runtime_error("compressed block invalid");
-        if (b.codec == BlockCodec::ByteShuffleZlib)
+        if (b.codec == BlockCodec::ByteShuffleZlib || b.codec == BlockCodec::DeltaShuffleZlib)
             out = unshuffle(out.data(), out.size(), t.element_bytes);
+        if (b.codec == BlockCodec::DeltaShuffleZlib)
+            out = undelta_lanes(out.data(), out.size(), t.element_bytes);
     } else {
         throw std::runtime_error("unknown codec");
     }
