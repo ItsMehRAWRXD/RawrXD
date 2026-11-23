@@ -110,25 +110,29 @@ bool prepareF32GpuCompression(ModelWeights& weights) {
     size_t compressedTensors = 0;
     size_t rejectedTensors = 0;
     auto prepare = [&](WeightTensor& tensor) {
-        if (tensor.type != 0 || !tensor.data || tensor.compressedF32 ||
-            tensor.gpuF16Payload || storedBytes >= budgetBytes)
+        if (tensor.type != 0 || !tensor.data || tensor.gpuF16Payload ||
+            storedBytes >= budgetBytes)
             return;
         const size_t remaining = budgetBytes - storedBytes;
+        const bool hadCompressedBacking = static_cast<bool>(tensor.compressedF32);
         // Avoid a candidate whose temporary raw-source bound is far beyond
         // the remaining compressed-residency allowance.
-        if (remaining <= std::numeric_limits<size_t>::max() / 2u &&
-            tensor.sizeBytes > remaining * 2u)
+        if (!hadCompressedBacking &&
+            remaining <= std::numeric_limits<size_t>::max() / 8u &&
+            tensor.sizeBytes > remaining * 8u)
             return;
-        if (!tensor.EnableCompressedF32(tolerance)) {
+        if (!hadCompressedBacking &&
+            !tensor.EnableCompressedF32(tolerance, 4096u, remaining)) {
             ++rejectedTensors;
             return;
         }
         RawrXD::TensorCompression::Encoding encoding{};
         std::vector<uint8_t> packed;
         const size_t expectedBytes = tensor.sizeBytes / 2u;
-        if (!tensor.compressedF32->ExportUniform16Bit(encoding, packed) ||
+        if (!tensor.compressedF32 ||
+            !tensor.compressedF32->ExportUniform16Bit(encoding, packed) ||
             packed.size() != expectedBytes || packed.size() > remaining) {
-            tensor.compressedF32.reset();
+            if (!hadCompressedBacking) tensor.compressedF32.reset();
             ++rejectedTensors;
             return;
         }
