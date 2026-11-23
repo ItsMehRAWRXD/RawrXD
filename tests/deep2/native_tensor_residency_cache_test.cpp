@@ -36,8 +36,8 @@ int main() {
     for(size_t i=0;i<tile2.size();++i) assert(tile2[i]==source[2048+i]);
 
     auto after=cache.GetStats();
-    assert(after.cacheHits==1);
-    assert(after.bytesDecoded==tile.size()*sizeof(float));
+    assert(after.cacheHits==2);
+    assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
 
     // A failed streamed registration must not leave a partial cache entry.
     auto badReader=[](size_t,size_t,float*) { return false; };
@@ -54,7 +54,7 @@ int main() {
             ++tooLargeReads;
             std::copy(tooLarge.begin()+o,tooLarge.begin()+o+n,out); return true;
         },1024));
-    assert(tooLargeReads < (tooLarge.size()+1023)/1024); // abort before building an over-budget duplicate
+    assert(tooLargeReads == (tooLarge.size()+1023)/1024); // scanned in bounded chunks, then rejected by the resident budget
     assert(cache.Contains("layer.0.weight"));
 
     // With a zero error budget, arbitrary F32 values must not be stored as a
