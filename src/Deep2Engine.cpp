@@ -1,4 +1,5 @@
 #include "Deep2Engine.hpp"
+#include "native_q8_0_kernel.hpp"
 #include "TensorROM.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
@@ -84,27 +85,13 @@ bool Deep2Engine::gemvROMQ8_0(
                 return false;
             for (std::size_t b = 0; b < count; ++b) {
                 const auto* block = staging.data() + b * 34;
-                const std::uint16_t half = std::uint16_t(block[0]) |
-                                           (std::uint16_t(block[1]) << 8);
-                const std::uint32_t sign = std::uint32_t(half & 0x8000u) << 16;
-                const std::uint32_t exponent = (half >> 10) & 31u;
-                const std::uint32_t fraction = half & 1023u;
-                std::uint32_t bits = sign;
-                if (exponent == 31) bits |= 0x7f800000u | (fraction << 13);
-                else if (exponent) bits |= ((exponent + 112u) << 23) | (fraction << 13);
-                else if (fraction) {
-                    std::uint32_t mantissa = fraction, shift = 0;
-                    while ((mantissa & 1024u) == 0) { mantissa <<= 1; ++shift; }
-                    bits |= ((113u - shift) << 23) | ((mantissa & 1023u) << 13);
-                }
-                float scale;
-                std::memcpy(&scale, &bits, sizeof(scale));
-                if (!std::isfinite(scale)) return false;
                 const std::size_t activationOffset = (first + b) * 32;
-                for (std::size_t j = 0; j < 32; ++j)
-                    accum += static_cast<double>(scale) *
-                             static_cast<std::int8_t>(block[j + 2]) *
-                             x[activationOffset + j];
+                try {
+                    accum += rawrxd::compression::q8_0_dot_block(
+                        block, x + activationOffset);
+                } catch (const std::exception&) {
+                    return false;
+                }
             }
             first += count;
         }
