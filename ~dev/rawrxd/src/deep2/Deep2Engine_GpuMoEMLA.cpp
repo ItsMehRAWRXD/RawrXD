@@ -347,6 +347,21 @@ bool Deep2Engine::computeMoEFFNGpu(
        layer>=moeRouters_.size()||!moeRouters_[layer])
         return false;
 
+    // RunExpertFFN currently binds raw mapped gate/up/down views directly.
+    // Do not silently bypass private compressed residency in this fused path;
+    // let the caller use the per-tensor LinearW route until compressed expert
+    // descriptors are wired into the fused expert kernel.
+    for (size_t ex = 0; ex < E; ++ex) {
+        if (lw.moeGate[ex].compressedF32 || lw.moeGate[ex].compressedBytes ||
+            lw.moeUp[ex].compressedF32 || lw.moeUp[ex].compressedBytes ||
+            lw.moeDown[ex].compressedF32 || lw.moeDown[ex].compressedBytes)
+            return false;
+    }
+    if (lw.moeSharedGate.compressedF32 || lw.moeSharedGate.compressedBytes ||
+        lw.moeSharedUp.compressedF32 || lw.moeSharedUp.compressedBytes ||
+        lw.moeSharedDown.compressedF32 || lw.moeSharedDown.compressedBytes)
+        return false;
+
     std::vector<float> logits(E,0.0f);
     if(!tryVulkanHostGEMV(lw.moeRouter,input,logits.data(),E))
         return false;
