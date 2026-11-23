@@ -16,6 +16,16 @@
 using rawrxd::compression::ReadCompressedWeightTile;
 
 int main() {
+    using rawrxd::compression::DecodeHalfToFloat;
+    assert(DecodeHalfToFloat(0x0000u) == 0.0f);
+    assert(DecodeHalfToFloat(0x8000u) == 0.0f);
+    assert(std::signbit(DecodeHalfToFloat(0x8000u)));
+    assert(DecodeHalfToFloat(0x3c00u) == 1.0f);
+    assert(DecodeHalfToFloat(0xbc00u) == -1.0f);
+    assert(DecodeHalfToFloat(0x7bffu) == 65504.0f);
+    assert(DecodeHalfToFloat(0x0001u) == std::ldexp(1.0f, -24));
+    assert(std::isinf(DecodeHalfToFloat(0x7c00u)));
+    assert(std::isnan(DecodeHalfToFloat(0x7e00u)));
     std::vector<std::uint8_t> source(10 * 16);
     for (std::size_t i = 0; i < source.size(); ++i)
         source[i] = static_cast<std::uint8_t>((i * 37u) & 0xffu);
