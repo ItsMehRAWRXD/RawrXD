@@ -71,6 +71,8 @@ The production host-bound Vulkan GEMV path now prefers compressed backing even w
 - Losslessly compressed quantized-byte tensors are expanded only for bounded row tiles on the host, then uploaded in their original GGML packed block representation. The existing Vulkan shader performs native packed decoding for F16, BF16, Q8_0, Q2_K, Q4_K, and Q6_K. Unsupported quant types fail the GPU attempt and retain the existing CPU dequantization fallback when strict mode is disabled.
 - Tile cache keys include tensor/backing identity, file/shard identity, row range, and type. The Vulkan cache validates a payload fingerprint and byte geometry before reusing a tile, failing closed on collisions.
 
+When two Vulkan devices are available, compressed GEMV partitions output rows between them. Each device independently reads and expands only its own bounded source tiles, dispatches into a local output window, and downloads directly into a disjoint range of the final output vector. Both partitions must succeed before the route is reported as dual-GPU; otherwise the attempt is discarded and the existing single-device path is tried. This avoids a second full-size output merge buffer.
+
 This is bounded host-side decompression followed by GPU-native arithmetic; it is not device-side LZ4 decompression. It avoids whole-tensor F32/quantized expansion, but the original GGUF mapping remains alive. Some fused/state/attention paths still consume direct mapped pointers, and source mapping reclamation remains gated on migrating every consumer and introducing per-tensor mapping ownership.
 
 ## Strict GPU execution contract
