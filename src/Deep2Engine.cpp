@@ -490,19 +490,26 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
-    deep2::DequantizedTensor tokenEmbDq;
-    std::cout << "[Move 10] Dequantizing token_embd.weight...\n" << std::flush;
-    if (!dequantTensor(*tokenEmb, tokenEmbDq)) {
-        fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
-        return false;
-    }
-    std::cout << "[Move 10] token_embd.weight dequantized: " << tokenEmbDq.rows << "x" << tokenEmbDq.cols << "\n" << std::flush;
-
-    // Use first token's embedding as initial hidden state
+    // Read only the selected F32 embedding row, not the full vocabulary matrix.
+    // Quantized embeddings retain the legacy path until block-aligned decode exists.
     if (inputTokens.empty()) return false;
     uint32_t firstToken = inputTokens[0];
-    if (firstToken >= tokenEmbDq.cols) firstToken = 0;
-    std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
+    if (tokenEmb->type == deep2::TensorType::F32 && tokenEmb->dims.size() == 2 &&
+        tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0) {
+        if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
+        if (hiddenDim > SIZE_MAX / sizeof(float) ||
+            firstToken > SIZE_MAX / (hiddenDim * sizeof(float))) return false;
+        const auto byteOffset = static_cast<uint64_t>(firstToken) * hiddenDim * sizeof(float);
+        if (!rom.readTensorRange(*tokenEmb, byteOffset, hiddenDim * sizeof(float),
+                                 reinterpret_cast<uint8_t*>(hiddenStates.data()))) return false;
+    } else {
+        deep2::DequantizedTensor tokenEmbDq;
+        if (!dequantTensor(*tokenEmb, tokenEmbDq)) return false;
+        if (firstToken >= tokenEmbDq.cols) firstToken = 0;
+        if (tokenEmbDq.data.size() < (static_cast<size_t>(firstToken) + 1) * hiddenDim) return false;
+        std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
+                    hiddenDim * sizeof(float));
+    }
     std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
 
     // Process each token position
