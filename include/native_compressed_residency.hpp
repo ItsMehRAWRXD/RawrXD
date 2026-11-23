@@ -48,6 +48,8 @@ public:
             std::lock_guard<std::mutex> lock(mu_);
             auto it = entries_.find(key);
             if (it != entries_.end()) {
+                if (it->second.data->size() != expected_bytes)
+                    throw std::invalid_argument("block key reused with different decoded size");
                 touch(it);
                 return it->second.data;
             }
@@ -58,6 +60,8 @@ public:
         std::lock_guard<std::mutex> lock(mu_);
         auto existing = entries_.find(key);
         if (existing != entries_.end()) {
+            if (existing->second.data->size() != expected_bytes)
+                throw std::invalid_argument("block key reused with different decoded size");
             touch(existing);
             return existing->second.data;
         }
