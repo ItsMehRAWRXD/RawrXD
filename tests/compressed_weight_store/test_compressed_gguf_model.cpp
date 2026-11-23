@@ -2,7 +2,9 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
