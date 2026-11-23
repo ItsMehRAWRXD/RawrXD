@@ -50,6 +50,12 @@ jobs:
           "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_compressed_gguf_model.cpp -o compressed_gguf_model_lifecycle
           ./compressed_gguf_model_lifecycle
 
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_compressed_model_e2e.cpp -o compressed_model_e2e
+          ./compressed_model_e2e
+
+          "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_compressed_transformer_generation.cpp -o compressed_transformer_generation
+          ./compressed_transformer_generation
+
           "$CXX" "${COMMON[@]}" "$STORE" tests/compressed_weight_store/test_stored_tensor_matvec.cpp -o stored_tensor_matvec
           ./stored_tensor_matvec
 
@@ -72,6 +78,8 @@ jobs:
           $cases = @(
             @{ Name = 'compressed_gguf_file_e2e'; Source = 'tests/compressed_weight_store/test_compressed_gguf_file_e2e.cpp' },
             @{ Name = 'compressed_gguf_model_lifecycle'; Source = 'tests/compressed_weight_store/test_compressed_gguf_model.cpp' },
+            @{ Name = 'compressed_model_e2e'; Source = 'tests/compressed_weight_store/test_compressed_model_e2e.cpp' },
+            @{ Name = 'compressed_transformer_generation'; Source = 'tests/compressed_weight_store/test_compressed_transformer_generation.cpp' },
             @{ Name = 'stored_tensor_matvec'; Source = 'tests/compressed_weight_store/test_stored_tensor_matvec.cpp' },
             @{ Name = 'gguf_compressed_residency'; Source = 'tests/compressed_weight_store/test_gguf_compressed_residency.cpp' }
           )

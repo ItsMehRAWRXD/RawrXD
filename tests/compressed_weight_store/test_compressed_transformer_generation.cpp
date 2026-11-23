@@ -1,0 +1,138 @@
+#include "../../src/deep2/compression/CompressedTransformerRuntime.hpp"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#include <cassert>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+namespace {
+struct OwnedTensor {
+    std::string name;
+    std::vector<std::int64_t> shape;
+    std::vector<std::uint8_t> bytes;
+};
+void appendF16(OwnedTensor& t, float value) {
+    const auto h = rawrxd::compression::floatToHalfRNE(value);
+    t.bytes.push_back(static_cast<std::uint8_t>(h & 0xffu));
+    t.bytes.push_back(static_cast<std::uint8_t>(h >> 8));
+}
+void addVector(std::vector<OwnedTensor>& all, const std::string& name,
+               const std::vector<float>& values) {
+    OwnedTensor t{name, {static_cast<std::int64_t>(values.size())}, {}};
+    for (float v : values) appendF16(t, v);
+    all.emplace_back(std::move(t));
+}
+void addMatrix(std::vector<OwnedTensor>& all, const std::string& name,
+               std::size_t rows, std::size_t cols,
+               const std::vector<float>& values) {
+    assert(values.size() == rows * cols);
+    OwnedTensor t{name, {static_cast<std::int64_t>(cols),
+                         static_cast<std::int64_t>(rows)}, {}};
+    for (float v : values) appendF16(t, v);
+    all.emplace_back(std::move(t));
+}
+std::vector<float> diagonal(std::size_t n, float scale) {
+    std::vector<float> v(n*n, 0.0f);
+    for (std::size_t i=0;i<n;++i) v[i*n+i]=scale;
+    return v;
+}
+std::vector<Deep2::GGUFTensor> descriptors(std::vector<OwnedTensor>& owned) {
+    std::vector<Deep2::GGUFTensor> out;
+    out.reserve(owned.size());
+    for (auto& src : owned) {
+        Deep2::GGUFTensor t;
+        t.name = src.name;
+        t.type = static_cast<Deep2::GGMLType>(1); // GGML_TYPE_F16
+        t.shape = src.shape;
+        t.data = src.bytes.data();
+        t.sizeBytes = src.bytes.size();
+        t.mapped = true;
+        out.emplace_back(std::move(t));
+    }
+    return out;
+}
+} // namespace
+
+int main() {
+    constexpr std::size_t hidden=4, intermediate=8, vocab=8;
+    std::vector<OwnedTensor> owned;
+    owned.reserve(16);
+
+    std::vector<float> embedding(vocab*hidden);
+    for (std::size_t r=0;r<vocab;++r) {
+        embedding[r*hidden+0]=0.10f*float(r+1);
+        embedding[r*hidden+1]=0.05f*float(r%3);
+        embedding[r*hidden+2]=0.025f*float(r%2);
+        embedding[r*hidden+3]=-0.02f*float(r);
+    }
+    addMatrix(owned,"token_embd.weight",vocab,hidden,embedding);
+    addVector(owned,"output_norm.weight",std::vector<float>(hidden,1.0f));
+    std::vector<float> output(vocab*hidden);
+    for(std::size_t r=0;r<vocab;++r)
+        for(std::size_t c=0;c<hidden;++c)
+            output[r*hidden+c]=0.05f*float(int((r*3+c*5)%11)-5);
+    addMatrix(owned,"output.weight",vocab,hidden,output);
+
+    const std::string p="blk.0.";
+    addVector(owned,p+"attn_norm.weight",std::vector<float>(hidden,1.0f));
+    addMatrix(owned,p+"attn_q.weight",hidden,hidden,diagonal(hidden,0.75f));
+    addMatrix(owned,p+"attn_k.weight",hidden,hidden,diagonal(hidden,0.50f));
+    addMatrix(owned,p+"attn_v.weight",hidden,hidden,diagonal(hidden,1.0f));
+    addMatrix(owned,p+"attn_output.weight",hidden,hidden,diagonal(hidden,1.0f));
+    addVector(owned,p+"ffn_norm.weight",std::vector<float>(hidden,1.0f));
+
+    std::vector<float> gate(intermediate*hidden), up(intermediate*hidden);
+    for(std::size_t r=0;r<intermediate;++r)
+        for(std::size_t c=0;c<hidden;++c) {
+            gate[r*hidden+c]=0.04f*float(1+((r+c)%4));
+            up[r*hidden+c]=0.10f*float(1+((2*r+c)%3));
+        }
+    addMatrix(owned,p+"ffn_gate.weight",intermediate,hidden,gate);
+    addMatrix(owned,p+"ffn_up.weight",intermediate,hidden,up);
+    std::vector<float> down(hidden*intermediate,0.0f);
+    for(std::size_t r=0;r<hidden;++r)
+        for(std::size_t c=0;c<intermediate;++c)
+            down[r*intermediate+c]=(c%hidden==r)?0.25f:0.025f;
+    addMatrix(owned,p+"ffn_down.weight",hidden,intermediate,down);
+
+    auto tensors=descriptors(owned);
+    rawrxd::compression::CompressedGGUFModel::Options storeOptions;
+    storeOptions.decoded_cache_bytes=0;
+    storeOptions.block_bytes=64;
+    storeOptions.require_savings=false;
+    rawrxd::compression::CompressedGGUFModel model(storeOptions);
+    std::string error, failed;
+    assert(model.loadMappedTensors(tensors,&error,&failed));
+    assert(model.loaded() && model.tensorCount()==owned.size());
+    assert(model.stats().cached_decoded_bytes==0);
+
+    rawrxd::compression::CompressedTransformerRuntime::Config config;
+    config.hidden=hidden;
+    config.intermediate=intermediate;
+    config.vocabulary=vocab;
+    config.layers=1;
+    config.heads=1;
+    config.head_dim=hidden;
+    config.rms_epsilon=1.0e-5f;
+    config.rope_theta=10000.0f;
+
+    rawrxd::compression::CompressedTransformerRuntime runtime(model,config);
+    const std::vector<int32_t> prompt{1,2};
+    const auto generated=runtime.generate(prompt,6);
+    assert(generated.size()==6);
+    for(auto token:generated) assert(token>=0 && token<static_cast<int32_t>(vocab));
+
+    // Recreate request-local KV state and require deterministic autoregressive
+    // output. All projections still read the compressed store; no full decoded
+    // weights or persistent decoded-block cache are allowed.
+    const auto repeated=runtime.generate(prompt,6);
+    assert(repeated==generated);
+    const auto stats=model.stats();
+    assert(stats.tensors==owned.size());
+    assert(stats.compressed_bytes>0 && stats.raw_bytes>0);
+    assert(stats.cached_decoded_bytes==0);
+    assert(stats.cache_misses>0);
+    return 0;
+}
