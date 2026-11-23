@@ -41,10 +41,29 @@ public:
         if (bytes>capacity_) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         auto old=entries_.find(key);
+        std::size_t oldBytes=0;
         if (old!=entries_.end()) {
             if (old->second.payload==payload) { touch(old); return true; }
             if (old->second.payload.use_count()!=1) return false;
-            resident_-=old->second.bytes;
+            oldBytes=old->second.bytes;
+        }
+
+        // Preflight before mutating the LRU. If pinned entries make the
+        // insertion impossible, reject it without evicting unrelated entries.
+        const std::size_t projected=resident_-oldBytes;
+        if (projected>capacity_-bytes) {
+            const std::size_t required=projected-(capacity_-bytes);
+            std::size_t reclaimable=0;
+            for (auto it=lru_.rbegin();it!=lru_.rend() && reclaimable<required;++it) {
+                if (*it==key) continue;
+                auto candidate=entries_.find(*it);
+                if (candidate!=entries_.end() && candidate->second.payload.use_count()==1)
+                    reclaimable+=candidate->second.bytes;
+            }
+            if (reclaimable<required) return false;
+        }
+        if (old!=entries_.end()) {
+            resident_-=oldBytes;
             lru_.erase(old->second.lru);
             entries_.erase(old);
         }
