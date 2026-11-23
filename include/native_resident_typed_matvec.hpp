@@ -412,7 +412,7 @@ inline std::vector<float> resident_q5_1_row(
 inline std::vector<float> resident_q8_1_row(
     const ResidentCompressedTensor& weights, std::size_t rowIndex,
     std::size_t rows, std::size_t cols, std::size_t stagingBudgetBytes = 64 * 1024) {
-    constexpr std::size_t kValues = 32, kBytes = 40;
+    constexpr std::size_t kValues = 32, kBytes = 36;
     if (!cols || cols % kValues) throw std::invalid_argument("Q8_1 columns must be a nonzero multiple of 32");
     const auto rowBlocks = cols / kValues;
     if (rowBlocks > std::numeric_limits<std::size_t>::max() / kBytes)
