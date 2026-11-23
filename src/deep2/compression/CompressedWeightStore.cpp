@@ -300,7 +300,6 @@ StoreStats CompressedWeightStore::stats()const {
  for(const auto& item:tensors_) {
   const auto& name=item.first;
   const auto& tensor=item.second;
-  add(s.encoded_capacity_bytes,0);
   add(s.metadata_bytes_estimate,sizeof(Tensor));
   add(s.metadata_bytes_estimate,name.capacity()+1);
   add(s.metadata_bytes_estimate,tensor.blocks.capacity()*sizeof(EncodedBlock));
