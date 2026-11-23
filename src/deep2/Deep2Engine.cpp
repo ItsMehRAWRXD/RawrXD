@@ -5989,7 +5989,7 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         error = "standard multi-shard binding has no layer geometry";
         return false;
     }
-    if (!standardMultiShardMappingKeys_.empty())
+    if (standardMultiShardWeightsBound_)
         return true;
 
     const auto findFirst = [&](std::initializer_list<const char*> names) -> const GlobalTensorRef*
@@ -6211,6 +6211,7 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
                      static_cast<unsigned long long>(compressionStats.cached_decoded_bytes),
                      512u * 1024u * 1024u);
     }
+    standardMultiShardWeightsBound_ = true;
     std::fflush(stderr);
     return true;
 }
@@ -6232,6 +6233,7 @@ void Deep2Engine::releaseStandardMultiShardWeights()
         }
     }
     standardMultiShardMappingKeys_.clear();
+    standardMultiShardWeightsBound_ = false;
     for (auto& layer : modelWeights.layers)
         layer = LayerWeights{};
     modelWeights.finalNorm = WeightTensor{};
