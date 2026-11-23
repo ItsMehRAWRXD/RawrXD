@@ -54,7 +54,7 @@ int main() {
             ++tooLargeReads;
             std::copy(tooLarge.begin()+o,tooLarge.begin()+o+n,out); return true;
         },1024));
-    assert(tooLargeReads == (tooLarge.size()+1023)/1024); // scanned in bounded chunks, then rejected by the resident budget
+    assert(tooLargeReads > 0 && tooLargeReads < (tooLarge.size()+1023)/1024); // stop as soon as the encoded budget is exceeded
     assert(cache.Contains("layer.0.weight"));
 
     // With a zero error budget, arbitrary F32 values must not be stored as a
