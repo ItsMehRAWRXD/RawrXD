@@ -665,6 +665,7 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
             GpuWeightView packedF32{};
             const bool gpuCompressedF32 =
                 wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                wt.rows > 0 && wt.rows <= UINT32_MAX &&
                 wt.BuildCompressedF32GpuView(
                     0, static_cast<uint32_t>(wt.rows), packedF32);
             if (wt.data && (gpuPacked || gpuCompressedF32 ||
