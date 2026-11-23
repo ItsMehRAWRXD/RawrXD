@@ -577,6 +577,24 @@ public:
                             n*sizeof(float));
                 continue;
             }
+            // Fixed-width FP16/BF16 chunks support direct range decoding.
+            // Avoid expanding a whole chunk when the kernel needs one row.
+            if (encoded.encoding == Encoding::F16 ||
+                encoded.encoding == Encoding::BF16) {
+                if (encoded.original_bytes % sizeof(float) != 0 ||
+                    encoded.payload.size() != encoded.original_bytes / 2)
+                    throw std::invalid_argument("16-bit F32 chunk size mismatch");
+                const size_t start = copy_first - chunk_first;
+                for (size_t i = 0; i < n; ++i) {
+                    const size_t byteOffset = (start + i) * sizeof(uint16_t);
+                    const uint16_t bits = uint16_t(encoded.payload[byteOffset]) |
+                                          (uint16_t(encoded.payload[byteOffset + 1]) << 8);
+                    destination[copy_first - first + i] =
+                        encoded.encoding == Encoding::F16
+                            ? FromHalf(bits) : FromBFloat16(bits);
+                }
+                continue;
+            }
             scratch.resize(static_cast<size_t>(encoded.original_bytes));
             DecodeInto(encoded,scratch.data(),scratch.size());
             std::memcpy(destination+(copy_first-first),
