@@ -347,6 +347,20 @@ def run(binary):
             for j in range(32):
                 nib=(packed[j]&15) if j<16 else (packed[j-16]>>4)
                 assert abs(scale*(nib-8)-1.0)<=1
+        large5=root/"huge-q5.gguf"
+        subprocess.run([binary,str(huge),str(large5),"1","q5_0"],check=True)
+        q5data,q5start,q5meta,q5desc=parse(large5)
+        assert q5desc["blk.0.attn_q.weight"][:2]==(6,(n,))
+        assert len(q5data)-q5start==(n//32)*22
+        for block in (0,2047,2048,n//32-1):
+            p=q5start+block*22
+            scale=struct.unpack_from("<e",q5data,p)[0]
+            high=struct.unpack_from("<I",q5data,p+2)[0]
+            packed=q5data[p+6:p+22]
+            for j in range(32):
+                low=(packed[j]&15) if j<16 else (packed[j-16]>>4)
+                code=low|(((high>>j)&1)<<4)
+                assert abs(scale*(code-16)-1.0)<=1
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
