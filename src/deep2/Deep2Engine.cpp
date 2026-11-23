@@ -3429,21 +3429,23 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             const bool compressedModeEnabled =
                 compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
             const bool linearProjectionName =
-                name == "output.weight" || name == "lm_head.weight" ||
-                (layerIdx >= 0 &&
-                 (name.find("attn_") != std::string::npos ||
-                  name.find("ffn_") != std::string::npos ||
-                  name.find("q_proj.") != std::string::npos ||
-                  name.find("k_proj.") != std::string::npos ||
-                  name.find("v_proj.") != std::string::npos ||
-                  name.find("o_proj.") != std::string::npos ||
-                  name.find("gate_proj.") != std::string::npos ||
-                  name.find("up_proj.") != std::string::npos ||
-                  name.find("down_proj.") != std::string::npos ||
-                  name.find(".wq.") != std::string::npos ||
-                  name.find(".wk.") != std::string::npos ||
-                  name.find(".wv.") != std::string::npos ||
-                  name.find(".wo.") != std::string::npos));
+                ((name == "output.weight" || name == "lm_head.weight") ||
+                 (layerIdx >= 0 &&
+                  name.find("norm") == std::string::npos &&
+                  name.find("bias") == std::string::npos &&
+                  (name.find("attn_") != std::string::npos ||
+                   name.find("ffn_") != std::string::npos ||
+                   name.find("q_proj.") != std::string::npos ||
+                   name.find("k_proj.") != std::string::npos ||
+                   name.find("v_proj.") != std::string::npos ||
+                   name.find("o_proj.") != std::string::npos ||
+                   name.find("gate_proj.") != std::string::npos ||
+                   name.find("up_proj.") != std::string::npos ||
+                   name.find("down_proj.") != std::string::npos ||
+                   name.find(".wq.") != std::string::npos ||
+                   name.find(".wk.") != std::string::npos ||
+                   name.find(".wv.") != std::string::npos ||
+                   name.find(".wo.") != std::string::npos)));
             const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
             const bool eligibleLinearMatrix =
                 compressedModeEnabled && linearProjectionName &&
