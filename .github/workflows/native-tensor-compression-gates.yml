@@ -1,0 +1,55 @@
+name: Native tensor compression standalone gates
+on:
+  push:
+    branches:
+      - codex/reusable-decoded-weight-tiles-20261123
+  pull_request:
+    paths:
+      - 'src/deep2/NativeTensorCompression.hpp'
+      - 'src/deep2/NativeTensorResidencyCache.hpp'
+      - 'src/deep2/DecodedWeightTileCache.hpp'
+      - 'tests/deep2/native_tensor_compression_test.cpp'
+      - 'tests/deep2/decoded_weight_tile_cache_test.cpp'
+      - 'tools/tensor_codec_benchmark.cpp'
+      - '.github/workflows/native-tensor-compression-gates.yml'
+  workflow_dispatch:
+
+jobs:
+  native-codec:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute native codec regression (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p codec-gates
+          g++ -std=c++17 -O2 -Wall -Wextra -pthread tests/deep2/native_tensor_compression_test.cpp -o codec-gates/native_codec
+          ./codec-gates/native_codec
+          g++ -std=c++17 -O2 -Wall -Wextra -pthread tests/deep2/decoded_weight_tile_cache_test.cpp -o codec-gates/tile_cache
+          ./codec-gates/tile_cache
+          g++ -std=c++17 -O2 -Wall -Wextra tools/tensor_codec_benchmark.cpp -o codec-gates/benchmark
+          python3 -c "import struct; open('codec-gates/nonrepetitive-f32.bin','wb').write(b''.join(struct.pack('<I', 0x3f800000 | ((i*131) & 0x7fffff)) for i in range(8192)))"
+          ./codec-gates/benchmark codec-gates/nonrepetitive-f32.bin
+      - name: Compile and execute native codec regression (Windows MSVC)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 exit /b 1
+          if not exist codec-gates mkdir codec-gates
+          cl /nologo /std:c++17 /EHsc /O2 /I src tests\deep2\native_tensor_compression_test.cpp /Fe:codec-gates\native_codec.exe
+          if errorlevel 1 exit /b 1
+          codec-gates\native_codec.exe
+          if errorlevel 1 exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 /I src tests\deep2\decoded_weight_tile_cache_test.cpp /Fe:codec-gates\tile_cache.exe
+          if errorlevel 1 exit /b 1
+          codec-gates\tile_cache.exe
+          if errorlevel 1 exit /b 1
+          cl /nologo /std:c++17 /EHsc /O2 tools\tensor_codec_benchmark.cpp /Fe:codec-gates\benchmark.exe
+          if errorlevel 1 exit /b 1
