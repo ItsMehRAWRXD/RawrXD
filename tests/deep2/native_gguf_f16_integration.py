@@ -96,6 +96,24 @@ def run(binary):
             assert all(abs(scale*q-values[block*32+j])<=300 for j,q in enumerate(qsamples))
         assert qt["blk.0.attn_k.weight"][0]==6
         assert qb[qs+qt["blk.0.attn_k.weight"][2]:qs+qt["blk.0.attn_k.weight"][2]+32]==quant
+        # Independent GGML Q4_0 block decoding: low nibble j, high nibble j+16.
+        for qsource in (source,target):
+            q4path=root/("f32-q4.gguf" if qsource==source else "f16-q4.gguf")
+            subprocess.run([binary,str(qsource),str(q4path),"10000","q4_0"],check=True)
+            bb,bs,mm,tt=parse(q4path)
+            assert mm==metadata
+            assert tt["blk.0.attn_q.weight"][:2]==(2,(len(values),))
+            off4=tt["blk.0.attn_q.weight"][2]
+            for block in range(len(values)//32):
+                start4=bs+off4+block*18
+                scale=struct.unpack_from("<e",bb,start4)[0]
+                packed=bb[start4+2:start4+18]
+                assert len(packed)==16
+                for j in range(32):
+                    nib=(packed[j] & 15) if j<16 else (packed[j-16]>>4)
+                    assert abs(scale*(nib-8)-values[block*32+j])<=10000
+            qoff4=tt["blk.0.attn_k.weight"][2]
+            assert bb[bs+qoff4:bs+qoff4+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
