@@ -1,0 +1,25 @@
+#version 450
+// ============================================================================
+// f32_matvec_simple.comp -- minimal GPU F32 matvec: ONE invocation per output
+// row, no shared memory, no reduction. Sequential dot product. This isolates
+// correctness from workgroup/reduction bugs.
+// Dispatch: workgroup_size=1, groups=rows. Bindings: 0=F32 weights, 1=x, 2=y,
+// 3=dims.
+// ============================================================================
+layout(local_size_x = 1) in;
+
+layout(set = 0, binding = 0) readonly  buffer Weights { float w[]; };
+layout(set = 0, binding = 1) readonly  buffer InputX  { float x[]; };
+layout(set = 0, binding = 2) writeonly buffer OutputY { float y[]; };
+layout(set = 0, binding = 3) uniform  Dims { uint rows; uint cols; uint bpr; };
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= rows) return;
+    uint base = row * cols;
+    float acc = 0.0;
+    for (uint c = 0; c < cols; ++c) {
+        acc += w[base + c] * x[c];
+    }
+    y[row] = acc;
+}

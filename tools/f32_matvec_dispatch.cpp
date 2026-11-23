@@ -33,7 +33,7 @@ int main(int argc,char**argv){
     if(cols%64){std::fprintf(stderr,"cols must be multiple of 64\n");return 1;}
     auto spv=ReadFile(argv[1]);
     std::vector<float> W((size_t)rows*cols), x(cols);
-    for(size_t i=0;i<W.size();++i)W[i]=(((i*37)%17)-8)*0.01f;
+    for(size_t i=0;i<W.size();++i)W[i]=(((int)(i*37)%17)-8)*0.01f;
     for(size_t i=0;i<cols;++i)x[i]=std::sin((double)i)*0.1f;
     std::vector<float> yref(rows);
     for(uint32_t r=0;r<rows;++r){double a=0;for(uint32_t c=0;c<cols;++c)a+=(double)W[(size_t)r*cols+c]*x[c];yref[r]=(float)a;}
@@ -82,6 +82,11 @@ int main(int argc,char**argv){
     auto t0=std::chrono::steady_clock::now();for(uint32_t s=0;s<steps;++s)disp();auto t1=std::chrono::steady_clock::now();
     double sec=std::chrono::duration<double>(t1-t0).count();double tps=sec>0?steps/sec:0;
     std::vector<float> y(rows);void* p;VK_CHECK(vkMapMemory(g.dev,mY,0,rows*sizeof(float),0,&p));std::memcpy(y.data(),p,rows*sizeof(float));vkUnmapMemory(g.dev,mY);
+    // debug: read back weights + input to verify GPU sees correct data
+    std::vector<float> wback(W.size()), xback(cols);
+    { void* q; VK_CHECK(vkMapMemory(g.dev,mW,0,W.size()*sizeof(float),0,&q)); std::memcpy(wback.data(),q,W.size()*sizeof(float)); vkUnmapMemory(g.dev,mW); }
+    { void* q; VK_CHECK(vkMapMemory(g.dev,mX,0,cols*sizeof(float),0,&q)); std::memcpy(xback.data(),q,cols*sizeof(float)); vkUnmapMemory(g.dev,mX); }
+    std::printf("DEBUG y[0]=%g yref[0]=%g  w[0]=%g (cpu %g)  x[0]=%g (cpu %g)\n", y[0], yref[0], wback[0], W[0], xback[0], x[0]);
     double maxd=0;for(uint32_t r=0;r<rows;++r)maxd=std::max(maxd,(double)std::fabs(y[r]-yref[r]));
     std::printf("GPU F32: steps=%u time_s=%.4f matvec_per_s=%.1f peak_ws=%llu max_diff=%g %s\n",steps,sec,tps,(unsigned long long)PeakWS(),maxd,maxd<1e-4?"PASS":"FAIL");
     return 0;

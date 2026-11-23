@@ -99,15 +99,16 @@ static void CreateBuffer(VkBuffer buf, VkDeviceMemory& mem, size_t size, VkMemor
 }
 
 int main(int argc, char** argv){
-    if(argc<2){ std::fprintf(stderr,"usage: int4_matvec_dispatch <shader.spv> [rows=1152] [cols=1024] [steps=100]\n"); return 2; }
+    if(argc<2){ std::fprintf(stderr,"usage: int4_matvec_dispatch <shader.spv> [rows=1152] [cols=1024] [steps=100] [--f32]\n"); return 2; }
     uint32_t rows=1152, cols=1024, steps=100;
-    if(argc>2) rows=(uint32_t)std::stoul(argv[2]); if(argc>3) cols=(uint32_t)std::stoul(argv[3]); if(argc>4) steps=(uint32_t)std::stoul(argv[4]);
+    bool f32mode=false;
+    for(int i=2;i<argc;++i){ std::string a=argv[i]; if(a=="--f32"){f32mode=true; continue;} if(a.rfind("--",0)==0) continue; if(rows==1152&&cols==1024&&steps==100){ if(std::isdigit((unsigned char)a[0])){ rows=(uint32_t)std::stoul(a); continue; } } if(cols==1024&&steps==100){ if(std::isdigit((unsigned char)a[0])){ cols=(uint32_t)std::stoul(a); continue; } } if(steps==100){ if(std::isdigit((unsigned char)a[0])) steps=(uint32_t)std::stoul(a); } }
     if(cols%64){ std::fprintf(stderr,"cols must be a multiple of 64\n"); return 1; }
     auto spv=ReadFile(argv[1]);
 
     // ---- host: build a synthetic INT4 matrix + reference output ----
     std::vector<float> W((size_t)rows*cols), x(cols);
-    for(size_t i=0;i<W.size();++i) W[i]=(((i*37)%17)-8)*0.01f;
+    for(size_t i=0;i<W.size();++i) W[i]=(((int)(i*37)%17)-8)*0.01f;
     for(size_t i=0;i<cols;++i) x[i]=std::sin((double)i)*0.1f;
     Quant q=Quantize(W,rows,cols);
     std::vector<float> yref(rows,0.0f);
