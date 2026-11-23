@@ -4183,9 +4183,12 @@ bool VulkanCompute::DispatchGemvDevice(
         if (bytes > std::numeric_limits<size_t>::max() - 3u) return false;
         DeviceBuf temporary{};
         const size_t padded = (bytes + 3u) & ~size_t(3u);
+        if (padded > std::numeric_limits<size_t>::max() - transientWeightBytes_)
+            return false;
         if (weightBudgetBytes_ &&
-            (padded > weightBudgetBytes_ ||
-             weightCacheBytes_ + transientWeightBytes_ > weightBudgetBytes_ - padded))
+            (weightCacheBytes_ > weightBudgetBytes_ ||
+             transientWeightBytes_ > weightBudgetBytes_ - weightCacheBytes_ ||
+             padded > weightBudgetBytes_ - weightCacheBytes_ - transientWeightBytes_))
             return false;
         if (!createBuffer(padded,
                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
@@ -4286,9 +4289,12 @@ bool VulkanCompute::DispatchGemvQuant(
             return fail("WEIGHT_SIZE_OVERFLOW");
         DeviceBuf temporary{};
         const size_t padded = (weightBytes + 3u) & ~size_t(3u);
+        if (padded > std::numeric_limits<size_t>::max() - transientWeightBytes_)
+            return fail("WEIGHT_SIZE_OVERFLOW");
         if (weightBudgetBytes_ &&
-            (padded > weightBudgetBytes_ ||
-             weightCacheBytes_ + transientWeightBytes_ > weightBudgetBytes_ - padded))
+            (weightCacheBytes_ > weightBudgetBytes_ ||
+             transientWeightBytes_ > weightBudgetBytes_ - weightCacheBytes_ ||
+             padded > weightBudgetBytes_ - weightCacheBytes_ - transientWeightBytes_))
             return fail("WEIGHT_BUDGET");
         if (!createBuffer(padded,
                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
