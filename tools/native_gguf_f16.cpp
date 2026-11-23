@@ -62,6 +62,7 @@ int main(int argc,char** argv) {
     if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
+    bool ownsTemporary=false;
     try {
         // String inequality is insufficient: aliases and symlinks can name
         // the same inode. Never truncate or replace the input model.
@@ -136,7 +137,12 @@ int main(int argc,char** argv) {
             
             // Large F32 tensors are handled by a bounded two-pass F16 stream.
         }
+        // Never overwrite an unrelated or interrupted conversion's staging file.
+        // Exclusive creation avoids following pre-existing symlinks and races.
+        if(std::filesystem::exists(tmp))
+            throw std::runtime_error("temporary output already exists; remove it manually after inspection");
         std::ofstream out(tmp,std::ios::binary|std::ios::trunc);
+        ownsTemporary=true;
         if(!out)throw std::runtime_error("cannot create output");
         seek(in,0);copy(in,out,kvEnd); // preserve original header and all metadata bytes
         // Preflight each F32 candidate before writing tensor table.
@@ -373,7 +379,7 @@ int main(int argc,char** argv) {
         bool same=false;
         if(std::filesystem::exists(tmp,ec) && !ec)
             same=std::filesystem::equivalent(argv[1],tmp,ec) && !ec;
-        if(!same && !ec)std::remove(tmp.c_str());
+        if(ownsTemporary && !same && !ec)std::remove(tmp.c_str());
         std::cerr<<e.what()<<"\n";return 1;
     }
 }
