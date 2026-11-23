@@ -69,7 +69,11 @@ add_library(rawrxd_compression_core STATIC
 target_include_directories(rawrxd_compression_core PUBLIC
     "${RAWRXD_ROOT}/include")
 target_compile_features(rawrxd_compression_core PUBLIC cxx_std_17)
+option(RAWRXD_SMOKE_REQUIRE_ZLIB "Fail configuration when the zlib provider is missing" OFF)
 find_package(ZLIB QUIET)
+if(RAWRXD_SMOKE_REQUIRE_ZLIB AND NOT ZLIB_FOUND)
+    message(FATAL_ERROR "Compressed residency smoke requires zlib but no provider was detected")
+endif()
 if(ZLIB_FOUND)
     if(TARGET ZLIB::ZLIB)
         target_link_libraries(rawrxd_compression_core PUBLIC ZLIB::ZLIB)
