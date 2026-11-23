@@ -47,12 +47,22 @@ bool CompressedWeightStore::decode(const EncodedBlock& b,std::vector<std::uint8_
  }
  return out.size()==b.raw_size&&crc32(out.data(),out.size())==b.checksum;
 }
-bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error) {
+bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error,std::uint32_t ggml_type) {
  if(name.empty()||(!bytes&&size)){if(error)*error="name and source bytes are required";return false;}
- const auto* src=static_cast<const std::uint8_t*>(bytes);Tensor tensor;tensor.raw_size=size;
+ const auto* src=static_cast<const std::uint8_t*>(bytes);Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
  for(std::size_t off=0;off<size;){const auto take=std::min(block_bytes_,size-off);EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(src+off,take);b.payload=encode(src+off,take,b.stored_raw);tensor.blocks.emplace_back(std::move(b));off+=take;}
  std::lock_guard<std::mutex> lock(mutex_);if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
  counters_.raw_bytes+=size;for(const auto& b:tensor.blocks)counters_.compressed_bytes+=b.payload.size();counters_.blocks+=tensor.blocks.size();++counters_.tensors;tensors_.emplace(std::move(name),std::move(tensor));return true;
+}
+bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error) {
+ if(!values&&count){if(error)*error="source values are required";return false;}
+ if(count>std::numeric_limits<std::size_t>::max()/sizeof(std::uint16_t)){if(error)*error="tensor size overflow";return false;}
+ std::vector<std::uint16_t> converted(count);
+ for(std::size_t i=0;i<count;++i) converted[i]=floatToHalfRNE(values[i]);
+ return addTensor(std::move(name),converted.data(),converted.size()*sizeof(std::uint16_t),error,GGML_TYPE_F16);
+}
+std::uint32_t CompressedWeightStore::tensorType(const std::string& n)const {
+ std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?GGML_TYPE_OPAQUE:i->second.ggml_type;
 }
 bool CompressedWeightStore::contains(const std::string& n)const{std::lock_guard<std::mutex>l(mutex_);return tensors_.find(n)!=tensors_.end();}
 std::size_t CompressedWeightStore::tensorBytes(const std::string& n)const{std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?0:i->second.raw_size;}
