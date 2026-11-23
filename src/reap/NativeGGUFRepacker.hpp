@@ -694,7 +694,11 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         if(convert_f32_to_q8_0 && !t.convert_f16 && !t.convert_q8_0 &&
            (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
-           t.dims[0]%32==0 && q8Bytes<t.bytes) {
+           t.dims[0]%32==0 &&
+           // Q8_K is grouped in 256-element superblocks. A row that
+           // only aligns to 32 must never be decoded as a full Q8_K.
+           (t.type!=15 || t.dims[0]%256==0) &&
+           q8Bytes<t.bytes) {
             t.convert_q8_0=true;
             t.q8_source_f16=(t.type==1);
             t.q8_source_k=(t.type==15);
