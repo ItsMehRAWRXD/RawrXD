@@ -84,6 +84,8 @@ int main() {
     const QByteArray empty;
     CHECK(codec::deflate(empty, &ok).isEmpty() && ok);
     CHECK(codec::inflate(empty, &ok).isEmpty() && ok);
+    // Invalid limits must fail even when the compressed input is empty.
+    CHECK(codec::inflate(empty, &ok, -1).isEmpty() && !ok);
 
     std::puts("QT_ZLIB_CODEC_ROUNDTRIP=PASS");
     return 0;
