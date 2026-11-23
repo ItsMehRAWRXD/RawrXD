@@ -47,6 +47,16 @@ int main() {
     assert(after.cache_misses > 0);
     assert(after.cached_decoded_bytes == 0);
     assert(after.compressed_bytes < after.raw_bytes);
+    // Token-embedding style access: fetch one packed row without decoding
+    // or materializing the complete vocabulary matrix.
+    constexpr std::size_t embeddingToken = 73;
+    const std::size_t embeddingRowBytes = cols * sizeof(std::uint16_t);
+    std::vector<std::uint8_t> embeddingRow(embeddingRowBytes);
+    assert(store.readRange("f16", embeddingToken * embeddingRowBytes,
+                           embeddingRow.data(), embeddingRow.size(), &error));
+    assert(std::equal(embeddingRow.begin(), embeddingRow.end(),
+                      weights.begin() + embeddingToken * embeddingRowBytes));
+
     // A second pass must remain numerically identical with no decoded cache.
     std::fill(output.begin(), output.end(), 0.f);
     StoredTensorMatvec(store, "f16", ResidentWeightType::F16,
