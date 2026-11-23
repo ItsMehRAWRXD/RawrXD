@@ -1,0 +1,81 @@
+#version 450
+// ============================================================================
+// int4_matvec.comp -- fused Vulkan INT4 matrix-vector kernel (production path).
+// ----------------------------------------------------------------------------
+// Consumes PACKED INT4 weights resident in VRAM (0.5 B/weight) with per-block
+// F16 scales. NO full F32 weight allocation exists on the GPU. One workgroup
+// computes ONE output row: its 64 threads cooperatively stream that row's
+// blocks (32 bytes = 64 nibbles each), unpack nibbles in registers, apply the
+// block scale, multiply by the input vector, and sum. The row's partial sums
+// are reduced via shared memory into y[row].
+//
+// Dispatch (host side):
+//   workgroup_size = 64
+//   groups         = rows          (one workgroup per output row)
+//   bindings:
+//     0: packed INT4 weights  (uint,  rows*cols/2 bytes)  -- storage buffer
+//     1: F16 scales           (uint,  num_blocks)          -- storage buffer
+//     2: input vector x       (float, cols)                -- storage buffer
+//     3: output vector y       (float, rows)                -- storage buffer
+//     4: dims (rows, cols, blocks_per_row)                   -- uniform
+//
+// This shader has NOT been run in the build environment that produced the CPU
+// benchmarks (no GPU/Vulkan there). It is production code for the AMD R9700 /
+// RX 7800 XT to build and validate. Numerical parity MUST be gated against the
+// CPU INT4 tiled reference (tools/int4_fused_bench.cpp) before certification.
+// ============================================================================
+layout(local_size_x = 64) in;
+
+layout(set = 0, binding = 0) readonly  buffer Weights { uint   wdata[]; };  // packed nibbles
+layout(set = 0, binding = 1) readonly  buffer Scales  { uint   sdata[]; };  // F16 bits per block
+layout(set = 0, binding = 2) readonly  buffer InputX  { float  x[]; };
+layout(set = 0, binding = 3) writeonly buffer OutputY { float  y[]; };
+layout(set = 0, binding = 4) uniform  Dims { uint rows; uint cols; uint bpr; };
+
+shared float s_partial[64];
+
+float half_to_float(uint h) {
+    uint sign = (h & 0x8000u) << 16;
+    uint exp  = (h >> 10) & 0x1fu;
+    uint man  = h & 0x3ffu;
+    uint res;
+    if (exp == 0) {
+        if (man == 0) { res = sign; }
+        else { exp = 127 - 15 + 1; while ((man & 0x400u) == 0) { man <<= 1; exp--; } man &= 0x3ffu; res = sign | (exp << 23) | (man << 13); }
+    } else if (exp == 31) { res = sign | 0x7f800000u | (man << 13); }
+    else { res = sign | ((exp - 15 + 127) << 23) | (man << 13); }
+    return uintBitsToFloat(res);
+}
+
+int sext4(uint nib) { return (nib & 8u) != 0u ? int(nib) - 16 : int(nib); }
+
+void main() {
+    uint row = gl_WorkGroupID.x;              // one workgroup per output row
+    if (row >= rows) return;
+    uint tid = gl_LocalInvocationID.x;        // 0..63
+
+    float acc = 0.0;
+    // Stream every block of this row; thread tid handles element (tid) within
+    // each 64-value block (byte = e>>1, nibble = (e&1)? hi : lo).
+    for (uint cb = 0; cb < bpr; ++cb) {
+        uint blkIdx = row * bpr + cb;           // global block index
+        float scale = half_to_float(sdata[blkIdx]);
+        uint byteBase = blkIdx * 32u;           // 32 bytes = 64 nibbles
+        uint e = tid;                         // element within the 64-value block
+        uint byteIdx = e >> 1;
+        uint w2 = wdata[(byteBase >> 2) + (byteIdx >> 2)];
+        uint bv = (w2 >> ((byteIdx & 3u) * 8)) & 0xffu;
+        uint nib = (e & 1u) != 0u ? ((bv >> 4) & 0x0fu) : (bv & 0x0fu);
+        float w = float(sext4(nib)) * scale;
+        acc += w * x[cb * 64u + e];
+    }
+    s_partial[tid] = acc;
+    barrier();
+
+    // Reduce the 64 partial sums -> y[row].
+    for (uint stride = 32; stride > 0; stride >>= 1) {
+        if (tid < stride) s_partial[tid] += s_partial[tid + stride];
+        barrier();
+    }
+    if (tid == 0) y[row] = s_partial[0];
+}
