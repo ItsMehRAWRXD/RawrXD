@@ -3233,7 +3233,7 @@ bool VulkanCompute::RunWeightHostBatchQ4K(
     }
     if(!DispatchGemvQ4KBatch(
             weight.data,weight.bytes,in,out,
-            weight.rows,weight.cols,batch)) {
+            weight.rows,weight.cols,batch,weight.key)) {
         fprintf(stderr,"[RWHB_Q4K] FAIL7 DispatchGemvQ4KBatch rows=%u cols=%u batch=%u\n",
             weight.rows,weight.cols,batch);
         return abort();
