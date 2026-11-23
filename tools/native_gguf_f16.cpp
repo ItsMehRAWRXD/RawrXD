@@ -89,8 +89,8 @@ int main(int argc,char** argv) {
             U elements=1;
             for(U d=0;d<nd;++d) {U dim=read(in,8);if(!dim)throw std::runtime_error("zero dimension");t.dims.push_back(dim);elements=mul(elements,dim);}
             t.type=uint32_t(read(in,4));t.offset=read(in,8);
-            t.convert=((t.type==0 || t.type==1) && elements<=std::numeric_limits<size_t>::max()/4);
-            t.bytes=t.type==0?mul(elements,4):(t.type==1?mul(elements,2):0);
+            t.convert=((t.type==0 || t.type==1 || t.type==30) && elements<=std::numeric_limits<size_t>::max()/4);
+            t.bytes=t.type==0?mul(elements,4):((t.type==1 || t.type==30)?mul(elements,2):0);
             ts.push_back(std::move(t));
         }
         U dataStart=align(pos(in),alignment);
@@ -107,8 +107,7 @@ int main(int argc,char** argv) {
             U span=next-t.offset;
             if(t.bytes && t.bytes>span)throw std::runtime_error("tensor exceeds span");
             if(!t.bytes)t.bytes=span; // Unknown quantized type: preserve complete storage span
-            if(t.type==0 && t.bytes!=mul(mul(t.dims[0],t.dims.size()>1?t.dims[1]:1),4) && t.dims.size()<=2)
-                throw std::runtime_error("F32 tensor size mismatch");
+            
             if(t.convert && t.bytes>64u*1024u*1024u) t.convert=false; // bounded allocation
         }
         std::ofstream out(tmp,std::ios::binary|std::ios::trunc);
@@ -120,7 +119,7 @@ int main(int argc,char** argv) {
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type==1 && !q8 && !q4))continue;
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4))continue;
             if(t.bytes>64u*1024u*1024u)continue;
             std::vector<uint8_t> raw(size_t(t.bytes));
             seek(in,add(dataStart,t.offset));
@@ -137,7 +136,8 @@ int main(int argc,char** argv) {
                         if(t.type==0) std::memcpy(&values[j],raw.data()+off+4*j,4);
                         else {
                             const uint16_t h=uint16_t(raw[off+2*j])|(uint16_t(raw[off+2*j+1])<<8);
-                            values[j]=FromHalf(h);
+                            if(t.type==1) values[j]=FromHalf(h);
+                            else {uint32_t bits=uint32_t(h)<<16;std::memcpy(&values[j],&bits,4);}
                         }
                         if(!std::isfinite(values[j])) {valid=false;break;}
                         maxAbs=std::max(maxAbs,std::fabs(values[j]));
