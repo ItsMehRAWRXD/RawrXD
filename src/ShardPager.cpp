@@ -173,11 +173,19 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
                     page->pageNo = tmp.pageNo;
                     page->fileOffset = tmp.fileOffset;
                     page->data = std::move(tmp.data);
-                    m_residentBytes += m_pageSize;
+                    if (m_pageSize > m_capacityBytes) {
+                        delete page;
+                        continue;
+                    }
+                    evictToFit(m_pageSize);
+                    if (m_residentBytes > m_capacityBytes - m_pageSize) {
+                        delete page;
+                        continue;
+                    }
+                    m_residentBytes += page->data.size();
                     m_lru.push_front(page);
                     page->lruIt = m_lru.begin();
                     m_index[key] = page;
-                    evictToFit(0);
                 }
             }
         }
