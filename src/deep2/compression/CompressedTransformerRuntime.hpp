@@ -117,7 +117,10 @@ public:
                 std::distance(logits.begin(), std::max_element(logits.begin(), logits.end())));
             generated.push_back(next);
             if (next == config_.eos_token) break;
-            logits = forwardToken(next, position++, keys, values);
+            // The final emitted token needs no forward pass: avoid an
+            // unnecessary KV insertion and a context-boundary overrun.
+            if (n + 1 < max_new_tokens)
+                logits = forwardToken(next, position++, keys, values);
         }
         return generated;
     }
