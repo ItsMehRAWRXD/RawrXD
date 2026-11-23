@@ -53,6 +53,26 @@ int main() {
     assert(stats.hits==1);
     assert(stats.activeReaders==0);
     assert(stats.bytesDecoded==decoded.size());
+    // Independent source-byte reference and malformed-window checks.
+    // Failed reads must not modify output, acquire a lease, or count as hits.
+    const auto beforeInvalid = cache.GetStats();
+    std::vector<uint8_t> untouched(32, 0x5C);
+    assert(!cache.ReadRange("shard0:weight0", source.size()-8, 32,
+                            untouched.data(), scratch));
+    assert(!cache.ReadRange("shard0:weight0", SIZE_MAX, 1,
+                            untouched.data(), scratch));
+    assert(!cache.ReadRange("shard0:weight0", 0, 1, nullptr, scratch));
+    assert(std::all_of(untouched.begin(), untouched.end(),
+                       [](uint8_t b) { return b == 0x5C; }));
+    const auto afterInvalid = cache.GetStats();
+    assert(afterInvalid.hits == beforeInvalid.hits);
+    assert(afterInvalid.misses == beforeInvalid.misses + 3);
+    assert(afterInvalid.activeReaders == 0);
+    assert(afterInvalid.bytesDecoded == beforeInvalid.bytesDecoded);
+    assert(cache.ReadRange("shard0:weight0", source.size()-untouched.size(),
+                           untouched.size(), untouched.data(), scratch));
+    assert(std::equal(untouched.begin(), untouched.end(),
+                      source.end()-untouched.size()));
     std::vector<uint8_t> patterned(96*1024);
     for(size_t i=0;i<patterned.size();++i)
         patterned[i]=static_cast<uint8_t>((i%251)^((i/251)&7));
