@@ -149,7 +149,8 @@ struct Deep2Engine {
 
     // Vulkan GEMV consuming TensorViews (dequant on CPU, real compute on GPU).
     bool vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
-                    const deep2::TensorView& xView, std::vector<float>& y);
+                    const deep2::TensorView& xView, std::vector<float>& y,
+                    const std::string& weightCacheKey = {});
 
     // ---- Move 10: Full Phi-3 ROM-Path Forward Pass ----
     // Execute complete 32-layer Phi-3 forward pass through virtual ROM path
