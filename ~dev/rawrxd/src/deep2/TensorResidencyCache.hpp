@@ -29,6 +29,7 @@ public:
     };
     struct Stats {
         std::size_t capacityBytes=0, residentBytes=0, peakResidentBytes=0, entries=0, pinnedEntries=0;
+        std::size_t pinnedBytes=0, evictableBytes=0;
         std::uint64_t hits=0, misses=0, evictions=0;
     };
     explicit TensorResidencyCache(std::size_t capacity) : capacity_(capacity) {}
@@ -117,7 +118,16 @@ public:
         Stats s; s.capacityBytes=capacity_; s.residentBytes=resident_;
         s.peakResidentBytes=peakResident_;
         s.entries=entries_.size(); s.hits=hits_; s.misses=misses_; s.evictions=evictions_;
-        for (const auto& kv:entries_) if (kv.second.payload.use_count()>1) ++s.pinnedEntries;
+        // Pinned memory cannot be reclaimed while an inference lease is active.
+        // Distinguish it from cache-owned memory that can be evicted on demand.
+        for (const auto& kv:entries_) {
+            if (kv.second.payload.use_count()>1) {
+                ++s.pinnedEntries;
+                s.pinnedBytes+=kv.second.bytes;
+            } else {
+                s.evictableBytes+=kv.second.bytes;
+            }
+        }
         return s;
     }
 private:
