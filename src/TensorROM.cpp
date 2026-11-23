@@ -114,6 +114,16 @@ uint64_t TensorEntry::byteSize() const {
 TensorROM::TensorROM() = default;
 TensorROM::~TensorROM() = default;
 
+void TensorROM::Reset() {
+    // Pager teardown precedes shard file closure because its reader callback
+    // captures this TensorROM and references the open shard streams.
+    m_pager.reset();
+    m_nameIndex.clear();
+    m_kvStrings.clear();
+    m_shards.clear();
+    m_geom = ModelGeometry{};
+}
+
 bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
     f.read(reinterpret_cast<char*>(&manifest.magic), 4);
     f.read(reinterpret_cast<char*>(&manifest.version), 4);
