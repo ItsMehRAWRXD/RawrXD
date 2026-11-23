@@ -58,12 +58,13 @@ void value(std::istream& f,uint32_t t,U fileSize,int depth=0) {
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|q8_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|q8_0|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     try {
         const bool q8=argc==5 && std::string(argv[4])=="q8_0";
-        if(argc==5 && !q8 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        const bool q4=argc==5 && std::string(argv[4])=="q4_0";
+        if(argc==5 && !q8 && !q4 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         float tolerance=std::stof(argv[3]);if(!std::isfinite(tolerance)||tolerance<0)throw std::runtime_error("invalid tolerance");
         std::ifstream in(argv[1],std::ios::binary|std::ios::ate);
         if(!in)throw std::runtime_error("cannot open input");
@@ -119,16 +120,16 @@ int main(int argc,char** argv) {
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type==1 && !q8))continue;
+            auto& t=ts[i];if(!t.convert || (t.type==1 && !q8 && !q4))continue;
             if(t.bytes>64u*1024u*1024u)continue;
             std::vector<uint8_t> raw(size_t(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
             Result r;
-            if(!q8 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
-            if(q8 && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
+            if(!q8 && !q4 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
+            if((q8 || q4) && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
                 std::vector<uint8_t> blocks;
-                blocks.reserve(raw.size()/(t.type==0?128:64)*34);
+                blocks.reserve(raw.size()/(t.type==0?128:64)*(q4?18:34));
                 bool valid=true;
                 for(size_t off=0;off<raw.size();off+=(t.type==0?128:64)) {
                     float values[32];float maxAbs=0;
@@ -142,25 +143,46 @@ int main(int argc,char** argv) {
                         maxAbs=std::max(maxAbs,std::fabs(values[j]));
                     }
                     if(!valid)break;
-                    float scale=maxAbs/127.0f;
-                    uint16_t h=ToHalf(scale);
-                    float actual=FromHalf(h);
-                    if(maxAbs && (!std::isfinite(actual) || actual==0)) {valid=false;break;}
-                    if(maxAbs && maxAbs/actual>127.5f) {valid=false;break;}
-                    blocks.push_back(uint8_t(h));blocks.push_back(uint8_t(h>>8));
-                    for(float f:values) {
-                        float qf=actual?std::round(f/actual):0.0f;
-                        qf=std::max(-128.0f,std::min(127.0f,qf));
-                        int qi=int(qf);
-                        if(std::fabs(actual*qi-f)>tolerance) {valid=false;break;}
-                        blocks.push_back(uint8_t(int8_t(qi)));
+                    if(q4) {
+                        // GGML Q4_0: 32 weights, FP16 scale, 16 packed signed nibbles.
+                        // Low nibble holds index j, high nibble index j+16.
+                        float scale=maxAbs/7.0f;
+                        uint16_t h=ToHalf(scale);
+                        float actual=FromHalf(h);
+                        if(maxAbs && (!std::isfinite(actual) || actual==0)) {valid=false;break;}
+                        uint8_t packed[16]{};
+                        for(int j=0;j<32;++j) {
+                            float qf=actual?std::round(values[j]/actual):0.0f;
+                            qf=std::max(-8.0f,std::min(7.0f,qf));
+                            int qi=int(qf);
+                            if(std::fabs(actual*qi-values[j])>tolerance) {valid=false;break;}
+                            if(j<16) packed[j]=uint8_t(qi+8);
+                            else packed[j-16]|=uint8_t((qi+8)<<4);
+                        }
+                        if(!valid)break;
+                        blocks.push_back(uint8_t(h));blocks.push_back(uint8_t(h>>8));
+                        blocks.insert(blocks.end(),packed,packed+16);
+                    } else {
+                        float scale=maxAbs/127.0f;
+                        uint16_t h=ToHalf(scale);
+                        float actual=FromHalf(h);
+                        if(maxAbs && (!std::isfinite(actual) || actual==0)) {valid=false;break;}
+                        if(maxAbs && maxAbs/actual>127.5f) {valid=false;break;}
+                        blocks.push_back(uint8_t(h));blocks.push_back(uint8_t(h>>8));
+                        for(float f:values) {
+                            float qf=actual?std::round(f/actual):0.0f;
+                            qf=std::max(-128.0f,std::min(127.0f,qf));
+                            int qi=int(qf);
+                            if(std::fabs(actual*qi-f)>tolerance) {valid=false;break;}
+                            blocks.push_back(uint8_t(int8_t(qi)));
+                        }
                     }
                     if(!valid)break;
                 }
                 if(valid && blocks.size()<raw.size()) {
-                    converted[i]=std::move(blocks);outputTypes[i]=8;++changed;
+                    converted[i]=std::move(blocks);outputTypes[i]=q4?2:8;++changed;
                 }
-            } else if(!q8 && r.encoding==Encoding::F16) {
+            } else if(!q8 && !q4 && r.encoding==Encoding::F16) {
                 converted[i]=std::move(r.payload);outputTypes[i]=1;++changed;
             }
         }
