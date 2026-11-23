@@ -169,6 +169,10 @@ struct BatchAccounting {
     uint64_t device_batches_opened = 0; // real Gpu().BeginQuantDotBatch() calls
     bool batch_active = false;
     size_t queued = 0;                  // dots still pending in the open batch
+    // Process-wide aggregate view. The fields above intentionally remain
+    // executor-local because the logical queue is thread-local.
+    uint64_t active_batches = 0;        // open logical batches across threads
+    uint64_t pending_queued = 0;        // queued dots across all open batches
 };
 BatchAccounting BatchAccountingSnapshot();
 

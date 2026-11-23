@@ -162,6 +162,8 @@ struct BatchStats {
     uint64_t device_batches_opened = 0;   // real Gpu().BeginQuantDotBatch() calls
 };
 BatchStats g_batch_stats;
+uint64_t g_active_batch_count = 0;
+uint64_t g_pending_queued_count = 0;
 
 // Implementation of the public BeginBatch: opens a logical batch for this
 // executor thread. Device ownership is acquired only while EndBatch submits;
@@ -183,6 +185,7 @@ bool BeginBatchImpl()
     g_batch_active = true;
     g_queued.clear();
     ++g_batch_stats.batches_opened;
+    ++g_active_batch_count;
     return true;
 }
 
@@ -235,6 +238,12 @@ bool EndBatchImpl()
             return std::getenv("RR_GPU_CHECK") != nullptr;
         }
         g_batch_active = false;
+        if (g_active_batch_count > 0) --g_active_batch_count;
+        const size_t queued_count = g_queued.size();
+        if (queued_count <= g_pending_queued_count)
+            g_pending_queued_count -= queued_count;
+        else
+            g_pending_queued_count = 0;
         qs.swap(g_queued);
     }
     // Device work is serialized by g_gpu_mutex alone: producers never block on
@@ -611,6 +620,8 @@ BatchAccounting BatchAccountingSnapshot()
     a.device_batches_opened = g_batch_stats.device_batches_opened;
     a.batch_active = g_batch_active;
     a.queued = g_queued.size();
+    a.active_batches = g_active_batch_count;
+    a.pending_queued = g_pending_queued_count;
     return a;
 }
 
@@ -804,6 +815,7 @@ bool DotBlocked(int kind,
             qd.cpu = cpu;
             g_queued.push_back(std::move(qd));
             ++g_batch_stats.accepted;
+            ++g_pending_queued_count;
             queued = true;
         }
     }

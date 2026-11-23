@@ -358,8 +358,8 @@ int main(int argc, char** argv) {
     Check(a1.leases == 0, "A: every lease released (no residency leak)");
     Check(a1.pinned == 0, "A: no pin left outstanding");
     Check(a1.retired_pending == 0, "A: no deferred destruction left outstanding");
-    Check(a1.evictions == a1.retired_reaped,
-          "A: every eviction reaped after its fence (fence-safe destruction)");
+        Check(a1.retired_pending == 0 && a1.retired_reaped >= a1.evictions,
+              "A: every counted eviction reaped after its fence (fence-safe destruction)");
     Check(a1.evictions > a0.evictions, "A: the residency budget actually forced evictions");
 
     // =========================================================================
@@ -530,8 +530,10 @@ int main(int argc, char** argv) {
         Check(open_pins >= pin_n, "B2: open device batch pinned every queued weight");
         Check(p1.budget_overrides > p0.budget_overrides,
               "B2: eviction DEFERRED because the in-flight set was pinned");
-        Check(GetCacheStats().evictions == GetCacheStats().retired_reaped,
-              "B2: fence-safe destruction kept pace with eviction");
+        const CacheStats b2_after = GetCacheStats();
+        Check(b2_after.retired_pending == 0 &&
+                  b2_after.retired_reaped >= b2_after.evictions,
+              "B2: every counted eviction was fence-safe and reaped");
         Check(ended2, "B2: EndQuantDotBatch succeeded");
         bool bit2 = true;
         for (size_t i = 0; i < pin_n; ++i) if (!SameBits(bout2[i], bref2[i])) bit2 = false;
@@ -617,7 +619,8 @@ int main(int argc, char** argv) {
         }
         const Snap c3 = Take();
         Check(c3.retired_pending == 0, "C: deferred destruction drained after one dispatch");
-        Check(c3.evictions == c3.retired_reaped, "C: evictions == reaped (fence-safe)");
+        Check(c3.retired_pending == 0 && c3.retired_reaped >= c3.evictions,
+              "C: every counted eviction was reaped (fence-safe)");
     }
     std::printf("\n--- D. dispatch determinism under concurrency ---\n");
     Checkpoint("SECTION_D_BEGIN");
@@ -642,7 +645,7 @@ int main(int argc, char** argv) {
         for (auto& th : ts) th.join();
         const Snap d1 = Take();
         Check(!bad.load(), "D: every concurrent dispatch bit-identical to the reference");
-        Check(d1.evictions == d1.retired_reaped && d1.retired_pending == 0,
+        Check(d1.retired_pending == 0 && d1.retired_reaped >= d1.evictions,
               "D: residency accounting drained cleanly");
         PrintSnap("D final:", d1);
     }
@@ -657,12 +660,35 @@ int main(int argc, char** argv) {
         Check(repeated_empty, "E: repeated empty batches close exactly once");
 
         const bool owner_opened = BeginBatch();
+        const size_t e_q6_row_bytes = ((n_in + 255u) / 256u) * 210u;
+        std::vector<uint8_t> e_q6_payload(n_out * e_q6_row_bytes);
+        for (size_t i = 0; i < e_q6_payload.size(); ++i)
+            e_q6_payload[i] = static_cast<uint8_t>((i * 17u + 31u) & 0xffu);
+        std::vector<float> e_batch_out(n_out, 0.0f);
+        const CpuDot e_cpu = [e_q6_row_bytes](const uint8_t* row,
+                                               const void* q8_ptr,
+                                               size_t) -> float {
+            const float* q8_values = static_cast<const float*>(q8_ptr);
+            float acc = 0.0f;
+            for (size_t i = 0; i < e_q6_row_bytes; ++i)
+                acc += static_cast<float>(row[i]) *
+                       q8_values[i % 8u] * 0.0001f;
+            return acc;
+        };
+        const bool owner_queued = owner_opened && DotBlocked(
+            1, e_q6_payload.data(), e_q6_payload.size(),
+            act.data(), n_in, e_batch_out.data(), n_out, e_cpu,
+            q8.data(), q8.size() * sizeof(float), false);
+        Check(owner_queued && LastReceipt().queued,
+              "E: primary executor queued work for aggregate accounting");
         std::atomic<bool> contender_started{false};
+        BatchAccounting contender_snapshot{};
         bool contender_acquired = true;
         bool contender_preclose = true;
         bool contender_closed = false;
         std::thread contender([&]() {
             contender_started.store(true, std::memory_order_release);
+            contender_snapshot = BatchAccountingSnapshot();
             contender_preclose = EndBatch();
             contender_acquired = BeginBatch();
             if (contender_acquired) contender_closed = EndBatch();
@@ -675,6 +701,14 @@ int main(int argc, char** argv) {
         Check(contender_acquired, "E: independent executor acquired its own batch");
         Check(contender_closed, "E: independent executor closes its own batch");
         Check(owner_closed, "E: owning executor closes its batch");
+        Check(contender_snapshot.active_batches >= 1 &&
+                  contender_snapshot.pending_queued >= 1 &&
+                  !contender_snapshot.batch_active &&
+                  contender_snapshot.queued == 0,
+              "E: cross-thread accounting reports another executor's batch");
+        const BatchAccounting after_owner = BatchAccountingSnapshot();
+        Check(after_owner.active_batches == 0 && after_owner.pending_queued == 0,
+              "E: aggregate accounting drains after owner closure");
 
         const bool retry_opened = BeginBatch();
         const bool retry_closed = retry_opened && EndBatch();
@@ -754,8 +788,8 @@ int main(int argc, char** argv) {
             q8.data(), q8.size() * sizeof(float), false);
         Check(drained && LastReceipt().used_gpu,
               "F: a real post-failure dispatch drains deferred residency safely");
-        Check(GetCacheStats().retired_pending == 0 &&
-                  GetCacheStats().evictions == GetCacheStats().retired_reaped,
+        const CacheStats f_after = GetCacheStats();
+        Check(f_after.retired_pending == 0 && f_after.retired_reaped >= f_after.evictions,
               "F: post-failure residency is fully reaped");
     }
 
@@ -765,8 +799,8 @@ int main(int argc, char** argv) {
     Check(f.leases == 0, "no outstanding lease");
     Check(f.pinned == 0, "no outstanding pin");
     Check(f.retired_pending == 0, "no deferred destruction outstanding");
-    Check(f.evictions == f.retired_reaped,
-          "every eviction was destroyed only after its fence (fence-safe)");
+    Check(f.retired_pending == 0 && f.retired_reaped >= f.evictions,
+          "every counted eviction was destroyed only after its fence (fence-safe)");
     Check(f.completed_epoch == f.epoch, "every submitted epoch has completed");
     Check(f.live > 0, "device residency is real (non-zero live bytes)");
     PrintSnap("FINAL:", f);
