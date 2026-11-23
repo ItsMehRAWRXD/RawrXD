@@ -140,6 +140,30 @@ inline bool IsQualitySensitiveTensor(const std::string& name) {
 // finite nonzero F16 range; the conversion is intentionally lossy.
 // Probe a complete F64 tensor for exact F16 representability before
 // selecting the smaller format. Uses fixed memory and checks signed zero.
+// Verify that a whole F32 tensor survives narrowing to F16 bit-for-bit
+// (including the sign of zero) before preferring it to lossy Q4_0.
+inline bool IsExactF32ToF16(std::ifstream& in,uint64_t from,uint64_t bytes) {
+    if(bytes%4 || from>static_cast<uint64_t>(
+       std::numeric_limits<std::streamoff>::max()))return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char buffer[8192];
+    while(bytes) {
+        const auto n=static_cast<std::streamsize>(
+            std::min<uint64_t>(bytes,sizeof(buffer)));
+        if(!in.read(reinterpret_cast<char*>(buffer),n))return false;
+        for(std::streamsize i=0;i<n;i+=4) {
+            uint32_t bits=0;
+            for(unsigned j=0;j<4;++j)bits|=uint32_t(buffer[i+j])<<(8*j);
+            float value=0;std::memcpy(&value,&bits,4);
+            if(!std::isfinite(value))return false;
+            const uint16_t half=Float32BitsToFloat16(bits);
+            if(Float16ToFloat32Bits(half)!=bits)return false;
+        }
+        bytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
 inline bool IsExactF64ToF16(std::ifstream& in,uint64_t from,uint64_t bytes) {
     if(bytes%8 || from>static_cast<uint64_t>(
        std::numeric_limits<std::streamoff>::max()))return false;
@@ -1309,6 +1333,22 @@ inline RepackError RepackGGUF(const std::string& input,
                 t.q5_source_q5_1=true;
                 t.type=6;
                 t.bytes=compact;
+            }
+        }
+    }
+    // Prefer exact F16 narrowing over lossy Q4_0 when a F32 matrix
+    // consists entirely of values exactly representable in F16.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_q4_0 || t.q4_source_type!=0)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)
+                return RepackError::Overflow;
+            if(IsExactF32ToF16(in,dataStart+t.old_offset,t.source_bytes)) {
+                t.convert_q4_0=false;
+                t.q4_source_type=0;
+                t.convert_f16=true;
+                t.type=1;
+                t.bytes=t.source_bytes/2;
             }
         }
     }
