@@ -12,6 +12,7 @@
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
 #include "deep2/LossyQuant.hpp"
+#include "deep2/Int4WeightCache.hpp"
 
 namespace lossy = rawrxd::lossy;
 
@@ -435,7 +436,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
 // verifies against a CPU INT4 reference (bit-exact) -- proving the GPU kernel
 // executes correctly inside Deep2, not just in a standalone harness.
 bool Deep2Engine::vulkanInt4Gemv(const float* W, const float* x, float* y,
-                                       uint64_t rows, uint64_t cols) {
+                                       uint64_t rows, uint64_t cols, const std::string& name) {
     if (!vulkanReady || !vulkan || !W || !x || !y) return false;
     if (rows == 0 || cols == 0 || (cols % 64) != 0) {
         fprintf(stderr, "[VULKAN_INT4] cols must be a positive multiple of 64\n");
@@ -445,10 +446,19 @@ bool Deep2Engine::vulkanInt4Gemv(const float* W, const float* x, float* y,
     if (!gpu) return false;
     const uint32_t bpr = static_cast<uint32_t>(cols / 64);
 
-    // Quantize the F32 weights to packed INT4 (per-64-block F16 scales).
-    lossy::BlockCfg cfg; cfg.bits = lossy::QBits::Int4; cfg.block = 64;
-    lossy::QuantTensor q;
-    if (!lossy::Quantize(W, static_cast<size_t>(rows * cols), cfg, q)) return false;
+    // Quantize-once: if `name` is set, use the cache (build on first call, reuse
+    // after). Otherwise quantize per call (backward-compatible path).
+    std::shared_ptr<const lossy::QuantTensor> qptr;
+    if (!name.empty()) {
+        qptr = int4Cache_.getOrBuild(name, W, static_cast<size_t>(rows), static_cast<size_t>(cols));
+        if (!qptr) return false;
+    } else {
+        lossy::BlockCfg cfg; cfg.bits = lossy::QBits::Int4; cfg.block = 64;
+        auto q = std::make_shared<lossy::QuantTensor>();
+        if (!lossy::Quantize(W, static_cast<size_t>(rows * cols), cfg, *q)) return false;
+        qptr = q;
+    }
+    const lossy::QuantTensor& q = *qptr;
 
     // CPU INT4 reference (independent of the GPU path).
     const auto cpuRef = lossy::Dequantize(q);

@@ -9,6 +9,7 @@
 #include "MasmCoreKernels.hpp"
 #include "deep2/NativeTensorResidencyCache.hpp"
 #include "deep2/NativeTensorByteResidencyCache.hpp"
+#include "deep2/Int4WeightCache.hpp"
 
 #include <vector>
 #include <string>
@@ -37,6 +38,9 @@ struct Deep2Engine {
     bool vulkanReady = false;
     // Stage 6B: lazily-initialized INT4 compute program (one per device).
     std::unique_ptr<deep2::VulkanInt4Program> int4Program_;
+    // Stage 6D: quantize-once INT4 weight cache (packed INT4 + scales reused
+    // across tokens/requests; bounded LRU residency).
+    rawrxd::avwm::Int4WeightCache int4Cache_;
 
     // ---- Compressed weight residency (Stage 3) ----
     // Compressed F32 residency (lossless F32->F16/BF16 when within tolerance)
@@ -120,12 +124,13 @@ struct Deep2Engine {
     bool gemvFloat(const float* W, const float* x, float* y,
                    uint64_t rows, uint64_t cols);
 
-    // Stage 6B: fused INT4 GPU matvec. Quantizes W to packed INT4 (per-64-block
-    // F16 scales), uploads weights+scales+x to GPU buffers, dispatches the
-    // VulkanInt4Program, reads back y, and verifies against a CPU INT4 reference.
+    // Stage 6B/6D: fused INT4 GPU matvec. Quantizes W to packed INT4 (per-64-block
+    // F16 scales) and dispatches the VulkanInt4Program. When `name` is non-empty,
+    // the packed INT4 is cached (quantize-once) and reused across calls. Uploads
+    // weights+scales+x to GPU, reads back, and verifies against a CPU INT4 ref.
     // Returns false on any failure (non-F32, unsupported shape, no Vulkan).
     bool vulkanInt4Gemv(const float* W, const float* x, float* y,
-                        uint64_t rows, uint64_t cols);
+                        uint64_t rows, uint64_t cols, const std::string& name = {});
 
     // Vulkan GEMV consuming TensorViews (dequant on CPU, real compute on GPU).
     bool vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
