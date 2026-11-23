@@ -391,7 +391,7 @@ bool TensorROM::readShardRange(size_t shardIndex, uint64_t fileOffset,
     const ShardManifest& m = m_shards[shardIndex];
     if (m.dataOffset > UINT64_MAX - m.dataSize) return false;
     const uint64_t end = m.dataOffset + m.dataSize;
-    if (fileOffset < m.dataOffset || fileOffset >= end) return false;
+    // File pages are aligned to the file, not the GGUF data section. The first\n    // payload page may begin in the header, so permit offsets before dataOffset.\n    if (fileOffset >= end) return false;
     const uint64_t available = end - fileOffset;
     if (size > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max()) ||
         fileOffset > static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
