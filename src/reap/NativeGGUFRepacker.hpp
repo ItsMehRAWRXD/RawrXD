@@ -1090,12 +1090,16 @@ inline RepackError RepackGGUF(const std::string& input,
         if(t.old_offset%alignment||t.old_offset>payload||
            t.source_bytes>payload-t.old_offset)return RepackError::Format;
     }
-    // Quality-sensitive Q4_1 tensors are eligible only if EVERY block is
-    // provably reconstruction-exact in Q4_0. This second pass runs after
-    // directory parsing so dataStart and original offsets are trustworthy.
+    // Quality-sensitive Q4_1 tensors and non-matrix vectors can
+    // shrink without requantization when EVERY Q4_1 block has an
+    // affine offset of exactly -8*d. Ordinary matrices are already
+    // handled by the general Q4_0 conversion planner above.
+    // Inspect original payloads after directory parsing, so both
+    // row geometry and absolute tensor offsets are validated.
     if(auto_compress) {
         for(auto& t:tensors) {
-            if(t.type!=3 || !IsQualitySensitiveTensor(t.name) ||
+            const bool matrix=t.dims.size()>=2 && t.dims[1]>1;
+            if(t.type!=3 || !(IsQualitySensitiveTensor(t.name) || !matrix) ||
                t.convert_q4_0 || t.dims[0]%32)continue;
             uint64_t compact=0;
             uint64_t count=1;
