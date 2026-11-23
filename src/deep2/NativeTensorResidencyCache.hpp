@@ -70,8 +70,8 @@ public:
                 existing->second.lastUse = ++tick_;
                 return true;
             }
-            // A failed first-touch probe is memoized; never rescan the same
-            // raw-only tensor on each subsequent inference request.
+            // Deterministic no-win/budget rejection is memoized; transient source
+            // and runtime failures remain retryable.
             if (rawFallback_.find(key) != rawFallback_.end()) return false;
             // Bound the candidate itself to the configured budget. Once its
             // exact encoded size is known, insertion evicts least-recently-used
