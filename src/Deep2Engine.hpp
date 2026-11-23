@@ -83,6 +83,10 @@ struct Deep2Engine {
     bool readDequantizedTensorTile(const deep2::TensorEntry& entry,
                                    uint64_t firstElement, uint64_t elementCount,
                                    float* destination);
+    bool readDequantizedTensorTile(const deep2::TensorEntry& entry,
+                                   uint64_t firstElement, uint64_t elementCount,
+                                   float* destination,
+                                   std::vector<uint8_t>& encodedScratch);
     // CPU GEMV that decompresses bounded row tiles instead of materializing the
     // full F32 weight matrix. Non-F32 GGUF types retain the established path.
     bool gemvTensorROM(const deep2::TensorEntry& entry, const float* input, float* output,
