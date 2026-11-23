@@ -19,8 +19,8 @@ public:
     struct Stats {
         size_t residentBytes = 0;
         size_t budgetBytes = 0;
-        // Cached bytes only: external leases can outlive eviction.
-        size_t leasedBytes = 0;
+        // Cached entries held by external leases; excludes evicted leases.
+        size_t cachedLeasedBytes = 0;
         uint64_t hits = 0, misses = 0, evictions = 0;
     };
     explicit DecodedWeightTileCache(TensorResidencyCache& source, size_t budgetBytes)
