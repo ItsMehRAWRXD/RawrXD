@@ -1,6 +1,7 @@
 // Portable C++ stored-block gzip fallback. This is framing/copying, not
 // entropy compression; it emits valid multi-block RFC 1952 streams.
 #include "gzip_crc32.h"
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>

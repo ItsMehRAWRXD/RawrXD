@@ -584,7 +584,7 @@ if(MSVC)
             src/gzip_crc32.cpp
             src/gzip_masm_store.cpp
         )
-        target_include_directories(bench_deflate_brutal PRIVATE tests)
+        target_include_directories(bench_deflate_brutal PRIVATE tests include)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
@@ -595,7 +595,7 @@ if(MSVC)
             src/gzip_crc32.cpp
             src/gzip_masm_store.cpp
         )
-        target_include_directories(test_deflate_brutal_gzip PRIVATE tests)
+        target_include_directories(test_deflate_brutal_gzip PRIVATE tests include)
         set_target_properties(test_deflate_brutal_gzip PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
@@ -618,7 +618,7 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
             src/gzip_crc32.cpp
             src/gzip_masm_store.cpp
         )
-        target_include_directories(bench_deflate_brutal_arm64 PRIVATE tests)
+        target_include_directories(bench_deflate_brutal_arm64 PRIVATE tests include)
         add_executable(test_deflate_brutal_gzip_arm64
             tests/test_deflate_brutal_gzip.cpp
             kernels/deflate_brutal_neon.S
@@ -626,7 +626,7 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
             src/gzip_masm_store.cpp
         )
         target_compile_definitions(test_deflate_brutal_gzip_arm64 PRIVATE RAWRXD_BRUTAL_NEON=1)
-        target_include_directories(test_deflate_brutal_gzip_arm64 PRIVATE tests)
+        target_include_directories(test_deflate_brutal_gzip_arm64 PRIVATE tests include)
         set_target_properties(bench_deflate_brutal_arm64 PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 endif()
