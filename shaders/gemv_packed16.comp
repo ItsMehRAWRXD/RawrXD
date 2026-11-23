@@ -9,7 +9,7 @@ layout(set = 0, binding = 2, std430) writeonly buffer OutputValues { float value
 layout(push_constant) uniform Parameters {
     uint rows;
     uint cols;
-    uint weightEncoding; // 0=F32, 1=IEEE F16, 2=BF16, 3=GGUF Q8_0
+    uint weightEncoding; // 0=F32, 1=F16, 2=BF16, 3=Q8_0, 4=Q4_0, 5=Q4_1, 6=Q5_0, 7=Q5_1, 8=Q8_1
 } params;
 
 uint loadByte(uint byteOffset) {
@@ -21,15 +21,45 @@ float loadWeight(uint index) {
     if (params.weightEncoding == 0u) {
         return uintBitsToFloat(weights.words[index]);
     }
-    if (params.weightEncoding == 3u) {
-        // GGUF Q8_0: 32 signed int8 values plus one IEEE F16 scale (34 bytes).
-        // Rows are block-aligned by GGUF's quantized tensor geometry.
-        uint blockOffset = (index >> 5u) * 34u;
-        uint scaleBits = loadByte(blockOffset) | (loadByte(blockOffset + 1u) << 8u);
-        float scale = unpackHalf2x16(scaleBits).x;
-        uint qByte = loadByte(blockOffset + 2u + (index & 31u));
-        int q = (qByte >= 128u) ? int(qByte) - 256 : int(qByte);
-        return scale * float(q);
+    uint lane = index & 31u;
+    if (params.weightEncoding >= 3u) {
+        // Fixed GGML blocks, each containing 32 values. All byte offsets are
+        // derived from canonical block strides; no host-side F32 expansion.
+        uint blockBytes = params.weightEncoding == 3u ? 34u :
+                          params.weightEncoding == 4u ? 18u :
+                          params.weightEncoding == 5u ? 20u :
+                          params.weightEncoding == 6u ? 22u :
+                          params.weightEncoding == 7u ? 24u : 36u;
+        uint blockOffset = (index >> 5u) * blockBytes;
+        uint dBits = loadByte(blockOffset) | (loadByte(blockOffset + 1u) << 8u);
+        float d = unpackHalf2x16(dBits).x;
+        if (params.weightEncoding == 3u || params.weightEncoding == 8u) {
+            uint qOffset = blockOffset + (params.weightEncoding == 3u ? 2u : 4u);
+            uint qByte = loadByte(qOffset + lane);
+            int q = (qByte >= 128u) ? int(qByte) - 256 : int(qByte);
+            return d * float(q);
+        }
+        if (params.weightEncoding == 4u || params.weightEncoding == 5u) {
+            uint mBits = params.weightEncoding == 5u
+                ? (loadByte(blockOffset + 2u) | (loadByte(blockOffset + 3u) << 8u)) : 0u;
+            float m = params.weightEncoding == 5u ? unpackHalf2x16(mBits).x : 0.0;
+            uint qOffset = blockOffset + (params.weightEncoding == 4u ? 2u : 4u);
+            uint packed = loadByte(qOffset + (lane & 15u));
+            int q = lane < 16u ? int(packed & 0x0fu) : int(packed >> 4u);
+            return params.weightEncoding == 4u ? d * float(q - 8) : d * float(q) + m;
+        }
+        // Q5_0/Q5_1: four high-bit bytes precede the 16 packed low-nibble bytes.
+        uint mBits = params.weightEncoding == 7u
+            ? (loadByte(blockOffset + 2u) | (loadByte(blockOffset + 3u) << 8u)) : 0u;
+        float m = params.weightEncoding == 7u ? unpackHalf2x16(mBits).x : 0.0;
+        uint qhOffset = blockOffset + (params.weightEncoding == 6u ? 2u : 4u);
+        uint qsOffset = qhOffset + 4u;
+        uint packed = loadByte(qsOffset + (lane & 15u));
+        int low = lane < 16u ? int(packed & 0x0fu) : int(packed >> 4u);
+        uint highBit = lane < 16u ? lane : lane - 4u;
+        uint high = (loadByte(qhOffset + (highBit >> 3u)) >> (highBit & 7u)) & 1u;
+        int q = low | (int(high) << 4);
+        return params.weightEncoding == 6u ? d * float(q - 16) : d * float(q) + m;
     }
     uint packed = weights.words[index >> 1u];
     uint halfBits = ((index & 1u) == 0u) ? (packed & 0xffffu) : (packed >> 16u);
