@@ -94,4 +94,37 @@ private:
     VkQueue m_queue = VK_NULL_HANDLE;
 };
 
+// Fused INT4 matrix-vector kernel (Stage 6). Binds: 0=packed INT4 weights,
+// 1=F16 scales, 2=input x, 3=output y, 4=dims (rows, cols, blocks_per_row).
+// Consumes packed INT4 weights resident in VRAM (0.5 B/weight) -- no full F32
+// weight allocation on the device.
+class VulkanInt4Program {
+public:
+    VulkanInt4Program();
+    ~VulkanInt4Program();
+    VulkanInt4Program(const VulkanInt4Program&) = delete;
+    VulkanInt4Program& operator=(const VulkanInt4Program&) = delete;
+
+    bool init(VkDevice device, const std::string& spvPath);
+    void destroy(VkDevice device);
+
+    // Dispatch one matvec: W = packed INT4 (rows*cols/2 bytes), scales = F16
+    // (blocks), x = F32 (cols), y = F32 (rows). blocksPerRow = cols/64.
+    bool dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer scales,
+                  VkBuffer x, VkBuffer y, uint32_t rows, uint32_t cols,
+                  uint32_t blocksPerRow);
+
+private:
+    VkDevice m_device = VK_NULL_HANDLE;
+    VkShaderModule m_shader = VK_NULL_HANDLE;
+    VkPipelineLayout m_layout = VK_NULL_HANDLE;
+    VkPipeline m_pipeline = VK_NULL_HANDLE;
+    VkDescriptorSetLayout m_dsl = VK_NULL_HANDLE;
+    VkDescriptorPool m_pool = VK_NULL_HANDLE;
+    VkDescriptorSet m_set = VK_NULL_HANDLE;
+    VkCommandBuffer m_cmd = VK_NULL_HANDLE;
+    VkFence m_fence = VK_NULL_HANDLE;
+    VkQueue m_queue = VK_NULL_HANDLE;
+};
+
 } // namespace deep2

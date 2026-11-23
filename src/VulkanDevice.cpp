@@ -405,4 +405,167 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     return true;
 }
 
+// ============================================================================
+// VulkanInt4Program -- fused INT4 matvec (Stage 6). Bindings:
+//   0 = packed INT4 weights (storage), 1 = F16 scales (storage),
+//   2 = input x (storage), 3 = output y (storage), 4 = dims UBO.
+// The dims UBO holds {rows, cols, blocksPerRow}. One workgroup per output row.
+// ============================================================================
+VulkanInt4Program::VulkanInt4Program() = default;
+VulkanInt4Program::~VulkanInt4Program() { /* caller must destroy before teardown */ }
+
+bool VulkanInt4Program::init(VkDevice device, const std::string& spvPath) {
+    m_device = device;
+    auto spv = readFileSpv(spvPath);
+    if (spv.empty()) { fprintf(stderr, "[VULKAN] could not read INT4 SPIR-V: %s\n", spvPath.c_str()); return false; }
+    VkShaderModuleCreateInfo smci{};
+    smci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    smci.codeSize = spv.size();
+    smci.pCode = reinterpret_cast<const uint32_t*>(spv.data());
+    if (vkCreateShaderModule(device, &smci, nullptr, &m_shader) != VK_SUCCESS) return false;
+    VkPipelineShaderStageCreateInfo ssi{};
+    ssi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    ssi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    ssi.module = m_shader;
+    ssi.pName = "main";
+
+    // Bindings 0-3 storage buffers, 4 uniform buffer (dims).
+    VkDescriptorSetLayoutBinding bindings[5] = {};
+    for (int i = 0; i < 4; ++i) {
+        bindings[i].binding = i;
+        bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bindings[i].descriptorCount = 1;
+        bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    bindings[4].binding = 4;
+    bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[4].descriptorCount = 1;
+    bindings[4].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    VkDescriptorSetLayoutCreateInfo dslci{};
+    dslci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    dslci.bindingCount = 5;
+    dslci.pBindings = bindings;
+    if (vkCreateDescriptorSetLayout(device, &dslci, nullptr, &m_dsl) != VK_SUCCESS) return false;
+
+    VkPipelineLayoutCreateInfo plci{};
+    plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    plci.setLayoutCount = 1;
+    plci.pSetLayouts = &m_dsl;
+    if (vkCreatePipelineLayout(device, &plci, nullptr, &m_layout) != VK_SUCCESS) return false;
+
+    VkComputePipelineCreateInfo cpci{};
+    cpci.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cpci.stage = ssi;
+    cpci.layout = m_layout;
+    if (vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &cpci, nullptr, &m_pipeline) != VK_SUCCESS) return false;
+
+    VkDescriptorPoolSize poolSizes[2] = {};
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; poolSizes[0].descriptorCount = 4;
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; poolSizes[1].descriptorCount = 1;
+    VkDescriptorPoolCreateInfo dpci{};
+    dpci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    dpci.maxSets = 4;
+    dpci.poolSizeCount = 2;
+    dpci.pPoolSizes = poolSizes;
+    if (vkCreateDescriptorPool(device, &dpci, nullptr, &m_pool) != VK_SUCCESS) return false;
+
+    VkDescriptorSetAllocateInfo dsai{};
+    dsai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    dsai.descriptorPool = m_pool;
+    dsai.descriptorSetCount = 1;
+    dsai.pSetLayouts = &m_dsl;
+    if (vkAllocateDescriptorSets(device, &dsai, &m_set) != VK_SUCCESS) return false;
+
+    VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    vkCreateFence(device, &fci, nullptr, &m_fence);
+    return true;
+}
+
+void VulkanInt4Program::destroy(VkDevice device) {
+    if (m_fence) vkDestroyFence(device, m_fence, nullptr);
+    if (m_pool) vkDestroyDescriptorPool(device, m_pool, nullptr);
+    if (m_dsl) vkDestroyDescriptorSetLayout(device, m_dsl, nullptr);
+    if (m_pipeline) vkDestroyPipeline(device, m_pipeline, nullptr);
+    if (m_layout) vkDestroyPipelineLayout(device, m_layout, nullptr);
+    if (m_shader) vkDestroyShaderModule(device, m_shader, nullptr);
+}
+
+bool VulkanInt4Program::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer scales,
+                                 VkBuffer x, VkBuffer y, uint32_t rows, uint32_t cols,
+                                 uint32_t blocksPerRow) {
+    if (m_device == VK_NULL_HANDLE) return false;
+    m_queue = gpu.queue;
+
+    // Dims UBO: {rows, cols, blocksPerRow}.
+    uint32_t dims[3] = {rows, cols, blocksPerRow};
+    VkBuffer dimBuf; VkDeviceMemory dimMem;
+    VkBufferCreateInfo dbi{}; dbi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    dbi.size = sizeof(dims); dbi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    dbi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    if (vkCreateBuffer(m_device, &dbi, nullptr, &dimBuf) != VK_SUCCESS) return false;
+    VkMemoryRequirements dmr; vkGetBufferMemoryRequirements(m_device, dimBuf, &dmr);
+    const VkPhysicalDeviceMemoryProperties& mp = gpu.memProps;
+    uint32_t mt = UINT32_MAX;
+    for (uint32_t i = 0; i < mp.memoryTypeCount; ++i)
+        if ((dmr.memoryTypeBits & (1u << i)) &&
+            (mp.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
+            (mp.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) { mt = i; break; }
+    if (mt == UINT32_MAX) { vkDestroyBuffer(m_device, dimBuf, nullptr); return false; }
+    VkMemoryAllocateInfo dai{}; dai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    dai.allocationSize = dmr.size; dai.memoryTypeIndex = mt;
+    if (vkAllocateMemory(m_device, &dai, nullptr, &dimMem) != VK_SUCCESS) { vkDestroyBuffer(m_device, dimBuf, nullptr); return false; }
+    vkBindBufferMemory(m_device, dimBuf, dimMem, 0);
+    void* dp = nullptr; vkMapMemory(m_device, dimMem, 0, sizeof(dims), 0, &dp);
+    std::memcpy(dp, dims, sizeof(dims)); vkUnmapMemory(m_device, dimMem);
+
+    VkDescriptorBufferInfo binfos[4] = {};
+    binfos[0].buffer = W; binfos[0].range = VK_WHOLE_SIZE;
+    binfos[1].buffer = scales; binfos[1].range = VK_WHOLE_SIZE;
+    binfos[2].buffer = x; binfos[2].range = VK_WHOLE_SIZE;
+    binfos[3].buffer = y; binfos[3].range = VK_WHOLE_SIZE;
+    VkDescriptorBufferInfo dinfo{dimBuf, 0, sizeof(dims)};
+    VkWriteDescriptorSet writes[5] = {};
+    for (int i = 0; i < 4; ++i) {
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = m_set; writes[i].dstBinding = i; writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &binfos[i];
+    }
+    writes[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writes[4].dstSet = m_set; writes[4].dstBinding = 4; writes[4].descriptorCount = 1;
+    writes[4].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writes[4].pBufferInfo = &dinfo;
+    vkUpdateDescriptorSets(m_device, 5, writes, 0, nullptr);
+
+    VkCommandBufferAllocateInfo cbai{};
+    cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cbai.commandPool = gpu.pool;
+    cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cbai.commandBufferCount = 1;
+    VkCommandBuffer cmd = VK_NULL_HANDLE;
+    if (vkAllocateCommandBuffers(m_device, &cbai, &cmd) != VK_SUCCESS) {
+        vkDestroyBuffer(m_device, dimBuf, nullptr); vkFreeMemory(m_device, dimMem, nullptr); return false;
+    }
+    VkCommandBufferBeginInfo cbi{};
+    cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &cbi);
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
+    vkCmdDispatch(cmd, rows, 1, 1); // one workgroup per output row
+    vkEndCommandBuffer(cmd);
+
+    vkResetFences(m_device, 1, &m_fence);
+    VkSubmitInfo si{};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers = &cmd;
+    vkQueueSubmit(gpu.queue, 1, &si, m_fence);
+    vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+    vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+    vkDestroyBuffer(m_device, dimBuf, nullptr);
+    vkFreeMemory(m_device, dimMem, nullptr);
+    return true;
+}
+
 } // namespace deep2
