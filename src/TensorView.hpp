@@ -59,7 +59,7 @@ inline double tensorTypeBytesPerValue(TensorType t) {
         case TensorType::F32: return 4.0;
         case TensorType::F16: return 2.0;
         case TensorType::Q8_0: return 1.0;
-        case TensorType::Q8_1: return 1.25;
+        case TensorType::Q8_1: return 1.125;
         case TensorType::Q4_0:
         case TensorType::Q4_1: return 0.5;
         case TensorType::Q2_K: return 0.25;
@@ -119,7 +119,7 @@ inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
         case TensorType::Q5_0:   bytesPerBlock = 22;  break;
         case TensorType::Q5_1:   bytesPerBlock = 24;  break;
         case TensorType::Q8_0:   bytesPerBlock = 34;  break;
-        case TensorType::Q8_1:   bytesPerBlock = 40;  break;
+        case TensorType::Q8_1:   bytesPerBlock = 36;  break;
         case TensorType::Q2_K:   bytesPerBlock = 82;  break;
         case TensorType::Q3_K_S:
         case TensorType::Q3_K_M:
