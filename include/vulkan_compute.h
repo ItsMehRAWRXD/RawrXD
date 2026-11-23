@@ -200,6 +200,8 @@ public:
     // gate force eviction pressure deterministically instead of depending on
     // how much VRAM the host happens to have.
     void SetQuantWeightBudgetBytes(size_t bytes) { quant_weight_budget_bytes_ = bytes; }
+    // RAWRXD_G04: single authoritative budget derivation (0 = auto-derive).
+    uint64_t DeriveQuantWeightBudget();
     size_t QuantWeightBudgetBytes() const { return quant_weight_budget_bytes_; }
     // RAWRXD_G04 observability: the residency-safety invariants a gate can
     // assert without trusting any counter's intent.
@@ -502,7 +504,11 @@ private:
     void* attn_stage_k_map_ = nullptr;
     void* attn_stage_v_map_ = nullptr;
     void* attn_stage_o_map_ = nullptr;
-    std::unordered_set<const void*> batch_pinned_;  // G04: weight keys pinned for the open batch (eviction must skip them until End)
+    // G04: weight keys pinned for the open batch, with ACQUISITION COUNTS:
+    // PinQuantWeight increments pin_count per queue call, so the batch must
+    // release once per acquisition (a set released once per key and leaked
+    // one pin per re-queued weight).
+    std::unordered_map<const void*, size_t> batch_pinned_;
     std::vector<QuantBatchEntry> quant_batch_entries_;
     std::vector<VkDescriptorSet> quant_batch_sets_;
     VkBuffer quant_batch_q8_dev_ = nullptr;
