@@ -9,8 +9,13 @@
 int main() {
     std::vector<std::uint8_t> input(65536, 0x5a);
     const auto encoded = rawrxd::compression::compress(input.data(), input.size());
-    if (encoded.status == rawrxd::compression::Status::Unsupported)
-        return 0; // Explicitly unsupported no-zlib configuration is valid.
+    if (encoded.status == rawrxd::compression::Status::Unsupported) {
+#ifdef RAWRXD_TEST_REQUIRE_ZLIB
+        return 2; // Strict provider smoke must exercise the real codec.
+#else
+        return 0; // No-zlib configurations are permitted outside strict CI.
+#endif
+    }
     assert(encoded);
     assert(!encoded.bytes.empty());
     const auto decoded = rawrxd::compression::decompress(
