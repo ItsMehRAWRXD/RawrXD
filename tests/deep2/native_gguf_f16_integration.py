@@ -281,6 +281,15 @@ def run(binary):
             dest=root/(source16.stem+"-explicit-f16-preserved.gguf")
             subprocess.run([binary,str(source16),str(dest),"0","f16"],check=True)
             assert dest.read_bytes()==source16.read_bytes()
+        # The conversion report must expose real line breaks and measured
+        # savings, rather than printing escaped backslash-n sequences.
+        report_target=root/"f64-report.gguf"
+        report=subprocess.run([binary,str(f64),str(report_target),"0","f32"],
+                              capture_output=True,text=True,check=True)
+        assert "converted tensors: 1/1\n" in report.stdout
+        assert "file bytes: " in report.stdout
+        assert "saved " in report.stdout
+        assert "\\n" not in report.stdout
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
