@@ -83,7 +83,7 @@ public:
         try {
             built = std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
-                    elementCount,maxAbsError,std::forward<Reader>(reader),chunkElements,true,
+                    elementCount,maxAbsError,std::forward<Reader>(reader),chunkElements,false,
                     buildBudget));
         } catch (const RawrXD::TensorCompression::SourceReadFailure&) {
             return false; // retryable: do not memoize transient source I/O failures
