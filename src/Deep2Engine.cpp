@@ -48,6 +48,30 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     return true;
 }
 
+Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() const {
+    const auto f32 = compressedF32Weights.GetStats();
+    const auto encoded = compressedEncodedWeights.GetStats();
+    TensorResidencySnapshot snapshot;
+    snapshot.f32BudgetBytes = f32.budgetBytes;
+    snapshot.encodedBudgetBytes = encoded.budgetBytes;
+    snapshot.f32CompressedBytes = f32.compressedBytes;
+    snapshot.encodedCompressedBytes = encoded.compressedBytes;
+    snapshot.f32LogicalBytes = f32.logicalBytes;
+    snapshot.encodedLogicalBytes = encoded.logicalBytes;
+    snapshot.f32TensorCount = f32.tensorCount;
+    snapshot.encodedTensorCount = encoded.tensorCount;
+    snapshot.f32CacheHits = f32.cacheHits;
+    snapshot.f32CacheMisses = f32.cacheMisses;
+    snapshot.encodedCacheHits = encoded.hits;
+    snapshot.encodedCacheMisses = encoded.misses;
+    const auto saturatingAdd = [](uint64_t a, uint64_t b) {
+        return b > UINT64_MAX - a ? UINT64_MAX : a + b;
+    };
+    snapshot.bytesDecoded = saturatingAdd(f32.bytesDecoded, encoded.bytesDecoded);
+    snapshot.evictions = saturatingAdd(f32.evictions, encoded.evictions);
+    return snapshot;
+}
+
 void Deep2Engine::Shutdown() {
     compressedF32Weights.Clear();
     compressedEncodedWeights.Clear();
