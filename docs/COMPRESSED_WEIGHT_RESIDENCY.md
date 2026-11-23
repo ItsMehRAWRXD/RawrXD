@@ -43,7 +43,7 @@ This is a deterministic architectural execution contract, not proof that every p
 
 The compressed decoder runtime now accepts BF16 tensor payloads as a first-class GGML type. The bounded scalar matvec kernel reconstructs BF16 by shifting the little-endian 16-bit word into the upper half of IEEE F32; it does not reuse the IEEE F16 exponent decoder. The model matvec adapter validates the tensor type before dispatch, and embedding/norm vector reads use the same BF16 conversion semantics.
 
-The synthetic generation suite converts the full deterministic model fixture into BF16 payloads and exercises compressed embedding reads, projection matvecs, normalization vectors, and autoregressive generation. Lossless compressed storage remains the default: this test consumes a BF16 source model and does not imply that F32-to-BF16 conversion is silently enabled.
+The synthetic generation suite converts the full deterministic model fixture into BF16 payloads and exercises compressed embedding reads, projection matvecs, normalization vectors, and autoregressive generation. Its output is now also checked against a separate dense scalar oracle that decodes the original BF16 fixture bytes independently of the compressed store, range reader, and resident matvec implementation. Lossless compressed storage remains the default: this test consumes a BF16 source model and does not imply that F32-to-BF16 conversion is silently enabled.
 
 ## What is not yet certified
 
