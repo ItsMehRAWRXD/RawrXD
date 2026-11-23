@@ -1200,6 +1200,21 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (!wt.data || wt.rows != V || wt.cols != H || H == 0)
         return false;
 
+    // Compressed F32 embedding: request only the selected vocabulary row.
+    // The full embedding matrix remains compressed and no F32 matrix copy is made.
+    if (wt.compressedF32) {
+        if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+            row > std::numeric_limits<size_t>::max()/H)
+            return false;
+        try {
+            wt.compressedF32->ReadRange(row*H,H,output);
+        } catch (...) {
+            return false;
+        }
+        parityEmit(ParityCheckpoint::Embed,output,H);
+        return finiteVector(output,H);
+    }
+
     const auto* desc = LookupQuantType(static_cast<uint32_t>(wt.type));
     if (!desc || desc->blockBytes == 0 || desc->blockElements == 0)
         return false;
@@ -1554,11 +1569,19 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
         }
 
         std::vector<float> w(dim);
-        auto dequant = QuantKernelRegistry::Instance().GetDequant(normWeight.type);
-        if (!dequant) {
-            throw std::runtime_error("RMSNormW: no dequant kernel");
+        if (normWeight.compressedF32) {
+            if (normWeight.type != static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+                normWeight.compressedF32->size() < dim) {
+                throw std::runtime_error("RMSNormW: compressed norm geometry mismatch");
+            }
+            normWeight.compressedF32->ReadRange(0,dim,w.data());
+        } else {
+            auto dequant = QuantKernelRegistry::Instance().GetDequant(normWeight.type);
+            if (!dequant) {
+                throw std::runtime_error("RMSNormW: no dequant kernel");
+            }
+            dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
         }
-        dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
         if (!finiteVector(w.data(), dim)) {
             throw std::runtime_error("RMSNormW: non-finite norm weights");
         }
