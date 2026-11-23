@@ -37,6 +37,7 @@ public:
     bool RegisterFromReader(const std::string& key, size_t byteCount, Reader&& reader,
                             size_t chunkBytes = 64 * 1024) {
         if (key.empty()) return false;
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
         size_t buildBudget;
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -147,6 +148,7 @@ private:
         }
     }
     mutable std::mutex mutex_;
+    std::mutex buildMutex_; // serialize admission scans so concurrent builds respect the hard budget
     size_t budgetBytes_ = 0, compressedBytes_ = 0, logicalBytes_ = 0;
     uint64_t tick_ = 0, hits_ = 0, misses_ = 0, evictions_ = 0, bytesDecoded_ = 0;
     std::unordered_map<std::string, Entry> entries_;
