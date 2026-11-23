@@ -136,8 +136,14 @@ add_test(NAME MetadataParity_Phi3
 
 # Optional Qt6/zlib adapter smoke test. The core engine does not depend on
 # either library; compile the production adapter whenever both are detected.
+option(RAWRXD_REQUIRE_QT_ZLIB_CODEC
+    "Fail configuration if the optional production Qt/zlib codec cannot be built" OFF)
 find_package(ZLIB QUIET)
 find_package(Qt6 COMPONENTS Core QUIET)
+if(RAWRXD_REQUIRE_QT_ZLIB_CODEC AND NOT (ZLIB_FOUND AND Qt6_FOUND))
+    message(FATAL_ERROR
+        "[CODEC] Qt6 Core and ZLIB are required by RAWRXD_REQUIRE_QT_ZLIB_CODEC")
+endif()
 if(ZLIB_FOUND AND Qt6_FOUND)
     add_library(rawrxd_qt_zlib_codec STATIC src/codec/compression.cpp)
     target_include_directories(rawrxd_qt_zlib_codec PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
