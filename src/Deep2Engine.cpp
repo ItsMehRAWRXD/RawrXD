@@ -152,6 +152,8 @@ Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() c
     snapshot.encodedLogicalBytes = encoded.logicalBytes;
     snapshot.f32TensorCount = f32.tensorCount;
     snapshot.encodedTensorCount = encoded.tensorCount;
+    snapshot.f32ActiveReaders = f32.activeReaders;
+    snapshot.encodedActiveReaders = encoded.activeReaders;
     snapshot.f32CacheHits = f32.cacheHits;
     snapshot.f32CacheMisses = f32.cacheMisses;
     snapshot.encodedCacheHits = encoded.hits;
