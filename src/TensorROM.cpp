@@ -350,19 +350,27 @@ bool TensorROM::readTensor(const TensorEntry& entry, uint8_t* out) const {
 
 bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
                                 uint64_t size, uint8_t* out) const {
-    if (!m_pager) return false;
+    if (!m_pager || entry.shardIndex >= m_shards.size() || (!out && size))
+        return false;
+    const uint64_t tensorBytes = entry.byteSize();
+    if (relOffset > tensorBytes || size > tensorBytes - relOffset)
+        return false; // never silently truncate a kernel weight request
+    if (size == 0) return true;
     const ShardManifest& m = m_shards[entry.shardIndex];
-    uint64_t avail = entry.byteSize() - relOffset;
-    if (size > avail) size = avail;
+    if (entry.offset > m.dataSize || tensorBytes > m.dataSize - entry.offset)
+        return false;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
                               m.dataOffset + entry.offset + relOffset, size, out);
 }
 
 TensorLease TensorROM::leaseTensor(const TensorEntry& entry) const {
-    if (!m_pager) return TensorLease(*m_pager, 0, 0, 0); // empty
+    if (!m_pager || entry.shardIndex >= m_shards.size()) return TensorLease{};
     const ShardManifest& m = m_shards[entry.shardIndex];
+    const uint64_t tensorBytes = entry.byteSize();
+    if (entry.offset > m.dataSize || tensorBytes > m.dataSize - entry.offset)
+        return TensorLease{};
     return TensorLease(*m_pager, static_cast<uint32_t>(entry.shardIndex),
-                       m.dataOffset + entry.offset, entry.byteSize());
+                       m.dataOffset + entry.offset, tensorBytes);
 }
 
 std::vector<TensorROM::ShardStatus> TensorROM::shardStatus() const {
