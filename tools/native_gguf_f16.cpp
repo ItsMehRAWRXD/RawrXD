@@ -850,6 +850,15 @@ int main(int argc,char** argv) {
         std::error_code sizeError;
         const auto outputBytes=std::filesystem::file_size(tmp,sizeError);
         if(sizeError)throw std::runtime_error("cannot measure compressed output");
+        if(outputBytes!=expectedEnd)
+            throw std::runtime_error("compressed GGUF disk length mismatch");
+        // Reject obvious source mutation during the two-pass conversion.
+        // A same-length concurrent rewrite still requires an external lock
+        // or immutable input snapshot for full protection.
+        std::error_code sourceSizeError;
+        const auto currentSourceBytes=std::filesystem::file_size(inputPath,sourceSizeError);
+        if(sourceSizeError || currentSourceBytes!=fileSize)
+            throw std::runtime_error("source model size changed during conversion");
         if(std::rename(tmp.c_str(),argv[2]))throw std::runtime_error("rename failed");
         std::cout<<"converted tensors: "<<changed<<"/"<<ts.size()<<"\\n";
         std::cout<<"file bytes: "<<fileSize<<" -> "<<outputBytes
