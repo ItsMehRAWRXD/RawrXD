@@ -2353,6 +2353,13 @@ void Deep2Engine::LinearWBatch4(
     size_t rows=0,cols=0;
     if(!matrixShape(wt,rows,cols)||rows!=outDim)
         throw std::runtime_error("LinearWBatch4: geometry mismatch");
+    // Both the Vulkan batch uploader and the compressed per-row fallback
+    // address count*cols inputs and count*outDim outputs.
+    if (cols == 0 ||
+        count > std::numeric_limits<size_t>::max() / cols ||
+        count > std::numeric_limits<size_t>::max() / outDim ||
+        count * outDim > std::numeric_limits<size_t>::max() / sizeof(float))
+        throw std::runtime_error("LinearWBatch4: batch span overflow");
 
     // Q4_K is the target amortized path. Other types retain exactness by
     // using the already GPU-backed single-vector LinearW path.
