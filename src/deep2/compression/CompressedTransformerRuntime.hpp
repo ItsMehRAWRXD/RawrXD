@@ -133,7 +133,7 @@ private:
             throw std::invalid_argument("compressed transformer missing tensor: " + name);
         const std::uint32_t type = model_.tensorType(name);
         const std::size_t scalar =
-            (type == GGML_TYPE_F16 || type == 30u) ? 2u :
+            (type == GGML_TYPE_F16 || type == GGML_TYPE_BF16) ? 2u :
             type == GGML_TYPE_F32 ? 4u : 0u;
         if (!scalar) throw std::invalid_argument("unsupported transformer tensor type: " + name);
         if (cols && rows > std::numeric_limits<std::size_t>::max() / cols)
@@ -177,7 +177,7 @@ private:
                                   std::size_t count) const {
         const auto type = model_.tensorType(name);
         const std::size_t scalar =
-            (type == GGML_TYPE_F16 || type == 30u) ? 2u : 4u;
+            (type == GGML_TYPE_F16 || type == GGML_TYPE_BF16) ? 2u : 4u;
         if (count > std::numeric_limits<std::size_t>::max() / scalar)
             throw std::overflow_error("compressed vector byte size overflow");
         std::vector<std::uint8_t> bytes(count * scalar);
@@ -186,7 +186,7 @@ private:
             throw std::runtime_error("compressed vector read failed for " + name + ": " + error);
         std::vector<float> result(count);
         for (std::size_t i = 0; i < count; ++i) {
-            if (type == GGML_TYPE_F16 || type == 30u) {
+            if (type == GGML_TYPE_F16 || type == GGML_TYPE_BF16) {
                 const std::uint16_t h = std::uint16_t(bytes[2*i]) |
                                         (std::uint16_t(bytes[2*i+1]) << 8);
                 result[i] = type == GGML_TYPE_F16 ? halfToFloat(h) : bfloat16ToFloat(h);
