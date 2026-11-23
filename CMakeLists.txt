@@ -520,6 +520,37 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/compression_roundtrip_test.cpp")
             endif()
         endif()
     endforeach()
+
+    # Native Universal Compression Expansion -- compressed in-memory weight
+    # residency. Proves weights stay compressed while resident and only the
+    # blocks an inference kernel reads are decompressed, plus a synthetic MLP
+    # forward pass that matches a dense reference bit-for-bit. Links the same
+    # core (zlib provider or native RXDN codec) the product uses.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/compressed_residency_test.cpp")
+        add_executable(compressed_residency_test
+            tests/compressed_residency_test.cpp)
+        target_link_libraries(compressed_residency_test PRIVATE rawrxd_compression_core)
+        target_include_directories(compressed_residency_test PRIVATE
+            "${CMAKE_SOURCE_DIR}/include"
+            "${CMAKE_SOURCE_DIR}/src")
+        target_compile_features(compressed_residency_test PRIVATE cxx_std_17)
+        if(MSVC)
+            target_compile_options(compressed_residency_test PRIVATE /EHsc)
+        endif()
+        add_test(NAME compressed_residency_test COMMAND compressed_residency_test)
+        foreach(_zlib_target zlib ZLIB::ZLIB)
+            if(TARGET ${_zlib_target})
+                get_target_property(_zlib_kind2 ${_zlib_target} TYPE)
+                if(_zlib_kind2 STREQUAL "SHARED_LIBRARY")
+                    add_custom_command(TARGET compressed_residency_test POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                            "$<TARGET_FILE:${_zlib_target}>"
+                            "$<TARGET_FILE_DIR:compressed_residency_test>"
+                        VERBATIM)
+                endif()
+            endif()
+        endforeach()
+    endif()
 endif()
 
 find_package(CURL QUIET)
