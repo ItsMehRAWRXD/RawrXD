@@ -64,6 +64,28 @@ int main() {
     try { ResidentMatvec(f16, ResidentWeightType::F16, badInput, y, 2, 2); }
     catch (const std::domain_error&) { rejected = true; }
     assert(rejected);
+    // Tile invariance: same matrix must produce the same results regardless
+    // of the scratch limit, including limits smaller than one Q8 block.
+    const auto verifyTiles = [&](const Resident& w, ResidentWeightType type,
+                                 std::size_t width, float a, float b) {
+        for (std::size_t limit : {std::size_t(1), std::size_t(2),
+                                  std::size_t(3), std::size_t(34),
+                                  std::size_t(65536)}) {
+            float actual[2] = {};
+            ResidentMatvec(w, type, x, actual, 2, width, limit);
+            assert(actual[0] == a && actual[1] == b);
+        }
+    };
+    verifyTiles(f16, ResidentWeightType::F16, 2, -3.f, 4.5f);
+    verifyTiles(f32, ResidentWeightType::F32, 2, -3.f, 4.5f);
+    verifyTiles(q8, ResidentWeightType::Q8_0, 32, 0.f, -1.f);
+    // A half-precision NaN weight must be rejected, not interpreted as zero.
+    Resident nanWeights = f16;
+    nanWeights.bytes[1] = 0x7e;
+    rejected = false;
+    try { ResidentMatvec(nanWeights, ResidentWeightType::F16, x, y, 2, 2); }
+    catch (const std::domain_error&) { rejected = true; }
+    assert(rejected);
     q8.bytes[1] = 0x7c; // +infinity scale
     rejected = false;
     try { ResidentMatvec(q8, ResidentWeightType::Q8_0, x, y, 2, 32); }
