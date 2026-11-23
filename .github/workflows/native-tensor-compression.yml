@@ -10,6 +10,7 @@ on:
       - 'src/Deep2Engine.hpp'
       - 'src/Deep2Engine.cpp'
       - 'src/TensorView.hpp'
+      - 'src/TensorROM.cpp'
       - 'src/quant_kernels.hpp'
       - 'src/quant_kernels.cpp'
       - 'tests/deep2/native_quantized_tile_range_test.cpp'
