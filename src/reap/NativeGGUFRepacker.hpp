@@ -207,7 +207,7 @@ inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
     while(sourceBytes) {
         if(!in.read(reinterpret_cast<char*>(source),static_cast<std::streamsize>(inputBlock)))return false;
         float values[32];
-        float maxAbs=0.0f;
+        float positiveMax=0.0f,negativeMax=0.0f;
         for(unsigned i=0;i<32;++i) {
             uint32_t bits=0;
             if(sourceF16) {
@@ -221,14 +221,20 @@ inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
             }
             std::memcpy(&values[i],&bits,4);
             if(!std::isfinite(values[i]))return false;
-            maxAbs=std::max(maxAbs,std::abs(values[i]));
+            positiveMax=std::max(positiveMax,values[i]);
+            negativeMax=std::max(negativeMax,-values[i]);
         }
-        const float scale=maxAbs/127.0f;
+        // GGML Q8_0 supports -128..127, not a symmetric +/-127 range.
+        // Derive the smallest scale that fits both signed extrema.
+        const double scale64=std::max(static_cast<double>(positiveMax)/127.0,
+                                      static_cast<double>(negativeMax)/128.0);
+        const float scale=static_cast<float>(scale64);
         uint32_t scaleBits=0;std::memcpy(&scaleBits,&scale,4);
         const uint16_t half=Float32BitsToFloat16(scaleBits);
         const uint32_t decoded=Float16ToFloat32Bits(half);
         float actualScale=0.0f;std::memcpy(&actualScale,&decoded,4);
-        if(maxAbs!=0.0f && (!std::isfinite(actualScale)||actualScale==0.0f))
+        if(!std::isfinite(actualScale) ||
+           ((positiveMax!=0.0f || negativeMax!=0.0f) && actualScale==0.0f))
             return false;
         encoded[0]=static_cast<unsigned char>(half);
         encoded[1]=static_cast<unsigned char>(half>>8);
@@ -236,7 +242,7 @@ inline bool ConvertFloatRangeToQ8_0(std::ifstream& in,std::ofstream& out,
             const double normalized=actualScale==0.0f?0.0:
                 static_cast<double>(values[i])/actualScale;
             const double rounded=std::round(normalized);
-            const int q=static_cast<int>(std::max(-127.0,std::min(127.0,rounded)));
+            const int q=static_cast<int>(std::max(-128.0,std::min(127.0,rounded)));
             encoded[2+i]=static_cast<unsigned char>(static_cast<int8_t>(q));
         }
         if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
