@@ -10,7 +10,7 @@ static void put64(std::ostream& o,uint64_t v){for(int i=0;i<8;++i)o.put(char(v>>
 static void putString(std::ostream& o,const std::string& s){put64(o,s.size());o.write(s.data(),std::streamsize(s.size()));}
 int main(){
     struct Expected{uint32_t type;size_t bytes;};
-    const Expected expected[]={{10,84},{11,110},{12,144},{13,176},{14,210}};
+    const Expected expected[]={{10,84},{11,110},{12,144},{13,176},{14,210},{15,292}};
     for(const auto& e:expected){
         const auto path=std::filesystem::temp_directory_path()/("rawrxd-k-loader-"+std::to_string(e.type)+".gguf");
         {
