@@ -39,6 +39,51 @@ int main() {
     CHECK(q8Out.data.size() == 32);
     for (float value : q8Out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
 
+    // Q4_1 affine block: d=1, m=2, q=1 => 3.
+    {
+        std::vector<std::uint8_t> bytes(20, 0x11);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        bytes[2] = 0x00; bytes[3] = 0x40;
+        TensorView view{TensorType::Q4_1, bytes.data(), bytes.size(), {32}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 3.0f) < 1e-6f);
+    }
+
+    // Q5_0: qh=all ones, nibble=9 => 25-16=9.
+    {
+        std::vector<std::uint8_t> bytes(22, 0x99);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        for (std::size_t i = 2; i < 6; ++i) bytes[i] = 0xff;
+        TensorView view{TensorType::Q5_0, bytes.data(), bytes.size(), {32}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 9.0f) < 1e-6f);
+    }
+
+    // Q5_1: d=1, m=2, q=1 => 3.
+    {
+        std::vector<std::uint8_t> bytes(24, 0x11);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        bytes[2] = 0x00; bytes[3] = 0x40;
+        for (std::size_t i = 4; i < 8; ++i) bytes[i] = 0;
+        TensorView view{TensorType::Q5_1, bytes.data(), bytes.size(), {32}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 3.0f) < 1e-6f);
+    }
+
+    // Q8_1: d=1, s=0, qs=1 => 1; standard block is 36 bytes.
+    {
+        std::vector<std::uint8_t> bytes(36, 1);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        bytes[2] = 0x00; bytes[3] = 0x00;
+        TensorView view{TensorType::Q8_1, bytes.data(), bytes.size(), {32}, true};
+        DequantizedTensor out;
+        CHECK(deep2::dequantizeTensor(view, out));
+        for (float value : out.data) CHECK(std::fabs(value - 1.0f) < 1e-6f);
+    }
+
     // Smallest positive binary16 subnormal is 2^-24, not zero or a wrapped exponent.
     const std::uint8_t subnormal[] = {0x01, 0x00};
     TensorView f16View;
