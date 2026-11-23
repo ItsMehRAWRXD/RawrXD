@@ -32,6 +32,14 @@ int main() {
     }
     assert(ToBFloat16(1.0f)==0x3f80);
     assert(Bits(FromBFloat16(0x3f80))==Bits(1.0f));
+    assert(ToBFloat16(-0.0f)==0x8000);
+    assert(ToBFloat16(std::numeric_limits<float>::infinity())==0x7f80);
+    assert((ToBFloat16(std::numeric_limits<float>::quiet_NaN())&0x7fc0)==0x7fc0);
+    // Exhaustively round-trip every finite BF16 bit pattern through F32.
+    for(uint32_t h=0;h<65536;++h) {
+        if((h&0x7f80u)==0x7f80u) continue;
+        assert(ToBFloat16(FromBFloat16(uint16_t(h)))==h);
+    }
     const float exact_bf[]={1.0f,-2.0f,0.5f,4.0f};
     auto exactBf=Encode(exact_bf,sizeof(exact_bf),false,0.0f,true);
     assert(exactBf.encoding==Encoding::BF16 && Decode(exactBf).size()==sizeof(exact_bf));
