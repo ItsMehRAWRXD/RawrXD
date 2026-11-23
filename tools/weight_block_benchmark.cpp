@@ -47,11 +47,12 @@ int main(int argc,char** argv) {
         }
         const auto after_decode=std::chrono::steady_clock::now();
         if(roundtrip!=source) throw std::runtime_error("byte-exact verification FAILED");
-        size_t raw=0,zlib=0,shuffle=0;
+        size_t raw=0,zlib=0,shuffle=0,delta_shuffle=0;
         for(const auto& b:t.blocks) {
             if(b.codec==BlockCodec::Raw) ++raw;
             else if(b.codec==BlockCodec::Zlib) ++zlib;
-            else ++shuffle;
+            else if(b.codec==BlockCodec::ByteShuffleZlib) ++shuffle;
+            else ++delta_shuffle;
         }
         const auto enc_ms=std::chrono::duration<double,std::milli>(after_encode-start).count();
         const auto dec_ms=std::chrono::duration<double,std::milli>(after_decode-after_encode).count();
@@ -59,7 +60,7 @@ int main(int argc,char** argv) {
         std::cout<<"input_bytes="<<source.size()<<" serialized_bytes="<<wire.size()
                  <<" ratio="<<ratio<<" reduction_pct="<<(1.0-ratio)*100.0
                  <<" raw_blocks="<<raw<<" zlib_blocks="<<zlib
-                 <<" shuffled_blocks="<<shuffle<<" encode_ms="<<enc_ms
+                 <<" shuffled_blocks="<<shuffle<<" delta_shuffled_blocks="<<delta_shuffle<<" encode_ms="<<enc_ms
                  <<" deserialize_and_decode_ms="<<dec_ms
                  <<" decoded_cache_peak_limit="<<static_cast<size_t>(block)*2
                  <<" exact_roundtrip=PASS\n";
