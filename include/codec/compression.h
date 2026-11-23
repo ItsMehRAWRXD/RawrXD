@@ -2,30 +2,25 @@
 
 #include <QByteArray>
 #include <QString>
+#include <QtGlobal>
 
 namespace codec {
 
-/**
- * @brief Compress data using deflate algorithm
- * @param data Input data to compress
- * @param success Optional pointer to receive success status
- * @return Compressed data as QByteArray
- */
+/** Compress data using the zlib-wrapped DEFLATE format. */
 QByteArray deflate(const QByteArray& data, bool* success = nullptr);
 
 /**
- * @brief Decompress data using inflate algorithm
- * @param data Compressed data to decompress
- * @param success Optional pointer to receive success status
- * @return Decompressed data as QByteArray
+ * Stream-decompress one zlib stream using bounded 64 KiB output chunks.
+ * Truncated input, trailing bytes, malformed streams, and expansion beyond
+ * maxOutputBytes fail closed and return an empty QByteArray.
+ * The default output ceiling is 1 GiB; callers can supply a tighter budget.
  */
-QByteArray inflate(const QByteArray& data, bool* success = nullptr);
+QByteArray inflate(const QByteArray& data, bool* success = nullptr,
+                   qint64 maxOutputBytes = (qint64(1) << 30));
 
 /**
- * @brief Compress data using MASM-optimized deflate
- * @param data Input data to compress
- * @param success Optional pointer to receive success status
- * @return Compressed data as QByteArray
+ * Compatibility entry point for maximum-level zlib compression. The name is
+ * retained for source compatibility and does not promise MASM dispatch.
  */
 QByteArray deflate_brutal_masm(const QByteArray& data, bool* success = nullptr);
 
