@@ -242,19 +242,48 @@ struct WeightTensor {
     // when the configured error budget permits it; otherwise exact F32 bytes
     // are returned. The caller owns the temporary bytes through upload.
     bool BuildCompressedF32GpuTile(
-        uint32_t rowBegin, uint32_t rowCount,
+        uint32_t rowBegin, uint32_t maxRowCount,
+        uint32_t& actualRowCount,
         std::vector<uint8_t>& packed, int& ggmlType) const noexcept {
         packed.clear();
         ggmlType = -1;
+        actualRowCount = 0;
         if (type != 0 || !compressedF32 || !rows || !cols ||
-            rowBegin >= rows || !rowCount || rowCount > rows - rowBegin ||
-            cols > std::numeric_limits<size_t>::max() / rowCount)
+            rowBegin >= rows || !maxRowCount ||
+            maxRowCount > rows - rowBegin ||
+            cols > std::numeric_limits<size_t>::max() / maxRowCount)
             return false;
         const size_t first = static_cast<size_t>(rowBegin) * cols;
-        const size_t elements = static_cast<size_t>(rowCount) * cols;
-        if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
-            return false;
         try {
+            // Model-load compression uses row-sized chunks. Coalesce adjacent
+            // rows with the same source encoding so mixed F16/BF16/F32 matrices
+            // remain compact without issuing one GPU dispatch per row.
+            const auto& chunks = compressedF32->chunks();
+            auto it = std::lower_bound(
+                chunks.begin(), chunks.end(), first,
+                [](const RawrXD::TensorCompression::ChunkedF32Storage::Chunk& chunk,
+                   size_t position) {
+                    return chunk.first + chunk.count <= position;
+                });
+            if (it == chunks.end() || it->first != first || it->count != cols)
+                return false;
+            const auto sourceEncoding = it->encoding;
+            size_t runRows = 0;
+            for (; it != chunks.end() && runRows < maxRowCount; ++it) {
+                const size_t expectedFirst = first + runRows * cols;
+                if (it->first != expectedFirst || it->count != cols ||
+                    it->encoding != sourceEncoding)
+                    break;
+                ++runRows;
+            }
+            if (!runRows || runRows > std::numeric_limits<uint32_t>::max() ||
+                runRows > std::numeric_limits<size_t>::max() / cols)
+                return false;
+            actualRowCount = static_cast<uint32_t>(runRows);
+            const size_t elements = runRows * cols;
+            if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
+                return false;
+
             RawrXD::TensorCompression::Encoding encoding{};
             if (compressedF32->ExportUniform16BitRange(
                     first, elements, encoding, packed,
@@ -263,6 +292,10 @@ struct WeightTensor {
                     RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
                 return packed.size() == elements * sizeof(uint16_t);
             }
+
+            // The run did not meet the configured 16-bit error budget.
+            // Upload only this run as exact F32; neighboring compact runs
+            // remain F16/BF16 and are never widened with it.
             std::vector<float> exact(elements);
             compressedF32->ReadRange(first, elements, exact.data());
             packed.resize(elements * sizeof(float));
@@ -272,6 +305,7 @@ struct WeightTensor {
         } catch (...) {
             packed.clear();
             ggmlType = -1;
+            actualRowCount = 0;
             return false;
         }
     }
