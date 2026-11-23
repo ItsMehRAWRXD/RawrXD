@@ -3429,9 +3429,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
             const bool compressedModeEnabled =
                 compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
+            // Router and per-expert tensors still have direct-pointer
+            // consumers; do not detach them until those consumers use ranges.
+            const bool moeRouterOrExpertName =
+                name.find("ffn_gate_inp") != std::string::npos ||
+                name.find("_exps") != std::string::npos ||
+                name.find("expert") != std::string::npos;
             const bool linearProjectionName =
                 ((name == "output.weight" || name == "lm_head.weight") ||
-                 (layerIdx >= 0 &&
+                 (layerIdx >= 0 && !moeRouterOrExpertName &&
                   name.find("norm") == std::string::npos &&
                   name.find("bias") == std::string::npos &&
                   (name.find("attn_") != std::string::npos ||
@@ -6317,6 +6323,7 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
             dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
             dst.cols * normElementBytes == dst.sizeBytes;
         const bool compressMatrix = compressedModeEnabled && !bindingIsNormOrBias &&
+            bindingLabel != "MoE router" &&
             ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
             packedRowBytes > 0 &&
             packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
