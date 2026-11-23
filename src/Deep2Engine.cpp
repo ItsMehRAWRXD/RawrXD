@@ -654,14 +654,17 @@ bool Deep2Engine::gpuMatvecQ4(const std::string& name, const uint8_t* packed, si
         return vulkan->createBuffer(*gpu, sz, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, b, m, &p);
     };
-    // Weights: reuse cached buffer if present (same size), else create + upload.
+    // Weights: reuse cached buffer if present, else create + upload (if packed).
     // weightInCache tracks ownership: true => the cache owns the buffer, per-call
     // cleanup must NOT destroy it. This avoids the stale-iterator use-after-free.
     bool weightInCache = false;
     auto it = gpuQ4Cache_.find(name);
-    if (it != gpuQ4Cache_.end() && it->second.bytes == packedBytes) {
+    if (it != gpuQ4Cache_.end() && (packed == nullptr || it->second.bytes == packedBytes)) {
         wb = it->second.wbuf; wm = it->second.wmem; // persistent, cache-owned
         weightInCache = true;
+    } else if (packed == nullptr) {
+        // No packed data and not cached -> cannot dispatch.
+        return false;
     } else {
         // Cache miss (or size mismatch): if a stale entry exists with a
         // different size, destroy it to avoid a leak, then create + upload.
@@ -719,7 +722,12 @@ bool Deep2Engine::matvecQ4FromRom(const std::string& name, const float* x, float
     if (fmt != rawrxd::gpu::GpuWeightFormat::Q4_0 && fmt != rawrxd::gpu::GpuWeightFormat::Q4_K) return false;
     const uint32_t vpb = rawrxd::gpu::ValuesPerBlock(fmt);
     if (vpb == 0 || (cols % vpb) != 0) return false;
-    // Read packed bytes from ROM (bounded read of this tensor only).
+    // Cache-first: if the packed buffer is already resident, dispatch without
+    // any ROM read or allocation (the hot path for repeated tokens).
+    if (gpuQ4Cache_.find(name) != gpuQ4Cache_.end()) {
+        return gpuMatvecQ4(name, nullptr, 0, x, y, rows, cols, static_cast<uint32_t>(entry->type));
+    }
+    // Cache miss: read packed bytes from ROM (bounded read of this tensor only).
     std::vector<uint8_t> raw(static_cast<size_t>(entry->byteSize()));
     if (!rom.readTensor(*entry, raw.data())) return false;
     return gpuMatvecQ4(name, raw.data(), raw.size(), x, y, rows, cols, static_cast<uint32_t>(entry->type));
