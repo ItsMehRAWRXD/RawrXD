@@ -74,6 +74,7 @@ QByteArray inflate(const QByteArray& data, bool* success) {
     }
 
     QByteArray output;
+    constexpr std::size_t kMaxInflatedBytes = 512u * 1024u * 1024u;
     char chunk[64 * 1024];
     ArraySize inputOffset = 0;
     int status = Z_OK;
@@ -94,8 +95,16 @@ QByteArray inflate(const QByteArray& data, bool* success) {
         stream.avail_out = static_cast<uInt>(sizeof(chunk));
         const uInt inputBefore = stream.avail_in;
         const int result = ::inflate(&stream, Z_NO_FLUSH);
+        status = result;
         const std::size_t produced = sizeof(chunk) - stream.avail_out;
+        const auto currentOutput = static_cast<std::size_t>(output.size());
 
+        if (currentOutput > kMaxInflatedBytes ||
+            produced > kMaxInflatedBytes - currentOutput) {
+            qWarning() << "[codec] inflated output exceeds configured 512 MiB safety ceiling";
+            valid = false;
+            break;
+        }
         if (produced > static_cast<std::uint64_t>(maxArraySize - output.size())) {
             qWarning() << "[codec] inflated output exceeds QByteArray capacity";
             valid = false;
