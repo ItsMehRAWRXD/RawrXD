@@ -101,17 +101,26 @@ struct WeightTensor {
     };
     mutable std::shared_ptr<const GpuCompressedF32Payload> gpuF16Payload;
 
-    bool EnableCompressedF32(float maxAbsError, size_t chunkElements=4096) {
+    bool EnableCompressedF32(
+        float maxAbsError, size_t chunkElements=4096,
+        size_t maxStoredBytes=std::numeric_limits<size_t>::max()) {
         if (type != 0 || !data || rows == 0 || cols == 0 ||
-            cols > std::numeric_limits<size_t>::max()/rows)
+            cols > std::numeric_limits<size_t>::max()/rows ||
+            !chunkElements)
             return false;
         const size_t elements=rows*cols;
         if (elements > std::numeric_limits<size_t>::max()/sizeof(float) ||
             sizeBytes != elements*sizeof(float))
             return false;
         try {
-            auto candidate=RawrXD::TensorCompression::ChunkedF32Storage::Build(
-                static_cast<const float*>(data),elements,maxAbsError,chunkElements);
+            const auto* source=static_cast<const float*>(data);
+            auto candidate=RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
+                elements,maxAbsError,
+                [source](size_t offset,size_t count,float* destination) {
+                    if (!source || !destination) return false;
+                    std::memcpy(destination,source+offset,count*sizeof(float));
+                    return true;
+                },chunkElements,false,maxStoredBytes);
             if (candidate.storedBytes() >= sizeBytes) return false;
             compressedF32=std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
                 std::move(candidate));
