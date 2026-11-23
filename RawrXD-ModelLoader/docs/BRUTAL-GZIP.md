@@ -14,6 +14,8 @@ gzip header/trailer and five bytes per 65,535-byte stored block.
 - Null source is accepted only when len is zero; out_len is required.
 - Allocation-size arithmetic is checked for overflow.
 - Both x64 and AArch64 paths use the shared IEEE CRC32 implementation.
+- The portable C++ `gzip_masm_alloc` fallback uses the same block framing,
+  handles zero-length and multi-block inputs, and shares the CRC32 routine.
 
 ## End-to-end validation
 

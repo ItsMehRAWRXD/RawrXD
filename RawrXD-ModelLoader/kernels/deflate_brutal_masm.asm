@@ -69,7 +69,8 @@ _have_blocks:
     mov     word ptr [rdi], 08B1Fh
     mov     byte ptr [rdi+2], 08h
     mov     dword ptr [rdi+4], 0
-    mov     word ptr [rdi+8], 0003h
+    mov     byte ptr [rdi+8], 0
+    mov     byte ptr [rdi+9], 3
     add     rdi, 10
 
     ; Stored blocks. RFC 1951 requires one final empty stored block for

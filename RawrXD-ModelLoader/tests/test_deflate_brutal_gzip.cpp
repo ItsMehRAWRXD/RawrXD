@@ -15,6 +15,7 @@ extern "C" void* deflate_brutal_neon(const void*, std::size_t, std::size_t*);
 extern "C" void* deflate_brutal_masm(const void*, std::size_t, std::size_t*);
 #define DEFLATE_BRUTAL deflate_brutal_masm
 #endif
+extern "C" void* gzip_masm_alloc(const void*, std::size_t, std::size_t*);
 
 static bool runCase(std::size_t size, bool repetitive) {
     std::vector<std::uint8_t> input(size);
@@ -33,6 +34,14 @@ static bool runCase(std::size_t size, bool repetitive) {
     const bool valid = rawrxd_test::validateStoredGzip(
         static_cast<const std::uint8_t*>(output), outputSize,
         input.empty() ? nullptr : input.data(), input.size());
+    std::size_t portableSize = 0;
+    void* portable = gzip_masm_alloc(
+        input.empty() ? nullptr : input.data(), input.size(), &portableSize);
+    const bool portableValid = portable && rawrxd_test::validateStoredGzip(
+        static_cast<const std::uint8_t*>(portable), portableSize,
+        input.empty() ? nullptr : input.data(), input.size());
+    std::free(portable);
+    if (!portableValid) { std::free(output); return false; }
     if (valid && outputSize >= 8) {
         auto* bytes = static_cast<std::uint8_t*>(output);
         const auto original = bytes[outputSize - 8];

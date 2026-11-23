@@ -582,6 +582,7 @@ if(MSVC)
             tests/bench_deflate_brutal.cpp
             kernels/deflate_brutal_masm.asm
             src/gzip_crc32.cpp
+            src/gzip_masm_store.cpp
         )
         target_include_directories(bench_deflate_brutal PRIVATE tests)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -592,6 +593,7 @@ if(MSVC)
             tests/test_deflate_brutal_gzip.cpp
             kernels/deflate_brutal_masm.asm
             src/gzip_crc32.cpp
+            src/gzip_masm_store.cpp
         )
         target_include_directories(test_deflate_brutal_gzip PRIVATE tests)
         set_target_properties(test_deflate_brutal_gzip PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -614,12 +616,14 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
             tests/bench_deflate_brutal_arm64.cpp
             kernels/deflate_brutal_neon.S
             src/gzip_crc32.cpp
+            src/gzip_masm_store.cpp
         )
         target_include_directories(bench_deflate_brutal_arm64 PRIVATE tests)
         add_executable(test_deflate_brutal_gzip_arm64
             tests/test_deflate_brutal_gzip.cpp
             kernels/deflate_brutal_neon.S
             src/gzip_crc32.cpp
+            src/gzip_masm_store.cpp
         )
         target_compile_definitions(test_deflate_brutal_gzip_arm64 PRIVATE RAWRXD_BRUTAL_NEON=1)
         target_include_directories(test_deflate_brutal_gzip_arm64 PRIVATE tests)
@@ -639,7 +643,7 @@ endif()
 
 
 # Brutal Gzip Library auto-selects MASM on x64 and NEON on ARM64
-add_library(brutal_gzip STATIC src/gzip_crc32.cpp)
+add_library(brutal_gzip STATIC src/gzip_crc32.cpp src/gzip_masm_store.cpp)
 target_include_directories(brutal_gzip PUBLIC include)
 # Architecture-specific kernels get added below (MASM on x64, NEON on ARM64).
 
