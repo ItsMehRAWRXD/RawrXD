@@ -1,4 +1,5 @@
 #include "../../src/quant_kernels.hpp"
+#include "../../src/deep2/NativeKQuant.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -85,6 +86,116 @@ static float loadPackedShaderModel(const std::vector<uint8_t>& bytes,
 static void put16(uint8_t* p, uint16_t value) {
     p[0] = static_cast<uint8_t>(value);
     p[1] = static_cast<uint8_t>(value >> 8u);
+}
+
+
+static float loadKQuantShaderModel(const std::vector<uint8_t>& bytes,
+                                   uint32_t type, uint32_t index) {
+    const uint32_t blockBytes = type == 10u ? 84u : type == 11u ? 110u :
+        type == 12u ? 144u : type == 13u ? 176u : type == 14u ? 210u : 292u;
+    const uint32_t lane = index & 255u;
+    const uint32_t block = (index >> 8u) * blockBytes;
+    if (type == 10u) {
+        const float d = halfToFloat(loadHalf(bytes, block + 80u));
+        const float dm = halfToFloat(loadHalf(bytes, block + 82u));
+        const uint32_t group = lane >> 4u;
+        const uint32_t offset = block + 16u + (group >> 3u) * 32u +
+            ((group & 7u) & 1u) * 16u + (lane & 15u);
+        const uint32_t shift = 2u * ((group & 7u) >> 1u);
+        const uint32_t q = (loadByte(bytes, offset) >> shift) & 3u;
+        const uint32_t sm = loadByte(bytes, block + group);
+        return d * float(sm & 15u) * float(q) - dm * float(sm >> 4u);
+    }
+    if (type == 11u) {
+        const float d = halfToFloat(loadHalf(bytes, block + 108u));
+        const uint32_t group = lane >> 4u;
+        const uint32_t scaleByte = loadByte(bytes, block + 96u + (group & 7u));
+        const uint32_t code = group < 8u ? (scaleByte & 15u) : (scaleByte >> 4u);
+        const uint32_t high = (loadByte(bytes, block + 104u + (group & 3u)) >>
+                               (2u * (group >> 2u))) & 3u;
+        const int scale = int(code | (high << 4u)) - 32;
+        const uint32_t chunk = lane >> 7u;
+        const uint32_t laneInChunk = (lane & 127u) >> 5u;
+        const uint32_t column = lane & 31u;
+        const uint32_t low = (loadByte(bytes, block + 32u + chunk * 32u + column) >>
+                              (2u * laneInChunk)) & 3u;
+        const uint32_t highBit = (loadByte(bytes, block + (lane & 31u)) >>
+                                  (lane >> 5u)) & 1u;
+        return d * float(scale) * float(int(low) - (highBit ? 0 : 4));
+    }
+    if (type == 12u || type == 13u) {
+        const float d = halfToFloat(loadHalf(bytes, block));
+        const float m = halfToFloat(loadHalf(bytes, block + 2u));
+        const uint32_t group = lane >> 5u;
+        const uint32_t s0 = loadByte(bytes, block + 4u + group);
+        const uint32_t s1 = loadByte(bytes, block + 4u + group + 4u);
+        const uint32_t is = group < 4u ? (s0 & 63u) :
+            ((s1 & 15u) | ((s0 >> 6u) << 4u));
+        const uint32_t im = group < 4u ? (s1 & 63u) :
+            ((loadByte(bytes, block + group) >> 6u) | ((s1 >> 4u) << 4u));
+        const uint32_t lowOffset = type == 12u ? 16u : 48u;
+        const uint32_t packed = loadByte(bytes, block + lowOffset +
+            (group >> 1u) * 32u + (lane & 31u));
+        uint32_t q = (group & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
+        if (type == 13u) {
+            const uint32_t high = (loadByte(bytes, block + 16u + (lane & 31u)) >>
+                (2u * (group >> 1u) + (group & 1u))) & 1u;
+            q |= high << 4u;
+        }
+        return d * float(is) * float(q) - m * float(im);
+    }
+    if (type == 14u) {
+        const float d = halfToFloat(loadHalf(bytes, block + 208u));
+        const uint32_t group = lane >> 4u;
+        const uint32_t chunk = lane >> 7u;
+        const uint32_t laneInChunk = (lane & 127u) >> 5u;
+        const uint32_t column = lane & 31u;
+        const uint32_t loIndex = chunk * 64u + (laneInChunk >> 1u) * 32u + column;
+        const uint32_t lo = (loadByte(bytes, block + loIndex) >>
+            ((laneInChunk & 1u) * 4u)) & 15u;
+        const uint32_t hi = (loadByte(bytes, block + 128u + chunk * 32u + column) >>
+            (laneInChunk * 2u)) & 3u;
+        const int q = int(lo | (hi << 4u)) - 32;
+        const uint32_t scaleByte = loadByte(bytes, block + 192u + group);
+        const int scale = scaleByte >= 128u ? int(scaleByte) - 256 : int(scaleByte);
+        return d * float(scale) * float(q);
+    }
+    uint32_t dBits = loadByte(bytes, block) | (loadByte(bytes, block + 1u) << 8u) |
+        (loadByte(bytes, block + 2u) << 16u) | (loadByte(bytes, block + 3u) << 24u);
+    const float d = [&]() { float f; std::memcpy(&f, &dBits, sizeof(f)); return f; }();
+    const uint32_t qb = loadByte(bytes, block + 4u + lane);
+    const int q = qb >= 128u ? int(qb) - 256 : int(qb);
+    return d * float(q);
+}
+
+static void testKQuantBlock(uint32_t type) {
+    const size_t blockBytes = type == 10u ? 84u : type == 11u ? 110u :
+        type == 12u ? 144u : type == 13u ? 176u : type == 14u ? 210u : 292u;
+    std::vector<uint8_t> encoded(blockBytes * 2u);
+    for (size_t b = 0; b < 2; ++b) {
+        uint8_t* p = encoded.data() + b * blockBytes;
+        for (size_t i = 0; i < blockBytes; ++i)
+            p[i] = static_cast<uint8_t>((i * 37u + b * 19u + 0x55u) & 0xffu);
+        if (type == 10u) { put16(p + 80u, 0x3c00u); put16(p + 82u, 0x3800u); }
+        else if (type == 11u) put16(p + 108u, 0x3c00u);
+        else if (type == 12u || type == 13u) {
+            put16(p, 0x3c00u); put16(p + 2u, 0x3800u);
+        } else if (type == 14u) put16(p + 208u, 0x3c00u);
+        else {
+            const float scale = 0.03125f;
+            std::memcpy(p, &scale, sizeof(scale));
+        }
+    }
+    const auto tensorType = static_cast<deep2::TensorType>(type);
+    float canonical[512]{};
+    assert(deep2::dequantizeTensorRange(tensorType, 512, 0, 512,
+        encoded.data(), encoded.size(), canonical));
+    for (uint32_t i = 0; i < 512; ++i) {
+        const float packed = loadKQuantShaderModel(encoded, type, i);
+        assert(std::isfinite(packed));
+        assert(std::fabs(packed - canonical[i]) <=
+               1.0e-6f * std::max(1.0f, std::fabs(canonical[i])));
+    }
 }
 
 static void testFixedBlock(uint32_t type) {
