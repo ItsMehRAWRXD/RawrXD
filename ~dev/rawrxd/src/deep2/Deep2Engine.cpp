@@ -1344,8 +1344,22 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
     if (!dequant) return false;
 
-    const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
-    dequant(src, output, H);
+    if (wt.compressedBytes) {
+        if (wt.compressedBytes->size() != wt.sizeBytes)
+            return false;
+        std::vector<uint8_t> encodedRow(rowBytes);
+        std::vector<uint8_t> decodeScratch;
+        try {
+            wt.compressedBytes->ReadRange(
+                offset, rowBytes, encodedRow.data(), decodeScratch);
+        } catch (...) {
+            return false;
+        }
+        dequant(encodedRow.data(), output, H);
+    } else {
+        const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
+        dequant(src, output, H);
+    }
     parityEmit(ParityCheckpoint::Embed, output, H);
     return finiteVector(output, H);
 }
