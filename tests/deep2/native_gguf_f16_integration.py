@@ -890,6 +890,47 @@ def run(binary):
         sb,ss,sm,st=parse(k5strict)
         assert st["blk.0.attn_q.weight"][0]==28
         assert sb[ss:ss+len(k5raw)]==k5raw
+        # Q6_K: canonical GGML layout ql[128], qh[64], scales[16], d[2].
+        # Independently reconstruct all four 6-bit lanes per 128-value half.
+        k6vals=[((i%53)-26)/64.0 for i in range(256)]
+        k6raw=struct.pack("<"+"d"*256,*k6vals)
+        k6meta=S("general.architecture")+U32(8)+S("llama")
+        k6meta+=S("general.alignment")+U32(4)+U32(ALIGN)
+        k6hdr=b"GGUF"+U32(3)+U64(1)+U64(2)+k6meta
+        k6hdr+=S("blk.0.attn_q.weight")+U32(1)+U64(256)+U32(28)+U64(0)
+        k6src=root/"f64-q6k-source.gguf";k6src.write_bytes(pad(k6hdr)+k6raw)
+        k6out=root/"f64-q6k-output.gguf"
+        subprocess.run([binary,str(k6src),str(k6out),"1","q6_k"],check=True)
+        k6b,k6s,k6m,k6t=parse(k6out)
+        assert k6m==k6meta and k6t["blk.0.attn_q.weight"][:2]==(14,(256,))
+        assert len(k6b)-k6s==210
+        p=k6s+k6t["blk.0.attn_q.weight"][2]
+        ql=k6b[p:p+128];qh=k6b[p+128:p+192]
+        scales=struct.unpack_from("<16b",k6b,p+192)
+        d=struct.unpack_from("<e",k6b,p+208)[0]
+        decoded=[0.0]*256
+        for half in range(2):
+            for lane in range(32):
+                group=lane//16
+                lo0=ql[half*64+lane]&15
+                lo1=ql[half*64+32+lane]&15
+                lo2=ql[half*64+lane]>>4
+                lo3=ql[half*64+32+lane]>>4
+                h=qh[half*32+lane]
+                codes=(lo0|((h&3)<<4),lo1|(((h>>2)&3)<<4),
+                       lo2|(((h>>4)&3)<<4),lo3|(((h>>6)&3)<<4))
+                indexes=(half*128+lane,half*128+lane+32,
+                         half*128+lane+64,half*128+lane+96)
+                scale_indexes=(half*8+group,half*8+group+2,
+                               half*8+group+4,half*8+group+6)
+                for ix,code,si in zip(indexes,codes,scale_indexes):
+                    decoded[ix]=d*scales[si]*(code-32)
+        assert max(abs(a-b) for a,b in zip(decoded,k6vals))<=1
+        k6strict=root/"f64-q6k-strict.gguf"
+        subprocess.run([binary,str(k6src),str(k6strict),"0","q6_k"],check=True)
+        sb,ss,sm,st=parse(k6strict)
+        assert st["blk.0.attn_q.weight"][0]==28
+        assert sb[ss:ss+len(k6raw)]==k6raw
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
