@@ -100,6 +100,45 @@ getResidentCompressedTensor(Deep2Engine& engine, const deep2::TensorEntry& entry
     auto inserted = engine.compressedWeights.emplace(key, loaded);
     return inserted.first->second;
 }
+
+std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>
+getResidentCompressedTensorRange(Deep2Engine& engine, const deep2::TensorEntry& entry,
+                                 std::uint64_t rangeOffset, std::uint64_t rangeBytes,
+                                 std::size_t blockBytes) {
+    const std::string key = entry.name + ":" + std::to_string(entry.shardIndex) +
+        ":" + std::to_string(entry.offset) + ":" + std::to_string(entry.byteSize()) +
+        ":range:" + std::to_string(rangeOffset) + ":" + std::to_string(rangeBytes) +
+        ":" + std::to_string(blockBytes);
+    std::lock_guard<std::mutex> lock(engine.compressedWeightsMutex);
+    auto it = engine.compressedWeights.find(key);
+    if (it != engine.compressedWeights.end()) {
+        engine.compressedWeightsLru.remove(key);
+        engine.compressedWeightsLru.push_front(key);
+        return it->second;
+    }
+
+    auto loaded = std::make_shared<rawrxd::compression::ResidentCompressedTensor>(
+        engine.rom.loadResidentCompressedTensorRange(entry, rangeOffset, rangeBytes, blockBytes));
+    const auto bytes = loaded->resident_bytes();
+    if (bytes > engine.compressedWeightsBudgetBytes) return loaded;
+    while (engine.compressedWeightsBytes >
+               engine.compressedWeightsBudgetBytes - bytes &&
+           !engine.compressedWeightsLru.empty()) {
+        const auto victim = engine.compressedWeightsLru.back();
+        engine.compressedWeightsLru.pop_back();
+        auto found = engine.compressedWeights.find(victim);
+        if (found == engine.compressedWeights.end()) continue;
+        const auto residentBytes = found->second->resident_bytes();
+        engine.compressedWeightsBytes =
+            residentBytes > engine.compressedWeightsBytes
+                ? 0 : engine.compressedWeightsBytes - residentBytes;
+        engine.compressedWeights.erase(found);
+    }
+    engine.compressedWeightsBytes += bytes;
+    engine.compressedWeightsLru.push_front(key);
+    auto inserted = engine.compressedWeights.emplace(key, loaded);
+    return inserted.first->second;
+}
 } // namespace
 
 bool Deep2Engine::gemvROMQ8_0(
@@ -258,31 +297,64 @@ bool Deep2Engine::readROMCompressedRow(
     if (!initialized || !romMode) return false;
     const auto* entry = rom.findTensor(tensorName);
     if (!entry || entry->dims.size() != 2 ||
-        rowIndex >= entry->dims[1] ||
         entry->dims[0] > (std::numeric_limits<std::size_t>::max)() ||
         entry->dims[1] > (std::numeric_limits<std::size_t>::max)())
         return false;
     const auto cols = static_cast<std::size_t>(entry->dims[0]);
     const auto rows = static_cast<std::size_t>(entry->dims[1]);
+    if (rowIndex >= rows || !cols) return false;
+
+    std::size_t rowBytes = 0;
+    switch (entry->type) {
+        case deep2::TensorType::F32:
+            if (cols > (std::numeric_limits<std::size_t>::max)() / 4u) return false;
+            rowBytes = cols * 4u;
+            break;
+        case deep2::TensorType::F16:
+            if (cols > (std::numeric_limits<std::size_t>::max)() / 2u) return false;
+            rowBytes = cols * 2u;
+            break;
+        case deep2::TensorType::Q4_0:
+            if (cols % 32u || cols / 32u >
+                (std::numeric_limits<std::size_t>::max)() / 18u) return false;
+            rowBytes = (cols / 32u) * 18u;
+            break;
+        case deep2::TensorType::Q8_0:
+            if (cols % 32u || cols / 32u >
+                (std::numeric_limits<std::size_t>::max)() / 34u) return false;
+            rowBytes = (cols / 32u) * 34u;
+            break;
+        default:
+            return false;
+    }
+    if (!rowBytes || rows > (std::numeric_limits<std::size_t>::max)() / rowBytes ||
+        rows * rowBytes != entry->byteSize() ||
+        rowIndex > (std::numeric_limits<std::size_t>::max)() / rowBytes)
+        return false;
+    const auto rangeOffset = rowIndex * rowBytes;
+
     try {
-        auto resident = getResidentCompressedTensor(*this, *entry, blockBytes);
+        // Only this row is read from the GGUF file, compressed, and cached.
+        // A large embedding matrix therefore never has to be loaded in full.
+        auto resident = getResidentCompressedTensorRange(
+            *this, *entry, rangeOffset, rowBytes, blockBytes);
         std::vector<float> next;
         switch (entry->type) {
             case deep2::TensorType::F32:
                 next = rawrxd::compression::resident_f32_row(
-                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                    *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
             case deep2::TensorType::F16:
                 next = rawrxd::compression::resident_f16_row(
-                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                    *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
             case deep2::TensorType::Q4_0:
                 next = rawrxd::compression::resident_q4_0_row(
-                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                    *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
             case deep2::TensorType::Q8_0:
                 next = rawrxd::compression::resident_q8_0_row(
-                    *resident, rowIndex, rows, cols, stagingBudgetBytes);
+                    *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
             default:
                 return false;
