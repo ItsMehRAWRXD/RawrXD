@@ -46,6 +46,24 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     return true;
 }
 
+bool Deep2Engine::gemvROMCompressedF32(
+    const std::string& tensorName, const float* x, float* y,
+    std::size_t rows, std::size_t cols,
+    std::size_t blockBytes, std::size_t stagingBudgetBytes) {
+    if (!initialized || !romMode) return false;
+    const auto* entry = rom.findTensor(tensorName);
+    if (!entry || entry->type != deep2::TensorType::F32) return false;
+    if (entry->dims.size() != 2 ||
+        entry->dims[0] != cols || entry->dims[1] != rows) return false;
+    try {
+        auto resident = rom.loadResidentCompressedTensor(*entry, blockBytes);
+        return gemvResidentF32(resident, x, y, rows, cols, stagingBudgetBytes);
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "[ROM_COMPRESSED_GEMV] %s\\n", e.what());
+        return false;
+    }
+}
+
 bool Deep2Engine::gemvResidentF32(
     const rawrxd::compression::ResidentCompressedTensor& weights,
     const float* x, float* y, std::size_t rows, std::size_t cols,
