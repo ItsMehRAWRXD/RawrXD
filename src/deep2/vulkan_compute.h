@@ -488,6 +488,9 @@ public:
     void ResetSpecKvMirror();
     std::vector<DeviceBuf> specKMirror_;
     std::vector<DeviceBuf> specVMirror_;
+    // Device buffers whose submission completion is unresolved. Retained
+    // until cleanup has authoritative device-idle/terminal-loss evidence.
+    std::vector<DeviceBuf> quarantinedDeviceBuffers_;
     uint32_t specKvLayers_ = 0, specKvHeads_ = 0, specKvHeadDim_ = 0;
     uint32_t specKvCapacity_ = 0;
 
