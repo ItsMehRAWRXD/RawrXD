@@ -11,6 +11,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 #include <fstream>
 #include <limits>
 #include <stdexcept>
@@ -172,6 +173,7 @@ private:
     std::unordered_map<std::string, std::string> m_kvStrings;   // shard 0 key->value (strings)
     ModelGeometry m_geom;
     std::unique_ptr<PageCache> m_pager;
+    mutable std::mutex m_shardReadMutex; // protects shared seekg/read state
 };
 
 } // namespace deep2
