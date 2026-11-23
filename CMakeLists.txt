@@ -101,6 +101,25 @@ if(Vulkan_FOUND)
     message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
 endif()
 
+# Compile the packed-weight GEMV shader when the Vulkan SDK shader compiler is
+# available. The runtime keeps the established F32 shader fallback when it is
+# not, so CPU-only/test configurations do not acquire a new hard dependency.
+find_program(RAWRXD_GLSLC NAMES glslc
+    HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin")
+if(RAWRXD_GLSLC)
+    add_custom_target(RawrXD_PackedWeightShader ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders"
+        COMMAND ${RAWRXD_GLSLC} --target-env=vulkan1.2 -O
+                "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
+                -o "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/gemv_packed16.spv"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_packed16.comp"
+        COMMENT "Compiling native packed F16/BF16 Vulkan GEMV shader")
+    add_dependencies(Deep2Engine_Benchmark RawrXD_PackedWeightShader)
+else()
+    message(WARNING "[BUILD] glslc not found; packed F16/BF16 Vulkan dispatch will be unavailable")
+endif()
+
 # Link libraries
 if(MSVC)
     target_link_libraries(Deep2Engine_Benchmark 
