@@ -11343,7 +11343,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // ── Qwen3.5: Apply per-head QK norm (RMSNorm) before RoPE ──
-        if (lw.attnQNorm.data && lw.attnQNorm.sizeBytes > 0)
+        if (lw.attnQNorm.hasBacking() && lw.attnQNorm.sizeBytes > 0)
         {
             const size_t qNormElementBytes =
                 lw.attnQNorm.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
@@ -11365,7 +11365,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                              static_cast<unsigned long long>(lw.attnQNorm.fileOffset));
                 if (lw.attnQNorm.type == (int)GGMLType::GGML_TYPE_F32)
                 {
+                    std::vector<float> qNormDiagnosticScratch;
                     const float* qNormValues = static_cast<const float*>(lw.attnQNorm.data);
+                    if (lw.attnQNorm.hasCompressedBacking())
+                    {
+                        qNormDiagnosticScratch.resize(qNormElements);
+                        std::string readError;
+                        if (!lw.attnQNorm.readBytes(0, qNormDiagnosticScratch.data(),
+                                                    lw.attnQNorm.sizeBytes, &readError))
+                            throw std::runtime_error("compressed Q norm diagnostic read failed: " +
+                                                     readError);
+                        qNormValues = qNormDiagnosticScratch.data();
+                    }
                     size_t badNorm = 0;
                     float normMin = qNormValues[0];
                     float normMax = qNormValues[0];
@@ -11383,11 +11394,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                         normMin = (std::min)(normMin, value);
                         normMax = (std::max)(normMax, value);
                     }
+                    const float head1Value = qNormElements > headDim
+                        ? qNormValues[headDim] : qNormValues[0];
                     std::fprintf(stderr,
                                  "[MINIMAX_Q_DIAG] q_norm_values bad=%zu first_bad=%zu "
                                  "min=%.9e max=%.9e first=%.9e head1=%.9e last=%.9e\n",
                                  badNorm, firstBadNorm, normMin, normMax, qNormValues[0],
-                                 qNormValues[headDim], qNormValues[qNormElements - 1]);
+                                 head1Value, qNormValues[qNormElements - 1]);
                 }
                 std::fflush(stderr);
             }
@@ -11396,8 +11409,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 WeightTensor headNorm = lw.attnQNorm;
                 if (qNormIsPerHead)
                 {
-                    headNorm.data = static_cast<char*>(lw.attnQNorm.data) +
-                                    h * headDim * qNormElementBytes;
+                    const std::size_t headByteOffset = h * headDim * qNormElementBytes;
+                    if (lw.attnQNorm.hasCompressedBacking())
+                    {
+                        if (headNorm.compressedByteOffset >
+                            (std::numeric_limits<std::size_t>::max)() - headByteOffset)
+                            throw std::overflow_error("Q norm compressed head offset overflow");
+                        headNorm.compressedByteOffset += headByteOffset;
+                        headNorm.data = nullptr;
+                    }
+                    else
+                        headNorm.data = static_cast<std::uint8_t*>(lw.attnQNorm.data) +
+                                        headByteOffset;
                     headNorm.sizeBytes = headDim * qNormElementBytes;
                     headNorm.rows = 1;
                     headNorm.cols = headDim;
@@ -11406,7 +11429,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                          modelWeights.normEps);
             }
         }
-        if (lw.attnKNorm.data && lw.attnKNorm.sizeBytes > 0)
+        if (lw.attnKNorm.hasBacking() && lw.attnKNorm.sizeBytes > 0)
         {
             const size_t kNormElementBytes =
                 lw.attnKNorm.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
@@ -11422,8 +11445,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 WeightTensor headNorm = lw.attnKNorm;
                 if (kNormIsPerHead)
                 {
-                    headNorm.data = static_cast<char*>(lw.attnKNorm.data) +
-                                    h * headDim * kNormElementBytes;
+                    const std::size_t headByteOffset = h * headDim * kNormElementBytes;
+                    if (lw.attnKNorm.hasCompressedBacking())
+                    {
+                        if (headNorm.compressedByteOffset >
+                            (std::numeric_limits<std::size_t>::max)() - headByteOffset)
+                            throw std::overflow_error("K norm compressed head offset overflow");
+                        headNorm.compressedByteOffset += headByteOffset;
+                        headNorm.data = nullptr;
+                    }
+                    else
+                        headNorm.data = static_cast<std::uint8_t*>(lw.attnKNorm.data) +
+                                        headByteOffset;
                     headNorm.sizeBytes = headDim * kNormElementBytes;
                     headNorm.rows = 1;
                     headNorm.cols = headDim;
