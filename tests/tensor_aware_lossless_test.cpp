@@ -46,6 +46,20 @@ int main() {
             verify(fp, stride, block);
         }
     }
+    // Explicitly exercise the delta-shuffle decoder, including a partial element.
+    {
+        std::vector<uint8_t> correlated(4097);
+        for (size_t i=0;i<correlated.size();++i)
+            correlated[i]=static_cast<uint8_t>((i%4==0)?(i/4):((i%4)*31));
+        Tensor t=encode(correlated.data(),correlated.size(),4,1024);
+        auto& b=t.blocks[0];
+        const auto delta=delta_lanes(correlated.data(),1024,4);
+        const auto shuffled=shuffle(delta.data(),delta.size(),4);
+        b.codec=BlockCodec::DeltaShuffleZlib;
+        b.payload=zcompress(shuffled.data(),shuffled.size());
+        assert(decode_block(t,0)==std::vector<uint8_t>(correlated.begin(),correlated.begin()+1024));
+        assert(decode_range(t,0,correlated.size())==correlated);
+    }
     verify({}, 4, 4096);
     bool rejected = false;
     try { (void)encode(nullptr, 1); }
