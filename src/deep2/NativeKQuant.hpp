@@ -1,5 +1,5 @@
 #pragma once
-// Independent, native GGML-compatible Q2_K through Q6_K block codec.
+// Independent, native GGML-compatible Q2_K through Q6_K and Q8_K block codec.
 // Wire layout follows ggml-common.h, NOT the legacy custom TensorView K layouts.
 // Two-pass GGUF writer uses the same encoder for preflight and emission.
 #include "NativeTensorCompression.hpp"
