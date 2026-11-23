@@ -60,3 +60,9 @@ A valid runtime-memory claim must report packed payload bytes, retained host all
 ## Regression target
 
 The native test target `rawrxd-native-tensor-compression-test` currently contains 53 explicit checks covering exact 16-bit compaction, zero-copy packed views, reader-bounded construction, absolute/relative error selection, NaN/infinity preservation, exact F32 fallback, mixed chunk encodings, LZ4 round trips, raw-byte fallback, range boundaries, storage budgets, and lease-aware cache admission/eviction. The model-load cache insertion/lease wiring is integrated but still requires a full Deep2 build and model-load runtime validation. A Windows CI workflow is configured to compile and run this standalone test with MSVC; no successful workflow receipt has yet been recorded. Full model numerical parity, end-to-end Vulkan inference, and process working-set measurements remain separate release gates.
+
+## Compressed-only inference entry points
+
+`WeightTensor::hasBacking()` treats raw mappings, chunked F32 backing, and losslessly compressed quantized-byte backing as valid tensor ownership. CPU `LinearW`, embeddings, RMSNorm, attention/FFN dispatch, MoE expert paths, and logits validation accept compressed-only tensors. When the source pointer is absent, `LinearW` deliberately bypasses GPU routes that still require a raw source pointer and uses bounded row/range decoding instead. GPU cache identity and stream-size accounting include compressed backing ownership.
+
+This is an enabling correctness change, not a claim that GGUF mappings are already released. The current loader still retains shard mappings, and some auxiliary/state/attention paths still consume direct mapped pointers. Source mapping reclamation remains gated on migrating every consumer and introducing per-tensor mapping ownership.
