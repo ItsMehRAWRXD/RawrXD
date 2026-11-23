@@ -181,6 +181,11 @@ inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
         case TensorType::Q5_K: blockBytes = 176; break;
         case TensorType::Q6_K: blockBytes = 210; break;
         case TensorType::Q8_K: blockBytes = 292; break;
+        case TensorType::IQ4_NL: blockBytes = 18; break;
+        case TensorType::IQ4_XS: blockBytes = 136; break;
+        case TensorType::MXFP4: blockBytes = 17; break;
+        case TensorType::NVFP4: blockBytes = 36; break;
+        case TensorType::TQ2_0: blockBytes = 66; break;
         default: break;
     }
     if (blockBytes) {
