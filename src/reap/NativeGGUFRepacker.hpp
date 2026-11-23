@@ -667,7 +667,7 @@ inline RepackError RepackGGUF(const std::string& input,
         // All F32 vectors can shrink to F16, including singleton-row matrices.
         // Only ordinary multi-row matrices are candidates for Q4_0.
         const bool matrix = t.dims.size()>=2 && t.dims[1]>1;
-        if((convert_f32_to_f16 || (auto_compress && (sensitive || !matrix))) && t.type==0) {
+        if((convert_f32_to_f16 || (auto_compress && (sensitive || !matrix || t.dims[0]%32!=0))) && t.type==0) {
             t.convert_f16=true;
             t.type=1; // GGML_TYPE_F16
             t.bytes/=2;
