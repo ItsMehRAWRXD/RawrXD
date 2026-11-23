@@ -53,6 +53,14 @@ The synthetic generation suite converts the full deterministic model fixture int
 - Device-loss recovery, cancellation, concurrent model requests, and multi-agent inference require sustained end-to-end tests.
 - Not every architecture or tensor type is covered by the synthetic decoder fixture. Unsupported shapes/types must reject the GPU path and use the independently validated fallback rather than guessing at geometry.
 
+## Optional F32-to-F16 residency
+
+Lossless byte compression remains the default. `CompressedGGUFModel::Options::enable_f32_to_f16` explicitly enables a second, precision-changing admission path for F32 tensors. The caller must supply a finite, non-negative `f32_to_f16_max_abs_error` bound. Conversion is performed directly from mapped F32 bytes into bounded compressed-store blocks; it does not allocate a second full-size F16 tensor.
+
+Each converted value is checked after IEEE-754 binary16 round-to-nearest-even conversion. If any value exceeds the configured absolute-error bound or is non-finite, that tensor falls back to byte-preserving F32 residency. Budget/codec failures remain hard admission failures. Tensor metadata is published as F16 only after successful conversion, so downstream matvec dispatch uses the stored representation. The default option is disabled; this is never silently applied to production weights.
+
+Store statistics report `f32_to_f16_tensors` and `f32_source_bytes` so the precision-changing path is visible in telemetry. This option must be validated against independent model logits and task quality before being enabled for real models.
+
 ## Resident-memory telemetry
 
 `StoreStats::compressed_bytes` is the encoded payload length used for compression ratios. It is not the full allocation footprint. The store additionally reports:
