@@ -1722,7 +1722,17 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
             if (!dequant) {
                 throw std::runtime_error("RMSNormW: no dequant kernel");
             }
-            dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
+            if (normWeight.compressedBytes) {
+                if (normWeight.compressedBytes->size() != normWeight.sizeBytes)
+                    throw std::runtime_error("RMSNormW: compressed byte backing mismatch");
+                std::vector<uint8_t> encoded(normWeight.sizeBytes);
+                std::vector<uint8_t> decodeScratch;
+                normWeight.compressedBytes->ReadRange(
+                    0, encoded.size(), encoded.data(), decodeScratch);
+                dequant(encoded.data(), w.data(), dim);
+            } else {
+                dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
+            }
         }
         if (!finiteVector(w.data(), dim)) {
             throw std::runtime_error("RMSNormW: non-finite norm weights");
