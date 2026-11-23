@@ -226,6 +226,42 @@ int main() {
         gpuEncoding, gpuTile.data(), gpuTile.size()));
     assert(cache.GetStats().activeReaders == 0);
 
+    // Packed GPU staging must reject malformed windows before leasing the
+    // tensor, and count only completed copies as successful cache hits.
+    const auto beforePackedInvalid = cache.GetStats();
+    std::vector<uint8_t> packedGuard(32, 0x5d);
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", SIZE_MAX, 1,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", source.size()-1, 2,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", 0, 1,
+        gpuEncoding, nullptr, packedGuard.size()));
+    assert(!cache.CopyUniform16BitRange("layer.0.weight", 0, 17,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(!cache.ExportUniform16BitRange("layer.0.weight", SIZE_MAX, 1,
+        compactEncoding, compactTile));
+    assert(compactTile.empty());
+    assert(std::all_of(packedGuard.begin(), packedGuard.end(),
+                       [](uint8_t v) { return v == 0x5d; }));
+    const auto afterPackedInvalid = cache.GetStats();
+    assert(afterPackedInvalid.cacheHits == beforePackedInvalid.cacheHits);
+    assert(afterPackedInvalid.cacheMisses == beforePackedInvalid.cacheMisses + 5);
+    assert(afterPackedInvalid.activeReaders == 0);
+    assert(afterPackedInvalid.bytesDecoded == beforePackedInvalid.bytesDecoded);
+    assert(cache.CopyUniform16BitRange("layer.0.weight", source.size()-8, 8,
+        gpuEncoding, packedGuard.data(), packedGuard.size()));
+    assert(gpuEncoding == RawrXD::TensorCompression::Encoding::F16);
+    for (size_t i = 0; i < 8; ++i) {
+        const uint16_t bits = static_cast<uint16_t>(packedGuard[2*i]) |
+            (static_cast<uint16_t>(packedGuard[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromHalf(bits) ==
+               source[source.size()-8+i]);
+    }
+    assert(std::all_of(packedGuard.begin()+16, packedGuard.end(),
+                       [](uint8_t v) { return v == 0x5d; }));
+    assert(cache.GetStats().cacheHits == afterPackedInvalid.cacheHits + 1);
+    assert(cache.GetStats().activeReaders == 0);
+
     // A failed streamed registration must not leave a partial cache entry.
     auto badReader=[](size_t,size_t,float*) { return false; };
     assert(!cache.RegisterF32FromReader("broken",512,0.0f,badReader,128));
