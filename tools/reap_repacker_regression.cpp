@@ -49,6 +49,7 @@ int main() {
     check(retained==after,"budget_rejection_preserves_output");
     check(RepackGGUF(source,source)==RepackError::Output,
           "in_place_overwrite_rejected");
+    a.close(); b.close(); intact.close();
     // A GGUF directory may enumerate tensors in a different order from
     // their physical locations. The repacker must preserve both payloads.
     {
