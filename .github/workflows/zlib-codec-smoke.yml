@@ -28,7 +28,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake g++ libvulkan-dev qt6-base-dev zlib1g-dev
       - name: Configure
-        run: cmake -S . -B build/zlib-codec -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build/zlib-codec -DCMAKE_BUILD_TYPE=Release -DRAWRXD_REQUIRE_QT_ZLIB_CODEC=ON
       - name: Build production adapter and test
         run: cmake --build build/zlib-codec --target qt_zlib_codec_test --parallel 2
       - name: Run streaming inflate regression
@@ -37,7 +37,7 @@ jobs:
       - name: Configure address and undefined behavior sanitizers
         run: |
           cmake -S . -B build/zlib-codec-sanitized \
-            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_BUILD_TYPE=Debug -DRAWRXD_REQUIRE_QT_ZLIB_CODEC=ON \
             -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
       - name: Build sanitized production codec
