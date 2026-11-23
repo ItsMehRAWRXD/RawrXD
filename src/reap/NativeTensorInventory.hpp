@@ -41,7 +41,7 @@ inline bool StorageLayout(uint32_t type, uint64_t& block, uint64_t& bytes) {
         case 6: block=32; bytes=22; return true; // Q5_0
         case 7: block=32; bytes=24; return true; // Q5_1
         case 8: block=32; bytes=34; return true; // Q8_0
-        case 9: block=32; bytes=36; return true; // Q8_1
+        case 9: block=32; bytes=40; return true; // Q8_1: float d, float s, 32 int8
         case 10: block=256; bytes=84; return true; // Q2_K
         case 11: block=256; bytes=110; return true; // Q3_K
         case 12: block=256; bytes=144; return true; // Q4_K
@@ -76,7 +76,7 @@ inline InventoryError BuildInventory(const EngineContext& ctx, Inventory& out) {
         uint64_t block=0, bytes=0;
         if (!StorageLayout(r.ggml_type,block,bytes))
             return InventoryError::UnsupportedType;
-        if (r.element_count % block) return InventoryError::InvalidDimensions;
+        if (r.dimensions.front() % block) return InventoryError::InvalidDimensions;
         if (!CheckedMultiply(r.element_count / block,bytes,r.storage_bytes))
             return InventoryError::Overflow;
         if (r.data_offset % next.alignment ||
