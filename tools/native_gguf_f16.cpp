@@ -733,10 +733,7 @@ int main(int argc,char** argv) {
                                 halfValid=false;
                         }
                         if(bf16Valid) {
-                            uint32_t word;
-                            std::memcpy(&word,&narrowed,4);
-                            const uint32_t rounded=word+0x7fffu+((word>>16)&1u);
-                            const float restored=Float(rounded&0xffff0000u);
+                            const float restored=FromBFloat16(ToBFloat16(narrowed));
                             if(!std::isfinite(restored) ||
                                !(std::fabs(double(restored)-original)<=double(tolerance)))
                                 bf16Valid=false;
@@ -880,9 +877,8 @@ int main(int argc,char** argv) {
                         uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
                                       (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
                         float original=Float(bits);
-                        // Round to nearest even, retaining BF16 sign and exponent.
-                        uint32_t rounded=bits+0x7fffu+((bits>>16)&1u);
-                        float decoded=Float(rounded&0xffff0000u);
+                        // Use the shared IEEE-754 BF16 round-to-nearest-even codec.
+                        float decoded=FromBFloat16(ToBFloat16(original));
                         if(!std::isfinite(original)||!std::isfinite(decoded)||
                            !(std::fabs(decoded-original)<=tolerance)){valid=false;break;}
                     }
@@ -927,8 +923,7 @@ int main(int argc,char** argv) {
                             uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
                                           (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
                             float original=Float(bits);
-                            uint32_t rounded=bits+0x7fffu+((bits>>16)&1u);
-                            float decoded=Float(rounded&0xffff0000u);
+                            float decoded=FromBFloat16(ToBFloat16(original));
                             if(!std::isfinite(original)||!std::isfinite(decoded)||
                                !(std::fabs(decoded-original)<=tolerance)){bfValid=false;break;}
                         }
@@ -1276,9 +1271,7 @@ int main(int argc,char** argv) {
                         double original;
                         std::memcpy(&original,&bits,8);
                         const float narrowed=static_cast<float>(original);
-                        uint32_t word;
-                        std::memcpy(&word,&narrowed,4);
-                        const uint16_t bf=uint16_t((word+0x7fffu+((word>>16)&1u))>>16);
+                        const uint16_t bf=ToBFloat16(narrowed);
                         packed[j/4]=uint8_t(bf);
                         packed[j/4+1]=uint8_t(bf>>8);
                     }
@@ -1443,7 +1436,8 @@ int main(int argc,char** argv) {
                     for(size_t j=0;j<n;j+=4) {
                         uint32_t bits=uint32_t(chunk[j])|(uint32_t(chunk[j+1])<<8)|
                                       (uint32_t(chunk[j+2])<<16)|(uint32_t(chunk[j+3])<<24);
-                        uint16_t h=uint16_t((bits+0x7fffu+((bits>>16)&1u))>>16);
+                        float value=Float(bits);
+                        uint16_t h=ToBFloat16(value);
                         packed[j/2]=uint8_t(h);
                         packed[j/2+1]=uint8_t(h>>8);
                     }
