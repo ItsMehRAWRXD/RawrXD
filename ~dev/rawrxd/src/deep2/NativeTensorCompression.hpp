@@ -32,7 +32,8 @@ public:
     static ChunkedF32Storage Build(const float* source, std::size_t elements,
                                    float maxAbsError, std::size_t chunkElements = 4096) {
         if ((!source && elements) || !std::isfinite(maxAbsError) || maxAbsError < 0.0f ||
-            chunkElements == 0)
+            chunkElements == 0 ||
+            elements > std::numeric_limits<std::size_t>::max() / sizeof(float))
             throw std::invalid_argument("invalid ChunkedF32Storage input");
         ChunkedF32Storage result;
         result.elements_ = elements;
