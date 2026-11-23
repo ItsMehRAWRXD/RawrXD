@@ -131,7 +131,7 @@ def run(binary):
                 nonfinite=strict_values.copy();nonfinite[0]=float("nan")
                 bad=root/"nonfinite-source.gguf"
                 badbytes=make_source(bad,28,nonfinite)
-                for fmt in ("q5_k","q6_k"):
+                for fmt in ("q2_k","q3_k","q4_k","q5_k","q6_k","q8_k"):
                     dst=root/("nonfinite-"+fmt+".gguf")
                     subprocess.run([binary,str(bad),str(dst),"1",fmt],check=True)
                     data,start,_,tensors=parse(dst)
