@@ -7,6 +7,12 @@ on:
   pull_request:
     paths:
       - 'src/deep2/compression/**'
+      - 'src/codec/compression_core.cpp'
+      - 'include/compression_core.hpp'
+      - 'tests/compression_core_test.cpp'
+      - 'tests/brutal_gzip*'
+      - 'kernels/deflate_brutal_masm.asm'
+      - 'tests/compressed_weight_store/smoke/**'
       - 'src/deep2/Deep2Engine.cpp'
       - 'src/Deep2Engine.h'
       - 'src/deep2/GGUFLoader.hpp'
@@ -49,11 +55,11 @@ jobs:
         shell: pwsh
         if: runner.os == 'Windows'
         run: |
-          cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
+          cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DRAWRXD_SMOKE_REQUIRE_ZLIB=ON
 
       - name: Configure isolated native smoke suite
         if: runner.os != 'Windows'
-        run: cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -DCMAKE_BUILD_TYPE=Release -DRAWRXD_SMOKE_REQUIRE_ZLIB=ON
 
       - name: Build all compressed-residency smoke targets
         run: cmake --build build/compressed-smoke --config Release --parallel 2
