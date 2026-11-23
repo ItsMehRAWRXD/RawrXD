@@ -223,8 +223,11 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         elementCount > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
         elementCount > std::numeric_limits<size_t>::max()) return false;
 
-    if (!compressedF32Weights.Contains(entry.name) &&
-        !compressedF32Weights.IsRawFallback(entry.name)) {
+    // GGUF tensor names are not a sufficient cache identity across shards.
+    const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+        std::to_string(entry.offset) + ":" + entry.name;
+    if (!compressedF32Weights.Contains(cacheKey) &&
+        !compressedF32Weights.IsRawFallback(cacheKey)) {
         const size_t count = static_cast<size_t>(totalElements);
         const auto reader = [this, &entry, bytes](size_t offset, size_t n, float* out) {
             if (offset > bytes / sizeof(float) ||
@@ -235,23 +238,23 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
                                        reinterpret_cast<uint8_t*>(out));
         };
         if (!compressedF32Weights.RegisterF32FromReader(
-                entry.name, count, compressedF32MaxAbsError, reader, 4096)) {
+                cacheKey, count, compressedF32MaxAbsError, reader, 4096)) {
             // No safe/smaller encoding or no cache capacity: memoize the
             // decision and fetch only requested raw tiles on future calls.
-            compressedF32Weights.MarkRawFallback(entry.name);
+            compressedF32Weights.MarkRawFallback(cacheKey);
             const uint64_t byteOffset = firstElement * sizeof(float);
             const uint64_t byteCount = elementCount * sizeof(float);
             return rom.readTensorRange(entry, byteOffset, byteCount,
                                        reinterpret_cast<uint8_t*>(destination));
         }
     }
-    if (compressedF32Weights.IsRawFallback(entry.name)) {
+    if (compressedF32Weights.IsRawFallback(cacheKey)) {
         const uint64_t byteOffset = firstElement * sizeof(float);
         const uint64_t byteCount = elementCount * sizeof(float);
         return rom.readTensorRange(entry, byteOffset, byteCount,
                                    reinterpret_cast<uint8_t*>(destination));
     }
-    return compressedF32Weights.ReadRange(entry.name,
+    return compressedF32Weights.ReadRange(cacheKey,
         static_cast<size_t>(firstElement), static_cast<size_t>(elementCount), destination,
         decodeScratch);
 }
