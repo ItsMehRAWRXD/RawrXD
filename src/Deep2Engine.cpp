@@ -14,6 +14,7 @@
 #include <windows.h>
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    compressedWeightsGeneration.fetch_add(1, std::memory_order_acq_rel);
     compressedWeights.Clear();
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
@@ -56,7 +57,9 @@ namespace {
 std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>
 getResidentCompressedTensor(Deep2Engine& engine, const deep2::TensorEntry& entry,
                             std::size_t blockBytes) {
-    const std::string key = entry.name + ":" + std::to_string(entry.shardIndex) +
+    const std::string key = std::to_string(
+        engine.compressedWeightsGeneration.load(std::memory_order_acquire)) + ":" +
+        entry.name + ":" + std::to_string(entry.shardIndex) +
         ":" + std::to_string(entry.offset) + ":" + std::to_string(entry.byteSize()) +
         ":" + std::to_string(blockBytes);
     return engine.compressedWeights.GetOrLoad(key, [&engine, &entry, blockBytes]() {
@@ -69,7 +72,9 @@ std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>
 getResidentCompressedTensorRange(Deep2Engine& engine, const deep2::TensorEntry& entry,
                                  std::uint64_t rangeOffset, std::uint64_t rangeBytes,
                                  std::size_t blockBytes) {
-    const std::string key = entry.name + ":" + std::to_string(entry.shardIndex) +
+    const std::string key = std::to_string(
+        engine.compressedWeightsGeneration.load(std::memory_order_acquire)) + ":" +
+        entry.name + ":" + std::to_string(entry.shardIndex) +
         ":" + std::to_string(entry.offset) + ":" + std::to_string(entry.byteSize()) +
         ":range:" + std::to_string(rangeOffset) + ":" + std::to_string(rangeBytes) +
         ":" + std::to_string(blockBytes);
