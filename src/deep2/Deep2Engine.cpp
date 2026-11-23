@@ -13906,6 +13906,16 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt, const std::string& name)
             wt.sizeBytes = t.size;
             wt.name = t.name;
             wt.mapped = true;  // GGUF view — externally owned
+            wt.hasFileBacking = true;
+            wt.fileOffset = t.dataOffset;
+            if (compressedWeightStore_ && compressedWeightStore_->contains(name))
+            {
+                if (!wt.attachCompressedBacking(compressedWeightStore_, name))
+                    return false;
+                wt.data = nullptr;
+                wt.mapped = false;
+                wt.hasFileBacking = false;
+            }
             return true;
         }
     }
