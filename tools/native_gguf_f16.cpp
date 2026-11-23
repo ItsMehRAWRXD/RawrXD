@@ -620,63 +620,103 @@ int main(int argc,char** argv) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[22];
+                std::vector<uint8_t> buffered;
+                buffered.reserve(65536);
                 for(U off=0;off<t.bytes;off+=inputBlock) {
                     if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
                         throw std::runtime_error("truncated Q5 streaming payload");
                     if(!encodeQ5Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q5 preflight mismatch");
-                    out.write(reinterpret_cast<const char*>(encoded),22);
+                    buffered.insert(buffered.end(),encoded,encoded+22);
+                    if(buffered.size()+22>65536) {
+                        out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                        buffered.clear();
+                    }
                     if(!out)throw std::runtime_error("Q5 streaming write failure");
                 }
-            } else if(streamQ4[i]) {
+
+                if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ4[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[18];
+                std::vector<uint8_t> buffered;
+                buffered.reserve(65536);
                 for(U off=0;off<t.bytes;off+=inputBlock) {
                     if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
                         throw std::runtime_error("truncated Q4 streaming payload");
                     if(!encodeQ4Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q4 preflight mismatch");
-                    out.write(reinterpret_cast<const char*>(encoded),18);
+                    buffered.insert(buffered.end(),encoded,encoded+18);
+                    if(buffered.size()+18>65536) {
+                        out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                        buffered.clear();
+                    }
                     if(!out)throw std::runtime_error("Q4 streaming write failure");
                 }
-            } else if(streamQ41[i]) {
+
+                if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ41[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[20];
+                std::vector<uint8_t> buffered;
+                buffered.reserve(65536);
                 for(U off=0;off<t.bytes;off+=inputBlock) {
                     if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
                         throw std::runtime_error("truncated Q4 streaming payload");
                     if(!encodeQ41Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q4 preflight mismatch");
-                    out.write(reinterpret_cast<const char*>(encoded),20);
+                    buffered.insert(buffered.end(),encoded,encoded+20);
+                    if(buffered.size()+20>65536) {
+                        out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                        buffered.clear();
+                    }
                     if(!out)throw std::runtime_error("Q4 streaming write failure");
                 }
-            } else if(streamQ51[i]) {
+
+                if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ51[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[24];
+                std::vector<uint8_t> buffered;
+                buffered.reserve(65536);
                 for(U off=0;off<t.bytes;off+=inputBlock) {
                     if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
                         throw std::runtime_error("truncated Q5_1 streaming payload");
                     if(!encodeQ51Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q5_1 preflight mismatch");
-                    out.write(reinterpret_cast<const char*>(encoded),24);
+                    buffered.insert(buffered.end(),encoded,encoded+24);
+                    if(buffered.size()+24>65536) {
+                        out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                        buffered.clear();
+                    }
                     if(!out)throw std::runtime_error("Q5_1 streaming write failure");
                 }
-            } else if(streamQ8[i]) {
+
+                if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamQ8[i]) {
                 seek(in,add(dataStart,t.offset));
                 const size_t inputBlock=t.type==0?128:64;
                 uint8_t block[128],encoded[34];
+                std::vector<uint8_t> buffered;
+                buffered.reserve(65536);
                 for(U off=0;off<t.bytes;off+=inputBlock) {
                     if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
                         throw std::runtime_error("truncated Q8 streaming payload");
                     if(!encodeQ8Block(block,t.type,tolerance,encoded))
                         throw std::runtime_error("Q8 preflight mismatch");
-                    out.write(reinterpret_cast<const char*>(encoded),34);
+                    buffered.insert(buffered.end(),encoded,encoded+34);
+                    if(buffered.size()+34>65536) {
+                        out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                        buffered.clear();
+                    }
                     if(!out)throw std::runtime_error("Q8 streaming write failure");
                 }
-            } else if(streamBf16[i]) {
+
+                if(!buffered.empty())out.write(reinterpret_cast<const char*>(buffered.data()),std::streamsize(buffered.size()));
+                if(!out)throw std::runtime_error("quantized streaming write failure");            } else if(streamBf16[i]) {
                 seek(in,add(dataStart,t.offset));
                 // Reuse fixed-size buffers to avoid one write syscall per weight.
                 std::vector<uint8_t> chunk(65536), packed(chunk.size()/2);
