@@ -12,6 +12,7 @@
 #include <limits>
 #include <mutex>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace deep2 {
