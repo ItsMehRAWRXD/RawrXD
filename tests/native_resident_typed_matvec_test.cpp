@@ -1,4 +1,6 @@
 #include "native_resident_typed_matvec.hpp"
+#include "../src/TensorView.hpp"
+#include <limits>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -28,6 +30,19 @@ int main() {
     using namespace rawrxd::compression;
     const char* path = "native_resident_typed_matvec_fixture.bin";
     const float x4[] = {1.f, 2.f, 3.f, 4.f};
+
+    // GGUF byte geometry must describe real packed storage before the ROM
+    // reader can safely stream a quantized tensor into compressed residency.
+    CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q4_0) == 18);
+    CHECK(deep2::tensorStorageBytes(64, deep2::TensorType::Q4_0) == 36);
+    CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q4_1) == 20);
+    CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q5_0) == 22);
+    CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q5_1) == 24);
+    CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q8_0) == 34);
+    CHECK(deep2::tensorStorageBytes(32, deep2::TensorType::Q8_1) == 40);
+    CHECK(deep2::tensorStorageBytes((std::numeric_limits<std::uint64_t>::max)(),
+                                    deep2::TensorType::F32) ==
+          (std::numeric_limits<std::uint64_t>::max)());
 
     // F16 values: [1,2,3,4] and [2,3,4,5].
     {
