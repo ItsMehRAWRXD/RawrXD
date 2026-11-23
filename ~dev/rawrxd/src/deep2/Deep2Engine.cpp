@@ -2791,13 +2791,13 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
     if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
         const char* enabled = std::getenv("RAWRXD_COMPRESS_F32");
         const bool compress = !enabled ||
-            (enabled[0] == '1' && enabled[1] == '\\0');
+            (enabled[0] == '1' && enabled[1] == '\0');
         float tolerance = 0.0f;
         bool valid = compress;
         if (const char* setting = std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR")) {
             char* end = nullptr;
             tolerance = std::strtof(setting, &end);
-            valid = valid && end != setting && *end == '\\0' &&
+            valid = valid && end != setting && *end == '\0' &&
                     std::isfinite(tolerance) && tolerance >= 0.0f;
         }
         size_t budget = 512ull * 1024ull * 1024ull;
@@ -2805,7 +2805,7 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
             char* end = nullptr;
             const unsigned long long mb = std::strtoull(setting, &end, 10);
             valid = valid && *setting && *setting != '-' &&
-                    end != setting && *end == '\\0' &&
+                    end != setting && *end == '\0' &&
                     mb <= std::numeric_limits<size_t>::max() / (1024ull * 1024ull);
             if (valid) budget = static_cast<size_t>(mb) * 1024ull * 1024ull;
         }
