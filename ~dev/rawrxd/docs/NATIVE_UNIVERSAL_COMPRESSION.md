@@ -2,7 +2,7 @@
 
 ## Runtime contract
 
-The Deep2 GGUF loader preserves the original GGUF wire type and tensor metadata. For F32 tensors, `WeightTensor::EnableCompressedF32` builds an immutable, chunked backing store. Each chunk independently selects:
+The Deep2 GGUF loader preserves the original GGUF wire type and tensor metadata. F32 tensors use `WeightTensor::EnableCompressedF32` and reader-backed chunk storage. Already-quantized tensors can use `WeightTensor::EnableCompressedBytes`, which stores each byte range as an LZ4 block only when it shrinks and otherwise retains raw bytes. Each chunk independently selects:
 
 - IEEE F16 when it satisfies the configured maximum absolute error.
 - BF16 when it satisfies the configured maximum absolute error and is better than F16.
@@ -14,15 +14,25 @@ Uniform F16/BF16 chunk sets expose a stable zero-copy contiguous 16-bit view. Th
 
 ## Configuration
 
-Set the following process environment variable before model loading:
+Compression is enabled by default on model load, subject to a shared 512 MiB retained-payload budget. F32 conversion defaults to zero absolute error, so only exactly representable 16-bit chunks are retained. Quantized-byte compression is lossless. Set these process environment variables before model loading to control the behavior:
 
 ```powershell
+# Disable F32 conversion (default: enabled)
+$env:RAWRXD_COMPRESS_F32 = "0"
+
+# Permit bounded lossy F32 conversion (default tolerance: 0)
 $env:RAWRXD_COMPRESS_F32_MAX_ABS_ERROR = "0.0001"
+
+# Set the shared compressed-payload budget in MiB (default: 512)
+$env:RAWRXD_COMPRESS_F32_BUDGET_MB = "1024"
+
+# Disable lossless compression of quantized GGUF bytes (default: enabled)
+$env:RAWRXD_COMPRESS_QUANTIZED_BYTES = "0"
 ```
 
-The value is an absolute error bound, not a relative error or a quality preset. Use model-specific parity measurements to choose it. An invalid, negative, NaN, or infinite value is ignored. Compression is opt-in when the variable is absent; this avoids silently changing model numerics.
+The F32 tolerance is an absolute error bound, not a relative error or a quality preset. An invalid, negative, NaN, or infinite value disables F32 compression. The lower-level reader API also supports explicit relative-error mode, but Deep2 currently selects absolute-error mode. At the default zero tolerance, no lossy change is made.
 
-The chunk size used by Deep2 is currently the tensor input width (`cols`) so CPU GEMV can decode one output row at a time.
+The F32 chunk size used by Deep2 is currently the tensor input width (`cols`) so CPU GEMV can decode one output row at a time. Quantized byte tensors are compressed in 64 KiB LZ4/raw chunks. CPU and GPU paths reconstruct bounded row tiles (up to 256 KiB) and retain the existing GGML dequantization/kernel interpretation.
 
 ## Memory accounting
 
@@ -42,7 +52,7 @@ A valid runtime-memory claim must report private compressed bytes, GPU payload b
 ## Supported and unsupported representations
 
 - F32 is the current lossy precision-reduction input type.
-- Existing GGML quantized tensors (Q2_K through Q8_K and other supported formats) already remain in their native packed representations and use their existing dequantization/GPU kernels. They are not automatically requantized by this F32 path.
+- Existing GGML quantized tensors (Q2_K through Q8_K and other supported formats) keep their original GGML type and packed bytes. Optional lossless LZ4 chunk storage is used only when it reduces bytes; CPU/GPU paths restore bounded tiles before invoking the existing dequantization/GPU kernels. No lossy requantization is applied.
 - F16/BF16 tensors are already 16-bit and are not converted by this path.
 - F64 and integer tensors are not converted by this path.
 - Mixed per-chunk GPU descriptors, device-side streaming decompression for nonuniform chunks, and per-tensor GGUF unmapping are not yet implemented.
