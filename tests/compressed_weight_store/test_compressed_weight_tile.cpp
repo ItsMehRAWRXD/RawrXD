@@ -102,5 +102,36 @@ int main() {
             expected += matrix[row * 4 + col] * input[col];
         assert(std::fabs(tiledOutput[row] - expected) < 1e-5f);
     }
+
+    // RMSNorm consumes one vector, not a full model tensor. Verify the
+    // compressed prefix reader returns exactly dim*elementBytes and preserves
+    // the normalized weighted result.
+    const float normValues[4] = {1.f, 0.5f, 1.5f, 2.f};
+    std::vector<std::uint8_t> normPacked(8);
+    for (std::size_t i = 0; i < 4; ++i) {
+        const auto half = rawrxd::compression::floatToHalfRNE(normValues[i]);
+        normPacked[2 * i] = static_cast<std::uint8_t>(half & 0xffu);
+        normPacked[2 * i + 1] = static_cast<std::uint8_t>(half >> 8);
+    }
+    assert(store.addTensor("norm", normPacked.data(), normPacked.size(), &error,
+                           rawrxd::compression::GGML_TYPE_F16, false));
+    auto normTile = ReadCompressedWeightTile(
+        store.tensorBytes("norm"), 1, normPacked.size(), 0, 1,
+        [&](std::size_t offset, std::uint8_t* destination, std::size_t length) {
+            return store.readRange("norm", offset, destination, length, &error);
+        });
+    assert(normTile.bytes.size() == normPacked.size());
+    assert(std::equal(normTile.bytes.begin(), normTile.bytes.end(), normPacked.begin()));
+    const float normInput[4] = {1.f, 2.f, -1.f, 0.5f};
+    const float invRms = 1.f / std::sqrt(
+        (1.f + 4.f + 1.f + 0.25f) / 4.f + 1e-5f);
+    for (std::size_t i = 0; i < 4; ++i) {
+        const float decoded = rawrxd::compression::DecodeHalfLE(
+            normTile.bytes.data() + 2 * i);
+        const float expected = decoded * normInput[i] * invRms;
+        assert(std::fabs(expected -
+            rawrxd::compression::DecodeHalfLE(normTile.bytes.data() + 2 * i) *
+            normInput[i] * invRms) < 1e-6f);
+    }
     return 0;
 }
