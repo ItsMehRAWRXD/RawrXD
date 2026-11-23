@@ -1,4 +1,5 @@
 #include "../../~dev/rawrxd/src/deep2/NativeQ5KDecode.hpp"
+#include "../../src/deep2/NativeKQuant.hpp"
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -21,7 +22,9 @@ int main(){
         block[112+i]=uint8_t((i*11+0x95)&0xff);
     }
     float actual[256]{};
+    double codec[256]{};
     Deep2::NativeQ5KDequantize(block.data(),actual,256);
+    assert(RawrXD::NativeKQuant::DecodeBlock(13,block.data(),codec));
     const uint8_t* ql=block.data()+48;
     const uint8_t* qh=block.data()+16;
     uint8_t u1=1,u2=2;
@@ -33,7 +36,10 @@ int main(){
         }
         ql+=32;u1=uint8_t(u1<<2);u2=uint8_t(u2<<2);
     }
-    for(int i=0;i<256;++i)assert(std::fabs(actual[i]-expected[i])==0.0f);
+    for(int i=0;i<256;++i){
+        assert(std::fabs(actual[i]-expected[i])==0.0f);
+        assert(std::fabs(double(actual[i])-codec[i])==0.0);
+    }
     // Exercise partial output bounds without requiring a padded destination.
     float partial[73]{};
     Deep2::NativeQ5KDequantize(block.data(),partial,73);
