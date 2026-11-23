@@ -293,14 +293,28 @@ TensorLease::~TensorLease() {
 }
 
 bool TensorLease::read(uint64_t relOffset, std::uint64_t size, std::uint8_t* out) const {
-    if (!m_ok || size == 0) return true;
-    if (relOffset + size > m_size) return false;
-    uint64_t absOffset = m_offset + relOffset;
-    return m_cache->readRange(m_shard, absOffset, size, out);
+    if (!m_ok || !m_cache || relOffset > m_size || size > m_size - relOffset ||
+        (size && !out)) return false;
+    if (size == 0) return true;
+    const uint64_t absOffset = m_offset + relOffset;
+    uint64_t copied = 0;
+    while (copied < size) {
+        const uint64_t pos = absOffset + copied;
+        const uint64_t pageNo = pos / m_cache->pageSize();
+        const uint64_t pageRel = pos % m_cache->pageSize();
+        const uint64_t chunk = std::min<uint64_t>(size - copied, m_cache->pageSize() - pageRel);
+        if (pageNo < m_pages.front()->pageNo ||
+            pageNo - m_pages.front()->pageNo >= m_pages.size()) return false;
+        const Page* page = m_pages[static_cast<std::size_t>(pageNo - m_pages.front()->pageNo)];
+        if (page->data.size() < pageRel + chunk) return false;
+        std::memcpy(out + copied, page->data.data() + pageRel, static_cast<std::size_t>(chunk));
+        copied += chunk;
+    }
+    return true;
 }
 
 const std::uint8_t* TensorLease::direct(uint64_t relOffset, std::uint64_t size) const {
-    if (!m_ok || size == 0 || relOffset + size > m_size) return nullptr;
+    if (!m_ok || !m_cache || size == 0 || relOffset > m_size || size > m_size - relOffset) return nullptr;
     if (m_pages.size() != 1) return nullptr;
     Page* pg = m_pages[0];
     uint64_t pageBase = m_offset + relOffset;
