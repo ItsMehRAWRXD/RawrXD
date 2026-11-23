@@ -48,16 +48,15 @@ static bool g_weight_cache_retention = false; // RAWRXD_G04: residency budget pi
 VulkanCompute& Gpu()
 {
     static VulkanCompute gpu;              // one device for the process
-    static bool initialised = false;
-    if (!initialised) {
-        initialised = true;
+    static std::once_flag init_once;
+    std::call_once(init_once, [&]() {
         // STRATA_S05: honour a device pin requested before the first dispatch.
         gpu.SetPreferredDeviceIndex(g_preferred_device);
         // RAWRXD_G04: honour a residency-budget pin requested before the first
         // dispatch (0 keeps the derived default).
         gpu.SetQuantWeightBudgetBytes((size_t)g_weight_cache_budget);
         gpu.Initialize();                  // false stays false; receipt explains
-    }
+    });
     return gpu;
 }
 
@@ -130,8 +129,8 @@ struct QueuedDot {
     size_t n_in;
     CpuDot cpu;
 };
-bool g_batch_active = false;
-std::vector<QueuedDot> g_queued;
+thread_local bool g_batch_active = false;
+thread_local std::vector<QueuedDot> g_queued;
 
 // RAWRXD_DEEP2_BATCH_SYNC_AUDIT (Sprint9 P0).
 //
@@ -164,9 +163,10 @@ struct BatchStats {
 };
 BatchStats g_batch_stats;
 
-// Implementation of the public BeginBatch: opens a batch on the device fast
-// path. Batches do not nest; an open batch makes DotBlocked queue instead of
-// executing.
+// Implementation of the public BeginBatch: opens a logical batch for this
+// executor thread. Device ownership is acquired only while EndBatch submits;
+// independent executor threads may therefore collect work concurrently while
+// g_gpu_mutex still serializes access to the single Vulkan context.
 bool BeginBatchImpl()
 {
     // Differential execution consumes every result immediately.  Keep the
@@ -175,19 +175,14 @@ bool BeginBatchImpl()
     // freshly written output rather than a queued zero.  EndBatchImpl treats
     // the matching logical close as a no-op below.
     if (std::getenv("RR_GPU_CHECK")) return true;
-    // P0: the ownership check and the claim are now one critical section. Both
-    // the batch-state mutex and the device mutex are held across the device open
-    // so this cannot race EndBatchImpl's chunk re-opens (which hold g_gpu_mutex).
+    // P0: the ownership check and the claim are one critical section. The
+    // logical state is thread-local, so this rejects only nested batches on the
+    // same executor while allowing independent executors to collect work.
     std::lock_guard<std::mutex> bk(g_batch_mutex);
     if (g_batch_active) return false;
-    std::lock_guard<std::mutex> gk(g_gpu_mutex);
-    const bool gpu_ok = Gpu().BeginQuantDotBatch();
-    QDTRACE_DISPATCH("BeginBatch gpu_ok=" << (int)gpu_ok);
-    if (!gpu_ok) return false;
     g_batch_active = true;
     g_queued.clear();
     ++g_batch_stats.batches_opened;
-    ++g_batch_stats.device_batches_opened;
     return true;
 }
 
@@ -242,21 +237,24 @@ bool EndBatchImpl()
         g_batch_active = false;
         qs.swap(g_queued);
     }
-    // RAWRXD_DEEP2_BATCH_LIFECYCLE_FIX (Sprint9 Commit C).
-    // BeginBatchImpl opened the device-level QuantDot batch (quant_batch_active_)
-    // so every successfully opened batch MUST have exactly one matching close --
-    // INCLUDING the empty (CPU-only) queue case. Previously the empty-queue early
-    // return skipped Gpu().EndQuantDotBatch(), leaking quant_batch_active_ and
-    // causing the next BeginQuantDotBatch() to be rejected as "nested".
-    // Device work is serialized by g_gpu_mutex alone: producers never block on the
-    // GPU, and no two threads touch the device at once. g_batch_mutex is already
-    // released here, so the lock order stays g_batch_mutex -> g_gpu_mutex.
+    // Device work is serialized by g_gpu_mutex alone: producers never block on
+    // the GPU, and no two threads touch the device at once. The logical batch
+    // was detached above, so the device-level batch is opened and closed within
+    // this critical section and cannot leak across executor lifetimes.
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     if (qs.empty()) {
-        // No GPU dots were queued (e.g. a CPU-pinned reference session). The
-        // device batch BeginBatchImpl opened still has to be closed, or its
-        // quant_batch_active_ flag leaks. Propagate a close failure as failure;
-        // never report success for a batch that did not close.
+        // Preserve the real device lifecycle even for an empty logical batch.
+        // This catches a close failure instead of reporting a false success.
+        if (!Gpu().BeginQuantDotBatch()) {
+            g_receipt = Receipt{};
+            g_receipt.used_gpu = false;
+            QDTRACE_DISPATCH("EndBatch empty-begin ok=0");
+            return false;
+        }
+        {
+            std::lock_guard<std::mutex> slk(g_batch_mutex);
+            ++g_batch_stats.device_batches_opened;
+        }
         const bool closed = Gpu().EndQuantDotBatch();
         g_receipt = Receipt{};
         g_receipt.used_gpu = false;
@@ -268,8 +266,8 @@ bool EndBatchImpl()
     // descriptor sets. A MoE block queues one dot per selected expert, so a
     // 199-expert model asks for 199 entries and entry 32 was rejected before any
     // submission, collapsing the whole block to CPU replay. Split the list into
-    // capacity-sized chunks and submit each one behind its own fence. Chunk 0
-    // reuses the batch BeginBatchImpl already opened; later chunks reopen it.
+    // capacity-sized chunks and submit each one behind its own fence. The first
+    // chunk uses the device batch opened below; later chunks reopen it.
     const size_t cap = BatchCapacity();
     const size_t chunk = cap ? cap : qs.size();
     bool ok = true;
@@ -278,6 +276,15 @@ bool EndBatchImpl()
     const char* fail_stage = nullptr;
     size_t replay_from = qs.size();   // nothing to replay until a chunk fails
     size_t chunks_ok = 0;
+    if (!Gpu().BeginQuantDotBatch()) {
+        ok = false;
+        fail_stage = "begin";
+        fail_index = qs.size();
+        replay_from = 0;
+    } else {
+        std::lock_guard<std::mutex> slk(g_batch_mutex);
+        ++g_batch_stats.device_batches_opened;
+    }
     for (size_t base = 0; base < qs.size() && ok; base += chunk) {
         const size_t end = (qs.size() - base) < chunk ? qs.size() : base + chunk;
         if (base > 0 && !Gpu().BeginQuantDotBatch()) {
@@ -286,6 +293,10 @@ bool EndBatchImpl()
             fail_index = qs.size();
             replay_from = base;
             break;
+        }
+        if (base > 0) {
+            std::lock_guard<std::mutex> slk(g_batch_mutex);
+            ++g_batch_stats.device_batches_opened;
         }
         for (size_t i = base; i < end; ++i) {
             const QueuedDot& e = qs[i];
@@ -324,7 +335,7 @@ bool EndBatchImpl()
     // therefore failed, not completed. pending is zero by construction because the
     // queue was swapped out before submission and the flag already reads closed.
     {
-        std::lock_guard<std::mutex> lk(g_batch_mutex);
+        std::lock_guard<std::mutex> stats_lk(g_batch_mutex);
         const size_t done = ok ? qs.size() : replay_from;
         g_batch_stats.completed += done;
         g_batch_stats.failed += qs.size() - done;

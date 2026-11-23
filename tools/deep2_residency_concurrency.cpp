@@ -659,16 +659,21 @@ int main(int argc, char** argv) {
         const bool owner_opened = BeginBatch();
         std::atomic<bool> contender_started{false};
         bool contender_acquired = true;
+        bool contender_preclose = true;
+        bool contender_closed = false;
         std::thread contender([&]() {
             contender_started.store(true, std::memory_order_release);
+            contender_preclose = EndBatch();
             contender_acquired = BeginBatch();
-            if (contender_acquired) (void)EndBatch();
+            if (contender_acquired) contender_closed = EndBatch();
         });
         while (!contender_started.load(std::memory_order_acquire)) std::this_thread::yield();
         contender.join();
         const bool owner_closed = owner_opened && EndBatch();
         Check(owner_opened, "E: primary executor acquired batch ownership");
-        Check(!contender_acquired, "E: concurrent executor cannot acquire active batch");
+        Check(!contender_preclose, "E: non-owner cannot close another executor batch");
+        Check(contender_acquired, "E: independent executor acquired its own batch");
+        Check(contender_closed, "E: independent executor closes its own batch");
         Check(owner_closed, "E: owning executor closes its batch");
 
         const bool retry_opened = BeginBatch();
