@@ -1864,6 +1864,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_S
         ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
         ${_rawrxd_vk_sdk_inc}
     )
+    # gguf_loader.cpp references rawrxd::compression symbols supplied by
+    # compression_core.cpp; linking zlib alone does not define that API.
+    target_link_libraries(deep2_spec_bench PRIVATE rawrxd_compression_core)
     if(TARGET ggml_interface)
         target_link_libraries(deep2_spec_bench PRIVATE ggml_interface)
     endif()
@@ -2611,6 +2614,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND EXISTS "${CMA
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${_rawrxd_vk_sdk_inc}
     )
+    # gguf_loader.cpp references rawrxd::compression symbols supplied by
+    # compression_core.cpp; linking zlib alone does not define that API.
+    target_link_libraries(deep2_prefill_parity PRIVATE rawrxd_compression_core)
     if(TARGET ggml_interface)
         target_link_libraries(deep2_prefill_parity PRIVATE ggml_interface)
     endif()
