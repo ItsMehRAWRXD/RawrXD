@@ -293,6 +293,8 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
 
     const uint64_t blockValues = deep2::quantBlockSize(entry.type);
     if (!blockValues) return false;
+    if (blockValues > 1 && (entry.dims.empty() || entry.dims[0] % blockValues != 0))
+        return false; // GGUF quant blocks may not straddle matrix rows.
     const uint64_t firstBlock = firstElement / blockValues;
     const uint64_t alignedFirst = firstBlock * blockValues;
     const uint64_t endElement = firstElement + elementCount;
