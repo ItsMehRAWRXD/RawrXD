@@ -73,6 +73,8 @@ The production host-bound Vulkan GEMV path now prefers compressed backing even w
 
 When two Vulkan devices are available, compressed GEMV partitions output rows between them. Each device independently reads and expands only its own bounded source tiles, dispatches into a local output window, and downloads directly into a disjoint range of the final output vector. Both partitions must succeed before the route is reported as dual-GPU; otherwise the attempt is discarded and the existing single-device path is tried. This avoids a second full-size output merge buffer.
 
+Each device transaction now holds its recursive Vulkan API lease across scratch allocation, upload, row-tile dispatches, and download. This prevents another agent from interleaving a request into shared per-device scratch buffers. Existing raw dual-GPU row-split, grouped, and batch helpers use the same device-lease discipline.
+
 This is bounded host-side decompression followed by GPU-native arithmetic; it is not device-side LZ4 decompression. It avoids whole-tensor F32/quantized expansion, but the original GGUF mapping remains alive. Some fused/state/attention paths still consume direct mapped pointers, and source mapping reclamation remains gated on migrating every consumer and introducing per-tensor mapping ownership.
 
 ## Strict GPU execution contract
