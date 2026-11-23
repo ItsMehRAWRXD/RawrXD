@@ -95,8 +95,10 @@ inline bool decode(const std::uint8_t* src, std::size_t compressedSize,
                 const std::size_t distance = encodedDistance + 1;
                 if (distance > produced || length < 4 || length > rawSize - produced)
                     return false;
-                for (std::size_t i = 0; i < length; ++i)
-                    dst[produced++] = dst[produced - distance];
+                for (std::size_t i = 0; i < length; ++i) {
+                    dst[produced] = dst[produced - distance];
+                    ++produced;
+                }
             } else {
                 if (in >= compressedSize) return false;
                 dst[produced++] = src[in++];
