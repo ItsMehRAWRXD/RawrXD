@@ -113,6 +113,55 @@ int main() {
         for (float value : row) CHECK(value == 2.f);
     }
 
+    // Q4_1: affine 4-bit values, x = q*d + m.
+    {
+        std::vector<std::uint8_t> bytes(20, 0x11);
+        bytes[0] = 0x00; bytes[1] = 0x3c; // d = 1
+        bytes[2] = 0x00; bytes[3] = 0x00; // m = 0
+        auto tensor = load_bytes(bytes, path, 10);
+        const auto y = resident_q4_1_matvec(tensor, ones, 1, 32, 20);
+        CHECK(y.size() == 1 && y[0] == 32.f);
+        const auto row = resident_q4_1_row(tensor, 0, 1, 32, 20);
+        for (float value : row) CHECK(value == 1.f);
+    }
+
+    // Q5_0: qh supplies the fifth bit; all codes are 25, centered at 16.
+    {
+        std::vector<std::uint8_t> bytes(22, 0x99);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        for (std::size_t i = 2; i < 6; ++i) bytes[i] = 0xff;
+        auto tensor = load_bytes(bytes, path, 11);
+        const auto y = resident_q5_0_matvec(tensor, ones, 1, 32, 22);
+        CHECK(y.size() == 1 && y[0] == 288.f);
+        const auto row = resident_q5_0_row(tensor, 0, 1, 32, 22);
+        for (float value : row) CHECK(value == 9.f);
+    }
+
+    // Q5_1: affine 5-bit values, q=1, d=1, m=2.
+    {
+        std::vector<std::uint8_t> bytes(24, 0x11);
+        bytes[0] = 0x00; bytes[1] = 0x3c;
+        bytes[2] = 0x00; bytes[3] = 0x40;
+        for (std::size_t i = 4; i < 8; ++i) bytes[i] = 0;
+        auto tensor = load_bytes(bytes, path, 12);
+        const auto y = resident_q5_1_matvec(tensor, ones, 1, 32, 24);
+        CHECK(y.size() == 1 && y[0] == 96.f);
+        const auto row = resident_q5_1_row(tensor, 0, 1, 32, 24);
+        for (float value : row) CHECK(value == 3.f);
+    }
+
+    // Q8_1: fp16 d, fp16 precomputed sum, then 32 signed bytes (36-byte block).
+    {
+        std::vector<std::uint8_t> bytes(36, 1);
+        bytes[0] = 0x00; bytes[1] = 0x3c; // d = 1
+        bytes[2] = 0x00; bytes[3] = 0x00; // s = 0
+        auto tensor = load_bytes(bytes, path, 18);
+        const auto y = resident_q8_1_matvec(tensor, ones, 1, 32, 36);
+        CHECK(y.size() == 1 && y[0] == 32.f);
+        const auto row = resident_q8_1_row(tensor, 0, 1, 32, 36);
+        for (float value : row) CHECK(value == 1.f);
+    }
+
     bool rejected = false;
     try {
         std::vector<std::uint8_t> bytes(18, 0);
