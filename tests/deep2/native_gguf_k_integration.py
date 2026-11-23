@@ -21,22 +21,51 @@ def make_source(path,typ,values):
     return raw
 
 def independent_decode(typ, block):
-    assert len(block)==(176 if typ==13 else 210)
+    sizes={10:84,11:110,12:144,13:176,14:210}
+    assert len(block)==sizes[typ]
     out=[]
-    if typ==13:
+    if typ==10:
+        d,dm=struct.unpack_from("<ee",block,80)
+        for j in range(256):
+            g=j//16;within=j%128;lane=within//32;col=within%32
+            q=(block[16+(j//128)*32+col]>>(2*lane))&3
+            out.append(d*(block[g]&15)*q-dm*(block[g]>>4))
+    elif typ==11:
+        d=struct.unpack_from("<e",block,108)[0]
+        for j in range(256):
+            g=j//16;chunk=g//8;within=g%8
+            lowcode=(block[96+(g if g<8 else g-8)]>>(0 if g<8 else 4))&15
+            highcode=(block[104+g%4]>>(2*(g//4)))&3
+            scale=(lowcode|(highcode<<4))-32
+            qbyte=block[32+chunk*32+(g%2)*16+(j%16)]
+            q=(qbyte>>(2*(within//2)))&3
+            hbyte=block[(g%2)*16+(j%16)]
+            high=bool(hbyte&(1<<(g//2)))
+            out.append(d*scale*(q-(0 if high else 4)))
+    elif typ==12:
+        d,m=struct.unpack_from("<ee",block)
+        scales=block[4:16];qs=block[16:144]
+        for j in range(256):
+            g=j//32
+            if g<4: sc=scales[g]&63;mn=scales[g+4]&63
+            else:
+                sc=(scales[g+4]&15)|((scales[g-4]>>6)<<4)
+                mn=(scales[g+4]>>4)|((scales[g]>>6)<<4)
+            byte=qs[(g//2)*32+j%32]
+            q=(byte>>(4*(g%2)))&15
+            out.append(d*sc*q-m*mn)
+    elif typ==13:
         d,m=struct.unpack_from("<ee",block)
         scales=block[4:16];hi=block[16:48];qs=block[48:176]
         for j in range(256):
             g=j//32
-            if g<4:
-                sc=scales[g]&63
-                mn=scales[g+4]&63
+            if g<4: sc=scales[g]&63;mn=scales[g+4]&63
             else:
                 sc=(scales[g+4]&15)|((scales[g-4]>>6)<<4)
                 mn=(scales[g+4]>>4)|((scales[g]>>6)<<4)
-            nib=(qs[(g//2)*32+(j%32)]>>(4*(g%2)))&15
+            nib=(qs[(g//2)*32+j%32]>>(4*(g%2)))&15
             top=(hi[j%32]>>(2*(g//2)+g%2))&1
-            out.append(d*sc*(nib|top<<4)-m*mn)
+            out.append(d*sc*(nib|(top<<4))-m*mn)
     else:
         d=struct.unpack_from("<e",block,208)[0]
         scales=struct.unpack_from("<16b",block,192)
@@ -64,6 +93,17 @@ def run(binary):
                 decoded=independent_decode(out_type,data[start+offset:start+offset+size])
                 assert max(abs(x-y) for x,y in zip(values,decoded))<=tol
                 assert len(data)<len(inp.read_bytes())
+            # Auto must choose a GGML K type per whole tensor and satisfy
+            # the same independent decoder/error budget, for every source dtype.
+            auto_dst=root/("auto-%d.gguf"%source_type)
+            subprocess.run([binary,str(inp),str(auto_dst),"0.02","auto"],check=True)
+            auto_data,auto_start,auto_meta,auto_tensors=parse(auto_dst)
+            auto_type,auto_dims,auto_offset=auto_tensors["blk.0.attn_q.weight"]
+            assert auto_type in (10,11,12,13,14), (source_type,auto_type)
+            auto_size={10:84,11:110,12:144,13:176,14:210}[auto_type]
+            auto_decoded=independent_decode(auto_type,auto_data[auto_start+auto_offset:auto_start+auto_offset+auto_size])
+            assert max(abs(x-y) for x,y in zip(values,auto_decoded))<=0.02
+            assert len(auto_data)<len(inp.read_bytes())
             if source_type==28:
                 strict_values=values.copy()
                 strict_values[0]=1.0+2**-40
