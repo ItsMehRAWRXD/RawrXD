@@ -58,7 +58,7 @@ void value(std::istream& f,uint32_t t,U fileSize,int depth=0) {
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|q8_0|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     try {
@@ -66,7 +66,8 @@ int main(int argc,char** argv) {
         const bool q4=argc==5 && std::string(argv[4])=="q4_0";
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
-        if(argc==5 && !q8 && !q4 && !q5 && !q41 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        const bool q51=argc==5 && std::string(argv[4])=="q5_1";
+        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         float tolerance=std::stof(argv[3]);if(!std::isfinite(tolerance)||tolerance<0)throw std::runtime_error("invalid tolerance");
         std::ifstream in(argv[1],std::ios::binary|std::ios::ate);
         if(!in)throw std::runtime_error("cannot open input");
@@ -131,16 +132,16 @@ int main(int argc,char** argv) {
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41))continue;
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51))continue;
             if(t.bytes>64u*1024u*1024u)continue;
             std::vector<uint8_t> raw(static_cast<size_t>(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
             Result r;
             if(!q8 && !q4 && !q5 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
-            if((q8 || q4 || q5 || q41) && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
+            if((q8 || q4 || q5 || q41 || q51) && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
                 std::vector<uint8_t> blocks;
-                blocks.reserve(raw.size()/(t.type==0?128:64)*(q4?18:(q5?22:(q41?20:34))));
+                blocks.reserve(raw.size()/(t.type==0?128:64)*(q4?18:(q5?22:(q41?20:(q51?24:34)))));
                 bool valid=true;
                 for(size_t off=0;off<raw.size();off+=(t.type==0?128:64)) {
                     float values[32];float maxAbs=0;
@@ -155,7 +156,34 @@ int main(int argc,char** argv) {
                         maxAbs=std::max(maxAbs,std::fabs(values[j]));
                     }
                     if(!valid)break;
-                    if(q41) {
+                    if(q51) {
+                        // GGML Q5_1: FP16 delta + FP16 minimum, 32 high bits,
+                        // 16 packed low nibbles; unsigned codes 0..31.
+                        float low=values[0],high=values[0];
+                        for(float f:values){low=std::min(low,f);high=std::max(high,f);}
+                        uint16_t hm=ToHalf(low);
+                        float minimum=FromHalf(hm);
+                        uint16_t hd=ToHalf((high-low)/31.0f);
+                        float delta=FromHalf(hd);
+                        if(!std::isfinite(minimum)||!std::isfinite(delta)||
+                           (high>low && delta<=0)) {valid=false;break;}
+                        uint32_t highBits=0;
+                        uint8_t packed[16]{};
+                        for(int j=0;j<32;++j) {
+                            float qf=delta?std::round((values[j]-minimum)/delta):0.0f;
+                            qf=std::max(0.0f,std::min(31.0f,qf));
+                            int qi=int(qf);
+                            if(std::fabs(minimum+delta*qi-values[j])>tolerance){valid=false;break;}
+                            if(qi&16)highBits|=uint32_t(1)<<j;
+                            if(j<16)packed[j]=uint8_t(qi&15);
+                            else packed[j-16]|=uint8_t((qi&15)<<4);
+                        }
+                        if(!valid)break;
+                        blocks.push_back(uint8_t(hd));blocks.push_back(uint8_t(hd>>8));
+                        blocks.push_back(uint8_t(hm));blocks.push_back(uint8_t(hm>>8));
+                        for(int j=0;j<4;++j)blocks.push_back(uint8_t(highBits>>(8*j)));
+                        blocks.insert(blocks.end(),packed,packed+16);
+                    } else if(q41) {
                         // GGML Q4_1: unsigned 4-bit values with half-precision
                         // delta and minimum, low nibble j, high nibble j+16.
                         float low=values[0],high=values[0];
@@ -246,7 +274,7 @@ int main(int argc,char** argv) {
                     if(!valid)break;
                 }
                 if(valid && blocks.size()<raw.size()) {
-                    converted[i]=std::move(blocks);outputTypes[i]=q4?2:(q5?6:(q41?3:8));++changed;
+                    converted[i]=std::move(blocks);outputTypes[i]=q4?2:(q5?6:(q41?3:(q51?7:8)));++changed;
                 }
             } else if(!q8 && !q4 && !q5 && r.encoding==Encoding::F16) {
                 converted[i]=std::move(r.payload);outputTypes[i]=1;++changed;
