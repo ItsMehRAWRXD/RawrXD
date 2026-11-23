@@ -132,7 +132,9 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
 
 Deep2 exposes `GetTensorResidencySnapshot()` with per-cache logical bytes,
 compressed bytes, budgets, tensor counts, hit/miss counts, decoded bytes,
-evictions and the live TensorROM pager resident-byte count. The snapshot also
+evictions, active compressed-range readers and the live TensorROM pager
+resident-byte count. Active-reader counts make pinned storage visible during
+concurrent inference and return to zero after each range operation. The snapshot also
 reports total tracked weight residency (compressed caches plus resident pager
 pages), so savings can be measured rather than inferred from file size.
 
