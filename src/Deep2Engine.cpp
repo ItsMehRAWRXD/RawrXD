@@ -592,7 +592,9 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         // row only; no vocabulary-sized FP32 allocation.
         if (hiddenDim / 32 > SIZE_MAX / 34) return false;
         const size_t rowBytes = (hiddenDim / 32) * 34;
-        if (firstToken > UINT64_MAX / rowBytes) return false;
+        if (!rowBytes || uint64_t(firstToken) > UINT64_MAX / rowBytes ||
+            uint64_t(firstToken) * rowBytes > UINT64_MAX - rowBytes)
+            return false;
         const uint64_t rowOffset = uint64_t(firstToken) * rowBytes;
         std::uint8_t block[34];
         for (size_t j = 0; j < hiddenDim; j += 32) {
@@ -677,8 +679,8 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
 
             // The current Phi-3 path assumes equal Q/K/V widths.
             // Reject incompatible grouped-query layouts instead of reading past V.
-            if (qkvOut.size() != hiddenDim * 3 ||
-                hiddenDim > SIZE_MAX / 3) return false;
+            if (hiddenDim > SIZE_MAX / 3 ||
+                qkvOut.size() != hiddenDim * 3) return false;
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
             std::vector<float> Q(qkvOut.begin(), qkvOut.begin() + qSize);
