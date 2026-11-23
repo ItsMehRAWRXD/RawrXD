@@ -131,7 +131,7 @@ static float loadKQuantShaderModel(const std::vector<uint8_t>& bytes,
         const uint32_t s0 = loadByte(bytes, block + 4u + group);
         const uint32_t s1 = loadByte(bytes, block + 4u + group + 4u);
         const uint32_t is = group < 4u ? (s0 & 63u) :
-            ((s1 & 15u) | ((s0 >> 6u) << 4u));
+            ((s1 & 15u) | ((loadByte(bytes, block + group) >> 6u) << 4u));
         const uint32_t im = group < 4u ? (s1 & 63u) :
             ((s1 >> 4u) | ((s0 >> 6u) << 4u));
         const uint32_t lowOffset = type == 12u ? 16u : 48u;
