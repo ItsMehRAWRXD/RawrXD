@@ -9,7 +9,7 @@ layout(set = 0, binding = 2, std430) writeonly buffer OutputValues { float value
 layout(push_constant) uniform Parameters {
     uint rows;
     uint cols;
-    uint weightEncoding; // 0=F32 bit pattern, 1=IEEE F16, 2=BF16
+    uint weightEncoding; // 0=F32, 1=IEEE F16, 2=BF16, 3=GGUF Q8_0
 } params;
 
 uint loadByte(uint byteOffset) {
