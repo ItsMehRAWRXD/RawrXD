@@ -156,7 +156,11 @@ int main(int argc,char** argv) {
                     if(q4) {
                         // GGML Q4_0: 32 weights, FP16 scale, 16 packed signed nibbles.
                         // Low nibble holds index j, high nibble index j+16.
-                        float scale=maxAbs/7.0f;
+                        // GGML Q4_0 uses a signed scale: the largest-magnitude
+                        // value is mapped to quantized -8 (not +7).
+                        float extremum=0.0f;
+                        for(float f:values) if(std::fabs(f)>std::fabs(extremum))extremum=f;
+                        float scale=extremum/-8.0f;
                         uint16_t h=ToHalf(scale);
                         float actual=FromHalf(h);
                         if(maxAbs && (!std::isfinite(actual) || actual==0)) {valid=false;break;}
