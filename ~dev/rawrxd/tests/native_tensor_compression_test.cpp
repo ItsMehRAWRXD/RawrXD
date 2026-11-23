@@ -38,6 +38,21 @@ int main() {
     CHECK(exact.DecodeRange(0,4,exactOut));
     for (int i=0;i<4;++i) CHECK(exactOut[i]==difficult[i]);
 
+    // Mixed chunks retain exact F32 only where the configured bound requires it.
+    const float mixedValues[] = {1.0f, 1.5f, 1.0001234f, 2.345678f};
+    auto mixed=ChunkedF32Storage::Build(mixedValues,4,0.0f,2);
+    CHECK(mixed.chunkCount()==2);
+    CHECK(mixed.chunks()[0].encoding!=RawrXD::TensorCompression::Encoding::F32);
+    CHECK(mixed.chunks()[1].encoding==RawrXD::TensorCompression::Encoding::F32);
+    RawrXD::TensorCompression::Encoding mixedEncoding{};
+    std::vector<std::uint8_t> mixedPacked;
+    CHECK(!mixed.ExportUniform16Bit(mixedEncoding,mixedPacked));
+    float mixedOut[4]{};
+    CHECK(mixed.DecodeRange(1,3,mixedOut));
+    CHECK(mixedOut[0]==mixedValues[1]);
+    CHECK(mixedOut[1]==mixedValues[2]);
+    CHECK(mixedOut[2]==mixedValues[3]);
+
     // Bounded cache: active leases prevent eviction; releasing permits trimming.
     Deep2::TensorResidencyCache cache(compact.storedBytes());
     const std::size_t residentBytes=compact.storedBytes();
