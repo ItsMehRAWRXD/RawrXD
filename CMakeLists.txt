@@ -6644,3 +6644,6 @@ endforeach()
 
 # Native compressed tensor-block residency (byte-exact; lazy decode).
 add_subdirectory(src/deep2/compression)
+if(TARGET deep2_engine_lib)
+    target_link_libraries(deep2_engine_lib PUBLIC rawrxd_compressed_weight_store)
+endif()
