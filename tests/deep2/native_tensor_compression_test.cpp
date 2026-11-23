@@ -22,6 +22,23 @@ int main() {
     assert(lz.encoding==Encoding::LZ4);
     assert(lz.payload.size()<patterned.size());
     assert(Decode(lz)==patterned);
+    // Whole-chunk LZ4 reads should decode directly into caller memory,
+    // leaving reusable scratch untouched; partial reads still use scratch.
+    auto byteChunks = ChunkedByteStorage::BuildFromReader(
+        patterned.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(patterned.begin() + offset,
+                      patterned.begin() + offset + count, out);
+            return true;
+        }, 4096, false);
+    std::vector<uint8_t> wholeChunk(4096);
+    std::vector<uint8_t> byteScratch;
+    byteChunks.ReadRange(4096, wholeChunk.size(), wholeChunk.data(), byteScratch);
+    assert(std::equal(wholeChunk.begin(), wholeChunk.end(), patterned.begin() + 4096));
+    assert(byteScratch.empty());
+    std::vector<uint8_t> partialChunk(13);
+    byteChunks.ReadRange(4101, partialChunk.size(), partialChunk.data(), byteScratch);
+    assert(std::equal(partialChunk.begin(), partialChunk.end(), patterned.begin() + 4101));
     std::vector<uint8_t> lzDirect(patterned.size(),0);
     DecodeInto(lz,lzDirect.data(),lzDirect.size());
     assert(lzDirect==patterned);
