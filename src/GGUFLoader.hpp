@@ -9,6 +9,7 @@
 struct ModelConfig {
     uint32_t magic = 0;
     uint32_t version = 0;
+    uint32_t ggufAlignment = 32;
     size_t tensorCount = 0;
     size_t kvCount = 0;
     size_t hiddenDim = 0;
