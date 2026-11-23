@@ -368,6 +368,29 @@ def run(binary):
                 code=(packed[qi]>>shift)&3
                 restored[g*16+j]=d*sc*code-dm*mn
         assert max(abs(a-b) for a,b in zip(restored,q2vals))<=0.5
+        # Q2_K regression: the encoded per-group scale/min must be normalized
+        # by the stored half super-scale exactly once. The older encoder
+        # incorrectly divided both codes by 15 a second time.
+        q2_levels=[(-1.5,-0.5,0.5,1.5)[i%4] for i in range(256)]
+        levels_src=root/"f64-q2k-levels-source.gguf"
+        levels_src.write_bytes(pad(q2hdr)+struct.pack("<256d",*q2_levels))
+        levels_out=root/"f64-q2k-levels-output.gguf"
+        subprocess.run([binary,str(levels_src),str(levels_out),"0.01","q2_k"],check=True)
+        ld,ls,_,lt=parse(levels_out)
+        assert lt["blk.0.attn_q.weight"][0]==10, "Q2_K precision-gate unexpectedly fell back"
+        lo=ls+lt["blk.0.attn_q.weight"][2]
+        codes=ld[lo:lo+16]
+        assert min((c & 15) for c in codes)>=14
+        assert min((c >> 4) for c in codes)>=14
+        d,dm=struct.unpack_from("<ee",ld,lo+80)
+        packed=ld[lo+16:lo+80]
+        levels_decoded=[]
+        for g in range(16):
+            for j in range(16):
+                qi=(g//8)*32+((g%8)%2)*16+j
+                q=(packed[qi]>>(((g%8)//2)*2))&3
+                levels_decoded.append(d*(codes[g]&15)*q-dm*(codes[g]>>4))
+        assert max(abs(x-y) for x,y in zip(levels_decoded,q2_levels)) <= 0.01
         q2strict=root/"f64-q2k-strict.gguf"
         subprocess.run([binary,str(q2src),str(q2strict),"0","q2_k"],check=True)
         assert q2strict.read_bytes()==q2src.read_bytes()
