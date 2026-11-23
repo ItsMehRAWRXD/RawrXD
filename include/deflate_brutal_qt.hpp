@@ -25,14 +25,11 @@
 
 namespace brutal {
 
+using Bytes = std::vector<uint8_t>;
+
 inline uint32_t gzipCrc32(const uint8_t* data, std::size_t len);
 inline std::size_t maxCompressedSize(std::size_t rawSize);
 inline Bytes compressStoredPortable(const uint8_t* data, std::size_t size);
-
-/**
- * @brief Raw byte buffer used by the Qt-free API.
- */
-using Bytes = std::vector<uint8_t>;
 
 /**
  * @brief Compress a raw byte buffer using stored-block gzip
