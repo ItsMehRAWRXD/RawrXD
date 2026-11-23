@@ -181,53 +181,72 @@ inline bool ConvertF32RangeToQ8_0(std::ifstream& in,std::ofstream& out,
 // Nibble i is the low half; nibble i+16 is the high half of byte i.
 inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                            uint64_t from,uint64_t sourceBytes,uint32_t sourceType) {
-    const uint64_t inputBlock=sourceType==8?34:sourceType==9?36:
+    const uint64_t inputBlock=sourceType==0?128:sourceType==1?64:
+        sourceType==8?34:sourceType==9?36:
         sourceType==6?22:sourceType==3?20:sourceType==7?24:0;
     if(!inputBlock || sourceBytes%inputBlock || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
     in.clear();in.seekg(static_cast<std::streamoff>(from));
     if(!in)return false;
-    unsigned char source[34],encoded[18];
+    unsigned char source[128],encoded[18];
     while(sourceBytes) {
         if(!in.read(reinterpret_cast<char*>(source),static_cast<std::streamsize>(inputBlock)))return false;
-        float scale=0;
-        if(sourceType==9) {
-            const uint32_t bits=uint32_t(source[0])|(uint32_t(source[1])<<8)|
-                (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
-            std::memcpy(&scale,&bits,4);
-        } else {
-            const uint16_t h=uint16_t(source[0])|(uint16_t(source[1])<<8);
-            const uint32_t bits=Float16ToFloat32Bits(h);
-            std::memcpy(&scale,&bits,4);
-        }
-        if(!std::isfinite(scale))return false;
-        float minimum=0;
-        if(sourceType==3 || sourceType==7) {
-            const uint16_t mh=uint16_t(source[2])|(uint16_t(source[3])<<8);
-            const uint32_t mbits=Float16ToFloat32Bits(mh);
-            std::memcpy(&minimum,&mbits,4);
-            if(!std::isfinite(minimum))return false;
-        }
         float values[32],extreme=0;
-        for(unsigned i=0;i<32;++i) {
-            int quantized=0;
-            if(sourceType==8)quantized=static_cast<int8_t>(source[2+i]);
-            else if(sourceType==9)quantized=static_cast<int8_t>(source[8+i]);
-            else if(sourceType==6 || sourceType==7) {
-                const unsigned qs=sourceType==6?6:8;
-                const unsigned qh=sourceType==6?2:4;
-                const unsigned j=i%16;
-                const unsigned nibble=i<16?(source[qs+j]&15):(source[qs+j]>>4);
-                const unsigned high=(source[qh+i/8]>>(i%8))&1;
-                quantized=static_cast<int>(nibble|(high<<4));
-                if(sourceType==6)quantized-=16;
-            } else if(sourceType==3) {
-                const unsigned j=i%16;
-                quantized=static_cast<int>(i<16?(source[4+j]&15):(source[4+j]>>4));
-            } else return false;
-            values[i]=static_cast<float>(quantized)*scale+minimum;
-            if(!std::isfinite(values[i]))return false;
-            if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
+        if(sourceType==0 || sourceType==1) {
+            for(unsigned i=0;i<32;++i) {
+                uint32_t bits=0;
+                if(sourceType==0) {
+                    const unsigned j=i*4;
+                    bits=uint32_t(source[j])|(uint32_t(source[j+1])<<8)|
+                        (uint32_t(source[j+2])<<16)|(uint32_t(source[j+3])<<24);
+                } else {
+                    const unsigned j=i*2;
+                    const uint16_t half=uint16_t(source[j])|(uint16_t(source[j+1])<<8);
+                    bits=Float16ToFloat32Bits(half);
+                }
+                std::memcpy(&values[i],&bits,4);
+                if(!std::isfinite(values[i]))return false;
+                if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
+            }
+        } else {
+            float scale=0;
+            if(sourceType==9) {
+                const uint32_t bits=uint32_t(source[0])|(uint32_t(source[1])<<8)|
+                    (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
+                std::memcpy(&scale,&bits,4);
+            } else {
+                const uint16_t half=uint16_t(source[0])|(uint16_t(source[1])<<8);
+                const uint32_t bits=Float16ToFloat32Bits(half);
+                std::memcpy(&scale,&bits,4);
+            }
+            if(!std::isfinite(scale))return false;
+            float minimum=0;
+            if(sourceType==3 || sourceType==7) {
+                const uint16_t half=uint16_t(source[2])|(uint16_t(source[3])<<8);
+                const uint32_t bits=Float16ToFloat32Bits(half);
+                std::memcpy(&minimum,&bits,4);
+                if(!std::isfinite(minimum))return false;
+            }
+            for(unsigned i=0;i<32;++i) {
+                int quantized=0;
+                if(sourceType==8)quantized=static_cast<int8_t>(source[2+i]);
+                else if(sourceType==9)quantized=static_cast<int8_t>(source[8+i]);
+                else if(sourceType==6 || sourceType==7) {
+                    const unsigned qs=sourceType==6?6:8;
+                    const unsigned qh=sourceType==6?2:4;
+                    const unsigned j=i%16;
+                    const unsigned nibble=i<16?(source[qs+j]&15):(source[qs+j]>>4);
+                    const unsigned high=(source[qh+i/8]>>(i%8))&1;
+                    quantized=static_cast<int>(nibble|(high<<4));
+                    if(sourceType==6)quantized-=16;
+                } else if(sourceType==3) {
+                    const unsigned j=i%16;
+                    quantized=static_cast<int>(i<16?(source[4+j]&15):(source[4+j]>>4));
+                } else return false;
+                values[i]=static_cast<float>(quantized)*scale+minimum;
+                if(!std::isfinite(values[i]))return false;
+                if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
+            }
         }
         const float d=extreme/-8.0f;
         uint32_t bits=0;std::memcpy(&bits,&d,4);
@@ -321,7 +340,8 @@ inline RepackError RepackGGUF(const std::string& input,
             t.bytes=(count/32)*34;
         }
         if(convert_q8_0_to_q4_0 &&
-           (t.type==8 || t.type==9 || t.type==6 || t.type==3 || t.type==7)) {
+           (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
+            t.type==6 || t.type==3 || t.type==7) && t.dims[0]%32==0) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
