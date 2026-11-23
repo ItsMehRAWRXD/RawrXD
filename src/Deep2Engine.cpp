@@ -487,34 +487,49 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
         std::cout << "[VERIFY] blk.0.attn_qkv.weight not present in ROM\n";
         return;
     }
-    deep2::DequantizedTensor dq;
-    if (!engine.dequantTensor(*qkv, dq)) {
-        std::cout << "[VERIFY] dequant of blk.0.attn_qkv.weight failed\n";
+    const uint64_t rows = qkv->dims.size() >= 2 ? qkv->dims[1] : 0;
+    const uint64_t cols = qkv->dims.size() >= 2 ? qkv->dims[0] : 0;
+    if (rows == 0 || cols == 0 || cols > UINT32_MAX) {
+        std::cout << "[VERIFY] invalid QKV matrix geometry\n";
         return;
     }
-    std::cout << "[VERIFY] dequantized blk.0.attn_qkv.weight -> " << dq.rows << "x" << dq.cols << " f32\n";
-
-    uint64_t testRows = std::min<uint64_t>(16, dq.rows);
-    std::vector<float> x(dq.cols, 1.0f), y(testRows, 0.0f);
-    engine.gemvFloat(dq.data.data(), x.data(), y.data(), testRows, dq.cols);
-    float sum = 0.0f;
-    for (float v : y) sum += v;
-    std::cout << "[VERIFY] GEMV(" << testRows << "x" << dq.cols << ") sum = " << sum << "\n";
+    const uint64_t testRows = std::min<uint64_t>(16, rows);
+    std::vector<float> x(static_cast<size_t>(cols), 1.0f);
+    std::vector<float> cpuTile;
+    std::vector<float> y(static_cast<size_t>(testRows), 0.0f);
+    if (!engine.dequantTensorRange(*qkv, 0, testRows * cols, cpuTile) ||
+        cpuTile.size() != static_cast<size_t>(testRows * cols)) {
+        std::cout << "[VERIFY] bounded compressed QKV range decode failed\n";
+        return;
+    }
+    engine.gemvFloat(cpuTile.data(), x.data(), y.data(), testRows, cols);
+    float cpuSum = 0.0f;
+    for (float v : y) cpuSum += v;
+    std::cout << "[VERIFY] bounded CPU GEMV(" << testRows << "x" << cols
+              << ") sum = " << cpuSum << "\n";
 
     if (engine.vulkanReady) {
-        deep2::TensorView wSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(dq.data.data()),
-                           static_cast<size_t>(testRows * dq.cols * 4),
-                           { testRows, dq.cols }, true };
-        deep2::TensorView xSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(x.data()),
-                           static_cast<size_t>(x.size() * 4), { dq.cols }, true };
         for (size_t gi = 0; gi < engine.vulkan->gpuCount(); ++gi) {
             const auto* g = engine.vulkan->gpu(gi);
             std::vector<float> yVulkan;
-            bool ok = engine.vulkanGemv(*g, wSlice, xSlice, yVulkan);
+            const bool ok = engine.vulkanGemvCompressed(
+                *g, *qkv, x.data(), cols, yVulkan, 16);
             float vs = 0.0f;
-            for (float v : yVulkan) vs += v;
-            std::cout << "[VERIFY] Vulkan GEMV on " << g->name << ": " << (ok ? "OK" : "FAILED")
-                      << " sum = " << vs << "\n";
+            bool parity = ok && yVulkan.size() == rows;
+            if (parity) {
+                for (uint64_t i = 0; i < testRows; ++i) {
+                    vs += yVulkan[static_cast<size_t>(i)];
+                    const float reference = y[static_cast<size_t>(i)];
+                    const float actual = yVulkan[static_cast<size_t>(i)];
+                    const float tolerance = 1e-3f + 1e-3f * std::fabs(reference);
+                    if (!std::isfinite(actual) || std::fabs(actual - reference) > tolerance)
+                        parity = false;
+                }
+            }
+            std::cout << "[VERIFY] compressed Vulkan GEMV on " << g->name
+                      << ": " << (ok ? "OK" : "FAILED")
+                      << " | first-row-window sum = " << vs
+                      << " | CPU parity = " << (parity ? "PASS" : "FAIL") << "\n";
         }
     }
     std::cout << "[STATUS] ROM execution bridge complete\n";
