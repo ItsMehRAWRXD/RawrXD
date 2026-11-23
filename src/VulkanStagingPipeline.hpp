@@ -14,6 +14,7 @@ namespace Deep2Rom::Compute {
         void*          mapped_ptr{ nullptr };
         size_t         capacity{ 0 };
         bool           in_use{ false };
+        VkFence        transfer_fence{ VK_NULL_HANDLE };
     };
 
     class VulkanStagingPipeline {
