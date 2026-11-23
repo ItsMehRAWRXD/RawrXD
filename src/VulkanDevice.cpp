@@ -350,7 +350,7 @@ bool VulkanDevice::getOrCreateCachedWeightBuffer(const Gpu& gpu, const std::stri
     evictCachedWeightsLocked(0);
 
     const std::string cacheKey =
-        std::to_string(reinterpret_cast<uintptr_t>(gpu.device)) + ":" + key;
+        std::to_string(reinterpret_cast<std::uintptr_t>(gpu.device)) + ":" + key;
     auto existing = m_weightBuffers.find(cacheKey);
     if (existing != m_weightBuffers.end()) {
         if (existing->second.size == size && existing->second.owner == gpu.device) {
