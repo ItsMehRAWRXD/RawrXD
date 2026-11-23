@@ -606,7 +606,13 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
     enable_language(ASM)
     # Existing generic NEON bench (if present)
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_neon.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/kernels/deflate_neon.S")
-        add_executable(bench_deflate_neon tests/bench_deflate_neon.cpp kernels/deflate_neon.S)
+        add_executable(bench_deflate_neon
+            tests/bench_deflate_neon.cpp
+            kernels/deflate_neon.S
+            kernels/deflate_brutal_neon.S
+            src/gzip_crc32.cpp
+        )
+        target_include_directories(bench_deflate_neon PRIVATE tests include)
         set_target_properties(bench_deflate_neon PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 

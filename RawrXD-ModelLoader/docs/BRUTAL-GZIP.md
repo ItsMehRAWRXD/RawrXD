@@ -42,4 +42,5 @@ superseded until the new CI roundtrip suite passes.
 
 - x64 MSVC: `kernels/deflate_brutal_masm.asm`
 - AArch64: `kernels/deflate_brutal_neon.S`
+- Legacy AArch64 `deflate_neon` symbol: thin alias to the validated brutal NEON entry point.
 - Shared IEEE CRC32: `src/gzip_crc32.cpp`

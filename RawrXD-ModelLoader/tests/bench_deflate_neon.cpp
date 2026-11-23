@@ -1,50 +1,48 @@
+#include "gzip_stored_validator.hpp"
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <cstdint>
 #include <vector>
-#include <chrono>
 #include <random>
-#include <algorithm>
+#include <chrono>
 
-extern "C" void* deflate_neon(const void* src, size_t len, size_t* out_len);
-
-using namespace std::chrono;
+extern "C" void* deflate_neon(const void* src, std::size_t len,
+                              std::size_t* out_len);
 
 int main() {
-    const size_t len = 1048576; // 1 MB
-    std::vector<char> src(len);
+    using clock = std::chrono::high_resolution_clock;
+    constexpr std::size_t len = 1048576;
+    std::vector<std::uint8_t> source(len);
     std::mt19937 rng(42);
-    std::generate(src.begin(), src.end(), [&](){ return (char)rng(); });
+    for (auto& value : source) value = static_cast<std::uint8_t>(rng());
 
-    printf("Benchmarking deflate_neon with 1MB random data...\n");
-
-    // Warmup
-    size_t out_len = 0;
-    void* out = deflate_neon(src.data(), len, &out_len);
-    if (!out) {
-        printf("Allocation failed!\n");
+    std::size_t outputSize = 0;
+    void* output = deflate_neon(source.data(), source.size(), &outputSize);
+    if (!output || !rawrxd_test::validateStoredGzip(
+            static_cast<const std::uint8_t*>(output), outputSize,
+            source.data(), source.size())) {
+        std::fprintf(stderr, "FAIL: NEON gzip stream failed roundtrip validation\\n");
+        std::free(output);
         return 1;
     }
-    printf("Warmup done. Out ptr: %p, Len: %zu\n", out, out_len);
-    free(out);
+    std::free(output);
 
-    // Measure
-    auto t0 = high_resolution_clock::now();
-    out = deflate_neon(src.data(), len, &out_len);
-    auto t1 = high_resolution_clock::now();
-    
-    double ms_asm = duration<double, std::milli>(t1 - t0).count();
-    free(out);
+    const auto start = clock::now();
+    output = deflate_neon(source.data(), source.size(), &outputSize);
+    const auto stop = clock::now();
+    if (!output) return 1;
+    const double ms = std::chrono::duration<double, std::milli>(stop - start).count();
+    const bool valid = rawrxd_test::validateStoredGzip(
+        static_cast<const std::uint8_t*>(output), outputSize,
+        source.data(), source.size());
+    std::free(output);
+    if (!valid) return 1;
 
-    printf("NEON ASM: %.2f ms\n", ms_asm);
-    printf("Target (Qt): ~50.00 ms\n");
-    printf("Speedup vs Target: %.2fx\n", 50.0 / ms_asm);
-
-    if (ms_asm <= 5.0) {
-        printf("SUCCESS: Latency <= 5ms\n");
-    } else {
-        printf("WARNING: Latency > 5ms\n");
-    }
-
+    std::printf("Stored-block gzip packaging: %.3f ms\\n", ms);
+    std::printf("Input: %zu bytes, output: %zu bytes, expansion: %.2f%%\\n",
+        len, outputSize,
+        100.0 * (static_cast<double>(outputSize) / len - 1.0));
+    std::puts("NOTE: DEFLATE BTYPE=00 copies data; this is not a compression-ratio benchmark.");
+    std::puts("NEON_GZIP_BENCH_ROUNDTRIP=PASS");
     return 0;
 }
