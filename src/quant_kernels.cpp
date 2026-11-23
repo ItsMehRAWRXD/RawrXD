@@ -1,6 +1,7 @@
 #include "quant_kernels.hpp"
 #include "native_resident_typed_matvec.hpp"
 
+#include <algorithm>
 #include <cstring>
 #include <cmath>
 #include <limits>
