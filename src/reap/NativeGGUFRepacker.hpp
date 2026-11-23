@@ -677,8 +677,10 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
             // direct-code candidate. For tiny nonzero Q8_K scales the
             // per-group max/127 scale can underflow to FP16 zero even
             // though the original scale rounds to a usable FP16 value.
-            const bool requantValid=maxAbs==0 ||
-                (std::isfinite(actual) && actual!=0);
+            // Even a zero group must not emit an infinite/NaN scale.
+            // Its canonical Q8_0 representation is zero scale and codes.
+            const bool requantValid=std::isfinite(actual) &&
+                (maxAbs==0 || actual!=0);
             // Compare the usual per-group requantization with keeping the
             // original signed codes and rounding only their shared scale.
             // Q8_K codes include -128; both candidate encodings support the
