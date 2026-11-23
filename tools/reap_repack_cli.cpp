@@ -9,7 +9,8 @@
 int main(int argc, char** argv) {
     if(argc<3 || argc>6) {
         std::cerr<<"Usage: rawrxd-reap-repack INPUT.gguf OUTPUT.gguf"
-                    " [--f16 | --q8-0 | --q4-0] [--max-bytes POSITIVE_INTEGER]\n";
+                    " [--f16 | --q8-0 | --q4-0] [--max-bytes POSITIVE_INTEGER]\n"
+                    "  --q4-0 requantizes Q8_0 and Q5_0 tensors; other types are preserved.\n";
         return 2;
     }
     uint64_t budget=UINT64_MAX;
