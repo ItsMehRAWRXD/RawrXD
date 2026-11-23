@@ -99,9 +99,9 @@ float loadWeight(uint index) {
             uint chunk = kLane >> 7u;
             uint laneInChunk = (kLane & 127u) >> 5u;
             uint column = kLane & 31u;
-            uint loIndex = chunk * 64u + (laneInChunk >> 1u) * 32u + column;
+            uint loIndex = chunk * 64u + (laneInChunk & 1u) * 32u + column;
             uint lo = (loadByte(blockOffset + loIndex) >>
-                       ((laneInChunk & 1u) * 4u)) & 15u;
+                       ((laneInChunk >> 1u) * 4u)) & 15u;
             uint hi = (loadByte(blockOffset + 128u + chunk * 32u + column) >>
                        (laneInChunk * 2u)) & 3u;
             int q = int(lo | (hi << 4u)) - 32;
