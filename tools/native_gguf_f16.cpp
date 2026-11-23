@@ -220,10 +220,24 @@ bool encodeQ3K_F64(const uint8_t* raw,float tolerance,uint8_t out[110]) {
     for(int i=0;i<256;++i){const int g=i/16;const double scale=d*ss[g];int code=scale?int(std::round(v[i]/scale))+4:4;code=std::max(0,std::min(7,code));if(!(std::fabs(scale*(code-4)-v[i])<=double(tolerance)))return false;const int within=i%128;low[(i/128)*32+within%32]|=uint8_t((code&3)<<((within/32)*2));if(code&4)high[i%32]|=uint8_t(1u<<(i/32));}
     std::memcpy(out,high,32);std::memcpy(out+32,low,64);std::memcpy(out+96,scales,12);out[108]=uint8_t(hd);out[109]=uint8_t(hd>>8);return true;
 }
+bool encodeQ4K_F64(const uint8_t* raw,float tolerance,uint8_t out[144]) {
+    double v[256],lo[8],hi[8],sc[8],mn[8],maxSc=0,maxMn=0;
+    for(int i=0;i<256;++i){uint64_t bits=0;for(int k=0;k<8;++k)bits|=uint64_t(raw[8*i+k])<<(8*k);std::memcpy(&v[i],&bits,8);if(!std::isfinite(v[i])||!std::isfinite(float(v[i])))return false;}
+    for(int g=0;g<8;++g){lo[g]=hi[g]=v[g*32];for(int j=1;j<32;++j){lo[g]=std::min(lo[g],v[g*32+j]);hi[g]=std::max(hi[g],v[g*32+j]);}sc[g]=(hi[g]-lo[g])/15.0;mn[g]=std::max(0.0,-lo[g]);maxSc=std::max(maxSc,sc[g]);maxMn=std::max(maxMn,mn[g]);}
+    const uint16_t hd=ToHalf(float(maxSc/63.0)),hm=ToHalf(float(maxMn/63.0));const double d=FromHalf(hd),dm=FromHalf(hm);
+    if((maxSc>0&&!(d>0))||(maxMn>0&&!(dm>0)))return false;
+    std::memset(out,0,144);uint8_t scales[12]={},qs[128]={};int si[8]={},mi[8]={};
+    for(int g=0;g<8;++g){si[g]=d?std::max(0,std::min(63,int(std::round(sc[g]/d)))):0;mi[g]=dm?std::max(0,std::min(63,int(std::round(mn[g]/dm)))):0;
+      if(g<4){scales[g]=uint8_t(si[g]);scales[g+4]=uint8_t(mi[g]);}
+      else {scales[g+4]=uint8_t((si[g]&15)|((mi[g]&15)<<4));scales[g-4]|=uint8_t((si[g]>>4)<<6);scales[g]|=uint8_t((mi[g]>>4)<<6);}
+    }
+    for(int i=0;i<256;++i){const int g=i/32;const double ds=d*si[g],ms=dm*mi[g];int q=ds?int(std::round((v[i]+ms)/ds)):0;q=std::max(0,std::min(15,q));if(!(std::fabs(ds*q-ms-v[i])<=double(tolerance)))return false;const int chunk=i/64,within=i%64,byte=chunk*32+(within%32);if(within<32)qs[byte]|=uint8_t(q);else qs[byte]|=uint8_t(q<<4);}
+    std::memcpy(out,scales,12);out[12]=uint8_t(hd);out[13]=uint8_t(hd>>8);out[14]=uint8_t(hm);out[15]=uint8_t(hm>>8);std::memcpy(out+16,qs,128);return true;
+}
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|q2_k|q3_k|f32|f16|bf16|q8_k|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|q2_k|q3_k|q4_k|f32|f16|bf16|q8_k|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     bool ownsTemporary=false;
@@ -240,6 +254,7 @@ int main(int argc,char** argv) {
         const bool f32=argc==5 && std::string(argv[4])=="f32";
         const bool automatic=argc==5 && std::string(argv[4])=="auto";
         const bool bf16=argc==5 && std::string(argv[4])=="bf16";
+        const bool q4k=argc==5 && std::string(argv[4])=="q4_k";
         const bool q3k=argc==5 && std::string(argv[4])=="q3_k";
         const bool q2k=argc==5 && std::string(argv[4])=="q2_k";
         const bool q8k=argc==5 && std::string(argv[4])=="q8_k";
@@ -248,10 +263,10 @@ int main(int argc,char** argv) {
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q3k && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q4k && !q3k && !q2k && !q8k && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && !f32 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
-        const bool quantized=q3k||q2k||q8k||q8||q4||q5||q41||q51;
+        const bool quantized=q4k||q3k||q2k||q8k||q8||q4||q5||q41||q51;
         // Require the complete argument to be a finite nonnegative number.
         // std::stof alone accepts trailing garbage (e.g. "0.1oops").
         const std::string toleranceArg(argv[3]);
@@ -357,6 +372,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamF64toQ51(ts.size(),false);
         std::vector<bool> streamF64toQ4(ts.size(),false);
         std::vector<bool> streamF64toQ5(ts.size(),false);
+        std::vector<bool> streamF64toQ4K(ts.size(),false);
         std::vector<bool> streamF64toQ3K(ts.size(),false);
         std::vector<bool> streamF64toQ2K(ts.size(),false);
         std::vector<bool> streamF64toQ8K(ts.size(),false);
@@ -483,6 +499,11 @@ int main(int argc,char** argv) {
                 }
                 if(streamF64toQ4[i]||streamF64toQ5[i])continue;
                 if(q4||q5)continue;
+            }
+            if(t.type==28 && q4k && t.dims[0]%256==0 && t.bytes%2048==0) {
+                seek(in,add(dataStart,t.offset));bool valid=true;uint8_t raw[2048],encoded[144];
+                for(U off=0;off<t.bytes;off+=2048){if(!in.read(reinterpret_cast<char*>(raw),2048))throw std::runtime_error("truncated F64 Q4_K preflight");if(!encodeQ4K_F64(raw,tolerance,encoded)){valid=false;break;}}
+                if(valid){streamF64toQ4K[i]=true;outputTypes[i]=12;++changed;continue;}continue;
             }
             if(t.type==28 && q3k && t.dims[0]%256==0 && t.bytes%2048==0) {
                 seek(in,add(dataStart,t.offset));bool valid=true;uint8_t raw[2048],encoded[110];
@@ -1009,6 +1030,7 @@ int main(int argc,char** argv) {
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
             U encodedBytes=t.bytes;
+            if(streamF64toQ4K[i])encodedBytes=mul(t.bytes/2048,144);
             if(streamF64toQ3K[i])encodedBytes=mul(t.bytes/2048,110);
             if(streamF64toQ41[i])encodedBytes=mul(t.bytes/256,20);
             else if(streamF64toQ51[i])encodedBytes=mul(t.bytes/256,24);
@@ -1038,7 +1060,10 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamF64toQ3K[i]) {
+            if(streamF64toQ4K[i]) {
+                seek(in,add(dataStart,t.offset));uint8_t raw[2048],encoded[144];
+                for(U off=0;off<t.bytes;off+=2048){if(!in.read(reinterpret_cast<char*>(raw),2048))throw std::runtime_error("truncated F64 Q4_K payload");if(!encodeQ4K_F64(raw,tolerance,encoded))throw std::runtime_error("Q4_K preflight/write mismatch");out.write(reinterpret_cast<const char*>(encoded),144);if(!out)throw std::runtime_error("F64 Q4_K write failure");}
+            } else if(streamF64toQ3K[i]) {
                 seek(in,add(dataStart,t.offset));uint8_t raw[2048],encoded[110];
                 for(U off=0;off<t.bytes;off+=2048){if(!in.read(reinterpret_cast<char*>(raw),2048))throw std::runtime_error("truncated F64 Q3_K payload");if(!encodeQ3K_F64(raw,tolerance,encoded))throw std::runtime_error("Q3_K preflight/write mismatch");out.write(reinterpret_cast<const char*>(encoded),110);if(!out)throw std::runtime_error("F64 Q3_K write failure");}
             } else if(streamF64toQ2K[i]) {
