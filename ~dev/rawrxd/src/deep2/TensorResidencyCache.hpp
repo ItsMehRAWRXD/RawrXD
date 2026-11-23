@@ -37,7 +37,7 @@ public:
 
     bool Insert(std::string key, std::shared_ptr<const Storage> payload) {
         if (key.empty() || !payload) return false;
-        const auto bytes=payload->storedBytes();
+        const auto bytes=payload->residentBytes();
         if (bytes>capacity_) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         auto old=entries_.find(key);
