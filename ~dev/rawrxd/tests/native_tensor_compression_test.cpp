@@ -38,6 +38,11 @@ int main() {
     CHECK(bf16.DecodeRange(0,1,bf16Out));
     CHECK(std::fabs(bf16Out[0]-largeFinite[0])<=1024.0f);
 
+    // Invalid ranges fail closed and do not touch caller memory.
+    float untouched[2] = {7.0f,8.0f};
+    CHECK(!compact.DecodeRange(compact.elements()-1,2,untouched));
+    CHECK(untouched[0]==7.0f && untouched[1]==8.0f);
+
     // Lossless fallback must preserve values that are not representable in 16 bits.
     const float difficult[] = {1.0001234f, -3.1415927f, 1.0e-20f, 65520.0f};
     auto exact=ChunkedF32Storage::Build(difficult,4,0.0f,4);
