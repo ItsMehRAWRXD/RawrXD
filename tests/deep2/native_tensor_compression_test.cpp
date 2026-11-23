@@ -290,6 +290,29 @@ int main() {
     assert(!packedStorage.CopyUniform16BitRange(
         127, 129, packedEncoding, nullptr, packedWindow.size()));
 
+    // Cross-chunk lossless byte reads, including the final partial chunk.
+    std::vector<uint8_t> byteSource(1000, 0x3c);
+    auto byteStorage = ChunkedByteStorage::BuildFromReader(
+        byteSource.size(),
+        [&](size_t offset, size_t count, uint8_t* out) {
+            std::copy(byteSource.begin() + offset,
+                      byteSource.begin() + offset + count, out);
+            return true;
+        }, 128);
+    std::vector<uint8_t> byteWindow(200, 0x7f), byteScratch;
+    byteStorage.ReadRange(125, 200, byteWindow.data(), byteScratch);
+    assert(std::all_of(byteWindow.begin(), byteWindow.end(),
+                       [](uint8_t v) { return v == 0x3c; }));
+    std::vector<uint8_t> byteTail(20, 0);
+    byteStorage.ReadRange(980, 20, byteTail.data(), byteScratch);
+    assert(std::all_of(byteTail.begin(), byteTail.end(),
+                       [](uint8_t v) { return v == 0x3c; }));
+    bool byteOutOfRange = false;
+    try { byteStorage.ReadRange(999, 2, byteTail.data(), byteScratch); }
+    catch (const std::out_of_range&) { byteOutOfRange = true; }
+    assert(byteOutOfRange);
+    assert(byteStorage.storedBytes() < byteSource.size());
+
     // Count the retained per-chunk directory against the hard budget before
     // source I/O. Tiny chunks cannot create unbounded metadata outside the cap.
     size_t f32MetadataReads = 0;
