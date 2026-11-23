@@ -630,7 +630,8 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
                 (std::isfinite(actual) && actual!=0);
             // Compare the usual per-group requantization with keeping the
             // original signed codes and rounding only their shared scale.
-            // Q8_K codes include -128; the direct candidate preserves it.
+            // Q8_K codes include -128; both candidate encodings support the
+            // complete signed int8 range, including that endpoint.
             // Select the candidate with smaller maximum reconstruction
             // error, rather than always discarding the original codes.
             unsigned char requant[32]={};
