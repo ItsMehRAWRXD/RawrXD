@@ -43,6 +43,21 @@ and scalar GEMV paths for Q2_K through Q6_K; Q4_K also has its existing
 specialized path. The integration test creates real GGUF files and loads
 each K type through the mapped Deep2 loader.
 
+## Canonical GGUF geometry
+
+The ROM path uses canonical GGML type IDs and block byte counts rather than
+shifted K-type labels or guessed block sizes:
+
+| GGUF type | Values per block | Bytes per block |
+|---|---:|---:|
+| Q4_0 / Q4_1 / Q5_0 / Q5_1 | 32 | 18 / 20 / 22 / 24 |
+| Q8_0 / Q8_1 | 32 | 34 / 36 |
+| Q2_K / Q3_K / Q4_K / Q5_K / Q6_K / Q8_K | 256 | 84 / 110 / 144 / 176 / 210 / 292 |
+
+TensorROM validates rank, dimension-product overflow, row/block alignment,
+known type IDs, payload bounds and exact partial-read ranges. It honors
+`general.alignment` (32-byte GGUF default) rather than assuming 64 bytes.
+
 ## Compressed in-memory F32 residency
 
 The file writer is not the runtime memory solution. Deep2 now has a separate
