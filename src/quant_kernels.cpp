@@ -227,6 +227,29 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     return false;
 }
 
+static bool checkedRangeStorageBytes(TensorType type, std::uint64_t elements,
+                                      std::uint64_t& bytes) {
+    std::uint64_t blockValues = 1;
+    std::uint64_t blockBytes = 0;
+    switch (type) {
+    case TensorType::F32: blockBytes = 4; break;
+    case TensorType::F16: blockBytes = 2; break;
+    case TensorType::Q8_0: blockValues = 32; blockBytes = 34; break;
+    case TensorType::Q2_K: blockValues = 256; blockBytes = 82; break;
+    case TensorType::Q3_K_S:
+    case TensorType::Q3_K_M: blockValues = 256; blockBytes = 114; break;
+    case TensorType::Q4_K_S: blockValues = 256; blockBytes = 146; break;
+    case TensorType::Q6_K: blockValues = 256; blockBytes = 210; break;
+    default: return false;
+    }
+    const std::uint64_t blocks = elements / blockValues +
+                                 (elements % blockValues != 0 ? 1u : 0u);
+    if (blocks > std::numeric_limits<std::uint64_t>::max() / blockBytes)
+        return false;
+    bytes = blocks * blockBytes;
+    return true;
+}
+
 bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
                            const TensorRangeReader& reader,
                            std::uint64_t firstElement, std::uint64_t elementCount,
@@ -243,8 +266,6 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     chunkElements = (chunkElements / block) * block;
     if (chunkElements == 0) return false;
 
-    const std::uint64_t byteOffset = tensorStorageBytes(firstElement, type);
-    if (byteOffset > std::numeric_limits<std::uint64_t>::max()) return false;
     if (elementCount > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max()))
         return false;
     output.reserve(static_cast<std::size_t>(elementCount));
@@ -253,9 +274,10 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     while (completed < elementCount) {
         const std::uint64_t take = std::min(chunkElements, elementCount - completed);
         const std::uint64_t absoluteElement = firstElement + completed;
-        const std::uint64_t sourceOffset = tensorStorageBytes(absoluteElement, type);
-        const std::uint64_t sourceBytes = tensorStorageBytes(take, type);
-        if (sourceOffset > std::numeric_limits<std::uint64_t>::max() - sourceBytes ||
+        std::uint64_t sourceOffset = 0, sourceBytes = 0;
+        if (!checkedRangeStorageBytes(type, absoluteElement, sourceOffset) ||
+            !checkedRangeStorageBytes(type, take, sourceBytes) ||
+            sourceOffset > std::numeric_limits<std::uint64_t>::max() - sourceBytes ||
             sourceBytes > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max())) {
             output.clear();
             return false;
