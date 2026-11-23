@@ -63,6 +63,10 @@ int main() {
     CHECK(lease);
     CHECK(cache.Trim(0)==0);
     CHECK(cache.GetStats().pinnedEntries==1);
+    auto secondPayload=std::make_shared<const ChunkedF32Storage>(std::move(exact));
+    CHECK(!cache.Insert("layer1.weight",secondPayload));
+    CHECK(cache.GetStats().entries==1);
+    CHECK(static_cast<bool>(cache.Acquire("layer0.weight")));
     lease=Deep2::TensorResidencyCache::Lease{};
     CHECK(cache.Trim(0)==residentBytes);
     CHECK(cache.GetStats().residentBytes==0);
