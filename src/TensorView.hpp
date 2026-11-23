@@ -41,6 +41,7 @@ enum class TensorType : uint32_t {
     I64   = 27,
     F64   = 28,
     BF16  = 30,
+    MXFP4 = 39,
 };
 
 inline const char* tensorTypeName(TensorType t) {
@@ -67,6 +68,7 @@ inline const char* tensorTypeName(TensorType t) {
         case TensorType::I64: return "I64";
         case TensorType::F64: return "F64";
         case TensorType::BF16: return "BF16";
+        case TensorType::MXFP4: return "MXFP4";
         default: return "UNKNOWN";
     }
 }
@@ -87,6 +89,7 @@ inline bool isQuantized(TensorType t) {
         case TensorType::Q8_K:
         case TensorType::IQ4_NL:
         case TensorType::IQ4_XS:
+        case TensorType::MXFP4:
             return true;
         default:
             return false;
@@ -118,6 +121,7 @@ inline double tensorTypeBytesPerValue(TensorType t) {
         case TensorType::Q8_K: return 292.0 / 256.0;
         case TensorType::IQ4_NL: return 18.0 / 32.0;
         case TensorType::IQ4_XS: return 136.0 / 256.0;
+        case TensorType::MXFP4: return 17.0 / 32.0;
         default: return 0.0;
     }
 }
@@ -131,6 +135,7 @@ inline std::size_t quantBlockSize(TensorType t) {
         case TensorType::Q8_0:
         case TensorType::Q8_1:
         case TensorType::IQ4_NL:
+        case TensorType::MXFP4:
             return 32;
         case TensorType::IQ4_XS:
             return 256;
