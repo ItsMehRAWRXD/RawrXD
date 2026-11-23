@@ -234,6 +234,19 @@ def run(binary):
             assert data[ds+off:ds+off+len(values)*4]==struct.pack("<"+"f"*len(values),*values)
             offq=desc["blk.0.attn_k.weight"][2]
             assert data[ds+offq:ds+offq+32]==quant
+        # 2D tensor with 16-wide rows must not be quantized by flattening
+        # across row boundaries, even though the total element count is 64.
+        narrow=root/"narrow-rows.gguf"
+        kv=S("general.architecture")+U32(8)+S("llama")
+        kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+        raw=struct.pack("<"+"f"*len(values),*values)
+        header=b"GGUF"+U32(3)+U64(1)+U64(2)+kv
+        header+=S("blk.0.attn_q.weight")+U32(2)+U64(16)+U64(4)+U32(0)+U64(0)
+        narrow.write_bytes(pad(header)+raw)
+        for fmt in ("q8_0","q5_0","q5_1","q4_0","q4_1"):
+            dest=root/("narrow-"+fmt+".gguf")
+            subprocess.run([binary,str(narrow),str(dest),"10000",fmt],check=True)
+            assert dest.read_bytes()==narrow.read_bytes()
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
