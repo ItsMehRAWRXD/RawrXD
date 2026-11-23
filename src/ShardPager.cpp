@@ -112,40 +112,32 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
 
 void PageCache::release(Page* page) {
     if (!page) return;
-    uint32_t prev = page->leaseCount.fetch_sub(1, std::memory_order_acq_rel);
-    if (prev <= 1) {
-        // Last lease dropped: page remains resident (cached) but is now evictable.
-        std::lock_guard<std::mutex> lock(m_mutex);
-        touch(page);
-    }
+    // Synchronize the final unpin with eviction and acquisition.
+    std::lock_guard<std::mutex> lock(m_mutex);
+    const uint32_t count = page->leaseCount.load(std::memory_order_relaxed);
+    if (count == 0) return;
+    page->leaseCount.store(count - 1, std::memory_order_release);
+    if (count == 1 && page->inCache) touch(page);
 }
 
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
     if (size == 0) return true;
     if (!out || offset > UINT64_MAX - size) return false;
-    std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
-    std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
-    std::vector<Page*> held;
-    held.reserve(lastPage - firstPage + 1);
-    for (std::size_t p = firstPage; p <= lastPage; ++p) {
-        Page* pg = acquire(shard, static_cast<uint64_t>(p));
-        if (!pg) {
-            for (Page* rel : held) release(rel);
-            return false;
-        }
-        held.push_back(pg);
-    }
+    // Hold one page at a time: a tensor can exceed the entire RAM cache budget.
+    // The caller's output is the only full-range allocation.
     std::uint64_t copied = 0;
     while (copied < size) {
-        std::size_t p = static_cast<std::size_t>((offset + copied) / m_pageSize);
-        Page* pg = held[p - firstPage];
-        std::size_t pageRel = static_cast<std::size_t>((offset + copied) % m_pageSize);
-        std::size_t avail = m_pageSize - pageRel;
-        std::size_t chunk = (std::size_t)(size - copied) < avail ? (std::size_t)(size - copied) : avail;
-        std::memcpy(out + copied, pg->data.data() + pageRel, chunk);
-        copied += chunk;
+        const std::uint64_t absolute = offset + copied;
+        const std::uint64_t pageNo = absolute / m_pageSize;
+        const std::size_t within = static_cast<std::size_t>(absolute % m_pageSize);
+        const std::size_t take = static_cast<std::size_t>(
+            std::min<std::uint64_t>(size - copied, m_pageSize - within));
+        Page* page = acquire(shard, pageNo);
+        if (!page) return false;
+        std::memcpy(out + copied, page->data.data() + within, take);
+        release(page);
+        copied += take;
     }
-    for (Page* rel : held) release(rel);
     return true;
 }
 
