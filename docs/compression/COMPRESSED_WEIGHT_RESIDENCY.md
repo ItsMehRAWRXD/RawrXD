@@ -33,7 +33,6 @@ The default payload is stored byte-exactly. GGML type IDs and quantized block la
 
 The following are deliberately not admitted by the single-shard path yet:
 
-- Token embeddings, whose lookup path still requires direct mapped access.
 - Norms, biases, and other vectors whose scalar consumers still dereference the raw pointer.
 - Three-dimensional expert tensors and unsupported/ambiguous row geometries.
 - Any tensor whose compression does not produce actual byte savings.
