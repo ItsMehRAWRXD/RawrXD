@@ -92,20 +92,30 @@ int main() {
                   outputBytes.begin() + static_cast<std::ptrdiff_t>(base + 18), packed);
     }
 
-    // Stream only token 1's byte range from the two-row embedding file.
-    const auto embedding = load_resident(
-        embeddingBytes, "embedding", hidden * 2, hidden * 2);
+    // Stream each selected token row independently from the two-row
+    // embedding tensor. No full vocabulary matrix is retained by either view.
+    const auto embeddingToken0 = load_resident(
+        embeddingBytes, "embedding_token0", 0, hidden * 2);
+    const auto embeddingToken1 = load_resident(
+        embeddingBytes, "embedding_token1", hidden * 2, hidden * 2);
     const auto projection = load_resident(identityBytes, "projection");
     const auto output = load_resident(outputBytes, "output");
-    CHECK(embedding.size() == hidden * 2); // resident object contains one row, not both tokens
+    CHECK(embeddingToken0.size() == hidden * 2);
+    CHECK(embeddingToken1.size() == hidden * 2);
     CHECK(projection.size() == hidden * hidden * 2);
     CHECK(output.size() == 2 * 18);
-    CHECK(embedding.compressed_bytes() < embedding.size());
+    CHECK(embeddingToken0.compressed_bytes() < embeddingToken0.size());
+    CHECK(embeddingToken1.compressed_bytes() < embeddingToken1.size());
     CHECK(projection.compressed_bytes() < projection.size());
 
-    // The runtime fetches only the requested token's row.
+    // The runtime fetches the requested token row, not the first prompt row
+    // repeatedly. Token 0 is all zeros; token 1 is [1, 0.5, 0, ...].
+    const auto token0Hidden = rawrxd::compression::resident_f16_row(
+        embeddingToken0, 0, 1, hidden, 16);
+    CHECK(token0Hidden.size() == hidden);
+    for (float value : token0Hidden) CHECK(value == 0.0f);
     const auto hidden0 = rawrxd::compression::resident_f16_row(
-        embedding, 0, 1, hidden, 16);
+        embeddingToken1, 0, 1, hidden, 16);
     CHECK(hidden0.size() == hidden);
     CHECK(hidden0[0] == 1.0f && hidden0[1] == 0.5f);
     for (std::size_t i = 2; i < hidden; ++i) CHECK(hidden0[i] == 0.0f);
