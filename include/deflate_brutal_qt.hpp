@@ -1,8 +1,8 @@
 #pragma once
 
-// MASM-optimised "brutal" deflate: RFC 1952 gzip framing around DEFLATE
-// stored blocks. The kernel (deflate_brutal_masm) is x64 MASM; this header is
-// the C++ side.
+// Throughput-oriented RFC 1952 gzip framing around DEFLATE stored blocks.
+// Windows x64 uses the MASM provider when the product target is linked;
+// other builds use the byte-compatible portable C++ implementation.
 //
 // This header is consumed by BOTH Qt builds (compression_interface.cpp,
 // gguf_loader.cpp's Qt consumers) and Qt-free builds (the Win32 IDE, the GGUF
@@ -35,7 +35,7 @@ inline Bytes compressStoredPortable(const uint8_t* data, std::size_t size);
 using Bytes = std::vector<uint8_t>;
 
 /**
- * @brief Compress a raw byte buffer using brutal MASM stored-block gzip
+ * @brief Compress a raw byte buffer using stored-block gzip
  * @param in Raw input data
  * @return Compressed gzip stream (RFC 1952 compliant)
  *
@@ -60,7 +60,7 @@ inline Bytes compress(const Bytes& in)
 }
 
 /**
- * @brief Compress a raw pointer/size pair using brutal MASM stored-block gzip.
+ * @brief Compress a raw pointer/size pair using stored-block gzip.
  */
 #if !defined(QT_CORE_LIB)
 inline Bytes compress(const void* data, std::size_t size)
@@ -203,7 +203,7 @@ inline std::size_t gzipHeaderSize(const uint8_t* data, std::size_t len)
 }
 
 /**
- * @brief Inflate a gzip stream produced by deflate_brutal_masm.
+ * @brief Inflate a gzip stream produced by the stored-block encoder.
  *
  * Dependency-free: decoded from the raw DEFLATE stored-block stream rather
  * than relying on qUncompress, so it works in Qt-free builds and on any Qt
@@ -281,7 +281,7 @@ inline Bytes decompress(const Bytes& compressed,
 #if defined(QT_CORE_LIB) || defined(Q_QDOC)
 
 /**
- * @brief Compress QByteArray using brutal MASM stored-block gzip
+ * @brief Compress QByteArray using stored-block gzip
  * @param in Raw input data
  * @return Compressed gzip stream (RFC 1952 compliant)
  */
@@ -312,7 +312,7 @@ inline QByteArray compress(const QByteArray& in)
 }
 
 /**
- * @brief Compress raw buffer using brutal MASM stored-block gzip
+ * @brief Compress raw buffer using stored-block gzip
  */
 #if defined(QT_CORE_LIB) || defined(Q_QDOC)
 inline QByteArray compress(const void* data, std::size_t size)
@@ -340,7 +340,7 @@ inline QByteArray compress(const void* data, std::size_t size)
 #endif
 
 /**
- * @brief Decompress gzip stream using MASM inflate kernel
+ * @brief Decompress gzip stream using the dependency-free stored-block decoder
  */
 inline QByteArray decompress(const QByteArray& compressed)
 {
