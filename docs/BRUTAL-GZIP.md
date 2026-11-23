@@ -55,3 +55,12 @@ supports an explicit decompressed-output ceiling (16 GiB default). The maximum
 output-size planner uses checked arithmetic and accounts for the mandatory
 empty stored block. The CMake test covers both zlib interoperability and
 wrapper-level corruption/ceiling rejection.
+
+## Cross-platform provider selection
+
+The shared C++ wrapper selects the x64 MASM routine only when the consuming
+target links the production library and receives
+RAWRXD_HAVE_BRUTAL_GZIP_MASM=1. Other builds use a portable C++ stored-block
+encoder with the same gzip wire format and CRC32/ISIZE contract. A separate
+portable contract CTest deliberately avoids linking the MASM library so the
+fallback remains covered even on Windows.
