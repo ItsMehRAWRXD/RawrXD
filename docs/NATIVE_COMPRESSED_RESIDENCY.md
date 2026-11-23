@@ -9,7 +9,7 @@ This change adds a dependency-free C++17 compressed-weight storage path. It is a
 3. `ResidentCompressedTensor` retains encoded blocks and releases each temporary source block after admission. It does not retain a full uncompressed tensor.
 4. `read(offset, destination, length)` reconstructs only the requested range. RLE ranges are expanded directly into the destination without materializing a full block.
 5. `BoundedWeightStager` limits each kernel-facing decode to a caller-selected scratch budget.
-6. Typed resident GEMV consumes F32, F16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, and Q8_1 matrices row-by-row using bounded staging; quantized blocks are decoded directly into the accumulator and never expanded into a full F32 matrix.
+6. Typed resident GEMV consumes F32, F16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, and Q8_1 matrices row-by-row using bounded staging; quantized blocks are decoded directly into the accumulator and never expanded into a full F32 matrix. A deterministic synthetic-model E2E test now exercises F16 embedding-row lookup, an F16 projection, Q4_0 logits, an independent scalar reference, eight concurrent inference requests, and staging-budget rejection.
 
 ## Correctness and safety contracts
 
@@ -39,7 +39,7 @@ The root CMake project now registers eight regression targets, including the qua
 - `native_resident_typed_matvec_test` (F32/F16/Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1 matvec and selected-row reads plus GGUF byte-geometry checks)
 - `native_quantized_dequant_test` (independent Q4_0/Q4_1/Q5_0/Q5_1/Q8_0/Q8_1 known answers, F16 subnormal, truncated block, and overflow rejection)
 
-They compile as C++17 and do not require Vulkan, Qt, or model downloads. The dedicated GitHub Actions workflow compiles and runs the header-only residency tests plus the linked quant-kernel reference test directly on Linux and Windows.
+They compile as C++17 and do not require Vulkan, Qt, or model downloads. The dedicated GitHub Actions workflow compiles and runs the header-only residency tests, linked quant-kernel reference test, and synthetic-model E2E smoke test directly on Linux and Windows.
 
 ## Next integration gates
 
