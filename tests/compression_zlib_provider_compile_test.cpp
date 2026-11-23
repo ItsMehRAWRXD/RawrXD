@@ -66,6 +66,27 @@ int main() {
         encoded.bytes.data(), encoded.bytes.size() - 1, input.size());
     if (truncated.status != Status::CorruptData) return 10;
 
+    // Exercise embedded NULs, high-bit bytes and incompressible content.
+    std::vector<std::uint8_t> binary(65536);
+    std::uint32_t state = 0xC0FFEE42u;
+    for (auto& byte : binary) {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        byte = static_cast<std::uint8_t>(state);
+    }
+    binary[0] = 0;
+    binary[1] = 0xff;
+    binary[2] = 0x80;
+    if (!roundTrip(binary.data(), binary.size())) return 12;
+
+    // Corrupt the Adler-32 trailer to test checksum enforcement.
+    std::vector<std::uint8_t> damaged = encoded.bytes;
+    damaged.back() ^= 0x01;
+    if (rawrxd::compression::decompress(
+            damaged.data(), damaged.size(), input.size()).status !=
+        Status::CorruptData) return 13;
+
     // Empty compressed input preserves the documented legacy contract.
     const Result empty = rawrxd::compression::decompress(nullptr, 0, 0);
     if (empty.status != Status::Ok || !empty.bytes.empty()) return 11;
