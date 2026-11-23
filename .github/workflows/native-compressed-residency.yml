@@ -18,6 +18,10 @@ on:
   pull_request:
     paths:
       - "include/native_*.hpp"
+      - "src/Deep2Engine.cpp"
+      - "src/Deep2Engine.hpp"
+      - "src/TensorView.hpp"
+      - "src/quant_kernels.cpp"
       - "tests/native_*_test.cpp"
       - "tests/native_file_tensor_reader_test.cpp"
       - "tests/native_resident_*_test.cpp"
