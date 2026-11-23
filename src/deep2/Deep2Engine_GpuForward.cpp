@@ -482,15 +482,12 @@ bool Deep2Engine::forwardLayerGpuResident(
                     rowBase += tileRows;
                 }
             } else {
-                std::vector<uint8_t> compressedPacked;
+                // An unsupported compressed layout must not silently allocate
+                // a full uncompressed matrix. Keep the runtime-residency
+                // contract explicit and fail before dispatching GPU work.
                 if (!packedData && wt.hasCompressedBacking()) {
-                    compressedPacked.resize(wt.sizeBytes);
-                    std::string decodeError;
-                    if (!wt.readBytes(0, compressedPacked.data(), compressedPacked.size(), &decodeError)) {
-                        gpuForwardTrace("reject: compressed packed-weight read failed");
-                        return false;
-                    }
-                    packedData = compressedPacked.data();
+                    gpuForwardTrace("reject: compressed packed-weight tile geometry unsupported");
+                    return false;
                 }
                 if (!packedData) return false;
                 ok = gpu->DispatchGemvQuant(wt.type, packedData, wt.sizeBytes,
