@@ -55,6 +55,11 @@ public:
             return false;
         }
         const size_t stored = built->storedBytes();
+        const size_t logical = elementCount * sizeof(float);
+        // A raw fallback is not a compression win. Do not duplicate an F32
+        // tensor in the cache when no lossless/tolerance-approved encoding
+        // actually reduces its resident footprint.
+        if (elementCount && stored >= logical) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         if(stored > budgetBytes_) return false;
         if(entries_.find(key)!=entries_.end()) {
