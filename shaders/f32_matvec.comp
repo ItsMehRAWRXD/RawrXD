@@ -1,0 +1,38 @@
+#version 450
+// ============================================================================
+// f32_matvec.comp -- GPU F32 baseline matvec for comparison against INT4.
+// ----------------------------------------------------------------------------
+// Same dispatch shape as int4_matvec.comp (one workgroup per output row, 64
+// threads) but reads a full F32 weight buffer. This is the baseline that the
+// INT4 path must match or beat on the same device/shape/timing.
+// Bindings: 0=F32 weights, 1=input x, 2=output y, 3=dims.
+// ============================================================================
+layout(local_size_x = 64) in;
+
+layout(set = 0, binding = 0) readonly  buffer Weights { float w[]; };
+layout(set = 0, binding = 1) readonly  buffer InputX  { float x[]; };
+layout(set = 0, binding = 2) writeonly buffer OutputY { float y[]; };
+layout(set = 0, binding = 3) uniform  Dims { uint rows; uint cols; uint bpr; };
+
+shared float s_partial[64];
+
+void main() {
+    uint row = gl_WorkGroupID.x;
+    if (row >= rows) return;
+    uint tid = gl_LocalInvocationID.x;
+
+    float acc = 0.0;
+    uint base = row * cols;
+    // stride-64 loop over the row's columns
+    for (uint c = tid; c < cols; c += 64) {
+        acc += w[base + c] * x[c];
+    }
+    s_partial[tid] = acc;
+    barrier();
+
+    for (uint stride = 32; stride > 0; stride >>= 1) {
+        if (tid < stride) s_partial[tid] += s_partial[tid + stride];
+        barrier();
+    }
+    if (tid == 0) y[row] = s_partial[0];
+}
