@@ -28,7 +28,7 @@ public:
         std::shared_ptr<const Storage> payload_;
     };
     struct Stats {
-        std::size_t capacityBytes=0, residentBytes=0, entries=0, pinnedEntries=0;
+        std::size_t capacityBytes=0, residentBytes=0, peakResidentBytes=0, entries=0, pinnedEntries=0;
         std::uint64_t hits=0, misses=0, evictions=0;
     };
     explicit TensorResidencyCache(std::size_t capacity) : capacity_(capacity) {}
@@ -38,7 +38,8 @@ public:
     bool Insert(std::string key, std::shared_ptr<const Storage> payload) {
         if (key.empty() || !payload) return false;
         const auto bytes=payload->residentBytes();
-        if (bytes>capacity_) return false;
+        // Empty payloads cannot back a tensor; never consume an LRU entry for one.
+        if (!bytes || bytes>capacity_) return false;
         std::lock_guard<std::mutex> lock(mutex_);
         auto old=entries_.find(key);
         std::size_t oldBytes=0;
@@ -53,14 +54,18 @@ public:
         const std::size_t projected=resident_-oldBytes;
         if (projected>capacity_-bytes) {
             const std::size_t required=projected-(capacity_-bytes);
-            std::size_t reclaimable=0;
-            for (auto it=lru_.rbegin();it!=lru_.rend() && reclaimable<required;++it) {
+            // Subtract the remaining deficit instead of summing potentially huge
+            // payload sizes: addition can wrap size_t and falsely reject admission.
+            std::size_t deficit=required;
+            for (auto it=lru_.rbegin();it!=lru_.rend() && deficit;++it) {
                 if (*it==key) continue;
                 auto candidate=entries_.find(*it);
-                if (candidate!=entries_.end() && candidate->second.payload.use_count()==1)
-                    reclaimable+=candidate->second.bytes;
+                if (candidate!=entries_.end() && candidate->second.payload.use_count()==1) {
+                    const auto available=candidate->second.bytes;
+                    deficit=available>=deficit ? 0 : deficit-available;
+                }
             }
-            if (reclaimable<required) return false;
+            if (deficit) return false;
         }
         if (old!=entries_.end()) {
             resident_-=oldBytes;
@@ -72,6 +77,7 @@ public:
         Entry e; e.payload=std::move(payload); e.bytes=bytes; e.lru=lru_.begin();
         entries_.emplace(std::move(key),std::move(e));
         resident_+=bytes;
+        if (resident_>peakResident_) peakResident_=resident_;
         return true;
     }
 
@@ -109,6 +115,7 @@ public:
     Stats GetStats() const {
         std::lock_guard<std::mutex> lock(mutex_);
         Stats s; s.capacityBytes=capacity_; s.residentBytes=resident_;
+        s.peakResidentBytes=peakResident_;
         s.entries=entries_.size(); s.hits=hits_; s.misses=misses_; s.evictions=evictions_;
         for (const auto& kv:entries_) if (kv.second.payload.use_count()>1) ++s.pinnedEntries;
         return s;
@@ -132,6 +139,7 @@ private:
     const std::size_t capacity_;
     mutable std::mutex mutex_;
     std::size_t resident_=0;
+    std::size_t peakResident_=0;
     std::uint64_t hits_=0,misses_=0,evictions_=0;
     std::list<std::string> lru_;
     Map entries_;
