@@ -4441,7 +4441,22 @@ endif()
 # MASM God-Mode deflate benchmark
 if(MSVC)
     enable_language(ASM_MASM)
-    
+
+    # The MASM stored-block gzip encoder is a real product library, not merely
+    # an assembly source compiled by the benchmark executable.
+    add_library(rawrxd_brutal_gzip STATIC
+        kernels/deflate_brutal_masm.asm)
+    target_include_directories(rawrxd_brutal_gzip PUBLIC
+        "${CMAKE_SOURCE_DIR}/include")
+    target_compile_definitions(rawrxd_brutal_gzip PUBLIC
+        RAWRXD_HAVE_BRUTAL_GZIP_MASM=1)
+    if(TARGET deep2_engine_lib)
+        target_link_libraries(deep2_engine_lib PUBLIC rawrxd_brutal_gzip)
+    endif()
+    if(TARGET RawrXD-Win32IDE-Native)
+        target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_brutal_gzip)
+    endif()
+
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_masm.cpp")
         # Disabled: deflate_godmode_masm.asm has broken syntax - bench only, not required for IDE
         # add_executable(bench_deflate_godmode tests/bench_deflate_masm.cpp kernels/deflate_godmode_masm.asm)
@@ -4451,7 +4466,8 @@ if(MSVC)
 
     # Brutal MASM benchmark
     if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
-        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp)
+        target_link_libraries(bench_deflate_brutal PRIVATE rawrxd_brutal_gzip)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
@@ -4459,8 +4475,8 @@ if(MSVC)
     # decoder, including header flags, CRC32, ISIZE, empty and multi-block data.
     if(BUILD_TESTING AND ZLIB_FOUND)
         add_executable(brutal_masm_gzip_contract_test
-            tests/brutal_masm_gzip_contract_test.cpp
-            kernels/deflate_brutal_masm.asm)
+            tests/brutal_masm_gzip_contract_test.cpp)
+        target_link_libraries(brutal_masm_gzip_contract_test PRIVATE rawrxd_brutal_gzip)
         target_include_directories(brutal_masm_gzip_contract_test PRIVATE
             "${CMAKE_SOURCE_DIR}/include")
         target_compile_features(brutal_masm_gzip_contract_test PRIVATE cxx_std_17)
