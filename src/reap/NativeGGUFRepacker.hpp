@@ -640,7 +640,7 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
                     const double normalized=actual==0?0.0:
                         static_cast<double>(values[i])/actual;
                     const double rounded=std::round(normalized);
-                    const int code=static_cast<int>(std::max(-127.0,std::min(127.0,rounded)));
+                    const int code=static_cast<int>(std::max(-128.0,std::min(127.0,rounded)));
                     requant[i]=static_cast<unsigned char>(static_cast<int8_t>(code));
                     requantError=std::max(requantError,std::abs(
                         static_cast<double>(values[i])-static_cast<double>(actual)*code));
