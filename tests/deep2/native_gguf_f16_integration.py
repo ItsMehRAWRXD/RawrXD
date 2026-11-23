@@ -159,6 +159,10 @@ def run(binary):
                 assert abs(scale*code-values[32*block_index+j])<=300
 
         assert at["blk.0.attn_k.weight"][0]==6
+        # Both tensor offsets must describe bytes inside the final GGUF.
+        assert ast+at["blk.0.attn_q.weight"][2]+(len(values)//32)*18<=len(ab)
+        assert ast+at["blk.0.attn_k.weight"][2]+len(quant)==len(ab)
+
         assert ab[ast+at["blk.0.attn_k.weight"][2]:ast+at["blk.0.attn_k.weight"][2]+32]==quant
         auto_strict=root/"auto-strict.gguf"
         subprocess.run([binary,str(source),str(auto_strict),"0","auto"],check=True)
