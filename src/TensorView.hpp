@@ -59,6 +59,7 @@ inline double tensorTypeBytesPerValue(TensorType t) {
         case TensorType::F32: return 4.0;
         case TensorType::F16: return 2.0;
         case TensorType::Q8_0: return 1.0;
+        case TensorType::Q8_1: return 1.25;
         case TensorType::Q4_0:
         case TensorType::Q4_1: return 0.5;
         case TensorType::Q2_K: return 0.25;
