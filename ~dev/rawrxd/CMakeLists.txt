@@ -14881,6 +14881,15 @@ target_include_directories(rawrxd-native-tensor-compression-test PRIVATE
 add_test(NAME rawrxd_native_tensor_compression
          COMMAND rawrxd-native-tensor-compression-test)
 
+# Synthetic forward-pass parity through compressed, row-range resident weights.
+add_executable(rawrxd-native-compressed-inference-e2e-test
+    tests/native_compressed_inference_e2e_test.cpp)
+target_compile_features(rawrxd-native-compressed-inference-e2e-test PRIVATE cxx_std_17)
+target_include_directories(rawrxd-native-compressed-inference-e2e-test PRIVATE
+    "${CMAKE_SOURCE_DIR}/src/deep2")
+add_test(NAME rawrxd_native_compressed_inference_e2e
+    COMMAND rawrxd-native-compressed-inference-e2e-test)
+
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/K2GlobalTensorIndex.cpp
