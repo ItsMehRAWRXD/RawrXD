@@ -10,6 +10,43 @@
 #include <stdexcept>
 #include <vector>
 namespace rawrxd::weights {
+// Reuse the cache across repeated matvec calls. Cache lifetime is owned by the
+// caller; the tensor must outlive the cache. This removes repeated inflate work
+// when the working set fits in the configured cache budget.
+inline std::vector<float> compressed_matvec_f32_cached(
+    const Tensor& weights, DecodedBlockCache& cache,
+    const std::vector<float>& input, size_t rows, size_t cols) {
+    if (cols != input.size() || cols == 0 || rows == 0 ||
+        cols > std::numeric_limits<size_t>::max()/sizeof(float) ||
+        rows > std::numeric_limits<size_t>::max()/(cols*sizeof(float)) ||
+        weights.plain_size != uint64_t(rows)*cols*sizeof(float) ||
+        weights.element_bytes != sizeof(float) || weights.block_size % sizeof(float))
+        throw std::invalid_argument("invalid compressed matrix dimensions");
+    std::vector<float> output(rows, 0.0f);
+    for (size_t row = 0; row < rows; ++row) {
+        double acc = 0.0;
+        size_t col = 0;
+        while (col < cols) {
+            const uint64_t byte_pos = (uint64_t(row)*cols + col)*sizeof(float);
+            const size_t block_index = static_cast<size_t>(byte_pos / weights.block_size);
+            const size_t within = static_cast<size_t>(byte_pos % weights.block_size);
+            const auto& bytes = cache.get(block_index);
+            if (within >= bytes.size() || (bytes.size()-within) % sizeof(float))
+                throw std::runtime_error("invalid decoded weight block");
+            const size_t count = std::min(cols-col, (bytes.size()-within)/sizeof(float));
+            if (!count) throw std::runtime_error("empty decoded weight span");
+            for (size_t i = 0; i < count; ++i) {
+                float w;
+                std::memcpy(&w, bytes.data()+within+i*sizeof(float), sizeof(float));
+                acc += double(w)*input[col+i];
+            }
+            col += count;
+        }
+        output[row] = static_cast<float>(acc);
+    }
+    return output;
+}
+
 inline std::vector<float> compressed_matvec_f32(
     const Tensor& weights, const std::vector<float>& input,
     size_t rows, size_t cols, size_t cache_budget_bytes) {
