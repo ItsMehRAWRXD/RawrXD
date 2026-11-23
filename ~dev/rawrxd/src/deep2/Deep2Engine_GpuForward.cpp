@@ -742,26 +742,33 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         for (uint32_t L = lo; L <= hi && L < modelWeights.layers.size(); ++L) {
             const auto& lw = modelWeights.layers[L];
             GpuWeightView v{};
-            if (!Deep2BuildGpuWeightView(lw.wq, 0,
+            if (!lw.wq.compressedBytes &&
+                !Deep2BuildGpuWeightView(lw.wq, 0,
                     static_cast<uint32_t>(lw.wq.rows), v) ||
                 !vc->PinWeightView(v)) { allOk = false; break; }
-            if (!Deep2BuildGpuWeightView(lw.wk, 0,
+            if (!lw.wk.compressedBytes &&
+                !Deep2BuildGpuWeightView(lw.wk, 0,
                     static_cast<uint32_t>(lw.wk.rows), v) ||
                 !vc->PinWeightView(v)) { allOk = false; break; }
-            if (!Deep2BuildGpuWeightView(lw.wv, 0,
+            if (!lw.wv.compressedBytes &&
+                !Deep2BuildGpuWeightView(lw.wv, 0,
                     static_cast<uint32_t>(lw.wv.rows), v) ||
                 !vc->PinWeightView(v)) { allOk = false; break; }
             const WeightTensor& woT = lw.wo.data ? lw.wo : lw.attnO;
-            if (!Deep2BuildGpuWeightView(woT, 0,
+            if (!woT.compressedBytes &&
+                !Deep2BuildGpuWeightView(woT, 0,
                     static_cast<uint32_t>(woT.rows), v) ||
                 !vc->PinWeightView(v)) { allOk = false; break; }
-            if (!Deep2BuildGpuWeightView(lw.wGate, 0,
+            if (!lw.wGate.compressedBytes &&
+                !Deep2BuildGpuWeightView(lw.wGate, 0,
                     static_cast<uint32_t>(lw.wGate.rows), v) ||
                 !vc->PinWeightView(v)) { allOk = false; break; }
-            if (!Deep2BuildGpuWeightView(lw.wUp, 0,
+            if (!lw.wUp.compressedBytes &&
+                !Deep2BuildGpuWeightView(lw.wUp, 0,
                     static_cast<uint32_t>(lw.wUp.rows), v) ||
                 !vc->PinWeightView(v)) { allOk = false; break; }
-            if (!Deep2BuildGpuWeightView(lw.wDown, 0,
+            if (!lw.wDown.compressedBytes &&
+                !Deep2BuildGpuWeightView(lw.wDown, 0,
                     static_cast<uint32_t>(lw.wDown.rows), v) ||
                 !vc->PinWeightView(v)) { allOk = false; break; }
         }
