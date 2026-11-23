@@ -23,6 +23,7 @@ struct Tensor {
     std::size_t cols = 0;
     std::vector<float> reference;
     std::shared_ptr<const Storage> compressed;
+    Deep2::TensorResidencyCache::Lease lease;
 };
 
 static Tensor makeTensor(std::size_t rows, std::size_t cols, int seed,
@@ -49,6 +50,9 @@ static Tensor makeTensor(std::size_t rows, std::size_t cols, int seed,
     const std::string key = "tiny-transformer." + std::to_string(seed);
     if (!cache.Insert(key, t.compressed))
         throw std::runtime_error("synthetic model cache admission failed");
+    t.lease = cache.Acquire(key);
+    if (!t.lease)
+        throw std::runtime_error("synthetic model cache lease failed");
     owners.push_back(t.compressed);
     return t;
 }
@@ -57,7 +61,7 @@ static void readRow(const Tensor& t, std::size_t row, bool compressed,
                     std::vector<float>& scratch, const float*& values) {
     if (row >= t.rows) throw std::out_of_range("synthetic tensor row");
     if (compressed) {
-        t.compressed->ReadRange(row * t.cols, t.cols, scratch.data());
+        t.lease->ReadRange(row * t.cols, t.cols, scratch.data());
         values = scratch.data();
     } else {
         values = t.reference.data() + row * t.cols;
@@ -188,7 +192,7 @@ int main() {
     CHECK(referenceToken == compressedToken);
     const auto stats = cache.GetStats();
     CHECK(stats.entries == TensorCount);
-    CHECK(stats.hits > 0);
+    CHECK(stats.hits == TensorCount);
     CHECK(stats.residentBytes < stats.entries * 1024u * sizeof(float));
     owners.clear();
     m = TinyModel{}; // release model-owned leases before asserting reclamation
