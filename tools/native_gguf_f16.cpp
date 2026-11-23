@@ -213,7 +213,7 @@ bool encodeQ51Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [f16|bf16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|f16|bf16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     bool ownsTemporary=false;
@@ -227,13 +227,14 @@ int main(int argc,char** argv) {
             throw std::runtime_error("input and output refer to the same file");
         if(fs::exists(partialPath) && fs::equivalent(inputPath,partialPath))
             throw std::runtime_error("temporary output refers to the input file");
+        const bool automatic=argc==5 && std::string(argv[4])=="auto";
         const bool bf16=argc==5 && std::string(argv[4])=="bf16";
         const bool q8=argc==5 && std::string(argv[4])=="q8_0";
         const bool q4=argc==5 && std::string(argv[4])=="q4_0";
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
         const bool q41=argc==5 && std::string(argv[4])=="q4_1";
         const bool q51=argc==5 && std::string(argv[4])=="q5_1";
-        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
+        if(argc==5 && !q8 && !q4 && !q5 && !q41 && !q51 && !bf16 && !automatic && std::string(argv[4])!="f16")throw std::runtime_error("unknown encoding");
         // A quantized GGUF tensor's innermost dimension must be divisible
         // by the 32-element block size. No flattened cross-row packing.
         const bool quantized=q8||q4||q5||q41||q51;
@@ -329,7 +330,51 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ41(ts.size(),false);
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51))continue;
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            if(automatic && t.dims[0]%32==0 &&
+               (t.type==0 || t.type==1 || t.type==30)) {
+                const size_t inputBlock=t.type==0?128:64;
+                if(t.bytes%inputBlock==0) {
+                    // Select the smallest existing GGML block encoding whose
+                    // decoded values meet the requested maximum absolute error.
+                    // The whole tensor must pass; never mix formats within it.
+                    for(int candidate=0;candidate<5;++candidate) {
+                        seek(in,add(dataStart,t.offset));
+                        bool valid=true;
+                        uint8_t block[128],encoded[34];
+                        for(U off=0;off<t.bytes;off+=inputBlock) {
+                            if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
+                                throw std::runtime_error("truncated auto quantization preflight");
+                            bool ok=false;
+                            switch(candidate) {
+                                case 0: ok=encodeQ4Block(block,t.type,tolerance,encoded);break;
+                                case 1: ok=encodeQ41Block(block,t.type,tolerance,encoded);break;
+                                case 2: ok=encodeQ5Block(block,t.type,tolerance,encoded);break;
+                                case 3: ok=encodeQ51Block(block,t.type,tolerance,encoded);break;
+                                case 4: ok=encodeQ8Block(block,t.type,tolerance,encoded);break;
+                            }
+                            if(!ok){valid=false;break;}
+                        }
+                        if(valid) {
+                            static constexpr uint32_t types[]={2,3,6,7,8};
+                            outputTypes[i]=types[candidate];
+                            switch(candidate) {
+                                case 0: streamQ4[i]=true;break;
+                                case 1: streamQ41[i]=true;break;
+                                case 2: streamQ5[i]=true;break;
+                                case 3: streamQ51[i]=true;break;
+                                case 4: streamQ8[i]=true;break;
+                            }
+                            ++changed;
+                            break;
+                        }
+                    }
+                    if(outputTypes[i]!=t.type)continue;
+                }
+                // F32 falls through to the existing F16 precision-gated
+                // streaming path; F16/BF16 remain unchanged if no quant fits.
+                if(t.type!=0)continue;
+            }
             if(q8 && t.dims[0]%32==0 && (t.type==0 || t.type==1 || t.type==30)) {
                 const size_t inputBlock=t.type==0?128:64;
                 if(t.bytes%inputBlock)continue;
