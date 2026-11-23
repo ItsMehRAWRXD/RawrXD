@@ -201,11 +201,38 @@ private:
         return value;
     }
 
+    // Decode only a requested Q8_0 row. The encoded row remains resident;
+    // temporary storage is bounded by one row, never the full tensor.
+    static void decodeQ8Row(const std::vector<std::uint8_t>& encoded,
+                            std::vector<float>& decoded) {
+        if (decoded.size() % 32u || encoded.size() != decoded.size() / 32u * 34u)
+            throw std::invalid_argument("invalid Q8_0 row geometry");
+        for (std::size_t block = 0; block < decoded.size() / 32u; ++block) {
+            const auto* p = encoded.data() + block * 34u;
+            const std::uint16_t scaleBits = std::uint16_t(p[0]) |
+                                            (std::uint16_t(p[1]) << 8);
+            const float scale = halfToFloat(scaleBits);
+            if (!std::isfinite(scale))
+                throw std::domain_error("nonfinite Q8_0 scale");
+            for (std::size_t i = 0; i < 32u; ++i)
+                decoded[block * 32u + i] =
+                    scale * static_cast<float>(static_cast<std::int8_t>(p[2u + i]));
+        }
+    }
+
     std::vector<float> readVector(const std::string& name,
                                   std::size_t count) const {
         const auto type = model_.tensorType(name);
-        if (type == GGML_TYPE_Q8_0)
-            throw std::invalid_argument("Q8_0 normalization vectors require block decoding: " + name);
+        if (type == GGML_TYPE_Q8_0) {
+            if (count % 32u) throw std::invalid_argument("unaligned Q8_0 normalization vector");
+            std::vector<std::uint8_t> encoded(count / 32u * 34u);
+            std::string error;
+            if (!model_.readTensorRange(name, 0, encoded.data(), encoded.size(), &error))
+                throw std::runtime_error("Q8_0 normalization read failed: " + error);
+            std::vector<float> result(count);
+            decodeQ8Row(encoded, result);
+            return result;
+        }
         const std::size_t scalar =
             (type == GGML_TYPE_F16 || type == GGML_TYPE_BF16) ? 2u : 4u;
         if (count > std::numeric_limits<std::size_t>::max() / scalar)
@@ -269,8 +296,21 @@ private:
         std::vector<std::vector<std::vector<float>>>& values) const {
         std::vector<float> hidden(config_.hidden);
         const auto embeddingType = model_.tensorType("token_embd.weight");
-        if (embeddingType == GGML_TYPE_Q8_0)
-            throw std::invalid_argument("Q8_0 embeddings require block decoding");
+        if (embeddingType == GGML_TYPE_Q8_0) {
+            if (config_.hidden % 32u)
+                throw std::invalid_argument("unaligned Q8_0 embedding width");
+            const std::size_t rowBytes = config_.hidden / 32u * 34u;
+            if (static_cast<std::size_t>(token) >
+                std::numeric_limits<std::size_t>::max() / rowBytes)
+                throw std::overflow_error("Q8_0 embedding offset overflow");
+            std::vector<std::uint8_t> encoded(rowBytes);
+            std::string error;
+            if (!model_.readTensorRange("token_embd.weight",
+                    static_cast<std::size_t>(token) * rowBytes,
+                    encoded.data(), encoded.size(), &error))
+                throw std::runtime_error("Q8_0 embedding read failed: " + error);
+            decodeQ8Row(encoded, hidden);
+        } else {
         const std::size_t scalar =
             (embeddingType == GGML_TYPE_F16 || embeddingType == GGML_TYPE_BF16) ? 2u : 4u;
         if (config_.hidden > std::numeric_limits<std::size_t>::max() / scalar)
@@ -291,6 +331,7 @@ private:
                 hidden[i] = embeddingType == GGML_TYPE_F16
                     ? halfToFloat(h) : bfloat16ToFloat(h);
             } else std::memcpy(&hidden[i], row.data() + 4*i, sizeof(float));
+        }
         }
 
         for (std::size_t layer = 0; layer < config_.layers; ++layer) {
