@@ -402,6 +402,11 @@ size_t VulkanDevice::cachedWeightBytes() const {
     return m_weightCacheBytes;
 }
 
+size_t VulkanDevice::weightCacheBudgetBytes() const {
+    std::lock_guard<std::mutex> lock(m_weightCacheMutex);
+    return m_weightCacheBudgetBytes;
+}
+
 void VulkanDevice::clearCachedWeights() {
     std::lock_guard<std::mutex> lock(m_weightCacheMutex);
     for (auto& item : m_weightBuffers) {
