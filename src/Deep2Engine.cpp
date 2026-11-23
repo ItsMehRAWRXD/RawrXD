@@ -190,11 +190,21 @@ Deep2Engine::TensorHandle Deep2Engine::getTensor(const std::string& name) {
     return h;
 }
 
-bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out) {
-    if (!romMode) return false;
-    const uint64_t size = entry.byteSize();
-    if (size > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) return false;
-    std::vector<uint8_t> staged(static_cast<size_t>(size));
+bool Deep2Engine::dequantTensorRange(const deep2::TensorEntry& entry,
+                                     uint64_t firstElement,
+                                     uint64_t elementCount,
+                                     std::vector<float>& output) {
+    output.clear();
+    if (!romMode || !initialized) return false;
+
+    uint64_t totalElements = 1;
+    for (const uint64_t dim : entry.dims) {
+        if (dim == 0 || totalElements > UINT64_MAX / dim) return false;
+        totalElements *= dim;
+    }
+    if (firstElement > totalElements || elementCount > totalElements - firstElement)
+        return false;
+
     std::shared_ptr<deep2::TensorROMCompressedView> compressed;
     {
         std::lock_guard<std::mutex> lock(compressedWeightViewsMutex);
@@ -212,13 +222,41 @@ bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::Dequanti
             compressedWeightViewLru.pop_back();
             compressedWeightViews.erase(victim);
         }
-        compressed = it->second; // keeps the view alive across concurrent LRU eviction
+        compressed = it->second; // pins the view across concurrent LRU eviction
     }
-    // The compressed view fetches exact shard ranges directly, bypassing the
-    // raw PageCache. Only this tensor's requested bytes are expanded here.
-    if (!compressed || !compressed->readRange(0, size, staged.data())) return false;
-    deep2::TensorView view{ entry.type, staged.data(), size, entry.dims, true };
-    return dequantizeTensor(view, out);
+    if (!compressed) return false;
+
+    // The quantizer requests only the selected, block-aligned byte intervals.
+    // CompressedTensorPager inflates only cache pages intersecting each interval.
+    const deep2::TensorRangeReader reader =
+        [compressed](uint64_t offset, uint64_t count, uint8_t* destination) {
+            return compressed->readRange(offset, count, destination);
+        };
+    return deep2::dequantizeTensorRange(entry.type, totalElements, reader,
+                                        firstElement, elementCount, output);
+}
+
+bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry,
+                                deep2::DequantizedTensor& out) {
+    out.data.clear();
+    out.dims.clear();
+    out.rows = 0;
+    out.cols = 0;
+    uint64_t totalElements = 1;
+    for (const uint64_t dim : entry.dims) {
+        if (dim == 0 || totalElements > UINT64_MAX / dim) return false;
+        totalElements *= dim;
+    }
+    if (!dequantTensorRange(entry, 0, totalElements, out.data)) return false;
+
+    out.dims.resize(entry.dims.size());
+    for (size_t i = 0; i < entry.dims.size(); ++i)
+        out.dims[i] = entry.dims[entry.dims.size() - 1 - i];
+    if (out.dims.size() >= 2) {
+        out.rows = out.dims[0];
+        out.cols = out.dims[1];
+    }
+    return true;
 }
 
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
