@@ -172,7 +172,7 @@ WeightTensor backing predicate. This prevents the null raw pointer that is
 intentional for compressed residency from skipping required inference stages.
 
 RMSNorm admission is restricted to the F32/F16 vector names actually consumed
-by RMSNormW, including per-head Q/K normalization vectors. Per-head Q/K norms are represented as compressed byte-offset views and read
+by RMSNormW, including per-head Q/K normalization vectors and MLA Q/KV low-rank normalization vectors. Per-head Q/K norms are represented as compressed byte-offset views and read
 one head at a time through RMSNormW. SSM channel norms use the dedicated
 Mamba-2 vector materializer rather than the RMSNorm consumer.
 
