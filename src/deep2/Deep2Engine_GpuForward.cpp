@@ -104,8 +104,10 @@ const float* ensureF32(
     auto cached = cache.find(key);
     if (cached != cache.end()) return cached->second.data();
 
-    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
-    if (!dequant) return nullptr;
+    auto dequant = wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+        ? nullptr : QuantKernelRegistry::Instance().GetDequant(wt.type);
+    if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32) && !dequant)
+        return nullptr;
     if (wt.rows > std::numeric_limits<size_t>::max() / wt.cols)
         return nullptr;
     const size_t elements = wt.rows * wt.cols;
