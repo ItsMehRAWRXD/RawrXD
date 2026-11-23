@@ -58,7 +58,8 @@ int main() {
     assert(!cache.Contains("not.compressible"));
 
     // A fitting insertion evicts the least-recently-used compressed tensor.
-    std::vector<float> second(512,3.0f);
+    std::vector<float> second(512);
+    for(size_t i=0;i<second.size();++i) second[i]=float(i%100);
     cache.SetBudget(21000);
     assert(cache.RegisterF32FromReader("layer.1.weight",second.size(),0.0f,
         [&](size_t o,size_t n,float* out) {
