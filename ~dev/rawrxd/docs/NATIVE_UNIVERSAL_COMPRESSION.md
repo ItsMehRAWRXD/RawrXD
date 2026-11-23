@@ -8,9 +8,9 @@ The Deep2 GGUF loader preserves the original GGUF wire type and tensor metadata.
 - BF16 when it satisfies the configured maximum absolute error and is better than F16.
 - Exact F32 when neither 16-bit representation satisfies the bound.
 
-The compressed backing supports range reads. CPU embedding and GEMV paths consume requested ranges/chunks rather than requiring a second full F32 matrix.
+The compressed backing supports range reads and reader-backed construction. `BuildFromReader` reads one chunk at a time, so conversion scratch is bounded by the selected chunk size rather than the full tensor. CPU embedding and GEMV paths consume requested ranges/chunks rather than requiring a second full F32 matrix. The builder also enforces a maximum retained-byte budget before appending each chunk.
 
-Uniform F16/BF16 chunk sets can be exported as a contiguous 16-bit payload. The resident Vulkan path dispatches that payload through the packed QGEMV path and accumulates in F32. Mixed-encoding tensors and chunks requiring exact F32 do not qualify for this uniform GPU view and use the CPU range-decode path.
+Uniform F16/BF16 chunk sets expose a stable zero-copy contiguous 16-bit view. The resident Vulkan path dispatches that payload through the packed QGEMV path and accumulates in F32. Mixed-encoding tensors and chunks requiring exact F32 do not qualify for this uniform GPU view and use the CPU range-decode path.
 
 ## Configuration
 
@@ -29,7 +29,7 @@ The chunk size used by Deep2 is currently the tensor input width (`cols`) so CPU
 Do not equate compressed bytes with total process residency:
 
 1. `ChunkedF32Storage::storedBytes()` measures the private compressed payload.
-2. `GpuCompressedF32Payload::bytes` is an additional contiguous 16-bit host payload created for uniform Vulkan dispatch.
+2. `GpuCompressedF32Payload` retains a shared owner and a zero-copy view into the canonical contiguous 16-bit backing; it does not allocate a second host copy.
 3. Vulkan resident-weight bytes are accounted by the Vulkan weight window / compressed dispatch counters.
 4. The original GGUF mapping remains alive and is still the backing source for other tensors. The current implementation does not unmap individual F32 tensor ranges or prove that their file-backed pages have left the process working set.
 
