@@ -17,6 +17,7 @@
 #include <pmmintrin.h>
 #include <memory>
 #include <unordered_map>
+#include <mutex>
 #include <queue>
 #include <functional>
 
@@ -36,6 +37,11 @@ struct Deep2Engine {
     bool vulkanReady = false;
 
     bool initialized = false;
+    // Persistent compressed weight ownership; entries survive token execution.
+    std::mutex compressedWeightsMutex;
+    std::unordered_map<std::string,
+        std::shared_ptr<const rawrxd::compression::ResidentCompressedTensor>> compressedWeights;
+
 
     bool Initialize(const std::string& modelPath, const std::string& manifestPath = "", bool forceWholeLoader = false);
     void Shutdown();
