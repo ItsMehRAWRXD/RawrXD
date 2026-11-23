@@ -426,13 +426,13 @@ inline bool ConvertQ6KToQ5_0(std::ifstream& in,std::ofstream& out,
 }
 inline bool ConvertQ5KToQ4_0(std::ifstream& in,std::ofstream& out,
                               uint64_t from,uint64_t sourceBytes) {
-    if(sourceBytes%176 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+    if(sourceBytes%210 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
         return false;
     in.clear();in.seekg(static_cast<std::streamoff>(from));
     if(!in)return false;
-    unsigned char source[176],encoded[18];
+    unsigned char source[210],encoded[18];
     while(sourceBytes) {
-        if(!in.read(reinterpret_cast<char*>(source),176))return false;
+        if(!in.read(reinterpret_cast<char*>(source),210))return false;
         // GGML Q5_K: FP16 d, FP16 dmin, scales[12], qh[32], qs[128].
         const uint16_t hd=uint16_t(source[0])|(uint16_t(source[1])<<8);
         const uint16_t hm=uint16_t(source[2])|(uint16_t(source[3])<<8);
@@ -481,7 +481,7 @@ inline bool ConvertQ5KToQ4_0(std::ifstream& in,std::ofstream& out,
                 encoded[2+i]=static_cast<unsigned char>(codes[i]|(codes[i+16]<<4));
             if(!out.write(reinterpret_cast<const char*>(encoded),18))return false;
         }
-        sourceBytes-=176;
+        sourceBytes-=210;
     }
     return true;
 }
