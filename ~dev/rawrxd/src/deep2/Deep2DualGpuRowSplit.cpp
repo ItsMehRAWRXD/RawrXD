@@ -657,6 +657,7 @@ uint64_t sliceKey(const WeightTensor& wt,uint32_t begin,uint32_t count) noexcept
     for(unsigned char c:wt.name){h^=c;h*=1099511628211ull;}
     for(unsigned char c:wt.residencyKey){h^=c;h*=1099511628211ull;}
     h^=wt.fileOffset+0x9E3779B97F4A7C15ull+(h<<6)+(h>>2);
+    h^=static_cast<uint64_t>(reinterpret_cast<uintptr_t>(wt.data));
     h^=(uint64_t)wt.shardId<<48;
     h^=(uint64_t)begin<<32;
     h^=count;
