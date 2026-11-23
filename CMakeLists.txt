@@ -148,6 +148,10 @@ add_executable(test_native_tensor_residency_cache tests/deep2/native_tensor_resi
 target_compile_features(test_native_tensor_residency_cache PRIVATE cxx_std_17)
 target_include_directories(test_native_tensor_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+add_executable(test_decoded_weight_tile_cache tests/deep2/decoded_weight_tile_cache_test.cpp)
+target_compile_features(test_decoded_weight_tile_cache PRIVATE cxx_std_17)
+target_include_directories(test_decoded_weight_tile_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 add_executable(test_native_tensor_byte_residency_cache tests/deep2/native_tensor_byte_residency_cache_test.cpp)
 target_compile_features(test_native_tensor_byte_residency_cache PRIVATE cxx_std_17)
 target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -155,6 +159,7 @@ target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMA
 # Synthetic GGUF -> TensorROM pager -> compressed F32/Q4_K residency -> tiled inference.
 find_package(Threads REQUIRED)
 target_link_libraries(test_native_tensor_residency_cache PRIVATE Threads::Threads)
+target_link_libraries(test_decoded_weight_tile_cache PRIVATE Threads::Threads)
 target_link_libraries(test_native_tensor_byte_residency_cache PRIVATE Threads::Threads)
 add_executable(test_native_compressed_gguf_e2e
     tests/deep2/native_compressed_gguf_e2e_test.cpp
@@ -206,6 +211,7 @@ if(ZLIB_FOUND)
 endif()
 add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
 add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
+add_test(NAME DecodedWeightTileReuse COMMAND test_decoded_weight_tile_cache)
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
 add_test(NAME NativeCompressedGGUFE2E COMMAND test_native_compressed_gguf_e2e)
 if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
