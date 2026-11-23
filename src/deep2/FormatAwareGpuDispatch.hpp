@@ -44,6 +44,14 @@ inline GpuWeightFormat DetectFormat(uint32_t gguf_type) {
 // F32/F16 tensors; not a GGUF type but a RawrXD internal format.
 inline bool IsCustomInt4(GpuWeightFormat f) { return f == GpuWeightFormat::INT4; }
 
+// FP64 capability check: Q4_K's double-accumulation kernel requires
+// shaderFloat64. If unsupported, the caller falls back to a float-accumulation
+// variant or the CPU path.
+inline bool HasFloat64(VkPhysicalDevice pd) {
+    VkPhysicalDeviceFeatures f; vkGetPhysicalDeviceFeatures(pd, &f);
+    return f.shaderFloat64 != VK_FALSE;
+}
+
 // Values per block for each format (for geometry).
 inline uint32_t ValuesPerBlock(GpuWeightFormat f) {
     switch (f) {
