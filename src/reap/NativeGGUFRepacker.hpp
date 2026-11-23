@@ -62,6 +62,7 @@ inline bool SkipMetadata(std::istream& in, uint32_t type) {
             for(uint64_t i=0;i<count;++i)if(!SkipMetadata(in,8))return false;
             return true;
         }
+        if (elem==9 || sizes[elem]==0) return false;
         return count<=UINT64_MAX/sizes[elem] && SkipExact(in,count*sizes[elem]);
     }
     return SkipExact(in,sizes[type]);
@@ -192,8 +193,19 @@ inline RepackError RepackGGUF(const std::string& input,
     }
     if(!PadTo(out,alignment))return RepackError::Output;
     for(const auto& t:tensors) {
-        if(!PadTo(out,alignment)||
-           !CopyRange(in,out,dataStart+t.old_offset,t.bytes))
+        // Directory order and physical order are independent in GGUF.
+        // Honor each advertised new offset, including its alignment gap.
+        const auto position=out.tellp();
+        if(position<0)return RepackError::Output;
+        const uint64_t absolute=static_cast<uint64_t>(position);
+        if(t.new_offset>UINT64_MAX-newData)return RepackError::Overflow;
+        const uint64_t target=newData+t.new_offset;
+        if(absolute>target)return RepackError::Format;
+        while(static_cast<uint64_t>(out.tellp())<target) {
+            out.put('\0');
+            if(!out)return RepackError::Output;
+        }
+        if(!CopyRange(in,out,dataStart+t.old_offset,t.bytes))
             return RepackError::Output;
     }
     out.flush();
