@@ -7,9 +7,9 @@ using namespace RawrXD::REAP;
 int main() {
     const char* src="reap_q8k_underflow_src.bin";
     const char* dst="reap_q8k_underflow_dst.bin";
-    // FP16-exact 2^-20, with nonexact per-group d = maxAbs/127
-    // which underflows to zero in FP16. Signed codes must survive.
-    const float scale=0x1p-20f;
+    // Non-FP16-exact scale; per-group d = maxAbs/127 underflows
+    // to FP16 zero, but the direct FP16 scale is nonzero.
+    const float scale=1.0e-6f;
     uint32_t bits=0;std::memcpy(&bits,&scale,4);
     {
         std::ofstream out(src,std::ios::binary);
@@ -27,11 +27,12 @@ int main() {
         std::ifstream in(dst,std::ios::binary|std::ios::ate);
         ok=bool(in) && in.tellg()==std::streamoff(272);
         in.seekg(0);
+        const uint16_t expectedHalf=Float32BitsToFloat16(bits);
         for(unsigned group=0;group<8;++group) {
             unsigned char block[34]={};
             ok &= bool(in.read(reinterpret_cast<char*>(block),34));
             const uint16_t half=uint16_t(block[0])|(uint16_t(block[1])<<8);
-            ok &= Float16ToFloat32Bits(half)==bits;
+            ok &= half==expectedHalf && half!=0;
             for(unsigned i=0;i<32;++i)
                 ok &= static_cast<int8_t>(block[i+2])==
                       (static_cast<int>(group*32+i)%3==0?-1:1);
