@@ -40,6 +40,147 @@ std::vector<float> diagonal(std::size_t n, float scale) {
     for (std::size_t i=0;i<n;++i) v[i*n+i]=scale;
     return v;
 }
+
+float referenceHalfToFloat(std::uint16_t h) {
+    const std::uint32_t sign=std::uint32_t(h&0x8000u)<<16;
+    std::uint32_t exp=(h>>10)&31u, mant=h&1023u, bits=0;
+    if(exp==0) {
+        if(!mant) bits=sign;
+        else { int e=-14; while((mant&0x400u)==0){mant<<=1;--e;}
+            mant&=0x3ffu; bits=sign|(std::uint32_t(e+127)<<23)|(mant<<13); }
+    } else if(exp==31) bits=sign|0x7f800000u|(mant<<13);
+    else bits=sign|((exp+112u)<<23)|(mant<<13);
+    float value=0.0f; std::memcpy(&value,&bits,sizeof(value)); return value;
+}
+const OwnedTensor& referenceTensor(const std::vector<OwnedTensor>& tensors,
+                                   const std::string& name) {
+    for(const auto& tensor:tensors) if(tensor.name==name) return tensor;
+    throw std::runtime_error("reference tensor missing: "+name);
+}
+std::vector<float> referenceValues(const std::vector<OwnedTensor>& tensors,
+                                   const std::string& name) {
+    const auto& tensor=referenceTensor(tensors,name);
+    if(tensor.bytes.size()%2) throw std::runtime_error("reference F16 tensor has odd byte length");
+    std::vector<float> values(tensor.bytes.size()/2);
+    for(std::size_t i=0;i<values.size();++i)
+        values[i]=referenceHalfToFloat(std::uint16_t(tensor.bytes[2*i])|
+                                      (std::uint16_t(tensor.bytes[2*i+1])<<8));
+    return values;
+}
+std::vector<float> referenceMatvec(const std::vector<OwnedTensor>& tensors,
+    const std::string& name,const std::vector<float>& input,
+    std::size_t rows,std::size_t cols) {
+    const auto weights=referenceValues(tensors,name);
+    if(weights.size()!=rows*cols||input.size()!=cols)
+        throw std::runtime_error("reference matvec geometry mismatch: "+name);
+    std::vector<float> output(rows,0.0f);
+    for(std::size_t row=0;row<rows;++row)
+        for(std::size_t col=0;col<cols;++col)
+            output[row]+=weights[row*cols+col]*input[col];
+    return output;
+}
+void referenceRmsNorm(const std::vector<OwnedTensor>& tensors,
+    std::vector<float>& x,const std::string& name,float epsilon) {
+    const auto weights=referenceValues(tensors,name);
+    if(weights.size()!=x.size()) throw std::runtime_error("reference norm geometry mismatch");
+    double sum=0.0; for(float value:x) sum+=static_cast<double>(value)*value;
+    const float inv=1.0f/std::sqrt(static_cast<float>(sum/x.size())+epsilon);
+    for(std::size_t i=0;i<x.size();++i) x[i]=x[i]*inv*weights[i];
+}
+void referenceRope(std::vector<float>& x,std::size_t position,
+    std::size_t headCount,std::size_t headDim,float theta) {
+    if(x.size()!=headCount*headDim) throw std::runtime_error("reference RoPE geometry mismatch");
+    for(std::size_t head=0;head<headCount;++head) {
+        const auto base=head*headDim;
+        for(std::size_t d=0;d<headDim;d+=2) {
+            const float frequency=1.0f/std::pow(theta,static_cast<float>(d)/headDim);
+            const float angle=static_cast<float>(position)*frequency;
+            const float cosine=std::cos(angle),sine=std::sin(angle);
+            const float a=x[base+d],b=x[base+d+1];
+            x[base+d]=a*cosine-b*sine; x[base+d+1]=a*sine+b*cosine;
+        }
+    }
+}
+// Independent dense oracle: reads the fixture's original F16 byte vectors,
+// performs scalar GEMVs and recomputes the KV cache without using the compressed
+// store, its block decoder, or its matvec implementation.
+std::vector<int32_t> referenceGenerate(const std::vector<OwnedTensor>& tensors,
+    const std::vector<int32_t>& prompt,std::size_t steps,std::size_t hidden,
+    std::size_t intermediate,std::size_t vocabulary,std::size_t layers,
+    std::size_t queryHeads,std::size_t kvHeads,std::size_t headDim,
+    float epsilon,float ropeTheta) {
+    if(!kvHeads) kvHeads=queryHeads;
+    if(!kvHeads||queryHeads%kvHeads) throw std::runtime_error("reference GQA geometry mismatch");
+    std::vector<std::vector<std::vector<float>>> keys(layers),values(layers);
+    auto forward=[&](int32_t token,std::size_t position) {
+        const auto embedding=referenceValues(tensors,"token_embd.weight");
+        if(token<0||static_cast<std::size_t>(token)>=vocabulary||
+           embedding.size()!=vocabulary*hidden)
+            throw std::runtime_error("reference embedding geometry mismatch");
+        std::vector<float> hiddenState(embedding.begin()+static_cast<std::size_t>(token)*hidden,
+            embedding.begin()+(static_cast<std::size_t>(token)+1)*hidden);
+        const std::size_t kvDim=kvHeads*headDim;
+        for(std::size_t layer=0;layer<layers;++layer) {
+            const auto prefix="blk."+std::to_string(layer)+".";
+            auto residual=hiddenState,normed=hiddenState;
+            referenceRmsNorm(tensors,normed,prefix+"attn_norm.weight",epsilon);
+            auto q=referenceMatvec(tensors,prefix+"attn_q.weight",normed,hidden,hidden);
+            auto k=referenceMatvec(tensors,prefix+"attn_k.weight",normed,kvDim,hidden);
+            auto v=referenceMatvec(tensors,prefix+"attn_v.weight",normed,kvDim,hidden);
+            referenceRope(q,position,queryHeads,headDim,ropeTheta);
+            referenceRope(k,position,kvHeads,headDim,ropeTheta);
+            keys[layer].push_back(k); values[layer].push_back(v);
+            std::vector<float> attended(hidden,0.0f);
+            const std::size_t headsPerKv=queryHeads/kvHeads;
+            for(std::size_t head=0;head<queryHeads;++head) {
+                const auto queryBase=head*headDim;
+                const auto kvBase=(head/headsPerKv)*headDim;
+                std::vector<float> scores(keys[layer].size());
+                float maximum=-std::numeric_limits<float>::infinity();
+                for(std::size_t t=0;t<keys[layer].size();++t) {
+                    double dot=0.0;
+                    for(std::size_t d=0;d<headDim;++d)
+                        dot+=static_cast<double>(q[queryBase+d])*keys[layer][t][kvBase+d];
+                    scores[t]=static_cast<float>(dot/std::sqrt(static_cast<float>(headDim)));
+                    maximum=std::max(maximum,scores[t]);
+                }
+                double denominator=0.0;
+                for(float& score:scores){score=std::exp(score-maximum);denominator+=score;}
+                for(std::size_t t=0;t<scores.size();++t) {
+                    const float probability=static_cast<float>(scores[t]/denominator);
+                    for(std::size_t d=0;d<headDim;++d)
+                        attended[queryBase+d]+=probability*values[layer][t][kvBase+d];
+                }
+            }
+            auto attentionOutput=referenceMatvec(tensors,prefix+"attn_output.weight",
+                attended,hidden,hidden);
+            for(std::size_t i=0;i<hidden;++i) hiddenState[i]=residual[i]+attentionOutput[i];
+            residual=hiddenState; normed=hiddenState;
+            referenceRmsNorm(tensors,normed,prefix+"ffn_norm.weight",epsilon);
+            auto gate=referenceMatvec(tensors,prefix+"ffn_gate.weight",normed,intermediate,hidden);
+            auto up=referenceMatvec(tensors,prefix+"ffn_up.weight",normed,intermediate,hidden);
+            for(std::size_t i=0;i<intermediate;++i) {
+                const float sigmoid=1.0f/(1.0f+std::exp(-gate[i]));
+                gate[i]=gate[i]*sigmoid*up[i];
+            }
+            auto down=referenceMatvec(tensors,prefix+"ffn_down.weight",gate,hidden,intermediate);
+            for(std::size_t i=0;i<hidden;++i) hiddenState[i]=residual[i]+down[i];
+        }
+        referenceRmsNorm(tensors,hiddenState,"output_norm.weight",epsilon);
+        return referenceMatvec(tensors,"output.weight",hiddenState,vocabulary,hidden);
+    };
+    std::vector<float> logits;
+    std::size_t position=0;
+    for(const auto token:prompt) logits=forward(token,position++);
+    std::vector<int32_t> generated;
+    for(std::size_t n=0;n<steps;++n) {
+        const auto next=static_cast<int32_t>(std::distance(logits.begin(),
+            std::max_element(logits.begin(),logits.end())));
+        generated.push_back(next);
+        logits=forward(next,position++);
+    }
+    return generated;
+}
 std::vector<Deep2::GGUFTensor> descriptors(std::vector<OwnedTensor>& owned) {
     std::vector<Deep2::GGUFTensor> out;
     out.reserve(owned.size());
@@ -135,6 +276,10 @@ int main() {
     // This catches numerically wrong but deterministic generation paths.
     const std::vector<int32_t> expected{7,7,7,7,7,7};
     assert(generated == expected);
+    const auto denseReference = referenceGenerate(owned, prompt, 6, hidden,
+        intermediate, vocab, 2, 2, 0, hidden/2, config.rms_epsilon,
+        config.rope_theta);
+    assert(generated == denseReference);
 
     // Request-local KV state must reset between generations.
     const auto repeated=runtime.generate(prompt,6);
@@ -177,6 +322,10 @@ int main() {
     for (auto token : gqaGenerated)
         assert(token >= 0 && token < static_cast<int32_t>(vocab));
     assert(gqaRuntime.generate(prompt, 2) == gqaGenerated);
+    const auto gqaReference = referenceGenerate(gqaOwned, prompt, 2, hidden,
+        intermediate, vocab, 2, 2, 1, hidden/2, gqaConfig.rms_epsilon,
+        gqaConfig.rope_theta);
+    assert(gqaGenerated == gqaReference);
 
     auto tooSmallGqaCache = gqaConfig;
     tooSmallGqaCache.max_kv_cache_bytes = 127;
