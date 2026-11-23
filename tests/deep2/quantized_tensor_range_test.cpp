@@ -57,6 +57,13 @@ int main() {
         assert(q8Out[i] == static_cast<float>(within - 16));
     }
 
+    // Fixed-block Q4_0 uses 32 values per 18-byte GGML block.
+    std::vector<std::uint8_t> q4(18, 0);
+    float q4Out[16];
+    assert(deep2::dequantizeTensorRange(deep2::TensorType::Q4_0, 32, 8, 16,
+        q4.data(), q4.size(), q4Out));
+    for (float value : q4Out) assert(value == 0.0f);
+
     // Canonical GGML K-quant blocks are 256 values. Cross a block boundary
     // and prove the range helper reads the two exact Q2_K blocks.
     std::vector<std::uint8_t> q2k(2 * 84, 0);
@@ -71,7 +78,7 @@ int main() {
     assert(!deep2::dequantizeTensorRange(deep2::TensorType::Q8_0, 64, 63, 2,
         q8.data(), q8.size(), sentinel));
     assert(sentinel[0] == 123.0f && sentinel[1] == 456.0f);
-    assert(!deep2::dequantizeTensorRange(deep2::TensorType::Q4_0, 64, 0, 1,
+    assert(!deep2::dequantizeTensorRange(deep2::TensorType::I8, 64, 0, 1,
         q8.data(), q8.size(), sentinel));
 
     std::cout << "bounded GGUF tensor range dequantization PASS\\n";
