@@ -115,7 +115,15 @@ inline bool ConvertF32RangeToF16(std::ifstream& in, std::ofstream& out,
         for(std::streamsize i=0;i<n;i+=4) {
             const uint32_t bits=uint32_t(source[i])|(uint32_t(source[i+1])<<8)|
                 (uint32_t(source[i+2])<<16)|(uint32_t(source[i+3])<<24);
+            float value=0;
+            std::memcpy(&value,&bits,4);
+            if(!std::isfinite(value))return false;
             const uint16_t half=Float32BitsToFloat16(bits);
+            const uint32_t restoredBits=Float16ToFloat32Bits(half);
+            float restored=0;
+            std::memcpy(&restored,&restoredBits,4);
+            if(!std::isfinite(restored) || (value!=0.0f && restored==0.0f))
+                return false;
             dest[i/2]=static_cast<unsigned char>(half);
             dest[i/2+1]=static_cast<unsigned char>(half>>8);
         }
