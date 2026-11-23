@@ -6649,6 +6649,14 @@ foreach(_rawrxd_quantdot_consumer IN ITEMS
   endif()
 endforeach()
 
+# Native zlib codec roundtrip/corruption/output-ceiling smoke.
+if(RAWRXD_BUILD_TESTS)
+    add_executable(rawrxd_compression_core_test tests/compression_core_test.cpp)
+    target_link_libraries(rawrxd_compression_core_test PRIVATE rawrxd_compression_core)
+    target_compile_features(rawrxd_compression_core_test PRIVATE cxx_std_17)
+    add_test(NAME rawrxd_compression_core_test COMMAND rawrxd_compression_core_test)
+endif()
+
 # Native compressed tensor-block residency (byte-exact; lazy decode).
 add_subdirectory(src/deep2/compression)
 if(TARGET deep2_engine_lib)
