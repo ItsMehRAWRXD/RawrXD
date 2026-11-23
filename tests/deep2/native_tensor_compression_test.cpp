@@ -16,11 +16,10 @@ int main() {
     std::vector<uint8_t> direct(repeated.size(),0);
     DecodeInto(r,direct.data(),direct.size());
     assert(direct==repeated);
-    DecodeInto(raw,direct.data(),randomish.size());
-    assert(std::equal(randomish.begin(),randomish.end(),direct.begin()));
-
     const std::vector<uint8_t> randomish={0,1,2,3,4,5,6,7,8,9};
     auto raw=Encode(randomish.data(),randomish.size());
+    DecodeInto(raw,direct.data(),randomish.size());
+    assert(std::equal(randomish.begin(),randomish.end(),direct.begin()));
     assert(raw.encoding==Encoding::Raw && Decode(raw)==randomish);
     const float f[]={1.0f,-2.0f,0.5f,65504.0f};
     auto half=Encode(f,sizeof(f),true,0.0f);
