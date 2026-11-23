@@ -502,6 +502,7 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
     std::vector<float> tile;
     std::vector<float> tileOutput;
     std::vector<float> completed(static_cast<size_t>(rows), 0.0f);
+    std::vector<uint8_t> encodedScratch;
     std::vector<uint8_t> decodeScratch;
 
     for (uint64_t firstRow = 0; firstRow < rows;) {
