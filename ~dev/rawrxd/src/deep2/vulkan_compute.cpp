@@ -3345,7 +3345,8 @@ bool VulkanCompute::SubmitGemvPrefetch(
     if(slot>=prefetch_.size()||!prefetch_[slot].valid) return false;
     auto& e=prefetch_[slot];
     if(packedBytes && quantType) {
-        if(quantType!=8&&quantType!=10&&quantType!=12&&quantType!=14) return false;
+        if(quantType!=1&&quantType!=8&&quantType!=10&&
+           quantType!=12&&quantType!=14&&quantType!=30) return false;
         QPush p{};
         p.type=static_cast<uint32_t>(quantType);
         p.rows=rows;p.cols=cols;
