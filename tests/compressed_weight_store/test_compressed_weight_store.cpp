@@ -158,6 +158,28 @@ int main(){
  REQUIRE(store.tensorBytes("fp16.weights")==14);
  std::uint16_t half[7]={};REQUIRE(store.readRange("fp16.weights",0,half,sizeof(half),&error));
  REQUIRE(half[0]==0x3C00u&&half[1]==0xC000u&&half[2]==0x7BFFu&&half[3]==0x0400u&&half[4]==0u&&half[5]==0x7C00u&&(half[6]&0x7E00u)==0x7E00u);
+
+ // Lossy F32->F16 admission is allowed only inside the caller's absolute
+ // error tolerance and can reject non-finite source values transactionally.
+ bool precisionRejected=false;
+ const float exactF32[]={1.0f,2.0f,4.0f};
+ REQUIRE(store.addTensorF32AsF16FromReader(
+  "fp16.exact",exactF32,3,&error,
+  (std::numeric_limits<std::size_t>::max)(),0.0f,true,&precisionRejected));
+ REQUIRE(!precisionRejected);
+ const float inexactF32[]={1.0001f};
+ precisionRejected=false;
+ REQUIRE(!store.addTensorF32AsF16FromReader(
+  "fp16.too_inexact",inexactF32,1,&error,
+  (std::numeric_limits<std::size_t>::max)(),0.0f,true,&precisionRejected));
+ REQUIRE(precisionRejected&&!store.contains("fp16.too_inexact"));
+ const float nonFiniteF32[]={std::numeric_limits<float>::infinity()};
+ precisionRejected=false;
+ REQUIRE(!store.addTensorF32AsF16FromReader(
+  "fp16.non_finite",nonFiniteF32,1,&error,
+  (std::numeric_limits<std::size_t>::max)(),
+  (std::numeric_limits<float>::infinity)(),true,&precisionRejected));
+ REQUIRE(precisionRejected&&!store.contains("fp16.non_finite"));
  REQUIRE(rawrxd::compression::floatToHalfRNE(1.00048828125f)==0x3C00u); // halfway rounds to even
  REQUIRE(rawrxd::compression::floatToHalfRNE(1.00146484375f)==0x3C02u); // odd halfway rounds up
  REQUIRE(rawrxd::compression::floatToHalfRNE(0x1.0p-25f)==0x0000u); // exact subnormal midpoint rounds to even zero
@@ -173,7 +195,8 @@ int main(){
   REQUIRE(roundTrip==expected);
  }
  REQUIRE(store.addTensor("empty",nullptr,0,&error));REQUIRE(store.tensorBlocks("empty")==0);REQUIRE(store.readRange("empty",0,nullptr,0,&error));
- const auto s=store.stats();REQUIRE(s.tensors==6&&s.raw_bytes==input.size()+random_data.size()+sizeof(q4_payload)+14+slowData.size());REQUIRE(s.compressed_bytes<s.raw_bytes);
+ const auto s=store.stats();REQUIRE(s.tensors==7&&s.raw_bytes==input.size()+random_data.size()+sizeof(q4_payload)+14+6+slowData.size());
+ REQUIRE(s.f32_to_f16_tensors==2&&s.f32_source_bytes==40);REQUIRE(s.compressed_bytes<s.raw_bytes);
  REQUIRE(s.encoded_capacity_bytes>=s.compressed_bytes);
  REQUIRE(s.metadata_bytes_estimate>0);
  REQUIRE(s.resident_bytes_estimate>=s.encoded_capacity_bytes);
