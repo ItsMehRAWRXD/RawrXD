@@ -583,6 +583,20 @@ inline bool ConvertQ8KToQ8_0(std::ifstream& in,std::ofstream& out,
             (uint32_t(source[2])<<16)|(uint32_t(source[3])<<24);
         float scale=0;std::memcpy(&scale,&bits,4);
         if(!std::isfinite(scale))return false;
+        // Q8_K uses one FP32 scale for 256 signed codes. If it fits
+        // FP16 exactly, all eight Q8_0 blocks can reuse those codes
+        // without any requantization or numerical reconstruction error.
+        const uint16_t directHalf=Float32BitsToFloat16(bits);
+        if(Float16ToFloat32Bits(directHalf)==bits) {
+            encoded[0]=static_cast<unsigned char>(directHalf);
+            encoded[1]=static_cast<unsigned char>(directHalf>>8);
+            for(unsigned group=0;group<8;++group) {
+                std::memcpy(encoded+2,source+4+group*32,32);
+                if(!out.write(reinterpret_cast<const char*>(encoded),34))return false;
+            }
+            sourceBytes-=292;
+            continue;
+        }
         for(unsigned group=0;group<8;++group) {
             float values[32],maxAbs=0;
             for(unsigned i=0;i<32;++i) {
