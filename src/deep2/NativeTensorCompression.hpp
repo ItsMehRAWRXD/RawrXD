@@ -12,7 +12,7 @@
 #include <utility>
 
 namespace RawrXD { namespace TensorCompression {
-enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3 };
+enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4 };
 struct Result {
     Encoding encoding = Encoding::Raw;
     uint64_t original_bytes = 0;
@@ -65,6 +65,82 @@ inline float FromHalf(uint16_t h) {
     }
     return Float(sign|((e+112u)<<23)|(m<<13));
 }
+// Dependency-free LZ4-block-compatible byte compressor. It is lossless and
+// selected only when its complete representation is smaller than the current
+// best encoding. A bounded 4K-entry hash table keeps scratch memory predictable.
+inline bool EncodeLZ4Block(const uint8_t* input, size_t size,
+                           std::vector<uint8_t>& output) {
+    output.clear();
+    if (size < 8) return false;
+    std::vector<int32_t> table(1u << 12, -1);
+    output.reserve(size);
+    auto read32 = [input](size_t at) {
+        uint32_t value = 0;
+        std::memcpy(&value, input + at, sizeof(value));
+        return value;
+    };
+    auto hash = [](uint32_t value) {
+        return static_cast<size_t>((value * 2654435761u) >> 20);
+    };
+    auto emitLength = [&output](size_t length) {
+        while (length >= 255) {
+            output.push_back(255);
+            length -= 255;
+        }
+        output.push_back(static_cast<uint8_t>(length));
+    };
+
+    size_t anchor = 0;
+    size_t cursor = 0;
+    while (cursor + 4 <= size) {
+        const size_t h = hash(read32(cursor));
+        const int32_t previous = table[h];
+        table[h] = static_cast<int32_t>(cursor);
+        if (previous < 0 || cursor - static_cast<size_t>(previous) > 65535 ||
+            std::memcmp(input + previous, input + cursor, 4) != 0) {
+            ++cursor;
+            continue;
+        }
+
+        const size_t matchStart = cursor;
+        size_t matchLength = 4;
+        while (matchStart + matchLength < size &&
+               input[static_cast<size_t>(previous) + matchLength] ==
+                   input[matchStart + matchLength])
+            ++matchLength;
+
+        const size_t literalLength = matchStart - anchor;
+        const size_t matchCodeLength = matchLength - 4;
+        const size_t tokenIndex = output.size();
+        output.push_back(0);
+        uint8_t token = static_cast<uint8_t>(
+            (std::min<size_t>(literalLength, 15) << 4) |
+            std::min<size_t>(matchCodeLength, 15));
+        if (literalLength >= 15) emitLength(literalLength - 15);
+        output.insert(output.end(), input + anchor, input + matchStart);
+        const uint16_t distance = static_cast<uint16_t>(matchStart - static_cast<size_t>(previous));
+        output.push_back(static_cast<uint8_t>(distance));
+        output.push_back(static_cast<uint8_t>(distance >> 8));
+        if (matchCodeLength >= 15) emitLength(matchCodeLength - 15);
+        output[tokenIndex] = token;
+
+        cursor += matchLength;
+        anchor = cursor;
+        // Seed hashes immediately before the next cursor to find short-period
+        // repetitions without scanning the already-consumed match again.
+        if (cursor >= 2 && cursor + 2 <= size)
+            table[hash(read32(cursor - 2))] = static_cast<int32_t>(cursor - 2);
+    }
+
+    const size_t literalLength = size - anchor;
+    const size_t tokenIndex = output.size();
+    output.push_back(static_cast<uint8_t>(std::min<size_t>(literalLength, 15) << 4));
+    if (literalLength >= 15) emitLength(literalLength - 15);
+    output.insert(output.end(), input + anchor, input + size);
+    (void)tokenIndex;
+    return output.size() < size;
+}
+
 inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, float max_abs_error=0.0f, bool allow_bf16=false) {
     if (bytes && !data) throw std::invalid_argument("null tensor");
     if (!std::isfinite(max_abs_error) || max_abs_error<0) throw std::invalid_argument("invalid tolerance");
@@ -81,6 +157,13 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
             if (rle.size()>=best.payload.size()) break;
         }
         if (rle.size()<best.payload.size()) { best.encoding=Encoding::RLE; best.payload=std::move(rle); }
+    }
+    if (bytes > 8) {
+        std::vector<uint8_t> lz4;
+        if (EncodeLZ4Block(p, bytes, lz4) && lz4.size() < best.payload.size()) {
+            best.encoding = Encoding::LZ4;
+            best.payload = std::move(lz4);
+        }
     }
     if (allow_fp16 && bytes%4==0 && bytes/2<best.payload.size()) {
         std::vector<uint8_t> half(bytes/2);
@@ -154,6 +237,76 @@ inline void DecodeInto(const Result& r, void* destination, size_t destination_by
             const size_t count=r.payload[i];
             std::memset(out+written,r.payload[i+1],count);
             written+=count;
+        }
+        return;
+    }
+    if (r.encoding==Encoding::LZ4) {
+        // Validate the complete block before touching caller memory.
+        auto readLength = [&r](size_t& pos, size_t base, size_t& value) {
+            value = base;
+            if (base != 15) return true;
+            for (;;) {
+                if (pos >= r.payload.size()) return false;
+                const size_t extra = r.payload[pos++];
+                if (extra > std::numeric_limits<size_t>::max() - value) return false;
+                value += extra;
+                if (extra != 255) return true;
+            }
+        };
+        size_t pos = 0, produced = 0;
+        while (pos < r.payload.size()) {
+            const uint8_t token = r.payload[pos++];
+            size_t literals = 0;
+            if (!readLength(pos, token >> 4, literals) ||
+                literals > r.payload.size() - pos || literals > n - produced)
+                throw std::invalid_argument("malformed LZ4 literals");
+            pos += literals;
+            produced += literals;
+            if (pos == r.payload.size()) break;
+            if (r.payload.size() - pos < 2)
+                throw std::invalid_argument("truncated LZ4 offset");
+            const size_t distance = size_t(r.payload[pos]) |
+                                    (size_t(r.payload[pos + 1]) << 8);
+            pos += 2;
+            if (!distance || distance > produced)
+                throw std::invalid_argument("invalid LZ4 back-reference");
+            size_t match = 0;
+            if (!readLength(pos, token & 0x0f, match) ||
+                match > std::numeric_limits<size_t>::max() - 4)
+                throw std::invalid_argument("malformed LZ4 match length");
+            match += 4;
+            if (match > n - produced)
+                throw std::invalid_argument("LZ4 output overflow");
+            produced += match;
+        }
+        if (produced != n || pos != r.payload.size())
+            throw std::invalid_argument("LZ4 decoded size mismatch");
+
+        pos = 0;
+        size_t written = 0;
+        while (pos < r.payload.size()) {
+            const uint8_t token = r.payload[pos++];
+            size_t literals = token >> 4;
+            if (literals == 15) {
+                uint8_t extra;
+                do { extra = r.payload[pos++]; literals += extra; } while (extra == 255);
+            }
+            if (literals) std::memcpy(out + written, r.payload.data() + pos, literals);
+            pos += literals;
+            written += literals;
+            if (pos == r.payload.size()) break;
+            const size_t distance = size_t(r.payload[pos]) |
+                                    (size_t(r.payload[pos + 1]) << 8);
+            pos += 2;
+            size_t match = token & 0x0f;
+            if (match == 15) {
+                uint8_t extra;
+                do { extra = r.payload[pos++]; match += extra; } while (extra == 255);
+            }
+            match += 4;
+            for (size_t i = 0; i < match; ++i)
+                out[written + i] = out[written + i - distance];
+            written += match;
         }
         return;
     }
