@@ -134,7 +134,7 @@ int main(int argc,char** argv) {
             if(t.bytes && t.bytes>span)throw std::runtime_error("tensor exceeds span");
             if(!t.bytes)t.bytes=span; // Unknown quantized type: preserve complete storage span
             
-            if(t.convert && t.bytes>64u*1024u*1024u) t.convert=false; // bounded allocation
+            // Large F32 tensors are handled by a bounded two-pass F16 stream.
         }
         std::ofstream out(tmp,std::ios::binary|std::ios::trunc);
         if(!out)throw std::runtime_error("cannot create output");
@@ -144,9 +144,26 @@ int main(int argc,char** argv) {
         std::vector<uint32_t> outputTypes(ts.size());
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
+        std::vector<bool> streamHalf(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51))continue;
-            if(t.bytes>64u*1024u*1024u)continue;
+            if(t.bytes>64u*1024u*1024u) {
+                if(t.type!=0 || quantized)continue;
+                // First pass: validate every F32 weight before changing its type.
+                // The second pass emits the same half values using fixed memory.
+                seek(in,add(dataStart,t.offset));
+                bool valid=true;
+                for(U off=0;off<t.bytes;off+=4) {
+                    uint32_t bits=uint32_t(read(in,4));
+                    float value=Float(bits);
+                    if(!std::isfinite(value)){valid=false;break;}
+                    float reconstructed=FromHalf(ToHalf(value));
+                    if(!std::isfinite(reconstructed) ||
+                       !(std::fabs(reconstructed-value)<=tolerance)){valid=false;break;}
+                }
+                if(valid){streamHalf[i]=true;outputTypes[i]=1;++changed;}
+                continue;
+            }
             std::vector<uint8_t> raw(static_cast<size_t>(t.bytes));
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
@@ -300,7 +317,7 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,converted[i].empty()?t.bytes:converted[i].size());
+            cursor=add(cursor,streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size()));
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
@@ -315,7 +332,14 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(!converted[i].empty())out.write(reinterpret_cast<const char*>(converted[i].data()),std::streamsize(converted[i].size()));
+            if(streamHalf[i]) {
+                seek(in,add(dataStart,t.offset));
+                for(U off=0;off<t.bytes;off+=4) {
+                    float value=Float(uint32_t(read(in,4)));
+                    write(out,ToHalf(value),2);
+                }
+            } else if(!converted[i].empty())
+                out.write(reinterpret_cast<const char*>(converted[i].data()),std::streamsize(converted[i].size()));
             else {seek(in,add(dataStart,t.offset));copy(in,out,t.bytes);}
         }
         out.flush();if(!out)throw std::runtime_error("output write failure");
