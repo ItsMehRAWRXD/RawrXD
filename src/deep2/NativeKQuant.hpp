@@ -151,8 +151,8 @@ inline bool EncodeBlock(uint32_t type,const double v[256],float tolerance,uint8_
                 lo=std::min(lo,v[g*16+k]);
                 hi=std::max(hi,v[g*16+k]);
             }
-            scale[g]=std::max(0.0,(hi-std::max(0.0,lo))/3.0);
             minimum[g]=std::max(0.0,-lo);
+            scale[g]=std::max(0.0,(hi+minimum[g])/3.0);
             maxScale=std::max(maxScale,scale[g]);
             maxMinimum=std::max(maxMinimum,minimum[g]);
         }
