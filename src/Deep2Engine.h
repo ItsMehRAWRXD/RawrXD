@@ -66,6 +66,7 @@
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "Deep2GpuForward.hpp"
 #include "reap/ReapRuntimePlan.hpp"
+#include "deep2/compression/CompressedWeightStore.hpp"
 // Standard library includes - must be BEFORE namespace Deep2
 #include <memory>
 #include <string>
@@ -74,6 +75,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <atomic>
+#include <cstring>
 
 namespace Deep2
 {
@@ -102,6 +104,49 @@ namespace Deep2
         bool mapped = false; // true if data is externally owned (do not free)
         bool hasFileBacking = false; // true if weight data is file-backed (mmap/mmap_range)
         uint64_t fileOffset = 0;    // byte offset in the backing GGUF file
+
+        // Optional authoritative compressed host representation. When present,
+        // consumers may request only the byte range required by a kernel.
+        std::shared_ptr<rawrxd::compression::CompressedWeightStore> compressedStore;
+        std::string compressedKey;
+
+        bool attachCompressedBacking(
+            std::shared_ptr<rawrxd::compression::CompressedWeightStore> store,
+            const std::string& key)
+        {
+            if (!store || key.empty() || !store->contains(key) ||
+                store->tensorBytes(key) != sizeBytes)
+                return false;
+            const auto storedType = store->tensorType(key);
+            if (storedType != rawrxd::compression::GGML_TYPE_OPAQUE &&
+                storedType != static_cast<std::uint32_t>(type))
+                return false;
+            compressedStore = std::move(store);
+            compressedKey = key;
+            return true;
+        }
+
+        bool hasCompressedBacking() const noexcept {
+            return compressedStore && !compressedKey.empty();
+        }
+
+        bool readBytes(std::size_t offset, void* destination, std::size_t length,
+                       std::string* error = nullptr) const
+        {
+            if ((!destination && length) || offset > sizeBytes ||
+                length > sizeBytes - offset) {
+                if (error) *error = "WeightTensor byte range is outside tensor bounds";
+                return false;
+            }
+            if (hasCompressedBacking())
+                return compressedStore->readRange(compressedKey, offset, destination, length, error);
+            if (!data && length) {
+                if (error) *error = "WeightTensor has neither raw nor compressed backing";
+                return false;
+            }
+            if (length) std::memcpy(destination, static_cast<const std::uint8_t*>(data) + offset, length);
+            return true;
+        }
     };
 
     // ============================================================================
