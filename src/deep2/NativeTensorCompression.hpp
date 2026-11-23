@@ -176,4 +176,72 @@ inline std::vector<uint8_t> Decode(const Result& r) {
     DecodeInto(r,out.data(),out.size());
     return out;
 }
+
+// Chunked compressed F32 residency. Each chunk is independently encoded, so
+// inference callers can request a row/tile without expanding the full tensor.
+// This is a private runtime representation; it never changes GGUF wire types.
+class ChunkedF32Storage {
+public:
+    ChunkedF32Storage() = default;
+    static ChunkedF32Storage Build(const float* values,size_t count,
+                                   float max_abs_error,size_t chunk_elements=4096) {
+        if(count && !values) throw std::invalid_argument("null F32 tensor");
+        if(!chunk_elements) throw std::invalid_argument("zero chunk size");
+        if(count>std::numeric_limits<size_t>::max()/sizeof(float))
+            throw std::length_error("F32 tensor size overflow");
+        ChunkedF32Storage result;
+        result.element_count_=count;
+        result.chunk_elements_=chunk_elements;
+        result.chunks_.reserve(count/chunk_elements+(count%chunk_elements!=0));
+        for(size_t offset=0;offset<count;) {
+            const size_t n=(count-offset<chunk_elements)?count-offset:chunk_elements;
+            result.chunks_.push_back(EncodeAdaptiveF32(values+offset,n,max_abs_error));
+            offset+=n;
+        }
+        return result;
+    }
+    size_t size() const noexcept { return element_count_; }
+    size_t chunkElements() const noexcept { return chunk_elements_; }
+    size_t chunkCount() const noexcept { return chunks_.size(); }
+    size_t storedBytes() const noexcept {
+        size_t total=0;
+        for(const auto& c:chunks_) {
+            if(c.payload.size()>std::numeric_limits<size_t>::max()-total)
+                return std::numeric_limits<size_t>::max();
+            total+=c.payload.size();
+        }
+        return total;
+    }
+    // Read [first, first+count) into caller-owned F32 memory. Only intersecting
+    // chunks are decoded; out-of-range requests fail before writing anything.
+    void ReadRange(size_t first,size_t count,float* destination) const {
+        if(first>element_count_ || count>element_count_-first)
+            throw std::out_of_range("compressed tensor range");
+        if(count && !destination) throw std::invalid_argument("null range destination");
+        if(!count) return;
+        const size_t end=first+count;
+        const size_t first_chunk=first/chunk_elements_;
+        const size_t last_chunk=(end-1)/chunk_elements_;
+        std::vector<uint8_t> scratch;
+        for(size_t ci=first_chunk;ci<=last_chunk;++ci) {
+            const Result& encoded=chunks_[ci];
+            const size_t chunk_first=ci*chunk_elements_;
+            const size_t chunk_count=static_cast<size_t>(encoded.original_bytes/sizeof(float));
+            scratch.resize(static_cast<size_t>(encoded.original_bytes));
+            DecodeInto(encoded,scratch.data(),scratch.size());
+            const size_t copy_first=first>chunk_first?first:chunk_first;
+            const size_t chunk_end=chunk_first+chunk_count;
+            const size_t copy_end=end<chunk_end?end:chunk_end;
+            const size_t n=copy_end-copy_first;
+            std::memcpy(destination+(copy_first-first),
+                        scratch.data()+(copy_first-chunk_first)*sizeof(float),
+                        n*sizeof(float));
+        }
+    }
+private:
+    size_t element_count_=0;
+    size_t chunk_elements_=4096;
+    std::vector<Result> chunks_;
+};
+
 }} // namespace RawrXD::TensorCompression
