@@ -215,6 +215,19 @@ int main() {
     assert(specialModel.tensorBytes(special.name) == specialValues.size() * sizeof(float));
     assert(specialModel.stats().f32_to_f16_tensors == 0);
 
+    // Finite F32 values that overflow to binary16 infinity are rejected even
+    // with a very permissive finite error threshold.
+    std::vector<float> overflowValues = {70000.0f, -2.0f, 0.5f, 2.0f};
+    auto overflowTensor = convertible;
+    overflowTensor.name = "blk.0.overflow_f32.weight";
+    overflowTensor.data = overflowValues.data();
+    conversionOptions.f32_to_f16_max_abs_error = std::numeric_limits<float>::max();
+    CompressedGGUFModel overflowModel(conversionOptions);
+    assert(overflowModel.loadMappedTensors({overflowTensor}, &error, &failed));
+    assert(overflowModel.tensorType(overflowTensor.name) == 0u);
+    assert(overflowModel.tensorBytes(overflowTensor.name) == overflowValues.size() * sizeof(float));
+    assert(overflowModel.stats().f32_to_f16_tensors == 0);
+
     // Unload publishes an empty state; in-flight readers can retain snapshots.
     model.unload();
     assert(!model.loaded() && model.tensorCount() == 0);
