@@ -360,15 +360,13 @@ def run(binary):
         scales=q2b[qo:qo+16];packed=q2b[qo+16:qo+80]
         d,dm=struct.unpack_from("<ee",q2b,qo+80)
         restored=[0.0]*256
-        for chunk in range(2):
-            for pair in range(4):
-                for half in range(2):
-                    g=chunk*8+pair*2+half
-                    sc=scales[g]&15;mn=scales[g]>>4
-                    for j in range(16):
-                        qi=chunk*32+pair*16+j
-                        code=(packed[qi]>>(pair*2))&3
-                        restored[g*16+j]=d*sc*code-dm*mn
+        for g in range(16):
+            chunk=g//8;within=g%8;half=within%2;shift=(within//2)*2
+            sc=scales[g]&15;mn=scales[g]>>4
+            for j in range(16):
+                qi=chunk*32+(16 if half else 0)+j
+                code=(packed[qi]>>shift)&3
+                restored[g*16+j]=d*sc*code-dm*mn
         assert max(abs(a-b) for a,b in zip(restored,q2vals))<=0.5
         q2strict=root/"f64-q2k-strict.gguf"
         subprocess.run([binary,str(q2src),str(q2strict),"0","q2_k"],check=True)
