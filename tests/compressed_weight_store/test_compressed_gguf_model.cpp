@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <limits>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -153,6 +154,66 @@ int main() {
     assert(model.loadMappedTensors({unsupported}, &error, &failed));
     assert(!model.matvec(unsupported.name, input, output, 2, &error));
     assert(error.find("no resident matvec kernel") != std::string::npos);
+
+    // Explicit F32->F16 admission halves the logical tensor payload while
+    // encoding directly from mapped bytes in bounded blocks. An odd block size
+    // deliberately splits half words across source callback boundaries.
+    std::vector<float> exactlyRepresentable = {1.0f, -2.0f, 0.5f, 2.0f};
+    Deep2::GGUFTensor convertible;
+    convertible.name = "blk.0.convertible_f32.weight";
+    convertible.type = static_cast<Deep2::GGMLType>(0);
+    convertible.shape = {2, 2};
+    convertible.data = exactlyRepresentable.data();
+    convertible.sizeBytes = exactlyRepresentable.size() * sizeof(float);
+    CompressedGGUFModel::Options conversionOptions;
+    conversionOptions.decoded_cache_bytes = 0;
+    conversionOptions.block_bytes = 3;
+    conversionOptions.enable_f32_to_f16 = true;
+    conversionOptions.f32_to_f16_max_abs_error = 0.0f;
+    CompressedGGUFModel convertedModel(conversionOptions);
+    assert(convertedModel.loadMappedTensors({convertible}, &error, &failed));
+    assert(convertedModel.tensorType(convertible.name) == 1u);
+    assert(convertedModel.tensorBytes(convertible.name) == exactlyRepresentable.size() * 2);
+    const auto conversionStats = convertedModel.stats();
+    assert(conversionStats.f32_to_f16_tensors == 1);
+    assert(conversionStats.f32_source_bytes == exactlyRepresentable.size() * sizeof(float));
+    std::uint8_t convertedBytes[8] = {};
+    assert(convertedModel.readTensorRange(convertible.name, 0, convertedBytes,
+                                           sizeof(convertedBytes), &error));
+    const std::uint16_t expectedHalves[] = {0x3c00u, 0xc000u, 0x3800u, 0x4000u};
+    assert(std::memcmp(convertedBytes, expectedHalves, sizeof(expectedHalves)) == 0);
+    float convertedOutput[2] = {};
+    assert(convertedModel.matvec(convertible.name, input, convertedOutput, 4, &error));
+    assert(convertedOutput[0] == -3.0f && convertedOutput[1] == 4.5f);
+
+    // A value outside the configured error bound falls back to lossless F32
+    // storage instead of silently changing model numerics.
+    std::vector<float> precisionSensitive = {1.0001f, -2.0f, 0.5f, 2.0f};
+    auto sensitive = convertible;
+    sensitive.name = "blk.0.precision_sensitive_f32.weight";
+    sensitive.data = precisionSensitive.data();
+    conversionOptions.f32_to_f16_max_abs_error = 1.0e-6f;
+    CompressedGGUFModel fallbackModel(conversionOptions);
+    assert(fallbackModel.loadMappedTensors({sensitive}, &error, &failed));
+    assert(fallbackModel.tensorType(sensitive.name) == 0u);
+    assert(fallbackModel.tensorBytes(sensitive.name) == precisionSensitive.size() * sizeof(float));
+    assert(fallbackModel.stats().f32_to_f16_tensors == 0);
+    float fallbackOutput[2] = {};
+    assert(fallbackModel.matvec(sensitive.name, input, fallbackOutput, 8, &error));
+    assert(std::fabs(fallbackOutput[0] - (precisionSensitive[0] - 4.0f)) < 1e-6f);
+
+    // Non-finite F32 tensors retain their original byte representation so NaN
+    // payloads and infinity semantics are not rewritten by a lossy conversion.
+    std::vector<float> specialValues = {1.0f, std::numeric_limits<float>::quiet_NaN(),
+                                        0.5f, 2.0f};
+    auto special = convertible;
+    special.name = "blk.0.special_f32.weight";
+    special.data = specialValues.data();
+    CompressedGGUFModel specialModel(conversionOptions);
+    assert(specialModel.loadMappedTensors({special}, &error, &failed));
+    assert(specialModel.tensorType(special.name) == 0u);
+    assert(specialModel.tensorBytes(special.name) == specialValues.size() * sizeof(float));
+    assert(specialModel.stats().f32_to_f16_tensors == 0);
 
     // Unload publishes an empty state; in-flight readers can retain snapshots.
     model.unload();
