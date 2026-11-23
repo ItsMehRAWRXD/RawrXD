@@ -65,6 +65,11 @@ size_t StreamBytes(const WeightTensor& wt) {
         return std::min<size_t>(wt.sizeBytes, 256u * 1024u);
     if (PackedQuant(wt)) return wt.sizeBytes;
     if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+        // A compressed F32 tensor is not a full F32 upload reservation.
+        // Account for the retained encoded representation, not its source
+        // GGUF byte size, when sizing the per-layer weight stream window.
+        if (wt.compressedF32)
+            return wt.compressedF32->residentBytes();
         const auto packed = std::atomic_load_explicit(
             &wt.gpuF16Payload, std::memory_order_acquire);
         if (packed && packed->data && packed->bytes) return packed->bytes;
