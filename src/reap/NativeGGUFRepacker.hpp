@@ -709,7 +709,9 @@ inline RepackError RepackGGUF(const std::string& input,
         // 272 bytes/256. Never choose an expanding target format.
         // Preserve the original tensor when a requested conversion
         // does not strictly reduce its serialized payload.
-        const uint64_t q8Bytes = (count/32)*34;
+        uint64_t q8Bytes=0;
+        if(!CheckedMultiply(count/32,34,q8Bytes))
+            return RepackError::Overflow;
         // Q8_1 and Q8_K vectors have no eligible Q4_0 path, while
         // sensitive matrices must not be aggressively requantized.
         // Repack both to Q8_0 only when the serialized payload shrinks.
@@ -721,7 +723,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.q8_source_k=(t.type==15);
             t.q8_source_q8_1=(t.type==9);
             t.type=8;
-            t.bytes=(count/32)*34;
+            t.bytes=q8Bytes;
         }
         if(convert_f32_to_q8_0 && !t.convert_f16 && !t.convert_q8_0 &&
            (t.type==0 || t.type==1 || t.type==9 || t.type==15) &&
@@ -735,13 +737,15 @@ inline RepackError RepackGGUF(const std::string& input,
             t.q8_source_k=(t.type==15);
             t.q8_source_q8_1=(t.type==9);
             t.type=8; // GGML_TYPE_Q8_0 (32 values per 34-byte block)
-            t.bytes=(count/32)*34;
+            t.bytes=q8Bytes;
         }
         // Automatic requantization must not touch vector-like parameters,
         // nor expand a tensor that is already more compact than Q4_0.
         // A two-dimensional GGUF tensor with a singleton second axis is
         // still a vector; require at least two logical rows.
-        const uint64_t q4Bytes = (count/32)*18;
+        uint64_t q4Bytes=0;
+        if(!CheckedMultiply(count/32,18,q4Bytes))
+            return RepackError::Overflow;
         if((convert_q8_0_to_q4_0 || auto_compress) &&
            !t.convert_f16 && !t.convert_q8_0 && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
@@ -755,7 +759,7 @@ inline RepackError RepackGGUF(const std::string& input,
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
-            t.bytes=(count/32)*18;
+            t.bytes=q4Bytes;
         }
         // Never reinterpret a tensor after another conversion was planned.
         // Explicit Q6_K -> Q5_0 applies only to original Q6_K payloads.
