@@ -18,6 +18,8 @@ The runtime must never select an encoding unless its decoder is implemented and 
 
 The encoded-byte residency cache uses lossless RLE/LZ4 chunks and is deliberately lossless: a quantized payload is never quantized a second time merely to make it smaller. Chunks that do not produce a net saving stay on the source pager path. After successful cache admission, corresponding unleased source pages are evicted to avoid retaining a duplicate raw copy.
 
+Admission failures are classified: source-reader failures and unexpected runtime/allocation exceptions remain retryable; a typed deterministic no-win or residency-budget rejection is memoized as a raw-pager fallback. This prevents repeated scans of tensors already proven not to fit while avoiding permanent fallback decisions after transient failures. The cache regression tests cover both classes.
+
 ## Configuration
 
 - `DEEP2_ROM_CACHE_BYTES`: source-page cache capacity.
