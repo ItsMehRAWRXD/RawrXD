@@ -29,9 +29,10 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING)
+ find_package(Threads REQUIRED)
  add_executable(test_compressed_gguf_model
      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_compressed_gguf_model.cpp)
- target_link_libraries(test_compressed_gguf_model PRIVATE rawrxd_compressed_weight_store)
+ target_link_libraries(test_compressed_gguf_model PRIVATE rawrxd_compressed_weight_store Threads::Threads)
  target_compile_features(test_compressed_gguf_model PRIVATE cxx_std_20)
  add_test(NAME compressed_gguf_model_lifecycle COMMAND test_compressed_gguf_model)
 endif()
