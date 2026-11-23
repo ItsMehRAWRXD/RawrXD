@@ -26,7 +26,7 @@ inline BlockDecoder zlibBlockDecoder() {
             if (dstSize) std::copy_n(src, dstSize, dst);
             return true;
         }
-        const auto result = compression::decompress(src, srcSize, dstSize);
+        const auto result = rawrxd::compression::decompress(src, srcSize, dstSize);
         if (!result || result.bytes.size() != dstSize) return false;
         if (dstSize) std::copy(result.bytes.begin(), result.bytes.end(), dst);
         return true;
@@ -46,7 +46,7 @@ inline BlockEncoder nativeLzBlockEncoder() {
 inline BlockEncoder zlibBlockEncoder(int level = -1) {
     return [level](const std::uint8_t* src, std::size_t size,
                    std::vector<std::uint8_t>& out) {
-        const auto result = compression::compress(src, size, level);
+        const auto result = rawrxd::compression::compress(src, size, level);
         if (!result) return false;
         out = result.bytes;
         // The paired decoder recognizes raw fallback by exact-size blocks.
