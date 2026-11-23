@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feat/native-compressed-weight-residency-20261123
+      - codex/compressed-gguf-model-runtime-20261123
     paths:
       - 'src/deep2/compression/**'
       - 'src/deep2/Deep2Engine.cpp'
