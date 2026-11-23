@@ -371,6 +371,38 @@ def run(binary):
         q2strict=root/"f64-q2k-strict.gguf"
         subprocess.run([binary,str(q2src),str(q2strict),"0","q2_k"],check=True)
         assert q2strict.read_bytes()==q2src.read_bytes()
+        # Q3_K: canonical 110-byte block (hmask[32], qs[64],
+        # scales[12], fp16 d). Decode using GGML's scale extraction and
+        # 2-bit low plane + high-mask semantics.
+        q3vals=[((i%29)-14)/16.0 for i in range(256)]
+        q3raw=struct.pack("<"+"d"*256,*q3vals)
+        q3meta=S("general.architecture")+U32(8)+S("llama")
+        q3meta+=S("general.alignment")+U32(4)+U32(ALIGN)
+        q3hdr=b"GGUF"+U32(3)+U64(1)+U64(2)+q3meta
+        q3hdr+=S("blk.0.attn_q.weight")+U32(1)+U64(256)+U32(28)+U64(0)
+        q3src=root/"f64-q3k-source.gguf";q3src.write_bytes(pad(q3hdr)+q3raw)
+        q3out=root/"f64-q3k-output.gguf"
+        subprocess.run([binary,str(q3src),str(q3out),"0.2","q3_k"],check=True)
+        q3b,q3s,q3m,q3t=parse(q3out)
+        assert q3t["blk.0.attn_q.weight"][0]==11
+        assert len(q3b)-q3s==110
+        qo=q3s+q3t["blk.0.attn_q.weight"][2]
+        hm=q3b[qo:qo+32];qs=q3b[qo+32:qo+96];sc=q3b[qo+96:qo+108]
+        d=struct.unpack_from("<e",q3b,qo+108)[0]
+        restored=[0.0]*256
+        for g in range(16):
+            nib=(sc[g]&15) if g<8 else (sc[g-8]>>4)
+            sext=(sc[8+g%4]>>(2*(g//4)))&3
+            scale=d*((nib|(sext<<4))-32)
+            for j in range(16):
+                ix=g*16+j;chunk=ix//128;within=ix%128
+                low=(qs[chunk*32+(within%32)]>>((within//32)*2))&3
+                high=(hm[ix%32]>>(ix//32))&1
+                restored[ix]=scale*(low+4*high-4)
+        assert max(abs(a-b) for a,b in zip(restored,q3vals))<=0.2
+        q3strict=root/"f64-q3k-strict.gguf"
+        subprocess.run([binary,str(q3src),str(q3strict),"0","q3_k"],check=True)
+        assert q3strict.read_bytes()==q3src.read_bytes()
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
