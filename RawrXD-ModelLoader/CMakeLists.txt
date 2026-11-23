@@ -613,7 +613,16 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
         add_executable(bench_deflate_brutal_arm64
             tests/bench_deflate_brutal_arm64.cpp
             kernels/deflate_brutal_neon.S
+            src/gzip_crc32.cpp
         )
+        target_include_directories(bench_deflate_brutal_arm64 PRIVATE tests)
+        add_executable(test_deflate_brutal_gzip_arm64
+            tests/test_deflate_brutal_gzip.cpp
+            kernels/deflate_brutal_neon.S
+            src/gzip_crc32.cpp
+        )
+        target_compile_definitions(test_deflate_brutal_gzip_arm64 PRIVATE RAWRXD_BRUTAL_NEON=1)
+        target_include_directories(test_deflate_brutal_gzip_arm64 PRIVATE tests)
         set_target_properties(bench_deflate_brutal_arm64 PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 endif()
@@ -640,7 +649,7 @@ if(MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
     target_compile_definitions(brutal_gzip PUBLIC HAS_BRUTAL_GZIP_MASM=1)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
     enable_language(ASM)
-    target_sources(brutal_gzip PRIVATE kernels/deflate_neon.S)
+    target_sources(brutal_gzip PRIVATE kernels/deflate_brutal_neon.S)
     target_compile_definitions(brutal_gzip PUBLIC HAS_BRUTAL_GZIP_NEON=1)
 endif()
 

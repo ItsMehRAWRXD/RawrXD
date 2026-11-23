@@ -1,116 +1,118 @@
-// AArch64 brutal gzip: stored-blocks only, malloc+memcpy
-// Args: x0=src, x1=len, x2=out_len* ; Returns x0=buffer
-// Notes: 16B-aligned stack, preserves frame; caller-saved regs used only
-// Verified ARM64 NEON path delivers the 116× speedup reported in docs/BRUTAL-GZIP.md
-
+// AArch64 stored-block gzip encoder. Emits valid RFC 1952 framing and
+// IEEE CRC32; stored DEFLATE blocks are intentionally non-compressing.
     .text
     .align  2
     .global deflate_brutal_neon
     .type   deflate_brutal_neon, %function
     .extern malloc
     .extern memcpy
+    .extern rawrxd_gzip_crc32
 
 deflate_brutal_neon:
-    // Prologue
     stp     x29, x30, [sp, #-16]!
+    stp     x19, x20, [sp, #-16]!
+    stp     x21, x22, [sp, #-16]!
+    stp     x23, x24, [sp, #-16]!
+    stp     x25, x26, [sp, #-16]!
     mov     x29, sp
 
-    // Save args
-    mov     x8, x0          // src
-    mov     x9, x1          // len
-    mov     x10, x2         // out_len*
+    mov     x19, x0                 // original source
+    mov     x20, x1                 // source length
+    mov     x21, x2                 // out_len*
+    cbz     x21, .Lfail
+    str     xzr, [x21]
+    cbz     x20, .Lsource_ok
+    cbz     x19, .Lfail
+.Lsource_ok:
 
-    // block_count = (len + 65534) / 65535
-    mov     x11, x9
-    add     x11, x11, #65534
+    // blocks = max(1, ceil(len / 65535)); reject every size overflow.
+    mov     x12, #65534
+    adds    x11, x20, x12
+    b.cs    .Lfail
     mov     x12, #65535
     udiv    x11, x11, x12
-
-    // alloc = len + blocks*5 + 18
-    // x11 = blocks
+    cbnz    x11, .Lhave_blocks
+    mov     x11, #1
+.Lhave_blocks:
     mov     x13, #5
-    madd    x11, x11, x13, x9   // x11 = blocks*5 + len
-    add     x11, x11, #18
+    mul     x14, x11, x13
+    umulh   x15, x11, x13
+    cbnz    x15, .Lfail
+    adds    x14, x14, x20
+    b.cs    .Lfail
+    adds    x14, x14, #18
+    b.cs    .Lfail
 
-    // p = malloc(alloc)
-    mov     x0, x11
-    bl      malloc
-    cbz     x0, 1f         // fail
-
-    mov     x13, x0        // base
-    mov     x14, x0        // p
-
-    // gzip header (10 bytes): 1F 8B 08 00 00 00 00 00 00 03
-    mov     w15, #0x8B1F
-    strh    w15, [x14]
-    add     x14, x14, #2
-    mov     w15, #0x08
-    strb    w15, [x14]
-    add     x14, x14, #1
-    mov     w15, #0
-    str     w15, [x14]
-    add     x14, x14, #4
-    mov     w15, #0
-    strb    w15, [x14]
-    add     x14, x14, #1
-    mov     w15, #3
-    strb    w15, [x14]
-    add     x14, x14, #1
-
-    // stored blocks
-    mov     x15, x9        // remaining
-0:
-    cbz     x15, 2f
-    // chunk = min(remaining, 65535)
-    mov     x16, #65535
-    cmp     x15, x16
-    csel    x16, x15, x16, ls
-    // bfinal = (remaining==chunk)
-    sub     x17, x15, x16
-    mov     w18, #0
-    cbnz    x17, 3f
-    mov     w18, #1
-3:
-    strb    w18, [x14]
-    add     x14, x14, #1
-    // LEN, NLEN
-    mov     w19, w16
-    strh    w19, [x14]
-    mvn     w19, w19
-    strh    w19, [x14, #2]
-    add     x14, x14, #4
-    // memcpy(p, src, chunk)
     mov     x0, x14
-    mov     x1, x8
-    mov     x2, x16
+    bl      malloc
+    cbz     x0, .Lfail
+    mov     x22, x0                 // allocation base
+    mov     x23, x0                 // output cursor
+    mov     x24, x19                // source cursor
+
+    // Gzip header.
+    mov     w9, #0x8B1F
+    strh    w9, [x23], #2
+    mov     w9, #8
+    strb    w9, [x23], #1
+    str     wzr, [x23], #4
+    strb    wzr, [x23], #1
+    mov     w9, #3
+    strb    w9, [x23], #1
+
+    // Empty input still requires one final empty stored DEFLATE block.
+    cbnz    x20, .Lblock_loop
+    mov     w9, #1
+    strb    w9, [x23], #1
+    strh    wzr, [x23]
+    mov     w9, #0xFFFF
+    strh    w9, [x23, #2]
+    add     x23, x23, #4
+    b       .Lafter_blocks
+
+.Lblock_loop:
+    mov     x10, x20                // remaining bytes
+.Lnext_block:
+    cbz     x10, .Lafter_blocks
+    mov     x11, #65535
+    cmp     x10, x11
+    csel    x25, x10, x11, ls       // chunk, preserved across memcpy
+    cmp     x10, x25
+    cset    w12, eq                 // BFINAL
+    strb    w12, [x23], #1
+    strh    w25, [x23]
+    mvn     w12, w25
+    strh    w12, [x23, #2]
+    add     x23, x23, #4
+
+    mov     x0, x23
+    mov     x1, x24
+    mov     x2, x25
     bl      memcpy
-    add     x14, x14, x16
-    add     x8,  x8,  x16
-    sub     x15, x15, x16
-    b       0b
+    add     x23, x23, x25
+    add     x24, x24, x25
+    sub     x10, x10, x25
+    b       .Lnext_block
 
-2:
-    // footer: CRC32=0, ISIZE=len
-    mov     w19, #0
-    str     w19, [x14]
-    add     x14, x14, #4
-    mov     w19, w9
-    str     w19, [x14]
-    add     x14, x14, #4
+.Lafter_blocks:
+    // Gzip trailer: IEEE CRC32(original source), then ISIZE modulo 2^32.
+    mov     x0, x19
+    mov     x1, x20
+    bl      rawrxd_gzip_crc32
+    str     w0, [x23], #4
+    str     w20, [x23], #4
+    sub     x9, x23, x22
+    str     x9, [x21]
+    mov     x0, x22
+    b       .Lexit
 
-    // *out_len = (p - base)
-    sub     x19, x14, x13
-    cbz     x10, 4f
-    str     x19, [x10]
-4:
-    mov     x0, x13
-    b       5f
-
-1:  // fail
+.Lfail:
     mov     x0, xzr
-
-5:
+.Lexit:
+    ldp     x25, x26, [sp], #16
+    ldp     x23, x24, [sp], #16
+    ldp     x21, x22, [sp], #16
+    ldp     x19, x20, [sp], #16
     ldp     x29, x30, [sp], #16
     ret
-
     .size deflate_brutal_neon, .-deflate_brutal_neon

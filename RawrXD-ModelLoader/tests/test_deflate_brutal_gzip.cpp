@@ -6,7 +6,13 @@
 #include <random>
 #include <algorithm>
 
+#if defined(RAWRXD_BRUTAL_NEON)
+extern "C" void* deflate_brutal_neon(const void*, std::size_t, std::size_t*);
+#define DEFLATE_BRUTAL deflate_brutal_neon
+#else
 extern "C" void* deflate_brutal_masm(const void*, std::size_t, std::size_t*);
+#define DEFLATE_BRUTAL deflate_brutal_masm
+#endif
 
 static bool runCase(std::size_t size, bool repetitive) {
     std::vector<std::uint8_t> input(size);
@@ -19,7 +25,7 @@ static bool runCase(std::size_t size, bool repetitive) {
     }
 
     std::size_t outputSize = 0;
-    void* output = deflate_brutal_masm(
+    void* output = DEFLATE_BRUTAL(
         input.empty() ? nullptr : input.data(), input.size(), &outputSize);
     if (!output) return false;
     const bool valid = rawrxd_test::validateStoredGzip(
@@ -40,6 +46,12 @@ static bool runCase(std::size_t size, bool repetitive) {
 }
 
 int main() {
+    std::size_t invalidLength = 123;
+    if (DEFLATE_BRUTAL(nullptr, 1, &invalidLength) != nullptr ||
+        invalidLength != 0 || DEFLATE_BRUTAL(nullptr, 0, nullptr) != nullptr) {
+        std::fprintf(stderr, "FAIL invalid argument contract\\n");
+        return 1;
+    }
     const struct { std::size_t size; bool repetitive; } cases[] = {
         {0, false}, {1, false}, {31, true}, {65535, false},
         {65536, true}, {131071, false}, {1048576, false},

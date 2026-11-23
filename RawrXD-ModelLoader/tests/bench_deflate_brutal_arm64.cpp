@@ -1,41 +1,43 @@
+#include "gzip_stored_validator.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
 #include <random>
-#include <algorithm>
 #include <chrono>
 
-// Confirms the 116× ARM64 speedup versus Qt qCompress on 1MB random inputs.
-
-extern "C" void* deflate_brutal_neon(const void* src, size_t len, size_t* out_len);
+extern "C" void* deflate_brutal_neon(const void*, std::size_t, std::size_t*);
 
 int main() {
     using clock = std::chrono::high_resolution_clock;
-    const size_t len = 1ull << 20; // 1 MB
-    std::vector<unsigned char> src(len);
+    const std::size_t len = 1u << 20;
+    std::vector<std::uint8_t> src(len);
     std::mt19937 rng(42);
-    for (size_t i = 0; i < len; ++i) src[i] = static_cast<unsigned char>(rng());
+    for (auto& value : src) value = static_cast<std::uint8_t>(rng());
 
-    std::printf("Benchmarking deflate_brutal_neon with 1MB random data...\n");
-
-    // Warmup
-    size_t out_len = 0;
-    void* out = deflate_brutal_neon(src.data(), len, &out_len);
-    if (!out) {
-        std::printf("Allocation failed!\n");
+    std::size_t outLen = 0;
+    void* out = deflate_brutal_neon(src.data(), src.size(), &outLen);
+    if (!out || !rawrxd_test::validateStoredGzip(
+            static_cast<const std::uint8_t*>(out), outLen, src.data(), src.size())) {
+        std::fprintf(stderr, "FAIL: NEON output is not a valid roundtripping gzip stream\\n");
+        std::free(out);
         return 1;
     }
     std::free(out);
 
-    auto t0 = clock::now();
-    out = deflate_brutal_neon(src.data(), len, &out_len);
-    auto t1 = clock::now();
-    double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    const auto start = clock::now();
+    out = deflate_brutal_neon(src.data(), src.size(), &outLen);
+    const auto stop = clock::now();
+    if (!out) return 1;
+    const double ms = std::chrono::duration<double, std::milli>(stop - start).count();
+    const bool valid = rawrxd_test::validateStoredGzip(
+        static_cast<const std::uint8_t*>(out), outLen, src.data(), src.size());
     std::free(out);
+    if (!valid) return 1;
 
-    std::printf("Brutal NEON: %.2f ms\n", ms);
-    std::printf("Target (Qt): ~50.00 ms\n");
-    std::printf("Speedup vs Target: %.2fx\n", 50.0 / ms);
-    std::printf(ms <= 5.0 ? "SUCCESS: Latency <= 5ms\n" : "WARNING: Latency > 5ms\n");
+    std::printf("Stored-block gzip packaging: %.3f ms\\n", ms);
+    std::printf("Input: %zu bytes, output: %zu bytes, expansion: %.2f%%\\n",
+        len, outLen, 100.0 * (static_cast<double>(outLen) / len - 1.0));
+    std::puts("NOTE: DEFLATE BTYPE=00 copies data; this is not a compression-ratio benchmark.");
+    std::puts("BRUTAL_NEON_GZIP_BENCH_ROUNDTRIP=PASS");
     return 0;
 }
