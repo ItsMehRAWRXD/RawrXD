@@ -3,7 +3,7 @@
 // ============================================================================
 #include <fstream>
 #include "runtime_graph_executor.hpp"
-#include "native_resident_matvec.hpp"
+#include "../../include/native_resident_matvec.hpp"
 #include "ReapRetainedRouting.hpp"
 #include <limits>
 
