@@ -62,14 +62,27 @@ struct Q4Program {
 int main(int argc, char** argv) {
     uint32_t rows = argc>1?(uint32_t)std::stoul(argv[1]):64;
     uint32_t cols = argc>2?(uint32_t)std::stoul(argv[2]):1024;
+    int isolate = -1; // --isolate=N: zero x except x[N]=1
+    for (int i = 1; i < argc; ++i) { std::string a = argv[i]; if (a.rfind("--isolate=",0)==0) isolate = std::stoi(a.substr(10)); }
     if(cols%32){std::fprintf(stderr,"cols must be multiple of 32\n");return 1;}
     const uint32_t bpr = cols/32, n_blocks = rows*bpr;
 
     std::mt19937 rng(42);
     std::vector<uint8_t> q4(n_blocks*18);
     for(auto&x:q4) x=(uint8_t)rng();
+    // Use finite, controlled fp16 scales to avoid NaN/inf in diagnostics.
+    // Set each block's d to 1.0 (0x3C00) and dmin to 0.0 for predictable math.
+    for (uint32_t b = 0; b < n_blocks; ++b) {
+        uint8_t* blk = q4.data() + b*18;
+        blk[0] = 0x00; blk[1] = 0x3C; // d = 1.0
+    }
     std::vector<float> x(cols);
-    for(size_t i=0;i<cols;++i) x[i]=std::sin((double)i)*0.1f;
+    if (isolate >= 0 && (uint32_t)isolate < cols) {
+        x[isolate] = 1.0f; // isolate a single activation
+        std::printf("ISOLATE mode: only x[%d]=1\n", isolate);
+    } else {
+        for(size_t i=0;i<cols;++i) x[i]=std::sin((double)i)*0.1f;
+    }
 
     // CPU reference.
     std::vector<float> W; DequantizeQ4_0(q4.data(), n_blocks, W);
@@ -126,16 +139,11 @@ int main(int argc, char** argv) {
     };
     dispatch();
     std::vector<float> y(rows); std::memcpy(y.data(),yp,ysz);
-    // Debug: print first few values for small cases.
-    if (rows <= 2 && cols <= 128) {
+    // Debug: print per-row GPU vs CPU (correct indexing: one output per row).
+    if (rows <= 4) {
         for (uint32_t r = 0; r < rows; ++r) {
-            std::printf("  row %u: y[0]=%g yCpu[0]=%g  y[1]=%g yCpu[1]=%g\n",
-                        r, y[r*cols], yCpu[r*cols], y[r*cols+1], yCpu[r*cols+1]);
-        }
-        // Print block 1's d and first qs (if present).
-        if (n_blocks >= 2) {
-            uint16_t d1; std::memcpy(&d1, q4.data() + 18, 2);
-            std::printf("  block1: d_bits=0x%04x qs[0]=0x%02x\n", d1, q4[20]);
+            std::printf("  row %u: GPU=%g CPU=%g diff=%g\n",
+                        r, y[r], yCpu[r], (double)y[r] - (double)yCpu[r]);
         }
     }
     double maxd=0; for(uint32_t r=0;r<rows;++r) maxd=std::max(maxd,(double)std::fabs(y[r]-yCpu[r]));
