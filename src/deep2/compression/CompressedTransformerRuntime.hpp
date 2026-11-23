@@ -25,6 +25,8 @@ public:
         std::size_t vocabulary = 0;
         std::size_t layers = 1;
         std::size_t heads = 1;
+        // Zero preserves multi-head attention; smaller values enable GQA.
+        std::size_t kv_heads = 0;
         std::size_t head_dim = 0;
         std::size_t max_context = 4096;
         std::size_t max_kv_cache_bytes = 1024ull * 1024ull * 1024ull;
@@ -47,6 +49,11 @@ public:
             (config_.eos_token >= 0 &&
              static_cast<std::size_t>(config_.eos_token) >= config_.vocabulary))
             throw std::invalid_argument("invalid decoder-only transformer geometry or memory budget");
+        if (config_.kv_heads == 0) config_.kv_heads = config_.heads;
+        if (config_.kv_heads > config_.heads ||
+            config_.heads % config_.kv_heads != 0)
+            throw std::invalid_argument("KV head count must evenly divide query heads");
+        const std::size_t kvDim = config_.kv_heads * config_.head_dim;
         validateTensor("token_embd.weight", config_.hidden, config_.vocabulary);
         validateTensor("output_norm.weight", config_.hidden, 1);
         validateTensor("output.weight", config_.hidden, config_.vocabulary);
@@ -54,8 +61,8 @@ public:
             const auto p = layerPrefix(l);
             validateTensor(p + "attn_norm.weight", config_.hidden, 1);
             validateTensor(p + "attn_q.weight", config_.hidden, config_.hidden);
-            validateTensor(p + "attn_k.weight", config_.hidden, config_.hidden);
-            validateTensor(p + "attn_v.weight", config_.hidden, config_.hidden);
+            validateTensor(p + "attn_k.weight", config_.hidden, kvDim);
+            validateTensor(p + "attn_v.weight", config_.hidden, kvDim);
             validateTensor(p + "attn_output.weight", config_.hidden, config_.hidden);
             validateTensor(p + "ffn_norm.weight", config_.hidden, 1);
             validateTensor(p + "ffn_gate.weight", config_.hidden, config_.intermediate);
@@ -76,15 +83,18 @@ public:
         if (max_new_tokens == 0) return {};
         const std::size_t totalTokens = prompt.size() + max_new_tokens;
         constexpr std::size_t bytesPerScalar = sizeof(float);
-        if (config_.hidden > std::numeric_limits<std::size_t>::max() /
-                                 (2u * bytesPerScalar) ||
+        const std::size_t kvHeads = config_.kv_heads;
+        const std::size_t kvDim = kvHeads * config_.head_dim;
+        if (kvDim > std::numeric_limits<std::size_t>::max() /
+                        (2u * bytesPerScalar) ||
             totalTokens > std::numeric_limits<std::size_t>::max() /
-                              (config_.hidden * 2u * bytesPerScalar) ||
+                              (kvDim * 2u * bytesPerScalar) ||
             config_.layers > std::numeric_limits<std::size_t>::max() /
-                                 (totalTokens * config_.hidden * 2u * bytesPerScalar))
+                                 (totalTokens * kvDim * 2u * bytesPerScalar))
             throw std::overflow_error("transformer KV cache geometry overflow");
+        // GQA stores one K/V vector per KV head, not per query head.
         const std::size_t kvBytes = config_.layers * totalTokens *
-                                    config_.hidden * 2u * bytesPerScalar;
+                                    kvDim * 2u * bytesPerScalar;
         if (kvBytes > config_.max_kv_cache_bytes)
             throw std::length_error("transformer KV cache exceeds configured byte budget");
         std::vector<std::vector<std::vector<float>>> keys(
@@ -193,8 +203,11 @@ private:
             throw std::runtime_error("compressed projection failed for " + name + ": " + error);
     }
 
-    void applyRope(std::vector<float>& x, std::size_t position) const {
-        for (std::size_t h = 0; h < config_.heads; ++h) {
+    void applyRope(std::vector<float>& x, std::size_t position,
+                   std::size_t headCount) const {
+        if (x.size() != headCount * config_.head_dim)
+            throw std::invalid_argument("RoPE vector does not match head geometry");
+        for (std::size_t h = 0; h < headCount; ++h) {
             const std::size_t base = h * config_.head_dim;
             for (std::size_t d = 0; d < config_.head_dim; d += 2) {
                 const float frequency = 1.0f / std::pow(
@@ -237,20 +250,24 @@ private:
             project(p + "attn_q.weight", normed, q, config_.hidden);
             project(p + "attn_k.weight", normed, k, config_.hidden);
             project(p + "attn_v.weight", normed, v, config_.hidden);
-            applyRope(q, position);
-            applyRope(k, position);
+            applyRope(q, position, config_.heads);
+            applyRope(k, position, config_.kv_heads);
             keys[layer].push_back(k);
             values[layer].push_back(v);
 
             std::vector<float> attended(config_.hidden, 0.0f);
+            const std::size_t queryHeadsPerKv = config_.heads / config_.kv_heads;
             for (std::size_t head = 0; head < config_.heads; ++head) {
-                const std::size_t base = head * config_.head_dim;
+                const std::size_t queryBase = head * config_.head_dim;
+                const std::size_t kvHead = head / queryHeadsPerKv;
+                const std::size_t kvBase = kvHead * config_.head_dim;
                 std::vector<float> scores(keys[layer].size());
                 float maximum = -std::numeric_limits<float>::infinity();
                 for (std::size_t t = 0; t < keys[layer].size(); ++t) {
                     double dot = 0.0;
                     for (std::size_t d = 0; d < config_.head_dim; ++d)
-                        dot += static_cast<double>(q[base+d]) * keys[layer][t][base+d];
+                        dot += static_cast<double>(q[queryBase+d]) *
+                               keys[layer][t][kvBase+d];
                     scores[t] = static_cast<float>(dot / std::sqrt(
                         static_cast<float>(config_.head_dim)));
                     maximum = std::max(maximum, scores[t]);
@@ -260,7 +277,7 @@ private:
                 for (std::size_t t = 0; t < scores.size(); ++t) {
                     const float probability = static_cast<float>(scores[t] / denom);
                     for (std::size_t d = 0; d < config_.head_dim; ++d)
-                        attended[base+d] += probability * values[layer][t][base+d];
+                        attended[queryBase+d] += probability * values[layer][t][kvBase+d];
                 }
             }
             std::vector<float> attnOut;
