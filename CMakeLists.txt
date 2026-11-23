@@ -4438,6 +4438,24 @@ if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm
     endif()
 endif()
 
+# Cross-platform portable stored-gzip contract test. This target deliberately
+# does not link rawrxd_brutal_gzip, so it exercises the C++ fallback even on
+# Windows hosts where the production MASM provider is also available.
+if(BUILD_TESTING AND ZLIB_FOUND)
+    add_executable(brutal_gzip_portable_contract_test
+        tests/brutal_gzip_portable_contract_test.cpp)
+    target_include_directories(brutal_gzip_portable_contract_test PRIVATE
+        "${CMAKE_SOURCE_DIR}/include")
+    target_compile_features(brutal_gzip_portable_contract_test PRIVATE cxx_std_17)
+    if(TARGET ZLIB::ZLIB)
+        target_link_libraries(brutal_gzip_portable_contract_test PRIVATE ZLIB::ZLIB)
+    else()
+        target_include_directories(brutal_gzip_portable_contract_test PRIVATE ${ZLIB_INCLUDE_DIRS})
+        target_link_libraries(brutal_gzip_portable_contract_test PRIVATE ${ZLIB_LIBRARIES})
+    endif()
+    add_test(NAME brutal_gzip_portable_contract COMMAND brutal_gzip_portable_contract_test)
+endif()
+
 # MASM God-Mode deflate benchmark
 if(MSVC)
     enable_language(ASM_MASM)
