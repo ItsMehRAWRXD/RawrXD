@@ -151,3 +151,12 @@ rawrxd_add_compression_test(native_bounded_weight_stager_test tests/native_bound
 rawrxd_add_compression_test(native_resident_f32_matvec_test tests/native_resident_f32_matvec_test.cpp)
 
 rawrxd_add_compression_test(native_resident_typed_matvec_test tests/native_resident_typed_matvec_test.cpp)
+
+add_executable(native_quantized_dequant_test
+    tests/native_quantized_dequant_test.cpp
+    src/quant_kernels.cpp)
+target_include_directories(native_quantized_dequant_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(native_quantized_dequant_test PRIVATE cxx_std_17)
+add_test(NAME native_quantized_dequant_test COMMAND native_quantized_dequant_test)
