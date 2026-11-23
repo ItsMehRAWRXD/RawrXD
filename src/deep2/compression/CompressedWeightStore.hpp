@@ -37,7 +37,7 @@ inline std::uint16_t floatToHalfRNE(float value) noexcept {
         if(he>=31) return static_cast<std::uint16_t>(sign|0x7C00u);
         return static_cast<std::uint16_t>(sign|(he<<10)|(rounded>>13));
     }
-    if(e < -24 || exp==0) return static_cast<std::uint16_t>(sign);
+    if(e < -25 || exp==0) return static_cast<std::uint16_t>(sign);
     const std::uint32_t significand=mant|0x800000u;
     const unsigned shift=static_cast<unsigned>(-e-1);
     std::uint32_t result=significand>>shift;
