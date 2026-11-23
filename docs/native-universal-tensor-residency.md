@@ -174,3 +174,21 @@ The Vulkan packed GEMV shader and its CPU shader mirror previously assembled the
 ### Follow-up: Q4_K/Q5_K high-group *scale* source offset
 
 For groups 4–7, GGML `get_scale_min_k4` derives the scale's upper two bits from `scales[group-4]` (tensor byte offset `group` after the 4-byte d/dmin prefix), while the minimum's upper two bits come from `scales[group]`. Both the Vulkan shader and its CPU mirror now use the distinct source offsets. The previous fix addressed the minimum's bit positions; this follow-up fixes the scale's source byte. Numerical certification still requires compiled shader execution against an independent GGML reference.
+
+## Vulkan staging transfer lifetime
+
+The native staging-buffer pool now treats CPU lease release and GPU transfer
+completion as separate events. A successful queue submission attaches a
+per-transfer Vulkan fence to the pool-owned staging slot. Releasing the CPU
+lease marks the slot available for consideration, but acquisition polls the
+fence and will not recycle the slot until the transfer has completed.
+
+The staging pipeline rejects zero-byte transfers, transfers larger than the
+source slot capacity, stale/unowned slots, and overlapping submissions against
+a slot with a pending fence. Teardown waits for outstanding transfer fences
+before unmapping or freeing staging memory.
+
+This closes a source-buffer reuse race in asynchronous DMA. It does not claim
+that every production weight-upload route uses this staging pipeline; the
+integration call graph must be audited separately. The Windows/Vulkan build
+and multi-agent transfer stress test remain acceptance gates.
