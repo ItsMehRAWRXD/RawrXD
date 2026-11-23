@@ -14804,7 +14804,8 @@ void Deep2Engine::enableVulkan(bool enable)
     }
 }
 
-bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim)
+bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output,
+                                  size_t outDim, bool bypassWeightCache)
 {
     // Diagnostic-only: one line per distinct early-return reason so a zero
     // dispatch count can be attributed to a specific branch.
@@ -14883,6 +14884,11 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
     {
         cacheKey = (uint64_t)(uintptr_t)wt.data ^ ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols;
     }
+
+    // A streamed row tile is a one-shot window. Passing key zero prevents
+    // the Vulkan weight cache from retaining each expanded tile in VRAM.
+    if (bypassWeightCache)
+        cacheKey = 0;
 
     // Q4_K GPU parity is intentionally diagnosable at the dispatch boundary.
     // The current shader uses direct dequantized FP32 dots while the CPU
