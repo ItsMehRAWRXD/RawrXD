@@ -142,3 +142,7 @@ add_test(NAME NativeCompressedResidency COMMAND native_compressed_residency_test
 add_executable(native_compressed_tensor_test tests/native_compressed_tensor_test.cpp)
 target_include_directories(native_compressed_tensor_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_test(NAME NativeCompressedTensor COMMAND native_compressed_tensor_test)
+
+add_executable(native_file_tensor_reader_test tests/native_file_tensor_reader_test.cpp)
+target_include_directories(native_file_tensor_reader_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_test(NAME NativeFileTensorReader COMMAND native_file_tensor_reader_test)
