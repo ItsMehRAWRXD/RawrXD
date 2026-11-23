@@ -220,7 +220,6 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
     void* mapped = nullptr;
     VkCommandBuffer command = VK_NULL_HANDLE;
     VkFence fence = VK_NULL_HANDLE;
-    bool submitted = false;
     auto cleanup = [&]() {
         if (fence != VK_NULL_HANDLE) vkDestroyFence(gpu.device, fence, nullptr);
         if (command != VK_NULL_HANDLE)
@@ -298,7 +297,6 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
         cleanup();
         return false;
     }
-    submitted = true;
 
     const VkResult waitResult =
         vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
@@ -308,7 +306,6 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
             cleanup();
         } else {
             // Do not destroy staging resources while the queue may still read them.
-            (void)submitted;
         }
         return false;
     }
