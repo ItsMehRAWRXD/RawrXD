@@ -138,7 +138,7 @@ int main(int argc,char** argv) {
             // Large F32 tensors are handled by a bounded two-pass F16 stream.
         }
         // Never overwrite an unrelated or interrupted conversion's staging file.
-        // Exclusive creation avoids following pre-existing symlinks and races.
+        // This preflight protects existing files but is not atomic against races.
         if(std::filesystem::exists(tmp))
             throw std::runtime_error("temporary output already exists; remove it manually after inspection");
         std::ofstream out(tmp,std::ios::binary|std::ios::trunc);
