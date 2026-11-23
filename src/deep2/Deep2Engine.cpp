@@ -2498,6 +2498,10 @@ void Deep2Engine::deallocateBuffers()
 // ============================================================================
 // Model Loading from GGUF
 // ============================================================================
+// Forward declaration: packed row geometry is shared by the loader's admission
+// gate and LinearW_Range's runtime slice decoder.
+static size_t LinearW_RowBytes(int type, size_t cols);
+
 bool Deep2Engine::loadModel(const std::string& ggufPath)
 {
     // Opt-in load-stage timing. Disabled by default so a normal load neither
@@ -3413,8 +3417,83 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = name;
-            // Owned by ggufResult (VirtualAlloc / FreeTensorData) — not alignedFree.
+            // Owned by ggufResult's mapped GGUF loader. Keep vectors/norms
+            // mapped because legacy scalar consumers still read their data
+            // pointer directly. Matrix projections that use LinearW can instead
+            // retain native GGML bytes in bounded compressed blocks.
             wt.mapped = true;
+            wt.hasFileBacking = true;
+            wt.fileOffset = t.dataOffset;
+
+            const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
+            const bool compressedModeEnabled =
+                compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
+            const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
+            const bool eligibleLinearMatrix =
+                compressedModeEnabled && t.dimensions.size() == 2 &&
+                wt.rows > 1 && wt.cols > 1 &&
+                name != "token_embd.weight" && name != "token_embeddings.weight" &&
+                packedRowBytes > 0 &&
+                packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
+                packedRowBytes * wt.rows == wt.sizeBytes;
+
+            if (eligibleLinearMatrix && t.data)
+            {
+                constexpr std::size_t kCompressedModelBudget = 4ull * 1024ull * 1024ull * 1024ull;
+                if (!compressedWeightStore_)
+                    compressedWeightStore_ =
+                        std::make_shared<rawrxd::compression::CompressedWeightStore>(
+                            256u * 1024u * 1024u,
+                            rawrxd::compression::CompressedWeightStore::DefaultBlockBytes,
+                            kCompressedModelBudget);
+
+                const auto before = compressedWeightStore_->stats();
+                const std::size_t encoded = static_cast<std::size_t>(before.compressed_bytes);
+                const std::size_t remaining =
+                    encoded < kCompressedModelBudget ? kCompressedModelBudget - encoded : 0;
+                std::string compressionError;
+                const bool stored = remaining > 0 &&
+                    compressedWeightStore_->addTensorFromReader(
+                        name, wt.sizeBytes,
+                        [](void* context, std::size_t offset, void* destination,
+                           std::size_t length) -> bool {
+                            if ((!context && length) || (!destination && length))
+                                return false;
+                            if (length)
+                                std::memcpy(destination,
+                                    static_cast<const std::uint8_t*>(context) + offset,
+                                    length);
+                            return true;
+                        },
+                        t.data, &compressionError,
+                        static_cast<std::uint32_t>(wt.type), true, remaining);
+
+                if (stored && wt.attachCompressedBacking(compressedWeightStore_, name))
+                {
+                    // CPU LinearW decodes only its worker's packed row range.
+                    // Keep the loader mapping alive for metadata/lifecycle, but
+                    // do not retain a second raw pointer in the inference view.
+                    wt.data = nullptr;
+                    wt.mapped = false;
+                    wt.hasFileBacking = false;
+                    std::fprintf(stderr,
+                        "[COMPRESSED_RESIDENCY] source=single-shard tensor=%s "
+                        "raw_bytes=%zu encoded_bytes=%llu block_bytes=%zu mode=lazy-row-decode\n",
+                        name.c_str(), wt.sizeBytes,
+                        static_cast<unsigned long long>(
+                            compressedWeightStore_->stats().compressed_bytes - encoded),
+                        compressedWeightStore_->blockBytes());
+                }
+                else
+                {
+                    std::fprintf(stderr,
+                        "[COMPRESSED_RESIDENCY] source=single-shard tensor=%s "
+                        "fallback=mapped reason=%s\n",
+                        name.c_str(), compressionError.empty()
+                            ? "encoded residency budget exhausted or no compression savings"
+                            : compressionError.c_str());
+                }
+            }
 
             if (name == "token_embd.weight" || name == "token_embeddings.weight")
             {
@@ -7361,7 +7440,14 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
                      wt.name.c_str(), outDim);
         std::fflush(stderr);
     }
-    if (!plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
+    const char* compressedGpuEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_STAGING");
+    const bool allowFullCompressedGpuStaging =
+        compressedGpuEnv && compressedGpuEnv[0] == '1' && compressedGpuEnv[1] == '\0';
+    // Default to bounded CPU row slices for compressed weights. The existing
+    // Vulkan upload ABI requires a full contiguous tensor; opt into that
+    // temporary expansion explicitly rather than silently defeating residency.
+    if ((!wtEffective.hasCompressedBacking() || allowFullCompressedGpuStaging) &&
+        !plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         WeightTensor gpuWeight = wtEffective;
@@ -7703,6 +7789,10 @@ void Deep2Engine::unloadModel()
     modelWeights.finalNorm = WeightTensor();
     modelWeights.loaded = false;
     modelWeights.tieEmbeddings = false;
+
+    // Release compressed blocks after all model WeightTensor aliases have
+    // been reset. This also drops the decoded-block cache and its LRU leases.
+    compressedWeightStore_.reset();
 
     std::fprintf(stderr, "[LIFE] unloadModel FreeTensorData ggufResult (%zu tensors)\n", ggufResult.tensors.size());
     std::fflush(stderr);
