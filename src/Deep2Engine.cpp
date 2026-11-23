@@ -422,6 +422,48 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         decodeScratch);
 }
 
+bool Deep2Engine::readCompressedEncodedRange(const deep2::TensorEntry& entry,
+                                                    uint64_t byteOffset,
+                                                    uint64_t byteCount,
+                                                    uint8_t* destination,
+                                                    std::vector<uint8_t>& decodeScratch) {
+    if (!romMode || (byteCount && !destination)) return false;
+    const uint64_t tensorBytes = entry.byteSize();
+    if (byteOffset > tensorBytes || byteCount > tensorBytes - byteOffset ||
+        byteCount > std::numeric_limits<size_t>::max() ||
+        byteOffset > std::numeric_limits<size_t>::max())
+        return false;
+    if (!byteCount) return true;
+
+    const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
+        std::to_string(entry.offset) + ":" + entry.name;
+    if (!compressedEncodedWeights.Contains(cacheKey) &&
+        !compressedEncodedWeights.IsRawFallback(cacheKey)) {
+        if (tensorBytes > std::numeric_limits<size_t>::max()) return false;
+        const auto reader = [this, &entry, tensorBytes](size_t offset, size_t count,
+                                                        uint8_t* out) {
+            if (offset > tensorBytes || count > tensorBytes - offset) return false;
+            return rom.readTensorRange(entry, static_cast<uint64_t>(offset),
+                                       static_cast<uint64_t>(count), out);
+        };
+        if (compressedEncodedWeights.RegisterFromReader(
+                cacheKey, static_cast<size_t>(tensorBytes), reader, 64 * 1024)) {
+            if (rom.pager() && entry.shardIndex < rom.shards().size()) {
+                const auto& shard = rom.shards()[entry.shardIndex];
+                if (shard.dataOffset <= UINT64_MAX - entry.offset)
+                    rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
+                        shard.dataOffset + entry.offset, tensorBytes);
+            }
+        }
+    }
+
+    if (compressedEncodedWeights.Contains(cacheKey) &&
+        compressedEncodedWeights.ReadRange(cacheKey, static_cast<size_t>(byteOffset),
+            static_cast<size_t>(byteCount), destination, decodeScratch))
+        return true;
+    return rom.readTensorRange(entry, byteOffset, byteCount, destination);
+}
+
 bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
                                                   uint64_t firstElement,
                                                   uint64_t elementCount,
@@ -514,38 +556,11 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
         byteCount > std::numeric_limits<size_t>::max())
         return false;
 
-    // Retain only strictly smaller lossless representations of non-F32
-    // encoded payloads. Canonical GGUF bytes are preserved exactly.
-    const std::string cacheKey = std::to_string(entry.shardIndex) + ":" +
-        std::to_string(entry.offset) + ":" + entry.name;
-    if (!compressedEncodedWeights.Contains(cacheKey) &&
-        !compressedEncodedWeights.IsRawFallback(cacheKey)) {
-        const uint64_t tensorBytes64 = entry.byteSize();
-        if (tensorBytes64 > std::numeric_limits<size_t>::max()) return false;
-        const auto reader = [this, &entry, tensorBytes64](size_t offset, size_t count,
-                                                          uint8_t* out) {
-            if (offset > tensorBytes64 || count > tensorBytes64 - offset) return false;
-            return rom.readTensorRange(entry, static_cast<uint64_t>(offset),
-                                       static_cast<uint64_t>(count), out);
-        };
-        if (compressedEncodedWeights.RegisterFromReader(
-                cacheKey, static_cast<size_t>(tensorBytes64), reader, 64 * 1024)) {
-            if (rom.pager() && entry.shardIndex < rom.shards().size()) {
-                const auto& shard = rom.shards()[entry.shardIndex];
-                if (shard.dataOffset <= UINT64_MAX - entry.offset)
-                    rom.pager()->evictUnleasedRange(static_cast<uint32_t>(entry.shardIndex),
-                        shard.dataOffset + entry.offset, tensorBytes64);
-            }
-        }
-        // Deterministic admission rejections are memoized inside the cache;
-        // source I/O failures remain retryable on the next inference request.
-    }
-
+    // Retain strictly smaller lossless representations of encoded GGUF
+    // payloads, then decode only the blocks intersecting this logical tile.
     encodedScratch.resize(static_cast<size_t>(byteCount));
-    const bool cached = compressedEncodedWeights.Contains(cacheKey) &&
-        compressedEncodedWeights.ReadRange(cacheKey, static_cast<size_t>(byteOffset),
-            static_cast<size_t>(byteCount), encodedScratch.data(), decodeScratch);
-    if (!cached && !rom.readTensorRange(entry, byteOffset, byteCount, encodedScratch.data()))
+    if (!readCompressedEncodedRange(entry, byteOffset, byteCount,
+                                    encodedScratch.data(), decodeScratch))
         return false;
     return deep2::dequantizeTensorRange(entry.type, totalElements, firstElement,
         elementCount, encodedScratch.data(), encodedScratch.size(), destination);
