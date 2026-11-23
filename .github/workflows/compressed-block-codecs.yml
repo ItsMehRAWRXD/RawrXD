@@ -1,0 +1,42 @@
+name: Compressed block codec adapters
+
+on:
+  pull_request:
+    paths:
+      - "include/rawrxd/**"
+      - "include/codec/compression_core.h"
+      - "src/codec/compression_core.cpp"
+      - "src/deep2/compression/CompressedWeightStore.*"
+      - "tests/compressed_block_codec_adapters_test.cpp"
+      - ".github/workflows/compressed-block-codecs.yml"
+  push:
+    branches:
+      - "codex/compression-codec-adapters-v2-20261123"
+
+jobs:
+  codec-adapters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install zlib
+        run: sudo apt-get update && sudo apt-get install -y zlib1g-dev
+      - name: Build and test with zlib
+        run: |
+          c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+            -DRAWRXD_HAVE_ZLIB=1 \
+            -Iinclude -Isrc/deep2/compression \
+            tests/compressed_block_codec_adapters_test.cpp \
+            src/deep2/compression/CompressedWeightStore.cpp \
+            src/codec/compression_core.cpp \
+            -lz -o compressed_block_codec_adapters_test
+          ./compressed_block_codec_adapters_test
+      - name: Build and test native-only configuration
+        run: |
+          c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+            -DRAWRXD_HAVE_ZLIB=0 \
+            -Iinclude -Isrc/deep2/compression \
+            tests/compressed_block_codec_adapters_test.cpp \
+            src/deep2/compression/CompressedWeightStore.cpp \
+            src/codec/compression_core.cpp \
+            -o compressed_block_codec_adapters_native_only
+          ./compressed_block_codec_adapters_native_only
