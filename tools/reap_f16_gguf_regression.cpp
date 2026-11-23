@@ -25,6 +25,11 @@ int main() {
             WriteU32(out,bits);
         WriteU32(out,0x00003c00u);
     }
+    const std::string tooSmall="reap_f16_budget_rejected.gguf";
+    check(RepackGGUF(source,tooSmall,64,true)==RepackError::Overflow,
+          "f16_budget_rejected_before_write");
+    {std::ifstream absent(tooSmall,std::ios::binary);
+     check(!absent.good(),"f16_budget_no_artifact");}
     const auto status=RepackGGUF(source,output,UINT64_MAX,true);
     check(status==RepackError::None,"convert_gguf_success");
     if(status==RepackError::None) {
@@ -60,6 +65,7 @@ int main() {
         check(original==0x00003c00u,"original_f16_tensor_unchanged");
     }
     std::remove(source.c_str());std::remove(output.c_str());
+    std::remove(tooSmall.c_str());
     std::cout<<"REAP_F16_GGUF_RESULT="<<(failures?"FAIL":"PASS")
              <<" failures="<<failures<<"\n";
     return failures?1:0;
