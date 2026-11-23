@@ -147,6 +147,17 @@ def run(binary):
         ab,ast,am,at=parse(auto_loose)
         assert am==metadata
         assert at["blk.0.attn_q.weight"][0]==2  # Q4_0 is the smallest candidate
+        # Decode the emitted GGML Q4_0 blocks independently and check the
+        # requested error bound, not merely the advertised tensor type.
+        qoff=ast+at["blk.0.attn_q.weight"][2]
+        for block_index in range(len(values)//32):
+            p=qoff+18*block_index
+            scale=struct.unpack_from("<e",ab,p)[0]
+            for j in range(32):
+                packed=ab[p+2+(j%16)]
+                code=((packed>>4) if j>=16 else (packed&15))-8
+                assert abs(scale*code-values[32*block_index+j])<=300
+
         assert at["blk.0.attn_k.weight"][0]==6
         assert ab[ast+at["blk.0.attn_k.weight"][2]:ast+at["blk.0.attn_k.weight"][2]+32]==quant
         auto_strict=root/"auto-strict.gguf"
