@@ -440,6 +440,22 @@ public:
     size_t size() const noexcept { return element_count_; }
     size_t chunkElements() const noexcept { return chunk_elements_; }
     size_t chunkCount() const noexcept { return chunks_.size(); }
+    // Actual source bytes expanded by ReadRange, not merely bytes copied to
+    // the caller. Raw chunks are copied without codec decompression.
+    uint64_t DecodedBytesForRange(size_t first, size_t count) const noexcept {
+        if (first > element_count_ || count > element_count_ - first || !count)
+            return 0;
+        const size_t firstChunk = first / chunk_elements_;
+        const size_t lastChunk = (first + count - 1) / chunk_elements_;
+        uint64_t total = 0;
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const auto& chunk = chunks_[i];
+            if (chunk.encoding == Encoding::Raw) continue;
+            if (chunk.original_bytes > UINT64_MAX - total) return UINT64_MAX;
+            total += chunk.original_bytes;
+        }
+        return total;
+    }
     size_t storedBytes() const noexcept {
         size_t total=0;
         for(const auto& c:chunks_) {
@@ -605,6 +621,22 @@ private:
 
      size_t size() const noexcept { return byte_count_; }
      size_t storedBytes() const noexcept { return stored_bytes_; }
+     // Count complete compressed chunks expanded to satisfy a byte range.
+     // This exposes decode amplification separately from caller-visible bytes.
+     uint64_t DecodedBytesForRange(size_t first, size_t count) const noexcept {
+         if (first > byte_count_ || count > byte_count_ - first || !count)
+             return 0;
+         const size_t firstChunk = first / chunk_bytes_;
+         const size_t lastChunk = (first + count - 1) / chunk_bytes_;
+         uint64_t total = 0;
+         for (size_t i = firstChunk; i <= lastChunk; ++i) {
+             const auto& chunk = chunks_[i];
+             if (chunk.encoding == Encoding::Raw) continue;
+             if (chunk.original_bytes > UINT64_MAX - total) return UINT64_MAX;
+             total += chunk.original_bytes;
+         }
+         return total;
+     }
 
      void ReadRange(size_t first, size_t count, uint8_t* destination,
                     std::vector<uint8_t>& scratch) const {
