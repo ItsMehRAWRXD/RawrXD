@@ -17,36 +17,57 @@ QByteArray compressWithLevel(const QByteArray& data, int level, bool* success) {
         return QByteArray();
     }
 
+    // Stream into bounded stack chunks rather than reserving compressBound()
+    // bytes up front. For large inputs, that bound can be substantially larger
+    // than the final compressed payload and inflate peak working-set memory.
     using ArraySize = decltype(data.size());
     const auto maxArraySize = (std::numeric_limits<ArraySize>::max)();
-    if (static_cast<std::uint64_t>(data.size()) >
-        static_cast<std::uint64_t>((std::numeric_limits<uLong>::max)())) {
-        qWarning() << "[codec] input exceeds zlib uLong capacity";
+    z_stream stream{};
+    const int initResult = deflateInit(&stream, level);
+    if (initResult != Z_OK) {
+        qWarning() << "[codec] deflateInit failed:" << initResult;
         return QByteArray();
     }
 
-    const uLong sourceSize = static_cast<uLong>(data.size());
-    const uLong bound = compressBound(sourceSize);
-    if (bound < sourceSize ||
-        static_cast<std::uint64_t>(bound) >
-            static_cast<std::uint64_t>(maxArraySize)) {
-        qWarning() << "[codec] compressed output exceeds QByteArray capacity";
-        return QByteArray();
+    QByteArray output;
+    char chunk[64 * 1024];
+    ArraySize inputOffset = 0;
+    int status = Z_OK;
+    bool valid = true;
+    while (status != Z_STREAM_END) {
+        if (stream.avail_in == 0 && inputOffset < data.size()) {
+            const std::uint64_t remaining =
+                static_cast<std::uint64_t>(data.size() - inputOffset);
+            const uInt count = static_cast<uInt>(std::min<std::uint64_t>(
+                remaining, (std::numeric_limits<uInt>::max)()));
+            stream.next_in = reinterpret_cast<Bytef*>(
+                const_cast<char*>(data.constData() + inputOffset));
+            stream.avail_in = count;
+            inputOffset += static_cast<ArraySize>(count);
+        }
+        const int flush = (inputOffset == data.size()) ? Z_FINISH : Z_NO_FLUSH;
+        stream.next_out = reinterpret_cast<Bytef*>(chunk);
+        stream.avail_out = static_cast<uInt>(sizeof(chunk));
+        status = ::deflate(&stream, flush);
+        const std::size_t produced = sizeof(chunk) - stream.avail_out;
+        if (status != Z_OK && status != Z_STREAM_END) {
+            qWarning() << "[codec] streaming deflate failed:" << status;
+            valid = false;
+            break;
+        }
+        if (static_cast<std::uint64_t>(produced) >
+            static_cast<std::uint64_t>(maxArraySize) -
+                static_cast<std::uint64_t>(output.size())) {
+            qWarning() << "[codec] compressed output exceeds QByteArray capacity";
+            valid = false;
+            break;
+        }
+        if (produced)
+            output.append(chunk, static_cast<ArraySize>(produced));
     }
-
-    QByteArray output(static_cast<ArraySize>(bound), Qt::Uninitialized);
-    uLongf outputSize = bound;
-    const int result = compress2(
-        reinterpret_cast<Bytef*>(output.data()), &outputSize,
-        reinterpret_cast<const Bytef*>(data.constData()), sourceSize, level);
-    if (result != Z_OK ||
-        static_cast<std::uint64_t>(outputSize) >
-            static_cast<std::uint64_t>(maxArraySize)) {
-        qWarning() << "[codec] deflate failed:" << result;
+    const int endResult = deflateEnd(&stream);
+    if (!valid || status != Z_STREAM_END || endResult != Z_OK)
         return QByteArray();
-    }
-
-    output.resize(static_cast<ArraySize>(outputSize));
     if (success) *success = true;
     return output;
 }
