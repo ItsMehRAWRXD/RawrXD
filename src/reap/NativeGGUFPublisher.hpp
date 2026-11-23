@@ -44,21 +44,23 @@ inline PublishResult PublishRepackedGGUF(const std::string& source,
     }
     static std::atomic<uint64_t> serial{0};
     const auto tick=std::chrono::steady_clock::now().time_since_epoch().count();
-    fs::path stage;
-    // Stage in the destination directory for same-filesystem hard-link commit.
-    // Refuse if a collision cannot be avoided.
-    bool found=false;
+    fs::path stageDirectory;
+    // Reserve the staging namespace atomically. An existence check alone
+    // permits two concurrent writers to truncate the same staging file.
+    bool reserved=false;
     for(unsigned attempt=0;attempt<32;++attempt) {
-        stage=parent/(target.filename().string()+".reap-part-"+
+        stageDirectory=parent/(target.filename().string()+".reap-part-"+
               std::to_string(tick)+"-"+std::to_string(serial.fetch_add(1)));
-        if(!fs::exists(stage,ec)&&!ec){found=true;break;}
-        if(ec)break;
+        ec.clear();
+        if(fs::create_directory(stageDirectory,ec)){reserved=true;break;}
+        if(ec && ec!=std::errc::file_exists)break;
     }
-    if(!found){result.error=PublishError::StageCreation;return result;}
+    if(!reserved){result.error=PublishError::StageCreation;return result;}
     struct Cleanup {
-        fs::path path;
-        ~Cleanup(){std::error_code ignored;std::filesystem::remove(path,ignored);}
-    } cleanup{stage};
+        fs::path directory;
+        ~Cleanup(){std::error_code ignored;std::filesystem::remove_all(directory,ignored);}
+    } cleanup{stageDirectory};
+    const fs::path stage=stageDirectory/"artifact.gguf";
     result.repack_error=RepackGGUF(source,stage.string(),max_bytes);
     if(result.repack_error!=RepackError::None) {
         result.error=PublishError::RepackFailed;return result;
