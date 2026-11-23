@@ -30,6 +30,8 @@ jobs:
       - name: Verify native Win32 IDE translation-unit source order
         shell: pwsh
         run: |
+          python -m py_compile tests/win32ide_source_order_regression.py tests/win32ide_ci_lifecycle_regression.py tests/win32ide_artifact_e2e_gate_regression.py
+          if ($LASTEXITCODE -ne 0) { throw "Native IDE CI regression scripts have invalid Python syntax" }
           python tests/win32ide_source_order_regression.py
           if ($LASTEXITCODE -ne 0) { throw "Win32 IDE source-order regression failed" }
           python tests/win32ide_ci_lifecycle_regression.py
