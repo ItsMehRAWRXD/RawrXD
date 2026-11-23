@@ -1319,21 +1319,15 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     const size_t V = modelWeights.vocabSize;
     const size_t row = static_cast<size_t>(tokenId);
 
-    if ((!wt.data && !wt.compressedF32 && !wt.compressedBytes) ||
-        wt.rows != V || wt.cols != H || H == 0)
+    if (!wt.hasBacking() || wt.rows != V || wt.cols != H || H == 0)
         return false;
 
-    // Compressed F32 embedding: request only the selected vocabulary row.
-    // The full embedding matrix remains compressed and no F32 matrix copy is made.
-    if (wt.compressedF32) {
-        if (wt.type != static_cast<int>(GGMLType::GGML_TYPE_F32) ||
-            row > std::numeric_limits<size_t>::max()/H)
+    // Resolve compressed F32 through either direct ownership or the
+    // residency-cache lease. Decode exactly one embedding row.
+    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32) &&
+        (wt.compressedF32 || wt.compressedF32Lease)) {
+        if (!wt.ReadCompressedF32Rows(row, 1, output))
             return false;
-        try {
-            wt.compressedF32->ReadRange(row*H,H,output);
-        } catch (...) {
-            return false;
-        }
         parityEmit(ParityCheckpoint::Embed,output,H);
         return finiteVector(output,H);
     }
@@ -1368,12 +1362,9 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
             return false;
         std::vector<uint8_t> encodedRow(rowBytes);
         std::vector<uint8_t> decodeScratch;
-        try {
-            wt.compressedBytes->ReadRange(
-                offset, rowBytes, encodedRow.data(), decodeScratch);
-        } catch (...) {
+        if (!wt.ReadCompressedByteRows(
+                row, 1, rowBytes, encodedRow.data(), decodeScratch))
             return false;
-        }
         dequant(encodedRow.data(), output, H);
     } else {
         const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
