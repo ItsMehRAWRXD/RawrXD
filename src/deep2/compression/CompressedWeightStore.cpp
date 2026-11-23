@@ -49,10 +49,12 @@ bool CompressedWeightStore::decode(const EncodedBlock& b,std::vector<std::uint8_
  }
  return out.size()==b.raw_size&&crc32(out.data(),out.size())==b.checksum;
 }
-bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error,std::uint32_t ggml_type) {
+bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
  if(name.empty()||(!bytes&&size)){if(error)*error="name and source bytes are required";return false;}
  const auto* src=static_cast<const std::uint8_t*>(bytes);Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
  for(std::size_t off=0;off<size;){const auto take=std::min(block_bytes_,size-off);EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(src+off,take);b.payload=encode(src+off,take,b.stored_raw);tensor.blocks.emplace_back(std::move(b));off+=take;}
+ std::size_t encoded_size=0;for(const auto& b:tensor.blocks){if(b.payload.size()>max_encoded_bytes-std::min(encoded_size,max_encoded_bytes)){if(error)*error="encoded tensor exceeds residency budget";return false;}encoded_size+=b.payload.size();}
+ if(encoded_size>max_encoded_bytes||(require_savings&&encoded_size>=size)){if(error)*error=require_savings?"compression did not reduce tensor size":"encoded tensor exceeds residency budget";return false;}
  std::lock_guard<std::mutex> lock(mutex_);if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
  counters_.raw_bytes+=size;for(const auto& b:tensor.blocks)counters_.compressed_bytes+=b.payload.size();counters_.blocks+=tensor.blocks.size();++counters_.tensors;tensors_.emplace(std::move(name),std::move(tensor));return true;
 }
