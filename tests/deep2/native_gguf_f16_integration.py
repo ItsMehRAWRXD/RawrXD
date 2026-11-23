@@ -426,6 +426,35 @@ def run(binary):
         q3strict=root/"f64-q3k-strict.gguf"
         subprocess.run([binary,str(q3src),str(q3strict),"0","q3_k"],check=True)
         assert q3strict.read_bytes()==q3src.read_bytes()
+        # Q4_K: canonical 144-byte block with d/dmin, packed 6-bit
+        # subgroup scales/minima, and nibble-interleaved 4-bit quants.
+        q4kvals=[((i%37)-18)/16.0 for i in range(256)]
+        q4kraw=struct.pack("<"+"d"*256,*q4kvals)
+        q4kmeta=S("general.architecture")+U32(8)+S("llama")
+        q4kmeta+=S("general.alignment")+U32(4)+U32(ALIGN)
+        q4khdr=b"GGUF"+U32(3)+U64(1)+U64(2)+q4kmeta
+        q4khdr+=S("blk.0.attn_q.weight")+U32(1)+U64(256)+U32(28)+U64(0)
+        q4ksrc=root/"f64-q4k-source.gguf";q4ksrc.write_bytes(pad(q4khdr)+q4kraw)
+        q4kout=root/"f64-q4k-output.gguf"
+        subprocess.run([binary,str(q4ksrc),str(q4kout),"0.2","q4_k"],check=True)
+        q4kb,q4ks,q4km,q4kt=parse(q4kout)
+        assert q4kt["blk.0.attn_q.weight"][0]==12
+        assert len(q4kb)-q4ks==144
+        qo=q4ks+q4kt["blk.0.attn_q.weight"][2]
+        sc=q4kb[qo:qo+12];d,dm=struct.unpack_from("<ee",q4kb,qo+12);qs=q4kb[qo+16:qo+144]
+        def q4k_scale_min(g):
+            if g<4:return sc[g],sc[g+4]
+            return (sc[g+4]&15)|((sc[g-4]>>6)<<4),(sc[g+4]>>4)|((sc[g]>>6)<<4)
+        restored=[0.0]*256
+        for i in range(256):
+            g=i//32;si,mi=q4k_scale_min(g);within=i%64
+            byte=qs[(i//64)*32+(within%32)]
+            q=(byte&15) if within<32 else (byte>>4)
+            restored[i]=d*si*q-dm*mi
+        assert max(abs(a-b) for a,b in zip(restored,q4kvals))<=0.2
+        q4kstrict=root/"f64-q4k-strict.gguf"
+        subprocess.run([binary,str(q4ksrc),str(q4kstrict),"0","q4_k"],check=True)
+        assert q4kstrict.read_bytes()==q4ksrc.read_bytes()
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
