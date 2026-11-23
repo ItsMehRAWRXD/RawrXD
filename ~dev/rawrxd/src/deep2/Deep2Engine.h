@@ -165,8 +165,8 @@ struct WeightTensor {
         }
     }
 
-    // Materialize one immutable, contiguous 16-bit GPU representation once.
-    // The shared payload owns the bytes for every GpuWeightView and upload.
+    // Expose the canonical contiguous 16-bit backing without copying it.
+    // The shared payload retains its owner for every GpuWeightView and upload.
     // Only uniform F16/BF16 chunk sets qualify.
     bool BuildCompressedF32GpuView(uint32_t rowBegin, uint32_t rowCount,
                                    GpuWeightView& out) const noexcept {
