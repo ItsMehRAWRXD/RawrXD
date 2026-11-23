@@ -26,13 +26,13 @@ ctest --test-dir build/compressed-weight-store -C Release --output-on-failure
 
 This is the runtime-residency primitive plus Deep2 kernel-consumer integration. `Deep2::WeightTensor` can attach a shared store/key and read byte ranges from either raw or compressed backing. `Deep2Engine::LinearW_Range` reads only the packed rows assigned to each CPU worker, preserving the original GGML row layout. Single-range calls read only the rows required by that invocation.
 
-Both model-binding routes now have opt-in admission via `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY=1` before model load:
-- The single-shard/single-file GGUF binder admits eligible named matrix projections and embedding matrices from the mapped tensor view.
-- The standard multi-shard binder admits eligible two-dimensional matrix weights from the shard mapping cache and releases the mapping pin only after the compressed store accepts the tensor.
+Both model-binding routes have opt-in admission via `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY=1` before model load:
+- The single-shard/single-file GGUF binder admits eligible named matrix projections, embedding matrices, and one-dimensional F32/F16 normalization vectors.
+- The standard multi-shard binder admits eligible two-dimensional matrix weights and one-dimensional F32/F16 normalization vectors from the shard mapping cache, releasing the mapping pin only after the compressed store accepts the tensor.
 - Both preserve the original GGML type and packed bytes by default. The separate `RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16=1` option is explicitly lossy and changes the resident GGML type to F16.
 - Both enforce a per-model encoded-payload budget, defaulting to 4 GiB and configurable with `RAWRXD_COMPRESSED_WEIGHT_BUDGET_MB`. A tensor is admitted only when its encoded representation is smaller; otherwise it stays mapped.
 
-Norms, vectors, biases, and any consumers that still require direct pointers remain mapped. The CPU LinearW range path reads only required rows. The opt-in Vulkan GEMV tile path stages bounded row-aligned slices; other Vulkan operators and direct-pointer consumers are not yet universally migrated. This is not yet universal all-tensor coverage.
+The CPU LinearW range path reads only required matrix rows. Token embedding lookup reads only the selected packed row. RMSNormW now reads only the required F32/F16 norm prefix into a request-local vector and no longer requires a mapped pointer. Biases and other vector consumers that still require direct pointers remain mapped. The opt-in Vulkan GEMV tile path stages bounded row-aligned slices; other Vulkan operators and direct-pointer consumers are not yet universally migrated. This is not yet universal all-tensor coverage.
 
 The standalone test covers multi-block range reads, exact round trips for compressible and high-entropy data, duplicate-name rejection, bounds checks, and lease survival when the cache budget is reduced.
 
@@ -46,15 +46,16 @@ The standalone test covers multi-block range reads, exact round trips for compre
 
 ## Automatic multi-shard model admission
 
-Set `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY=1` before loading a standard multi-shard model to enable compressed matrix admission. The current implementation:
-- Reads the existing mapped tensor bytes directly into independently decodable 64 KiB blocks.
-- Preserves the GGML type ID and packed quantized payload byte-for-byte.
-- Rejects any tensor whose compressed payload is not strictly smaller than the source.
-- Enforces a 512 MiB compressed payload budget per engine model.
-- Releases the tensor-residency mapping pin only after successful compressed-store admission.
-- Leaves norm/vector tensors mapped because their consumers have not all been migrated to range reads.
+Set `RAWRXD_COMPRESSED_WEIGHT_RESIDENCY=1` before loading a model to enable opt-in admission in both the single-shard GGUF binder and the standard multi-shard binder. The current implementation:
+- Streams mapped tensor bytes directly into independently decodable 64 KiB blocks.
+- Preserves the GGML type ID and packed payload byte-for-byte by default.
+- Admits eligible matrix projections, token embedding matrices, and one-dimensional F32/F16 norm vectors when the encoded payload is strictly smaller.
+- Enforces the configurable per-model compressed payload budget (4 GiB default).
+- Releases the multi-shard tensor mapping pin only after successful compressed-store admission.
+- Keeps biases, non-F32/F16 norm formats, and unsupported direct-pointer consumers mapped.
+- Reads token embedding rows and RMSNorm vector prefixes from compressed backing without retaining decoded tensors.
 
-The default is OFF until full product validation completes. It currently applies to the standard multi-shard binder only, not the single-file GGUF path or every tensor consumer. The Vulkan GEMV adapter still requires one contiguous tensor pointer and therefore stages a full tensor for GPU dispatch. This is an implementation milestone, not a claim of universal compressed residency.
+The default is OFF until full product validation completes. The Vulkan GEMV adapter supports opt-in bounded row-tile staging, but other Vulkan operators and direct-pointer consumers are not yet universally migrated. This is an implementation milestone, not a claim of universal compressed residency.
 
 ## Q4_0 compressed-resident CPU kernel
 
@@ -140,3 +141,23 @@ selects the next token by greedy argmax, and rejects a truncated model. This is
 a deterministic miniature loader-to-logits-to-token-selection path; it is not
 a claim of full production transformer architecture coverage or language
 quality.
+
+## RMSNorm vector residency
+
+Both single-shard and standard multi-shard binders now admit one-dimensional
+F32/F16 tensors whose names identify normalization weights, provided the
+lossless block encoding is strictly smaller and the per-model budget allows
+admission. The original GGML type and bytes are preserved unless the separately
+opted-in F32-to-F16 conversion is selected.
+
+`Deep2Engine::RMSNormW` accepts either raw or compressed backing. For compressed
+F32/F16 norms it reads only the requested vector prefix into a request-local
+buffer, then uses the same AVX2/scalar normalization path. It validates type,
+length, and read errors before consuming the vector. No decoded norm tensor is
+retained in the store cache by this consumer. Biases and non-F32/F16 vector
+consumers remain mapped until their direct-pointer paths are migrated.
+
+The isolated smoke suite includes F32/F16 norm-vector block admission, exact
+prefix and nonzero-range reads, and zero decoded-cache retention. Full Deep2
+RMSNorm model parity still requires the native integration build and reference
+inference validation.
