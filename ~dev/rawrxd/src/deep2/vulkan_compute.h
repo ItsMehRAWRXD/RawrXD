@@ -76,6 +76,10 @@ struct GpuWeightView {
     uint32_t cols = 0;
     uint64_t key = 0;
 
+    // Optional host-side materialization for compressed-range staging.
+    // PinWeightView copies this into device-local residency synchronously.
+    std::shared_ptr<std::vector<uint8_t>> ownedBytes;
+
     bool valid() const noexcept {
         return data && bytes && rows && cols;
     }
