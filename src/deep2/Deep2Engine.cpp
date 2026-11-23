@@ -3473,6 +3473,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             // pointer consumers and must remain mapped.
             const bool rmsNormVectorName =
                 hasSuffix("attn_norm.weight") ||
+                hasSuffix("attn_q_norm.weight") ||
+                hasSuffix("attn_k_norm.weight") ||
                 hasSuffix("input_layernorm.weight") ||
                 hasSuffix("ffn_norm.weight") ||
                 hasSuffix("post_attention_layernorm.weight") ||
@@ -6307,7 +6309,9 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         const bool rmsNormBinding =
             bindingLabel == "final norm" ||
             bindingLabel == "attention norm" ||
-            bindingLabel == "FFN norm";
+            bindingLabel == "FFN norm" ||
+            bindingLabel == "attention Q norm" ||
+            bindingLabel == "attention K norm";
         const bool compressNormVector = compressedModeEnabled && rmsNormBinding &&
             ref->shape.size() == 1 && normElementBytes != 0 && dst.cols > 0 &&
             dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
