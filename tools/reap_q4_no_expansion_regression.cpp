@@ -35,6 +35,18 @@ int main() {
         }
         ok=types[0]==12 && types[1]==10 &&
            offsets[0]==0 && offsets[1]==288;
+        // Neither compact tensor may be expanded or rewritten.
+        std::ifstream original(src,std::ios::binary|std::ios::ate);
+        std::ifstream repacked(dst,std::ios::binary|std::ios::ate);
+        ok &= bool(original) && bool(repacked) &&
+              original.tellg()==repacked.tellg();
+        if(ok) {
+            const uint64_t start=(static_cast<uint64_t>(in.tellg())+31)&~uint64_t(31);
+            in.seekg(static_cast<std::streamoff>(start+288));
+            unsigned char bytes[168]={};
+            ok &= bool(in.read(reinterpret_cast<char*>(bytes),sizeof(bytes)));
+            for(unsigned char v:bytes)ok &= v==0;
+        }
     }
     std::remove(src);std::remove(dst);
     std::cout<<"REAP_Q4_NO_EXPANSION="<<(ok?"PASS":"FAIL")<<"\n";
