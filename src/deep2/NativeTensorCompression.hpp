@@ -13,7 +13,7 @@
 #include <utility>
 
 namespace RawrXD { namespace TensorCompression {
-enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4, ShuffleLZ4 = 5 };
+enum class Encoding : uint8_t { Raw = 0, RLE = 1, F16 = 2, BF16 = 3, LZ4 = 4, ShuffleLZ4 = 5, Shuffle16LZ4 = 6 };
 struct Result {
     Encoding encoding = Encoding::Raw;
     uint64_t original_bytes = 0;
@@ -174,6 +174,21 @@ inline Result Encode(const void* data, size_t bytes, bool allow_fp16=false, floa
             best.payload = std::move(lz4);
         }
     }
+    // Shuffle 16-bit lanes: BF16/FP16 weights often have high-byte exponent
+    // correlations even when no complete two-byte values repeat.
+    if (bytes >= 64 && bytes % 2 == 0) {
+        std::vector<uint8_t> shuffled(bytes);
+        const size_t words = bytes / 2;
+        for (size_t lane = 0; lane < 2; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                shuffled[lane * words + i] = p[i * 2 + lane];
+        std::vector<uint8_t> packed;
+        if (EncodeLZ4Block(shuffled.data(), bytes, packed) &&
+            packed.size() < best.payload.size()) {
+            best.encoding = Encoding::Shuffle16LZ4;
+            best.payload = std::move(packed);
+        }
+    }
     // Byte-shuffle 32-bit lanes before LZ4. Non-repeating float weights often
     // share exponent/high mantissa bytes even when full values never repeat.
     // Keep this only when it wins over raw, RLE, and ordinary LZ4.
@@ -243,6 +258,18 @@ inline void DecodeInto(const Result& r, void* destination, size_t destination_by
     if (destination_bytes!=n) throw std::invalid_argument("destination size mismatch");
     if (n && !destination) throw std::invalid_argument("null decode destination");
     auto* out=static_cast<uint8_t*>(destination);
+    if (r.encoding==Encoding::Shuffle16LZ4) {
+        if (n % 2 != 0) throw std::invalid_argument("shuffled16 LZ4 alignment");
+        Result inner = r;
+        inner.encoding = Encoding::LZ4;
+        std::vector<uint8_t> shuffled(n);
+        DecodeInto(inner, shuffled.data(), shuffled.size());
+        const size_t words = n / 2;
+        for (size_t lane = 0; lane < 2; ++lane)
+            for (size_t i = 0; i < words; ++i)
+                out[i * 2 + lane] = shuffled[lane * words + i];
+        return;
+    }
     if (r.encoding==Encoding::ShuffleLZ4) {
         if (n % 4 != 0) throw std::invalid_argument("shuffled LZ4 alignment");
         // Decode and validate in private scratch before touching the caller's
