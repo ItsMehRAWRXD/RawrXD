@@ -218,7 +218,8 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
     const uint64_t bytes = entry.byteSize();
     if ((bytes % sizeof(float)) != 0) return false;
     const uint64_t totalElements = bytes / sizeof(float);
-    if (firstElement > totalElements || elementCount > totalElements - firstElement ||
+    if (totalElements > std::numeric_limits<size_t>::max() ||
+        firstElement > totalElements || elementCount > totalElements - firstElement ||
         firstElement > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
         elementCount > std::numeric_limits<uint64_t>::max() / sizeof(float) ||
         elementCount > std::numeric_limits<size_t>::max()) return false;
