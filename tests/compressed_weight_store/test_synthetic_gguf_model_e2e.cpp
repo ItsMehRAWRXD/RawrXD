@@ -50,25 +50,42 @@ void putTensorDescriptor(std::vector<std::uint8_t>& file,
     put32(file,2); put64(file,cols); put64(file,rows);
     put32(file,type); put64(file,offset);
 }
+void putVectorDescriptor(std::vector<std::uint8_t>& file,
+                         const std::string& name,
+                         std::uint64_t elements,
+                         std::uint32_t type, std::uint64_t offset) {
+    putString(file,name);
+    put32(file,1); put64(file,elements);
+    put32(file,type); put64(file,offset);
+}
 bool writeSyntheticGGUF(const std::filesystem::path& path,
                         const std::vector<std::uint8_t>& embedding,
                         const std::vector<std::uint8_t>& projection,
-                        const std::vector<std::uint8_t>& output) {
+                        const std::vector<std::uint8_t>& output,
+                        const std::vector<std::uint8_t>& f32Norm,
+                        const std::vector<std::uint8_t>& f16Norm) {
     std::vector<std::uint8_t> file;
     put32(file,0x46554747u); // "GGUF" little-endian
     put32(file,3);            // GGUF v3
-    put64(file,3);            // token embedding, attention projection, output head
+    put64(file,5);            // embedding, attention projection, output head, F32/F16 norms
     put64(file,0);            // metadata count
 
     putTensorDescriptor(file,"token_embd.weight",32,64,2,0);
     putTensorDescriptor(file,"blk.0.attn_q.weight",32,64,2,embedding.size());
     putTensorDescriptor(file,"output.weight",64,64,2,embedding.size()+projection.size());
+    putVectorDescriptor(file,"output_norm.weight",64,0,
+                        embedding.size()+projection.size()+output.size());
+    putVectorDescriptor(file,"blk.0.attn_norm.weight",64,1,
+                        embedding.size()+projection.size()+output.size()+f32Norm.size());
 
     align32(file);
-    if (file.size()%32 || embedding.size()%32 || projection.size()%32) return false;
+    if (file.size()%32 || embedding.size()%32 || projection.size()%32 ||
+        output.size()%32 || f32Norm.size()%32 || f16Norm.size()%32) return false;
     file.insert(file.end(),embedding.begin(),embedding.end());
     file.insert(file.end(),projection.begin(),projection.end());
     file.insert(file.end(),output.begin(),output.end());
+    file.insert(file.end(),f32Norm.begin(),f32Norm.end());
+    file.insert(file.end(),f16Norm.begin(),f16Norm.end());
 
     std::ofstream outFile(path,std::ios::binary|std::ios::trunc);
     if(!outFile) return false;
@@ -92,23 +109,34 @@ int main() {
     const auto embedding=makeQ4ModelTensor(vocab,embeddingWidth);
     const auto projection=makeQ4ModelTensor(hidden,embeddingWidth);
     const auto outputWeights=makeQ4ModelTensor(vocab,hidden);
+    std::vector<float> f32NormValues(hidden,1.0f);
+    std::vector<std::uint8_t> f32Norm(f32NormValues.size()*sizeof(float));
+    std::memcpy(f32Norm.data(),f32NormValues.data(),f32Norm.size());
+    std::vector<std::uint16_t> f16NormValues(hidden,0x3c00u);
+    std::vector<std::uint8_t> f16Norm(f16NormValues.size()*sizeof(std::uint16_t));
+    std::memcpy(f16Norm.data(),f16NormValues.data(),f16Norm.size());
     const auto path=std::filesystem::temp_directory_path()/
         "rawrxd_synthetic_compressed_model_e2e.gguf";
-    REQUIRE(writeSyntheticGGUF(path,embedding,projection,outputWeights));
+    REQUIRE(writeSyntheticGGUF(path,embedding,projection,outputWeights,f32Norm,f16Norm));
 
     Deep2::GGUFLoader loader;
     REQUIRE(loader.load(path.string()));
     REQUIRE(loader.loaded());
     REQUIRE(loader.version()==3);
-    REQUIRE(loader.tensorCount()==3);
+    REQUIRE(loader.tensorCount()==5);
     const auto* mappedEmbedding=loader.getTensor("token_embd.weight");
     const auto* mappedProjection=loader.getTensor("blk.0.attn_q.weight");
     const auto* mappedOutput=loader.getTensor("output.weight");
-    REQUIRE(mappedEmbedding&&mappedProjection&&mappedOutput);
-    REQUIRE(mappedEmbedding->mapped&&mappedProjection->mapped&&mappedOutput->mapped);
+    const auto* mappedF32Norm=loader.getTensor("output_norm.weight");
+    const auto* mappedF16Norm=loader.getTensor("blk.0.attn_norm.weight");
+    REQUIRE(mappedEmbedding&&mappedProjection&&mappedOutput&&mappedF32Norm&&mappedF16Norm);
+    REQUIRE(mappedEmbedding->mapped&&mappedProjection->mapped&&mappedOutput->mapped&&
+            mappedF32Norm->mapped&&mappedF16Norm->mapped);
     REQUIRE(mappedEmbedding->sizeBytes==embedding.size());
     REQUIRE(mappedProjection->sizeBytes==projection.size());
     REQUIRE(mappedOutput->sizeBytes==outputWeights.size());
+    REQUIRE(mappedF32Norm->sizeBytes==f32Norm.size());
+    REQUIRE(mappedF16Norm->sizeBytes==f16Norm.size());
     REQUIRE(static_cast<std::uint32_t>(mappedProjection->type)==2u);
 
     // Production mapped-GGUF adapter: ingest the complete synthetic model.
@@ -116,15 +144,26 @@ int main() {
     std::string failedTensor,error;
     const auto admitted=rawrxd::compression::StoreMappedGGUFModel(
         store,loader,&failedTensor,&error,true);
-    REQUIRE(admitted==3);
+    REQUIRE(admitted==5);
     REQUIRE(failedTensor.empty());
     const auto admittedStats=store.stats();
-    REQUIRE(admittedStats.tensors==3);
-    REQUIRE(admittedStats.raw_bytes==embedding.size()+projection.size()+outputWeights.size());
+    REQUIRE(admittedStats.tensors==5);
+    REQUIRE(admittedStats.raw_bytes==embedding.size()+projection.size()+outputWeights.size()+
+                                  f32Norm.size()+f16Norm.size());
     REQUIRE(admittedStats.compressed_bytes<admittedStats.raw_bytes);
     REQUIRE(store.tensorType("blk.0.attn_q.weight")==2u);
     REQUIRE(store.tensorType("output.weight")==2u);
     REQUIRE(store.tensorType("token_embd.weight")==2u);
+    REQUIRE(store.tensorType("output_norm.weight")==0u);
+    REQUIRE(store.tensorType("blk.0.attn_norm.weight")==1u);
+
+    std::vector<std::uint8_t> normPrefix(16*sizeof(float));
+    REQUIRE(store.readRange("output_norm.weight",0,normPrefix.data(),normPrefix.size(),&error));
+    REQUIRE(std::memcmp(normPrefix.data(),f32Norm.data(),normPrefix.size())==0);
+    std::vector<std::uint8_t> qkNormPrefix(16*sizeof(std::uint16_t));
+    REQUIRE(store.readRange("blk.0.attn_norm.weight",0,qkNormPrefix.data(),
+                            qkNormPrefix.size(),&error));
+    REQUIRE(std::memcmp(qkNormPrefix.data(),f16Norm.data(),qkNormPrefix.size())==0);
 
     // Release the original GGUF mmap before any inference. All following
     // operations must succeed solely from the compressed resident store.
