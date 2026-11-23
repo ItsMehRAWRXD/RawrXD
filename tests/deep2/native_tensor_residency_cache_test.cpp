@@ -113,6 +113,38 @@ int main() {
     assert(after.activeReaders==0);
     assert(after.bytesDecoded==(tile.size()+tile2.size())*sizeof(float));
 
+    // The engine's WeightTensor path uses the same bounded streaming
+    // builder. Verify that it never needs a full-size F32 intermediate and
+    // that the compressed-storage budget rejects before retaining excess data.
+    size_t directReads = 0;
+    auto direct = RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
+        source.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            ++directReads;
+            std::copy(source.begin() + offset,
+                      source.begin() + offset + count, out);
+            return true;
+        }, 1024, false, source.size() * sizeof(uint16_t));
+    assert(directReads == 10);
+    assert(direct.storedBytes() <= source.size() * sizeof(uint16_t));
+    std::vector<float> directTile(513);
+    direct.ReadRange(4093, directTile.size(), directTile.data());
+    for (size_t i = 0; i < directTile.size(); ++i)
+        assert(directTile[i] == source[4093 + i]);
+    bool budgetRejected = false;
+    try {
+        (void)RawrXD::TensorCompression::ChunkedF32Storage::BuildFromReader(
+            source.size(), 0.0f,
+            [&](size_t offset, size_t count, float* out) {
+                std::copy(source.begin() + offset,
+                          source.begin() + offset + count, out);
+                return true;
+            }, 1024, false, 1024);
+    } catch (const RawrXD::TensorCompression::StorageAdmissionRejected&) {
+        budgetRejected = true;
+    }
+    assert(budgetRejected);
+
     // A failed streamed registration must not leave a partial cache entry.
     auto badReader=[](size_t,size_t,float*) { return false; };
     assert(!cache.RegisterF32FromReader("broken",512,0.0f,badReader,128));
