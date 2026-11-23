@@ -21,7 +21,7 @@ A separate, explicitly lossy conversion can halve eligible F32 projection payloa
 $env:RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16 = "1"
 ```
 
-This setting has no effect unless compressed residency is enabled. It applies to eligible F32 linear projections in the single-shard and standard multi-shard binding paths, with validated row geometry. Conversion is performed in bounded reader blocks using round-to-nearest-even, stores the resulting tensor as GGML F16, and updates the runtime weight type and byte geometry before kernel dispatch. If conversion admission fails, the loader retries the byte-preserving F32 path.
+This setting has no effect unless compressed residency is enabled. It applies to eligible F32 linear projections and single-shard token embeddings, plus projections in the standard multi-shard binding path, with validated row geometry. Conversion is performed in bounded reader blocks using round-to-nearest-even, stores the resulting tensor as GGML F16, and updates the runtime weight type and byte geometry before kernel dispatch. If conversion admission fails, the loader retries the byte-preserving F32 path.
 
 F32-to-F16 can change model outputs. It is disabled by default and must be validated with teacher-forced logits and task-quality tests before production use. Byte-preserving compression remains the default.
 
@@ -29,7 +29,7 @@ F32-to-F16 can change model outputs. It is disabled by default and must be valid
 
 The single-shard path selects two-dimensional linear projections routed through `LinearW` (attention/FFN projections and output projection) plus token embeddings. Token lookup decodes only the requested packed embedding row. The standard multi-shard binding path uses the same opt-in admission rules for compatible matrix projections; its token embeddings continue through the existing shard-row reader.
 
-The payload is stored byte-exactly. GGML type IDs and quantized block layouts are retained; this feature does not quantize Q4/Q5/Q6/F16/F32 tensors and does not silently convert F32 to F16.
+The default payload is stored byte-exactly. GGML type IDs and quantized block layouts are retained. Only when `RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16=1` is explicitly set are eligible F32 linear matrices and token embeddings converted to F16; other supported formats remain byte-exact.
 
 The following are deliberately not admitted by the single-shard path yet:
 
@@ -40,7 +40,7 @@ The following are deliberately not admitted by the single-shard path yet:
 
 ## Inference behavior
 
-For an admitted matrix, `WeightTensor` retains a shared compressed-store/key pair and has no raw data pointer. `LinearW_Range` calculates the packed bytes per row from the GGML type and decodes only the worker's requested output-row range into bounded temporary storage. The quantized kernel receives the original packed bytes, so numerical semantics remain unchanged by compression.
+For an admitted linear matrix, `WeightTensor` retains a shared compressed-store/key pair and has no raw data pointer. `LinearW_Range` calculates the packed bytes per row from the GGML type and decodes only the worker's requested output-row range into bounded temporary storage. Token embedding lookup similarly decodes only the selected token row. The quantized kernel receives the stored packed bytes; byte-preserving mode therefore leaves numerical semantics unchanged.
 
 The existing Vulkan GEMV upload interface consumes a full contiguous tensor. To prevent a hidden full-tensor decompression from defeating compressed residency, compressed weights use the bounded CPU row-slice path by default. Full-tensor Vulkan staging is an explicit opt-in:
 
