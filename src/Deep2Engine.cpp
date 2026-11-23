@@ -712,22 +712,27 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
-    // Read only the selected F32 embedding row, not the full vocabulary matrix.
-    // Quantized embeddings retain the legacy path until block-aligned decode exists.
+    // Load only the selected embedding row from compressed backing. The
+    // original GGUF tensor remains encoded; no full vocabulary F32 matrix is
+    // materialized for F32/F16/Q4_0/Q8_0 embeddings.
     if (inputTokens.empty()) return false;
     uint32_t firstToken = inputTokens[0];
-    if (tokenEmb->type == deep2::TensorType::F32 && tokenEmb->dims.size() == 2 &&
-        tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0) {
+    const bool tokenEmbResident = tokenEmb->dims.size() == 2 &&
+        tokenEmb->dims[0] == hiddenDim && tokenEmb->dims[1] > 0 &&
+        (tokenEmb->type == deep2::TensorType::F32 ||
+         tokenEmb->type == deep2::TensorType::F16 ||
+         tokenEmb->type == deep2::TensorType::Q4_0 ||
+         tokenEmb->type == deep2::TensorType::Q8_0);
+    if (tokenEmbResident) {
         if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
-        if (!hiddenDim || hiddenDim > SIZE_MAX / sizeof(float) ||
-            firstToken > SIZE_MAX / (hiddenDim * sizeof(float))) return false;
-        const auto byteOffset = static_cast<uint64_t>(firstToken) * hiddenDim * sizeof(float);
-        if (!rom.readTensorRange(*tokenEmb, byteOffset, hiddenDim * sizeof(float),
-                                 reinterpret_cast<uint8_t*>(hiddenStates.data()))) return false;
+        std::vector<float> embeddingRow;
+        if (!readROMCompressedRow("token_embd.weight", firstToken, embeddingRow) ||
+            embeddingRow.size() != hiddenDim) return false;
+        std::copy(embeddingRow.begin(), embeddingRow.end(), hiddenStates.begin());
     } else {
         deep2::DequantizedTensor tokenEmbDq;
         if (!dequantTensor(*tokenEmb, tokenEmbDq)) return false;
-        if (firstToken >= tokenEmbDq.cols) firstToken = 0;
+        if (firstToken >= tokenEmbDq.rows) firstToken = 0;
         if (hiddenDim && static_cast<size_t>(firstToken) + 1 > tokenEmbDq.data.size() / hiddenDim) return false;
         std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim],
                     hiddenDim * sizeof(float));
