@@ -50,10 +50,17 @@ int main(int argc, char** argv) {
     const std::string path = argv[1];
     size_t max_tensors = 12;
     uint32_t block = 65536;
+    size_t skipped = 0;
     for (int i = 2; i < argc; ++i) {
         std::string a = argv[i];
         if (a.rfind("max_tensors=", 0) == 0) max_tensors = std::stoul(a.substr(12));
-        else if (a.rfind("block=", 0) == 0) block = static_cast<uint32_t>(std::stoul(a.substr(6)));
+        else if (a.rfind("block=", 0) == 0) {
+            const auto requested = std::stoull(a.substr(6));
+            if (requested == 0 || requested > UINT32_MAX) {
+                std::cerr << "invalid block size\n"; return 2;
+            }
+            block = static_cast<uint32_t>(requested);
+        }
     }
     std::ifstream f(path, std::ios::binary);
     if (!f) { std::cerr << "cannot open " << path << "\n"; return 1; }
@@ -98,10 +105,19 @@ int main(int argc, char** argv) {
         uint64_t n_elem = 1;
         for (uint32_t d = 0; d < ti.n_dims; ++d) n_elem *= ti.dims[d];
         uint64_t bytes = type_bytes(ti.type, n_elem);
-        if (bytes == 0 || bytes > (1ull << 31)) continue;
+        if (bytes == 0 || bytes > (1ull << 31)) {
+            ++skipped;
+            std::cerr << "SKIP " << ti.name << " unsupported type or size\n";
+            continue;
+        }
         std::vector<uint8_t> buf(static_cast<size_t>(bytes));
         f.seekg(static_cast<std::streamoff>(data_start + ti.offset), std::ios::beg);
-        if (!f.read(reinterpret_cast<char*>(buf.data()), static_cast<std::streamsize>(bytes))) continue;
+        if (!f.read(reinterpret_cast<char*>(buf.data()), static_cast<std::streamsize>(bytes))) {
+            ++skipped;
+            std::cerr << "SKIP " << ti.name << " unreadable tensor bytes\n";
+            f.clear();
+            continue;
+        }
         uint8_t eb = (ti.type == 0) ? 4 : (ti.type == 1 ? 2 : 1);
         auto t = encode(buf.data(), buf.size(), eb, block);
         auto wire = serialize(t);
@@ -118,8 +134,11 @@ int main(int argc, char** argv) {
     }
     std::cout << "SUMMARY tensors=" << done << " roundtrip_ok=" << ok << " fail=" << fail
               << " raw=" << total_raw << " comp=" << total_comp
-              << " overall_ratio=" << (total_raw ? total_comp / total_raw : 0)
+              << " overall_ratio=" << (total_raw ? static_cast<double>(total_comp) / static_cast<double>(total_raw) : 0.0)
+              << " skipped=" << skipped
               << " codecs[Raw=" << codec_counts[0] << " Zlib=" << codec_counts[1]
               << " Shuffle=" << codec_counts[2] << " DeltaShuffle=" << codec_counts[3] << "]\n";
-    return fail == 0 ? 0 : 1;
+    // A clean exit must represent at least one checked tensor; skipped tensors
+    // remain visible so incomplete model coverage cannot be mistaken for certification.
+    return (fail == 0 && ok > 0 && skipped == 0) ? 0 : 1;
 }
