@@ -51,7 +51,7 @@ size_t StreamBytes(const WeightTensor& wt) {
     if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
         const auto packed = std::atomic_load_explicit(
             &wt.gpuF16Payload, std::memory_order_acquire);
-        if (packed && !packed->bytes.empty()) return packed->bytes.size();
+        if (packed && packed->data && packed->bytes) return packed->bytes;
     }
     if (wt.cols > std::numeric_limits<size_t>::max() / sizeof(float) ||
         wt.rows > std::numeric_limits<size_t>::max() /
