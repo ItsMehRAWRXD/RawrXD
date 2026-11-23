@@ -313,6 +313,29 @@ int main() {
     assert(byteOutOfRange);
     assert(byteStorage.storedBytes() < byteSource.size());
 
+    // F32 bounded decode: unaligned cross-chunk and final partial chunk.
+    std::vector<float> f32Source(1000, 2.0f);
+    auto f32Storage = ChunkedF32Storage::BuildFromReader(
+        f32Source.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            std::copy(f32Source.begin() + offset,
+                      f32Source.begin() + offset + count, out);
+            return true;
+        }, 128);
+    std::vector<float> f32Window(200, -1.0f);
+    std::vector<uint8_t> f32Scratch;
+    f32Storage.ReadRange(125, f32Window.size(), f32Window.data(), f32Scratch);
+    assert(std::all_of(f32Window.begin(), f32Window.end(),
+                       [](float value) { return value == 2.0f; }));
+    std::vector<float> f32Tail(20, 0.0f);
+    f32Storage.ReadRange(980, 20, f32Tail.data(), f32Scratch);
+    assert(std::all_of(f32Tail.begin(), f32Tail.end(),
+                       [](float value) { return value == 2.0f; }));
+    bool f32OutOfRange = false;
+    try { f32Storage.ReadRange(999, 2, f32Tail.data(), f32Scratch); }
+    catch (const std::out_of_range&) { f32OutOfRange = true; }
+    assert(f32OutOfRange);
+
     // Count the retained per-chunk directory against the hard budget before
     // source I/O. Tiny chunks cannot create unbounded metadata outside the cap.
     size_t f32MetadataReads = 0;
