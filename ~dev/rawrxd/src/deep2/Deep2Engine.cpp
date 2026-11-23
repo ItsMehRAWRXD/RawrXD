@@ -1518,13 +1518,40 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     if (deep2ForwardTraceEnabled()) {
         std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
     }
-    auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
+    const int cpuWeightType =
+        (wt.residencyCache && !wt.residencyKey.empty() &&
+         wt.residencyType >= 0) ? wt.residencyType : wt.type;
+    auto kernel = QuantKernelRegistry::Instance().GetGEMV(cpuWeightType);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
     }
 
     std::memset(output, 0, outDim * sizeof(float));
-    kernel(static_cast<const uint8_t*>(wt.data), input, output, rows, cols);
+    if (wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0) {
+        // Decode exactly one matrix row at a time. Transient decompression
+        // memory is bounded to one packed row, never the full tensor.
+        const size_t cachedBytes =
+            packedBytesRequired(cpuWeightType, rows, cols);
+        if (cachedBytes == 0 || cachedBytes % rows != 0)
+            throw std::runtime_error("LinearW: invalid compressed row geometry");
+        const size_t rowBytes = cachedBytes / rows;
+        std::vector<uint8_t> rowTile;
+        try { rowTile.resize(rowBytes); }
+        catch (...) {
+            throw std::runtime_error("LinearW: compressed row allocation failed");
+        }
+        for (size_t row = 0; row < rows; ++row) {
+            if (!wt.residencyCache->ReadRange(
+                    wt.residencyKey, row * rowBytes, rowBytes,
+                    rowTile.data())) {
+                throw std::runtime_error("LinearW: compressed row read failed");
+            }
+            kernel(rowTile.data(), input, output + row, 1, cols);
+        }
+    } else {
+        kernel(static_cast<const uint8_t*>(wt.data), input, output, rows, cols);
+    }
 
     if (bias) {
         for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
