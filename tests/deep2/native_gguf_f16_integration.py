@@ -210,9 +210,9 @@ def run(binary):
         f64_out=root/"f64-auto.gguf"
         subprocess.run([binary,str(f64),str(f64_out),"0","auto"],check=True)
         fd,fs,fm,ft=parse(f64_out)
-        assert ft["blk.0.attn_q.weight"][:2]==(0,(len(doubles),))
-        assert len(fd)-fs==len(doubles)*4
-        assert struct.unpack_from("<"+"f"*len(doubles),fd,fs)==tuple(doubles)
+        assert ft["blk.0.attn_q.weight"][:2]==(1,(len(doubles),))
+        assert len(fd)-fs==len(doubles)*2
+        assert struct.unpack_from("<"+"e"*len(doubles),fd,fs)==tuple(doubles)
         # Explicit F32 mode only narrows F64 and leaves existing F32 intact.
         f64_explicit=root/"f64-explicit-f32.gguf"
         subprocess.run([binary,str(f64),str(f64_explicit),"0","f32"],check=True)
@@ -222,6 +222,18 @@ def run(binary):
         f32_unchanged=root/"explicit-f32-preserves-f32.gguf"
         subprocess.run([binary,str(source),str(f32_unchanged),"300","f32"],check=True)
         assert f32_unchanged.read_bytes()==source.read_bytes()
+        # F64 values representable in F32 but not F16 must fall back to
+        # F32, rather than losing precision or retaining all eight bytes.
+        f64_f32only=root/"f64-f32-only.gguf"
+        f32only=bytearray(f64.read_bytes())
+        _,f64start,_,_=parse(f64)
+        struct.pack_into("<d",f32only,f64start,1.0009765625/2+2**-20)
+        f64_f32only.write_bytes(f32only)
+        f32only_dest=root/"f64-f32-fallback.gguf"
+        subprocess.run([binary,str(f64_f32only),str(f32only_dest),"0","auto"],check=True)
+        xd,xs,xm,xt=parse(f32only_dest)
+        assert xt["blk.0.attn_q.weight"][0]==0
+        assert len(xd)-xs==len(doubles)*4
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
