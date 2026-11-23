@@ -490,7 +490,11 @@ inline void decode_q3(const std::uint8_t* b, float* out) {
     const float dAll = half_to_float(u16(b + 108));
     if (!std::isfinite(dAll)) throw std::runtime_error("non-finite Q3_K scale");
     std::uint32_t aux[4]{};
-    std::memcpy(aux, packedScales, 12);
+    for (std::size_t word = 0; word < 3; ++word) {
+        const auto* p = packedScales + word * 4;
+        aux[word] = std::uint32_t(p[0]) | (std::uint32_t(p[1]) << 8) |
+                    (std::uint32_t(p[2]) << 16) | (std::uint32_t(p[3]) << 24);
+    }
     const std::uint32_t tmp = aux[2];
     constexpr std::uint32_t kmask1 = 0x03030303u;
     constexpr std::uint32_t kmask2 = 0x0f0f0f0fu;
