@@ -169,6 +169,11 @@ endif()
 # RawrXD - Zero Bloat Horizon (Phase 14.7.3+)
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
+# Optional build-time zlib for the legacy Qt QByteArray adapter. The native
+# runtime loader below remains dependency-free and discovers system zlib at run time.
+find_package(ZLIB QUIET)
+find_package(Qt6 COMPONENTS Core QUIET)
+
 # Native standard-GGUF tensor compression (no external codec dependency).
 include(cmake/NativeTensorCompression.cmake)
 
@@ -3275,6 +3280,7 @@ target_include_directories(RawrXD_Compression PUBLIC ${RAWRXD_COMPRESSION_DIR})
 target_link_libraries(RawrXD_Compression PUBLIC
     kernel32
     user32
+    ${CMAKE_DL_LIBS}
 )
 
 # Also create the MASM compression if available
@@ -5191,6 +5197,13 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
 endif()
 
+if(NOT (ZLIB_FOUND AND Qt6_FOUND))
+    # This adapter is Qt/zlib-specific; native inference remains available through
+    # RawrXD_Compression's runtime-loaded implementation when either is absent.
+    list(REMOVE_ITEM INFERENCE_ENGINE_SOURCES src/codec/compression.cpp)
+    message(STATUS "[Compression] Skipping legacy Qt/zlib adapter; runtime zlib loader remains enabled")
+endif()
+
 set(INFERENCE_ENGINE_LIBRARY_SOURCES ${INFERENCE_ENGINE_SOURCES})
 list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
     src/deep2/K2LivePathTensorCache_Emit.cpp)
@@ -5200,6 +5213,10 @@ list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
 )
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
+if(ZLIB_FOUND AND Qt6_FOUND)
+    target_link_libraries(InferenceEngine PUBLIC ZLIB::ZLIB Qt6::Core)
+    target_compile_definitions(InferenceEngine PRIVATE RAWRXD_HAS_QT_ZLIB_ADAPTER=1)
+endif()
 
 # Build the production Deep2 packed-weight QGEMV shader with the same glslc
 # tool supplied by the Vulkan SDK. The Vulkan runtime loads this exact output
@@ -5326,7 +5343,7 @@ target_include_directories(InferenceEngine PUBLIC
     ${RAWR_VULKAN_INCLUDE}
 )
 
-target_link_libraries(InferenceEngine PUBLIC Threads::Threads)
+target_link_libraries(InferenceEngine PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
 
 if(WIN32)
     target_link_libraries(InferenceEngine PUBLIC
@@ -16751,3 +16768,15 @@ if(MSVC)
 endif()
 add_test(NAME deep2_f32_compression_config
     COMMAND test_f32_compression_config)
+
+# The runtime zlib adapter is built without zlib headers or link-time zlib.
+add_executable(test_zlib_runtime_loader
+    tests/compression/zlib_runtime_loader_test.cpp)
+target_include_directories(test_zlib_runtime_loader PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/compression)
+target_compile_features(test_zlib_runtime_loader PRIVATE cxx_std_17)
+target_link_libraries(test_zlib_runtime_loader PRIVATE RawrXD_Compression)
+add_test(NAME compression_runtime_zlib_roundtrip
+    COMMAND test_zlib_runtime_loader)
+set_tests_properties(compression_runtime_zlib_roundtrip PROPERTIES
+    SKIP_RETURN_CODE 77)
