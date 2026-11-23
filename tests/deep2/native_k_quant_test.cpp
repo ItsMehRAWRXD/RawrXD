@@ -8,10 +8,10 @@
 
 using namespace RawrXD::NativeKQuant;
 int main() {
-    const uint32_t types[]={10,11,12,13,14};
-    const size_t sizes[]={84,110,144,176,210};
-    const double tolerances[]={2.0,2.0,1.0,0.8,0.15};
-    for(int t=0;t<5;++t) {
+    const uint32_t types[]={10,11,12,13,14,15};
+    const size_t sizes[]={84,110,144,176,210,292};
+    const double tolerances[]={2.0,2.0,1.0,0.8,0.15,0.05};
+    for(int t=0;t<6;++t) {
         const auto type=types[t];
         assert(BlockBytes(type)==sizes[t]);
         std::array<uint8_t,210> buf{};
@@ -42,7 +42,7 @@ int main() {
         for(double& x:v)x=0;
         v[0]=1.0+std::ldexp(1.0,-40);
         assert(!EncodeBlock(type,v,0,buf.data()));
-        std::cout<<"Q"<<(type-8)<<"_K native block PASS size="<<sizes[t]
+        std::cout<<"Q"<<(type==15?8:(type-8))<<"_K native block PASS size="<<sizes[t]
                  <<" max_error="<<maxError<<"\n";
     }
     assert(BlockBytes(1)==0);
