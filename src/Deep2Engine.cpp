@@ -268,6 +268,11 @@ bool Deep2Engine::readDequantizedTensorTile(const deep2::TensorEntry& entry,
     switch (entry.type) {
     case deep2::TensorType::F16:
     case deep2::TensorType::BF16:
+    case deep2::TensorType::Q4_0:
+    case deep2::TensorType::Q4_1:
+    case deep2::TensorType::Q5_0:
+    case deep2::TensorType::Q5_1:
+    case deep2::TensorType::Q8_1:
     case deep2::TensorType::F64:
     case deep2::TensorType::Q8_0:
     case deep2::TensorType::Q2_K:
