@@ -40,6 +40,33 @@ int main() {
     request.fixed_overhead_bytes=UINT64_MAX;
     check(PlanLosslessPackaging(inventory,request,plan)==PlanError::Overflow,
           "overhead_overflow_rejected");
+    EngineContext overlap = ctx;
+    GGUFTensorMeta second;
+    second.name = "second.weight";
+    second.type = 0;
+    second.dims = {4};
+    second.offset = 0;
+    overlap.tensors.emplace(second.name, second);
+    Inventory preserved = inventory;
+    check(BuildInventory(overlap,inventory)==InventoryError::OverlappingTensors &&
+          inventory.tensors.size()==preserved.tensors.size() &&
+          inventory.logical_bytes==preserved.logical_bytes,
+          "overlapping_tensors_rejected_transactionally");
+    second.offset = 32;
+    overlap.tensors[second.name] = second;
+    check(BuildInventory(overlap,inventory)==InventoryError::None &&
+          inventory.logical_bytes==32 && inventory.tensors.size()==2,
+          "aligned_nonoverlapping_tensors_accepted");
+    EngineContext quant;
+    quant.cfg.ggufAlignment=32;
+    quant.tensorWeightsPool.resize(144);
+    GGUFTensorMeta q;
+    q.name="quant.weight"; q.type=12; q.dims={256}; q.offset=0;
+    quant.tensors.emplace(q.name,q);
+    Inventory qinventory;
+    check(BuildInventory(quant,qinventory)==InventoryError::None &&
+          qinventory.logical_bytes==144,
+          "q4_k_block_storage_accounting");
     std::cout<<"REAP_PLANNER_RESULT="<<(failed?"FAIL":"PASS")
              <<" failures="<<failed<<"\n";
     return failed?1:0;
