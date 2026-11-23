@@ -186,7 +186,9 @@ void main() {
 
     uint blocksPerRow = 0u;
     uint rowBytes = 0u;
-    if (pc.type == 1u || pc.type == 30u) {
+    if (pc.type == 0u) {
+        rowBytes = pc.cols * 4u;
+    } else if (pc.type == 1u || pc.type == 30u) {
         rowBytes = pc.cols * 2u;
     } else if (pc.type == 8u) {
         blocksPerRow = (pc.cols + 31u) / 32u;
@@ -219,7 +221,8 @@ void main() {
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
-            if (pc.type == 1u) ww = geth(rb + j * 2u);
+            if (pc.type == 0u) ww = uintBitsToFloat(w[(rb + j * 4u) >> 2u]);
+            else if (pc.type == 1u) ww = geth(rb + j * 2u);
             else if (pc.type == 30u) ww = getbf16(rb + j * 2u);
             else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
