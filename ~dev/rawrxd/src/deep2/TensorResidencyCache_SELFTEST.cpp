@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
+#include <limits>
 #include <thread>
 #include <vector>
 
@@ -53,6 +55,28 @@ int main() {
     assert(stats.cacheHits >= 3);
     assert(stats.cacheMisses >= 1);
     assert(stats.bytesDecoded >= tile.size() + a.size() + b.size());
+
+    // Explicit lossy FP32 -> FP16 residency: half-size storage and
+    // conversion of only the requested range, including a chunk boundary.
+    std::vector<float> fp32(2048);
+    for (size_t i = 0; i < fp32.size(); ++i)
+        fp32[i] = std::sin(static_cast<float>(i) * 0.013f) * 3.0f;
+    fp32[20] = std::numeric_limits<float>::infinity();
+    fp32[21] = -std::numeric_limits<float>::infinity();
+    fp32[22] = std::numeric_limits<float>::quiet_NaN();
+    assert(cache.RegisterF32AsF16("fp32.norm", fp32.data(), fp32.size()));
+    std::vector<float> fp16Decoded(17);
+    assert(cache.ReadF32Range("fp32.norm", 509, fp16Decoded.size(),
+                              fp16Decoded.data()));
+    for (size_t i = 0; i < fp16Decoded.size(); ++i) {
+        const float expected = fp32[509 + i];
+        if (std::isnan(expected)) assert(std::isnan(fp16Decoded[i]));
+        else if (std::isinf(expected)) assert(fp16Decoded[i] == expected);
+        else assert(std::fabs(fp16Decoded[i] - expected) < 0.002f);
+    }
+    const auto fpStats = cache.GetStats();
+    assert(fpStats.logicalBytes >= fp32.size() * sizeof(uint16_t));
+    assert(fpStats.storedBytes < fpStats.logicalBytes + source.size());
 
     cache.SetBudget(1);
     assert(!cache.Contains("weights.layer0"));
