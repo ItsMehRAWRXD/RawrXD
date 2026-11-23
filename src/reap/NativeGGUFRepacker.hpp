@@ -726,9 +726,11 @@ inline RepackError RepackGGUF(const std::string& input,
         // Repack both to Q8_0 only when the serialized payload shrinks.
         // Ordinary multi-row matrices remain candidates for Q4_0.
         if(auto_compress && (sensitive || !matrix) &&
-           (t.type==9 || t.type==15) && q8Bytes<t.bytes &&
+           (t.type==9 || t.type==15 || (t.type==1 && !sensitive && !matrix)) &&
+           q8Bytes<t.bytes &&
            t.dims[0]%(t.type==15?256ULL:32ULL)==0) {
             t.convert_q8_0=true;
+            t.q8_source_f16=(t.type==1);
             t.q8_source_k=(t.type==15);
             t.q8_source_q8_1=(t.type==9);
             t.type=8;
