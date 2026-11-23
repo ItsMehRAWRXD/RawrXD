@@ -202,5 +202,40 @@ int main() {
     assert(sharedStats.activeReaders == 0);
     assert(sharedStats.hits >= 6 * 128);
 
+
+    // Model rebinding must not reuse an equal-sized but different payload.
+    Deep2::TensorByteResidencyCache scoped(65536);
+    std::vector<uint8_t> modelA(8192, 0x11), modelB(8192, 0xE7);
+    scoped.SetModelIdentity("model-A");
+    assert(scoped.RegisterFromReader("shared.key", modelA.size(),
+        [&](size_t o, size_t n, uint8_t* out) {
+            std::copy(modelA.begin()+o, modelA.begin()+o+n, out);
+            return true;
+        }, 1024));
+    std::vector<uint8_t> scopeTile(64), scopeScratch;
+    assert(scoped.ReadRange("shared.key", 0, scopeTile.size(),
+                            scopeTile.data(), scopeScratch));
+    assert(std::all_of(scopeTile.begin(), scopeTile.end(),
+                       [](uint8_t b) { return b == 0x11; }));
+    scoped.MarkRawFallback("old.fallback");
+    scoped.SetModelIdentity("model-A"); // no-op: preserve existing cache
+    assert(scoped.Contains("shared.key") && scoped.IsRawFallback("old.fallback"));
+    scoped.SetModelIdentity("model-B");
+    assert(scoped.ModelIdentity() == "model-B");
+    assert(!scoped.Contains("shared.key") && !scoped.IsRawFallback("old.fallback"));
+    assert(scoped.GetStats().compressedBytes == 0);
+    size_t reboundReads = 0;
+    assert(scoped.RegisterFromReader("shared.key", modelB.size(),
+        [&](size_t o, size_t n, uint8_t* out) {
+            ++reboundReads;
+            std::copy(modelB.begin()+o, modelB.begin()+o+n, out);
+            return true;
+        }, 1024));
+    assert(reboundReads > 0);
+    assert(scoped.ReadRange("shared.key", 0, scopeTile.size(),
+                            scopeTile.data(), scopeScratch));
+    assert(std::all_of(scopeTile.begin(), scopeTile.end(),
+                       [](uint8_t b) { return b == 0xE7; }));
+
     std::cout<<"lossless encoded-byte tensor residency cache PASS\n";
 }
