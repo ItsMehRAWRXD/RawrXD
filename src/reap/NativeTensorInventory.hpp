@@ -48,8 +48,6 @@ inline bool StorageLayout(uint32_t type, uint64_t& block, uint64_t& bytes) {
         case 13: block=256; bytes=176; return true; // Q5_K
         case 14: block=256; bytes=210; return true; // Q6_K
         case 15: block=256; bytes=292; return true; // Q8_K
-        case 30: block=1; bytes=8; return true; // F64
-        case 31: block=1; bytes=2; return true; // IQ variants are not inferred
         default: return false;
     }
 }
