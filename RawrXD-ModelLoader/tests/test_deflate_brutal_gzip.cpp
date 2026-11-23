@@ -52,13 +52,13 @@ int main() {
     if (rawrxd_gzip_crc32(crcVector, 9) != 0xCBF43926u ||
         rawrxd_test::gzipCrc32(
             reinterpret_cast<const std::uint8_t*>(crcVector), 9) != 0xCBF43926u) {
-        std::fprintf(stderr, "FAIL IEEE CRC32 known-answer test\\n");
+        std::fprintf(stderr, "FAIL IEEE CRC32 known-answer test\n");
         return 1;
     }
     std::size_t invalidLength = 123;
     if (DEFLATE_BRUTAL(nullptr, 1, &invalidLength) != nullptr ||
         invalidLength != 0 || DEFLATE_BRUTAL(nullptr, 0, nullptr) != nullptr) {
-        std::fprintf(stderr, "FAIL invalid argument contract\\n");
+        std::fprintf(stderr, "FAIL invalid argument contract\n");
         return 1;
     }
     const struct { std::size_t size; bool repetitive; } cases[] = {
@@ -87,6 +87,10 @@ int main() {
                      static_cast<std::streamsize>(fixture.size()));
     gzipFile.write(static_cast<const char*>(fixtureGzip),
                    static_cast<std::streamsize>(fixtureSize));
+    sourceFile.flush();
+    gzipFile.flush();
+    sourceFile.close();
+    gzipFile.close();
     const bool filesOk = sourceFile.good() && gzipFile.good();
     std::free(fixtureGzip);
     if (!filesOk) return 1;

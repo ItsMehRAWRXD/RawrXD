@@ -17,6 +17,10 @@ on:
       - '.github/workflows/brutal-masm-gzip-e2e.yml'
   pull_request:
     paths:
+      - 'RawrXD-ModelLoader/docs/BRUTAL-GZIP.md'
+      - 'RawrXD-ModelLoader/include/brutal_gzip.h'
+      - 'RawrXD-ModelLoader/CMakeLists.txt'
+      - 'RawrXD-ModelLoader/kernels/deflate_brutal_neon.S'
       - 'RawrXD-ModelLoader/kernels/deflate_brutal_masm.asm'
       - 'RawrXD-ModelLoader/src/gzip_crc32.cpp'
       - 'RawrXD-ModelLoader/tests/gzip_stored_validator.hpp'

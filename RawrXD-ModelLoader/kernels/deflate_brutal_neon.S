@@ -77,7 +77,7 @@ deflate_brutal_neon:
     mov     x11, #65535
     cmp     x26, x11
     csel    x25, x26, x11, ls       // chunk, preserved across memcpy
-    cmp     x10, x25
+    cmp     x26, x25
     cset    w12, eq                 // BFINAL
     strb    w12, [x23], #1
     strh    w25, [x23]
