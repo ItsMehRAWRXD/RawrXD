@@ -3418,10 +3418,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = name;
-            // Owned by ggufResult's mapped GGUF loader. Keep vectors/norms
-            // mapped because legacy scalar consumers still read their data
-            // pointer directly. Matrix projections that use LinearW can instead
-            // retain native GGML bytes in bounded compressed blocks.
+            // Owned by ggufResult's mapped GGUF loader until admitted to the
+            // compressed store. Matrix projections use bounded row reads;
+            // supported F32/F16 norm vectors use operation-sized reads.
             wt.mapped = true;
             wt.hasFileBacking = true;
             wt.fileOffset = t.dataOffset;
@@ -3450,12 +3449,27 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
             const bool embeddingMatrixName =
                 name == "token_embd.weight" || name == "token_embeddings.weight";
+            // RMSNorm consumes a complete one-dimensional scale vector for
+            // this operation, so retaining that small vector in compressed
+            // backing is safe: RMSNormW requests exactly the required byte span.
+            const bool normVectorName =
+                name.find("norm") != std::string::npos &&
+                t.dimensions.size() == 1 && wt.cols > 1 &&
+                (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+                 wt.type == static_cast<int>(GGMLType::GGML_TYPE_F16)) &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() /
+                    (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                        ? sizeof(float) : sizeof(std::uint16_t)) &&
+                wt.cols * (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                    ? sizeof(float) : sizeof(std::uint16_t)) == wt.sizeBytes;
             const bool eligibleCompressedMatrix =
-                compressedModeEnabled && (linearProjectionName || embeddingMatrixName) &&
-                t.dimensions.size() == 2 && wt.rows > 1 && wt.cols > 1 &&
-                packedRowBytes > 0 &&
-                packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
-                packedRowBytes * wt.rows == wt.sizeBytes;
+                compressedModeEnabled &&
+                (((linearProjectionName || embeddingMatrixName) &&
+                  t.dimensions.size() == 2 && wt.rows > 1 && wt.cols > 1 &&
+                  packedRowBytes > 0 &&
+                  packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
+                  packedRowBytes * wt.rows == wt.sizeBytes) ||
+                 normVectorName);
 
             if (eligibleCompressedMatrix && t.data)
             {
@@ -6239,21 +6253,38 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         dst.hasFileBacking = true;
         dst.fileOffset = ref->fileOffset;
 
-        // Opt-in native compressed residency for matrix weights. Keep norms
-        // and vectors mapped because their current consumers read direct pointers.
+        // Matrix projections use bounded row reads. F32/F16 normalization
+        // vectors are also eligible because RMSNormW reads their exact span;
+        // biases and other vectors stay mapped until every consumer supports
+        // range-backed access.
         const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
         const bool compressedModeEnabled =
             compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
         const std::size_t packedRowBytes = LinearW_RowBytes(dst.type, dst.cols);
         const std::string bindingLabel = label ? label : "";
-        const bool bindingIsNormOrBias =
+        const bool bindingIsNorm =
             bindingLabel.find("norm") != std::string::npos ||
-            bindingLabel.find("bias") != std::string::npos;
-        const bool compressMatrix = compressedModeEnabled && !bindingIsNormOrBias &&
-            ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
-            packedRowBytes > 0 &&
-            packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
-            packedRowBytes * dst.rows == dst.sizeBytes;
+            ref->name.find("norm") != std::string::npos;
+        const bool bindingIsBias =
+            bindingLabel.find("bias") != std::string::npos ||
+            ref->name.find("bias") != std::string::npos;
+        const bool normVector =
+            bindingIsNorm && !bindingIsBias && ref->shape.size() == 1 &&
+            dst.cols > 1 &&
+            (dst.type == static_cast<int>(GGMLType::GGML_TYPE_F32) ||
+             dst.type == static_cast<int>(GGMLType::GGML_TYPE_F16)) &&
+            dst.cols <= (std::numeric_limits<std::size_t>::max)() /
+                (dst.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                    ? sizeof(float) : sizeof(std::uint16_t)) &&
+            dst.cols * (dst.type == static_cast<int>(GGMLType::GGML_TYPE_F32)
+                ? sizeof(float) : sizeof(std::uint16_t)) == dst.sizeBytes;
+        const bool compressMatrix = compressedModeEnabled && !bindingIsBias &&
+            ((ref->shape.size() == 2 && !bindingIsNorm &&
+              dst.rows > 1 && dst.cols > 1 &&
+              packedRowBytes > 0 &&
+              packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
+              packedRowBytes * dst.rows == dst.sizeBytes) ||
+             normVector);
         if (compressMatrix)
         {
             constexpr std::size_t kDefaultCompressedModelBudget =
