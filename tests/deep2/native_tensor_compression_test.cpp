@@ -257,6 +257,39 @@ int main() {
     assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
 
+    // Direct packed row-window staging: no intermediate whole-tensor buffer.
+    // Use exactly representable half values to force uniform F16 chunks.
+    std::vector<float> packedSource(1024, 1.5f);
+    auto packedStorage = ChunkedF32Storage::BuildFromReader(
+        packedSource.size(), 0.0f,
+        [&](size_t offset, size_t count, float* out) {
+            std::copy(packedSource.begin() + offset,
+                      packedSource.begin() + offset + count, out);
+            return true;
+        }, 128);
+    Encoding packedEncoding = Encoding::Raw;
+    std::vector<uint8_t> packedWindow(130 * sizeof(uint16_t), 0xa5);
+    assert(packedStorage.CopyUniform16BitRange(
+        127, 129, packedEncoding, packedWindow.data(), packedWindow.size()));
+    assert(packedEncoding == Encoding::F16);
+    for (size_t i = 0; i < 129; ++i) {
+        const uint16_t value = static_cast<uint16_t>(packedWindow[2*i]) |
+                               (static_cast<uint16_t>(packedWindow[2*i+1]) << 8);
+        assert(FromHalf(value) == 1.5f);
+    }
+    assert(packedWindow[129 * 2] == 0xa5);
+    assert(packedWindow[129 * 2 + 1] == 0xa5);
+    std::vector<uint8_t> shortWindow(8, 0x5a);
+    packedEncoding = Encoding::Raw;
+    assert(!packedStorage.CopyUniform16BitRange(
+        127, 129, packedEncoding, shortWindow.data(), shortWindow.size()));
+    assert(std::all_of(shortWindow.begin(), shortWindow.end(),
+                       [](uint8_t value) { return value == 0x5a; }));
+    assert(!packedStorage.CopyUniform16BitRange(
+        1023, 2, packedEncoding, packedWindow.data(), packedWindow.size()));
+    assert(!packedStorage.CopyUniform16BitRange(
+        127, 129, packedEncoding, nullptr, packedWindow.size()));
+
     // Count the retained per-chunk directory against the hard budget before
     // source I/O. Tiny chunks cannot create unbounded metadata outside the cap.
     size_t f32MetadataReads = 0;
