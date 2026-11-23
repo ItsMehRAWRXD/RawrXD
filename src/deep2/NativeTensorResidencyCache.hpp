@@ -47,11 +47,23 @@ public:
                                float maxAbsError,Reader&& reader,
                                size_t chunkElements = 4096) {
         if(key.empty()) return false;
+        // Serialize first-touch construction. Concurrent inference agents must
+        // not create duplicate temporary compressed copies of one tensor.
+        std::lock_guard<std::mutex> buildLock(buildMutex_);
         size_t buildBudget = 0;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            buildBudget = budgetBytes_;
+            auto existing = entries_.find(key);
+            if (existing != entries_.end()) {
+                existing->second.lastUse = ++tick_;
+                return true;
+            }
+            // Temporary construction shares the same residency budget as
+            // already-resident compressed entries.
+            buildBudget = budgetBytes_ > compressedBytes_
+                ? budgetBytes_ - compressedBytes_ : 0;
         }
+        if (!buildBudget) return false;
         std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> built;
         try {
             built = std::make_shared<RawrXD::TensorCompression::ChunkedF32Storage>(
@@ -194,6 +206,7 @@ private:
     }
 
     mutable std::mutex mutex_;
+    std::mutex buildMutex_;
     size_t budgetBytes_=0;
     size_t compressedBytes_=0;
     size_t logicalBytes_=0;
