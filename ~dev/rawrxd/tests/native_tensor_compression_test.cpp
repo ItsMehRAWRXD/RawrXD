@@ -10,7 +10,7 @@
 using RawrXD::TensorCompression::ChunkedF32Storage;
 
 #define CHECK(condition) do { if (!(condition)) { \
-    std::fprintf(stderr, "CHECK failed at line %d: %s\\n", __LINE__, #condition); \
+    std::fprintf(stderr, "CHECK failed at line %d: %s\n", __LINE__, #condition); \
     return __LINE__; \
 } } while (0)
 
