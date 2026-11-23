@@ -323,5 +323,13 @@ int main(int argc,char** argv) {
         if(std::rename(tmp.c_str(),argv[2]))throw std::runtime_error("rename failed");
         std::cout<<"converted tensors: "<<changed<<"/"<<ts.size()<<"\n";
         return 0;
-    } catch(const std::exception& e) {std::remove(tmp.c_str());std::cerr<<e.what()<<"\n";return 1;}
+    } catch(const std::exception& e) {
+        // Cleanup must not unlink an input aliased by the temporary path.
+        std::error_code ec;
+        bool same=false;
+        if(std::filesystem::exists(tmp,ec) && !ec)
+            same=std::filesystem::equivalent(argv[1],tmp,ec) && !ec;
+        if(!same && !ec)std::remove(tmp.c_str());
+        std::cerr<<e.what()<<"\n";return 1;
+    }
 }
