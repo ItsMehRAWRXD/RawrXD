@@ -188,28 +188,7 @@ public:
 // ═════════════════════════════════════════════════════════════════════════════
 // 5. Compression symbols (UniversalModelLoader.cpp)
 // ═════════════════════════════════════════════════════════════════════════════
-namespace RawrXD {
-namespace Compression {
 
-class ZlibRuntimeLoader {
-public:
-    ZlibRuntimeLoader() {}
-    ~ZlibRuntimeLoader() {}
-    bool Load() { return true; }
-    bool Decompress(unsigned char* out, unsigned int* outLen,
-                    const unsigned char* in, unsigned int inLen) {
-        if (!out || !outLen || !in) return false;
-        if (inLen == 0) { *outLen = 0; return true; }
-        // Passthrough fallback with bounds checking
-        unsigned int copyLen = (inLen < *outLen) ? inLen : *outLen;
-        std::memcpy(out, in, copyLen);
-        *outLen = copyLen;
-        return (copyLen == inLen);
-    }
-};
-
-} // namespace Compression
-} // namespace RawrXD
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 6. Deep2 API Server symbols (Deep2Integration.cpp)
