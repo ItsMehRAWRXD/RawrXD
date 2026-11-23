@@ -17,6 +17,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 
@@ -44,18 +45,32 @@ int32_t g_preferred_device = -1;   // STRATA_S05: device pin, applied at first i
 thread_local int32_t g_active_device = -1; // RAWRXD_MULTI_GPU: per-thread device override (-1 = default Gpu(); set via SetActiveDevice for split-model dual-GPU). Default keeps single-GPU behaviour byte-identical.
 int64_t g_weight_cache_budget = 0;
 static bool g_weight_cache_retention = false; // RAWRXD_G04: residency budget pin, applied at first init
+std::atomic<GpuInitializationState> g_primary_gpu_state{
+    GpuInitializationState::Pending};
 
 VulkanCompute& Gpu()
 {
     static VulkanCompute gpu;              // one device for the process
     static std::once_flag init_once;
     std::call_once(init_once, [&]() {
+        g_primary_gpu_state.store(GpuInitializationState::Initializing,
+                                  std::memory_order_release);
         // STRATA_S05: honour a device pin requested before the first dispatch.
         gpu.SetPreferredDeviceIndex(g_preferred_device);
         // RAWRXD_G04: honour a residency-budget pin requested before the first
         // dispatch (0 keeps the derived default).
         gpu.SetQuantWeightBudgetBytes((size_t)g_weight_cache_budget);
-        gpu.Initialize();                  // false stays false; receipt explains
+        const bool initialized = gpu.Initialize();
+        if (!initialized) {
+            // Initialize() may have created an instance or device before a
+            // later stage failed.  Release that partial context immediately;
+            // a call_once failure must never leave live Vulkan handles behind.
+            gpu.Cleanup();
+        }
+        g_primary_gpu_state.store(
+            initialized ? GpuInitializationState::Ready
+                       : GpuInitializationState::Failed,
+            std::memory_order_release);
     });
     return gpu;
 }
@@ -254,7 +269,7 @@ bool EndBatchImpl()
     if (qs.empty()) {
         // Preserve the real device lifecycle even for an empty logical batch.
         // This catches a close failure instead of reporting a false success.
-        if (!Gpu().BeginQuantDotBatch()) {
+        if (!PrimaryGpuReady() || !Gpu().BeginQuantDotBatch()) {
             g_receipt = Receipt{};
             g_receipt.used_gpu = false;
             QDTRACE_DISPATCH("EndBatch empty-begin ok=0");
@@ -285,7 +300,7 @@ bool EndBatchImpl()
     const char* fail_stage = nullptr;
     size_t replay_from = qs.size();   // nothing to replay until a chunk fails
     size_t chunks_ok = 0;
-    if (!Gpu().BeginQuantDotBatch()) {
+    if (!PrimaryGpuReady() || !Gpu().BeginQuantDotBatch()) {
         ok = false;
         fail_stage = "begin";
         fail_index = qs.size();
@@ -463,6 +478,7 @@ bool AttnDecodeGqa(const float* q, size_t q_floats,
                    uint32_t head_dim, uint32_t heads, uint32_t kv_heads,
                    uint32_t seq_len, float scale)
 {
+    if (!PrimaryGpuReady()) return false;
     return Gpu().ExecuteAttnDecodeGqa(
         q, q_floats, k_cache, k_floats, v_cache, v_floats,
         out, out_floats, head_dim, heads, kv_heads, seq_len, scale);
@@ -598,6 +614,15 @@ void SetPreferredDevice(int index) {
     g_preferred_device = (int32_t)index;
 }
 
+GpuInitializationState PrimaryGpuInitializationState() {
+    Gpu();
+    return g_primary_gpu_state.load(std::memory_order_acquire);
+}
+
+bool PrimaryGpuReady() {
+    return PrimaryGpuInitializationState() == GpuInitializationState::Ready;
+}
+
 size_t BatchCapacity() {
     // kQuantBatchMaxSets: the descriptor ring bounds one batch. Reported, not
     // asserted, so callers can chunk instead of failing closed.
@@ -675,7 +700,7 @@ bool DotF16(const void* wBytes, size_t wBytesCount,
         g_receipt.fallback_reason = "f16: weight bytes short";
         return false;
     }
-    if (!g_force_cpu && !force_cpu) {
+    if (!g_force_cpu && !force_cpu && PrimaryGpuReady()) {
         std::lock_guard<std::mutex> lk(g_gpu_mutex);
         VulkanCompute& gpu = (g_active_device >= 0) ? GpuFor(g_active_device) : Gpu();
         if (gpu.ExecuteF16Dot(wBytes, wBytesCount, x, n_in, y,
@@ -853,12 +878,21 @@ bool DotBlocked(int kind,
     }
 
     // GPU path. The packed kernel is proven; a dispatch failure is reported.
-    VulkanCompute& gpu = (g_active_device >= 0) ? GpuFor(g_active_device) : Gpu();
-    const bool gpuOk = q8_interleaved && q8_bytes >= n_sb * 273u * sizeof(float)
-        ? gpu.ExecuteQuantDot(wBytes, wBytesCount,
-                              q8_interleaved, q8_bytes,
-                              y, n_out * sizeof(float),
-                              n_out, n_in, n_sb, kind)
+    VulkanCompute* gpu = nullptr;
+    if (g_active_device >= 0) {
+        try {
+            gpu = &GpuFor(g_active_device);
+        } catch (const std::exception& e) {
+            g_receipt.fallback_reason = e.what();
+        }
+    } else if (PrimaryGpuReady()) {
+        gpu = &Gpu();
+    }
+    const bool gpuOk = gpu && q8_interleaved && q8_bytes >= n_sb * 273u * sizeof(float)
+        ? gpu->ExecuteQuantDot(wBytes, wBytesCount,
+                               q8_interleaved, q8_bytes,
+                               y, n_out * sizeof(float),
+                               n_out, n_in, n_sb, kind)
         : false;
     if (gpuOk) {
         g_receipt.used_gpu = true;
@@ -1056,6 +1090,10 @@ bool DispatchLmHeadBatchQ4K(
     // Use the canonical VulkanCompute's fused Q4_K/Q6_K batch GEMV via its
     // scratch system. The caller supplies the real GGUF type so a Q6_K output
     // head is not silently routed through a Q4-only kernel.
+    if (!PrimaryGpuReady()) {
+        g_receipt.fallback_reason = "lmhead-batch: primary GPU initialization failed";
+        return false;
+    }
     auto& gpu = Gpu();
     const size_t in_bytes = batch * cols * sizeof(float);
     const size_t out_bytes = batch * rows * sizeof(float);

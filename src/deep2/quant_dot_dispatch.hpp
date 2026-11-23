@@ -34,6 +34,13 @@ namespace RawrXD {
 namespace Deep2 {
 namespace QuantDot {
 
+enum class GpuInitializationState : uint8_t {
+    Pending,
+    Initializing,
+    Ready,
+    Failed,
+};
+
 // Row-dequantising CPU dot, supplied by the caller so this layer stays free of
 // ggml dependencies.
 using CpuDot = std::function<float(const uint8_t* row, const void* q8_act, size_t rowIndex)>;
@@ -296,6 +303,12 @@ VulkanCompute& DispatchDevice(int32_t device = -1);
 // discrete AMD card in a two-GPU host). -1 restores score-based auto-select.
 // Must be called before the first dispatch; selection is otherwise automatic.
 void SetPreferredDevice(int index);
+
+// The primary Vulkan context is initialized lazily.  This state is explicit so
+// callers and certification tools can distinguish a real GPU path from a
+// failed initialization that would otherwise look like an ordinary fallback.
+GpuInitializationState PrimaryGpuInitializationState();
+bool PrimaryGpuReady();
 
 // D1: the maximum dots one quant-dot batch can hold (the device descriptor
 // ring capacity). Callers that queue more than this many dots must chunk;

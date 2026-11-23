@@ -32,21 +32,25 @@ VulkanCompute::~VulkanCompute() {
 bool VulkanCompute::Initialize() {
     if (!CreateInstance()) {
         std::cerr << "Failed to create Vulkan instance" << std::endl;
+        Cleanup();
         return false;
     }
     
     if (!SelectPhysicalDevice()) {
         std::cerr << "Failed to select physical device" << std::endl;
+        Cleanup();
         return false;
     }
     
     if (!CreateLogicalDevice()) {
         std::cerr << "Failed to create logical device" << std::endl;
+        Cleanup();
         return false;
     }
     
     if (!CreateCommandPool()) {
         std::cerr << "Failed to create command pool" << std::endl;
+        Cleanup();
         return false;
     }
     
