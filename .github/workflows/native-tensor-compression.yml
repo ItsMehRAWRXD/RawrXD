@@ -7,6 +7,7 @@ on:
       - 'src/deep2/NativeTensorCompression.hpp'
       - 'src/deep2/NativeKQuant.hpp'
       - 'tests/deep2/native_k_quant_test.cpp'
+      - 'tests/deep2/native_gguf_k_integration.py'
       - 'tools/native_tensor_pack.cpp'
       - 'tests/deep2/native_tensor_compression_test.cpp'
       - 'tests/deep2/native_gguf_f16_integration.py'
@@ -30,6 +31,7 @@ jobs:
           ./native_k_test
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_gguf_f16.cpp -o native_gguf_f16
           python3 tests/deep2/native_gguf_f16_integration.py ./native_gguf_f16
+          python3 tests/deep2/native_gguf_k_integration.py ./native_gguf_f16
           c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_tensor_pack.cpp -o tensor_pack
           python3 -c "from pathlib import Path; Path('input.bin').write_bytes(bytes(range(256))*4096 + b'Z'*100000)"
           ./tensor_pack pack input.bin compressed.rxtc
@@ -55,6 +57,8 @@ jobs:
           cl /nologo /EHsc /std:c++17 /O2 tools/native_gguf_f16.cpp /Fe:native_gguf_f16.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/deep2/native_gguf_f16_integration.py .\\native_gguf_f16.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/deep2/native_gguf_k_integration.py .\\native_gguf_f16.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cl /nologo /EHsc /std:c++17 /O2 tools/native_tensor_pack.cpp /Fe:tensor_pack.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
