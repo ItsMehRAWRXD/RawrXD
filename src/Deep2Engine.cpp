@@ -11,6 +11,9 @@
 #include "VulkanDeviceAllocator.hpp"
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
+#include "deep2/LossyQuant.hpp"
+
+namespace lossy = rawrxd::lossy;
 
 #include <iostream>
 #include <cmath>
@@ -424,6 +427,97 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
 
     std::memcpy(y.data(), ymapped, static_cast<size_t>(ysize));
     cleanup();
+    return true;
+}
+
+// Stage 6B: fused INT4 GPU matvec. Quantizes W to packed INT4 (per-64-block
+// F16 scales), uploads to GPU, dispatches VulkanInt4Program, reads back, and
+// verifies against a CPU INT4 reference (bit-exact) -- proving the GPU kernel
+// executes correctly inside Deep2, not just in a standalone harness.
+bool Deep2Engine::vulkanInt4Gemv(const float* W, const float* x, float* y,
+                                       uint64_t rows, uint64_t cols) {
+    if (!vulkanReady || !vulkan || !W || !x || !y) return false;
+    if (rows == 0 || cols == 0 || (cols % 64) != 0) {
+        fprintf(stderr, "[VULKAN_INT4] cols must be a positive multiple of 64\n");
+        return false;
+    }
+    const auto* gpu = vulkan->primary();
+    if (!gpu) return false;
+    const uint32_t bpr = static_cast<uint32_t>(cols / 64);
+
+    // Quantize the F32 weights to packed INT4 (per-64-block F16 scales).
+    lossy::BlockCfg cfg; cfg.bits = lossy::QBits::Int4; cfg.block = 64;
+    lossy::QuantTensor q;
+    if (!lossy::Quantize(W, static_cast<size_t>(rows * cols), cfg, q)) return false;
+
+    // CPU INT4 reference (independent of the GPU path).
+    const auto cpuRef = lossy::Dequantize(q);
+    auto cpuMatvec = [&](float* out) {
+        for (uint64_t r = 0; r < rows; ++r) {
+            double acc = 0.0;
+            const float* wr = &cpuRef[static_cast<size_t>(r * cols)];
+            for (uint64_t c = 0; c < cols; ++c) acc += (double)wr[c] * x[c];
+            out[r] = (float)acc;
+        }
+    };
+    std::vector<float> yCpu(rows);
+    cpuMatvec(yCpu.data());
+
+    // Lazily init the INT4 program (one per device).
+    if (!int4Program_) {
+        int4Program_ = std::make_unique<deep2::VulkanInt4Program>();
+        std::string spv = exeDir() + "shaders\\int4_matvec.spv";
+        if (!int4Program_->init(gpu->device, spv)) {
+            fprintf(stderr, "[VULKAN_INT4] program init failed for %s\n", spv.c_str());
+            int4Program_.reset();
+            return false;
+        }
+    }
+
+    // Upload buffers (host-visible): packed INT4 weights, F16 scales, x, y.
+    VkBuffer Wbuf = VK_NULL_HANDLE, Sbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
+    VkDeviceMemory Wmem = VK_NULL_HANDLE, Smem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
+    void* Wmapped = nullptr; void* Smapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
+    const VkDeviceSize Wsize = q.packed.size();
+    const VkDeviceSize Ssize = q.scales.size() * sizeof(uint16_t);
+    const VkDeviceSize xsize = cols * sizeof(float);
+    const VkDeviceSize ysize = rows * sizeof(float);
+    auto cleanup = [&]() {
+        vulkan->destroyBuffer(*gpu, Wbuf, Wmem);
+        vulkan->destroyBuffer(*gpu, Sbuf, Smem);
+        vulkan->destroyBuffer(*gpu, xbuf, xmem);
+        vulkan->destroyBuffer(*gpu, ybuf, ymem);
+    };
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags hv = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    if (!vulkan->createBuffer(*gpu, Wsize, usage, hv, Wbuf, Wmem, &Wmapped)) { cleanup(); return false; }
+    if (!vulkan->createBuffer(*gpu, Ssize, usage, hv, Sbuf, Smem, &Smapped)) { cleanup(); return false; }
+    if (!vulkan->createBuffer(*gpu, xsize, usage, hv, xbuf, xmem, &xmapped)) { cleanup(); return false; }
+    if (!vulkan->createBuffer(*gpu, ysize, usage, hv, ybuf, ymem, &ymapped)) { cleanup(); return false; }
+
+    std::memcpy(Wmapped, q.packed.data(), static_cast<size_t>(Wsize));
+    std::memcpy(Smapped, q.scales.data(), static_cast<size_t>(Ssize));
+    std::memcpy(xmapped, x, static_cast<size_t>(xsize));
+    std::memset(ymapped, 0, static_cast<size_t>(ysize));
+
+    if (!int4Program_->dispatch(*gpu, Wbuf, Sbuf, xbuf, ybuf,
+                                (uint32_t)rows, (uint32_t)cols, bpr)) {
+        cleanup(); return false;
+    }
+
+    std::memcpy(y, ymapped, static_cast<size_t>(ysize));
+    cleanup();
+
+    // Verify GPU output against the CPU INT4 reference (bit-exact).
+    double maxDiff = 0.0;
+    for (uint64_t r = 0; r < rows; ++r)
+        maxDiff = std::max(maxDiff, (double)std::fabs(y[r] - yCpu[r]));
+    if (maxDiff > 1e-3) {
+        fprintf(stderr, "[VULKAN_INT4] GPU vs CPU INT4 maxDiff=%g exceeds tolerance\n", maxDiff);
+        return false;
+    }
+    fprintf(stderr, "[VULKAN_INT4] rows=%llu cols=%llu maxDiff=%g PASS\n",
+            (unsigned long long)rows, (unsigned long long)cols, maxDiff);
     return true;
 }
 

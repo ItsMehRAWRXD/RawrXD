@@ -35,6 +35,8 @@ struct Deep2Engine {
     deep2::TensorROM rom;
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
+    // Stage 6B: lazily-initialized INT4 compute program (one per device).
+    std::unique_ptr<deep2::VulkanInt4Program> int4Program_;
 
     // ---- Compressed weight residency (Stage 3) ----
     // Compressed F32 residency (lossless F32->F16/BF16 when within tolerance)
@@ -117,6 +119,13 @@ struct Deep2Engine {
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
                    uint64_t rows, uint64_t cols);
+
+    // Stage 6B: fused INT4 GPU matvec. Quantizes W to packed INT4 (per-64-block
+    // F16 scales), uploads weights+scales+x to GPU buffers, dispatches the
+    // VulkanInt4Program, reads back y, and verifies against a CPU INT4 reference.
+    // Returns false on any failure (non-F32, unsupported shape, no Vulkan).
+    bool vulkanInt4Gemv(const float* W, const float* x, float* y,
+                        uint64_t rows, uint64_t cols);
 
     // Vulkan GEMV consuming TensorViews (dequant on CPU, real compute on GPU).
     bool vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
