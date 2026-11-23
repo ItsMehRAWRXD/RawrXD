@@ -57,6 +57,14 @@ add_executable(test_compressed_range_dequant
 target_include_directories(test_compressed_range_dequant PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_test(NAME compressed_range_dequant COMMAND test_compressed_range_dequant)
 
+# Regression coverage for lossless compressed-page residency and streaming inflate.
+add_executable(test_compressed_tensor_pager
+    src/test_compressed_tensor_pager.cpp
+)
+target_include_directories(test_compressed_tensor_pager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(test_compressed_tensor_pager PRIVATE ZLIB::ZLIB)
+add_test(NAME compressed_tensor_pager COMMAND test_compressed_tensor_pager)
+
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_link_libraries(Deep2Engine_Benchmark PRIVATE ZLIB::ZLIB)

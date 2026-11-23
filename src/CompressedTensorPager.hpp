@@ -5,6 +5,7 @@
 // at a time into the caller's destination. Reader must provide exact ranges.
 #include <zlib.h>
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -40,18 +41,64 @@ public:
                 std::min<uint64_t>(pageSize_, logicalSize_-pageNo*pageSize_));
             Page* page=getPage(pageNo,rawSize);
             if(!page) return false;
-            scratch.resize(rawSize);
-            if(page->compressed) {
-                uLongf actual=static_cast<uLongf>(rawSize);
-                if(uncompress(scratch.data(),&actual,page->bytes.data(),
-                              static_cast<uLong>(page->bytes.size()))!=Z_OK || actual!=rawSize)
-                    return false;
-            } else {
-                if(page->bytes.size()!=rawSize) return false;
-                std::memcpy(scratch.data(),page->bytes.data(),rawSize);
+            const std::size_t n=std::min<std::size_t>(
+                static_cast<std::size_t>(size-copied), rawSize-inPage);
+            if (!page->compressed) {
+                if (page->bytes.size()!=rawSize) return false;
+                std::memcpy(out+copied,page->bytes.data()+inPage,n);
+                copied+=n;
+                continue;
             }
-            const std::size_t n=std::min<std::size_t>(static_cast<std::size_t>(size-copied),rawSize-inPage);
-            std::memcpy(out+copied,scratch.data()+inPage,n);
+
+            // Inflate through a fixed-size window. Bytes outside the requested
+            // subrange are discarded instead of materializing a full raw page.
+            if (page->bytes.size() > std::numeric_limits<uInt>::max()) return false;
+            z_stream stream{};
+            stream.next_in = const_cast<Bytef*>(
+                reinterpret_cast<const Bytef*>(page->bytes.data()));
+            stream.avail_in = static_cast<uInt>(page->bytes.size());
+            if (inflateInit(&stream) != Z_OK) return false;
+            std::array<uint8_t, 32 * 1024> window{};
+            uint64_t producedTotal = 0;
+            bool streamEnd = false;
+            bool inflateOk = true;
+            while (!streamEnd) {
+                stream.next_out = reinterpret_cast<Bytef*>(window.data());
+                stream.avail_out = static_cast<uInt>(window.size());
+                const uInt inputBefore = stream.avail_in;
+                const int status = inflate(&stream, Z_NO_FLUSH);
+                const std::size_t produced = window.size() - stream.avail_out;
+                if (producedTotal > rawSize || produced > rawSize - producedTotal) {
+                    inflateOk = false;
+                    break;
+                }
+
+                const uint64_t chunkBegin = producedTotal;
+                const uint64_t chunkEnd = producedTotal + produced;
+                const uint64_t wantedBegin = inPage;
+                const uint64_t wantedEnd = static_cast<uint64_t>(inPage) + n;
+                const uint64_t copyBegin = std::max(chunkBegin, wantedBegin);
+                const uint64_t copyEnd = std::min(chunkEnd, wantedEnd);
+                if (copyBegin < copyEnd) {
+                    const std::size_t dstOffset = static_cast<std::size_t>(copyBegin - wantedBegin);
+                    const std::size_t srcOffset = static_cast<std::size_t>(copyBegin - chunkBegin);
+                    const std::size_t copyBytes = static_cast<std::size_t>(copyEnd - copyBegin);
+                    std::memcpy(out + copied + dstOffset, window.data() + srcOffset, copyBytes);
+                }
+                producedTotal = chunkEnd;
+
+                if (status == Z_STREAM_END) {
+                    streamEnd = true;
+                } else if (status != Z_OK ||
+                           (produced == 0 && inputBefore == stream.avail_in)) {
+                    inflateOk = false;
+                    break;
+                }
+            }
+            const bool exactPage = inflateOk && streamEnd &&
+                                   producedTotal == rawSize && stream.avail_in == 0;
+            inflateEnd(&stream);
+            if (!exactPage) return false;
             copied+=n;
         }
         return true;
