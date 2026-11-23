@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "native_resident_typed_matvec.hpp"
 #include "../src/TensorView.hpp"
 #include <limits>
