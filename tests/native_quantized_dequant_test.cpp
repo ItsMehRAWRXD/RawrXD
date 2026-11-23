@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
 #include <cstdlib>
 #include <vector>
 
@@ -52,5 +53,13 @@ int main() {
     // A truncated packed block must be rejected before any out-of-bounds read.
     q4View.byteSize = 17;
     CHECK(!deep2::dequantizeTensor(q4View, q4Out));
+
+    TensorView overflowView;
+    overflowView.type = TensorType::F32;
+    overflowView.data = subnormal;
+    overflowView.byteSize = sizeof(subnormal);
+    overflowView.dims = {(std::numeric_limits<std::uint64_t>::max)(), 2};
+    DequantizedTensor overflowOut;
+    CHECK(!deep2::dequantizeTensor(overflowView, overflowOut));
     return 0;
 }
