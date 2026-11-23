@@ -42,5 +42,19 @@ int main() {
     try { (void)invalid.acquire({0, 0}); }
     catch (const std::runtime_error&) { rejected = true; }
     assert(rejected && invalid.decodedResidentBytes() == 0);
+    // Atomic miss loading: a cache hit must not call the loader again.
+    Cache atomic(8);
+    int loads = 0;
+    auto loader = [&]() { ++loads; return Cache::Bytes{42}; };
+    auto first = atomic.acquireOrLoad({9, 1, 3}, 4, loader, decoder);
+    auto second = atomic.acquireOrLoad({9, 1, 3}, 4, loader, decoder);
+    assert(loads == 1 && first == second && (*first)[0] == 42);
+    // Same tensor offset in a different shard must be a distinct block.
+    auto third = atomic.acquireOrLoad({9, 1, 4}, 4, loader, decoder);
+    assert(loads == 2 && (*third)[0] == 42);
+    bool conflict = false;
+    try { (void)atomic.acquireOrLoad({9, 1, 3}, 3, loader, decoder); }
+    catch (const std::invalid_argument&) { conflict = true; }
+    assert(conflict);
     return 0;
 }
