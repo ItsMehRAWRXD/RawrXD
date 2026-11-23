@@ -206,12 +206,55 @@ bool CompressedWeightStore::contains(const std::string& n)const{std::lock_guard<
 std::size_t CompressedWeightStore::tensorBytes(const std::string& n)const{std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?0:i->second.raw_size;}
 std::size_t CompressedWeightStore::tensorBlocks(const std::string& n)const{std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?0:i->second.blocks.size();}
 std::string CompressedWeightStore::cacheKey(const std::string& n,std::size_t i){return std::to_string(n.size())+":"+n+":"+std::to_string(i);}
-CompressedWeightStore::BlockLease CompressedWeightStore::acquireBlock(const std::string& name,std::size_t index,std::string* error) {
- std::lock_guard<std::mutex>lock(mutex_);auto t=tensors_.find(name);if(t==tensors_.end()||index>=t->second.blocks.size()){if(error)*error="unknown tensor or block index out of range";return{};}
- const auto key=cacheKey(name,index);auto hit=cache_.find(key);if(hit!=cache_.end()){++counters_.cache_hits;lru_.splice(lru_.begin(),lru_,hit->second.lru);return hit->second.data;}
- ++counters_.cache_misses;std::vector<std::uint8_t>decoded;if(!decode(t->second.blocks[index],decoded)){if(error)*error="compressed block corrupt or checksum mismatch";return{};}
- auto lease=std::make_shared<const std::vector<std::uint8_t>>(std::move(decoded));const auto bytes=lease->size();
- if(bytes<=cache_budget_){lru_.push_front(key);cache_.emplace(key,CacheEntry{lease,bytes,lru_.begin()});cache_bytes_+=bytes;evictToBudgetLocked();}
+CompressedWeightStore::BlockLease CompressedWeightStore::acquireBlock(
+    const std::string& name,std::size_t index,std::string* error) {
+ const EncodedBlock* encodedBlock=nullptr;
+ const auto key=cacheKey(name,index);
+ {
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto tensor=tensors_.find(name);
+  if(tensor==tensors_.end()||index>=tensor->second.blocks.size()){
+   if(error)*error="unknown tensor or block index out of range";
+   return{};
+  }
+  auto hit=cache_.find(key);
+  if(hit!=cache_.end()){
+   ++counters_.cache_hits;
+   lru_.splice(lru_.begin(),lru_,hit->second.lru);
+   return hit->second.data;
+  }
+  ++counters_.cache_misses;
+  // Tensor objects and their block vectors are immutable after publication;
+  // unordered_map insertion does not invalidate references to existing values.
+  encodedBlock=&tensor->second.blocks[index];
+ }
+
+ std::vector<std::uint8_t> decoded;
+ if(!decode(*encodedBlock,codec_,decoded)){
+  if(error)*error="compressed block corrupt, unsupported, or checksum mismatch";
+  return{};
+ }
+ BlockLease lease;
+ try { lease=std::make_shared<const std::vector<std::uint8_t>>(std::move(decoded)); }
+ catch (...) { if(error)*error="decoded block allocation failed";return{}; }
+
+ {
+  std::lock_guard<std::mutex> lock(mutex_);
+  // Another reader may have decoded this block while we worked outside lock.
+  auto existing=cache_.find(key);
+  if(existing!=cache_.end()){
+   ++counters_.cache_hits;
+   lru_.splice(lru_.begin(),lru_,existing->second.lru);
+   return existing->second.data;
+  }
+  const auto bytes=lease->size();
+  if(bytes<=cache_budget_){
+   lru_.push_front(key);
+   cache_.emplace(key,CacheEntry{lease,bytes,lru_.begin()});
+   cache_bytes_+=bytes;
+   evictToBudgetLocked();
+  }
+ }
  return lease;
 }
 bool CompressedWeightStore::readRange(const std::string& name,std::size_t offset,void* dst,std::size_t length,std::string* error) {
