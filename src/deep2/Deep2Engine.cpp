@@ -12348,7 +12348,10 @@ if (hasGate)
             }
         }
         
-        // Compare up projection
+        // Compare up projection only when the reference source is still
+        // mapped. The production projection above accepts compressed backing.
+        if (upWt->data)
+        {
         std::vector<float> upRef(intermediateDim, 0.0f);
         auto cpuKernel = QuantKernelRegistry::Instance().GetGEMV(upWt->type);
         if (cpuKernel)
@@ -12364,6 +12367,7 @@ if (hasGate)
             }
             fprintf(stderr, "[L21_DIAG] FFN_UP Q6K vs FP32: maxDiff=%.9e avgDiff=%.9e\n", maxDiff, sumDiff/intermediateDim);
             fflush(stderr);
+        }
         }
     }
 
