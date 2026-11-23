@@ -1808,6 +1808,7 @@ static int cmdAsk(const std::vector<std::string>& args) {
     // silently redirected to Ollama or Deep2.
     // Declared at function scope so the resolved backend can drive routing too.
     std::string askBackend;
+    std::string askModelPath; // --model <path>: explicit GGUF for serverless Deep2
     {
         for (std::size_t i = 0; i < args.size(); ++i) {
             const std::string& a = args[i];
@@ -1815,6 +1816,10 @@ static int cmdAsk(const std::vector<std::string>& args) {
                 askBackend = normalizeBackendPref(args[i + 1]);
             } else if (a.rfind("--backend=", 0) == 0) {
                 askBackend = normalizeBackendPref(a.substr(10));
+            } else if (a == "--model" && i + 1 < args.size()) {
+                askModelPath = args[i + 1];
+            } else if (a.rfind("--model=", 0) == 0) {
+                askModelPath = a.substr(8);
             }
         }
         if (askBackend.empty()) askBackend = loadBackendPref();
@@ -1835,10 +1840,13 @@ static int cmdAsk(const std::vector<std::string>& args) {
 
     std::string qtext;
     bool noMemory = false;
-    for (const auto& a : args) {
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        const auto& a = args[i];
         if (a == "--json") { g_json = true; continue; }
         if (a == "--no-memory") { noMemory = true; continue; }
         if (a == "--stream") { g_stream_tokens = true; continue; }
+        if (a == "--model") { ++i; continue; } // value consumed as askModelPath
+        if (a.rfind("--model=", 0) == 0) continue;
         qtext += (qtext.empty() ? "" : " ") + a;
     }
 
@@ -1851,9 +1859,12 @@ static int cmdAsk(const std::vector<std::string>& args) {
     // here silently discarded an explicit --backend=ollama whenever deep2 was
     // stored, so the flag validated but never routed.
     const std::string pref = askBackend;
-    // C06/C08/C09: deep2|native → in-process Deep2Engine (not HTTP :8080).
-    if (pref == "deep2" || pref == "native") {
-        const std::string modelRel = defaultDeep2ModelRel();
+    // C06/C08/C09: deep2|native|auto → in-process Deep2Engine (serverless, no
+    // HTTP :8080 dependency). "auto" defaults to the in-process engine so
+    // `rawr ask` works without a running localhost backend daemon.
+    if (pref == "deep2" || pref == "native" || pref == "auto" || pref.empty()) {
+        // Explicit --model <path> wins; else the default Deep2 GGUF.
+        const std::string modelRel = askModelPath.empty() ? defaultDeep2ModelRel() : askModelPath;
         const std::string modelPath = ws.resolve(modelRel, true);
         if (modelPath.empty()) {
             out("ERROR: Deep2 GGUF not found: " + modelRel);
