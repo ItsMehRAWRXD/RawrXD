@@ -13,6 +13,7 @@
 #include "GGUFLoader.hpp"
 #include "NativeTensorCompression.hpp"
 #include <memory>
+#include <limits>
 #include "lavapath/GgufDynamicGeometry.hpp"
 #include "lavapath/LocalModelAuthority_Bundle.hpp"
 #include "BP16Streamer.hpp"
