@@ -73,6 +73,7 @@ private:
         VkBuffer buffer = VK_NULL_HANDLE;
         VkDeviceMemory memory = VK_NULL_HANDLE;
         VkDeviceSize size = 0;
+        uint64_t contentHash = 0;
         uint64_t lastUse = 0;
     };
     void evictCachedWeightsLocked(size_t requiredBytes);
