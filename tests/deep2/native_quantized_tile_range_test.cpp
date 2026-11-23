@@ -51,6 +51,7 @@ static void testFixedBlockRange(uint32_t type) {
         else if(type==7) { put16(p,0x3c00);put16(p+2,0x3800);const uint8_t h[4]={0xA5,0x3C,0xF0,0x0F};for(int i=0;i<4;++i)p[4+i]=h[i];for(int i=0;i<16;++i)p[8+i]=0x98; }
         else if(type==8) { put16(p,0x3c00);for(int i=0;i<32;++i)p[2+i]=uint8_t(int8_t(i-16)); }
         else if(type==9) { put16(p,0x3c00);put16(p+2,0);for(int i=0;i<32;++i)p[4+i]=uint8_t(int8_t(i-16)); }
+        else if(type==20) { put16(p,0x3c00);for(int i=0;i<16;++i)p[2+i]=0xF0; }
     }
     float tile[30]{};
     assert(deep2::dequantizeTensorRange(tt,64,13,30,encoded.data(),encoded.size(),tile));
@@ -67,6 +68,7 @@ static void testFixedBlockRange(uint32_t type) {
             expected=type==6?float(q-16):float(q)+0.5f;
         }
         if(type==8||type==9) expected=float(lane-16);
+        if(type==20) expected=lane<16?-127.0f:113.0f;
         assert(std::fabs(tile[i]-expected)<1e-6f);
     }
 }
@@ -147,6 +149,6 @@ int main() {
     testScalarRange(26, sizeof(int32_t));
     testScalarRange(27, sizeof(int64_t));
     for(uint32_t type=10;type<=15;++type) testKBlockRange(type);
-    for(uint32_t type:{2u,3u,6u,7u,8u,9u}) testFixedBlockRange(type);
+    for(uint32_t type:{2u,3u,6u,7u,8u,9u,20u}) testFixedBlockRange(type);
     std::cout<<"canonical GGML fixed/K quantized range dequantization PASS\n";
 }
