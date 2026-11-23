@@ -20,6 +20,28 @@ int main() {
     std::vector<std::uint8_t> slice(9000);
     tensor.read(62000, slice.data(), slice.size());
     CHECK(std::equal(slice.begin(), slice.end(), original.begin() + 62000));
+    // Exercise tiny unaligned reads through both RLE and raw block paths.
+    for (std::size_t offset : {std::size_t(0), std::size_t(1),
+                               std::size_t(4095), std::size_t(4096),
+                               std::size_t(65535), std::size_t(65536),
+                               original.size() - 1}) {
+        std::uint8_t value = 0;
+        tensor.read(offset, &value, 1);
+        CHECK(value == original[offset]);
+    }
+    // Incompressible data must use raw blocks, also without full-block copies.
+    std::vector<std::uint8_t> raw(4096);
+    for (std::size_t i = 0; i < raw.size(); ++i)
+        raw[i] = static_cast<std::uint8_t>(i % 251);
+    { std::ofstream f(path, std::ios::binary | std::ios::trunc);
+      f.write(reinterpret_cast<const char*>(raw.data()), raw.size()); }
+    ResidentCompressedTensor rawTensor(4096);
+    { FileTensorReader source(path, 0, raw.size()); rawTensor.load(source); }
+    std::remove(path);
+    CHECK(rawTensor.compressed_bytes() == raw.size());
+    std::uint8_t small[3] = {};
+    rawTensor.read(251, small, 3);
+    CHECK(std::equal(small, small + 3, raw.begin() + 251));
     bool rejected = false;
     try { tensor.read(original.size() - 1, slice.data(), slice.size()); }
     catch (const std::out_of_range&) { rejected = true; }
