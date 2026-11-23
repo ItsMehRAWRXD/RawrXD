@@ -83,6 +83,18 @@ def run(binary):
             qsamples=struct.unpack_from("<32b",qb,start_block+2)
             for j,q in enumerate(qsamples):
                 assert abs(scale*q-values[block*32+j])<=300
+        # The unified streaming F16 path must reject a tensor with even
+        # one non-representable F32 value under a zero-error budget.
+        inexact=root/"inexact-f32.gguf"
+        altered=bytearray(original)
+        struct.pack_into("<f",altered,orig_start,1.0001)
+        inexact.write_bytes(altered)
+        unchanged=root/"inexact-f32-output.gguf"
+        subprocess.run([binary,str(inexact),str(unchanged),"0","f16"],check=True)
+        ub,us,um,ut=parse(unchanged)
+        assert ut["blk.0.attn_q.weight"][0]==0
+        assert ub[us+ut["blk.0.attn_q.weight"][2]:us+ut["blk.0.attn_q.weight"][2]+4]==struct.pack("<f",1.0001)
+        assert ut["blk.0.attn_k.weight"][0]==6
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
