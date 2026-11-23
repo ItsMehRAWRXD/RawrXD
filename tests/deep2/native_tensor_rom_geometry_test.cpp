@@ -106,6 +106,26 @@ static void testPagerStreamingAndEviction() {
     assert(cache.pageCount() == 0);
 }
 
+static void testPagerPinnedBudgetFailsClosed() {
+    std::vector<uint8_t> backing(64, 0xA5);
+    deep2::PageCache cache(16, 16);
+    cache.setReader([&](uint32_t, uint64_t pageNo, uint8_t* out, size_t size) {
+        const uint64_t offset = pageNo * 16;
+        if (offset > backing.size() || size > backing.size() - offset) return false;
+        std::memcpy(out, backing.data() + static_cast<size_t>(offset), size);
+        return true;
+    });
+    deep2::Page* held = cache.acquire(0, 0);
+    assert(held != nullptr);
+    assert(cache.acquire(0, 1) == nullptr); // cannot exceed budget while page zero is pinned
+    assert(cache.residentBytes() == cache.capacityBytes());
+    cache.release(held);
+    deep2::Page* next = cache.acquire(0, 1);
+    assert(next != nullptr);
+    cache.release(next);
+    assert(cache.residentBytes() <= cache.capacityBytes());
+}
+
 static void testResetBetweenModels() {
     const auto first = std::filesystem::temp_directory_path()/"rawrxd-rom-reset-first.gguf";
     const auto second = std::filesystem::temp_directory_path()/"rawrxd-rom-reset-second.gguf";
@@ -124,6 +144,7 @@ static void testResetBetweenModels() {
 }
 
 int main() {
+    testPagerPinnedBudgetFailsClosed();
     testPagerStreamingAndEviction();
     testResetBetweenModels();
     testRejectedAlignment();
