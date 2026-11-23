@@ -29,5 +29,15 @@ int main() {
     std::vector<std::uint8_t> whole(original.size());
     assert(resident.read(0, whole.data(), whole.size()) == rawrxd::compression::Status::Ok);
     assert(whole == original);
+    // Invalid replacement must preserve the previously committed compressed tensor.
+    assert(resident.assign(nullptr, original.size(), 4096) ==
+           rawrxd::compression::Status::InvalidInput);
+    assert(resident.decodedSize() == original.size());
+    std::vector<std::uint8_t> afterInvalid(7777);
+    assert(resident.read(4000, afterInvalid.data(), afterInvalid.size()) ==
+           rawrxd::compression::Status::Ok);
+    assert(afterInvalid == part);
+    assert(resident.read(0, nullptr, 0) == rawrxd::compression::Status::Ok);
+    assert(resident.read(original.size(), nullptr, 0) == rawrxd::compression::Status::Ok);
     return 0;
 }
