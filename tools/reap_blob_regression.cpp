@@ -29,6 +29,13 @@ int main(){
     const auto second=StoreRepackedGGUFBlob(src.string(),root.string(),1024);
     check(second.error==BlobError::None&&second.already_present &&
           second.digest==first.digest,"identical_blob_deduplicated");
+    std::string verified;
+    check(VerifyGGUFBlob(root.string(),first.digest,verified)==BlobVerifyError::None &&
+          verified==first.blob_path,"verified_blob_roundtrip");
+    check(VerifyGGUFBlob(root.string(),"../bad",verified)==BlobVerifyError::InvalidDigest &&
+          verified.empty(),"reject_invalid_digest_path");
+    check(VerifyGGUFBlob(root.string(),std::string(64,'0'),verified)==BlobVerifyError::Missing,
+          "missing_digest_rejected");
     const auto tooSmall=StoreRepackedGGUFBlob(src.string(),root.string(),16);
     check(tooSmall.error==BlobError::RepackFailure &&
           tooSmall.repack_error==RepackError::Overflow,
@@ -45,6 +52,8 @@ int main(){
     }
     const auto conflict=StoreRepackedGGUFBlob(src.string(),root.string(),1024);
     check(conflict.error==BlobError::Conflict,"corrupt_existing_digest_rejected");
+    check(VerifyGGUFBlob(root.string(),first.digest,verified)==BlobVerifyError::Corrupt &&
+          verified.empty(),"corrupt_blob_verification_rejected");
     fs::remove_all(root,ec);fs::remove(src,ec);
     std::cout<<"REAP_BLOB_RESULT="<<(failures?"FAIL":"PASS")
              <<" failures="<<failures<<"\n";
