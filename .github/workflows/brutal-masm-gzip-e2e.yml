@@ -47,7 +47,7 @@ jobs:
       - name: Compile and run gzip roundtrip and corruption tests
         shell: cmd
         run: |
-          cl /nologo /std:c++17 /EHsc /O2 /I"RawrXD-ModelLoader\tests" "RawrXD-ModelLoader\tests\test_deflate_brutal_gzip.cpp" "RawrXD-ModelLoader\src\gzip_crc32.cpp" "%RUNNER_TEMP%\deflate_brutal_masm.obj" /Fe:"%RUNNER_TEMP%\test_deflate_brutal_gzip.exe"
+          cl /nologo /std:c++17 /EHsc /O2 /I"RawrXD-ModelLoader\tests" /I"RawrXD-ModelLoader\include" "RawrXD-ModelLoader\tests\test_deflate_brutal_gzip.cpp" "RawrXD-ModelLoader\src\gzip_crc32.cpp" "RawrXD-ModelLoader\src\gzip_masm_store.cpp" "%RUNNER_TEMP%\deflate_brutal_masm.obj" /Fe:"%RUNNER_TEMP%\test_deflate_brutal_gzip.exe"
           if errorlevel 1 exit /b %errorlevel%
           "%RUNNER_TEMP%\test_deflate_brutal_gzip.exe"
           if errorlevel 1 exit /b %errorlevel%
@@ -58,7 +58,7 @@ jobs:
       - name: Run validated throughput benchmark
         shell: cmd
         run: |
-          cl /nologo /std:c++17 /EHsc /O2 /I"RawrXD-ModelLoader\tests" "RawrXD-ModelLoader\tests\bench_deflate_brutal.cpp" "RawrXD-ModelLoader\src\gzip_crc32.cpp" "%RUNNER_TEMP%\deflate_brutal_masm.obj" /Fe:"%RUNNER_TEMP%\bench_deflate_brutal.exe"
+          cl /nologo /std:c++17 /EHsc /O2 /I"RawrXD-ModelLoader\tests" /I"RawrXD-ModelLoader\include" "RawrXD-ModelLoader\tests\bench_deflate_brutal.cpp" "RawrXD-ModelLoader\src\gzip_crc32.cpp" "RawrXD-ModelLoader\src\gzip_masm_store.cpp" "%RUNNER_TEMP%\deflate_brutal_masm.obj" /Fe:"%RUNNER_TEMP%\bench_deflate_brutal.exe"
           if errorlevel 1 exit /b %errorlevel%
           "%RUNNER_TEMP%\bench_deflate_brutal.exe"
           if errorlevel 1 exit /b %errorlevel%
