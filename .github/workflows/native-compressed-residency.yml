@@ -5,7 +5,7 @@ on:
     branches: [main, "codex/native-compressed-residency-integration-20261123"]
     paths:
       - "include/native_*.hpp"
-      - "tests/native_*compression*_test.cpp"
+      - "tests/native_*_test.cpp"
       - "tests/native_file_tensor_reader_test.cpp"
       - "tests/native_resident_*_test.cpp"
       - "tests/native_bounded_weight_stager_test.cpp"
@@ -14,7 +14,7 @@ on:
   pull_request:
     paths:
       - "include/native_*.hpp"
-      - "tests/native_*compression*_test.cpp"
+      - "tests/native_*_test.cpp"
       - "tests/native_file_tensor_reader_test.cpp"
       - "tests/native_resident_*_test.cpp"
       - "tests/native_bounded_weight_stager_test.cpp"
