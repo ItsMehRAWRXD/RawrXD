@@ -257,6 +257,23 @@ int main() {
     assert(accountingByteStorage.storedBytes() >= 4 * sizeof(Result));
     assert(accountingByteStorage.storedBytes() < accountingBytes.size());
 
+    // Distinct but correlated 16-bit bit patterns. The predictor is bitwise
+    // and must preserve all payload bits without numerical approximation.
+    std::vector<uint16_t> correlated16(4096);
+    uint16_t running16 = 0x3c00u;
+    for (size_t i = 0; i < correlated16.size(); ++i) {
+        running16 = uint16_t(running16 ^ uint16_t(i % 11u));
+        correlated16[i] = running16;
+    }
+    correlated16[21] = 0x8000u;
+    correlated16[22] = 0x7e55u;
+    const auto encoded16 = Encode(correlated16.data(),
+                                  correlated16.size() * sizeof(uint16_t));
+    const auto restored16 = Decode(encoded16);
+    assert(restored16.size() == correlated16.size() * sizeof(uint16_t));
+    assert(std::memcmp(restored16.data(), correlated16.data(), restored16.size()) == 0);
+    assert(encoded16.payload.size() <= restored16.size());
+
     // Structured 8-byte records: independent varying payloads and common
     // metadata bytes. Test exact byte restoration regardless of which
     // adaptive lossless codec wins the block.
