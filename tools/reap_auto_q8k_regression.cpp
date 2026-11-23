@@ -15,7 +15,12 @@ int main() {
         PadTo(out,32);
         WriteU32(out,0x3f800000u); // Q8_K FP32 scale 1.0
         for(int i=0;i<256;++i)out.put(static_cast<char>((i%32)-16));
-        for(int i=0;i<16;++i) {out.put(static_cast<char>(0xf0));out.put(static_cast<char>(0xff));} // 16 signed int16 sums: each group sums to -16
+        // Q8_K bsums stores the sum of each 16-code subblock, not
+        // the sum of the entire 32-code cycle (-16).
+        for(int i=0;i<16;++i) {
+            const int16_t sum=(i%2==0)?-136:120;
+            WriteU16(out,static_cast<uint16_t>(sum));
+        }
     }
     if(RepackGGUF(src,dst,UINT64_MAX,false,false,false,false,true)!=RepackError::None) {
         std::cerr<<"FAIL auto Q8_K conversion\n";++failures;
