@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.20)
-project(RawrXDCompressedWeightStore LANGUAGES CXX)
 add_library(rawrxd_compressed_weight_store CompressedWeightStore.cpp)
 target_include_directories(rawrxd_compressed_weight_store PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(rawrxd_compressed_weight_store PUBLIC cxx_std_20)
