@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -316,7 +317,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                     else ++c.compressedBF16GemvOps;
                     const uint64_t bytes = static_cast<uint64_t>(packed.bytes);
                     c.compressedWeightBytesSubmitted =
-                        bytes > UINT64_MAX - c.compressedWeightBytesSubmitted
+                        bytes > std::numeric_limits<uint64_t>::max() - c.compressedWeightBytesSubmitted
                             ? UINT64_MAX
                             : c.compressedWeightBytesSubmitted + bytes;
                 }
