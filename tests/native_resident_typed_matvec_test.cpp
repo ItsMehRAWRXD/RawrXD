@@ -239,6 +239,20 @@ int main() {
         CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
     }
 
+    CHECK(deep2::tensorStorageBytes(256, deep2::TensorType::Q8_K) == 292);
+    {
+        std::vector<std::uint8_t> bytes(292, 0);
+        const float scale = 1.0f;
+        std::memcpy(bytes.data(), &scale, sizeof(scale));
+        std::fill(bytes.begin() + 4, bytes.begin() + 260, 1);
+        auto tensor = load_bytes(bytes, path, 73);
+        const auto y = resident_q8_k_matvec(tensor, ones256, 1, 256, 292);
+        CHECK(y.size() == 1 && std::fabs(y[0] - 256.f) < 1e-5f);
+        const auto row = resident_q8_k_row(tensor, 0, 1, 256, 292);
+        CHECK(row.size() == 256);
+        for (float value : row) CHECK(value == 1.0f);
+    }
+
     bool rejected = false;
     try {
         std::vector<std::uint8_t> bytes(18, 0);
