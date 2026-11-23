@@ -73,7 +73,25 @@ static void testRejectedAlignment() {
     std::filesystem::remove(path);
 }
 
+static void testResetBetweenModels() {
+    const auto first = std::filesystem::temp_directory_path()/"rawrxd-rom-reset-first.gguf";
+    const auto second = std::filesystem::temp_directory_path()/"rawrxd-rom-reset-second.gguf";
+    assert(writeMini(first, 2, {32,1}, 18, 256));
+    assert(writeMini(second, 2, {32,1}, 18, 32));
+    deep2::TensorROM rom;
+    assert(rom.addShard(first.string()) && rom.finalizeIndex());
+    assert(rom.shards()[0].dataOffset % 256 == 0);
+    rom.Reset();
+    assert(rom.shardCount() == 0);
+    assert(rom.addShard(second.string()) && rom.finalizeIndex());
+    assert(rom.shards()[0].dataOffset < 256); // stale 256-byte alignment metadata was not inherited
+    rom.Reset();
+    std::filesystem::remove(first);
+    std::filesystem::remove(second);
+}
+
 int main() {
+    testResetBetweenModels();
     testRejectedAlignment();
     testValid(0,{16,2},16*2*4);
     testValid(1,{16,2},16*2*2);
