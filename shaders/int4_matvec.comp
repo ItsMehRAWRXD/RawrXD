@@ -38,13 +38,13 @@ float half_to_float(uint h) {
     uint sign = (h & 0x8000u) << 16;
     uint exp  = (h >> 10) & 0x1fu;
     uint man  = h & 0x3ffu;
-    uint out;
+    uint res;
     if (exp == 0) {
-        if (man == 0) { out = sign; }
-        else { exp = 127 - 15 + 1; while ((man & 0x400u) == 0) { man <<= 1; exp--; } man &= 0x3ffu; out = sign | (exp << 23) | (man << 13); }
-    } else if (exp == 31) { out = sign | 0x7f800000u | (man << 13); }
-    else { out = sign | ((exp - 15 + 127) << 23) | (man << 13); }
-    return uintBitsToFloat(out);
+        if (man == 0) { res = sign; }
+        else { exp = 127 - 15 + 1; while ((man & 0x400u) == 0) { man <<= 1; exp--; } man &= 0x3ffu; res = sign | (exp << 23) | (man << 13); }
+    } else if (exp == 31) { res = sign | 0x7f800000u | (man << 13); }
+    else { res = sign | ((exp - 15 + 127) << 23) | (man << 13); }
+    return uintBitsToFloat(res);
 }
 
 int sext4(uint nib) { return (nib & 8u) != 0u ? int(nib) - 16 : int(nib); }
@@ -58,9 +58,9 @@ void main() {
     // Stream every block of this row; thread tid handles element (tid) within
     // each 64-value block (byte = e>>1, nibble = (e&1)? hi : lo).
     for (uint cb = 0; cb < bpr; ++cb) {
-        uint flat = row * bpr + cb;           // global block index
-        float scale = half_to_float(sdata[flat]);
-        uint byteBase = flat * 32u;           // 32 bytes = 64 nibbles
+        uint blkIdx = row * bpr + cb;           // global block index
+        float scale = half_to_float(sdata[blkIdx]);
+        uint byteBase = blkIdx * 32u;           // 32 bytes = 64 nibbles
         uint e = tid;                         // element within the 64-value block
         uint byteIdx = e >> 1;
         uint w2 = wdata[(byteBase >> 2) + (byteIdx >> 2)];
