@@ -89,7 +89,7 @@ Tensor makeTensor(std::string name, std::vector<uint64_t> dims,
 }
 
 int main() {
-    constexpr size_t H = 4;
+    constexpr size_t H = 16;
     std::vector<Tensor> tensors;
 
     // Token 1 -> [1, 2, 0, 0]. GGUF matrix dimensions are [columns, rows].
@@ -114,12 +114,12 @@ int main() {
     tensors.push_back(makeTensor("blk.0.ffn_down.weight", {H, H},
                                  std::vector<float>(H * H, 0.0f)));
 
-    // Identity output projection with a stronger final row. Expected argmax=3.
+    // F16 output projection with a deliberately dominant final row.
+    // Its 512-byte mostly-zero payload must compress losslessly in residency.
     std::vector<float> output(H * H, 0.0f);
-    output[0 * H + 0] = 1.0f;
-    output[1 * H + 1] = 1.0f;
-    output[2 * H + 2] = 1.0f;
-    output[3 * H + 3] = 2.0f;
+    for (size_t i = 0; i < H - 1; ++i) output[i * H + i] = 1.0f;
+    output[(H - 1) * H + 0] = 2.0f;
+    output[(H - 1) * H + 1] = 2.0f;
     Tensor packedOutput = makeTensor("output.weight", {H, H}, output);
     packedOutput.ggmlType = 1; // Exercise the native packed-F16 inference dispatch.
     tensors.push_back(std::move(packedOutput));
@@ -155,7 +155,7 @@ int main() {
                 const auto best = static_cast<size_t>(
                     std::max_element(logits.begin(), logits.end()) - logits.begin());
                 const auto stats = engine.GetTensorResidencySnapshot();
-                if (best != 3 || logits != baseline ||
+                if (best != H - 1 || logits != baseline ||
                     stats.f32TensorCount == 0 ||
                     stats.f32CompressedBytes >= stats.f32LogicalBytes ||
                     stats.encodedTensorCount == 0 ||
@@ -171,8 +171,8 @@ int main() {
                 } else {
                     std::cout << "DEEP2_COMPRESSED_MODEL_E2E_PASS"
                               << " argmax=" << best
-                              << " logits=" << logits[0] << "," << logits[1]
-                              << "," << logits[2] << "," << logits[3]
+                              << " logits[0..1]=" << logits[0] << "," << logits[1]
+                              << " final_logit=" << logits[H - 1]
                               << " f32_compressed=" << stats.f32CompressedBytes
                               << " f32_logical=" << stats.f32LogicalBytes
                               << " encoded_compressed=" << stats.encodedCompressedBytes
