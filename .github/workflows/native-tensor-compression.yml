@@ -1,0 +1,47 @@
+name: Native tensor compression
+on:
+  push:
+    branches: [feat/native-tensor-compression-20261122]
+  pull_request:
+    paths:
+      - 'src/deep2/NativeTensorCompression.hpp'
+      - 'tools/native_tensor_pack.cpp'
+      - 'tests/deep2/native_tensor_compression_test.cpp'
+      - '.github/workflows/native-tensor-compression.yml'
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and test on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror tests/deep2/native_tensor_compression_test.cpp -o tensor_test
+          ./tensor_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror tools/native_tensor_pack.cpp -o tensor_pack
+          python3 -c "from pathlib import Path; Path('input.bin').write_bytes(bytes(range(256))*4096 + b'Z'*100000)"
+          ./tensor_pack pack input.bin compressed.rxtc
+          ./tensor_pack unpack compressed.rxtc restored.bin
+          cmp input.bin restored.bin
+          python3 -c "from pathlib import Path; p=Path('compressed.rxtc'); b=bytearray(p.read_bytes()); b[35]^=1; Path('corrupt.rxtc').write_bytes(b)"
+          if ./tensor_pack unpack corrupt.rxtc corrupt.out; then exit 1; fi
+      - name: Compile and test on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cl /nologo /EHsc /std:c++17 /O2 tests/deep2/native_tensor_compression_test.cpp /Fe:tensor_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\tensor_test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cl /nologo /EHsc /std:c++17 /O2 tools/native_tensor_pack.cpp /Fe:tensor_pack.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          [IO.File]::WriteAllBytes('input.bin', ([byte[]](0..255) * 4096))
+          .\tensor_pack.exe pack input.bin compressed.rxtc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\tensor_pack.exe unpack compressed.rxtc restored.bin
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ((Get-FileHash input.bin).Hash -ne (Get-FileHash restored.bin).Hash) { exit 1 }
