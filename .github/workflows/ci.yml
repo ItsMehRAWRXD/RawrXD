@@ -47,6 +47,12 @@ jobs:
       - name: Build Win32 IDE
         run: .\scripts\build.ps1 -Config Release -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
 
+      - name: Run Deep2 compressed synthetic-model E2E
+        shell: pwsh
+        run: |
+          ctest --test-dir build -C Release -R "^Deep2CompressedModelE2E$" --output-on-failure
+          if ($LASTEXITCODE -ne 0) { throw "Deep2 compressed model E2E failed" }
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
