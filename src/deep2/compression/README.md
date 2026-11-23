@@ -161,3 +161,38 @@ The isolated smoke suite includes F32/F16 norm-vector block admission, exact
 prefix and nonzero-range reads, and zero decoded-cache retention. Full Deep2
 RMSNorm model parity still requires the native integration build and reference
 inference validation.
+
+## Deep2 normalization and Mamba-2 consumer coverage
+
+Compressed backing is now recognized by the inference call sites as a valid
+weight source. The final normalization gate in both prompt processing and
+autoregressive decode, the output/logit head gate, the dedicated mixer-norm
+selection, and Gemma sandwich norm gates use the unified raw-or-compressed
+WeightTensor backing predicate. This prevents the null raw pointer that is
+intentional for compressed residency from skipping required inference stages.
+
+RMSNorm admission is restricted to the F32/F16 vector names actually consumed
+by RMSNormW. Q/K head norms and SSM channel norms are not accidentally routed
+through that consumer.
+
+The single-shard GGUF binder additionally admits eligible Mamba-2 tensors:
+- ssm_in and ssm_out matrices use the existing LinearW compressed row-range
+  path.
+- ssm_conv1d matrices and the ssm_a, ssm_d, ssm_dt_bias,
+  ssm_conv1d_bias, and ssm_norm vectors are admitted only as F32 where their
+  consumers are explicitly range-aware.
+- computeSSM reads compressed custom-consumer tensors into request-local
+  buffers and supports F32 as well as the separately opted-in F16 conversion.
+  It validates element counts against the dimensions used by the selective
+  scan before reading values.
+- Unsupported legacy SSM tensors remain mapped. Multi-shard SSM binding is
+  not claimed by this change.
+
+The Mamba-2 convolution kernel is fully consumed each token, so its current
+custom consumer reads that complete kernel into a temporary buffer; LinearW
+matrices continue to read only worker row ranges. The store's decoded-block
+cache can reuse verified blocks within its configured budget.
+
+This expands consumer coverage but does not establish complete Deep2 model
+parity. The native engine build, Mamba-2 reference comparisons, long-context
+decode, and Vulkan parity still require execution on the target build matrix.
