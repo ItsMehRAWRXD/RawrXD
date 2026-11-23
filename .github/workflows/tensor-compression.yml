@@ -8,6 +8,7 @@ on:
       - 'tests/tensor_aware_lossless_test.cpp'
       - 'tests/decoded_block_cache_test.cpp'
       - 'tests/tensor_weight_storage_test.cpp'
+      - 'tools/weight_block_benchmark.cpp'
       - '.github/workflows/tensor-compression.yml'
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - 'tests/tensor_aware_lossless_test.cpp'
       - 'tests/decoded_block_cache_test.cpp'
       - 'tests/tensor_weight_storage_test.cpp'
+      - 'tools/weight_block_benchmark.cpp'
       - '.github/workflows/tensor-compression.yml'
 permissions:
   contents: read
@@ -34,3 +36,15 @@ jobs:
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -I. "tests/${test}.cpp" -lz -o "/tmp/${test}"
             "/tmp/${test}"
           done
+      - name: Compile and smoke-test weight benchmark on non-repetitive bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror -I. tools/weight_block_benchmark.cpp -lz -o /tmp/weight_bench
+          python3 - <<'PY'
+          import random
+          random.seed(20261123)
+          with open('/tmp/weights.bin', 'wb') as f:
+              f.write(random.randbytes(65537))
+          PY
+          /tmp/weight_bench /tmp/weights.bin 2 4096
