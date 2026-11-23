@@ -1,4 +1,5 @@
 #include "brutal_gzip.h"
+#include "deflate_brutal_qt.hpp"
 #include <zlib.h>
 
 #include <cstdint>
@@ -53,9 +54,26 @@ bool roundTrip(const std::vector<std::uint8_t>& input) {
 int main() {
     std::vector<std::uint8_t> empty;
     if (!roundTrip(empty)) return 1;
+    if (brutal::maxCompressedSize(0) != 23 ||
+        brutal::maxCompressedSize(1) != 24) return 6;
+    const auto emptyGzip = brutal::compress(brutal::Bytes{});
+    if (emptyGzip.size() != 23 || !brutal::decompress(emptyGzip).empty()) return 7;
 
     std::vector<std::uint8_t> repeated(1u << 20, 0x5a);
     if (!roundTrip(repeated)) return 2;
+    const brutal::Bytes repeatedBytes(repeated.begin(), repeated.end());
+    const brutal::Bytes encodedRepeated = brutal::compress(repeatedBytes);
+    if (encodedRepeated.empty() ||
+        brutal::decompress(encodedRepeated) != repeatedBytes) return 8;
+    if (!brutal::decompress(encodedRepeated, repeatedBytes.size() - 1).empty()) return 9;
+    auto badCrc = encodedRepeated;
+    badCrc[badCrc.size() - 8] ^= 0x01;
+    if (!brutal::decompress(badCrc).empty()) return 10;
+    auto badLen = encodedRepeated;
+    const std::size_t deflateStart = brutal::gzipHeaderSize(badLen.data(), badLen.size());
+    if (deflateStart == 0) return 11;
+    badLen[deflateStart + 2] ^= 0x01;
+    if (!brutal::decompress(badLen).empty()) return 12;
 
     std::vector<std::uint8_t> randomish(1u << 20);
     std::uint32_t state = 0x12345678u;
