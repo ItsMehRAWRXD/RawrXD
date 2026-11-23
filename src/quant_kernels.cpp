@@ -184,7 +184,7 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
                 out[v + k] = static_cast<float>(q) * d;
             }
             v += take;
-            p += 40;
+            p += 36;
         }
         return true;
     }
