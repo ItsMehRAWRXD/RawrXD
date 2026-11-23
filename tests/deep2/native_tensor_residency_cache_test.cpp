@@ -65,6 +65,8 @@ int main() {
         },2));
     assert(arbitraryReads==1); // only the probe chunk was read
     assert(!cache.Contains("not.compressible"));
+    cache.MarkRawFallback("not.compressible");
+    assert(cache.IsRawFallback("not.compressible"));
 
     // A fitting insertion evicts the least-recently-used compressed tensor.
     std::vector<float> second(512);
@@ -84,6 +86,7 @@ int main() {
     auto finalStats=cache.GetStats();
     assert(finalStats.compressedBytes==0 && finalStats.logicalBytes==0);
     assert(finalStats.evictions>=2);
+    assert(!cache.IsRawFallback("not.compressible")); // Clear() resets fallback memoization
 
     // Bounds are fail-closed and never write beyond the requested output.
     Deep2::TensorResidencyCache bounded(4096);
