@@ -33,7 +33,7 @@ public:
     template <class Reader>
     static ChunkedF32Storage BuildFromReader(
         std::size_t elements, float maxAbsError, Reader&& reader,
-        std::size_t chunkElements = 4096, bool /*reservedPolicy*/ = false,
+        std::size_t chunkElements = 4096, bool useRelativeError = false,
         std::size_t maxStoredBytes = std::numeric_limits<std::size_t>::max()) {
         if (!std::isfinite(maxAbsError) || maxAbsError < 0.0f ||
             chunkElements == 0 ||
@@ -43,43 +43,57 @@ public:
         result.elements_ = elements;
         result.chunkElements_ = chunkElements;
         std::vector<float> sourceChunk;
+        std::vector<std::uint16_t> encoded;
         for (std::size_t first = 0; first < elements;) {
             const std::size_t count = std::min(chunkElements, elements - first);
             sourceChunk.resize(count);
             if (!reader(first, count, sourceChunk.data()))
                 throw std::runtime_error("ChunkedF32Storage source read failed");
+            encoded.resize(count);
             Chunk chunk;
             chunk.first = first;
             chunk.count = count;
-            std::vector<std::uint16_t> half(count), bfloat(count);
             float halfError = 0.0f, bfloatError = 0.0f;
+            float halfMetric = 0.0f, bfloatMetric = 0.0f;
             bool halfValid = true, bfloatValid = true;
             for (std::size_t i = 0; i < count; ++i) {
                 const float value = sourceChunk[i];
-                half[i] = floatToHalf(value);
-                bfloat[i] = floatToBfloat(value);
-                const float h = halfToFloat(half[i]);
-                const float b = bfloatToFloat(bfloat[i]);
+                const std::uint16_t halfBits = floatToHalf(value);
+                const std::uint16_t bfloatBits = floatToBfloat(value);
+                const float h = halfToFloat(halfBits);
+                const float b = bfloatToFloat(bfloatBits);
                 const float eh = std::isnan(value) ? 0.0f : std::fabs(value - h);
                 const float eb = std::isnan(value) ? 0.0f : std::fabs(value - b);
+                const float scale = useRelativeError
+                    ? std::max(std::fabs(value), std::numeric_limits<float>::min())
+                    : 1.0f;
+                const float mh = eh / scale;
+                const float mb = eb / scale;
                 if (!std::isfinite(value) && !std::isnan(value)) {
                     halfValid = halfValid && (h == value);
                     bfloatValid = bfloatValid && (b == value);
                 }
+                halfValid = halfValid && mh <= maxAbsError;
+                bfloatValid = bfloatValid && mb <= maxAbsError;
                 halfError = std::max(halfError, eh);
                 bfloatError = std::max(bfloatError, eb);
+                halfMetric = std::max(halfMetric, mh);
+                bfloatMetric = std::max(bfloatMetric, mb);
+                encoded[i] = halfBits;
             }
-            halfValid = halfValid && halfError <= maxAbsError;
-            bfloatValid = bfloatValid && bfloatError <= maxAbsError;
             if (halfValid || bfloatValid) {
-                chunk.encoding = (halfValid && (!bfloatValid || halfError <= bfloatError))
-                    ? Encoding::F16 : Encoding::BF16;
-                chunk.maxAbsError = chunk.encoding == Encoding::F16 ? halfError : bfloatError;
-                const auto& encoded = chunk.encoding == Encoding::F16 ? half : bfloat;
+                const bool useHalf = halfValid && (!bfloatValid || halfMetric <= bfloatMetric);
+                chunk.encoding = useHalf ? Encoding::F16 : Encoding::BF16;
+                chunk.maxAbsError = useHalf ? halfError : bfloatError;
+                if (!useHalf) {
+                    for (std::size_t i = 0; i < count; ++i)
+                        encoded[i] = floatToBfloat(sourceChunk[i]);
+                }
                 chunk.payloadBytes = count * sizeof(std::uint16_t);
                 chunk.payloadOffset = result.payload_.size();
                 const std::size_t oldSize = result.payload_.size();
-                if (chunk.payloadBytes > maxStoredBytes - oldSize)
+                if (oldSize > maxStoredBytes ||
+                    chunk.payloadBytes > maxStoredBytes - oldSize)
                     throw std::length_error("compressed tensor exceeds storage budget");
                 result.payload_.resize(oldSize + chunk.payloadBytes);
                 std::memcpy(result.payload_.data() + oldSize, encoded.data(), chunk.payloadBytes);
@@ -89,7 +103,8 @@ public:
                 chunk.payloadBytes = count * sizeof(float);
                 chunk.payloadOffset = result.payload_.size();
                 const std::size_t oldSize = result.payload_.size();
-                if (chunk.payloadBytes > maxStoredBytes - oldSize)
+                if (oldSize > maxStoredBytes ||
+                    chunk.payloadBytes > maxStoredBytes - oldSize)
                     throw std::length_error("compressed tensor exceeds storage budget");
                 result.payload_.resize(oldSize + chunk.payloadBytes);
                 std::memcpy(result.payload_.data() + oldSize, sourceChunk.data(), chunk.payloadBytes);
