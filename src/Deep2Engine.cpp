@@ -47,6 +47,7 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 }
 
 void Deep2Engine::Shutdown() {
+    { std::lock_guard<std::mutex> lock(compressedWeightViewsMutex); compressedWeightViews.clear(); }
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
