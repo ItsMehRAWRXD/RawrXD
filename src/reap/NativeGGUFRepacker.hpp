@@ -681,7 +681,9 @@ inline RepackError RepackGGUF(const std::string& input,
         if((convert_q8_0_to_q4_0 || auto_compress) && !sensitive &&
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
             t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) &&
-            t.dims[0]%32==0 && (!auto_compress || t.bytes>(count/32)*18)) {
+            t.dims[0]%32==0 &&
+            (!auto_compress || (t.dims.size()>=2 &&
+              t.bytes>(count/32)*18))) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
