@@ -165,12 +165,15 @@ residency pass, set:
 - `DEEP2_F32_GPU_COMPRESSED_BUDGET_MB=512` (bounded host-side packed payload)
 
 A positive finite absolute-error tolerance explicitly permits lossy F16/BF16
-conversion. The runtime admits only tensors whose complete chunk set uses one
-uniform 16-bit encoding and whose packed payload fits the configured budget.
-Mixed codecs, unsupported encodings, invalid settings and failed admissions
-stay on the original F32 route. The Vulkan QGEMV shader reads the packed bytes
-directly and performs F32 accumulation; it does not allocate a full F32 weight
-matrix on the device.
+conversion. The runtime considers only transformer matrix weights consumed by the
+packed QGEMV path (dense attention/FFN, MLA, MoE and SSM projections). Norm
+vectors, biases, embeddings and convolution/state vectors retain their
+existing upload and residency accounting. A matrix is admitted only when its
+complete chunk set uses one uniform 16-bit encoding and its packed payload
+fits the configured budget. Mixed codecs, unsupported encodings, invalid
+settings and failed admissions stay on the original F32 route. The Vulkan
+QGEMV shader reads the packed bytes directly and performs F32 accumulation;
+it does not allocate a full F32 weight matrix on the device.
 
 ## Verification gates
 
