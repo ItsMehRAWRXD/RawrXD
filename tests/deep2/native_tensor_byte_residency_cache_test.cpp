@@ -64,6 +64,7 @@ int main() {
         },4096));
     assert(noiseReads==1);
     assert(!cache.Contains("noise"));
+    assert(cache.IsRawFallback("noise")); // deterministic rejection is atomic with first-touch admission
     cache.MarkRawFallback("noise");
     assert(cache.IsRawFallback("noise"));
     size_t repeatedNoiseReads=0;
