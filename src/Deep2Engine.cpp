@@ -668,6 +668,8 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 // Stage exactly this GEMV row tile, not a whole tensor.
                 // vulkanGemv waits for dispatch completion before returning,
                 // so the caller-owned packed buffer remains live through use.
+                if (elements > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+                    return false;
                 packedWeightTile.resize(elements * sizeof(uint16_t));
                 if (compressedF32Weights.CopyUniform16BitRange(
                         cacheKey, static_cast<size_t>(firstElement), elements,
