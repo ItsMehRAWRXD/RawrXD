@@ -164,7 +164,6 @@ public:
             }
             it->second.lastUse = ++tick_;
             ++it->second.activeReaders;
-            ++hits_;
             storage = it->second.storage;
         }
         bool decoded = false;
@@ -175,8 +174,11 @@ public:
             auto it = entries_.find(key);
             if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
             if (decoded) {
+                ++hits_;
                 const uint64_t n = static_cast<uint64_t>(count);
                 bytesDecoded_ = n > UINT64_MAX - bytesDecoded_ ? UINT64_MAX : bytesDecoded_ + n;
+            } else {
+                ++misses_;
             }
             EvictToFitLocked(0, std::string());
             readersDrained_.notify_all();
