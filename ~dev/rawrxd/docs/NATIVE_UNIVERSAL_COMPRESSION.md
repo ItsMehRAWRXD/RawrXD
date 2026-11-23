@@ -10,7 +10,7 @@ The Deep2 GGUF loader preserves the original GGUF wire type and tensor metadata.
 
 The compressed backing supports range reads and reader-backed construction. `BuildFromReader` reads one chunk at a time, so conversion scratch is bounded by the selected chunk size rather than the full tensor. CPU embedding and GEMV paths consume requested ranges/chunks rather than requiring a second full F32 matrix. The builder also enforces a maximum retained-byte budget before appending each chunk.
 
-Uniform F16/BF16 chunk sets expose a stable zero-copy contiguous 16-bit view. The resident Vulkan path dispatches that payload through the packed QGEMV path and accumulates in F32. Mixed-encoding tensors and chunks requiring exact F32 do not qualify for this uniform GPU view and use the CPU range-decode path.
+Uniform F16/BF16 chunk sets expose a stable zero-copy contiguous 16-bit view. The resident Vulkan path dispatches that payload through the packed QGEMV path and accumulates in F32. Mixed-encoding tensors and chunks requiring exact F32 do not qualify for this uniform GPU view. The host-bound Vulkan GEMV path decodes only bounded row tiles, repacks eligible tiles, and dispatches them into their final output-row windows; CPU GEMV uses the same bounded range-decode contract.
 
 ## Configuration
 
@@ -55,7 +55,7 @@ A valid runtime-memory claim must report packed payload bytes, retained host all
 - Existing GGML quantized tensors (Q2_K through Q8_K and other supported formats) keep their original GGML type and packed bytes. Optional lossless LZ4 chunk storage is used only when it reduces bytes; CPU/GPU paths restore bounded tiles before invoking the existing dequantization/GPU kernels. No lossy requantization is applied.
 - F16/BF16 tensors are already 16-bit and are not converted by this path.
 - F64 and integer tensors are not converted by this path.
-- F32 LZ4 chunks are decompressed on the host only for the requested row/range before GPU upload; device-side LZ4/RLE decoding, mixed-codec descriptors in fused command recording, and per-tensor GGUF unmapping are not yet implemented.
+- F32 LZ4 chunks are decompressed on the host only for the requested row/range before GPU upload; device-side LZ4/RLE decoding and per-tensor GGUF unmapping are not yet implemented. Compressed quantized and mixed-codec F32 row-tile GEMVs can now append to an already-active fused Vulkan command buffer through `DispatchGemvQuantRows`; other specialized fused/state/attention paths that still require direct mapped pointers remain migration work.
 
 ## Regression target
 
@@ -65,7 +65,7 @@ The native test target `rawrxd-native-tensor-compression-test` currently contain
 
 `WeightTensor::hasBacking()` treats raw mappings, chunked F32 backing, and losslessly compressed quantized-byte backing as valid tensor ownership. CPU `LinearW`, embeddings, RMSNorm, attention/FFN dispatch, MoE expert paths, and logits validation accept compressed-only tensors.
 
-The production host-bound Vulkan GEMV path now prefers compressed backing even when the original GGUF mapping is still present:
+The production host-bound Vulkan GEMV path now prefers compressed backing even when the original GGUF mapping is still present. Its compressed quantized and mixed-F32 tile branches are eligible both for standalone dispatch and for an already-active fused command buffer:
 
 - F32 row chunks with matching source encodings are coalesced into bounded GPU tiles. Existing F16/BF16 payload bytes are copied without re-quantization, preserving the original error bound; F32/LZ4 rows are expanded exactly. Each dispatch writes directly to its final output-row window.
 - Losslessly compressed quantized-byte tensors are expanded only for bounded row tiles on the host, then uploaded in their original GGML packed block representation. The existing Vulkan shader performs native packed decoding for F16, BF16, Q8_0, Q2_K, Q4_K, and Q6_K. Unsupported quant types fail the GPU attempt and retain the existing CPU dequantization fallback when strict mode is disabled.
@@ -79,4 +79,4 @@ This is bounded host-side decompression followed by GPU-native arithmetic; it is
 
 ## Strict GPU execution contract
 
-When `vulkanStrictNoCpuFallback_` is enabled, Deep2 rejects unsupported compressed-only weight execution instead of silently falling back to CPU range decoding. The host-bound GEMV path can now consume compressed F32 and supported compressed quantized tiles, but fused Vulkan paths requiring raw mapped pointers remain gated until their owner-backed compressed-tile routes are migrated and independently validated. This does not yet establish full-model compressed-only GPU parity or GGUF mapping reclamation.
+When `vulkanStrictNoCpuFallback_` is enabled, Deep2 rejects unsupported compressed-only weight execution instead of silently falling back to CPU range decoding. The host-bound GEMV path can consume compressed F32 and supported compressed quantized tiles in both standalone and active fused command recording. Other specialized fused/state/attention routes that still require raw mapped pointers remain gated until their owner-backed compressed-tile routes are migrated and independently validated. This does not yet establish full-model compressed-only GPU parity or GGUF mapping reclamation.
