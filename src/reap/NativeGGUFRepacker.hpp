@@ -750,7 +750,13 @@ inline RepackError RepackGGUF(const std::string& input,
         }
         // Never reinterpret a tensor after another conversion was planned.
         // Explicit Q6_K -> Q5_0 applies only to original Q6_K payloads.
-        if(convert_q6_k_to_q5_0 && !t.convert_q4_0 && !t.convert_q8_0 &&
+        // Auto mode preserves more precision for Q6_K vectors and
+        // quality-sensitive tensors: Q6_K (210 bytes) -> eight Q5_0
+        // blocks (176 bytes) per 256 weights. Matrix Q6_K weights
+        // continue through the more compact Q4_0 path above.
+        if((convert_q6_k_to_q5_0 ||
+            (auto_compress && (sensitive || !matrix))) &&
+           !t.convert_q4_0 && !t.convert_q8_0 &&
            !t.convert_f16 && t.type==14 && t.dims[0]%256==0) {
             t.convert_q5_0=true;
             t.type=6; // GGML_TYPE_Q5_0: 8 x 22-byte blocks per 256 weights
