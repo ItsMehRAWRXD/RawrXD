@@ -72,6 +72,25 @@ bool CompressedWeightStore::addTensorFromReader(std::string name,
         return false;
     }
 
+    // Take an early budget snapshot to bound temporary candidate allocation.
+    // The final publication section rechecks the shared budget because another
+    // admission may win capacity while this candidate is being encoded.
+    std::size_t admission_limit = 0;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (tensors_.find(name) != tensors_.end()) {
+            if (error) *error = "tensor already exists";
+            return false;
+        }
+        const auto resident = static_cast<std::size_t>(counters_.compressed_bytes);
+        if (resident > encoded_residency_budget_) {
+            if (error) *error = "encoded residency accounting exceeds budget";
+            return false;
+        }
+        admission_limit = std::min(max_encoded_bytes,
+                                   encoded_residency_budget_ - resident);
+    }
+
     // Build the immutable candidate without holding the store mutex. Reader
     // callbacks can touch mapped GGUF pages and encoding can be CPU-expensive;
     // neither operation should block inference reads or unrelated admissions.
@@ -93,9 +112,9 @@ bool CompressedWeightStore::addTensorFromReader(std::string name,
             block.checksum = crc32(scratch.data(), take);
             block.payload = encode(scratch.data(), take, block.stored_raw);
 
-            if (encoded_size > max_encoded_bytes ||
-                block.payload.size() > max_encoded_bytes - encoded_size) {
-                if (error) *error = "encoded tensor exceeds per-tensor admission limit";
+            if (encoded_size > admission_limit ||
+                block.payload.size() > admission_limit - encoded_size) {
+                if (error) *error = "encoded tensor exceeds available residency budget";
                 return false;
             }
             encoded_size += block.payload.size();
