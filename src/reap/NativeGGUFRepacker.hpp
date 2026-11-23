@@ -30,6 +30,7 @@ struct RepackTensor {
     uint32_t type = 0;
     uint64_t old_offset = 0, new_offset = 0, bytes = 0, source_bytes = 0;
     bool convert_f64_to_f32 = false;
+    bool convert_f64_to_f16 = false;
     bool convert_f16 = false;
     bool convert_q8_0 = false;
     bool q8_source_f16 = false;
@@ -134,6 +135,42 @@ inline bool IsQualitySensitiveTensor(const std::string& name) {
 }
 // GGML F64 is little-endian IEEE-754 binary64. Stream-convert to F32,
 // rejecting NaN, infinities, overflow and nonzero values rounded to zero.
+// Direct F64 -> F16 streaming conversion. No intermediate GGUF file or
+// unbounded allocation. Reject nonfinite input and values outside the
+// finite nonzero F16 range; the conversion is intentionally lossy.
+inline bool ConvertF64RangeToF16(std::ifstream& in,std::ofstream& out,
+                                 uint64_t from,uint64_t sourceBytes) {
+    if(sourceBytes%8 ||
+       from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char src[8192],dst[2048];
+    while(sourceBytes) {
+        const auto n=static_cast<std::streamsize>(
+            std::min<uint64_t>(sourceBytes,sizeof(src)));
+        if(!in.read(reinterpret_cast<char*>(src),n))return false;
+        for(std::streamsize i=0;i<n;i+=8) {
+            uint64_t bits=0;
+            for(unsigned j=0;j<8;++j)bits|=uint64_t(src[i+j])<<(8*j);
+            double value=0;std::memcpy(&value,&bits,8);
+            if(!std::isfinite(value))return false;
+            const float intermediate=static_cast<float>(value);
+            if(!std::isfinite(intermediate))return false;
+            uint32_t fbits=0;std::memcpy(&fbits,&intermediate,4);
+            const uint16_t half=Float32BitsToFloat16(fbits);
+            const uint32_t decoded=Float16ToFloat32Bits(half);
+            float actual=0;std::memcpy(&actual,&decoded,4);
+            if(!std::isfinite(actual) || (value!=0.0 && actual==0.0f))
+                return false;
+            dst[(i/8)*2]=static_cast<unsigned char>(half);
+            dst[(i/8)*2+1]=static_cast<unsigned char>(half>>8);
+        }
+        if(!out.write(reinterpret_cast<const char*>(dst),n/4))return false;
+        sourceBytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
 inline bool ConvertF64RangeToF32(std::ifstream& in,std::ofstream& out,
                                  uint64_t from,uint64_t sourceBytes) {
     if(sourceBytes%8 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -970,9 +1007,17 @@ inline RepackError RepackGGUF(const std::string& input,
         // F64 GGUF tensors are uncommon but can be safely narrowed to F32
         // in auto mode. Do not cascade this conversion into Q8/Q4.
         if(auto_compress && t.type==28) {
-            t.convert_f64_to_f32=true;
-            t.type=0;
-            t.bytes/=2;
+            // F64 sensitive tensors use F16, matching the protection
+            // policy for F32. Other F64 tensors retain F32 precision.
+            if(IsQualitySensitiveTensor(t.name)) {
+                t.convert_f64_to_f16=true;
+                t.type=1;
+                t.bytes/=4;
+            } else {
+                t.convert_f64_to_f32=true;
+                t.type=0;
+                t.bytes/=2;
+            }
         }
         // Auto mode uses FP16 for sensitive F32 tensors rather than aggressively
         // quantizing normalization, embeddings, or output projection weights.
@@ -1288,6 +1333,9 @@ inline RepackError RepackGGUF(const std::string& input,
                  ConvertQ8_1ToQ8_0(in,out,dataStart+t.old_offset,t.source_bytes) :
                  ConvertFloatRangeToQ8_0(in,out,dataStart+t.old_offset,
                                           t.source_bytes,t.q8_source_f16)))
+                return RepackError::Output;
+        } else if(t.convert_f64_to_f16) {
+            if(!ConvertF64RangeToF16(in,out,dataStart+t.old_offset,t.source_bytes))
                 return RepackError::Output;
         } else if(t.convert_f64_to_f32) {
             if(!ConvertF64RangeToF32(in,out,dataStart+t.old_offset,t.source_bytes))
