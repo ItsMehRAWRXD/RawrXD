@@ -7,6 +7,8 @@
 #include "VulkanDeviceAllocator.hpp"
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
+#include "deep2/NativeTensorResidencyCache.hpp"
+#include "deep2/NativeTensorByteResidencyCache.hpp"
 
 #include <vector>
 #include <string>
@@ -33,6 +35,30 @@ struct Deep2Engine {
     deep2::TensorROM rom;
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
+
+    // ---- Compressed weight residency (Stage 3) ----
+    // Compressed F32 residency (lossless F32->F16/BF16 when within tolerance)
+    // and lossless RLE/LZ4 residency for encoded non-F32 payloads. These are the
+    // canonical compressed-byte caches Deep2's tensor bindings read through,
+    // replacing raw mmap pointers with bounded, leased residency.
+    Deep2::TensorResidencyCache compressedF32Weights{2ull * 1024ull * 1024ull * 1024ull};
+    Deep2::TensorByteResidencyCache compressedEncodedWeights{512ull * 1024ull * 1024ull};
+
+    struct TensorResidencySnapshot {
+        size_t f32Budget = 0;
+        size_t encodedBudget = 0;
+        size_t encodedCompressedBytes = 0;
+        size_t encodedLogicalBytes = 0;
+        size_t encodedTensorCount = 0;
+        uint64_t encodedHits = 0;
+        uint64_t encodedMisses = 0;
+        uint64_t encodedEvictions = 0;
+    };
+    TensorResidencySnapshot GetTensorResidencySnapshot() const;
+    // Configure both residency budgets + F32->F16 tolerance. Returns false on
+    // invalid tolerance. Budgets are enforced by the caches' admission logic.
+    bool ConfigureTensorCompression(size_t f32BudgetBytes, size_t encodedBudgetBytes,
+                                    float f32MaxAbsError);
 
     bool initialized = false;
 

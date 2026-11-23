@@ -9,8 +9,13 @@
 #include <iostream>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
+#include <limits>
 #include <fstream>
 #include <windows.h>
+
+// Forward declaration: defined below (file-static), called from Initialize().
+static void configureTensorResidencyBudgets(Deep2Engine& engine);
 
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
     if (!manifestPath.empty()) {
@@ -26,6 +31,12 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     // --- ROM (paged) path: header/tensor-directory only, no whole-model allocation ---
     if (!rom.addShard(modelPath)) return false;
     if (!rom.finalizeIndex()) return false;
+
+    // Configure compressed-weight residency budgets (Stage 3). The compressed
+    // caches are the bounded residency owners Deep2's tensor bindings read
+    // through; budgets are derived from available physical memory and may be
+    // overridden via DEEP2_F32_RESIDENCY_MB / DEEP2_ENCODED_RESIDENCY_MB.
+    configureTensorResidencyBudgets(*this);
 
     // Best-effort Vulkan initialization on all discovered AMD discrete GPUs.
     vulkan = std::make_unique<deep2::VulkanDevice>();
@@ -49,6 +60,71 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 void Deep2Engine::Shutdown() {
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
+}
+
+// ---- Compressed weight residency (Stage 3) ---------------------------------
+namespace {
+constexpr size_t kResidencyMiB = 1024ull * 1024ull;
+
+size_t readResidencyMiB(const char* name, size_t fallback) {
+    const char* v = std::getenv(name);
+    if (!v || !*v) return fallback;
+    char* end = nullptr;
+    const unsigned long long value = std::strtoull(v, &end, 10);
+    if (end == v || value == 0ull) {
+        std::fprintf(stderr, "[ROM] invalid tensor residency cache budget environment value\n");
+        return fallback;
+    }
+    if (value > std::numeric_limits<size_t>::max() / kResidencyMiB) return fallback;
+    return static_cast<size_t>(value) * kResidencyMiB;
+}
+} // namespace
+
+static void configureTensorResidencyBudgets(Deep2Engine& engine) {
+    size_t f32Budget = 512ull * kResidencyMiB;
+    size_t encodedBudget = 128ull * kResidencyMiB;
+    MEMORYSTATUSEX memory{};
+    memory.dwLength = sizeof(memory);
+    if (GlobalMemoryStatusEx(&memory) && memory.ullAvailPhys) {
+        const size_t available = static_cast<size_t>(std::min<unsigned long long>(
+            memory.ullAvailPhys, std::numeric_limits<size_t>::max()));
+        f32Budget = std::min<size_t>(2ull * 1024ull * kResidencyMiB,
+            std::max<size_t>(16ull * kResidencyMiB, available / 8));
+        encodedBudget = std::min<size_t>(512ull * kResidencyMiB,
+            std::max<size_t>(8ull * kResidencyMiB, available / 32));
+    }
+    f32Budget = readResidencyMiB("DEEP2_F32_RESIDENCY_MB", f32Budget);
+    encodedBudget = readResidencyMiB("DEEP2_ENCODED_RESIDENCY_MB", encodedBudget);
+    engine.compressedF32Weights.SetBudget(f32Budget);
+    engine.compressedEncodedWeights.SetBudget(encodedBudget);
+    std::fprintf(stderr, "[TENSOR_RESIDENCY] f32_budget=%zu encoded_budget=%zu\n",
+                 f32Budget, encodedBudget);
+}
+
+bool Deep2Engine::ConfigureTensorCompression(size_t f32BudgetBytes,
+                                                   size_t encodedBudgetBytes,
+                                                   float f32MaxAbsError) {
+    if (!std::isfinite(f32MaxAbsError) || f32MaxAbsError < 0.0f)
+        return false;
+    // Cache SetBudget operations are synchronized with active reads/builds.
+    compressedF32Weights.SetBudget(f32BudgetBytes);
+    compressedEncodedWeights.SetBudget(encodedBudgetBytes);
+    return true;
+}
+
+Deep2Engine::TensorResidencySnapshot Deep2Engine::GetTensorResidencySnapshot() const {
+    TensorResidencySnapshot snapshot;
+    const auto f32Stats = compressedF32Weights.GetStats();
+    snapshot.f32Budget = f32Stats.budgetBytes;
+    const auto encStats = compressedEncodedWeights.GetStats();
+    snapshot.encodedBudget = encStats.budgetBytes;
+    snapshot.encodedCompressedBytes = encStats.compressedBytes;
+    snapshot.encodedLogicalBytes = encStats.logicalBytes;
+    snapshot.encodedTensorCount = encStats.tensorCount;
+    snapshot.encodedHits = encStats.hits;
+    snapshot.encodedMisses = encStats.misses;
+    snapshot.encodedEvictions = encStats.evictions;
+    return snapshot;
 }
 
 void MatrixWorkerStub(size_t index, void* args) {
