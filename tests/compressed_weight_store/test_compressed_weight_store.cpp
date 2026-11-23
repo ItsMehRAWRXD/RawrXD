@@ -8,7 +8,7 @@
 #include <vector>
 using rawrxd::compression::CompressedWeightStore;
 
-// Keep test checks active in Release builds (NDEBUG disables REQUIRE()).
+// Keep test checks active in Release builds (NDEBUG disables assert()).
 #define REQUIRE(condition) do { \
     if (!(condition)) { \
         std::cerr << "FAIL: " #condition << " at " << __FILE__ << ':' << __LINE__ << '\n'; \
