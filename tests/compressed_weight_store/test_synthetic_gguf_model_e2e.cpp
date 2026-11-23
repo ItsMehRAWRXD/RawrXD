@@ -12,7 +12,6 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
-#include <limits>
 #include <string>
 #include <vector>
 
@@ -31,147 +30,179 @@ void putString(std::vector<std::uint8_t>& b, const std::string& s) {
 void align32(std::vector<std::uint8_t>& b) {
     while (b.size() % 32) b.push_back(0);
 }
-std::vector<std::uint8_t> makeQ4ModelTensor(std::size_t rows) {
-    std::vector<std::uint8_t> bytes(rows * 18, 0);
+std::vector<std::uint8_t> makeQ4ModelTensor(std::size_t rows, std::size_t cols) {
+    const std::size_t rowBytes=(cols/32)*18;
+    std::vector<std::uint8_t> bytes(rows*rowBytes, 0);
     for (std::size_t row=0; row<rows; ++row) {
-        const std::size_t base=row*18;
-        bytes[base]=0x00; bytes[base+1]=0x3c; // fp16 scale = 1
-        for (std::size_t i=0;i<16;++i) bytes[base+2+i]=0x98;
+        for (std::size_t block=0; block<cols/32; ++block) {
+            const std::size_t base=row*rowBytes+block*18;
+            bytes[base]=0x00; bytes[base+1]=0x3c; // fp16 scale = 1
+            for (std::size_t i=0;i<16;++i) bytes[base+2+i]=0x98;
+        }
     }
     return bytes;
 }
+void putTensorDescriptor(std::vector<std::uint8_t>& file,
+                         const std::string& name,
+                         std::uint64_t cols, std::uint64_t rows,
+                         std::uint32_t type, std::uint64_t offset) {
+    putString(file,name);
+    put32(file,2); put64(file,cols); put64(file,rows);
+    put32(file,type); put64(file,offset);
+}
 bool writeSyntheticGGUF(const std::filesystem::path& path,
                         const std::vector<std::uint8_t>& embedding,
-                        const std::vector<std::uint8_t>& projection) {
+                        const std::vector<std::uint8_t>& projection,
+                        const std::vector<std::uint8_t>& output) {
     std::vector<std::uint8_t> file;
-    put32(file, 0x46554747u); // "GGUF" little-endian
-    put32(file, 3);           // GGUF v3
-    put64(file, 2);           // tensor count
-    put64(file, 0);           // metadata count
+    put32(file,0x46554747u); // "GGUF" little-endian
+    put32(file,3);            // GGUF v3
+    put64(file,3);            // token embedding, attention projection, output head
+    put64(file,0);            // metadata count
 
-    // token_embd.weight: [input width=32, vocab rows=64], Q4_0
-    putString(file, "token_embd.weight");
-    put32(file, 2); put64(file, 32); put64(file, 64);
-    put32(file, 2); put64(file, 0);
-
-    // blk.0.attn_q.weight: [input width=32, output rows=64], Q4_0
-    putString(file, "blk.0.attn_q.weight");
-    put32(file, 2); put64(file, 32); put64(file, 64);
-    put32(file, 2); put64(file, embedding.size());
+    putTensorDescriptor(file,"token_embd.weight",32,64,2,0);
+    putTensorDescriptor(file,"blk.0.attn_q.weight",32,64,2,embedding.size());
+    putTensorDescriptor(file,"output.weight",64,64,2,embedding.size()+projection.size());
 
     align32(file);
-    if (file.size() % 32 != 0 || embedding.size() % 32 != 0) return false;
-    file.insert(file.end(), embedding.begin(), embedding.end());
-    file.insert(file.end(), projection.begin(), projection.end());
+    if (file.size()%32 || embedding.size()%32 || projection.size()%32) return false;
+    file.insert(file.end(),embedding.begin(),embedding.end());
+    file.insert(file.end(),projection.begin(),projection.end());
+    file.insert(file.end(),output.begin(),output.end());
 
-    std::ofstream out(path, std::ios::binary | std::ios::trunc);
-    if (!out) return false;
-    out.write(reinterpret_cast<const char*>(file.data()),
-              static_cast<std::streamsize>(file.size()));
-    return out.good();
+    std::ofstream outFile(path,std::ios::binary|std::ios::trunc);
+    if(!outFile) return false;
+    outFile.write(reinterpret_cast<const char*>(file.data()),
+                  static_cast<std::streamsize>(file.size()));
+    return outFile.good();
 }
 struct DirectReader {
     const std::vector<std::uint8_t>& bytes;
     std::size_t size() const { return bytes.size(); }
-    void read(std::size_t offset, std::uint8_t* out, std::size_t count) const {
-        if (offset > bytes.size() || count > bytes.size()-offset)
+    void read(std::size_t offset,std::uint8_t* out,std::size_t count) const {
+        if(offset>bytes.size()||count>bytes.size()-offset)
             throw std::out_of_range("direct GGUF fixture range");
-        std::memcpy(out, bytes.data()+offset, count);
+        std::memcpy(out,bytes.data()+offset,count);
     }
 };
 }
 
 int main() {
-    constexpr std::size_t rows=64, cols=32, rowBytes=18;
-    const auto embedding=makeQ4ModelTensor(rows);
-    const auto projection=makeQ4ModelTensor(rows);
-    const auto path=std::filesystem::temp_directory_path() /
+    constexpr std::size_t vocab=64, hidden=64, embeddingWidth=32;
+    const auto embedding=makeQ4ModelTensor(vocab,embeddingWidth);
+    const auto projection=makeQ4ModelTensor(hidden,embeddingWidth);
+    const auto outputWeights=makeQ4ModelTensor(vocab,hidden);
+    const auto path=std::filesystem::temp_directory_path()/
         "rawrxd_synthetic_compressed_model_e2e.gguf";
-    REQUIRE(writeSyntheticGGUF(path, embedding, projection));
+    REQUIRE(writeSyntheticGGUF(path,embedding,projection,outputWeights));
 
     Deep2::GGUFLoader loader;
     REQUIRE(loader.load(path.string()));
     REQUIRE(loader.loaded());
     REQUIRE(loader.version()==3);
-    REQUIRE(loader.tensorCount()==2);
+    REQUIRE(loader.tensorCount()==3);
     const auto* mappedEmbedding=loader.getTensor("token_embd.weight");
     const auto* mappedProjection=loader.getTensor("blk.0.attn_q.weight");
-    REQUIRE(mappedEmbedding && mappedProjection);
-    REQUIRE(mappedEmbedding->mapped && mappedProjection->mapped);
+    const auto* mappedOutput=loader.getTensor("output.weight");
+    REQUIRE(mappedEmbedding&&mappedProjection&&mappedOutput);
+    REQUIRE(mappedEmbedding->mapped&&mappedProjection->mapped&&mappedOutput->mapped);
     REQUIRE(mappedEmbedding->sizeBytes==embedding.size());
     REQUIRE(mappedProjection->sizeBytes==projection.size());
+    REQUIRE(mappedOutput->sizeBytes==outputWeights.size());
     REQUIRE(static_cast<std::uint32_t>(mappedProjection->type)==2u);
 
-    // This exercises the actual mapped-GGUF -> block-compressed-store adapter.
-    rawrxd::compression::CompressedWeightStore store(0, 64, 1u<<20);
-    std::string failedTensor, error;
+    // Production mapped-GGUF adapter: ingest the complete synthetic model.
+    rawrxd::compression::CompressedWeightStore store(0,64,1u<<20);
+    std::string failedTensor,error;
     const auto admitted=rawrxd::compression::StoreMappedGGUFModel(
-        store, loader, &failedTensor, &error, true);
-    REQUIRE(admitted==2);
+        store,loader,&failedTensor,&error,true);
+    REQUIRE(admitted==3);
     REQUIRE(failedTensor.empty());
     const auto admittedStats=store.stats();
-    REQUIRE(admittedStats.tensors==2);
-    REQUIRE(admittedStats.raw_bytes==embedding.size()+projection.size());
+    REQUIRE(admittedStats.tensors==3);
+    REQUIRE(admittedStats.raw_bytes==embedding.size()+projection.size()+outputWeights.size());
     REQUIRE(admittedStats.compressed_bytes<admittedStats.raw_bytes);
     REQUIRE(store.tensorType("blk.0.attn_q.weight")==2u);
+    REQUIRE(store.tensorType("output.weight")==2u);
     REQUIRE(store.tensorType("token_embd.weight")==2u);
 
-    // Drop the GGUF mapping. The compressed store must remain independently
-    // usable and must not rely on the original mapped pointer.
+    // Release the original GGUF mmap before any inference. All following
+    // operations must succeed solely from the compressed resident store.
     loader.close();
     REQUIRE(!loader.loaded());
 
-    std::vector<float> input(cols, 1.0f), compressedOutput(rows), referenceOutput(rows);
-    rawrxd::compression::StoredTensorMatvec(
-        store, "blk.0.attn_q.weight", rawrxd::compression::ResidentWeightType::Q4_0,
-        input.data(), compressedOutput.data(), rows, cols, 7);
-    DirectReader direct{projection};
-    rawrxd::compression::ResidentMatvec(
-        direct, rawrxd::compression::ResidentWeightType::Q4_0,
-        input.data(), referenceOutput.data(), rows, cols, 7);
-    REQUIRE(compressedOutput==referenceOutput);
-    for (float value:compressedOutput) REQUIRE(value==16.0f);
-
-    // Embedding lookup reads only the selected packed row, not the vocabulary
-    // matrix. Its bytes must match the original GGUF payload exactly.
+    using namespace rawrxd::compression;
     constexpr std::size_t token=37;
-    std::array<std::uint8_t,rowBytes> selectedRow{};
-    REQUIRE(store.readRange("token_embd.weight", token*rowBytes,
-                            selectedRow.data(), selectedRow.size(), &error));
-    REQUIRE(std::equal(selectedRow.begin(), selectedRow.end(),
-                       embedding.begin()+token*rowBytes));
+    std::vector<float> hiddenState(embeddingWidth);
+    StoredTensorReadRow(store,"token_embd.weight",ResidentWeightType::Q4_0,
+                        token,hiddenState.data(),embeddingWidth);
+    for(std::size_t i=0;i<embeddingWidth;++i)
+        REQUIRE(hiddenState[i]==(i<16?0.0f:1.0f));
 
-    // With decoded cache budget zero, all successful reads are transient
-    // block leases; no whole decoded tensor is retained in the store cache.
+    // One synthetic transformer projection, then the vocabulary output head.
+    std::vector<float> qOutput(hidden),qReference(hidden);
+    StoredTensorMatvec(store,"blk.0.attn_q.weight",ResidentWeightType::Q4_0,
+                       hiddenState.data(),qOutput.data(),hidden,embeddingWidth,7);
+    DirectReader directProjection{projection};
+    ResidentMatvec(directProjection,ResidentWeightType::Q4_0,
+                   hiddenState.data(),qReference.data(),hidden,embeddingWidth,7);
+    REQUIRE(qOutput==qReference);
+    for(float value:qOutput) REQUIRE(value==16.0f);
+
+    std::vector<float> logits(vocab),referenceLogits(vocab);
+    StoredTensorMatvec(store,"output.weight",ResidentWeightType::Q4_0,
+                       qOutput.data(),logits.data(),vocab,hidden,7);
+    DirectReader directOutput{outputWeights};
+    ResidentMatvec(directOutput,ResidentWeightType::Q4_0,
+                   qOutput.data(),referenceLogits.data(),vocab,hidden,7);
+    REQUIRE(logits==referenceLogits);
+    for(float value:logits) REQUIRE(value==512.0f);
+
+    // Greedy token selection is deterministic for the synthetic tied-logit
+    // model. The point is to complete the loader->embedding->projection->logits
+    // path using compressed-resident tensors, not to claim language quality.
+    const std::size_t nextToken=static_cast<std::size_t>(
+        std::max_element(logits.begin(),logits.end())-logits.begin());
+    REQUIRE(nextToken==0);
+
+    // Selected embedding row is still individually addressable in packed form.
+    constexpr std::size_t embeddingRowBytes=(embeddingWidth/32)*18;
+    std::array<std::uint8_t,embeddingRowBytes> packedRow{};
+    REQUIRE(store.readRange("token_embd.weight",token*embeddingRowBytes,
+                            packedRow.data(),packedRow.size(),&error));
+    REQUIRE(std::equal(packedRow.begin(),packedRow.end(),
+                       embedding.begin()+token*embeddingRowBytes));
+
     const auto finalStats=store.stats();
     REQUIRE(finalStats.cache_misses>0);
     REQUIRE(finalStats.cached_decoded_bytes==0);
     REQUIRE(finalStats.compressed_bytes<finalStats.raw_bytes);
 
-    // Corrupt/truncate the synthetic GGUF and require parser rejection.
+    // A truncated synthetic model must be rejected by the production parser.
     const auto badPath=path.string()+".truncated";
     {
-        std::ifstream in(path, std::ios::binary);
+        std::ifstream in(path,std::ios::binary);
         std::vector<char> bytes(std::istreambuf_iterator<char>(in),
                                 std::istreambuf_iterator<char>());
         REQUIRE(bytes.size()>64);
         bytes.resize(bytes.size()-17);
-        std::ofstream out(badPath, std::ios::binary|std::ios::trunc);
-        REQUIRE(static_cast<bool>(out));
-        out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-        REQUIRE(out.good());
+        std::ofstream outFile(badPath,std::ios::binary|std::ios::trunc);
+        REQUIRE(static_cast<bool>(outFile));
+        outFile.write(bytes.data(),static_cast<std::streamsize>(bytes.size()));
+        REQUIRE(outFile.good());
     }
     Deep2::GGUFLoader badLoader;
     REQUIRE(!badLoader.load(badPath));
     REQUIRE(!badLoader.error().empty());
 
     std::error_code ignored;
-    std::filesystem::remove(path, ignored);
-    std::filesystem::remove(badPath, ignored);
-    std::cout << "SYNTHETIC_GGUF_E2E_PASS tensors=" << finalStats.tensors
-              << " raw=" << finalStats.raw_bytes
-              << " compressed=" << finalStats.compressed_bytes
-              << " cache_misses=" << finalStats.cache_misses
-              << " decoded_cache=" << finalStats.cached_decoded_bytes << "\n";
+    std::filesystem::remove(path,ignored);
+    std::filesystem::remove(badPath,ignored);
+    std::cout<<"SYNTHETIC_GGUF_MODEL_E2E_PASS tensors="<<finalStats.tensors
+             <<" raw="<<finalStats.raw_bytes
+             <<" compressed="<<finalStats.compressed_bytes
+             <<" cache_misses="<<finalStats.cache_misses
+             <<" decoded_cache="<<finalStats.cached_decoded_bytes
+             <<" next_token="<<nextToken<<" logits="<<logits[0]<<"\n";
     return 0;
 }
