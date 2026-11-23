@@ -90,6 +90,25 @@ int main() {
     CHECK(bf16.DecodeRange(0,1,bf16Out));
     CHECK(std::fabs(bf16Out[0]-largeFinite[0])<=1024.0f);
 
+    // F32 rows that cannot satisfy a 16-bit tolerance still get lossless
+    // LZ4 residency when repeated byte patterns make the chunk smaller.
+    std::vector<float> repeatedF32(8192, 1.0001234f);
+    auto repeatedF32Store = ChunkedF32Storage::Build(
+        repeatedF32.data(), repeatedF32.size(), 0.0f, 1024);
+    CHECK(repeatedF32Store.storedBytes() < repeatedF32Store.originalBytes());
+    CHECK(repeatedF32Store.chunks()[0].encoding ==
+          RawrXD::TensorCompression::Encoding::LZ4);
+    std::vector<float> repeatedF32Out(repeatedF32.size());
+    CHECK(repeatedF32Store.DecodeRange(
+        0, repeatedF32Out.size(), repeatedF32Out.data()));
+    CHECK(std::memcmp(repeatedF32Out.data(), repeatedF32.data(),
+                      repeatedF32.size() * sizeof(float)) == 0);
+    std::vector<float> repeatedF32Slice(777);
+    CHECK(repeatedF32Store.DecodeRange(333, repeatedF32Slice.size(),
+                                       repeatedF32Slice.data()));
+    CHECK(std::memcmp(repeatedF32Slice.data(), repeatedF32.data() + 333,
+                      repeatedF32Slice.size() * sizeof(float)) == 0);
+
     // Lossless LZ4 byte chunks keep already-quantized GGUF blocks packed.
     std::vector<std::uint8_t> byteSource(256u*1024u);
     for (std::size_t i=0;i<byteSource.size();++i)

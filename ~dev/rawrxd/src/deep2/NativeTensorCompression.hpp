@@ -17,7 +17,7 @@
 
 namespace RawrXD::TensorCompression {
 
-enum class Encoding : std::uint8_t { F16 = 1, BF16 = 2, F32 = 3 };
+enum class Encoding : std::uint8_t { F16 = 1, BF16 = 2, F32 = 3, LZ4 = 4 };
 
 class ChunkedF32Storage {
 public:
@@ -100,16 +100,26 @@ public:
                 result.payload_.resize(oldSize + chunk.payloadBytes);
                 std::memcpy(result.payload_.data() + oldSize, encoded.data(), chunk.payloadBytes);
             } else {
-                chunk.encoding = Encoding::F32;
+                // Precision reduction was not safe. Still try lossless LZ4 on
+                // the raw F32 bytes so repeated values/patterns can shrink
+                // without changing a single bit.
+                const std::size_t rawBytes = count * sizeof(float);
+                std::vector<std::uint8_t> lz4 = lz4Compress(
+                    reinterpret_cast<const std::uint8_t*>(sourceChunk.data()),
+                    rawBytes);
+                const bool useLz4 = lz4.size() < rawBytes;
+                chunk.encoding = useLz4 ? Encoding::LZ4 : Encoding::F32;
                 chunk.maxAbsError = 0.0f;
-                chunk.payloadBytes = count * sizeof(float);
+                chunk.payloadBytes = useLz4 ? lz4.size() : rawBytes;
                 chunk.payloadOffset = result.payload_.size();
                 const std::size_t oldSize = result.payload_.size();
                 if (oldSize > maxStoredBytes ||
                     chunk.payloadBytes > maxStoredBytes - oldSize)
                     throw std::length_error("compressed tensor exceeds storage budget");
                 result.payload_.resize(oldSize + chunk.payloadBytes);
-                std::memcpy(result.payload_.data() + oldSize, sourceChunk.data(), chunk.payloadBytes);
+                std::memcpy(result.payload_.data() + oldSize,
+                    useLz4 ? lz4.data() : reinterpret_cast<const std::uint8_t*>(sourceChunk.data()),
+                    chunk.payloadBytes);
             }
             result.storedBytes_ = result.payload_.size();
             result.maxAbsError_ = std::max(result.maxAbsError_, chunk.maxAbsError);
@@ -172,6 +182,21 @@ public:
             if (chunk.encoding == Encoding::F32) {
                 std::memcpy(destination + dstOffset,
                     payload_.data() + chunk.payloadOffset + srcOffset * sizeof(float), n * sizeof(float));
+            } else if (chunk.encoding == Encoding::LZ4) {
+                if (chunk.count > std::numeric_limits<std::size_t>::max() / sizeof(float))
+                    return false;
+                std::vector<std::uint8_t> decodedBytes;
+                try {
+                    decodedBytes.resize(chunk.count * sizeof(float));
+                    if (!lz4Decompress(payload_.data() + chunk.payloadOffset,
+                                       chunk.payloadBytes, decodedBytes.data(),
+                                       decodedBytes.size()))
+                        return false;
+                } catch (...) {
+                    return false;
+                }
+                std::memcpy(destination + dstOffset,
+                    decodedBytes.data() + srcOffset * sizeof(float), n * sizeof(float));
             } else {
                 for (std::size_t i = 0; i < n; ++i) {
                     std::uint16_t bits;
@@ -193,7 +218,7 @@ public:
         bytes = 0;
         if (chunks_.empty()) { encoding = Encoding::F16; return elements_ == 0; }
         encoding = chunks_.front().encoding;
-        if (encoding == Encoding::F32 ||
+        if ((encoding != Encoding::F16 && encoding != Encoding::BF16) ||
             elements_ > std::numeric_limits<std::size_t>::max() / 2)
             return false;
         for (const Chunk& chunk : chunks_)
@@ -275,6 +300,140 @@ public:
     }
 
 private:
+    static std::uint32_t load32(const std::uint8_t* p) noexcept {
+        std::uint32_t value;
+        std::memcpy(&value, p, sizeof(value));
+        return value;
+    }
+
+    static void appendLz4Length(std::vector<std::uint8_t>& out,
+                                std::size_t length) {
+        while (length >= 255) {
+            out.push_back(255);
+            length -= 255;
+        }
+        out.push_back(static_cast<std::uint8_t>(length));
+    }
+
+    static std::vector<std::uint8_t> lz4Compress(
+        const std::uint8_t* source, std::size_t size) {
+        std::vector<std::uint8_t> out;
+        out.reserve(size);
+        if (size < 13) {
+            out.push_back(static_cast<std::uint8_t>(
+                std::min<std::size_t>(size, 15) << 4));
+            if (size >= 15) appendLz4Length(out, size - 15);
+            out.insert(out.end(), source, source + size);
+            return out;
+        }
+        constexpr std::uint32_t kHashBits = 16;
+        constexpr std::uint32_t kHashSize = 1u << kHashBits;
+        std::vector<std::int32_t> table(kHashSize, -1);
+        auto hashAt = [&](std::size_t pos) {
+            return (load32(source + pos) * 2654435761u) >> (32 - kHashBits);
+        };
+        std::size_t anchor = 0;
+        std::size_t pos = 0;
+        while (pos <= size - 12) {
+            const std::uint32_t hash = hashAt(pos);
+            const std::int32_t reference = table[hash];
+            table[hash] = static_cast<std::int32_t>(pos);
+            if (reference < 0 ||
+                pos - static_cast<std::size_t>(reference) > 65535u ||
+                std::memcmp(source + reference, source + pos, 4) != 0) {
+                ++pos;
+                continue;
+            }
+            const std::size_t ref = static_cast<std::size_t>(reference);
+            std::size_t matchLength = 4;
+            while (pos + matchLength < size - 5 &&
+                   source[ref + matchLength] == source[pos + matchLength])
+                ++matchLength;
+            const std::size_t literalLength = pos - anchor;
+            const std::size_t matchCode = matchLength - 4;
+            const std::size_t tokenIndex = out.size();
+            out.push_back(0);
+            out[tokenIndex] = static_cast<std::uint8_t>(
+                (std::min<std::size_t>(literalLength, 15) << 4) |
+                std::min<std::size_t>(matchCode, 15));
+            if (literalLength >= 15)
+                appendLz4Length(out, literalLength - 15);
+            out.insert(out.end(), source + anchor, source + pos);
+            const std::uint16_t distance =
+                static_cast<std::uint16_t>(pos - ref);
+            out.push_back(static_cast<std::uint8_t>(distance & 0xffu));
+            out.push_back(static_cast<std::uint8_t>(distance >> 8));
+            if (matchCode >= 15)
+                appendLz4Length(out, matchCode - 15);
+            pos += matchLength;
+            anchor = pos;
+            for (std::size_t seed =
+                     pos > matchLength ? pos - matchLength + 1 : 0;
+                 seed + 4 <= pos && seed <= size - 4; ++seed)
+                table[hashAt(seed)] = static_cast<std::int32_t>(seed);
+        }
+        const std::size_t literalLength = size - anchor;
+        const std::size_t tokenIndex = out.size();
+        out.push_back(static_cast<std::uint8_t>(
+            std::min<std::size_t>(literalLength, 15) << 4));
+        if (literalLength >= 15)
+            appendLz4Length(out, literalLength - 15);
+        out.insert(out.end(), source + anchor, source + size);
+        (void)tokenIndex;
+        return out;
+    }
+
+    static bool readLz4ExtendedLength(
+        const std::uint8_t* source, std::size_t sourceSize,
+        std::size_t& cursor, std::size_t& length) noexcept {
+        std::uint8_t part = 255;
+        while (part == 255) {
+            if (cursor >= sourceSize) return false;
+            part = source[cursor++];
+            if (length > std::numeric_limits<std::size_t>::max() - part)
+                return false;
+            length += part;
+        }
+        return true;
+    }
+
+    static bool lz4Decompress(
+        const std::uint8_t* source, std::size_t sourceSize,
+        std::uint8_t* destination, std::size_t destinationSize) noexcept {
+        std::size_t src = 0, dst = 0;
+        while (src < sourceSize) {
+            const std::uint8_t token = source[src++];
+            std::size_t literalLength = token >> 4;
+            if (literalLength == 15 &&
+                !readLz4ExtendedLength(source, sourceSize, src, literalLength))
+                return false;
+            if (literalLength > sourceSize - src ||
+                literalLength > destinationSize - dst)
+                return false;
+            if (literalLength) {
+                std::memcpy(destination + dst, source + src, literalLength);
+                src += literalLength;
+                dst += literalLength;
+            }
+            if (src == sourceSize) break;
+            if (sourceSize - src < 2) return false;
+            const std::size_t distance =
+                static_cast<std::size_t>(source[src]) |
+                (static_cast<std::size_t>(source[src + 1]) << 8);
+            src += 2;
+            if (!distance || distance > dst) return false;
+            std::size_t matchLength = (token & 0x0fu) + 4u;
+            if ((token & 0x0fu) == 15 &&
+                !readLz4ExtendedLength(source, sourceSize, src, matchLength))
+                return false;
+            if (matchLength > destinationSize - dst) return false;
+            for (std::size_t i = 0; i < matchLength; ++i)
+                destination[dst + i] = destination[dst + i - distance];
+            dst += matchLength;
+        }
+        return dst == destinationSize;
+    }
+
     static std::uint16_t floatToHalf(float value) noexcept {
         std::uint32_t bits;
         std::memcpy(&bits, &value, sizeof(bits));
