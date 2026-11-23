@@ -106,6 +106,18 @@ int main() {
     byteStore.ReadRange(61337,byteOut.size(),byteOut.data(),byteScratch);
     CHECK(std::memcmp(byteOut.data(),byteSource.data()+61337,byteOut.size())==0);
 
+    // Full compressed chunks must decode directly into the destination without
+    // allocating a second full-chunk scratch buffer.
+    std::vector<std::uint8_t> wholeChunk(64u*1024u);
+    std::vector<std::uint8_t> emptyScratch;
+    byteStore.ReadRange(0,wholeChunk.size(),wholeChunk.data(),emptyScratch);
+    CHECK(std::memcmp(wholeChunk.data(),byteSource.data(),wholeChunk.size())==0);
+    CHECK(emptyScratch.empty());
+    // Partial compressed reads must still decode correctly using bounded scratch.
+    byteStore.ReadRange(7,31,wholeChunk.data(),emptyScratch);
+    CHECK(std::memcmp(wholeChunk.data(),byteSource.data()+7,31)==0);
+    CHECK(emptyScratch.size()==64u*1024u);
+
     bool oversizedLz4ChunkRejected=false;
     try {
         (void)RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
