@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 #include <fstream>
 
 namespace deep2 {
@@ -131,6 +132,7 @@ private:
     std::unordered_map<std::string, std::string> m_kvStrings;   // shard 0 key->value (strings)
     ModelGeometry m_geom;
     std::unique_ptr<PageCache> m_pager;
+    mutable std::mutex m_fileReadMutex; // std::ifstream seek/read is not thread-safe
 };
 
 } // namespace deep2
