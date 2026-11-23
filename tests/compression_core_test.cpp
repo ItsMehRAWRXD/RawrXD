@@ -1,4 +1,7 @@
 #include "codec/compression_core.h"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <cstdint>
 #include <vector>
