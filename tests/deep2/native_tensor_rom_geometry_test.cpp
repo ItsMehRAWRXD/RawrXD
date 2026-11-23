@@ -63,7 +63,18 @@ static void testRejected(uint32_t type,const std::vector<uint64_t>& dims) {
     std::filesystem::remove(path);
 }
 
+static void testRejectedAlignment() {
+    const auto path=std::filesystem::temp_directory_path()/"rawrxd-rom-bad-alignment.gguf";
+    assert(writeMini(path,0,{16,2},16*2*4,24));
+    {
+        deep2::TensorROM rom;
+        assert(!rom.addShard(path.string()));
+    }
+    std::filesystem::remove(path);
+}
+
 int main() {
+    testRejectedAlignment();
     testValid(0,{16,2},16*2*4);
     testValid(1,{16,2},16*2*2);
     testValid(2,{32,2},2*18);
