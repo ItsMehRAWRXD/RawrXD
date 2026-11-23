@@ -69,9 +69,16 @@ uint64_t denseLayerResidentBytes(const LayerWeights& l) {
 double envPositiveDouble(const char* name, double fallback) {
     const char* s = std::getenv(name);
     if (!s || !*s) return fallback;
+
+    // Throughput weights feed the dual-device split planner. Accepting a
+    // numeric prefix ("1.25junk"), NaN, or infinity can poison the split
+    // ratio and produce undefined scheduling decisions. Parse the complete
+    // value and require a finite, strictly positive number.
     char* end = nullptr;
     const double v = std::strtod(s, &end);
-    return end != s && v > 0.0 ? v : fallback;
+    if (end == s || !end || *end != '\\0' || !std::isfinite(v) || v <= 0.0)
+        return fallback;
+    return v;
 }
 
 // Explicit opt-in: prepare only F32 tensors that produce a smaller, uniform
