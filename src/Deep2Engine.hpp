@@ -74,6 +74,14 @@ struct Deep2Engine {
                          const float* x, float* y, std::size_t rows, std::size_t cols,
                          std::size_t stagingBudgetBytes = 64 * 1024);
 
+    // Resolve an F32 GGUF tensor and run bounded compressed-resident CPU GEMV.
+    // Unlike dequantTensor, this path does not allocate a full decoded matrix.
+    bool gemvROMCompressedF32(const std::string& tensorName,
+                              const float* x, float* y,
+                              std::size_t rows, std::size_t cols,
+                              std::size_t blockBytes = 64 * 1024,
+                              std::size_t stagingBudgetBytes = 64 * 1024);
+
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
                    uint64_t rows, uint64_t cols);
