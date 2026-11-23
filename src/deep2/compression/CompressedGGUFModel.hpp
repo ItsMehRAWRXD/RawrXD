@@ -134,6 +134,20 @@ public:
         return state && state->tensors.find(name) != state->tensors.end();
     }
 
+    std::uint32_t tensorType(const std::string& name) const noexcept {
+        const auto state = snapshot();
+        if (!state) return GGML_TYPE_OPAQUE;
+        const auto found = state->tensors.find(name);
+        return found == state->tensors.end() ? GGML_TYPE_OPAQUE : found->second.type;
+    }
+
+    std::size_t tensorBytes(const std::string& name) const noexcept {
+        const auto state = snapshot();
+        if (!state) return 0;
+        const auto found = state->tensors.find(name);
+        return found == state->tensors.end() ? 0 : found->second.bytes;
+    }
+
     StoreStats stats() const {
         const auto state = snapshot();
         return state ? state->store->stats() : StoreStats{};
