@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <new>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -22,12 +24,18 @@ public:
         if ((!src && size) || blockBytes == 0 || blockBytes > MaxOneShotBytes)
             return Status::InvalidInput;
         std::vector<Block> pending;
+        try {
         for (std::size_t off = 0; off < size;) {
             const auto n = std::min(blockBytes, size - off);
             auto result = compress(src + off, n);
             if (!result) return result.status;
             pending.push_back({std::move(result.bytes), n});
             off += n;
+        }
+        } catch (const std::bad_alloc&) {
+            return Status::AllocationFailure;
+        } catch (const std::length_error&) {
+            return Status::AllocationFailure;
         }
         blocks_ = std::move(pending);
         total_ = size;
