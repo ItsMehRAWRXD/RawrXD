@@ -516,6 +516,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             }
         }
     }
+    const size_t f32CompressionBudgetInitial = f32CompressionBudget;
     size_t f32CompressedBytes = 0;
     size_t f32CompressedTensors = 0;
     auto compressF32Tensor = [&](WeightTensor& wt) {
@@ -1122,6 +1123,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                   ggufPath.c_str());
 
     modelWeights.loaded = true;
+    if (compressF32OnLoad) {
+        std::fprintf(stderr,
+            "[Deep2Engine] F32_RESIDENCY tensors=%zu stored_bytes=%zu budget_bytes=%zu tolerance=%.9g\n",
+            f32CompressedTensors, f32CompressedBytes,
+            f32CompressionBudgetInitial, f32CompressionTolerance);
+    }
 
     // Runtime may be entered through loadModel-only clients.
     if (!initialized) {
