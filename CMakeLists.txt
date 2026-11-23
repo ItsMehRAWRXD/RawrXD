@@ -47,6 +47,9 @@ add_executable(gguf_parser_regression
 )
 target_include_directories(gguf_parser_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+add_executable(reap_planner_regression tools/reap_planner_regression.cpp)
+target_include_directories(reap_planner_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
 )
@@ -132,6 +135,7 @@ install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 # Enable testing
 enable_testing()
 add_test(NAME GGUF_Parser_Regression COMMAND gguf_parser_regression)
+add_test(NAME REAP_Planner_Regression COMMAND reap_planner_regression)
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
