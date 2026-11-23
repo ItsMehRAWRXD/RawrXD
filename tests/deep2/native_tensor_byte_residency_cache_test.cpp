@@ -7,6 +7,32 @@
 #include <vector>
 
 int main() {
+    // Production WeightTensor byte backing uses this exact storage primitive:
+    // independent lossless chunks with arbitrary row-range reads.
+    std::vector<uint8_t> directSource(96u * 1024u, 0x5a);
+    uint32_t directState = 0x243f6a88u;
+    for (size_t i = 0; i < 16u * 1024u; ++i) {
+        directState ^= directState << 13;
+        directState ^= directState >> 17;
+        directState ^= directState << 5;
+        directSource[i] = static_cast<uint8_t>(directState);
+    }
+    auto directStorage =
+        RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
+            directSource.size(),
+            [&](size_t offset, size_t count, uint8_t* out) {
+                std::copy(directSource.begin() + offset,
+                          directSource.begin() + offset + count, out);
+                return true;
+            }, 4096, false, 64u * 1024u);
+    assert(directStorage.storedBytes() < directStorage.size());
+    std::vector<uint8_t> directTile(12u * 1024u);
+    std::vector<uint8_t> directScratch;
+    directStorage.ReadRange(14u * 1024u, directTile.size(),
+                            directTile.data(), directScratch);
+    assert(std::equal(directTile.begin(), directTile.end(),
+                      directSource.begin() + 14u * 1024u));
+
     std::vector<uint8_t> source(128*1024,0xA7);
     Deep2::TensorByteResidencyCache cache(16*1024);
     size_t reads=0;
