@@ -1,3 +1,9 @@
+// NOMINMAX must be defined before <windows.h> so the min/max macros do not
+// mangle std::numeric_limits<...>::max() in the included residency headers.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "Deep2Engine.hpp"
 #include "TensorROM.hpp"
 #include "quant_kernels.hpp"
