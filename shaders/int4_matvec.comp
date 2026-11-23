@@ -27,7 +27,7 @@
 layout(local_size_x = 64) in;
 
 layout(set = 0, binding = 0) readonly  buffer Weights { uint   wdata[]; };  // packed nibbles
-layout(set = 0, binding = 1) readonly  buffer Scales  { uint   sdata[]; };  // F16 bits per block
+layout(set = 0, binding = 1) readonly  buffer Scales  { uint   sdata[]; };  // F16 pairs per uint (2 scales/uint)
 layout(set = 0, binding = 2) readonly  buffer InputX  { float  x[]; };
 layout(set = 0, binding = 3) writeonly buffer OutputY { float  y[]; };
 layout(set = 0, binding = 4) uniform  Dims { uint rows; uint cols; uint bpr; };
@@ -59,7 +59,10 @@ void main() {
     // each 64-value block (byte = e>>1, nibble = (e&1)? hi : lo).
     for (uint cb = 0; cb < bpr; ++cb) {
         uint blkIdx = row * bpr + cb;           // global block index
-        float scale = half_to_float(sdata[blkIdx]);
+        // Each uint holds 2 F16 scales (blocks 2k, 2k+1). Select by parity.
+        uint s = sdata[blkIdx >> 1];
+        uint scaleBits = ((blkIdx & 1u) != 0u) ? (s >> 16) : (s & 0xffffu);
+        float scale = half_to_float(scaleBits);
         uint byteBase = blkIdx * 32u;           // 32 bytes = 64 nibbles
         uint e = tid;                         // element within the 64-value block
         uint byteIdx = e >> 1;

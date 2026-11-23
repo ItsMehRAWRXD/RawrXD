@@ -113,6 +113,9 @@ inline std::vector<float> Dequantize(const QuantTensor& t) {
     std::vector<float> out(t.n_elem, 0.0f);
     const int qmax = qmax_for(t.bits);
     const uint32_t block = t.block;
+    const uint32_t qbits = static_cast<uint32_t>(t.bits);
+    const uint32_t signBit = 1u << (qbits - 1);
+    const int fullRange = static_cast<int>(1u << qbits);
     uint32_t bitbuf = 0; int bitcnt = 0; size_t ppos = 0;
     for (uint32_t b = 0; b < t.n_blocks; ++b) {
         const size_t base = (size_t)b * block;
@@ -120,9 +123,11 @@ inline std::vector<float> Dequantize(const QuantTensor& t) {
         const float scale = F16ToF32(t.scales[b]);
         for (size_t i = 0; i < len; ++i) {
             while (bitcnt < (int)t.bits) { bitbuf |= ((uint32_t)t.packed[ppos++] << bitcnt); bitcnt += 8; }
-            uint32_t uq = bitbuf & (((1u << (uint32_t)t.bits) - 1));
-            bitbuf >>= (uint32_t)t.bits; bitcnt -= (int)t.bits;
-            int q = (int)uq; if (t.asymmetric) q -= qmax;
+            uint32_t uq = bitbuf & ((1u << qbits) - 1);
+            bitbuf >>= qbits; bitcnt -= (int)qbits;
+            int q = (int)uq;
+            if (t.asymmetric) q -= qmax;            // unsigned offset form
+            else if (uq & signBit) q -= fullRange; // sign-extend two's complement
             out[base + i] = (float)q * scale;
         }
     }
