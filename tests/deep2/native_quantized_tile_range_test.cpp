@@ -61,7 +61,8 @@ static void testFixedBlockRange(uint32_t type) {
         if(type==3) expected=(lane<16?8.5f:9.5f);
         if(type==6||type==7) {
             const uint8_t h[4]={0xA5,0x3C,0xF0,0x0F};
-            const int high=(h[lane>>3]>>(lane&7))&1;
+            const int highBit=lane<16?lane:lane-4;
+            const int high=(h[highBit>>3]>>(highBit&7))&1;
             const int q=(lane<16?8:9)+(high<<4);
             expected=type==6?float(q-16):float(q)+0.5f;
         }
