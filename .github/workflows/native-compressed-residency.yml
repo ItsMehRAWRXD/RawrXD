@@ -12,6 +12,8 @@ on:
       - "src/TensorROM.cpp"
       - "src/TensorROM.hpp"
       - "src/TensorView.hpp"
+      - "src/TensorROM.cpp"
+      - "src/TensorROM.hpp"
       - "src/quant_kernels.cpp"
       - "tests/native_*_test.cpp"
       - "tests/native_file_tensor_reader_test.cpp"
