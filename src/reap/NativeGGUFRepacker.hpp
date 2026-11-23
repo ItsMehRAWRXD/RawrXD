@@ -708,7 +708,11 @@ inline RepackError RepackGGUF(const std::string& input,
            (t.type==0 || t.type==1 || t.type==8 || t.type==9 ||
             t.type==6 || t.type==3 || t.type==7 || t.type==13 || t.type==14 || t.type==15) &&
             t.dims[0]%32==0 &&
-            (!auto_compress || (matrix && t.bytes>q4Bytes))) {
+            // K-quantized blocks are 256 values, not 32. Never dispatch
+            // a K decoder on a row that is not a complete superblock.
+            ((t.type!=13 && t.type!=14 && t.type!=15) || t.dims[0]%256==0) &&
+            q4Bytes<t.bytes &&
+            (!auto_compress || matrix)) {
             t.q4_source_type=t.type;
             t.convert_q4_0=true;
             t.type=2; // GGML_TYPE_Q4_0
