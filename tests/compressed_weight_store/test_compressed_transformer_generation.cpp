@@ -3,6 +3,8 @@
 #undef NDEBUG
 #endif
 #include <cassert>
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <future>
@@ -61,6 +63,37 @@ void addMatrix(std::vector<OwnedTensor>& all, const std::string& name,
                          static_cast<std::int64_t>(rows)}, {}};
     for (float v : values) appendF16(t, v);
     all.emplace_back(std::move(t));
+}
+// Quantize one block-aligned tensor into GGML Q8_0 for the E2E fixture.
+// Each block has a little-endian FP16 scale followed by 32 signed bytes.
+void quantizeQ8Fixture(OwnedTensor& tensor, std::size_t columns) {
+    assert(columns && columns % 32u == 0u);
+    assert(tensor.bytes.size() % (columns * 2u) == 0u);
+    std::vector<std::uint8_t> encoded;
+    encoded.reserve(tensor.bytes.size() / 64u * 34u);
+    for (std::size_t pos = 0; pos < tensor.bytes.size(); pos += 64u) {
+        float values[32] = {};
+        float maxAbs = 0.0f;
+        for (std::size_t j = 0; j < 32u; ++j) {
+            const std::size_t off = pos + j * 2u;
+            const auto bits = static_cast<std::uint16_t>(
+                tensor.bytes[off] | (std::uint16_t(tensor.bytes[off + 1]) << 8));
+            values[j] = decodeHalfForFixture(bits);
+            maxAbs = std::max(maxAbs, std::fabs(values[j]));
+        }
+        const float scale = maxAbs == 0.0f ? 0.0f : maxAbs / 127.0f;
+        const auto halfScale = rawrxd::compression::floatToHalfRNE(scale);
+        encoded.push_back(static_cast<std::uint8_t>(halfScale));
+        encoded.push_back(static_cast<std::uint8_t>(halfScale >> 8));
+        const float storedScale = decodeHalfForFixture(halfScale);
+        for (float value : values) {
+            const int quantized = storedScale == 0.0f ? 0 :
+                std::max(-128, std::min(127, static_cast<int>(std::round(value / storedScale))));
+            encoded.push_back(static_cast<std::uint8_t>(static_cast<std::int8_t>(quantized)));
+        }
+    }
+    tensor.bytes.swap(encoded);
+    tensor.type = rawrxd::compression::GGML_TYPE_Q8_0;
 }
 std::vector<float> diagonal(std::size_t n, float scale) {
     std::vector<float> v(n*n, 0.0f);
