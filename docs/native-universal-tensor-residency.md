@@ -169,3 +169,8 @@ The packed GEMV Vulkan upload path now passes the existing compressed residency 
 ## Q4_K / Q5_K high-group minimum-scale parity correction
 
 The Vulkan packed GEMV shader and its CPU shader mirror previously assembled the upper-group minimum-scale bits in reversed positions. For groups 4–7, GGML's `get_scale_min_k4` specifies `m = (scales[group+4] >> 4) | ((scales[group] >> 6) << 4)`; the prior expression swapped the low and high contributions. Both decoder paths now follow that layout, matching `NativeKQuant::DecodeBlock`. This is a correctness fix, not a compression-ratio improvement. The registered packed-weight parity test exercises the affected K-quant formats, but CI and independent GPU numerical validation are still required before certification.
+
+
+### Follow-up: Q4_K/Q5_K high-group *scale* source offset
+
+For groups 4–7, GGML `get_scale_min_k4` derives the scale's upper two bits from `scales[group-4]` (tensor byte offset `group` after the 4-byte d/dmin prefix), while the minimum's upper two bits come from `scales[group]`. Both the Vulkan shader and its CPU mirror now use the distinct source offsets. The previous fix addressed the minimum's bit positions; this follow-up fixes the scale's source byte. Numerical certification still requires compiled shader execution against an independent GGML reference.
