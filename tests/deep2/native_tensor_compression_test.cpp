@@ -1,3 +1,9 @@
+// These checks are executable test operations, not debug-only diagnostics.
+// Release/RelWithDebInfo define NDEBUG; preserve the assertions and their
+// side effects so CI exercises admission, decoding and reference comparisons.
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include "../../src/deep2/NativeTensorCompression.hpp"
 #include <cassert>
 #include <cstring>
