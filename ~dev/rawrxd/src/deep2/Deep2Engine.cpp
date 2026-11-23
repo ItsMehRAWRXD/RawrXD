@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cstdint>
 #include <limits>
+#include <cstdlib>
 #include <new>
 #include <stdexcept>
 
@@ -22,6 +23,50 @@
 #endif
 
 namespace Deep2 {
+
+static bool deep2CompressedResidencyEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_COMPRESSED_RESIDENCY");
+        return value && value[0] == '1';
+    }();
+    return enabled;
+}
+
+static bool deep2F16ResidencyEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_RESIDENCY_FP16");
+        return value && value[0] == '1';
+    }();
+    return enabled;
+}
+
+static void attachCompressedResidency(WeightTensor& wt,
+                                      const GGUFTensor& tensor,
+                                      TensorResidencyCache& cache) {
+    if (!deep2CompressedResidencyEnabled() || !tensor.data ||
+        tensor.sizeBytes == 0 || tensor.name.empty())
+        return;
+    const std::string key = tensor.name + "@" +
+        std::to_string(tensor.shardId) + ":" +
+        std::to_string(tensor.fileOffset);
+    bool stored = false;
+    int storedType = static_cast<int>(tensor.type);
+    if (tensor.type == GGMLType::GGML_TYPE_F32 &&
+        deep2F16ResidencyEnabled() &&
+        tensor.sizeBytes == tensor.numElements() * sizeof(float)) {
+        stored = cache.RegisterF32AsF16(
+            key, reinterpret_cast<const float*>(tensor.data),
+            tensor.numElements());
+        if (stored) storedType = static_cast<int>(GGMLType::GGML_TYPE_F16);
+    } else {
+        stored = cache.Register(key, tensor.data, tensor.sizeBytes, true);
+    }
+    if (stored) {
+        wt.residencyCache = &cache;
+        wt.residencyKey = key;
+        wt.residencyType = storedType;
+    }
+}
 
 // =================== HELPER: RMSNorm ====================
 static void rmsnorm(float* out, const float* in, const float* weight,
@@ -448,7 +493,8 @@ void Deep2Engine::reset() {
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
     if (ggufPath.empty()) return false;
 
-    // Tear down aliases before replacing the mapping.
+    // Tear down prior cache entries before replacing mapped tensor aliases.
+    tensorResidencyCache_.Clear();
     modelWeights = {};
     ggufResult = {};
     modelState_ = ModelState::Closed;
@@ -493,6 +539,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         wt.shardId = t->shardId;
         wt.fileOffset = t->fileOffset;
         wt.hasFileBacking = true;
+        attachCompressedResidency(wt, *t, tensorResidencyCache_);
 
         if (t->shape.size() >= 2) {
             wt.cols = static_cast<size_t>(t->shape[0]);
@@ -2650,6 +2697,7 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
     wt.shardId = t->shardId;
     wt.fileOffset = t->fileOffset;
     wt.hasFileBacking = true;
+    attachCompressedResidency(wt, *t, tensorResidencyCache_);
 
     if (t->shape.size() == 1) {
         wt.rows = static_cast<size_t>(t->shape[0]);
