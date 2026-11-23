@@ -87,6 +87,24 @@ int main() {
             damaged.data(), damaged.size(), input.size()).status !=
         Status::CorruptData) return 13;
 
+    // Invalid zlib levels are caller errors, not backend failures. Both
+    // supported boundary levels must still produce decodable streams.
+    if (rawrxd::compression::compress(input.data(), input.size(), -2).status !=
+        Status::InvalidInput) return 14;
+    if (rawrxd::compression::compress(input.data(), input.size(), 10).status !=
+        Status::InvalidInput) return 15;
+    for (const int level : {Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION,
+                            Z_BEST_COMPRESSION}) {
+        const Result bounded = rawrxd::compression::compress(
+            input.data(), input.size(), level);
+        if (bounded.status != Status::Ok || bounded.bytes.empty()) return 16;
+        const Result restored = rawrxd::compression::decompress(
+            bounded.bytes.data(), bounded.bytes.size(), input.size());
+        if (restored.status != Status::Ok || restored.bytes.size() != input.size() ||
+            std::memcmp(restored.bytes.data(), input.data(), input.size()) != 0)
+            return 17;
+    }
+
     // Empty compressed input preserves the documented legacy contract.
     const Result empty = rawrxd::compression::decompress(nullptr, 0, 0);
     if (empty.status != Status::Ok || !empty.bytes.empty()) return 11;
