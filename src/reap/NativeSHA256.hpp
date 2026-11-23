@@ -51,7 +51,7 @@ class SHA256 {
 public:
     bool Update(const uint8_t* p,size_t n){
         if(n && !p)return false;
-        if(n>(UINT64_MAX-total_))return false;
+        if(n>((UINT64_MAX/8)-total_))return false;
         total_+=n;
         for(size_t i=0;i<n;++i){
             block_[used_++]=p[i];
