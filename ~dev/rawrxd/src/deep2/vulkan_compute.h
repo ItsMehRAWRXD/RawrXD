@@ -1317,6 +1317,7 @@ private:
         size_t bytes = 0;
         int type = 0;
         uint64_t lastUse = 0;
+        uint64_t contentHash = 0;
         bool pinned = false;
         uint64_t failedResidentEpoch = 0; // DEEP2_NEGATIVE_RESIDENCY_CACHE_001
     };
