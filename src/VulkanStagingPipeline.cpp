@@ -1,5 +1,7 @@
 #include "VulkanStagingPipeline.hpp"
 #include <iostream>
+#include <cstring>
+#include <cstdint>
 
 namespace Deep2Rom::Compute {
 
@@ -97,6 +99,19 @@ namespace Deep2Rom::Compute {
         return true;
     }
 
+    bool VulkanStagingPipeline::populate_staging_buffer(
+        StagingSlot& slot, size_t byte_count,
+        const std::function<bool(uint8_t*, size_t)>& read_exact) {
+        if (!slot.in_use || !slot.mapped_ptr || !read_exact ||
+            byte_count > slot.capacity) return false;
+        // Never expose a partially filled staging buffer as valid input.
+        if (!read_exact(static_cast<uint8_t*>(slot.mapped_ptr), byte_count)) {
+            std::memset(slot.mapped_ptr, 0, byte_count);
+            return false;
+        }
+        return true;
+    }
+
     void VulkanStagingPipeline::release_staging_buffer(StagingSlot& slot) {
         std::lock_guard<std::mutex> lock(m_pool_mutex);
         for (auto& pooled_slot : m_pool) {
@@ -114,6 +129,9 @@ namespace Deep2Rom::Compute {
         VkBuffer dst_vram_buffer,
         size_t bytes_count)
     {
+        if (bytes_count == 0 || bytes_count > src_slot.capacity ||
+            src_slot.buffer == VK_NULL_HANDLE || !src_slot.in_use ||
+            dst_vram_buffer == VK_NULL_HANDLE) return false;
         VkCommandBufferBeginInfo begin_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
         begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
