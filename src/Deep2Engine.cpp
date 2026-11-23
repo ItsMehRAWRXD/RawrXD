@@ -712,13 +712,14 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            // F32 weights use persistent compressed residency; quantized GGUF
-            // formats retain the existing dequantization fallback.
-            const bool qkvCompressed = qkv->type == deep2::TensorType::F32 && qkv->dims.size() == 2;
-            if (qkvCompressed) {
-                qkvCols = static_cast<size_t>(qkv->dims[0]);
-                qkvRows = static_cast<size_t>(qkv->dims[1]);
-            } else if (qkv->type == deep2::TensorType::Q8_0 && qkv->dims.size() == 2) {
+            // F32/F16/Q4_0/Q8_0 projections retain exact GGUF bytes in
+            // compressed residency and decode only bounded row fragments.
+            const bool qkvResident = qkv->dims.size() == 2 &&
+                (qkv->type == deep2::TensorType::F32 ||
+                 qkv->type == deep2::TensorType::F16 ||
+                 qkv->type == deep2::TensorType::Q4_0 ||
+                 qkv->type == deep2::TensorType::Q8_0);
+            if (qkvResident) {
                 qkvCols = static_cast<size_t>(qkv->dims[0]);
                 qkvRows = static_cast<size_t>(qkv->dims[1]);
             } else {
@@ -732,12 +733,9 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
 
             std::vector<float> qkvOut(qkvRows, 0.0f);
-            if (qkvCompressed) {
-                if (!gemvROMCompressedF32(qkvName, hiddenStatesCopy.data(),
-                                          qkvOut.data(), qkvRows, qkvCols)) return false;
-            } else if (qkv->type == deep2::TensorType::Q8_0) {
-                if (!gemvROMQ8_0(qkvName, hiddenStatesCopy.data(), qkvOut.data(),
-                                  qkvRows, qkvCols)) return false;
+            if (qkvResident) {
+                if (!gemvROMCompressed(qkvName, hiddenStatesCopy.data(),
+                                       qkvOut.data(), qkvRows, qkvCols)) return false;
             } else if (!gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(),
                                   qkvOut.data(), qkvRows, qkvCols)) return false;
 
@@ -767,21 +765,20 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            const bool upCompressed = upEntry->type == deep2::TensorType::F32 &&
-                                      upEntry->dims.size() == 2;
-            const bool downCompressed = downEntry->type == deep2::TensorType::F32 &&
-                                        downEntry->dims.size() == 2;
-            if (!upCompressed && upEntry->type != deep2::TensorType::Q8_0 && !dequantTensor(*upEntry, upDq)) return false;
-            if (!downCompressed && downEntry->type != deep2::TensorType::Q8_0 && !dequantTensor(*downEntry, downDq)) return false;
+            const auto residentType = [](deep2::TensorType type) {
+                return type == deep2::TensorType::F32 || type == deep2::TensorType::F16 ||
+                       type == deep2::TensorType::Q4_0 || type == deep2::TensorType::Q8_0;
+            };
+            const bool upResident = upEntry->dims.size() == 2 && residentType(upEntry->type);
+            const bool downResident = downEntry->dims.size() == 2 && residentType(downEntry->type);
+            if (!upResident && !dequantTensor(*upEntry, upDq)) return false;
+            if (!downResident && !dequantTensor(*downEntry, downDq)) return false;
 
             // FFN: hidden = down(gelu(up(hidden)))
             std::vector<float> upOut(intermediateDim, 0.0f);
-            if (upCompressed) {
-                if (!gemvROMCompressedF32(upName, hiddenStates.data(), upOut.data(),
-                                          intermediateDim, hiddenDim)) return false;
-            } else if (upEntry->type == deep2::TensorType::Q8_0) {
-                if (!gemvROMQ8_0(upName, hiddenStates.data(), upOut.data(),
-                                  intermediateDim, hiddenDim)) return false;
+            if (upResident) {
+                if (!gemvROMCompressed(upName, hiddenStates.data(), upOut.data(),
+                                       intermediateDim, hiddenDim)) return false;
             } else if (!gemvFloat(upDq.data.data(), hiddenStates.data(), upOut.data(),
                                   upDq.rows, upDq.cols)) return false;
 
@@ -796,12 +793,9 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             // overflowed for models with larger hidden dimensions.
             std::vector<float> downOutStorage(hiddenDim, 0.0f);
             float* downOut = downOutStorage.data();
-            if (downCompressed) {
-                if (!gemvROMCompressedF32(downName, upOut.data(), downOut,
-                                          hiddenDim, intermediateDim)) return false;
-            } else if (downEntry->type == deep2::TensorType::Q8_0) {
-                if (!gemvROMQ8_0(downName, upOut.data(), downOut,
-                                  hiddenDim, intermediateDim)) return false;
+            if (downResident) {
+                if (!gemvROMCompressed(downName, upOut.data(), downOut,
+                                       hiddenDim, intermediateDim)) return false;
             } else if (!gemvFloat(downDq.data.data(), upOut.data(), downOut,
                                   downDq.rows, downDq.cols)) return false;
 
@@ -829,16 +823,16 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             return false;
         }
 
-        const bool outputCompressed = outputEntry->type == deep2::TensorType::F32 &&
-                                      outputEntry->dims.size() == 2;
-        if (!outputCompressed && outputEntry->type != deep2::TensorType::Q8_0 && !dequantTensor(*outputEntry, outputDq)) return false;
+        const bool outputResident = outputEntry->dims.size() == 2 &&
+            (outputEntry->type == deep2::TensorType::F32 ||
+             outputEntry->type == deep2::TensorType::F16 ||
+             outputEntry->type == deep2::TensorType::Q4_0 ||
+             outputEntry->type == deep2::TensorType::Q8_0);
+        if (!outputResident && !dequantTensor(*outputEntry, outputDq)) return false;
         outputLogits.resize(vocabSize, 0.0f);
-        if (outputCompressed) {
-            if (!gemvROMCompressedF32("output.weight", hiddenStates.data(),
-                                      outputLogits.data(), vocabSize, hiddenDim)) return false;
-        } else if (outputEntry->type == deep2::TensorType::Q8_0) {
-            if (!gemvROMQ8_0("output.weight", hiddenStates.data(),
-                              outputLogits.data(), vocabSize, hiddenDim)) return false;
+        if (outputResident) {
+            if (!gemvROMCompressed("output.weight", hiddenStates.data(),
+                                   outputLogits.data(), vocabSize, hiddenDim)) return false;
         } else if (!gemvFloat(outputDq.data.data(), hiddenStates.data(),
                               outputLogits.data(), outputDq.rows, outputDq.cols)) return false;
 
