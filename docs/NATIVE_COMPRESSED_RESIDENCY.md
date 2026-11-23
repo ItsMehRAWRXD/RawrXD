@@ -63,9 +63,16 @@ The reported compressed-byte total is the cache-owned chunk directory plus
 payload allocation capacity. It is not process RSS or total host/device
 residency: allocator bookkeeping, map nodes, caller-owned decode scratch,
 temporary admission buffers, pager pages, Vulkan staging, and GPU allocations
-are separate measurements and must be reported independently. The cache
-budget is therefore a strict cap on its accounted retained storage, not a
-claim that the entire inference process is capped to that number.
+are separate measurements and must be reported independently.
+
+If a budget reduction occurs while readers hold leases, those pinned entries
+remain alive until the readers finish. The cache may temporarily report an
+over-budget state during that lease window, but it rejects new admissions
+without unsigned-size underflow and retries them after leases drain. A
+temporary capacity miss is not memoized as an intrinsically uncompressible
+tensor. Once active leases have drained, the configured budget is enforced
+against the cache's accounted retained storage; it is not a cap on total
+process memory.
 
 ## Bounded packed GPU staging primitive
 
