@@ -8,6 +8,37 @@
 #include <vector>
 
 int main() {
+    // Adaptive CPU storage may choose a tiny RLE block for zeros, while the
+    // GPU requires a uniform fixed-stride F16/BF16 stream. These are distinct
+    // representations and both must be selected correctly.
+    std::vector<float> zeros(256, 0.0f);
+    const auto adaptiveZeros =
+        RawrXD::TensorCompression::EncodeAdaptiveF32(zeros.data(), zeros.size(), 0.0f);
+    assert(adaptiveZeros.encoding == RawrXD::TensorCompression::Encoding::RLE);
+    RawrXD::TensorCompression::Encoding gpuEncoding =
+        RawrXD::TensorCompression::Encoding::Raw;
+    std::vector<uint8_t> gpuPacked;
+    assert(RawrXD::TensorCompression::EncodeUniform16BitF32(
+        zeros.data(), zeros.size(), 0.0f, gpuEncoding, gpuPacked));
+    assert(gpuEncoding == RawrXD::TensorCompression::Encoding::F16);
+    assert(gpuPacked.size() == zeros.size() * sizeof(uint16_t));
+
+    const std::vector<float> wideExponent = {65536.0f, 131072.0f, 262144.0f};
+    assert(RawrXD::TensorCompression::EncodeUniform16BitF32(
+        wideExponent.data(), wideExponent.size(), 0.0f, gpuEncoding, gpuPacked));
+    assert(gpuEncoding == RawrXD::TensorCompression::Encoding::BF16);
+    for (size_t i = 0; i < wideExponent.size(); ++i) {
+        const uint16_t h = static_cast<uint16_t>(gpuPacked[2*i]) |
+                           (static_cast<uint16_t>(gpuPacked[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromBFloat16(h) == wideExponent[i]);
+    }
+    const std::vector<float> specialValues = {
+        1.0f, std::numeric_limits<float>::infinity()
+    };
+    assert(!RawrXD::TensorCompression::EncodeUniform16BitF32(
+        specialValues.data(), specialValues.size(), 0.0f, gpuEncoding, gpuPacked));
+    assert(gpuPacked.empty());
+
     std::vector<float> source(10003);
     for(size_t i=0;i<source.size();++i)
         source[i]=float(int(i%31)-15); // exactly representable in IEEE F16
