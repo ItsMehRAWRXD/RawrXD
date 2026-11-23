@@ -124,3 +124,16 @@ not authorize sharing a cache across concurrently active different models.
 Deterministic tests cover equal-sized, same-key F32 and byte tensors whose
 values differ across model scopes, including fallback invalidation and
 unchanged-scope retention. Test execution remains a separate CI gate.
+
+
+### Same-path GGUF replacement safety (2026-11-23)
+
+Deep2 ROM initialization calls Shutdown and then explicitly clears both F32 and
+encoded-byte compressed residency caches before binding the new model identity.
+A path is not a content fingerprint: an in-place GGUF replacement may preserve
+both path and tensor dimensions while changing weight values. Calling
+SetModelIdentity with an unchanged path is intentionally a no-op, so the
+mandatory Clear step invalidates old compressed entries and memoized raw
+fallbacks. Both cache regression suites cover same-identity invalidation and
+re-admission of different, equal-sized payloads. These are committed tests;
+CI execution and full model parity are separate verification gates.
