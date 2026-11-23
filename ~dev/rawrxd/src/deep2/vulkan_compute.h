@@ -208,7 +208,7 @@ public:
                             uint32_t rows, uint32_t cols);
     bool DispatchGemvQuant(int type, const void* weights, size_t weightBytes,
                            DeviceBuf& input, DeviceBuf& output,
-                           uint32_t rows, uint32_t cols);
+                           uint32_t rows, uint32_t cols, uint64_t stableKey = 0);
 
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
