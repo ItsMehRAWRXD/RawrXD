@@ -269,6 +269,18 @@ def run(binary):
         ad,az,am,at=parse(accepted_bf16)
         assert at["blk.0.attn_q.weight"][0]==30
         assert struct.unpack_from("<H",ad,az)[0]==0x7180
+        # Explicit Q4/Q5/Q8 requests must never reinterpret F64 as F32.
+        # Until F64-to-quantized conversion is implemented, preserve F64
+        # payloads byte-for-byte, including when their row width is 32.
+        for mode in ("q4_0","q4_1","q5_0","q5_1","q8_0"):
+            dest=root/("f64-preserve-"+mode+".gguf")
+            subprocess.run([binary,str(f64),str(dest),"10000",mode],check=True)
+            assert dest.read_bytes()==f64.read_bytes()
+        # The same rule applies to F16/BF16 under explicit f16 mode.
+        for source16 in (target,bf):
+            dest=root/(source16.stem+"-explicit-f16-preserved.gguf")
+            subprocess.run([binary,str(source16),str(dest),"0","f16"],check=True)
+            assert dest.read_bytes()==source16.read_bytes()
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
