@@ -20,8 +20,8 @@ JSExtensionHost::~JSExtensionHost() = default;
 
 PatchResult JSExtensionHost::initialize()
 {
-    m_initialized = true;
-    return PatchResult::ok("JSExtensionHost stub initialized");
+    m_initialized = false;
+    return PatchResult::error("QuickJS extension host unavailable in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::shutdown()
@@ -38,13 +38,13 @@ bool JSExtensionHost::isInitialized() const
 PatchResult JSExtensionHost::activateExtension(const char* extensionId)
 {
     (void)extensionId;
-    return PatchResult::ok("activateExtension (stub)");
+    return PatchResult::error("activateExtension unavailable in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::deactivateExtension(const char* extensionId)
 {
     (void)extensionId;
-    return PatchResult::ok("deactivateExtension (stub)");
+    return PatchResult::error("deactivateExtension unavailable in RawrEngine headless lane");
 }
 
 void JSExtensionHost::getLoadedExtensions(JSExtensionState* outStates, size_t maxStates, size_t* outCount) const
@@ -71,7 +71,7 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir)
 PatchResult JSExtensionHost::unloadExtension(const char* extensionId)
 {
     (void)extensionId;
-    return PatchResult::ok("unloadExtension (stub)");
+    return PatchResult::error("unloadExtension unavailable in RawrEngine headless lane");
 }
 
 bool JSExtensionHost::isJSExtension(const VSCodeExtensionManifest* manifest) const
@@ -92,14 +92,14 @@ PatchResult JSExtensionHost::fireEvent(const char* eventName, const char* dataJs
 {
     (void)eventName;
     (void)dataJson;
-    return PatchResult::ok("fireEvent (stub)");
+    return PatchResult::error("fireEvent unavailable in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::registerModuleResolver(const char* moduleName, const char* jsSource)
 {
     (void)moduleName;
     (void)jsSource;
-    return PatchResult::ok("registerModuleResolver (stub)");
+    return PatchResult::error("registerModuleResolver unavailable in RawrEngine headless lane");
 }
 
 PatchResult JSExtensionHost::executeScript(const char* extensionId, const char* script, char* outResult,

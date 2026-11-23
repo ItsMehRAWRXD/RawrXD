@@ -378,6 +378,12 @@ PatchResult JSExtensionHost::initialize() {
         return PatchResult::error("JSExtensionHost shut down; re-init refused");
     if (m_initialized) return PatchResult::error("Already initialized");
 
+#if !RAWRXD_HAS_QUICKJS
+    // Reject the compile-only QuickJS shim before starting polyfills or creating
+    // any extension state. A missing engine must never look like a live host.
+    return PatchResult::error("QuickJS is not compiled into this build; JS extensions unavailable");
+#endif
+
     OutputDebugStringA("[JSExtensionHost] Initializing QuickJS runtime...\n");
 
     // ---- Initialize Polyfill Engine ----
@@ -394,6 +400,7 @@ PatchResult JSExtensionHost::initialize() {
     // ---- Create QuickJS Runtime ----
     JSRuntime* rt = JS_NewRuntime();
     if (!rt) {
+        PolyfillEngine::instance().shutdown();
         return PatchResult::error("Failed to create QuickJS runtime");
     }
 
@@ -413,6 +420,7 @@ PatchResult JSExtensionHost::initialize() {
     if (!ctx) {
         JS_FreeRuntime(rt);
         m_jsRuntime = nullptr;
+        PolyfillEngine::instance().shutdown();
         return PatchResult::error("Failed to create QuickJS context");
     }
 
@@ -2125,7 +2133,24 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     std::string displayName = jsonGetString(pkgJson, "displayName");
 
     if (name.empty()) return PatchResult::error("Extension has no name");
+    // Extension IDs must not contain filesystem separators or control characters.
+    // Reject invalid names before constructing an extension ID or loading scripts.
+    const auto validIdPart = [](const std::string& value) {
+        return !value.empty() && std::all_of(value.begin(), value.end(),
+            [](unsigned char c) {
+                return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                       (c >= '0' && c <= '9') || c == '-' || c == '_';
+            });
+    };
+    if (!validIdPart(name) || (!publisher.empty() && !validIdPart(publisher)))
+        return PatchResult::error("Invalid extension name or publisher");
     if (mainEntry.empty()) mainEntry = "./extension.js";
+    // A manifest entrypoint is a relative path inside the extension package.
+    // Reject drive-rooted, UNC, and root-relative forms before joining paths.
+    const std::filesystem::path declaredEntry(mainEntry);
+    if (declaredEntry.is_absolute() || declaredEntry.has_root_name() ||
+        declaredEntry.has_root_directory())
+        return PatchResult::error("Absolute extension entry point is not allowed");
 
     std::string extensionId = publisher.empty() ? name : (publisher + "." + name);
 
@@ -2149,6 +2174,25 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
         std::snprintf(err, sizeof(err),
                       "Entry point not found: %s", mainPath.c_str());
         return PatchResult::error(err);
+    }
+
+    // Keep the extension entry point within its installed root. In particular,
+    // reject absolute paths, ".." traversal, and symlinks escaping the root.
+    // canonical() is used only after both paths have been checked to exist.
+    {
+        std::error_code ec;
+        const auto root = std::filesystem::canonical(extRoot, ec);
+        if (ec) return PatchResult::error("Cannot resolve extension root");
+        const auto entry = std::filesystem::canonical(mainPath, ec);
+        if (ec) return PatchResult::error("Cannot resolve extension entry point");
+        auto rootIt = root.begin();
+        auto entryIt = entry.begin();
+        for (; rootIt != root.end() && entryIt != entry.end(); ++rootIt, ++entryIt) {
+            if (*rootIt != *entryIt)
+                return PatchResult::error("Extension entry point escapes extension root");
+        }
+        if (rootIt != root.end() || entryIt == entry.end())
+            return PatchResult::error("Extension entry point escapes extension root");
     }
 
     // ---- Create Extension State ----
@@ -2196,7 +2240,9 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
     // ---- Register extension ----
     {
         std::lock_guard<std::mutex> lock(m_extensionsMutex);
-        m_extensions[extensionId] = std::move(state);
+        if (m_extensions.find(extensionId) != m_extensions.end())
+            return PatchResult::error("Extension already loaded");
+        m_extensions.emplace(extensionId, std::move(state));
     }
 
     m_stats.jsExtensionsLoaded++;
@@ -2466,9 +2512,14 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     // Execute deactivate() if available
     if (state->hasDeactivate && state->jsContext) {
         JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
-        JSValue result = JS_Eval(extCtx,
-            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();",
-            68, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+        static constexpr char kDeactivateScript[] =
+            "if(typeof globalThis.__deactivate==='function')globalThis.__deactivate();";
+        JSValue result = JS_Eval(extCtx, kDeactivateScript,
+            sizeof(kDeactivateScript) - 1, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
+        if (JS_IsException(result)) {
+            JS_FreeValue(extCtx, result);
+            return PatchResult::error("Extension deactivate() threw an exception");
+        }
         JS_FreeValue(extCtx, result);
     }
 
@@ -2485,8 +2536,9 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
 PatchResult JSExtensionHost::unloadExtension(const char* extensionId) {
     if (!extensionId) return PatchResult::error("Null extensionId");
 
-    // Deactivate first
-    deactivateExtension(extensionId);
+    // Preserve extension state if its deactivate hook failed.
+    const PatchResult deactivation = deactivateExtension(extensionId);
+    if (!deactivation.success) return deactivation;
 
     std::lock_guard<std::mutex> lock(m_extensionsMutex);
     auto it = m_extensions.find(extensionId);
@@ -2671,7 +2723,8 @@ JSExtensionHost::Stats JSExtensionHost::getStats() const {
 
 void JSExtensionHost::getLoadedExtensions(JSExtensionState* outStates, size_t maxStates,
                                             size_t* outCount) const {
-    if (!outStates || !outCount) return;
+    if (outCount) *outCount = 0;
+    if (!outCount || (!outStates && maxStates != 0)) return;
 
     std::lock_guard<std::mutex> lock(m_extensionsMutex);
 
@@ -2710,6 +2763,11 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
                       "VSIX file not found: %s", vsixPath);
         return result;
     }
+    if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
+        std::strncpy(result.errorDetail, "VSIX path refers to a directory",
+                     sizeof(result.errorDetail) - 1);
+        return result;
+    }
 
     // ---- Check file extension ----
     const char* ext = PathFindExtensionA(vsixPath);
@@ -2728,9 +2786,14 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
         return result;
     }
 
-    LARGE_INTEGER fileSize;
-    GetFileSizeEx(hFile, &fileSize);
+    LARGE_INTEGER fileSize{};
+    const BOOL gotFileSize = GetFileSizeEx(hFile, &fileSize);
     CloseHandle(hFile);
+    if (!gotFileSize) {
+        std::strncpy(result.errorDetail, "Cannot determine VSIX file size",
+                     sizeof(result.errorDetail) - 1);
+        return result;
+    }
 
     if (fileSize.QuadPart < 100) {
         std::strncpy(result.errorDetail, "VSIX file too small (corrupt?)",
@@ -2748,11 +2811,21 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
     {
         hFile = CreateFileA(vsixPath, GENERIC_READ, FILE_SHARE_READ,
                             nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (hFile != INVALID_HANDLE_VALUE) {
+        if (hFile == INVALID_HANDLE_VALUE) {
+            std::strncpy(result.errorDetail, "Cannot reopen VSIX for signature check",
+                         sizeof(result.errorDetail) - 1);
+            return result;
+        }
+        {
             unsigned char magic[4] = {};
             DWORD bytesRead = 0;
-            ReadFile(hFile, magic, 4, &bytesRead, nullptr);
+            const BOOL readOk = ReadFile(hFile, magic, 4, &bytesRead, nullptr);
             CloseHandle(hFile);
+            if (!readOk) {
+                std::strncpy(result.errorDetail, "Cannot read VSIX ZIP signature",
+                             sizeof(result.errorDetail) - 1);
+                return result;
+            }
 
             // ZIP magic: PK\x03\x04
             if (bytesRead < 4 || magic[0] != 'P' || magic[1] != 'K' ||
@@ -2766,8 +2839,14 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
 
     // ---- Try Authenticode verification (for signed VSIX) ----
     {
-        wchar_t wPath[MAX_PATH];
-        MultiByteToWideChar(CP_UTF8, 0, vsixPath, -1, wPath, MAX_PATH);
+        wchar_t wPath[MAX_PATH] = {};
+        const int pathChars = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                                  vsixPath, -1, wPath, MAX_PATH);
+        if (pathChars == 0) {
+            std::strncpy(result.errorDetail, "Cannot convert VSIX path for signature verification",
+                         sizeof(result.errorDetail) - 1);
+            return result;
+        }
 
         WINTRUST_FILE_INFO fileInfo = {};
         fileInfo.cbStruct = sizeof(fileInfo);
@@ -2806,9 +2885,11 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
             OutputDebugStringA("[JSExtensionHost] WARNING: Loading unsigned VSIX "
                              "(RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1)\n");
         } else {
-            // In strict mode, reject unsigned VSIX
-            // For now, we allow but warn (many extensions are unsigned)
-            OutputDebugStringA("[JSExtensionHost] NOTICE: VSIX is not signed\n");
+            // Fail closed unless unsigned extensions were explicitly opted in.
+            std::strncpy(result.errorDetail,
+                         "Unsigned VSIX rejected (set RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1 to opt in)",
+                         sizeof(result.errorDetail) - 1);
+            return result;
         }
     }
 
@@ -2828,17 +2909,37 @@ JSExtensionHost::VSIXVerificationResult JSExtensionHost::verifyVSIX(const char* 
 PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir) {
     if (!zipPath || !destDir) return PatchResult::error("Null parameters");
 
-    // Create destination directory
-    std::filesystem::create_directories(destDir);
+    // Paths are embedded in a PowerShell -Command string below. Refuse quote
+    // characters rather than allowing a path to terminate either quoting layer.
+    // This is a defensive stopgap until extraction uses a native ZIP library.
+    for (const char* path : {zipPath, destDir}) {
+        if (std::strchr(path, 0x27) || std::strchr(path, '"'))
+            return PatchResult::error("Unsupported quote character in VSIX extraction path");
+        // PowerShell -Command and CreateProcess must never receive embedded
+        // control characters from an untrusted archive or destination path.
+        for (const unsigned char* p = reinterpret_cast<const unsigned char*>(path); *p; ++p) {
+            if (*p < 0x20 || *p == 0x7f)
+                return PatchResult::error("Control character in VSIX extraction path");
+        }
+    }
+
+    // Report filesystem errors instead of allowing an exception to escape the
+    // extension API boundary.
+    std::error_code createError;
+    std::filesystem::create_directories(destDir, createError);
+    if (createError)
+        return PatchResult::error("Failed to create VSIX destination directory");
 
     // ---- Shell-based extraction using PowerShell ----
     // This is a robust fallback that handles all ZIP variants.
     // In production builds, replace with minizip or direct DEFLATE.
     char cmd[2048];
-    std::snprintf(cmd, sizeof(cmd),
+    const int cmdLen = std::snprintf(cmd, sizeof(cmd),
                   "powershell -NoProfile -Command "
                   "\"Expand-Archive -Path '%s' -DestinationPath '%s' -Force\"",
                   zipPath, destDir);
+    if (cmdLen < 0 || static_cast<size_t>(cmdLen) >= sizeof(cmd))
+        return PatchResult::error("VSIX extraction command exceeds buffer capacity");
 
     OutputDebugStringA("[JSExtensionHost] Extracting VSIX: ");
     OutputDebugStringA(cmd);
@@ -2868,10 +2969,18 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
         return PatchResult::error("VSIX extraction timed out (60s)");
     }
 
+    if (waitResult != WAIT_OBJECT_0) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return PatchResult::error("VSIX extraction process wait failed");
+    }
+
     DWORD exitCode = 0;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
+    const BOOL gotExitCode = GetExitCodeProcess(pi.hProcess, &exitCode);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+    if (!gotExitCode || exitCode == STILL_ACTIVE)
+        return PatchResult::error("VSIX extraction exit status unavailable");
 
     if (exitCode != 0) {
         char err[256];
@@ -2880,11 +2989,20 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
         return PatchResult::error(err);
     }
 
-    // Verify extraction produced files
-    if (!std::filesystem::exists(destDir) ||
-        std::filesystem::is_empty(destDir)) {
-        return PatchResult::error("VSIX extraction produced no files");
-    }
+    // Verify the expected manifest exists, not merely arbitrary pre-existing
+    // files in the destination. A nonempty directory is not proof of success.
+    std::error_code verifyError;
+    const auto destination = std::filesystem::path(destDir);
+    const bool nestedManifest = std::filesystem::is_regular_file(
+        destination / "extension" / "package.json", verifyError);
+    if (verifyError)
+        return PatchResult::error("Cannot inspect extracted VSIX manifest");
+    const bool rootManifest = std::filesystem::is_regular_file(
+        destination / "package.json", verifyError);
+    if (verifyError)
+        return PatchResult::error("Cannot inspect extracted VSIX manifest");
+    if (!nestedManifest && !rootManifest)
+        return PatchResult::error("VSIX extraction produced no extension manifest");
 
     return PatchResult::ok("VSIX extracted");
 }
@@ -2893,7 +3011,9 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
                                              VSCodeExtensionManifest* outManifest) {
     if (!extensionDir || !outManifest) return PatchResult::error("Null parameters");
 
-    std::memset(outManifest, 0, sizeof(VSCodeExtensionManifest));
+    // VSCodeExtensionManifest owns std::string/std::vector members: byte-zeroing
+    // it corrupts their object invariants and can crash during assignment.
+    *outManifest = VSCodeExtensionManifest{};
 
     // Find package.json
     std::string pkgPath = std::string(extensionDir) + "\\extension\\package.json";
@@ -2921,10 +3041,22 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
     assignField(jsonGetString(json, "description"),    outManifest->description);
     assignField(jsonGetString(json, "main"),           outManifest->main);
 
-    // Build the id from publisher.name
-    if (!outManifest->publisher.empty() && !outManifest->name.empty()) {
-        outManifest->id = outManifest->publisher + "." + outManifest->name;
-    }
+    // Reject malformed manifests rather than returning success with an empty ID.
+    // Keep the identifier contract aligned with loadExtensionFromDir().
+    const auto validManifestIdPart = [](const std::string& value) {
+        return !value.empty() && std::all_of(value.begin(), value.end(),
+            [](unsigned char c) {
+                return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                       (c >= '0' && c <= '9') || c == '-' || c == '_';
+            });
+    };
+    if (!validManifestIdPart(outManifest->name) ||
+        (!outManifest->publisher.empty() &&
+         !validManifestIdPart(outManifest->publisher)))
+        return PatchResult::error("Invalid extension manifest name or publisher");
+
+    outManifest->id = outManifest->publisher.empty()
+        ? outManifest->name : outManifest->publisher + "." + outManifest->name;
 
     // Parse activation events
     auto events = jsonGetStringArray(json, "activationEvents");

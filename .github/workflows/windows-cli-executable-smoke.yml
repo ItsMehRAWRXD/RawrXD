@@ -1,0 +1,45 @@
+name: Windows CLI executable smoke
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tests/test_cli_executable_smoke.py'
+      - '.github/workflows/windows-cli-executable-smoke.yml'
+      - '~dev/rawrxd/src/win32app/cli_main_headless.cpp'
+      - '~dev/rawrxd/CMakeLists.txt'
+jobs:
+  build-and-smoke:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify CLI source tree exists before attempting build
+        shell: pwsh
+        run: |
+          $required = @(
+            '~dev/rawrxd/src/win32app/cli_main_headless.cpp',
+            '~dev/rawrxd/src/win32app/HeadlessIDE.cpp'
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Required CLI source missing from checkout: $path"
+            }
+          }
+      - name: Configure actual RawrXD CLI
+        shell: pwsh
+        run: |
+          cmake -S '~dev/rawrxd' -B build-cli-smoke -G 'Visual Studio 17 2022' -A x64 -DRAWR_ENABLE_VULKAN=OFF -DRAWRXD_BUILD_CLI=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build actual CLI
+        shell: pwsh
+        run: |
+          cmake --build build-cli-smoke --config Release --target rawrxd --parallel 4
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run executable acceptance tests
+        shell: pwsh
+        run: |
+          $binary = Get-ChildItem build-cli-smoke -Filter rawrxd.exe -Recurse -File | Select-Object -First 1
+          if (-not $binary) { throw 'rawrxd.exe missing after build' }
+          $env:RAWRXD_CLI_EXE = $binary.FullName
+          python tests/test_cli_executable_smoke.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

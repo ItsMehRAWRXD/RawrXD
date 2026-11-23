@@ -1,0 +1,34 @@
+name: Windows compiler pipeline acceptance
+on:
+  push:
+    branches:
+      - 'audit/extension-headless-fail-closed-20261105'
+    paths:
+      - '~dev/rawrxd/src/cli/windows_process_runner.hpp'
+      - 'tests/windows_compiler_pipeline_smoke.cpp'
+      - '.github/workflows/windows-compiler-pipeline.yml'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '~dev/rawrxd/src/cli/windows_process_runner.hpp'
+      - 'tests/windows_compiler_pipeline_smoke.cpp'
+      - '.github/workflows/windows-compiler-pipeline.yml'
+jobs:
+  compiler-linker:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile actual subprocess runner acceptance executable
+        shell: pwsh
+        run: |
+          cl /nologo /std:c++17 /EHsc /W4 /DUNICODE /D_UNICODE tests/windows_compiler_pipeline_smoke.cpp /Fe:windows_compiler_pipeline_smoke.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Execute real C++ compile object link executable pipeline
+        shell: pwsh
+        run: |
+          $env:RAWRXD_TEST_CXX = (Get-Command cl.exe -ErrorAction Stop).Source
+          $env:RAWRXD_TEST_LINK = (Get-Command link.exe -ErrorAction Stop).Source
+          .\windows_compiler_pipeline_smoke.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
