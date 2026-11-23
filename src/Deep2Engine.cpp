@@ -340,10 +340,30 @@ bool Deep2Engine::readROMCompressedRow(
                 (std::numeric_limits<std::size_t>::max)() / 18u) return false;
             rowBytes = (cols / 32u) * 18u;
             break;
+        case deep2::TensorType::Q4_1:
+            if (cols % 32u || cols / 32u >
+                (std::numeric_limits<std::size_t>::max)() / 20u) return false;
+            rowBytes = (cols / 32u) * 20u;
+            break;
+        case deep2::TensorType::Q5_0:
+            if (cols % 32u || cols / 32u >
+                (std::numeric_limits<std::size_t>::max)() / 22u) return false;
+            rowBytes = (cols / 32u) * 22u;
+            break;
+        case deep2::TensorType::Q5_1:
+            if (cols % 32u || cols / 32u >
+                (std::numeric_limits<std::size_t>::max)() / 24u) return false;
+            rowBytes = (cols / 32u) * 24u;
+            break;
         case deep2::TensorType::Q8_0:
             if (cols % 32u || cols / 32u >
                 (std::numeric_limits<std::size_t>::max)() / 34u) return false;
             rowBytes = (cols / 32u) * 34u;
+            break;
+        case deep2::TensorType::Q8_1:
+            if (cols % 32u || cols / 32u >
+                (std::numeric_limits<std::size_t>::max)() / 40u) return false;
+            rowBytes = (cols / 32u) * 40u;
             break;
         default:
             return false;
@@ -373,8 +393,24 @@ bool Deep2Engine::readROMCompressedRow(
                 next = rawrxd::compression::resident_q4_0_row(
                     *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
+            case deep2::TensorType::Q4_1:
+                next = rawrxd::compression::resident_q4_1_row(
+                    *resident, 0, 1, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::Q5_0:
+                next = rawrxd::compression::resident_q5_0_row(
+                    *resident, 0, 1, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::Q5_1:
+                next = rawrxd::compression::resident_q5_1_row(
+                    *resident, 0, 1, cols, stagingBudgetBytes);
+                break;
             case deep2::TensorType::Q8_0:
                 next = rawrxd::compression::resident_q8_0_row(
+                    *resident, 0, 1, cols, stagingBudgetBytes);
+                break;
+            case deep2::TensorType::Q8_1:
+                next = rawrxd::compression::resident_q8_1_row(
                     *resident, 0, 1, cols, stagingBudgetBytes);
                 break;
             default:
@@ -815,7 +851,11 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         (tokenEmb->type == deep2::TensorType::F32 ||
          tokenEmb->type == deep2::TensorType::F16 ||
          tokenEmb->type == deep2::TensorType::Q4_0 ||
-         tokenEmb->type == deep2::TensorType::Q8_0);
+         tokenEmb->type == deep2::TensorType::Q4_1 ||
+         tokenEmb->type == deep2::TensorType::Q5_0 ||
+         tokenEmb->type == deep2::TensorType::Q5_1 ||
+         tokenEmb->type == deep2::TensorType::Q8_0 ||
+         tokenEmb->type == deep2::TensorType::Q8_1);
     if (tokenEmbResident) {
         if (firstToken >= tokenEmb->dims[1]) firstToken = 0;
         std::vector<float> embeddingRow;
