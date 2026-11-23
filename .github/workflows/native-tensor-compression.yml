@@ -9,6 +9,7 @@ on:
       - 'tests/deep2/native_tensor_residency_cache_test.cpp'
       - 'tests/deep2/native_tensor_byte_residency_cache_test.cpp'
       - 'tests/deep2/native_compressed_gguf_e2e_test.cpp'
+      - 'tests/deep2/native_deep2_compressed_model_e2e_test.cpp'
       - 'src/Deep2Engine.cpp'
       - 'src/Deep2Engine.hpp'
       - 'src/TensorROM.cpp'
