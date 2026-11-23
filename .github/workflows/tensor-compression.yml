@@ -9,6 +9,8 @@ on:
       - 'tests/decoded_block_cache_test.cpp'
       - 'tests/tensor_weight_storage_test.cpp'
       - 'tools/weight_block_benchmark.cpp'
+      - 'src/deep2/CompressedMatVecReference.hpp'
+      - 'tests/compressed_matvec_reference_test.cpp'
       - '.github/workflows/tensor-compression.yml'
   pull_request:
     paths:
@@ -19,6 +21,8 @@ on:
       - 'tests/decoded_block_cache_test.cpp'
       - 'tests/tensor_weight_storage_test.cpp'
       - 'tools/weight_block_benchmark.cpp'
+      - 'src/deep2/CompressedMatVecReference.hpp'
+      - 'tests/compressed_matvec_reference_test.cpp'
       - '.github/workflows/tensor-compression.yml'
 permissions:
   contents: read
@@ -32,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for test in tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test; do
+          for test in tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test compressed_matvec_reference_test; do
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -I. "tests/${test}.cpp" -lz -o "/tmp/${test}"
             "/tmp/${test}"
           done
@@ -61,7 +65,7 @@ jobs:
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          for %%T in (tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test) do (
+          for %%T in (tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test compressed_matvec_reference_test) do (
             cl /nologo /std:c++17 /EHsc /O2 /W4 /I. /I"C:\vcpkg\installed\x64-windows\include" tests\%%T.cpp /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" zlib.lib /OUT:%%T.exe
             if errorlevel 1 exit /b 1
             %%T.exe
