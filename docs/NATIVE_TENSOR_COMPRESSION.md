@@ -43,6 +43,40 @@ and scalar GEMV paths for Q2_K through Q6_K; Q4_K also has its existing
 specialized path. The integration test creates real GGUF files and loads
 each K type through the mapped Deep2 loader.
 
+## Compressed in-memory F32 residency
+
+The file writer is not the runtime memory solution. Deep2 now has a separate
+private resident representation in `src/deep2/NativeTensorCompression.hpp`
+and `src/deep2/NativeTensorResidencyCache.hpp`:
+
+- `ChunkedF32Storage::BuildFromReader` builds the representation by reading
+  bounded source chunks from a callback. It never stages the complete F32
+  tensor in an intermediate buffer.
+- `TensorResidencyCache` retains only encodings that actually reduce bytes,
+  enforces a configurable memory budget, tracks hits/misses/decoded bytes and
+  evicts least-recently-used entries.
+- Range reads decompress only the chunks intersecting the requested range
+  into caller-owned output memory. A caller can reuse a scratch buffer; the
+  cache does not retain an expanded F32 copy.
+- `Deep2Engine::readCompressedF32Tile` streams F32 tensor chunks from the
+  TensorROM pager into compressed resident storage. If no safe encoding saves
+  space or the cache budget cannot admit the tensor, it reads only the
+  requested raw tile instead of duplicating the tensor.
+- `Deep2Engine::gemvTensorROM` computes F32 GEMV in bounded row tiles. The
+  Phi-3 ROM forward path uses it for token embeddings, QKV, FFN up/down and
+  output projection. The full matrix is not reconstructed for those F32
+  operations.
+- F16/BF16 conversion remains opt-in through
+  `compressedF32MaxAbsError`; its default is zero, so lossy conversion is
+  never silently enabled. Exact F16/BF16 representations and lossless RLE
+  may still be retained when they reduce storage.
+
+This is an in-memory runtime cache, not a change to GGUF wire types. Existing
+GGUF Q2_K–Q8_K weights already remain in compact quantized form in the pager;
+their kernel-specific tile decoders are a separate integration step. The
+non-F32 fallback in `gemvTensorROM` currently uses the established
+dequantize-then-GEMV path and is not claimed to be tile-decompressed.
+
 ## Verification gates
 
 - The native block tests cover positive-only, negative-only, mixed-sign, and
