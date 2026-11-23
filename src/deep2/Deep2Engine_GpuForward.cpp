@@ -447,6 +447,14 @@ bool Deep2Engine::forwardLayerGpuResident(
                 if (rowBytes != VulkanCompute::QuantPackedRowBytes(wt.type, cols))
                     return false;
                 constexpr uint32_t kCompressedGpuTileRows = 128;
+                // Reuse one bounded host decode buffer for every tile. This
+                // avoids per-dispatch allocations and keeps peak temporary
+                // host residency independent of the full matrix row count.
+                const size_t capacityRows =
+                    std::min<size_t>(kCompressedGpuTileRows, rows);
+                if (rowBytes > std::numeric_limits<size_t>::max() / capacityRows)
+                    return false;
+                std::vector<uint8_t> packedTile(rowBytes * capacityRows);
                 ok = true;
                 for (uint32_t rowBase = 0; rowBase < rows;) {
                     const uint32_t tileRows = std::min<uint32_t>(
@@ -454,7 +462,6 @@ bool Deep2Engine::forwardLayerGpuResident(
                     if (tileRows > std::numeric_limits<size_t>::max() / rowBytes)
                         return false;
                     const size_t tileBytes = static_cast<size_t>(tileRows) * rowBytes;
-                    std::vector<uint8_t> packedTile(tileBytes);
                     std::string decodeError;
                     if (!wt.readBytes(static_cast<size_t>(rowBase) * rowBytes,
                                       packedTile.data(), tileBytes, &decodeError)) {
@@ -462,7 +469,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                         return false;
                     }
                     if (!gpu->DispatchGemvQuantTile(
-                            wt.type, packedTile.data(), packedTile.size(),
+                            wt.type, packedTile.data(), tileBytes,
                             input, output, tileRows, cols, rowBase)) {
                         gpuForwardTrace("reject: compressed Vulkan quantized tile dispatch failed");
                         return false;
