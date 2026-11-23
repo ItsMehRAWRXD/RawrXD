@@ -67,6 +67,26 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     fprintf(stderr, "[ROM] F32 compressed residency absolute-error budget: %.9g\\n",
             compressedF32MaxAbsError);
 
+    const auto applyCacheBudget = [](const char* variable, auto&& setter) -> bool {
+        const char* value = std::getenv(variable);
+        if (!value) return true;
+        if (!*value || *value == '-') return false;
+        char* end = nullptr;
+        const unsigned long long parsed = std::strtoull(value, &end, 10);
+        if (end == value || *end != '\\0' ||
+            parsed > static_cast<unsigned long long>(std::numeric_limits<size_t>::max()))
+            return false;
+        setter(static_cast<size_t>(parsed));
+        return true;
+    };
+    if (!applyCacheBudget("DEEP2_F32_CACHE_BYTES",
+            [this](size_t bytes) { compressedF32Weights.SetBudget(bytes); }) ||
+        !applyCacheBudget("DEEP2_ENCODED_CACHE_BYTES",
+            [this](size_t bytes) { compressedEncodedWeights.SetBudget(bytes); })) {
+        fprintf(stderr, "[ROM] invalid tensor residency cache budget environment value\\n");
+        return false;
+    }
+
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
     }
