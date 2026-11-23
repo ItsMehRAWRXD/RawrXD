@@ -182,8 +182,9 @@ int main() {
     const auto badPath=path.string()+".truncated";
     {
         std::ifstream in(path,std::ios::binary);
-        std::vector<char> bytes(std::istreambuf_iterator<char>(in),
-                                std::istreambuf_iterator<char>());
+        const std::istreambuf_iterator<char> begin(in);
+        const std::istreambuf_iterator<char> end;
+        std::vector<char> bytes(begin,end);
         REQUIRE(bytes.size()>64);
         bytes.resize(bytes.size()-17);
         std::ofstream outFile(badPath,std::ios::binary|std::ios::trunc);
