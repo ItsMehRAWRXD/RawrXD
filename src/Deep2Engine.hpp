@@ -52,8 +52,11 @@ struct Deep2Engine {
         }
         size_t totalResidentBytes() const noexcept {
             const size_t compressed = totalCompressedBytes();
-            return sourcePagerResidentBytes > static_cast<size_t>(-1) - compressed
-                ? static_cast<size_t>(-1) : compressed + sourcePagerResidentBytes;
+            const size_t hostResident =
+                sourcePagerResidentBytes > static_cast<size_t>(-1) - compressed
+                    ? static_cast<size_t>(-1) : compressed + sourcePagerResidentBytes;
+            return gpuCachedWeightBytes > static_cast<size_t>(-1) - hostResident
+                ? static_cast<size_t>(-1) : hostResident + gpuCachedWeightBytes;
         }
         size_t totalTrackedWeightResidentBytes() const noexcept {
             return totalResidentBytes();
