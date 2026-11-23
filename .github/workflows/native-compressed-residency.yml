@@ -61,7 +61,8 @@ jobs:
             tests/native_resident_compressed_tensor_test.cpp \
             tests/native_bounded_weight_stager_test.cpp \
             tests/native_resident_f32_matvec_test.cpp \
-            tests/native_resident_typed_matvec_test.cpp; do
+            tests/native_resident_typed_matvec_test.cpp \
+            tests/native_resident_tensor_cache_test.cpp; do
             name="$(basename "$source" .cpp)"
             c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include "$source" -o "build/native-compression/$name"
             "build/native-compression/$name"
@@ -92,7 +93,8 @@ jobs:
             "native_resident_compressed_tensor_test",
             "native_bounded_weight_stager_test",
             "native_resident_f32_matvec_test",
-            "native_resident_typed_matvec_test"
+            "native_resident_typed_matvec_test",
+            "native_resident_tensor_cache_test"
           )
           foreach ($name in $sources) {
             cl /nologo /std:c++17 /EHsc /W4 /WX /I include "tests/$name.cpp" "/Fe:build/native-compression/$name.exe"
