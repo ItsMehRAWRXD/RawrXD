@@ -337,7 +337,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamQ41(ts.size(),false);
         std::vector<bool> streamQ51(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
-            auto& t=ts[i];if(!t.convert || (t.type!=0 && t.type!=28 && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
+            auto& t=ts[i];if(!t.convert || (t.type!=0 && !(automatic && t.type==28) && !q8 && !q4 && !q5 && !q41 && !q51 && !automatic))continue;
             if(automatic && t.type==28) {
                 // GGML F64 (type 28) to F32: 50% storage reduction only
                 // when every finite double survives the precision budget.
@@ -554,7 +554,7 @@ int main(int argc,char** argv) {
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
             Result r;
             if(!q8 && !q4 && !q5 && !q41 && !q51 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
-            if(quantized && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
+            if(quantized && (t.type==0 || t.type==1 || t.type==30) && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
                 std::vector<uint8_t> blocks;
                 blocks.reserve(raw.size()/(t.type==0?128:64)*(q4?18:(q5?22:(q41?20:(q51?24:34)))));
                 bool valid=true;
