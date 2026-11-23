@@ -40,3 +40,12 @@ ROM F32, floating and supported quantized 2-D projection weights use bounded row
 - GPU-side decode kernels and persistent compressed GPU weight residency are not implemented by this change.
 - Every production operator must be audited for use of the tiled ROM path; this document does not claim universal operator coverage.
 - CI must pass on Windows and Linux, followed by reference-logit parity, peak host/VRAM measurement, and multi-agent stress tests before release certification.
+
+
+## Vulkan tile staging lifecycle
+
+The ROM Vulkan GEMV route still expands only the requested compressed/dequantized row tile on the CPU, then uploads/dispatches that bounded F32 tile. It does **not** yet perform RLE/LZ4/F16/BF16 decode inside a Vulkan shader or retain a compressed representation in VRAM. This distinction is intentional: the current shader contract consumes F32 storage buffers, so claiming GPU-native compressed residency would be inaccurate.
+
+The synchronous GEMV path now explicitly unmaps each host-visible weight/input/output allocation before destroying its buffer and freeing its memory. The Vulkan buffer allocator also fails closed if binding or mapping fails and clears output handles on those failures. This fixes a per-tile mapped-memory lifetime defect in the current upload path; it does not change numerical behavior or establish GPU decompression parity.
+
+The next GPU-residency milestone requires a separate shader contract that accepts the encoded chunk format and its metadata (encoding kind, compressed byte length, logical element count, and chunk boundaries), validates bounds before decode, and feeds decoded values directly into the compute operation. That work must preserve the existing F32 GEMV reference path until device-side decode has independent correctness and memory measurements.
