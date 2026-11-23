@@ -235,5 +235,6 @@ static void testFixedBlock(uint32_t type) {
 
 int main() {
     for (uint32_t type : {2u, 3u, 6u, 7u, 8u, 9u}) testFixedBlock(type);
-    std::cout << "packed Q4/Q5/Q8 Vulkan shader decoder parity PASS\n";
+    for (uint32_t type : {10u, 11u, 12u, 13u, 14u, 15u}) testKQuantBlock(type);
+    std::cout << "packed Q4/Q5/Q8 and K-quant Vulkan shader decoder parity PASS\n";
 }
