@@ -330,11 +330,15 @@ private:
             out.insert(out.end(), source, source + size);
             return out;
         }
-        constexpr std::uint32_t kHashBits = 16;
-        constexpr std::uint32_t kHashSize = 1u << kHashBits;
-        std::vector<std::int64_t> table(kHashSize, -1);
+        // Row-sized chunks are commonly only a few KiB. Scale the hash
+        // table to the input so per-row compression does not allocate a
+        // 512 KiB table for a 16 KiB payload.
+        const std::uint32_t hashBits = size >= (1u << 20) ? 16u :
+                                       size >= (1u << 16) ? 14u : 12u;
+        const std::uint32_t hashSize = 1u << hashBits;
+        std::vector<std::int64_t> table(hashSize, -1);
         auto hashAt = [&](std::size_t pos) {
-            return (load32(source + pos) * 2654435761u) >> (32 - kHashBits);
+            return (load32(source + pos) * 2654435761u) >> (32 - hashBits);
         };
         std::size_t anchor = 0;
         std::size_t pos = 0;
@@ -653,18 +657,19 @@ private:
             out.insert(out.end(), source, source + size);
             return out;
         }
-        constexpr std::uint32_t kHashBits = 16;
-        constexpr std::uint32_t kHashSize = 1u << kHashBits;
-        std::vector<std::int32_t> table(kHashSize, -1);
+        const std::uint32_t hashBits = size >= (1u << 20) ? 16u :
+                                       size >= (1u << 16) ? 14u : 12u;
+        const std::uint32_t hashSize = 1u << hashBits;
+        std::vector<std::int64_t> table(hashSize, -1);
         auto hashAt = [&](std::size_t p) {
-            return (load32(source + p) * 2654435761u) >> (32 - kHashBits);
+            return (load32(source + p) * 2654435761u) >> (32 - hashBits);
         };
         std::size_t anchor = 0;
         std::size_t pos = 0;
         while (pos <= size - 12) {
             const std::uint32_t h = hashAt(pos);
-            const std::int32_t reference = table[h];
-            table[h] = static_cast<std::int32_t>(pos);
+            const std::int64_t reference = table[h];
+            table[h] = static_cast<std::int64_t>(pos);
             if (reference < 0 ||
                 pos - static_cast<std::size_t>(reference) > 65535u ||
                 std::memcmp(source + reference, source + pos, 4) != 0) {
@@ -694,7 +699,7 @@ private:
             // Seed positions inside the match to improve subsequent matches.
             for (std::size_t p = pos > matchLength ? pos - matchLength + 1 : 0;
                  p + 4 <= pos && p <= size - 4; ++p)
-                table[hashAt(p)] = static_cast<std::int32_t>(p);
+                table[hashAt(p)] = static_cast<std::int64_t>(p);
         }
         const std::size_t literalLength = size - anchor;
         const std::size_t tokenIndex = out.size();
