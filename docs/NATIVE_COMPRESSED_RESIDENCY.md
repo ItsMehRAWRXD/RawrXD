@@ -79,3 +79,16 @@ a cap on total process memory.
 ## Bounded packed GPU staging primitive
 
 `ChunkedF32Storage::CopyUniform16BitRange(first, count, encoding, destination, destinationBytes)` copies only the requested F16/BF16 range into a caller-owned staging allocation. It validates the complete intersecting chunk span and destination capacity before writing. The destination remains unchanged on invalid ranges, mixed codecs, insufficient capacity, or missing storage. It supports windows crossing chunk boundaries without allocating or concatenating a whole-tensor packed buffer. The caller owns staging lifetime and must retain it through the GPU fence; this method alone does not dispatch a Vulkan kernel or prove GPU numerical parity.
+
+## Release-mode test integrity
+
+The three native codec and residency-cache test executables contain 225
+assertion-based checks, including registration and range-read calls inside
+assert expressions. Defining `NDEBUG` would otherwise remove both the checks
+and those calls, allowing a false-green test. Each test translation unit now
+undefines `NDEBUG` before including `<cassert>`; the standalone Linux and
+MSVC CI compilation explicitly defines `NDEBUG` to exercise this Release
+configuration. The synthetic GGUF and Deep2 model E2E executables use
+explicit runtime checks instead. A green CI run after this change verifies
+that the assertions were actually executed; it does not by itself establish
+production-model or GPU parity.
