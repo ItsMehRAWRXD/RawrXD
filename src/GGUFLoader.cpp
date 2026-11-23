@@ -8,61 +8,83 @@ static const std::vector<std::string> ARCH_PREFIXES = {
     "llama", "qwen2", "gemma2", "phi3", "nemotron", "granite", "starcoder2", "glm"
 };
 
-void SkipArray(std::ifstream& f);
+namespace {
+constexpr uint64_t kMaxMetadataString = 64ULL * 1024 * 1024;
+constexpr uint64_t kMaxMetadataElements = 16ULL * 1024 * 1024;
+constexpr unsigned kMaxMetadataDepth = 16;
+
+bool SkipBytes(std::ifstream& f, uint64_t count) {
+    const auto begin = f.tellg();
+    if (begin < 0) { f.setstate(std::ios::failbit); return false; }
+    f.seekg(0, std::ios::end);
+    const auto end = f.tellg();
+    if (end < begin || static_cast<uint64_t>(end - begin) < count) {
+        f.setstate(std::ios::failbit);
+        return false;
+    }
+    f.seekg(begin + static_cast<std::streamoff>(count), std::ios::beg);
+    return static_cast<bool>(f);
+}
+
+bool SkipValue(std::ifstream& f, uint32_t type, unsigned depth);
+
+bool SkipArrayValue(std::ifstream& f, unsigned depth) {
+    uint32_t elementType = 0;
+    uint64_t count = 0;
+    f.read(reinterpret_cast<char*>(&elementType), sizeof(elementType));
+    f.read(reinterpret_cast<char*>(&count), sizeof(count));
+    if (!f || depth >= kMaxMetadataDepth || count > kMaxMetadataElements ||
+        elementType > 12 || elementType == 9) {
+        f.setstate(std::ios::failbit);
+        return false;
+    }
+    for (uint64_t i = 0; i < count; ++i) {
+        if (!SkipValue(f, elementType, depth + 1)) return false;
+    }
+    return true;
+}
+
+bool SkipValue(std::ifstream& f, uint32_t type, unsigned depth) {
+    static constexpr uint8_t sizes[13] = {1,1,2,2,4,4,4,1,0,0,8,8,8};
+    if (type > 12 || depth > kMaxMetadataDepth) {
+        f.setstate(std::ios::failbit);
+        return false;
+    }
+    if (type == 8) {
+        uint64_t length = 0;
+        f.read(reinterpret_cast<char*>(&length), sizeof(length));
+        if (!f || length > kMaxMetadataString) {
+            f.setstate(std::ios::failbit);
+            return false;
+        }
+        return SkipBytes(f, length);
+    }
+    if (type == 9) return SkipArrayValue(f, depth);
+    return SkipBytes(f, sizes[type]);
+}
+} // namespace
+
+void SkipArray(std::ifstream& f) { (void)SkipArrayValue(f, 0); }
 
 std::string ReadGGUFStr(std::ifstream& f) {
-    uint64_t len = 0;
-    f.read(reinterpret_cast<char*>(&len), sizeof(len));
-    if (!f || len > 2048) return "";
-    std::vector<char> buf(len);
-    f.read(buf.data(), len);
-    return std::string(buf.data(), len);
+    uint64_t length = 0;
+    f.read(reinterpret_cast<char*>(&length), sizeof(length));
+    if (!f || length > kMaxMetadataString) {
+        f.setstate(std::ios::failbit);
+        return {};
+    }
+    std::string result;
+    if (length > result.max_size()) {
+        f.setstate(std::ios::failbit);
+        return {};
+    }
+    result.resize(static_cast<size_t>(length));
+    if (length) f.read(&result[0], static_cast<std::streamsize>(length));
+    return f ? result : std::string{};
 }
 
 void SkipGGUFValue(uint32_t type, std::ifstream& f) {
-    if (type <= 7) { // Primitive types: 0=U8, 1=I8, 2=U16, 3=I16, 4=U32, 5=I32, 6=F32, 7=BOOL
-        // GGUF spec: BOOL (type 7) is 1 byte (uint8), not 8 bytes
-        uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
-        f.seekg(sz[type & 7], std::ios::cur);
-    } else if (type == 8) { // STRING (type 8 in GGUF spec)
-        ReadGGUFStr(f);
-    } else if (type == 9) { // ARRAY (type 9 in GGUF spec)
-        SkipArray(f);
-    } else { // Unknown type (10=U64, 11=I64, 12=F64)
-        uint32_t sub = 0;
-        uint64_t len = 0;
-        f.read(reinterpret_cast<char*>(&sub), sizeof(sub));
-        f.read(reinterpret_cast<char*>(&len), sizeof(len));
-        if (sub == 9) {
-            for (uint64_t i = 0; i < len; ++i) ReadGGUFStr(f);
-        } else if (sub == 8) {
-            for (uint64_t i = 0; i < len; ++i) SkipArray(f);
-        } else {
-            uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-            f.seekg(len * sz[sub & 7], std::ios::cur);
-        }
-    }
-}
-
-void SkipArray(std::ifstream& f) {
-    // GGUF array format: [array_type: uint32] [array_len: uint64] [elements...]
-    // array_type is the type of elements (not the array type itself)
-    uint32_t arrayType = 0;
-    uint64_t arrayLen = 0;
-    f.read(reinterpret_cast<char*>(&arrayType), sizeof(arrayType));
-    f.read(reinterpret_cast<char*>(&arrayLen), sizeof(arrayLen));
-    if (arrayLen > 1000000) {
-        fprintf(stderr, "[WARN] Array length absurdly large (%zu)\n", arrayLen);
-        return;
-    }
-    if (arrayType == 8) {  // String elements
-        for (uint64_t i = 0; i < arrayLen; ++i) ReadGGUFStr(f);
-    } else if (arrayType == 9) {  // Nested array elements
-        for (uint64_t i = 0; i < arrayLen; ++i) SkipArray(f);
-    } else {  // Primitive elements
-        uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-        f.seekg(arrayLen * sz[arrayType & 7], std::ios::cur);
-    }
+    (void)SkipValue(f, type, 0);
 }
 
 float SafeFp16ToFloat32(uint16_t fp16) {
@@ -288,12 +310,18 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
     f.read(reinterpret_cast<char*>(&ctx->cfg.tensorCount), 8);
     f.read(reinterpret_cast<char*>(&ctx->cfg.kvCount), 8);
 
+    if (!f || ctx->cfg.version < 2 || ctx->cfg.version > 3 ||
+        ctx->cfg.kvCount > kMaxMetadataElements ||
+        ctx->cfg.tensorCount > kMaxMetadataElements) return false;
+
     // Parse Dynamic Prefix Metadata arrays
     for (size_t i = 0; i < ctx->cfg.kvCount; ++i) {
         std::string key = ReadGGUFStr(f);
         uint32_t type = 0;
         f.read(reinterpret_cast<char*>(&type), sizeof(type));
+        if (!f || key.empty() || type > 12) return false;
         ParseUniversalGGUFMetadata(key, type, f, ctx);
+        if (!f) return false;
     }
 
     // Read Layer Allocation Layout indices
@@ -302,11 +330,12 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
         meta.name = ReadGGUFStr(f);
         uint32_t nDims = 0;
         f.read(reinterpret_cast<char*>(&nDims), 4);
+        if (!f || meta.name.empty() || nDims > 8) return false;
         meta.dims.resize(nDims);
         if (nDims > 0) f.read(reinterpret_cast<char*>(meta.dims.data()), nDims * 8);
         f.read(reinterpret_cast<char*>(&meta.type), 4);
         f.read(reinterpret_cast<char*>(&meta.offset), 8);
-        ctx->tensors[meta.name] = meta;
+        if (!f || !ctx->tensors.emplace(meta.name, meta).second) return false;
     }
 
     // Align memory segment lines to 64-byte boundaries
@@ -317,14 +346,17 @@ bool LoadUniversalBlob(const std::string& path, EngineContext* ctx) {
 
     // Read physical weight arrays straight into aligned heap storage
     f.seekg(0, std::ios::end);
+    if (!f || f.tellg() < 0 || static_cast<uint64_t>(f.tellg()) < alignedDataStart) return false;
     uint64_t totalBytes = static_cast<uint64_t>(f.tellg()) - alignedDataStart;
     f.seekg(alignedDataStart, std::ios::beg);
 
     ctx->tensorWeightsPool.resize(totalBytes);
-    f.read(reinterpret_cast<char*>(ctx->tensorWeightsPool.data()), totalBytes);
+    if (totalBytes) f.read(reinterpret_cast<char*>(ctx->tensorWeightsPool.data()), static_cast<std::streamsize>(totalBytes));
+    if (!f) return false;
 
     // Bind raw internal device mapping coordinates
     for (auto& pair : ctx->tensors) {
+        if (pair.second.offset >= totalBytes) return false;
         pair.second.dataData = ctx->tensorWeightsPool.data() + pair.second.offset;
     }
 
