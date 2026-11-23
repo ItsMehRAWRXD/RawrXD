@@ -138,7 +138,7 @@ int main(int argc,char** argv) {
             seek(in,add(dataStart,t.offset));
             if(!in.read(reinterpret_cast<char*>(raw.data()),std::streamsize(raw.size())))throw std::runtime_error("truncated F32");
             Result r;
-            if(!q8 && !q4 && !q5 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
+            if(!q8 && !q4 && !q5 && !q41 && !q51 && t.type==0) r=Encode(raw.data(),raw.size(),true,tolerance);
             if((q8 || q4 || q5 || q41 || q51) && t.dims[0]%32==0 && raw.size()%(t.type==0?128:64)==0) {
                 std::vector<uint8_t> blocks;
                 blocks.reserve(raw.size()/(t.type==0?128:64)*(q4?18:(q5?22:(q41?20:(q51?24:34)))));
@@ -276,7 +276,7 @@ int main(int argc,char** argv) {
                 if(valid && blocks.size()<raw.size()) {
                     converted[i]=std::move(blocks);outputTypes[i]=q4?2:(q5?6:(q41?3:(q51?7:8)));++changed;
                 }
-            } else if(!q8 && !q4 && !q5 && r.encoding==Encoding::F16) {
+            } else if(!q8 && !q4 && !q5 && !q41 && !q51 && r.encoding==Encoding::F16) {
                 converted[i]=std::move(r.payload);outputTypes[i]=1;++changed;
             }
         }
