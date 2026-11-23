@@ -1797,7 +1797,12 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
                 throw std::runtime_error("RMSNormW: no dequant kernel");
             }
             if (normWeight.compressedBytes) {
-                if (normWeight.compressedBytes->size() != normWeight.sizeBytes)
+                // The compressed payload must cover the actual vector
+                // span, even when legacy metadata leaves sizeBytes unset.
+                // ReadRange must never be asked to decode past its backing.
+                if (normWeight.compressedBytes->size() < required ||
+                    (normWeight.sizeBytes != 0 &&
+                     normWeight.compressedBytes->size() != normWeight.sizeBytes))
                     throw std::runtime_error("RMSNormW: compressed byte backing mismatch");
                 std::vector<uint8_t> encoded(required);
                 std::vector<uint8_t> decodeScratch;
