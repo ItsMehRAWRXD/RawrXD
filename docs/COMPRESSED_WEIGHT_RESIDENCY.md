@@ -39,6 +39,12 @@ The KV-cache budget is calculated from the actual K/V width (layers * tokens * k
 
 This is a deterministic architectural execution contract, not proof that every production GGUF architecture has been mapped correctly. Architecture-specific tensor names, RoPE variants/scaling, sliding-window policies, MLA, MoE, quantized K/V caches, and the production Vulkan lane remain separate integration and parity gates.
 
+## BF16 compressed transformer execution
+
+The compressed decoder runtime now accepts BF16 tensor payloads as a first-class GGML type. The bounded scalar matvec kernel reconstructs BF16 by shifting the little-endian 16-bit word into the upper half of IEEE F32; it does not reuse the IEEE F16 exponent decoder. The model matvec adapter validates the tensor type before dispatch, and embedding/norm vector reads use the same BF16 conversion semantics.
+
+The synthetic generation suite converts the full deterministic model fixture into BF16 payloads and exercises compressed embedding reads, projection matvecs, normalization vectors, and autoregressive generation. Lossless compressed storage remains the default: this test consumes a BF16 source model and does not imply that F32-to-BF16 conversion is silently enabled.
+
 ## What is not yet certified
 
 - The CI suite must compile the canonical GPU forward translation unit on Windows and Linux.
