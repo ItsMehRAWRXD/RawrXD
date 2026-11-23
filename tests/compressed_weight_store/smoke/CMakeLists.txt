@@ -108,6 +108,15 @@ if(RAWRXD_SMOKE_REQUIRE_ZLIB)
     target_compile_definitions(rawrxd_resident_f32_matvec_test PRIVATE RAWRXD_TEST_REQUIRE_ZLIB=1)
 endif()
 add_test(NAME rawrxd_resident_f32_matvec COMMAND rawrxd_resident_f32_matvec_test)
+add_executable(rawrxd_resident_multitoken_inference_test
+    "${RAWRXD_ROOT}/tests/resident_multitoken_inference_test.cpp")
+target_link_libraries(rawrxd_resident_multitoken_inference_test PRIVATE rawrxd_compression_core)
+target_compile_features(rawrxd_resident_multitoken_inference_test PRIVATE cxx_std_17)
+if(RAWRXD_SMOKE_REQUIRE_ZLIB)
+    target_compile_definitions(rawrxd_resident_multitoken_inference_test PRIVATE RAWRXD_TEST_REQUIRE_ZLIB=1)
+endif()
+add_test(NAME rawrxd_resident_multitoken_inference COMMAND rawrxd_resident_multitoken_inference_test)
+
 
 
 if(ZLIB_FOUND)
