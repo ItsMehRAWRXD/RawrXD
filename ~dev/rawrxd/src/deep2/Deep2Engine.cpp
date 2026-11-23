@@ -766,8 +766,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.tieEmbeddings = true;
     }
 
-    if (!modelWeights.finalNorm.data ||
-        !modelWeights.lmHead.data ||
+    if (!modelWeights.finalNorm.hasBacking() ||
+        !modelWeights.lmHead.hasBacking() ||
         modelWeights.lmHead.rows != modelWeights.vocabSize ||
         modelWeights.lmHead.cols != modelWeights.hiddenDim) {
         std::fprintf(stderr, "[Deep2Engine] final norm / LM-head topology invalid\n");
@@ -898,7 +898,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             return bindSeparateExperts(role, hfRole, hfAlt, dst);
         };
 
-        if (lw.moeRouter.data) {
+        if (lw.moeRouter.hasBacking()) {
             if (lw.moeRouter.rows != modelWeights.numExperts ||
                 lw.moeRouter.cols != modelWeights.hiddenDim) {
                 std::fprintf(stderr,
@@ -963,9 +963,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 lw.moeSharedGate.data || lw.moeSharedUp.data ||
                 lw.moeSharedDown.data;
             const bool allShared =
-                lw.moeSharedGate.data &&
-                lw.moeSharedUp.data &&
-                lw.moeSharedDown.data;
+                lw.moeSharedGate.hasBacking() &&
+                lw.moeSharedUp.hasBacking() &&
+                lw.moeSharedDown.hasBacking();
             if ((anyShared && !allShared) ||
                 (modelWeights.numSharedExperts > 0 && !allShared)) {
                 std::fprintf(stderr,
@@ -975,7 +975,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             }
         }
 
-        if (!lw.attnNorm.data || !lw.ffnNorm.data) {
+        if (!lw.attnNorm.hasBacking() || !lw.ffnNorm.hasBacking()) {
             std::fprintf(stderr,
                 "[Deep2Engine] layer %zu missing transformer norm tensors\n",
                 layer);
@@ -983,8 +983,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
 
         const bool splitQkv =
-            lw.wq.data && lw.wk.data && lw.wv.data;
-        const bool fusedQkv = lw.wqkv.data != nullptr;
+            lw.wq.hasBacking() && lw.wk.hasBacking() && lw.wv.hasBacking();
+        const bool fusedQkv = lw.wqkv.hasBacking();
         if (!splitQkv && !fusedQkv) {
             std::fprintf(stderr,
                 "[Deep2Engine] layer %zu missing Q/K/V topology\n", layer);
@@ -992,7 +992,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
 
         if (!modelWeights.isMoE) {
-            if (!lw.wUp.data || !lw.wDown.data) {
+            if (!lw.wUp.hasBacking() || !lw.wDown.hasBacking()) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu missing dense FFN tensors\n",
                     layer);
@@ -1088,14 +1088,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
             LayerWeights& lw = modelWeights.layers[layer];
             const bool layerIsMoE =
-                lw.moeRouter.data &&
+                lw.moeRouter.hasBacking() &&
                 lw.moeGate.size() == modelWeights.numExperts &&
                 lw.moeUp.size() == modelWeights.numExperts &&
                 lw.moeDown.size() == modelWeights.numExperts;
 
             if (!layerIsMoE) {
                 // Leading/interleaved dense layers are legal in hybrid MoE.
-                if (!lw.wUp.data || !lw.wDown.data) {
+                if (!lw.wUp.hasBacking() || !lw.wDown.hasBacking()) {
                     std::fprintf(stderr,
                         "[Deep2Engine] layer %zu has neither complete dense nor MoE FFN\n",
                         layer);
