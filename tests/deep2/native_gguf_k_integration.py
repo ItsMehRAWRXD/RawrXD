@@ -112,8 +112,8 @@ def run(binary):
             subprocess.run([binary,str(inp),str(auto_dst),"0.02","auto"],check=True)
             auto_data,auto_start,auto_meta,auto_tensors=parse(auto_dst)
             auto_type,auto_dims,auto_offset=auto_tensors["blk.0.attn_q.weight"]
-            assert auto_type in (10,11,12,13,14,15), (source_type,auto_type)
-            auto_size={10:84,11:110,12:144,13:176,14:210,15:292}[auto_type]
+            assert auto_type in (10,11,12,13,14), (source_type,auto_type)
+            auto_size={10:84,11:110,12:144,13:176,14:210}[auto_type]
             auto_decoded=independent_decode(auto_type,auto_data[auto_start+auto_offset:auto_start+auto_offset+auto_size])
             assert max(abs(x-y) for x,y in zip(values,auto_decoded))<=0.02
             assert len(auto_data)<len(inp.read_bytes())
