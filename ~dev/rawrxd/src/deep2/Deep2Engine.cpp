@@ -2022,8 +2022,10 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             ? reinterpret_cast<const float*>(lw.bv.data) : nullptr;
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvY[3]={qProj,kProj,vProj};
-        const bool grouped=tryVulkanHostGEMVGroup(
-            qkvW,qkvY,3,input,H);
+        // Grouped Vulkan upload still requires all raw mapped pointers.
+        // Compressed-only weights use the bounded per-tensor LinearW path.
+        const bool grouped=lw.wq.data && lw.wk.data && lw.wv.data &&
+            tryVulkanHostGEMVGroup(qkvW,qkvY,3,input,H);
         if(grouped){
             if(bq) for(size_t i=0;i<H;++i) qProj[i]+=bq[i];
             if(bk) for(size_t i=0;i<kvDim;++i) kProj[i]+=bk[i];
@@ -2179,7 +2181,8 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
         // Real SwiGLU: gate = Wg @ x, up = Wu @ x
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guY[2]={gateBuf,upBuf};
-        if(!tryVulkanHostGEMVGroup(guW,guY,2,input,H)){
+        if(!(lw.wGate.data && lw.wUp.data &&
+             tryVulkanHostGEMVGroup(guW,guY,2,input,H))){
             LinearW(lw.wGate, input, nullptr, gateBuf, I);
             LinearW(lw.wUp,   input, nullptr, upBuf,   I);
         }
