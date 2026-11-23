@@ -13,7 +13,7 @@ int main() {
     }
     Deep2::GGUFTensor tensor;
     tensor.name = "blk.0.attn.weight";
-    tensor.type = static_cast<GGMLType>(1); // GGML_TYPE_F16
+    tensor.type = static_cast<Deep2::GGMLType>(1); // GGML_TYPE_F16
     tensor.data = source.data();
     tensor.sizeBytes = source.size();
     tensor.mapped = true;
