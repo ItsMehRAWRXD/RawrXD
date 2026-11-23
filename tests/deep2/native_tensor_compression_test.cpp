@@ -6,12 +6,19 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
+#include <algorithm>
 using namespace RawrXD::TensorCompression;
 int main() {
     const std::vector<uint8_t> repeated(4096,0x5a);
     auto r=Encode(repeated.data(),repeated.size());
     assert(r.encoding==Encoding::RLE && r.payload.size()<repeated.size());
     assert(Decode(r)==repeated);
+    std::vector<uint8_t> direct(repeated.size(),0);
+    DecodeInto(r,direct.data(),direct.size());
+    assert(direct==repeated);
+    DecodeInto(raw,direct.data(),randomish.size());
+    assert(std::equal(randomish.begin(),randomish.end(),direct.begin()));
+
     const std::vector<uint8_t> randomish={0,1,2,3,4,5,6,7,8,9};
     auto raw=Encode(randomish.data(),randomish.size());
     assert(raw.encoding==Encoding::Raw && Decode(raw)==randomish);
@@ -20,11 +27,17 @@ int main() {
     assert(half.encoding==Encoding::F16 && half.payload.size()==sizeof(f)/2);
     auto decoded=Decode(half);
     assert(std::memcmp(decoded.data(),f,sizeof(f))==0);
+    uint8_t directHalf[sizeof(f)]{};
+    DecodeInto(half,directHalf,sizeof(directHalf));
+    assert(std::memcmp(directHalf,f,sizeof(f))==0);
     // BF16 keeps F32's exponent range when FP16 would overflow.
     const float wide[]={1.0e20f,-1.0e20f,3.25f,-0.0f};
     auto bf16=Encode(wide,sizeof(wide),true,1.0e18f,true);
     assert(bf16.encoding==Encoding::BF16 && bf16.payload.size()==sizeof(wide)/2);
     auto wideDecoded=Decode(bf16);
+    uint8_t directBf16[sizeof(wide)]{};
+    DecodeInto(bf16,directBf16,sizeof(directBf16));
+    assert(std::memcmp(directBf16,wideDecoded.data(),sizeof(wide))==0);
     for(size_t i=0;i<4;++i) {
         float value; std::memcpy(&value,wideDecoded.data()+i*4,4);
         assert(std::isfinite(value));
@@ -74,6 +87,18 @@ int main() {
     assert(ToHalf(1.0f)==0x3c00 && ToHalf(-0.0f)==0x8000);
     assert(Bits(FromHalf(0x3c00))==Bits(1.0f));
     assert(Bits(FromHalf(0x0001))==Bits(0x1p-24f));
+    auto malformed=r;
+    malformed.payload.push_back(1);
+    std::vector<uint8_t> untouched(repeated.size(),0xa5);
+    bool malformedRejected=false;
+    try { DecodeInto(malformed,untouched.data(),untouched.size()); }
+    catch(const std::invalid_argument&) { malformedRejected=true; }
+    assert(malformedRejected);
+    assert(std::all_of(untouched.begin(),untouched.end(),[](uint8_t x){return x==0xa5;}));
+    bool wrongSize=false;
+    try { DecodeInto(r,untouched.data(),untouched.size()-1); }
+    catch(const std::invalid_argument&) { wrongSize=true; }
+    assert(wrongSize);
     bool rejected=false;
     try { auto bad=r; bad.payload[0]=0; (void)Decode(bad); } catch(const std::invalid_argument&) {rejected=true;}
     assert(rejected);
