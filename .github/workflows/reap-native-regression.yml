@@ -1,0 +1,32 @@
+name: REAP native regression
+on:
+  push:
+    branches: [codex/reap-native-r01-gguf-parser]
+    paths: ['src/reap/**', 'tools/reap_*', '.github/workflows/reap-native-regression.yml']
+  pull_request:
+    paths: ['src/reap/**', 'tools/reap_*', '.github/workflows/reap-native-regression.yml']
+  workflow_dispatch:
+jobs:
+  standalone:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute native C++17 REAP regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reap-test-bin
+          for name in reap_sha256_regression reap_float16_regression reap_f16_gguf_regression reap_repacker_regression reap_planner_regression reap_publisher_regression reap_blob_regression; do
+            echo "Compiling $name"
+            if [[ "$RUNNER_OS" == "Windows" ]]; then
+              g++ -std=c++17 -O2 -Wall -Wextra -pthread "tools/$name.cpp" -o "reap-test-bin/$name.exe"
+              "./reap-test-bin/$name.exe"
+            else
+              g++ -std=c++17 -O2 -Wall -Wextra -pthread "tools/$name.cpp" -o "reap-test-bin/$name"
+              "./reap-test-bin/$name"
+            fi
+          done
