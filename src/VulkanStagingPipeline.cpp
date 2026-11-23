@@ -147,7 +147,22 @@ namespace Deep2Rom::Compute {
     {
         if (bytes_count == 0 || bytes_count > src_slot.capacity ||
             src_slot.buffer == VK_NULL_HANDLE || !src_slot.in_use ||
+            transfer_queue == VK_NULL_HANDLE || cmd_buffer == VK_NULL_HANDLE ||
             dst_vram_buffer == VK_NULL_HANDLE) return false;
+        // Validate pool ownership and fence state BEFORE recording/submitting work.
+        // A rejected second submission must never reach the GPU.
+        {
+            std::lock_guard<std::mutex> lock(m_pool_mutex);
+            bool owned = false;
+            for (const auto& pooled_slot : m_pool) {
+                if (pooled_slot.buffer == src_slot.buffer) {
+                    owned = pooled_slot.in_use &&
+                            pooled_slot.transfer_fence == VK_NULL_HANDLE;
+                    break;
+                }
+            }
+            if (!owned) return false;
+        }
         VkCommandBufferBeginInfo begin_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
         begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
@@ -192,18 +207,13 @@ namespace Deep2Rom::Compute {
         }
         std::lock_guard<std::mutex> lock(m_pool_mutex);
         for (auto& pooled_slot : m_pool) {
-            if (pooled_slot.buffer == src_slot.buffer) {
-                // A slot cannot be submitted again until its previous transfer is released.
-                if (pooled_slot.transfer_fence != VK_NULL_HANDLE) {
-                    ::vkWaitForFences(m_device, 1, &completion, VK_TRUE, UINT64_MAX);
-                    ::vkDestroyFence(m_device, completion, nullptr);
-                    return false;
-                }
+            if (pooled_slot.buffer == src_slot.buffer && pooled_slot.in_use &&
+                pooled_slot.transfer_fence == VK_NULL_HANDLE) {
                 pooled_slot.transfer_fence = completion;
                 return true;
             }
         }
-        // Submission is live but this staging buffer is not pool-owned.
+        // Ownership changed unexpectedly after submission; wait before returning.
         ::vkWaitForFences(m_device, 1, &completion, VK_TRUE, UINT64_MAX);
         ::vkDestroyFence(m_device, completion, nullptr);
         return false;
