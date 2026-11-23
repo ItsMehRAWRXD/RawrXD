@@ -45,9 +45,14 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     const uint64_t n = src.totalElements();
     if (n == 0) return true;
     if (!src.data || n > static_cast<uint64_t>((std::numeric_limits<std::size_t>::max)() / sizeof(float))) return false;
-    const uint64_t requiredBytes = tensorStorageBytes(n, src.type);
+    const uint64_t requiredBytes = tensorStorageBytesForShape(src.dims, src.type);
     if (requiredBytes == (std::numeric_limits<uint64_t>::max)() ||
         src.byteSize < requiredBytes) return false;
+    // The flat dequantizers below consume contiguous blocks. If a quantized
+    // matrix row needs padding, reject it rather than crossing row boundaries;
+    // the compressed-resident row kernels handle only block-aligned rows today.
+    if (isQuantized(src.type) && src.dims.size() > 1 &&
+        src.dims[0] % quantBlockSize(src.type) != 0) return false;
 
     dst.data.resize(static_cast<std::size_t>(n));
     float* out = dst.data.data();
