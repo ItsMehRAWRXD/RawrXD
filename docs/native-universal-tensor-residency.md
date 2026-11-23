@@ -164,3 +164,8 @@ Packed-weight cache eviction and replacement now wait for the owning Vulkan devi
 ## Zero-copy host handoff for aligned packed GPU tiles
 
 The packed GEMV Vulkan upload path now passes the existing compressed residency tile buffer directly to the upload/cache helper whenever its byte size is already a multiple of four. Previously it always allocated a second `alignedWeights` vector and copied the complete tile. An unaligned tail still uses a zero-initialized padded vector so the Vulkan copy size remains valid and the shader sees the original logical shape. This removes one transient host-side copy for aligned tiles, but does not eliminate the Vulkan staging transfer or prove zero-copy host-to-device access. Numerical GPU parity, multi-threaded ownership, and peak-memory benchmarks remain release gates.
+
+
+## Q4_K / Q5_K high-group minimum-scale parity correction
+
+The Vulkan packed GEMV shader and its CPU shader mirror previously assembled the upper-group minimum-scale bits in reversed positions. For groups 4–7, GGML's `get_scale_min_k4` specifies `m = (scales[group+4] >> 4) | ((scales[group] >> 6) << 4)`; the prior expression swapped the low and high contributions. Both decoder paths now follow that layout, matching `NativeKQuant::DecodeBlock`. This is a correctness fix, not a compression-ratio improvement. The registered packed-weight parity test exercises the affected K-quant formats, but CI and independent GPU numerical validation are still required before certification.
