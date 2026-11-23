@@ -296,22 +296,19 @@ struct WeightTensor {
                 return false;
 
             RawrXD::TensorCompression::Encoding encoding{};
-            // F32/LZ4 rows were already tested against this same policy at
-            // model-load time, so do not decode them twice merely to discover
-            // that they still require exact F32. Mixed geometry and stored
-            // 16-bit rows can still use the range exporter.
-            if ((!rowAlignedSource || sourceAlready16Bit) &&
-                compressedF32->ExportUniform16BitRange(
-                    first, elements, encoding, packed,
-                    compressedF32MaxAbsError)) {
+            // Reuse stored F16/BF16 bytes directly. Re-quantizing an already
+            // lossy chunk could stack a second error budget; F32/LZ4 chunks
+            // were already tested at model-load time and remain exact F32.
+            if (rowAlignedSource && sourceAlready16Bit &&
+                compressedF32->ExportStored16BitRange(
+                    first, elements, encoding, packed)) {
                 ggmlType = encoding ==
                     RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
                 return packed.size() == elements * sizeof(uint16_t);
             }
 
-            // The run did not meet the configured 16-bit error budget.
-            // Upload only this run as exact F32; neighboring compact runs
-            // remain F16/BF16 and are never widened with it.
+            // F32/LZ4 or mixed-geometry runs remain exact F32 here. A lossy
+            // conversion is never stacked on top of the model-load encoding.
             std::vector<float> exact(elements);
             compressedF32->ReadRange(first, elements, exact.data());
             packed.resize(elements * sizeof(float));

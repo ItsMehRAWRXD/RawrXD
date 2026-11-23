@@ -214,6 +214,61 @@ public:
         return true;
     }
 
+    // Export a range already stored as one F16/BF16 encoding without
+    // decoding or re-quantizing it. This preserves the original model-load
+    // error bound exactly instead of stacking another lossy conversion.
+    bool ExportStored16BitRange(std::size_t first, std::size_t count,
+                                Encoding& encoding,
+                                std::vector<std::uint8_t>& bytes) const {
+        bytes.clear();
+        if (first > elements_ || count > elements_ - first ||
+            count > std::numeric_limits<std::size_t>::max() / 2)
+            return false;
+        if (count == 0) { encoding = Encoding::F16; return true; }
+
+        const std::size_t end = first + count;
+        auto locate = [&](std::size_t position) {
+            return std::lower_bound(
+                chunks_.begin(), chunks_.end(), position,
+                [](const Chunk& chunk, std::size_t value) {
+                    return chunk.first + chunk.count <= value;
+                });
+        };
+        auto firstIt = locate(first);
+        auto lastIt = locate(end - 1);
+        if (firstIt == chunks_.end() || lastIt == chunks_.end())
+            return false;
+        encoding = firstIt->encoding;
+        if (encoding != Encoding::F16 && encoding != Encoding::BF16)
+            return false;
+
+        bytes.resize(count * 2);
+        std::size_t copied = 0;
+        for (auto it = firstIt; it <= lastIt; ++it) {
+            const Chunk& chunk = *it;
+            if (chunk.encoding != encoding ||
+                chunk.payloadBytes != chunk.count * sizeof(std::uint16_t) ||
+                chunk.payloadOffset > payload_.size() ||
+                chunk.payloadBytes > payload_.size() - chunk.payloadOffset) {
+                bytes.clear();
+                return false;
+            }
+            const std::size_t begin = std::max(first, chunk.first);
+            const std::size_t finish = std::min(end, chunk.first + chunk.count);
+            if (finish <= begin) continue;
+            const std::size_t sourceOffset = begin - chunk.first;
+            const std::size_t destinationOffset = begin - first;
+            const std::size_t values = finish - begin;
+            std::memcpy(bytes.data() + destinationOffset * sizeof(std::uint16_t),
+                payload_.data() + chunk.payloadOffset +
+                    sourceOffset * sizeof(std::uint16_t),
+                values * sizeof(std::uint16_t));
+            copied += values;
+        }
+        if (copied != count) { bytes.clear(); return false; }
+        return true;
+    }
+
     // Returns a stable zero-copy view when every chunk shares one 16-bit encoding.
     // The caller must retain this storage object for the lifetime of the view.
     bool GetUniform16BitView(Encoding& encoding, const std::uint8_t*& data,
