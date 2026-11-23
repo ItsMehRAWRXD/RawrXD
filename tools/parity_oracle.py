@@ -157,6 +157,13 @@ def self_test():
     check(not m["argmax_match"], "argmax flip detected")
     check(position_diverges(m, 1.0, 1.0, 0.0), "argmax flip diverges")
 
+    # Format presets: a Q4_0-scale error passes q4_0 gates but trips logits gates.
+    ref = [1.0, 2.0, 3.0, 4.0]
+    cand = [1.1, 2.1, 3.1, 4.1]
+    m = position_metrics(ref, cand)
+    check(position_diverges(m, 0.05, 0.05, 0.99), "logits gates trip on q4-scale error")
+    check(not position_diverges(m, 0.15, 0.15, 0.95), "q4_0 gates accept q4-scale error")
+
     if failures == 0:
         print("SELF_TEST=PASS")
         return 0
@@ -170,9 +177,15 @@ def main(argv=None):
     ap.add_argument("--cand", help="printf-style candidate path with %d")
     ap.add_argument("--positions", type=int, help="number of positions to compare")
     ap.add_argument("--out", help="write JSON verdict here")
-    ap.add_argument("--max-abs", type=float, default=0.05)
-    ap.add_argument("--max-rel", type=float, default=0.05)
-    ap.add_argument("--min-cos", type=float, default=0.99)
+    ap.add_argument("--format", default="logits",
+                    choices=["logits", "f32", "f16", "q8_0", "q5_0", "q4_0"],
+                    help="acceptance preset; sets default gates (default: logits)")
+    ap.add_argument("--max-abs", type=float, default=None,
+                    help="override the preset max |cand-ref| gate")
+    ap.add_argument("--max-rel", type=float, default=None,
+                    help="override the preset relative-L2 gate")
+    ap.add_argument("--min-cos", type=float, default=None,
+                    help="override the preset cosine gate")
     ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args(argv)
 
@@ -182,9 +195,24 @@ def main(argv=None):
     if not args.ref or not args.cand or args.positions is None:
         ap.error("--ref, --cand and --positions are required (or use --self-test)")
 
+    # Per-format acceptance presets. Weight-quantization formats get looser
+    # gates than logits parity; f32 demands exactness.
+    format_defaults = {
+        "logits": (0.05, 0.05, 0.99),
+        "f32": (0.0, 0.0, 1.0),
+        "f16": (0.001, 0.001, 0.999),
+        "q8_0": (0.01, 0.01, 0.999),
+        "q5_0": (0.05, 0.05, 0.99),
+        "q4_0": (0.15, 0.15, 0.95),
+    }
+    dmax, drel, dcos = format_defaults[args.format]
+    max_abs = args.max_abs if args.max_abs is not None else dmax
+    max_rel = args.max_rel if args.max_rel is not None else drel
+    min_cos = args.min_cos if args.min_cos is not None else dcos
+
     try:
         result = run(args.ref, args.cand, args.positions,
-                     args.max_abs, args.max_rel, args.min_cos)
+                     max_abs, max_rel, min_cos)
     except (OSError, ValueError) as exc:
         print("ERROR:", exc, file=sys.stderr)
         return 2
