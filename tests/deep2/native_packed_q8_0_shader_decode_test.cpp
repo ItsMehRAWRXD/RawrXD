@@ -200,7 +200,10 @@ static void testK4UpperGroupScaleFixture(uint32_t type) {
 // Independently calculated Q3_K GGML block fixture: scale 1, q=1,
 // and an enabled high mask bit produce +1; a cleared bit produces -3.
 static void testQ3KSignMaskFixture() {
-    std::vector<uint8_t> bytes(110u, 0u);
+    // The shader reads byte-addressed data through 32-bit words.  Keep the
+    // GGML payload length (110 bytes) and add the two-byte tail required for
+    // the final aligned word load at offset 108.
+    std::vector<uint8_t> bytes(112u, 0u);
     put16(bytes.data() + 108u, 0x3c00u); // d = 1
     // group 0: 6-bit scale = 33, biased by -32 -> 1.
     bytes[96u] = 0x01u;
@@ -216,7 +219,9 @@ static void testQ3KSignMaskFixture() {
 // GGML uses low nibbles, a separate 2-bit high plane, and signed 8-bit
 // sub-block scales. The expected values below are computed by hand.
 static void testQ6KPackedPlanesFixture() {
-    std::vector<uint8_t> bytes(210u, 0u);
+    // Q6_K is 210 bytes; the final half at offset 208 is read from the
+    // aligned four-byte word, so the standalone fixture needs two tail bytes.
+    std::vector<uint8_t> bytes(212u, 0u);
     put16(bytes.data() + 208u, 0x3c00u); // d = 1
     bytes[192u] = 2u;    // signed sub-block scale +2
     bytes[0u] = 0x05u;   // first low nibble = 5
