@@ -21,7 +21,7 @@ bool roundTrip(const std::uint8_t* data, std::size_t size) {
     const Result encoded = rawrxd::compression::compress(data, size);
     if (encoded.status != Status::Ok || encoded.bytes.empty()) return false;
     const Result decoded = rawrxd::compression::decompress(
-        encoded.bytes.data(), encoded.bytes.size(), size);
+        encoded.bytes.data(), encoded.bytes.size(), size == 0 ? 1 : size);
     return decoded.status == Status::Ok &&
            decoded.bytes.size() == size &&
            (size == 0 || std::memcmp(decoded.bytes.data(), data, size) == 0);
