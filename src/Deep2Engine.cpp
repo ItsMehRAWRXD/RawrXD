@@ -900,7 +900,16 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     const VkMemoryPropertyFlags memProps =
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-    if (!vulkan->createBuffer(gpu, weightBufferBytes, usage, memProps, Wbuf, Wmem, &Wmapped)) {
+    // Weight payloads are uploaded in their compact representation into
+    // device-local storage. Only the requested tile is resident on the GPU;
+    // the full tensor remains in compressed host residency / the ROM pager.
+    const VkBufferUsageFlags weightUsage =
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    if (!vulkan->createBuffer(gpu, weightBufferBytes, weightUsage,
+                              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Wbuf, Wmem, nullptr)) {
+        cleanup(); return false;
+    }
+    if (!vulkan->uploadToBuffer(gpu, Wbuf, 0, wView.data, logicalWeightBytes)) {
         cleanup(); return false;
     }
     if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) {
@@ -910,8 +919,6 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         cleanup(); return false;
     }
 
-    std::memset(Wmapped, 0, static_cast<size_t>(weightBufferBytes));
-    std::memcpy(Wmapped, wView.data, logicalWeightBytes);
     std::memcpy(xmapped, xView.data, static_cast<size_t>(xsize));
     std::memset(ymapped, 0, static_cast<size_t>(ysize));
 
