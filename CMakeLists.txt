@@ -4455,6 +4455,36 @@ if(MSVC)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
+    # Production contract test: validate the MASM output with zlib's gzip
+    # decoder, including header flags, CRC32, ISIZE, empty and multi-block data.
+    if(BUILD_TESTING AND ZLIB_FOUND)
+        add_executable(brutal_masm_gzip_contract_test
+            tests/brutal_masm_gzip_contract_test.cpp
+            kernels/deflate_brutal_masm.asm)
+        target_include_directories(brutal_masm_gzip_contract_test PRIVATE
+            "${CMAKE_SOURCE_DIR}/include")
+        target_compile_features(brutal_masm_gzip_contract_test PRIVATE cxx_std_17)
+        if(TARGET ZLIB::ZLIB)
+            target_link_libraries(brutal_masm_gzip_contract_test PRIVATE ZLIB::ZLIB)
+        else()
+            target_include_directories(brutal_masm_gzip_contract_test PRIVATE ${ZLIB_INCLUDE_DIRS})
+            target_link_libraries(brutal_masm_gzip_contract_test PRIVATE ${ZLIB_LIBRARIES})
+        endif()
+        add_test(NAME brutal_masm_gzip_contract COMMAND brutal_masm_gzip_contract_test)
+        foreach(_zlib_target ZLIB::ZLIB)
+            if(TARGET ${_zlib_target})
+                get_target_property(_zlib_kind ${_zlib_target} TYPE)
+                if(_zlib_kind STREQUAL "SHARED_LIBRARY")
+                    add_custom_command(TARGET brutal_masm_gzip_contract_test POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                            "$<TARGET_FILE:${_zlib_target}>"
+                            "$<TARGET_FILE_DIR:brutal_masm_gzip_contract_test>"
+                        VERBATIM)
+                endif()
+            endif()
+        endforeach()
+    endif()
+
 endif()
 
 # ARM-NEON benchmark (cross-compile or native ARM64)
