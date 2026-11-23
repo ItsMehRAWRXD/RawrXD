@@ -213,12 +213,19 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
             int quantized=0;
             if(sourceType==8)quantized=static_cast<int8_t>(source[2+i]);
             else if(sourceType==9)quantized=static_cast<int8_t>(source[8+i]);
-            else {
-                const unsigned nibble=i<16?(source[6+i]&15):(source[6+i-16]>>4);
-                const unsigned high=(source[2+i/8]>>(i%8))&1;
-                quantized=static_cast<int>(nibble|(high<<4))-16;
-            }
-            values[i]=static_cast<float>(quantized)*scale;
+            else if(sourceType==6 || sourceType==7) {
+                const unsigned qs=sourceType==6?6:8;
+                const unsigned qh=sourceType==6?2:4;
+                const unsigned j=i%16;
+                const unsigned nibble=i<16?(source[qs+j]&15):(source[qs+j]>>4);
+                const unsigned high=(source[qh+i/8]>>(i%8))&1;
+                quantized=static_cast<int>(nibble|(high<<4));
+                if(sourceType==6)quantized-=16;
+            } else if(sourceType==3) {
+                const unsigned j=i%16;
+                quantized=static_cast<int>(i<16?(source[4+j]&15):(source[4+j]>>4));
+            } else return false;
+            values[i]=static_cast<float>(quantized)*scale+minimum;
             if(!std::isfinite(values[i]))return false;
             if(std::abs(values[i])>std::abs(extreme))extreme=values[i];
         }
