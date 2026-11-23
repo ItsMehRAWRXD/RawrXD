@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <condition_variable>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -36,6 +37,7 @@ public:
     void SetBudget(size_t bytes) {
         std::lock_guard<std::mutex> buildLock(buildMutex_);
         std::lock_guard<std::mutex> lock(mutex_);
+        if (budgetBytes_ != bytes) rawFallback_.clear();
         budgetBytes_ = bytes;
         EvictToFitLocked(0, std::string());
     }
@@ -102,22 +104,30 @@ public:
             auto it = entries_.find(key);
             if (it == entries_.end()) { ++misses_; return false; }
             it->second.lastUse = ++tick_;
+            ++it->second.activeReaders;
             ++hits_;
             storage = it->second.storage;
         }
-        try { storage->ReadRange(first, count, destination, scratch); }
-        catch (...) { return false; }
+        bool decoded = false;
+        try { storage->ReadRange(first, count, destination, scratch); decoded = true; }
+        catch (...) { decoded = false; }
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            const uint64_t n = static_cast<uint64_t>(count);
-            bytesDecoded_ = n > UINT64_MAX - bytesDecoded_ ? UINT64_MAX : bytesDecoded_ + n;
+            auto it = entries_.find(key);
+            if (it != entries_.end() && it->second.activeReaders) --it->second.activeReaders;
+            if (decoded) {
+                const uint64_t n = static_cast<uint64_t>(count);
+                bytesDecoded_ = n > UINT64_MAX - bytesDecoded_ ? UINT64_MAX : bytesDecoded_ + n;
+            }
+            EvictToFitLocked(0, std::string());
+            readersDrained_.notify_all();
         }
-        return true;
+        return decoded;
     }
     bool Evict(const std::string& key) {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = entries_.find(key);
-        if (it == entries_.end()) return false;
+        if (it == entries_.end() || it->second.activeReaders != 0) return false;
         compressedBytes_ -= it->second.compressedBytes;
         logicalBytes_ -= it->second.logicalBytes;
         entries_.erase(it);
@@ -126,7 +136,12 @@ public:
     }
     void Clear() {
         std::lock_guard<std::mutex> buildLock(buildMutex_);
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
+        readersDrained_.wait(lock, [this] {
+            for (const auto& item : entries_)
+                if (item.second.activeReaders != 0) return false;
+            return true;
+        });
         evictions_ += entries_.size();
         entries_.clear();
         rawFallback_.clear();
@@ -143,12 +158,13 @@ private:
         size_t compressedBytes = 0;
         size_t logicalBytes = 0;
         uint64_t lastUse = 0;
+        size_t activeReaders = 0;
     };
     void EvictToFitLocked(size_t needed, const std::string& protectedKey) {
         while (needed <= budgetBytes_ && compressedBytes_ > budgetBytes_ - needed) {
             auto victim = entries_.end();
             for (auto it = entries_.begin(); it != entries_.end(); ++it)
-                if (it->first != protectedKey &&
+                if (it->first != protectedKey && it->second.activeReaders == 0 &&
                     (victim == entries_.end() || it->second.lastUse < victim->second.lastUse))
                     victim = it;
             if (victim == entries_.end()) break;
@@ -160,6 +176,7 @@ private:
     }
     mutable std::mutex mutex_;
     std::mutex buildMutex_; // serialize admission scans so concurrent builds respect the hard budget
+    std::condition_variable readersDrained_;
     size_t budgetBytes_ = 0, compressedBytes_ = 0, logicalBytes_ = 0;
     uint64_t tick_ = 0, hits_ = 0, misses_ = 0, evictions_ = 0, bytesDecoded_ = 0;
     std::unordered_map<std::string, Entry> entries_;
