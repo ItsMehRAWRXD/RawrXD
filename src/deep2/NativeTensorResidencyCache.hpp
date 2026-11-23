@@ -109,8 +109,12 @@ public:
             return true;
         }
         EvictToFitLocked(stored,key);
-        if(stored > budgetBytes_ - compressedBytes_) {
-            rawFallback_.insert(key);
+        // A concurrent reader may temporarily pin enough old entries that
+        // the cache remains above a newly lowered budget. Do not subtract in
+        // that state (size_t would underflow), and do not memoize this as a
+        // deterministic raw fallback: once leases drain, admission can retry.
+        if(compressedBytes_ > budgetBytes_ ||
+           stored > budgetBytes_ - compressedBytes_) {
             return false;
         }
         Entry e;
