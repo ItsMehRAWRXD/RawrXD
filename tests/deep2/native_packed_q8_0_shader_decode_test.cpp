@@ -1,6 +1,12 @@
 #include <algorithm>
 #include "../../src/quant_kernels.hpp"
 #include "../../src/deep2/NativeKQuant.hpp"
+// Keep the numerical regression checks active in Release/RelWithDebInfo.
+// CMake may define NDEBUG for optimized test executables; without this,
+// every assert below becomes a no-op and the test can report a false PASS.
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <cmath>
 #include <cstdint>
