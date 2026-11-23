@@ -774,16 +774,14 @@ inline RepackError RepackGGUF(const std::string& input,
         // quality-sensitive tensors: Q6_K (210 bytes) -> eight Q5_0
         // blocks (176 bytes) per 256 weights. Matrix Q6_K weights
         // continue through the more compact Q4_0 path above.
+        uint64_t q5Bytes=0;
+        if(!CheckedMultiply(count/256,176,q5Bytes))
+            return RepackError::Overflow;
         if((convert_q6_k_to_q5_0 ||
             (auto_compress && (sensitive || !matrix))) &&
            !t.convert_q4_0 && !t.convert_q8_0 &&
            !t.convert_f16 && t.type==14 && t.dims[0]%256==0 &&
-           count/256<t.bytes/176) {
-            // Strictly smaller without multiplying unchecked dimensions.
-            // The final byte count is bounded by the original payload.
-            uint64_t q5Bytes=0;
-            if(!CheckedMultiply(count/256,176,q5Bytes))
-                return RepackError::Overflow;
+           q5Bytes<t.bytes) {
             t.convert_q5_0=true;
             t.type=6; // GGML_TYPE_Q5_0: 8 x 22-byte blocks per 256 weights
             t.bytes=q5Bytes;
