@@ -35,8 +35,28 @@ public:
     std::size_t block_count() const noexcept { return blocks_.size(); }
     std::size_t compressed_bytes() const noexcept {
         std::size_t result = 0;
-        for (const auto& b : blocks_) result += b.payload.size();
+        for (const auto& b : blocks_) {
+            if (b.payload.size() > std::numeric_limits<std::size_t>::max() - result)
+                return std::numeric_limits<std::size_t>::max();
+            result += b.payload.size();
+        }
         return result;
+    }
+    // Account for retained vector capacity and per-block metadata as well as
+    // payload bytes. Use this value for residency admission/budgeting; the
+    // compressed_bytes() value is only the wire-payload ratio.
+    std::size_t resident_bytes() const noexcept {
+        if (blocks_.capacity() >
+            std::numeric_limits<std::size_t>::max() / sizeof(Block))
+            return std::numeric_limits<std::size_t>::max();
+        std::size_t total = blocks_.capacity() * sizeof(Block);
+        for (const auto& b : blocks_) {
+            if (b.payload.capacity() >
+                std::numeric_limits<std::size_t>::max() - total)
+                return std::numeric_limits<std::size_t>::max();
+            total += b.payload.capacity();
+        }
+        return total;
     }
     void read(std::size_t offset, std::uint8_t* out, std::size_t bytes) const {
         if (offset > size_ || bytes > size_ - offset || (bytes && !out))
