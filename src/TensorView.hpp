@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <limits>
 
 namespace deep2 {
 
@@ -138,22 +139,35 @@ inline std::size_t quantBlockSize(TensorType t) {
 // the GGUF loader validates that condition before calling this helper.
 inline std::uint64_t tensorStorageBytes(std::uint64_t numValues, TensorType t) {
     const std::size_t blockValues = quantBlockSize(t);
-    const std::uint64_t blocks = (numValues + blockValues - 1) / blockValues;
+    std::uint64_t blockBytes = 0;
     switch (t) {
-        case TensorType::Q4_0: return blocks * 18;
-        case TensorType::Q4_1: return blocks * 20;
-        case TensorType::Q5_0: return blocks * 22;
-        case TensorType::Q5_1: return blocks * 24;
-        case TensorType::Q8_0: return blocks * 34;
-        case TensorType::Q8_1: return blocks * 40;
-        case TensorType::Q2_K: return blocks * 84;
-        case TensorType::Q3_K: return blocks * 110;
-        case TensorType::Q4_K: return blocks * 144;
-        case TensorType::Q5_K: return blocks * 176;
-        case TensorType::Q6_K: return blocks * 210;
-        case TensorType::Q8_K: return blocks * 292;
-        default: return numValues * static_cast<std::uint64_t>(tensorTypeBytesPerValue(t));
+        case TensorType::Q4_0: blockBytes = 18; break;
+        case TensorType::Q4_1: blockBytes = 20; break;
+        case TensorType::Q5_0: blockBytes = 22; break;
+        case TensorType::Q5_1: blockBytes = 24; break;
+        case TensorType::Q8_0: blockBytes = 34; break;
+        case TensorType::Q8_1: blockBytes = 40; break;
+        case TensorType::Q2_K: blockBytes = 84; break;
+        case TensorType::Q3_K: blockBytes = 110; break;
+        case TensorType::Q4_K: blockBytes = 144; break;
+        case TensorType::Q5_K: blockBytes = 176; break;
+        case TensorType::Q6_K: blockBytes = 210; break;
+        case TensorType::Q8_K: blockBytes = 292; break;
+        default: break;
     }
+    if (blockBytes) {
+        const std::uint64_t blocks = numValues / blockValues +
+            static_cast<std::uint64_t>((numValues % blockValues) != 0);
+        if (blocks > std::numeric_limits<std::uint64_t>::max() / blockBytes)
+            return std::numeric_limits<std::uint64_t>::max();
+        return blocks * blockBytes;
+    }
+    const double bytesPerValue = tensorTypeBytesPerValue(t);
+    if (bytesPerValue <= 0.0 ||
+        numValues > std::numeric_limits<std::uint64_t>::max() /
+                    static_cast<std::uint64_t>(bytesPerValue))
+        return std::numeric_limits<std::uint64_t>::max();
+    return numValues * static_cast<std::uint64_t>(bytesPerValue);
 }
 
 // Non-owning view over raw tensor storage (quantized, f16 or f32). The backing memory
