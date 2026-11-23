@@ -55,6 +55,29 @@ int main() {
     trailing.append('x');
     CHECK(codec::inflate(trailing, &ok).isEmpty() && !ok);
 
+    // Verify checksum rejection after a complete valid header and payload.
+    // Flipping the Adler-32 trailer must never return unverified bytes.
+    QByteArray badChecksum = compact;
+    badChecksum[badChecksum.size() - 1] =
+        static_cast<char>(badChecksum.at(badChecksum.size() - 1) ^ 0x01);
+    CHECK(codec::inflate(badChecksum, &ok).isEmpty() && !ok);
+
+    // Incompressible binary data may expand on disk; the decoder must still
+    // reproduce every byte and respect the caller's exact output budget.
+    QByteArray pseudoRandom;
+    pseudoRandom.reserve(256 * 1024 + 17);
+    unsigned int rng = 0x12345678u;
+    for (int i = 0; i < 256 * 1024 + 17; ++i) {
+        rng ^= rng << 13;
+        rng ^= rng >> 17;
+        rng ^= rng << 5;
+        pseudoRandom.append(static_cast<char>(rng & 0xff));
+    }
+    const QByteArray randomPacked = codec::deflate(pseudoRandom, &ok);
+    CHECK(ok && !randomPacked.isEmpty());
+    CHECK(codec::inflate(randomPacked, &ok, pseudoRandom.size()) == pseudoRandom && ok);
+    CHECK(codec::inflate(randomPacked, &ok, pseudoRandom.size() - 1).isEmpty() && !ok);
+
     const QByteArray invalid("not-a-zlib-stream");
     CHECK(codec::inflate(invalid, &ok).isEmpty() && !ok);
 
