@@ -12,6 +12,16 @@ static constexpr int8_t kIQ4NLValues[16] = {
     -127, -104, -83, -65, -49, -35, -22, -10,
        1,   13,  25,  38,  53,  69,  89, 113
 };
+static constexpr int8_t kMXFP4Values[16] = {
+    0, 1, 2, 3, 4, 6, 8, 12, 0, -1, -2, -3, -4, -6, -8, -12
+};
+
+static inline bool e8m0HalfScale(uint8_t exponent, float& scale) {
+    if (exponent == 0xff) return false; // E8M0 NaN is not a valid weight scale.
+    const int unbiased = exponent == 0 ? -128 : static_cast<int>(exponent) - 128;
+    scale = std::ldexp(1.0f, unbiased);
+    return std::isfinite(scale);
+}
 
 static inline float fp16ToF32(uint16_t v) {
     uint32_t sign = (v & 0x8000u) << 16;
@@ -117,6 +127,23 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
             out[i] = static_cast<float>(value);
         }
         return true;
+    case TensorType::MXFP4: {
+        const size_t blocks = static_cast<size_t>((n + 31) / 32);
+        for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
+            const uint8_t* block = src.data + blockIndex * 17;
+            float scale = 0.0f;
+            if (!e8m0HalfScale(block[0], scale)) return false;
+            const uint8_t* packed = block + 1;
+            const size_t base = blockIndex * 32;
+            const size_t take = std::min<size_t>(32, static_cast<size_t>(n) - base);
+            for (size_t j = 0; j < take; ++j) {
+                const uint8_t byte = packed[j & 15u];
+                const uint8_t code = j < 16 ? (byte & 0x0fu) : (byte >> 4);
+                out[base + j] = scale * static_cast<float>(kMXFP4Values[code]);
+            }
+        }
+        return true;
+    }
     case TensorType::IQ4_XS: {
         const size_t blocks = static_cast<size_t>((n + 255) / 256);
         for (size_t blockIndex = 0; blockIndex < blocks; ++blockIndex) {
@@ -277,6 +304,7 @@ bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
     case TensorType::Q8_1:
     case TensorType::IQ4_NL:
     case TensorType::IQ4_XS:
+    case TensorType::MXFP4:
     case TensorType::Q2_K:
     case TensorType::Q3_K:
     case TensorType::Q4_K:
