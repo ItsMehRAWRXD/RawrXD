@@ -662,20 +662,28 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
                 wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
                 wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
                 wt.type == (int)GGMLType::GGML_TYPE_Q6_K;
-            if (wt.data && (gpuPacked ||
+            GpuWeightView packedF32{};
+            const bool gpuCompressedF32 =
+                wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                wt.BuildCompressedF32GpuView(
+                    0, static_cast<uint32_t>(wt.rows), packedF32);
+            if (wt.data && (gpuPacked || gpuCompressedF32 ||
                 wt.type == (int)GGMLType::GGML_TYPE_F32)) {
-                const size_t bytes = gpuPacked
-                    ? wt.sizeBytes
-                    : wt.rows * wt.cols * sizeof(float);
-                batch9PrimeType = gpuPacked ? wt.type : 0;
+                const void* primeData = gpuPacked ? wt.data
+                    : (gpuCompressedF32 ? packedF32.data : wt.data);
+                const size_t bytes = gpuPacked ? wt.sizeBytes
+                    : (gpuCompressedF32 ? packedF32.bytes
+                        : wt.rows * wt.cols * sizeof(float));
+                batch9PrimeType = gpuPacked ? wt.type
+                    : (gpuCompressedF32 ? packedF32.type : 0);
                 batch9PrimeKey = gpuPacked
                     ? (uint64_t)(uintptr_t)wt.data
-                    : WeightKey(wt);
+                    : (gpuCompressedF32 ? packedF32.key : WeightKey(wt));
                 const uint64_t epoch =
                     kvCache ? kvCache->currentLength() : 0;
                 next->SetWorkEpoch(epoch);
                 batch9PrimeLive = next->SubmitWeightPrimeAsync(
-                    wt.data, bytes, batch9PrimeType,
+                    primeData, bytes, batch9PrimeType,
                     batch9PrimeKey, epoch, batch9Prime);
             }
         }
