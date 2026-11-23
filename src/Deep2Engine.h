@@ -110,6 +110,9 @@ namespace Deep2
         // consumers may request only the byte range required by a kernel.
         std::shared_ptr<rawrxd::compression::CompressedWeightStore> compressedStore;
         std::string compressedKey;
+        // Byte offset into the authoritative compressed tensor for lightweight
+        // subviews such as one per-head Q/K normalization vector.
+        std::size_t compressedByteOffset = 0;
 
         bool attachCompressedBacking(
             std::shared_ptr<rawrxd::compression::CompressedWeightStore> store,
@@ -124,6 +127,7 @@ namespace Deep2
                 return false;
             compressedStore = std::move(store);
             compressedKey = key;
+            compressedByteOffset = 0;
             return true;
         }
 
@@ -144,7 +148,14 @@ namespace Deep2
                 return false;
             }
             if (hasCompressedBacking())
-                return compressedStore->readRange(compressedKey, offset, destination, length, error);
+            {
+                if (compressedByteOffset > (std::numeric_limits<std::size_t>::max)() - offset) {
+                    if (error) *error = "WeightTensor compressed view offset overflow";
+                    return false;
+                }
+                return compressedStore->readRange(compressedKey,
+                    compressedByteOffset + offset, destination, length, error);
+            }
             if (!data && length) {
                 if (error) *error = "WeightTensor has neither raw nor compressed backing";
                 return false;
