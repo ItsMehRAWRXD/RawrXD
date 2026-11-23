@@ -217,6 +217,39 @@ public:
         return exported;
     }
 
+    // Fill caller-owned GPU upload staging directly. The shared storage
+    // reference keeps chunks alive while the copy is in progress.
+    bool CopyUniform16BitRange(const std::string& key, size_t first, size_t count,
+                               RawrXD::TensorCompression::Encoding& encoding,
+                               void* destination, size_t destinationBytes) {
+        std::shared_ptr<const RawrXD::TensorCompression::ChunkedF32Storage> storage;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = entries_.find(key);
+            if (it == entries_.end()) { ++cacheMisses_; return false; }
+            it->second.lastUse = ++tick_;
+            ++it->second.activeReaders;
+            ++cacheHits_;
+            storage = it->second.storage;
+        }
+        bool copied = false;
+        try {
+            copied = storage->CopyUniform16BitRange(
+                first, count, encoding, destination, destinationBytes);
+        } catch (...) {
+            copied = false;
+        }
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = entries_.find(key);
+            if (it != entries_.end() && it->second.activeReaders)
+                --it->second.activeReaders;
+            EvictToFitLocked(0, std::string());
+            readersDrained_.notify_all();
+        }
+        return copied;
+    }
+
     bool Evict(const std::string& key) {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it=entries_.find(key);
