@@ -34,7 +34,7 @@ int main(){
           "f16_accuracy_and_nonfinite_accounting");
     {
         std::fstream out(target,std::ios::binary|std::ios::in|std::ios::out);
-        out.seekp(0);out.put('\0');
+        out.seekp(0);out.put('\x01');
     }
     check(!AuditF32ToF16(source,target,0,0,6,accuracy),
           "corrupted_conversion_rejected");
