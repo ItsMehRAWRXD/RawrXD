@@ -130,7 +130,7 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
             for (size_t group = 0; group < 8; ++group) {
                 const unsigned low = (lowScales[group / 2] >> (4 * (group % 2))) & 0x0fu;
                 const unsigned high = (highScales >> (2 * group)) & 0x03u;
-                const float groupScale = scale * static_cast<float>((low | (high << 4)) - 32);
+                const float groupScale = scale * static_cast<float>(static_cast<int>(low | (high << 4)) - 32);
                 for (size_t j = 0; j < 16; ++j) {
                     const size_t first = group * 32 + j;
                     const size_t second = first + 16;
