@@ -511,7 +511,8 @@ public:
     // detail: slicing is performed directly on the compact payload, without
     // decoding an intermediate F32 tile. Mixed codecs fail closed.
     bool ExportUniform16BitRange(size_t first, size_t count, Encoding& encoding,
-                                 std::vector<uint8_t>& packed) const {
+                                 std::vector<uint8_t>& packed,
+                                 float maxAbsError = 0.0f) const {
         packed.clear();
         if (first > element_count_ || count > element_count_ - first) return false;
         if (!count) {
@@ -524,15 +525,43 @@ public:
         const size_t lastChunk = (end - 1) / chunk_elements_;
         if (lastChunk >= chunks_.size()) return false;
         const Encoding selected = chunks_[firstChunk].encoding;
-        if (selected != Encoding::F16 && selected != Encoding::BF16) return false;
+        // Fast path: if every intersecting chunk is already the same compact
+        // 16-bit representation, slice its bytes without decoding.
+        bool uniform16 = selected == Encoding::F16 || selected == Encoding::BF16;
+        for (size_t i = firstChunk; uniform16 && i <= lastChunk; ++i) {
+            const auto& chunk = chunks_[i];
+            uniform16 = chunk.encoding == selected &&
+                chunk.original_bytes % sizeof(float) == 0 &&
+                chunk.payload.size() == chunk.original_bytes / 2;
+        }
+        if (!uniform16) {
+            // Mixed RLE/LZ4/raw/F16/BF16 chunks are still eligible for a
+            // compact GPU tile. Decode only the requested range, then repack
+            // to a uniform F16/BF16 payload under the caller's explicit error
+            // budget. This avoids falling all the way back to a 32-bit GPU
+            // upload merely because the host cache uses mixed chunk codecs.
+            if (count > std::numeric_limits<size_t>::max() / sizeof(float) ||
+                !std::isfinite(maxAbsError) || maxAbsError < 0.0f)
+                return false;
+            std::vector<float> decoded(count);
+            std::vector<uint8_t> decodeScratch;
+            try {
+                ReadRange(first, count, decoded.data(), decodeScratch);
+                if (!EncodeUniform16BitF32(decoded.data(), count, maxAbsError,
+                                           encoding, packed)) {
+                    packed.clear();
+                    return false;
+                }
+            } catch (...) {
+                packed.clear();
+                return false;
+            }
+            return packed.size() == count * sizeof(uint16_t);
+        }
 
         size_t totalBytes = 0;
         for (size_t i = firstChunk; i <= lastChunk; ++i) {
             const auto& chunk = chunks_[i];
-            if (chunk.encoding != selected ||
-                chunk.original_bytes % sizeof(float) != 0 ||
-                chunk.payload.size() != chunk.original_bytes / 2)
-                return false;
             const size_t chunkFirst = i * chunk_elements_;
             const size_t chunkElements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
             if (chunkElements > element_count_ - chunkFirst) return false;

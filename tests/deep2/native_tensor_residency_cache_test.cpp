@@ -201,6 +201,23 @@ int main() {
         RawrXD::TensorCompression::Encoding::Raw;
     std::vector<uint8_t> mixedPacked;
     assert(!mixedTileStorage.ExportUniform16Bit(mixedEncoding, mixedPacked));
+    // Mixed raw/RLE/LZ4/F16 chunks can still be exported as one compact GPU
+    // tile by decoding only the requested range and applying the explicit
+    // F16/BF16 error budget. The 0.01 budget covers this deterministic [0,1]
+    // fixture while preserving the compact two-byte device representation.
+    assert(mixedTileStorage.ExportUniform16BitRange(
+        0, 512, mixedEncoding, mixedPacked, 0.01f));
+    assert(mixedEncoding == RawrXD::TensorCompression::Encoding::F16 ||
+           mixedEncoding == RawrXD::TensorCompression::Encoding::BF16);
+    assert(mixedPacked.size() == 512 * sizeof(uint16_t));
+    for (size_t i = 0; i < 512; ++i) {
+        const uint16_t bits = static_cast<uint16_t>(mixedPacked[2*i]) |
+                              (static_cast<uint16_t>(mixedPacked[2*i+1]) << 8);
+        const float restored = mixedEncoding == RawrXD::TensorCompression::Encoding::F16
+            ? RawrXD::TensorCompression::FromHalf(bits)
+            : RawrXD::TensorCompression::FromBFloat16(bits);
+        assert(std::fabs(restored - mixedTileSource[i]) <= 0.01f);
+    }
     std::vector<float> mixedDecodedRows(512);
     std::vector<uint8_t> mixedDecodeScratch;
     mixedTileStorage.ReadRange(0, mixedDecodedRows.size(),

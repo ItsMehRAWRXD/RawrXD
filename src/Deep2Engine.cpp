@@ -723,7 +723,8 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                 std::vector<uint8_t> packedWeights;
                 if (compressedF32Weights.ExportUniform16BitRange(
                         cacheKey, static_cast<size_t>(firstElement), elements,
-                        encoding, packedWeights)) {
+                        encoding, packedWeights,
+                        compressedF32MaxAbsError.load(std::memory_order_relaxed))) {
                     const deep2::TensorType packedType =
                         encoding == RawrXD::TensorCompression::Encoding::F16
                             ? deep2::TensorType::F16 : deep2::TensorType::BF16;

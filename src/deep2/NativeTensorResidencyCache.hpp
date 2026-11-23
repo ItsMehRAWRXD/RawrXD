@@ -188,7 +188,8 @@ public:
     // returned bytes remain in the cache's native 16-bit representation.
     bool ExportUniform16BitRange(const std::string& key, size_t first, size_t count,
                                  RawrXD::TensorCompression::Encoding& encoding,
-                                 std::vector<uint8_t>& packed) {
+                                 std::vector<uint8_t>& packed,
+                                 float maxAbsError = 0.0f) {
         std::shared_ptr<const RawrXD::TensorCompression::ChunkedF32Storage> storage;
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -201,7 +202,7 @@ public:
         }
         bool exported = false;
         try {
-            exported = storage->ExportUniform16BitRange(first, count, encoding, packed);
+            exported = storage->ExportUniform16BitRange(first, count, encoding, packed, maxAbsError);
         } catch (...) {
             packed.clear();
             exported = false;
