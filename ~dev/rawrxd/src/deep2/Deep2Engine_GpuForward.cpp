@@ -334,6 +334,78 @@ bool Deep2Engine::forwardLayerGpuResident(
                 return submitted;
             }
         }
+        // Mixed-codec F32 storage cannot be exported as one uniform
+        // 16-bit matrix. Decode only a bounded row tile, repack that tile to
+        // fixed-stride F16/BF16, and dispatch it into the corresponding output
+        // window. This keeps RLE/LZ4/raw chunks compressed between kernel calls
+        // and never materializes the full F32 weight matrix.
+        if (wt.type == (int)GGMLType::GGML_TYPE_F32 && wt.compressedF32) {
+            if (prefetch && vc->WeightStreamActive() &&
+                !vc->FlushWeightComputes())
+                return false;
+            float maxAbsError = 0.0f;
+            if (const char* setting =
+                    std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR")) {
+                char* end = nullptr;
+                maxAbsError = std::strtof(setting, &end);
+                if (end == setting || *end != '\0' ||
+                    !std::isfinite(maxAbsError) || maxAbsError < 0.0f)
+                    return false;
+            }
+            constexpr size_t kMaxDecodedTileBytes = 256u * 1024u;
+            if (!cols || cols > std::numeric_limits<size_t>::max() /
+                                  sizeof(float))
+                return false;
+            const size_t rowBytes = static_cast<size_t>(cols) * sizeof(float);
+            const size_t rowsPerTile = std::max<size_t>(
+                1, kMaxDecodedTileBytes / std::max<size_t>(1, rowBytes));
+            std::vector<float> decodedTile;
+            std::vector<uint8_t> decodeScratch;
+            std::vector<uint8_t> packedTile;
+            for (uint32_t rowBase = 0; rowBase < rows;) {
+                const uint32_t tileRows = static_cast<uint32_t>(
+                    std::min<size_t>(rows - rowBase, rowsPerTile));
+                const size_t tileElements =
+                    static_cast<size_t>(tileRows) * static_cast<size_t>(cols);
+                decodedTile.resize(tileElements);
+                wt.compressedF32->ReadRange(
+                    static_cast<size_t>(rowBase) * cols, tileElements,
+                    decodedTile.data(), decodeScratch);
+
+                RawrXD::TensorCompression::Encoding encoding{};
+                if (!RawrXD::TensorCompression::EncodeUniform16BitF32(
+                        decodedTile.data(), tileElements, maxAbsError,
+                        encoding, packedTile))
+                    return false;
+                const int packedType = encoding ==
+                    RawrXD::TensorCompression::Encoding::F16 ? 1 : 30;
+                if (packedTile.size() != tileElements * sizeof(uint16_t))
+                    return false;
+
+                uint64_t tileKey = WeightKey(wt);
+                tileKey ^= (static_cast<uint64_t>(rowBase) *
+                            0x9E3779B185EBCA87ull);
+                tileKey ^= (static_cast<uint64_t>(tileRows) << 17);
+                tileKey ^= (static_cast<uint64_t>(packedType) << 57);
+                if (!tileKey) tileKey = 1;
+                if (!vc->DispatchGemvQuantRows(
+                        packedType, packedTile.data(), packedTile.size(),
+                        in, out, tileRows, cols, rowBase, tileKey))
+                    return false;
+
+                if (packedType == 1) ++c.compressedF16GemvOps;
+                else ++c.compressedBF16GemvOps;
+                const uint64_t bytes = static_cast<uint64_t>(packedTile.size());
+                c.compressedWeightBytesSubmitted =
+                    bytes > std::numeric_limits<uint64_t>::max() -
+                                c.compressedWeightBytesSubmitted
+                        ? UINT64_MAX
+                        : c.compressedWeightBytesSubmitted + bytes;
+                rowBase += tileRows;
+            }
+            return true;
+        }
+
         /* Product decode: Q2_K must not host-Expand F32 / 72-byte MASM. */
         if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
             const char* pd = std::getenv("RAWRXD_Q2K_PRODUCT_DECODE");
