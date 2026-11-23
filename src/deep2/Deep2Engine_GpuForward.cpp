@@ -81,8 +81,12 @@ bool gpuPackedType(int type) noexcept {
            type == static_cast<int>(GGMLType::GGML_TYPE_Q4_0);
 }
 
+bool hasWeightStorage(const WeightTensor& wt) noexcept {
+    return wt.data != nullptr || wt.hasCompressedBacking();
+}
+
 bool usableWeight(const WeightTensor& wt) noexcept {
-    return wt.data != nullptr && wt.rows != 0 && wt.cols != 0 &&
+    return hasWeightStorage(wt) && wt.rows != 0 && wt.cols != 0 &&
            wt.sizeBytes != 0 && wt.rows <= UINT32_MAX && wt.cols <= UINT32_MAX;
 }
 
@@ -90,7 +94,7 @@ const float* ensureF32(
     const WeightTensor& wt,
     std::unordered_map<std::string, std::vector<float>>& cache) {
     if (!usableWeight(wt)) return nullptr;
-    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32))
+    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32) && wt.data)
         return static_cast<const float*>(wt.data);
 
     std::string key = wt.name;
@@ -109,13 +113,19 @@ const float* ensureF32(
         return nullptr;
 
     std::vector<float> decoded(elements);
-    dequant(static_cast<const uint8_t*>(wt.data), decoded.data(), elements);
+    if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+        if (!wt.readBytes(0, decoded.data(), elements * sizeof(float))) return nullptr;
+    } else {
+        std::vector<uint8_t> packed(wt.sizeBytes);
+        if (!wt.readBytes(0, packed.data(), packed.size())) return nullptr;
+        dequant(packed.data(), decoded.data(), elements);
+    }
     auto inserted = cache.emplace(std::move(key), std::move(decoded));
     return inserted.first->second.data();
 }
 
 bool denseLayerReady(const LayerWeights& lw) noexcept {
-    const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    const WeightTensor& wo = hasWeightStorage(lw.wo) ? lw.wo : lw.attnO;
     return usableWeight(lw.attnNorm) && usableWeight(lw.wq) &&
            usableWeight(lw.wk) && usableWeight(lw.wv) && usableWeight(wo) &&
            usableWeight(lw.ffnNorm) && usableWeight(lw.wGate) &&
@@ -427,7 +437,19 @@ bool Deep2Engine::forwardLayerGpuResident(
         const bool packed = gpuPackedType(wt.type);
         bool ok = false;
         if (packed) {
-            ok = gpu->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes,
+            std::vector<uint8_t> compressedPacked;
+            const void* packedData = wt.data;
+            if (!packedData && wt.hasCompressedBacking()) {
+                compressedPacked.resize(wt.sizeBytes);
+                std::string decodeError;
+                if (!wt.readBytes(0, compressedPacked.data(), compressedPacked.size(), &decodeError)) {
+                    gpuForwardTrace("reject: compressed packed-weight read failed");
+                    return false;
+                }
+                packedData = compressedPacked.data();
+            }
+            if (!packedData) return false;
+            ok = gpu->DispatchGemvQuant(wt.type, packedData, wt.sizeBytes,
                                         input, output, rows, cols,
                                         weightKey(wt));
             if (ok) {
