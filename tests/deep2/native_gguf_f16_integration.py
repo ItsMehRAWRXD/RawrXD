@@ -267,6 +267,25 @@ def run(binary):
             assert result.returncode!=0
             assert source.read_bytes()==before
             assert partial.is_symlink()
+        # Exercise the >64 MiB F32 streaming path without allocating a
+        # Python list of millions of floats.
+        huge=root/"huge.gguf"
+        n=(64*1024*1024)//4+32
+        kv=S("general.architecture")+U32(8)+S("llama")
+        kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+        header=b"GGUF"+U32(3)+U64(1)+U64(2)+kv
+        header+=S("blk.0.attn_q.weight")+U32(1)+U64(n)+U32(0)+U64(0)
+        with huge.open("wb") as f:
+            f.write(pad(header))
+            chunk=struct.pack("<f",1.0)*16384
+            for _ in range(n//16384):f.write(chunk)
+            f.write(struct.pack("<f",1.0)*(n%16384))
+        compact=root/"huge-f16.gguf"
+        subprocess.run([binary,str(huge),str(compact),"0","f16"],check=True)
+        data,ds,meta,desc=parse(compact)
+        assert desc["blk.0.attn_q.weight"][:2]==(1,(n,))
+        assert len(data)<len(huge.read_bytes())
+        assert data[ds:ds+16]==struct.pack("<e",1.0)*8
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
