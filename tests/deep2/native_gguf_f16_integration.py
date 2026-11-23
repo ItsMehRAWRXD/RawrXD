@@ -143,6 +143,27 @@ def run(binary):
                     packed=cb[p+2:p+18]
                     decoded=tuple((packed[j]&15)-8 if j<16 else (packed[j-16]>>4)-8 for j in range(32))
                 assert all(abs(scale*q-values[block*32+j])<=limit for j,q in enumerate(decoded))
+        # GGML Q5_0 independent reconstruction (16 low and 16 high nibbles
+        # plus one high bit per element, little-endian 32-bit high-bit mask).
+        for qsource in (source,target,bf):
+            dest=root/(qsource.stem+"-q5.gguf")
+            subprocess.run([binary,str(qsource),str(dest),"500","q5_0"],check=True)
+            bb,bs,mm,tt=parse(dest)
+            assert mm==metadata
+            assert tt["blk.0.attn_q.weight"][0]==6
+            off=tt["blk.0.attn_q.weight"][2]
+            for block in range(len(values)//32):
+                p=bs+off+block*22
+                scale=struct.unpack_from("<e",bb,p)[0]
+                high=struct.unpack_from("<I",bb,p+2)[0]
+                packed=bb[p+6:p+22]
+                assert len(packed)==16
+                for j in range(32):
+                    lo=(packed[j]&15) if j<16 else (packed[j-16]>>4)
+                    code=lo|(((high>>j)&1)<<4)
+                    assert abs(scale*(code-16)-values[block*32+j])<=500
+            offq=tt["blk.0.attn_k.weight"][2]
+            assert bb[bs+offq:bs+offq+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
