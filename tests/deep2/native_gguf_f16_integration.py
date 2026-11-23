@@ -160,6 +160,21 @@ def run(binary):
         ib,ins,im,it=parse(auto_inexact)
         assert it["blk.0.attn_q.weight"][0]==0  # no lossy encoding permitted
         assert struct.unpack_from("<f",ib,ins+it["blk.0.attn_q.weight"][2])[0]==struct.unpack("<f",struct.pack("<f",1.0001))[0]
+        # F16 cannot represent 65536, but BF16 can represent it exactly.
+        # Auto must choose BF16 for this tensor under zero absolute error.
+        wide=root/"auto-bf16-source.gguf"
+        wide_bytes=bytearray(original)
+        for j in range(3,len(values),4):
+            struct.pack_into("<f",wide_bytes,orig_start+4*j,65536.0)
+        wide.write_bytes(wide_bytes)
+        wide_out=root/"auto-bf16-output.gguf"
+        subprocess.run([binary,str(wide),str(wide_out),"0","auto"],check=True)
+        wb,ws,wm,wt=parse(wide_out)
+        assert wt["blk.0.attn_q.weight"][0]==30
+        assert wt["blk.0.attn_k.weight"][0]==6
+        woff=ws+wt["blk.0.attn_q.weight"][2]
+        assert struct.unpack_from("<H",wb,woff+3*2)[0]==0x4780
+        assert wb[ws+wt["blk.0.attn_k.weight"][2]:ws+wt["blk.0.attn_k.weight"][2]+32]==quant
         # Strict Q8_0 error budget must retain F32, including all payload bytes.
         strictq=root/"strict-q8.gguf"
         subprocess.run([binary,str(source),str(strictq),"0","q8_0"],check=True)
