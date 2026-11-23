@@ -5474,7 +5474,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
         size_t hiddenDim = modelWeights.hiddenDim;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize)
         {
-            const uint16_t* src = embedTable + tokenId * hiddenDim;
+            const uint16_t* src = embedTable + embedRowIndex * hiddenDim;
 #if defined(__F16C__) || defined(_MSC_VER)
             if (hiddenDim >= 8)
             {
@@ -5587,7 +5587,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 rowBytes = modelWeights.tokenEmbed.sizeBytes / modelWeights.vocabSize;
             }
 
-            const uint8_t* row = embedData + tokenId * rowBytes;
+            const uint8_t* row = embedData + embedRowIndex * rowBytes;
 
             auto& reg = Deep2::QuantKernelRegistry::Instance();
             // Ensure registry is initialized before use
