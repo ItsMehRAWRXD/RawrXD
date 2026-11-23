@@ -95,6 +95,34 @@ struct WeightTensor {
     // Optional private compressed F32 backing. GGUF wire type and mapped
     // source remain unchanged; CPU inference may opt into row-streamed reads.
     std::shared_ptr<RawrXD::TensorCompression::ChunkedF32Storage> compressedF32;
+    // Losslessly compressed wire bytes for already-quantized GGUF tensors.
+    // Their GGML type and logical geometry remain authoritative.
+    std::shared_ptr<RawrXD::TensorCompression::ChunkedByteStorage> compressedBytes;
+
+    bool EnableCompressedBytes(
+        size_t chunkBytes = 64u * 1024u,
+        size_t maxStoredBytes = std::numeric_limits<size_t>::max()) {
+        if (type == 0 || !data || !sizeBytes || !chunkBytes) return false;
+        try {
+            const auto* source = static_cast<const uint8_t*>(data);
+            auto candidate =
+                RawrXD::TensorCompression::ChunkedByteStorage::BuildFromReader(
+                    sizeBytes,
+                    [source](size_t offset, size_t count, uint8_t* destination) {
+                        if (!source || !destination) return false;
+                        std::memcpy(destination, source + offset, count);
+                        return true;
+                    }, chunkBytes, false, maxStoredBytes);
+            if (!candidate.storedBytes() || candidate.storedBytes() >= sizeBytes)
+                return false;
+            compressedBytes =
+                std::make_shared<RawrXD::TensorCompression::ChunkedByteStorage>(
+                    std::move(candidate));
+            return true;
+        } catch (...) {
+            return false;
+        }
+    }
     struct GpuCompressedF32Payload {
         // Retain the canonical chunked backing instead of copying it into a
         // second contiguous 16-bit host allocation.
