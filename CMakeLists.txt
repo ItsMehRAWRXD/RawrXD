@@ -87,6 +87,8 @@ add_executable(reap_affine_q4_regression tools/reap_affine_q4_regression.cpp)
 target_include_directories(reap_affine_q4_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_float_to_q4_regression tools/reap_float_to_q4_regression.cpp)
 target_include_directories(reap_float_to_q4_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(reap_auto_regression tools/reap_auto_regression.cpp)
+target_include_directories(reap_auto_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_row_alignment_regression tools/reap_row_alignment_regression.cpp)
 target_include_directories(reap_row_alignment_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -189,6 +191,7 @@ add_test(NAME REAP_Q5_0_To_Q4_0_Regression COMMAND reap_q5_to_q4_regression)
 add_test(NAME REAP_Q8_1_To_Q4_0_Regression COMMAND reap_q8_1_to_q4_regression)
 add_test(NAME REAP_Affine_Q4_Regression COMMAND reap_affine_q4_regression)
 add_test(NAME REAP_Float_To_Q4_Regression COMMAND reap_float_to_q4_regression)
+add_test(NAME REAP_Auto_Regression COMMAND reap_auto_regression)
 add_test(NAME REAP_Row_Alignment_Regression COMMAND reap_row_alignment_regression)
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
