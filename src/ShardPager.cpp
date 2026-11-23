@@ -209,6 +209,30 @@ std::size_t PageCache::leaseCount() const {
     return total;
 }
 
+std::size_t PageCache::evictUnleasedRange(uint32_t shard, uint64_t offset, uint64_t size) {
+    if (!size || offset > UINT64_MAX - (size - 1)) return 0;
+    const uint64_t firstPage = offset / m_pageSize;
+    const uint64_t lastPage = (offset + size - 1) / m_pageSize;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    std::size_t evicted = 0;
+    for (uint64_t pageNo = firstPage;; ++pageNo) {
+        auto it = m_index.find(makeKey(shard, pageNo));
+        if (it != m_index.end()) {
+            Page* page = it->second;
+            if (page->leaseCount.load(std::memory_order_acquire) == 0) {
+                m_lru.erase(page->lruIt);
+                m_index.erase(it);
+                m_residentBytes -= page->data.size();
+                page->inCache = false;
+                delete page;
+                ++evicted;
+            }
+        }
+        if (pageNo == lastPage) break;
+    }
+    return evicted;
+}
+
 void PageCache::evictUnleasedAll() {
     std::lock_guard<std::mutex> lock(m_mutex);
     while (!m_lru.empty()) {
