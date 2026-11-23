@@ -18,7 +18,8 @@ int main() {
     BoundedWeightStager stager(1024);
     std::vector<std::uint8_t> observed;
     std::size_t chunks = 0;
-    stager.for_each_chunk(resident, 99, 65500, [&](std::size_t offset, const std::uint8_t* bytes, std::size_t n) {
+    const std::size_t requested = original.size() - 99;
+    stager.for_each_chunk(resident, 99, requested, [&](std::size_t offset, const std::uint8_t* bytes, std::size_t n) {
         (void)offset;
         observed.insert(observed.end(), bytes, bytes + n);
         ++chunks;
