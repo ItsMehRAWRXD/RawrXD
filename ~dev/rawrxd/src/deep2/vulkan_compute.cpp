@@ -764,7 +764,7 @@ VulkanCompute::Q4KBatchTile VulkanCompute::SelectQ4KBatchTile(
         bool ok=t==Q4KBatchTile::Eight
             ? DispatchGemvQ4KBatch8Row(
                 weights,weightBytes,inputBatch,scratchOutput,
-                rows,cols,batch)
+                rows,cols,batch,stableKey)
             : DispatchGemvQ4KBatch4Row(
                 weights,weightBytes,inputBatch,scratchOutput,
                 rows,cols,batch);
@@ -3126,14 +3126,14 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     if(rows>=4 && qBatch4RowPipeline_) {
         const Q4KBatchTile tile=SelectQ4KBatchTile(
             weights,weightBytes,inputBatch,outputBatch,
-            rows,cols,batch);
+            rows,cols,batch,stableKey);
         if(tile==Q4KBatchTile::Eight && rows>=8 && qBatch8RowPipeline_)
             return DispatchGemvQ4KBatch8Row(
                 weights,weightBytes,inputBatch,outputBatch,
-                rows,cols,batch);
+                rows,cols,batch,stableKey);
         return DispatchGemvQ4KBatch4Row(
             weights,weightBytes,inputBatch,outputBatch,
-            rows,cols,batch);
+            rows,cols,batch,stableKey);
     }
     if(!qBatchPipeline_||!weights||!weightBytes||
        !rows||!cols||batch==0||batch>4)
