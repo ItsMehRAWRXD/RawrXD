@@ -1,5 +1,5 @@
 # Native, dependency-free GGUF tensor compressor.
-# The executable emits standard GGML Q2_K..Q6_K blocks; Deep2's existing
+# The executable emits standard GGML Q2_K..Q6_K and Q8_K blocks; Deep2's existing
 # GGUFLoader/QuantKernelRegistry already own the corresponding load/decode path.
 option(RAWRXD_BUILD_NATIVE_GGUF_COMPRESSOR "Build native GGUF precision-gated compressor" ON)
 if(RAWRXD_BUILD_NATIVE_GGUF_COMPRESSOR)
