@@ -169,6 +169,9 @@ endif()
 # RawrXD - Zero Bloat Horizon (Phase 14.7.3+)
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
+# Native standard-GGUF tensor compression (no external codec dependency).
+include(cmake/NativeTensorCompression.cmake)
+
 # ============================================================================
 # nlohmann/json via FetchContent (fixes Deep2Discovery.cpp json/json.hpp)
 # ============================================================================
