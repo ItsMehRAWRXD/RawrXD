@@ -156,7 +156,17 @@ target_include_directories(test_native_tensor_byte_residency_cache PRIVATE ${CMA
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
 # Enable testing
+find_package(ZLIB QUIET)
+if(ZLIB_FOUND)
+    add_executable(test_zlib_autodetect_smoke tests/zlib_autodetect_smoke.cpp)
+    target_compile_features(test_zlib_autodetect_smoke PRIVATE cxx_std_17)
+    target_link_libraries(test_zlib_autodetect_smoke PRIVATE ZLIB::ZLIB)
+endif()
+
 enable_testing()
+if(ZLIB_FOUND)
+    add_test(NAME ZlibAutoDetectSmoke COMMAND test_zlib_autodetect_smoke)
+endif()
 add_test(NAME NativeTensorCompression COMMAND test_native_tensor_compression)
 add_test(NAME NativeTensorResidencyCache COMMAND test_native_tensor_residency_cache)
 add_test(NAME NativeTensorByteResidencyCache COMMAND test_native_tensor_byte_residency_cache)
