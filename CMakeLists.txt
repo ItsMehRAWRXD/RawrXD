@@ -161,6 +161,8 @@ add_executable(reap_q51_matrix_lossy_regression tools/reap_q51_matrix_lossy_regr
 target_include_directories(reap_q51_matrix_lossy_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_q41_vector_guard_regression tools/reap_q41_vector_guard_regression.cpp)
 target_include_directories(reap_q41_vector_guard_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(reap_q81_exact_regression tools/reap_q81_exact_regression.cpp)
+target_include_directories(reap_q81_exact_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_auto_regression tools/reap_auto_regression.cpp)
 target_include_directories(reap_auto_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_row_alignment_regression tools/reap_row_alignment_regression.cpp)
@@ -302,6 +304,7 @@ add_test(NAME REAP_Overlap_Preflight_Regression COMMAND reap_overlap_preflight_r
 add_test(NAME REAP_Affine_Used_Codes_Regression COMMAND reap_affine_used_codes_regression)
 add_test(NAME REAP_Q51_Matrix_Lossy_Regression COMMAND reap_q51_matrix_lossy_regression)
 add_test(NAME REAP_Q41_Vector_Guard_Regression COMMAND reap_q41_vector_guard_regression)
+add_test(NAME REAP_Q81_Exact_Regression COMMAND reap_q81_exact_regression)
 add_test(NAME REAP_Auto_Regression COMMAND reap_auto_regression)
 add_test(NAME REAP_Row_Alignment_Regression COMMAND reap_row_alignment_regression)
 add_test(NAME Deep2Engine_SmokeTest
