@@ -294,6 +294,19 @@ inline bool ConvertToQ4_0(std::ifstream& in,std::ofstream& out,
                 std::memcpy(&minimum,&bits,4);
                 if(!std::isfinite(minimum))return false;
             }
+            // Q4_1 and Q4_0 have identical nibble order. When Q4_1's
+            // affine minimum is exactly -8*d, its 16 codes already have
+            // Q4_0 semantics: drop the minimum, preserve d and all codes.
+            // Avoid needless requantization (including FP16 rounding).
+            if(sourceType==3 && minimum==-8.0f*scale) {
+                encoded[0]=source[0];
+                encoded[1]=source[1];
+                std::memcpy(encoded+2,source+4,16);
+                if(!out.write(reinterpret_cast<const char*>(encoded),18))
+                    return false;
+                sourceBytes-=inputBlock;
+                continue;
+            }
             for(unsigned i=0;i<32;++i) {
                 int quantized=0;
                 if(sourceType==8)quantized=static_cast<int8_t>(source[2+i]);
