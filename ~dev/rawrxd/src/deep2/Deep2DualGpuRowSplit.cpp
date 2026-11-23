@@ -642,21 +642,26 @@ bool Deep2BuildGpuWeightView(
     GpuWeightView& out) noexcept
 {
     out={};
-    if(!wt.data || !rowCount || rowBegin>=wt.rows ||
-       rowCount>wt.rows-rowBegin || !wt.cols ||
-       !supportedGpuType(wt.type))
+    const bool compressedAvailable =
+        wt.residencyCache && !wt.residencyKey.empty() &&
+        wt.residencyType >= 0 &&
+        wt.residencyCache->Contains(wt.residencyKey);
+    const int sourceType = compressedAvailable ? wt.residencyType : wt.type;
+    if((!wt.data && !compressedAvailable) || !rowCount ||
+       rowBegin>=wt.rows || rowCount>wt.rows-rowBegin || !wt.cols ||
+       !supportedGpuType(sourceType))
         return false;
 
-    size_t rowBytes=0;
-    if(wt.type==0){
-        if(wt.cols>std::numeric_limits<size_t>::max()/sizeof(float))
-            return false;
-        rowBytes=wt.cols*sizeof(float);
-    } else {
-        if(!wt.sizeBytes || wt.rows==0 || wt.sizeBytes%wt.rows!=0)
-            return false;
-        rowBytes=wt.sizeBytes/wt.rows;
-    }
+    const auto* desc = LookupQuantType(static_cast<uint32_t>(sourceType));
+    if(!desc || !desc->blockElements || !desc->blockBytes ||
+       (desc->blockElements > 1 && wt.cols % desc->blockElements != 0))
+        return false;
+    const size_t blocksPerRow =
+        (wt.cols + desc->blockElements - 1) / desc->blockElements;
+    if(!blocksPerRow ||
+       blocksPerRow > std::numeric_limits<size_t>::max()/desc->blockBytes)
+        return false;
+    const size_t rowBytes=blocksPerRow*desc->blockBytes;
     if(!rowBytes ||
        rowBegin>std::numeric_limits<size_t>::max()/rowBytes ||
        rowCount>std::numeric_limits<size_t>::max()/rowBytes)
@@ -664,15 +669,30 @@ bool Deep2BuildGpuWeightView(
 
     const size_t off=(size_t)rowBegin*rowBytes;
     const size_t bytes=(size_t)rowCount*rowBytes;
-    if(wt.sizeBytes && (off>wt.sizeBytes || bytes>wt.sizeBytes-off))
-        return false;
-
-    out.data=static_cast<const uint8_t*>(wt.data)+off;
+    if(compressedAvailable) {
+        try {
+            out.ownedBytes=std::make_shared<std::vector<uint8_t>>(bytes);
+        } catch(...) {
+            out={};
+            return false;
+        }
+        if(!wt.residencyCache->ReadRange(
+                wt.residencyKey,off,bytes,out.ownedBytes->data())) {
+            out={};
+            return false;
+        }
+        out.data=out.ownedBytes->data();
+    } else {
+        if(wt.sizeBytes && (off>wt.sizeBytes || bytes>wt.sizeBytes-off))
+            return false;
+        out.data=static_cast<const uint8_t*>(wt.data)+off;
+    }
     out.bytes=bytes;
-    out.type=wt.type;
+    out.type=sourceType;
     out.rows=rowCount;
     out.cols=(uint32_t)wt.cols;
-    out.key=sliceKey(wt,rowBegin,rowCount);
+    out.key=sliceKey(wt,rowBegin,rowCount) ^
+        (compressedAvailable ? 0xC04D505245535345ull : 0ull);
     return true;
 }
 
