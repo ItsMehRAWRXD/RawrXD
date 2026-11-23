@@ -286,6 +286,10 @@ def run(binary):
         assert desc["blk.0.attn_q.weight"][:2]==(1,(n,))
         assert len(data)<len(huge.read_bytes())
         assert data[ds:ds+16]==struct.pack("<e",1.0)*8
+        # Verify values straddling each 64 KiB chunk boundary.
+        for i in (0, 16383, 16384, 16385, n-1):
+            assert struct.unpack_from("<e",data,ds+2*i)[0]==1.0
+        assert len(data)-ds==n*2
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
