@@ -19,5 +19,5 @@ int main(){
  assert(store.addTensor("random",random_data.data(),random_data.size(),&error));std::vector<std::uint8_t> random_out(random_data.size());
  assert(store.readRange("random",0,random_out.data(),random_out.size(),&error));assert(random_data==random_out);
  const auto s=store.stats();assert(s.tensors==2&&s.raw_bytes==input.size()+random_data.size());
- std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\\n';
+ std::cout<<"CompressedWeightStore PASS tensors="<<s.tensors<<" blocks="<<s.blocks<<" raw="<<s.raw_bytes<<" encoded="<<s.compressed_bytes<<'\n';
 }
