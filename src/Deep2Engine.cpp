@@ -283,9 +283,21 @@ bool Deep2Engine::gemvROMCompressed(
         case deep2::TensorType::Q4_0:
             return gemvROMCompressedQ4_0(tensorName, x, y, rows, cols,
                                          blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::Q4_1:
+            return gemvROMCompressedTypedQ4_1(tensorName, x, y, rows, cols,
+                                              blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::Q5_0:
+            return gemvROMCompressedTypedQ5_0(tensorName, x, y, rows, cols,
+                                              blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::Q5_1:
+            return gemvROMCompressedTypedQ5_1(tensorName, x, y, rows, cols,
+                                              blockBytes, stagingBudgetBytes);
         case deep2::TensorType::Q8_0:
             return gemvROMCompressedQ8_0(tensorName, x, y, rows, cols,
                                          blockBytes, stagingBudgetBytes);
+        case deep2::TensorType::Q8_1:
+            return gemvROMCompressedTypedQ8_1(tensorName, x, y, rows, cols,
+                                              blockBytes, stagingBudgetBytes);
         default:
             return false;
     }
