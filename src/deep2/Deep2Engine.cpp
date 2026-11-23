@@ -7387,7 +7387,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     // No fallback to wt.data — eliminates silent page-fault escape hatch.
     Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
     bool acquired = false;
-    if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty() && !vulkanEnabled_)
+    if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty() &&
+        !vulkanEnabled_ && !wtEffective.hasCompressedBacking())
     {
         auto status = elasticResidency_->AcquireTensor(wt.name, 0, 0, resHandle);
         if (status == Deep2::ElasticResidencyManager::AcquireStatus::Ready && resHandle.ready)
