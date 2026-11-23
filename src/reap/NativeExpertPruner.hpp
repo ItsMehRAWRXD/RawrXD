@@ -264,17 +264,47 @@ inline PruneError PruneGGUF(const std::string& input,
         if (router && (router->type == 0 || router->type == 1))
             have_imp = RouterImportance(rbytes, router->type, router->dims[0], n_expert, imp);
         if (!have_imp) imp.assign(n_expert, 1.0);   // uniform fallback (first K)
-        uint32_t k = (uint32_t)std::ceil(n_expert * req.keep_ratio);
-        if (k < req.min_experts) k = req.min_experts;
+        // Selection. DeepSeek-family (deepseek2) models use GROUP-limited
+        // routing (n_group=8, topk_group=4): select WHOLE groups so the
+        // grouped-routing structure stays valid. Groups are ranked by their
+        // MAX-member importance (not the sum): the group-sum heuristic was
+        // measured to discard individually-important experts (quality cos
+        // 0.812 -> -0.172 on DeepSeek-V2-Lite); max-member keeps the groups that
+        // contain the strongest experts. NOTE: keeping G groups does not
+        // guarantee keeping all top-(G*group_size) experts if they span more
+        // groups -- the runtime must route within the kept structure.
+        std::vector<uint32_t> order;
+        if (arch == "deepseek2" && n_expert % 8 == 0) {
+            const uint32_t gsize = 8;
+            const uint32_t n_group = n_expert / gsize;
+            std::vector<double> gimp(n_group, 0.0);
+            for (uint32_t g = 0; g < n_group; ++g) {
+                double best = -1.0;
+                for (uint32_t j = 0; j < gsize; ++j) best = std::max(best, imp[g * gsize + j]);
+                gimp[g] = best;
+            }
+            std::vector<uint32_t> gorder(n_group);
+            for (uint32_t g = 0; g < n_group; ++g) gorder[g] = g;
+            std::stable_sort(gorder.begin(), gorder.end(), [&](uint32_t a, uint32_t b){ return gimp[a] > gimp[b]; });
+            uint32_t keep_groups = (uint32_t)std::ceil(n_group * req.keep_ratio);
+            if (keep_groups < 1) keep_groups = 1;
+            gorder.resize(keep_groups);
+            std::sort(gorder.begin(), gorder.end());
+            for (uint32_t g : gorder)
+                for (uint32_t j = 0; j < gsize; ++j) order.push_back(g * gsize + j);
+        } else {
+            for (uint32_t e = 0; e < n_expert; ++e) order.push_back(e);
+            std::stable_sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b){ return imp[a] > imp[b]; });
+            uint32_t k = (uint32_t)std::ceil(n_expert * req.keep_ratio);
+            if (k < req.min_experts) k = req.min_experts;
+            order.resize(k);
+            std::sort(order.begin(), order.end());
+        }
+        uint32_t k = (uint32_t)order.size();
         if (k >= n_expert) {
             report.layers.push_back({t.name, n_expert, n_expert, t.bytes, t.bytes, {}});
             continue;
         }
-        std::vector<uint32_t> order(n_expert);
-        for (uint32_t e = 0; e < n_expert; ++e) order[e] = e;
-        std::stable_sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b){ return imp[a] > imp[b]; });
-        order.resize(k);
-        std::sort(order.begin(), order.end());
         t.pruned = true;
         t.kept = order;
         // physical bytes per retained expert: the slowest-dim slice
