@@ -804,7 +804,8 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     const uint64_t rows = wView.dims[0];
     const uint64_t cols = wView.dims[1];
     if (!rows || !cols || rows > UINT32_MAX || cols > UINT32_MAX ||
-        rows > std::numeric_limits<size_t>::max() / cols)
+        rows > std::numeric_limits<size_t>::max() / cols ||
+        rows > std::numeric_limits<size_t>::max() / sizeof(float))
         return false;
     const size_t elements = static_cast<size_t>(rows * cols);
     // The shader uses 32-bit element indices and a single packed uint word
@@ -844,8 +845,6 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         xsize > gpu.props.limits.maxStorageBufferRange ||
         ysize > gpu.props.limits.maxStorageBufferRange)
         return false;
-    const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * sizeof(float);
-    const VkDeviceSize ysize = static_cast<VkDeviceSize>(rows) * sizeof(float);
     y.assign(static_cast<size_t>(rows), 0.0f);
 
     static deep2::VulkanProgram f32Program;
