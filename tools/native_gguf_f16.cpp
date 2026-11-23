@@ -213,7 +213,7 @@ bool encodeQ51Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
-    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|f32|f16|bf16|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
+    if(argc!=4 && argc!=5) {std::cerr<<"usage: native_gguf_f16 INPUT.gguf OUTPUT.gguf MAX_ABS_ERROR [auto|f32|f16|bf16|q8_k|q8_0|q5_1|q5_0|q4_1|q4_0]\n";return 2;}
     if(std::string(argv[1])==argv[2]) {std::cerr<<"input and output must differ\n";return 2;}
     std::string tmp=std::string(argv[2])+".partial";
     bool ownsTemporary=false;
@@ -230,6 +230,7 @@ int main(int argc,char** argv) {
         const bool f32=argc==5 && std::string(argv[4])=="f32";
         const bool automatic=argc==5 && std::string(argv[4])=="auto";
         const bool bf16=argc==5 && std::string(argv[4])=="bf16";
+        const bool q8k=argc==5 && std::string(argv[4])=="q8_k";
         const bool q8=argc==5 && std::string(argv[4])=="q8_0";
         const bool q4=argc==5 && std::string(argv[4])=="q4_0";
         const bool q5=argc==5 && std::string(argv[4])=="q5_0";
@@ -344,6 +345,7 @@ int main(int argc,char** argv) {
         std::vector<bool> streamF64toQ51(ts.size(),false);
         std::vector<bool> streamF64toQ4(ts.size(),false);
         std::vector<bool> streamF64toQ5(ts.size(),false);
+        std::vector<bool> streamF64toQ8K(ts.size(),false);
         std::vector<bool> streamF64toQ8(ts.size(),false);
         std::vector<bool> streamF64toBf16(ts.size(),false);
         std::vector<bool> streamF64toF16(ts.size(),false);
@@ -467,6 +469,46 @@ int main(int argc,char** argv) {
                 }
                 if(streamF64toQ4[i]||streamF64toQ5[i])continue;
                 if(q4||q5)continue;
+            }
+            if(t.type==28 && q8k && t.dims[0]%256==0 &&
+               t.bytes%2048==0) {
+                // GGML block_q8_K: float d, 256 signed quants, 16 int16
+                // subgroup sums. Validate reconstruction against original F64.
+                seek(in,add(dataStart,t.offset));
+                bool valid=true;
+                uint8_t raw[2048],encoded[292];
+                for(U off=0;off<t.bytes;off+=2048) {
+                    if(!in.read(reinterpret_cast<char*>(raw),2048))
+                        throw std::runtime_error("truncated F64 Q8_K preflight");
+                    double values[256],maxAbs=0;
+                    for(int j=0;j<256;++j) {
+                        uint64_t bits=0;
+                        for(int k=0;k<8;++k)bits|=uint64_t(raw[8*j+k])<<(8*k);
+                        std::memcpy(&values[j],&bits,8);
+                        if(!std::isfinite(values[j])){valid=false;break;}
+                        maxAbs=std::max(maxAbs,std::fabs(values[j]));
+                    }
+                    if(!valid)break;
+                    const float d=float(maxAbs/127.0);
+                    if(!std::isfinite(d)){valid=false;break;}
+                    std::memcpy(encoded,&d,4);
+                    int16_t sums[16]={};
+                    for(int j=0;j<256;++j) {
+                        const int q=d?int(std::max(-127.0,std::min(127.0,
+                            std::round(values[j]/double(d))))):0;
+                        const int8_t qi=int8_t(q);
+                        encoded[4+j]=uint8_t(qi);
+                        sums[j/16]=int16_t(sums[j/16]+q);
+                        if(!(std::fabs(double(d)*q-values[j]<=double(tolerance)))) {
+                            valid=false;break;
+                        }
+                    }
+                    for(int j=0;j<16;++j)
+                        std::memcpy(encoded+260+2*j,&sums[j],2);
+                    if(!valid)break;
+                }
+                if(valid){streamF64toQ8K[i]=true;outputTypes[i]=15;++changed;continue;}
+                continue;
             }
             if(t.type==28 && (automatic || q8) && t.dims[0]%32==0 &&
                t.bytes%256==0) {
@@ -922,7 +964,34 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamF64toQ41[i]||streamF64toQ51[i]) {
+            if(streamF64toQ8K[i]) {
+                seek(in,add(dataStart,t.offset));
+                uint8_t raw[2048],encoded[292];
+                for(U off=0;off<t.bytes;off+=2048) {
+                    if(!in.read(reinterpret_cast<char*>(raw),2048))
+                        throw std::runtime_error("truncated F64 Q8_K payload");
+                    double values[256],maxAbs=0;
+                    for(int j=0;j<256;++j) {
+                        uint64_t bits=0;
+                        for(int k=0;k<8;++k)bits|=uint64_t(raw[8*j+k])<<(8*k);
+                        std::memcpy(&values[j],&bits,8);
+                        maxAbs=std::max(maxAbs,std::fabs(values[j]));
+                    }
+                    const float d=float(maxAbs/127.0);
+                    std::memcpy(encoded,&d,4);
+                    int16_t sums[16]={};
+                    for(int j=0;j<256;++j) {
+                        const int q=d?int(std::max(-127.0,std::min(127.0,
+                            std::round(values[j]/double(d))))):0;
+                        encoded[4+j]=uint8_t(int8_t(q));
+                        sums[j/16]=int16_t(sums[j/16]+q);
+                    }
+                    for(int j=0;j<16;++j)
+                        std::memcpy(encoded+260+2*j,&sums[j],2);
+                    out.write(reinterpret_cast<const char*>(encoded),292);
+                    if(!out)throw std::runtime_error("F64 Q8_K write failure");
+                }
+            } else if(streamF64toQ41[i]||streamF64toQ51[i]) {
                 seek(in,add(dataStart,t.offset));
                 uint8_t raw[256],narrow[128],encoded[24];
                 for(U off=0;off<t.bytes;off+=256) {
