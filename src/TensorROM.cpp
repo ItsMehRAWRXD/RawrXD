@@ -1,10 +1,12 @@
 #include "TensorROM.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <limits>
 
 namespace deep2 {
 
@@ -65,7 +67,6 @@ static void skipValue(uint32_t type, std::ifstream& f) {
 static std::string readValueAsString(uint32_t type, std::ifstream& f) {
     char buf[64];
     if (type <= 7) {
-        const uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
         switch (type) {
             case 0: { uint8_t v = 0; f.read(reinterpret_cast<char*>(&v), 1); std::snprintf(buf, sizeof(buf), "%u", v); return buf; }
             case 1: { int8_t v = 0; f.read(reinterpret_cast<char*>(&v), 1); std::snprintf(buf, sizeof(buf), "%d", v); return buf; }
@@ -96,8 +97,13 @@ static std::string readValueAsString(uint32_t type, std::ifstream& f) {
 // ---------------------------------------------------------------------------
 
 uint64_t TensorEntry::byteSize() const {
+    if (dims.empty()) return 0;
     uint64_t n = 1;
-    for (auto d : dims) n *= d;
+    for (uint64_t d : dims) {
+        if (!d || n > std::numeric_limits<uint64_t>::max() / d)
+            return std::numeric_limits<uint64_t>::max();
+        n *= d;
+    }
     return tensorStorageBytes(n, type);
 }
 
@@ -107,6 +113,16 @@ uint64_t TensorEntry::byteSize() const {
 
 TensorROM::TensorROM() = default;
 TensorROM::~TensorROM() = default;
+
+void TensorROM::Reset() {
+    // Pager teardown precedes shard file closure because its reader callback
+    // captures this TensorROM and references the open shard streams.
+    m_pager.reset();
+    m_nameIndex.clear();
+    m_kvStrings.clear();
+    m_shards.clear();
+    m_geom = ModelGeometry{};
+}
 
 bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
     f.read(reinterpret_cast<char*>(&manifest.magic), 4);
@@ -139,11 +155,29 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         e.name = readGGUFStr(f);
         uint32_t nDims = 0;
         f.read(reinterpret_cast<char*>(&nDims), 4);
+        if (!f || nDims == 0 || nDims > 4) {
+            fprintf(stderr, "[ROM] %s: invalid tensor rank %u for %s\\n",
+                    manifest.path.c_str(), nDims, e.name.c_str());
+            return false;
+        }
         e.dims.resize(nDims);
-        if (nDims > 0) f.read(reinterpret_cast<char*>(e.dims.data()), nDims * 8);
+        f.read(reinterpret_cast<char*>(e.dims.data()), nDims * 8);
         uint32_t type = 0;
         f.read(reinterpret_cast<char*>(&type), sizeof(type));
         e.type = static_cast<TensorType>(type);
+        uint64_t elements = 1;
+        for (uint64_t dim : e.dims) {
+            if (dim == 0 || elements > std::numeric_limits<uint64_t>::max() / dim)
+                return false;
+            elements *= dim;
+        }
+        if (tensorTypeBytesPerValue(e.type) <= 0.0 ||
+            (quantBlockSize(e.type) > 1 && e.dims[0] % quantBlockSize(e.type) != 0) ||
+            tensorStorageBytes(elements, e.type) == std::numeric_limits<uint64_t>::max()) {
+            fprintf(stderr, "[ROM] %s: unsupported or misaligned GGUF tensor %s type=%u\\n",
+                    manifest.path.c_str(), e.name.c_str(), type);
+            return false;
+        }
         f.read(reinterpret_cast<char*>(&e.offset), 8);
         e.shardIndex = static_cast<size_t>(m_shards.size());
         manifest.tensors.push_back(std::move(e));
@@ -154,9 +188,24 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         return false;
     }
 
-    // Align to 64 bytes: payload starts here (GGUF spec).
+    // GGUF payload alignment defaults to 32 bytes and may be overridden by
+    // general.alignment in the metadata directory.
+    uint64_t alignment = 32;
+    const auto alignmentIt = m_kvStrings.find("general.alignment");
+    if (alignmentIt != m_kvStrings.end()) {
+        try { alignment = std::stoull(alignmentIt->second); }
+        catch (...) { return false; }
+    }
+    if (alignment == 0 || (alignment & (alignment - 1)) != 0 ||
+        alignment > (1ull << 20)) {
+        fprintf(stderr, "[ROM] %s: invalid GGUF alignment %llu\\n",
+                manifest.path.c_str(), static_cast<unsigned long long>(alignment));
+        return false;
+    }
+    manifest.alignment = static_cast<uint32_t>(alignment);
     uint64_t pos = static_cast<uint64_t>(f.tellg());
-    uint64_t aligned = (pos + 63) & ~63ull;
+    if (pos > std::numeric_limits<uint64_t>::max() - (alignment - 1)) return false;
+    uint64_t aligned = (pos + alignment - 1) & ~(alignment - 1);
     manifest.dataOffset = aligned;
     f.seekg(0, std::ios::end);
     uint64_t end = static_cast<uint64_t>(f.tellg());
@@ -166,6 +215,7 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
 }
 
 bool TensorROM::addShard(const std::string& path) {
+    if (m_shards.empty()) m_kvStrings.clear(); // Do not inherit prior-model alignment metadata.
     auto file = std::make_unique<std::ifstream>(path, std::ios::binary);
     if (!file->is_open()) {
         fprintf(stderr, "[ROM] cannot open shard: %s\n", path.c_str());
@@ -273,6 +323,21 @@ bool TensorROM::finalizeIndex() {
         try { m_geom.vocabSize = std::stoull(*s); } catch (...) {}
     }
 
+    // Validate every tensor's canonical encoded size and shard-relative range
+    // before any pager lease or partial read can expose the payload.
+    for (const ShardManifest& shard : m_shards) {
+        for (const TensorEntry& entry : shard.tensors) {
+            const uint64_t bytes = entry.byteSize();
+            if (bytes == std::numeric_limits<uint64_t>::max() ||
+                entry.offset % shard.alignment != 0 ||
+                entry.offset > shard.dataSize || bytes > shard.dataSize - entry.offset) {
+                fprintf(stderr, "[ROM] tensor %s has an invalid payload range\\n",
+                        entry.name.c_str());
+                return false;
+            }
+        }
+    }
+
     // Global tensor index: every tensor must have a unique name across shards.
     for (size_t s = 0; s < m_shards.size(); ++s) {
         const ShardManifest& m = m_shards[s];
@@ -289,7 +354,18 @@ bool TensorROM::finalizeIndex() {
     // Default pager: a few GiB bounded budget, overridable via env.
     if (!m_pager) {
         const char* env = std::getenv("DEEP2_ROM_CACHE_BYTES");
-        uint64_t capacity = env ? static_cast<uint64_t>(std::stoull(env)) : (4ull << 30);
+        size_t capacity = static_cast<size_t>(4ull << 30);
+        if (env) {
+            if (!*env || *env == '-') return false;
+            char* end = nullptr;
+            const unsigned long long parsed = std::strtoull(env, &end, 10);
+            if (end == env || *end != '\0' ||
+                parsed > static_cast<unsigned long long>(std::numeric_limits<size_t>::max())) {
+                fprintf(stderr, "[ROM] invalid DEEP2_ROM_CACHE_BYTES value\\n");
+                return false;
+            }
+            capacity = static_cast<size_t>(parsed);
+        }
         m_pager = std::make_unique<PageCache>(capacity, 256 * 1024);
         // Reader: pageNo is an absolute file page number (readRange passes
         // offset / pageSize), so the absolute file offset is pageNo * pageSize.
@@ -332,8 +408,13 @@ bool TensorROM::hasTensor(const std::string& name) const {
 }
 
 uint64_t TensorROM::tensorNumValues(const TensorEntry& e) {
+    if (e.dims.empty()) return 0;
     uint64_t n = 1;
-    for (auto d : e.dims) n *= d;
+    for (uint64_t d : e.dims) {
+        if (!d || n > std::numeric_limits<uint64_t>::max() / d)
+            return std::numeric_limits<uint64_t>::max();
+        n *= d;
+    }
     return n;
 }
 
@@ -342,24 +423,29 @@ uint64_t TensorROM::tensorStorageBytes(const TensorEntry& e) {
 }
 
 bool TensorROM::readTensor(const TensorEntry& entry, uint8_t* out) const {
-    if (!m_pager) return false;
+    if (!m_pager || !out || entry.shardIndex >= m_shards.size()) return false;
     const ShardManifest& m = m_shards[entry.shardIndex];
+    const uint64_t bytes = entry.byteSize();
+    if (entry.offset > m.dataSize || bytes > m.dataSize - entry.offset) return false;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
-                              m.dataOffset + entry.offset, entry.byteSize(), out);
+                              m.dataOffset + entry.offset, bytes, out);
 }
 
 bool TensorROM::readTensorRange(const TensorEntry& entry, uint64_t relOffset,
                                 uint64_t size, uint8_t* out) const {
-    if (!m_pager) return false;
+    if (!m_pager || (size && !out) || entry.shardIndex >= m_shards.size()) return false;
     const ShardManifest& m = m_shards[entry.shardIndex];
-    uint64_t avail = entry.byteSize() - relOffset;
-    if (size > avail) size = avail;
+    const uint64_t tensorBytes = entry.byteSize();
+    if (relOffset > tensorBytes || size > tensorBytes - relOffset ||
+        entry.offset > m.dataSize || tensorBytes > m.dataSize - entry.offset)
+        return false;
+    if (!size) return true;
     return m_pager->readRange(static_cast<uint32_t>(entry.shardIndex),
                               m.dataOffset + entry.offset + relOffset, size, out);
 }
 
 TensorLease TensorROM::leaseTensor(const TensorEntry& entry) const {
-    if (!m_pager) return TensorLease(*m_pager, 0, 0, 0); // empty
+    if (!m_pager || entry.shardIndex >= m_shards.size()) return TensorLease{};
     const ShardManifest& m = m_shards[entry.shardIndex];
     return TensorLease(*m_pager, static_cast<uint32_t>(entry.shardIndex),
                        m.dataOffset + entry.offset, entry.byteSize());
