@@ -148,11 +148,16 @@ public:
             return false;
         if (count == 0) return true;
         const std::size_t end = first + count;
-        for (const Chunk& chunk : chunks_) {
+        auto chunkIt = std::lower_bound(
+            chunks_.begin(), chunks_.end(), first,
+            [](const Chunk& chunk, std::size_t position) {
+                return chunk.first + chunk.count <= position;
+            });
+        for (; chunkIt != chunks_.end() && chunkIt->first < end; ++chunkIt) {
+            const Chunk& chunk = *chunkIt;
             const std::size_t chunkEnd = chunk.first + chunk.count;
             const std::size_t begin = std::max(first, chunk.first);
             const std::size_t finish = std::min(end, chunkEnd);
-            if (begin >= finish) continue;
             const std::size_t srcOffset = begin - chunk.first;
             const std::size_t dstOffset = begin - first;
             const std::size_t n = finish - begin;
@@ -357,11 +362,16 @@ public:
             throw std::out_of_range("ChunkedByteStorage::ReadRange outside tensor");
         if (count == 0) return;
         const std::size_t end = first + count;
-        for (const Chunk& chunk : chunks_) {
+        auto chunkIt = std::lower_bound(
+            chunks_.begin(), chunks_.end(), first,
+            [](const Chunk& chunk, std::size_t position) {
+                return chunk.first + chunk.count <= position;
+            });
+        for (; chunkIt != chunks_.end() && chunkIt->first < end; ++chunkIt) {
+            const Chunk& chunk = *chunkIt;
             const std::size_t chunkEnd = chunk.first + chunk.count;
             const std::size_t begin = std::max(first, chunk.first);
             const std::size_t finish = std::min(end, chunkEnd);
-            if (begin >= finish) continue;
             const std::size_t sourceOffset = begin - chunk.first;
             const std::size_t destinationOffset = begin - first;
             const std::size_t copyBytes = finish - begin;
