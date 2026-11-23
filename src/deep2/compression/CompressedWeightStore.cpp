@@ -1,4 +1,6 @@
 #include "CompressedWeightStore.hpp"
+#include "rawrxd/native_lz_block_codec.hpp"
+#include "codec/compression_core.h"
 #include <algorithm>
 #include <cstring>
 #include <limits>
@@ -7,49 +9,59 @@
 #include <stdexcept>
 
 namespace rawrxd::compression {
-namespace {
-constexpr std::size_t kMinMatch=4,kMaxMatch=255,kMaxDistance=65535;
-inline std::uint32_t hash4(const std::uint8_t* p) {
- const std::uint32_t v=std::uint32_t(p[0])|(std::uint32_t(p[1])<<8)|(std::uint32_t(p[2])<<16)|(std::uint32_t(p[3])<<24);
- return (v*2654435761u)>>16;
-}
-}
-CompressedWeightStore::CompressedWeightStore(std::size_t budget,std::size_t block_bytes,std::size_t encoded_budget)
- : block_bytes_(block_bytes),cache_budget_(budget),encoded_residency_budget_(encoded_budget) {
- if(!block_bytes_||block_bytes_>static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) throw std::invalid_argument("invalid block size: exceeds signed match index capacity");
+CompressedWeightStore::CompressedWeightStore(std::size_t budget,
+    std::size_t block_bytes,std::size_t encoded_budget,BlockCodec codec)
+ : block_bytes_(block_bytes),cache_budget_(budget),
+   encoded_residency_budget_(encoded_budget),codec_(codec) {
+ if(!block_bytes_||block_bytes_>static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
+  throw std::invalid_argument("invalid block size: exceeds signed codec capacity");
 }
 std::uint32_t CompressedWeightStore::crc32(const std::uint8_t* p,std::size_t n) {
  std::uint32_t crc=0xFFFFFFFFu;
  for(std::size_t i=0;i<n;++i){crc^=p[i];for(unsigned b=0;b<8;++b)crc=(crc>>1)^(0xEDB88320u&(0u-(crc&1u)));}
  return ~crc;
 }
-// Independent LZ tokens: control byte, then up to eight literals or (distance-1:u16,length:u8) matches.
-std::vector<std::uint8_t> CompressedWeightStore::encode(const std::uint8_t* src,std::size_t n,bool& stored_raw) {
- if(n>static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) throw std::length_error("compressed block exceeds 32-bit match index");
- if(n==0){stored_raw=true;return{};}
- std::vector<std::uint8_t> out;out.reserve(n);std::vector<std::int32_t> last(1u<<16,-1);std::size_t pos=0;
- while(pos<n){const auto cp=out.size();out.push_back(0);std::uint8_t control=0;
-  for(unsigned bit=0;bit<8&&pos<n;++bit){std::size_t len=0,dist=0;
-   if(pos+kMinMatch<=n){const auto h=hash4(src+pos);const auto candidate=last[h];last[h]=static_cast<std::int32_t>(pos);
-    if(candidate>=0){const auto c=static_cast<std::size_t>(candidate),d=pos-c;if(d&&d<=kMaxDistance){const auto limit=std::min(kMaxMatch,n-pos);while(len<limit&&src[c+len]==src[pos+len])++len;if(len>=kMinMatch)dist=d;else len=0;}}
-   }
-   if(len){control|=static_cast<std::uint8_t>(1u<<bit);const auto d=static_cast<std::uint16_t>(dist-1);out.push_back(static_cast<std::uint8_t>(d));out.push_back(static_cast<std::uint8_t>(d>>8));out.push_back(static_cast<std::uint8_t>(len));
-    const auto end=pos+len;for(auto q=pos+1;q+kMinMatch<=end;++q)last[hash4(src+q)]=static_cast<std::int32_t>(q);pos=end;
-   }else out.push_back(src[pos++]);
-  }out[cp]=control;
+std::vector<std::uint8_t> CompressedWeightStore::encode(
+    const std::uint8_t* src,std::size_t size,BlockCodec codec,bool& stored_raw) {
+ if(!src&&size) throw std::invalid_argument("null block source");
+ if(size==0){stored_raw=true;return{};}
+ std::vector<std::uint8_t> encoded;
+ if(codec==BlockCodec::NativeLz) {
+  if(!native_lz::encode(src,size,encoded))
+   throw std::runtime_error("native LZ block encode failed");
+ } else if(codec==BlockCodec::Zlib) {
+  const auto result=rawrxd::compression::compress(src,size,-1);
+  if(!result) throw std::runtime_error("zlib block encode unavailable or failed");
+  encoded=result.bytes;
+ } else {
+  throw std::invalid_argument("unknown compressed-weight codec");
  }
- stored_raw=out.size()>=n;if(stored_raw)return std::vector<std::uint8_t>(src,src+n);return out;
+ stored_raw=encoded.size()>=size;
+ if(stored_raw) encoded.assign(src,src+size);
+ return encoded;
 }
-bool CompressedWeightStore::decode(const EncodedBlock& b,std::vector<std::uint8_t>& out) {
- if(b.stored_raw)out=b.payload;else{out.clear();out.reserve(b.raw_size);std::size_t p=0;
-  while(p<b.payload.size()&&out.size()<b.raw_size){const auto control=b.payload[p++];for(unsigned bit=0;bit<8&&out.size()<b.raw_size;++bit){
-   if(control&(1u<<bit)){if(p+3>b.payload.size())return false;const auto d=std::size_t(b.payload[p])|(std::size_t(b.payload[p+1])<<8);const auto len=b.payload[p+2];p+=3;const auto dist=d+1;
-    if(dist>out.size()||len<kMinMatch||len>b.raw_size-out.size())return false;for(std::size_t i=0;i<len;++i)out.push_back(out[out.size()-dist]);
-   }else{if(p>=b.payload.size())return false;out.push_back(b.payload[p++]);}
-  }}
-  if(p!=b.payload.size()) return false;
- }
- return out.size()==b.raw_size&&crc32(out.data(),out.size())==b.checksum;
+bool CompressedWeightStore::decode(const EncodedBlock& block,BlockCodec codec,
+                                   std::vector<std::uint8_t>& out) {
+ out.clear();
+ try {
+  if(block.stored_raw) {
+   if(block.payload.size()!=block.raw_size) return false;
+   out=block.payload;
+  } else if(codec==BlockCodec::NativeLz) {
+   out.resize(block.raw_size);
+   if(!native_lz::decode(block.payload.data(),block.payload.size(),out.data(),out.size())) {
+    out.clear();return false;
+   }
+  } else if(codec==BlockCodec::Zlib) {
+   const auto result=rawrxd::compression::decompress(
+       block.payload.data(),block.payload.size(),block.raw_size);
+   if(!result||result.bytes.size()!=block.raw_size) return false;
+   out=result.bytes;
+  } else {
+   return false;
+  }
+ } catch(...) { out.clear();return false; }
+ return out.size()==block.raw_size&&crc32(out.data(),out.size())==block.checksum;
 }
 bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
  if(!bytes&&size){if(error)*error="source bytes are required";return false;}
@@ -75,7 +87,7 @@ bool CompressedWeightStore::addTensorFromReader(std::string name,std::size_t siz
    const auto take=std::min(block_bytes_,size-off);
    if(!reader(context,off,scratch.data(),take)){if(error)*error="tensor reader failed before completing requested range";return false;}
    EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(scratch.data(),take);
-   b.payload=encode(scratch.data(),take,b.stored_raw);
+   b.payload=encode(scratch.data(),take,codec_,b.stored_raw);
    if(encoded_size>admission_limit||b.payload.size()>admission_limit-encoded_size){if(error)*error="encoded tensor exceeds residency budget";return false;}
    encoded_size+=b.payload.size();tensor.blocks.emplace_back(std::move(b));off+=take;
   }
