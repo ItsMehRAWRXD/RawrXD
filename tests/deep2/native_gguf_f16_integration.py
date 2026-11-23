@@ -427,6 +427,20 @@ def run(binary):
         for i in (0, 16383, 16384, 16385, n-1):
             assert struct.unpack_from("<e",data,ds+2*i)[0]==1.0
         assert len(data)-ds==n*2
+        # Auto must also quantize tensors beyond 64 MiB without loading the
+        # full tensor into memory; Q4_0 is the smallest accepted encoding.
+        huge_auto=root/"huge-auto.gguf"
+        subprocess.run([binary,str(huge),str(huge_auto),"1","auto"],check=True)
+        ha,hs,hm,ht=parse(huge_auto)
+        assert ht["blk.0.attn_q.weight"][:2]==(2,(n,))
+        assert len(ha)-hs==(n//32)*18
+        for block in (0,2047,2048,n//32-1):
+            p=hs+block*18
+            scale=struct.unpack_from("<e",ha,p)[0]
+            packed=ha[p+2:p+18]
+            for j in range(32):
+                code=(packed[j]&15) if j<16 else (packed[j-16]>>4)
+                assert abs(scale*(code-8)-1.0)<=1
         # BF16 streaming must also handle tensors beyond the old 64 MiB cap
         # without retaining the entire source or destination in the converter.
         huge_bf=root/"huge-bf16.gguf"
