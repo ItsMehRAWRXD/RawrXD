@@ -49,6 +49,7 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 }
 
 void Deep2Engine::Shutdown() {
+    compressedF32Weights.Clear();
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
@@ -225,10 +226,14 @@ bool Deep2Engine::readCompressedF32Tile(const deep2::TensorEntry& entry,
         };
         if (!compressedF32Weights.RegisterF32FromReader(
                 entry.name, count, compressedF32MaxAbsError, reader, 4096)) {
-            fprintf(stderr, "[TENSOR_RESIDENCY] unable to retain compressed F32 tensor %s (%llu bytes)\n",
-                    entry.name.c_str(), static_cast<unsigned long long>(bytes));
-            return false;
+            // No safe/smaller encoding or no cache capacity: preserve correctness
+            // and fetch only this raw F32 tile instead of expanding the tensor.
+            const uint64_t byteOffset = firstElement * sizeof(float);
+            const uint64_t byteCount = elementCount * sizeof(float);
+            return rom.readTensorRange(entry, byteOffset, byteCount,
+                                       reinterpret_cast<uint8_t*>(destination));
         }
+    }
     }
     return compressedF32Weights.ReadRange(entry.name,
         static_cast<size_t>(firstElement), static_cast<size_t>(elementCount), destination);
