@@ -29,12 +29,19 @@ int main() {
     assert(second && third);
     assert(tiles.GetStats().residentBytes <= 4096);
     assert(tiles.GetStats().evictions >= 1);
+    assert(tiles.GetStats().totalLiveDecodedBytes >= 3 * 512 * sizeof(float));
     // Existing leases remain valid after eviction and invalidation.
     assert((*first)[0] == weights[100]);
     tiles.Invalidate("w");
     assert(tiles.GetStats().residentBytes <= 4096);
     tiles.SetBudget(0);
     assert(tiles.GetStats().residentBytes == 0);
+    assert(tiles.GetStats().totalLiveDecodedBytes >= 3 * 512 * sizeof(float));
+    first.reset();
+    again.reset();
+    second.reset();
+    third.reset();
+    assert(tiles.GetStats().totalLiveDecodedBytes == 0);
     assert(!tiles.Acquire("missing", 0, 64));
     assert(!tiles.Acquire("w", weights.size(), 1));
     std::cout << "DECODED_TILE_REUSE=PASS\n";
