@@ -42,8 +42,26 @@ int main() {
                            (static_cast<uint16_t>(compactTile[2*i+1]) << 8);
         assert(RawrXD::TensorCompression::FromHalf(h) == source[i]);
     }
-    // Partial chunks and mixed/unsupported encodings must fail closed.
-    assert(!cache.ExportUniform16BitRange("layer.0.weight", 1, 1024,
+    // Arbitrary ranges, including partial first/last chunks and ranges that
+    // cross chunk boundaries, remain in compact F16 form without F32 decode.
+    assert(cache.ExportUniform16BitRange("layer.0.weight", 1, 1024,
+                                         compactEncoding, compactTile));
+    assert(compactEncoding == RawrXD::TensorCompression::Encoding::F16);
+    assert(compactTile.size() == 1024 * sizeof(uint16_t));
+    for (size_t i = 0; i < 1024; ++i) {
+        const uint16_t h = static_cast<uint16_t>(compactTile[2*i]) |
+                           (static_cast<uint16_t>(compactTile[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromHalf(h) == source[i + 1]);
+    }
+    assert(cache.ExportUniform16BitRange("layer.0.weight", 1000, 500,
+                                         compactEncoding, compactTile));
+    assert(compactTile.size() == 500 * sizeof(uint16_t));
+    for (size_t i = 0; i < 500; ++i) {
+        const uint16_t h = static_cast<uint16_t>(compactTile[2*i]) |
+                           (static_cast<uint16_t>(compactTile[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromHalf(h) == source[i + 1000]);
+    }
+    assert(!cache.ExportUniform16BitRange("layer.0.weight", source.size(), 1,
                                           compactEncoding, compactTile));
     assert(compactTile.empty());
     assert(cache.GetStats().activeReaders == 0);
@@ -71,6 +89,15 @@ int main() {
         const uint16_t h = static_cast<uint16_t>(bf16Packed[2*i]) |
                            (static_cast<uint16_t>(bf16Packed[2*i+1]) << 8);
         assert(RawrXD::TensorCompression::FromBFloat16(h) == bf16Source[i]);
+    }
+    assert(bf16Cache.ExportUniform16BitRange(
+        "bf16.exact", 7, 19, bf16Encoding, bf16Packed));
+    assert(bf16Encoding == RawrXD::TensorCompression::Encoding::BF16);
+    assert(bf16Packed.size() == 19 * sizeof(uint16_t));
+    for (size_t i = 0; i < 19; ++i) {
+        const uint16_t h = static_cast<uint16_t>(bf16Packed[2*i]) |
+                           (static_cast<uint16_t>(bf16Packed[2*i+1]) << 8);
+        assert(RawrXD::TensorCompression::FromBFloat16(h) == bf16Source[i + 7]);
     }
 
     std::vector<float> tile(1537,-999.0f);
