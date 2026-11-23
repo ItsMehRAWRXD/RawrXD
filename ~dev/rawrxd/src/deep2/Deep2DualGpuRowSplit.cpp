@@ -1,5 +1,6 @@
 // Deep2DualGpuRowSplit.cpp
 #include "Deep2DualGpuRowSplit.hpp"
+#include "QuantKernelRegistry.hpp"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
