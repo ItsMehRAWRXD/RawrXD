@@ -201,6 +201,7 @@ public:
             case GGML_TYPE_F32: type = ResidentWeightType::F32; break;
             case GGML_TYPE_F16: type = ResidentWeightType::F16; break;
             case 8u: type = ResidentWeightType::Q8_0; break;
+            case 30u: type = ResidentWeightType::BF16; break;
             default:
                 if (error) *error = "no resident matvec kernel for this GGML type";
                 return false;
