@@ -34,14 +34,16 @@ int main() {
 
     // Bounded cache: active leases prevent eviction; releasing permits trimming.
     Deep2::TensorResidencyCache cache(compact.storedBytes());
+    const std::size_t residentBytes=compact.storedBytes();
     auto payload=std::make_shared<const ChunkedF32Storage>(std::move(compact));
     assert(cache.Insert("layer0.weight",payload));
+    payload.reset();
     auto lease=cache.Acquire("layer0.weight");
     assert(lease);
     assert(cache.Trim(0)==0);
     assert(cache.GetStats().pinnedEntries==1);
     lease=Deep2::TensorResidencyCache::Lease{};
-    assert(cache.Trim(0)==payload->storedBytes());
+    assert(cache.Trim(0)==residentBytes);
     assert(cache.GetStats().residentBytes==0);
     return 0;
 }
