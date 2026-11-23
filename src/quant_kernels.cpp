@@ -1,5 +1,7 @@
 #include "quant_kernels.hpp"
 
+#include <algorithm>
+#include <limits>
 #include <cstring>
 #include <cmath>
 
