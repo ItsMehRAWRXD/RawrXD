@@ -73,6 +73,27 @@ static void testFixedBlockRange(uint32_t type) {
     }
 }
 
+static void testF8E4M3Range() {
+    assert(deep2::tensorStorageBytes(128, deep2::TensorType::F8_E4M3) == 129);
+    std::vector<uint8_t> encoded(2 * 129, 0);
+    for (int j = 0; j < 128; ++j) {
+        encoded[j + 1] = 0x38; // +1.0
+        encoded[129 + j + 1] = 0xB8; // -1.0
+    }
+    encoded[0] = encoded[129] = 127; // E8M0 scale = 1
+    float tile[4]{};
+    assert(deep2::dequantizeTensorRange(deep2::TensorType::F8_E4M3,
+        256, 126, 4, encoded.data(), encoded.size(), tile));
+    assert(tile[0] == 1.0f && tile[1] == 1.0f &&
+           tile[2] == -1.0f && tile[3] == -1.0f);
+
+    encoded[126 + 1] = 0x7F; // reserved NaN encoding must fail closed
+    float sentinel[1] = { 77.0f };
+    assert(!deep2::dequantizeTensorRange(deep2::TensorType::F8_E4M3,
+        256, 126, 1, encoded.data(), encoded.size(), sentinel));
+    assert(sentinel[0] == 77.0f);
+}
+
 static void testQ1Q2Ranges() {
     assert(deep2::tensorStorageBytes(128, deep2::TensorType::Q1_0) == 18);
     std::vector<uint8_t> q1(2 * 18, 0);
@@ -234,6 +255,7 @@ static void testF32Range() {
 }
 
 int main() {
+    testF8E4M3Range();
     testQ1Q2Ranges();
     testTQ1Range();
     testTQ2Range();
