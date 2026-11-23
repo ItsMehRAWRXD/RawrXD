@@ -3446,7 +3446,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                    name.find(".wq.") != std::string::npos ||
                    name.find(".wk.") != std::string::npos ||
                    name.find(".wv.") != std::string::npos ||
-                   name.find(".wo.") != std::string::npos)));
+                   name.find(".wo.") != std::string::npos ||
+                   name.find("ssm_in.") != std::string::npos ||
+                   name.find("ssm_out.") != std::string::npos ||
+                   name.find("ssm_conv1d.") != std::string::npos)));
             const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
             const bool embeddingMatrixName =
                 name == "token_embd.weight" || name == "token_embeddings.weight";
@@ -3488,8 +3491,25 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 wt.cols > 0 &&
                 wt.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
                 wt.cols * normElementBytes == wt.sizeBytes;
+            const bool ssmVectorName =
+                (name.find("ssm_a") != std::string::npos &&
+                 name.find("ssm_alpha") == std::string::npos) ||
+                name.find("ssm_d") != std::string::npos ||
+                name.find("ssm_dt_bias") != std::string::npos ||
+                name.find("ssm_dt.bias") != std::string::npos ||
+                name.find("ssm_conv1d_bias") != std::string::npos ||
+                name.find("ssm_conv1d.bias") != std::string::npos ||
+                name.find("ssm_norm") != std::string::npos;
+            const bool eligibleCompressedSsmVector =
+                compressedModeEnabled && ssmVectorName &&
+                wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                t.dimensions.size() == 1 &&
+                wt.cols > 0 &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() / sizeof(float) &&
+                wt.cols * sizeof(float) == wt.sizeBytes;
 
-            if ((eligibleCompressedMatrix || eligibleCompressedNorm) && t.data)
+            if ((eligibleCompressedMatrix || eligibleCompressedNorm ||
+                 eligibleCompressedSsmVector) && t.data)
             {
                 constexpr std::size_t kDefaultCompressedModelBudget =
                     4ull * 1024ull * 1024ull * 1024ull;
