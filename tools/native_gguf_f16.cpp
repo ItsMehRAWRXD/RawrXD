@@ -300,6 +300,17 @@ int main(int argc,char** argv) {
             
             // Floating tensor payload sizes are checked before streaming conversion.
         }
+        // GGUF tensor descriptors are required to have unique names.
+        // Duplicate names make tensor lookup ambiguous in native runtimes;
+        // reject malformed input before producing a rewritten artifact.
+        {
+            std::vector<std::string> names;
+            names.reserve(ts.size());
+            for(const auto& tensor:ts)names.push_back(tensor.name);
+            std::sort(names.begin(),names.end());
+            if(std::adjacent_find(names.begin(),names.end())!=names.end())
+                throw std::runtime_error("duplicate GGUF tensor name");
+        }
         // Never replace an existing destination: a model conversion must not
         // silently destroy an earlier artifact. This is a preflight check,
         // not a cross-process atomic no-clobber guarantee.
