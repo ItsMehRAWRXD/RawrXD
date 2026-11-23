@@ -329,6 +329,7 @@ int main(int argc,char** argv) {
         std::vector<uint32_t> outputTypes(ts.size());
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
+        std::vector<bool> streamF64toF16(ts.size(),false);
         std::vector<bool> streamF64toF32(ts.size(),false);
         std::vector<bool> streamHalf(ts.size(),false);
         std::vector<bool> streamBf16(ts.size(),false);
@@ -344,6 +345,7 @@ int main(int argc,char** argv) {
                 // when every finite double survives the precision budget.
                 seek(in,add(dataStart,t.offset));
                 bool valid=true;
+                bool halfValid=automatic;
                 uint8_t block[65536];
                 for(U off=0;off<t.bytes && valid;) {
                     const size_t n=size_t(std::min<U>(t.bytes-off,sizeof(block)));
@@ -355,6 +357,12 @@ int main(int argc,char** argv) {
                         double original;
                         std::memcpy(&original,&bits,8);
                         const float narrowed=static_cast<float>(original);
+                        if(halfValid) {
+                            const float half=FromHalf(ToHalf(narrowed));
+                            if(!std::isfinite(half) ||
+                               !(std::fabs(double(half)-original)<=double(tolerance)))
+                                halfValid=false;
+                        }
                         if(!std::isfinite(original)||!std::isfinite(narrowed)||
                            !(std::fabs(double(narrowed)-original)<=double(tolerance))) {
                             valid=false;break;
@@ -362,7 +370,8 @@ int main(int argc,char** argv) {
                     }
                     off+=n;
                 }
-                if(valid){streamF64toF32[i]=true;outputTypes[i]=0;++changed;}
+                if(valid && halfValid){streamF64toF16[i]=true;outputTypes[i]=1;++changed;}
+                else if(valid){streamF64toF32[i]=true;outputTypes[i]=0;++changed;}
                 continue;
             }
             if(f32)continue;
@@ -704,7 +713,7 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,streamF64toF32[i]?t.bytes/2:(streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size()))))))))));
+            cursor=add(cursor,streamF64toF16[i]?t.bytes/4:(streamF64toF32[i]?t.bytes/2:(streamBf16[i]?t.bytes/2:(streamQ51[i]?mul(t.bytes/(t.type==0?128:64),24):(streamQ41[i]?mul(t.bytes/(t.type==0?128:64),20):(streamQ5[i]?mul(t.bytes/(t.type==0?128:64),22):(streamQ4[i]?mul(t.bytes/(t.type==0?128:64),18):(streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size())))))))))));
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
@@ -719,7 +728,27 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamF64toF32[i]) {
+            if(streamF64toF16[i]) {
+                seek(in,add(dataStart,t.offset));
+                uint8_t source[65536],packed[16384];
+                for(U off=0;off<t.bytes;) {
+                    const size_t n=size_t(std::min<U>(t.bytes-off,sizeof(source)));
+                    if(!in.read(reinterpret_cast<char*>(source),std::streamsize(n)))
+                        throw std::runtime_error("truncated F64 to F16 streaming payload");
+                    for(size_t j=0;j<n;j+=8) {
+                        uint64_t bits=0;
+                        for(int k=0;k<8;++k)bits|=uint64_t(source[j+k])<<(8*k);
+                        double original;
+                        std::memcpy(&original,&bits,8);
+                        const uint16_t half=ToHalf(static_cast<float>(original));
+                        packed[j/4]=uint8_t(half);
+                        packed[j/4+1]=uint8_t(half>>8);
+                    }
+                    out.write(reinterpret_cast<const char*>(packed),std::streamsize(n/4));
+                    if(!out)throw std::runtime_error("F64 to F16 streaming write failure");
+                    off+=n;
+                }
+            } else if(streamF64toF32[i]) {
                 seek(in,add(dataStart,t.offset));
                 uint8_t source[65536],packed[32768];
                 for(U off=0;off<t.bytes;) {
