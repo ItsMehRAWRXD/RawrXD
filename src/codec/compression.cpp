@@ -25,6 +25,16 @@ QByteArray CompressWithLevel(const QByteArray& data, int level, bool* success) {
         return QByteArray();
     }
     const uLong sourceSize = static_cast<uLong>(data.size());
+    // Guard compressBound's uLong arithmetic before calling into zlib. This
+    // matters on Win64, where uLong is still 32-bit even though QByteArray's
+    // qsizetype is 64-bit.
+    const uLong maxULong = std::numeric_limits<uLong>::max();
+    const uLong overhead = (sourceSize >> 12) + (sourceSize >> 14) +
+                           (sourceSize >> 25) + 13u;
+    if (sourceSize > maxULong - overhead) {
+        qWarning() << "[codec] zlib compressBound arithmetic would overflow";
+        return QByteArray();
+    }
     const uLong bound = compressBound(sourceSize);
     if (bound > static_cast<uLong>(INT_MAX)) {
         qWarning() << "[codec] compressed output exceeds QByteArray capacity";
