@@ -24,7 +24,7 @@ using namespace rawrxd::weights;
 static uint64_t PeakWorkingSetBytes() {
     PROCESS_MEMORY_COUNTERS pmc;
     if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-        return static_cast<uint64_t>(pmc.PeakWorkingSetSize) * 1024ULL;
+        return static_cast<uint64_t>(pmc.PeakWorkingSetSize); // Win32 reports bytes
     }
     return 0;
 }
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     uint64_t data_start = static_cast<uint64_t>(f.tellg());
     data_start = (data_start + ALIGN - 1) & ~(ALIGN - 1);
 
-    // ---- Phase 1: load raw tensors, measure peak memory ----
+    // ---- Phase 1: load raw tensors, record process lifetime peak (NOT isolated baseline) ----
     struct Loaded { std::string name; std::vector<uint8_t> raw; uint8_t eb; };
     std::vector<Loaded> raw_tensors;
     uint64_t raw_total = 0;
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
     uint64_t peak_raw = PeakWorkingSetBytes();
     std::cerr << "RAW loaded=" << raw_tensors.size() << " bytes=" << raw_total << " peak_ws=" << peak_raw << "\n";
 
-    // ---- Phase 2: compress all, keep compressed + wire ----
+    // ---- Phase 2: compress all while raw tensors remain resident; peak is NOT an isolated compressed baseline ----
     uint64_t comp_total = 0;
     std::vector<Tensor> compressed;
     for (auto& rt : raw_tensors) {
@@ -149,8 +149,8 @@ int main(int argc, char** argv) {
               << " saved_pct=" << saved_pct
               << " parity_ok=" << parity_ok
               << " parity_fail=" << parity_fail
-              << " peak_ws_raw=" << peak_raw
-              << " peak_ws_comp=" << peak_comp
+              << " process_lifetime_peak_after_raw_bytes=" << peak_raw
+              << " process_lifetime_peak_after_compress_bytes=" << peak_comp
               << "\n";
     bool pass = (parity_fail == 0) && (comp_total < raw_total);
     std::cout << (pass ? "RESULT=PASS\n" : "RESULT=FAIL\n");
