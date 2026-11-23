@@ -15,7 +15,7 @@ inline std::uint32_t hash4(const std::uint8_t* p) {
 }
 CompressedWeightStore::CompressedWeightStore(std::size_t budget,std::size_t block_bytes)
  : block_bytes_(block_bytes),cache_budget_(budget) {
- if(!block_bytes_||block_bytes_>std::numeric_limits<std::uint32_t>::max()) throw std::invalid_argument("invalid block size");
+ if(!block_bytes_||block_bytes_>static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) throw std::invalid_argument("invalid block size: exceeds signed match index capacity");
 }
 std::uint32_t CompressedWeightStore::crc32(const std::uint8_t* p,std::size_t n) {
  std::uint32_t crc=0xFFFFFFFFu;
