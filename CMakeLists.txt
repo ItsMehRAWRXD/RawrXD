@@ -57,6 +57,7 @@ add_executable(reap_repacker_regression tools/reap_repacker_regression.cpp)
 target_include_directories(reap_repacker_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_executable(rawrxd_reap_blob tools/reap_blob_cli.cpp)
+add_executable(reap_f16_accuracy_regression tools/reap_f16_accuracy_regression.cpp)
 add_executable(reap_f16_gguf_regression tools/reap_f16_gguf_regression.cpp)
 add_executable(reap_float16_regression tools/reap_float16_regression.cpp)
 add_executable(reap_blob_regression tools/reap_blob_regression.cpp)
@@ -158,6 +159,7 @@ add_test(NAME REAP_SHA256_Regression COMMAND reap_sha256_regression)
 add_test(NAME REAP_Blob_Regression COMMAND reap_blob_regression)
 add_test(NAME REAP_Float16_Regression COMMAND reap_float16_regression)
 add_test(NAME REAP_F16_GGUF_Regression COMMAND reap_f16_gguf_regression)
+add_test(NAME REAP_F16_Accuracy_Regression COMMAND reap_f16_accuracy_regression)
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
