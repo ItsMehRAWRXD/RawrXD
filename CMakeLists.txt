@@ -117,6 +117,8 @@ add_executable(reap_q81_lossless_regression tools/reap_q81_lossless_regression.c
 target_include_directories(reap_q81_lossless_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_q5k_numeric_regression tools/reap_q5k_numeric_regression.cpp)
 target_include_directories(reap_q5k_numeric_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(reap_q41_numeric_regression tools/reap_q41_numeric_regression.cpp)
+target_include_directories(reap_q41_numeric_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_auto_regression tools/reap_auto_regression.cpp)
 target_include_directories(reap_auto_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_row_alignment_regression tools/reap_row_alignment_regression.cpp)
@@ -236,6 +238,7 @@ add_test(NAME REAP_Stage_Failure_Regression COMMAND reap_stage_failure_regressio
 add_test(NAME REAP_Trailing_No_Shrink_Regression COMMAND reap_trailing_no_shrink_regression)
 add_test(NAME REAP_Q81_Lossless_Regression COMMAND reap_q81_lossless_regression)
 add_test(NAME REAP_Q5K_Numeric_Regression COMMAND reap_q5k_numeric_regression)
+add_test(NAME REAP_Q41_Numeric_Regression COMMAND reap_q41_numeric_regression)
 add_test(NAME REAP_Auto_Regression COMMAND reap_auto_regression)
 add_test(NAME REAP_Row_Alignment_Regression COMMAND reap_row_alignment_regression)
 add_test(NAME Deep2Engine_SmokeTest
