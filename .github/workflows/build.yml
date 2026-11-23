@@ -95,7 +95,9 @@ jobs:
           # verifies the Q5/Q6 quantization kernels and exits non-zero on
           # failure).
           $smoke = "bin/${{ matrix.config }}/quant_scalar_smoke.exe"
-          if (Test-Path $smoke) { & $smoke } else { Write-Host "no native smoke binary in this configuration" }
+          if (!(Test-Path $smoke)) { throw "Required native smoke binary missing: $smoke" }
+          & $smoke
+          if ($LASTEXITCODE -ne 0) { throw "Native smoke test failed with exit code $LASTEXITCODE" }
 
       - name: Verify Executable
         shell: pwsh
@@ -347,9 +349,9 @@ jobs:
           | Linux (GCC) | Release | ${{ needs.build-linux-gcc.result }} |
           | Windows (ARM64) | Release | ${{ needs.build-arm64.result }} |
           
-          **All builds** compiled successfully with zero errors.
-          
-          Executables available in Artifacts.
+          This is a job-result report, not an unconditional build certification.
+          A skipped, cancelled, or failed job is not a passing build.
+          Artifacts are available only for jobs that actually uploaded them.
           "@
           
           Write-Host $summary
@@ -364,12 +366,13 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## ✅ Build Verification Complete
+              body: `## Build verification results
               
-              All platforms built successfully:
-              - ✅ Windows (MSVC) - x64, x86
-              - ✅ Linux (GCC)
-              - ✅ Windows (ARM64)
+              Build jobs (inspect individual matrix legs for architecture/config details):
+              - Windows MSVC: ${{ needs.build-windows-msvc.result }}
+              - Linux GCC: ${{ needs.build-linux-gcc.result }}
+              - Windows ARM64: ${{ needs.build-arm64.result }}
+              - Size analysis: ${{ needs.build-size-analysis.result }}
               
-              Artifacts ready for download and testing.`
+              These are workflow job results; do not infer release certification from them.`
             });
