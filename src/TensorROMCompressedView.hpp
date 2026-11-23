@@ -15,7 +15,17 @@ public:
         : rom_(rom), tensor_(tensor),
           pager_(tensor.byteSize(),
                  [&rom,&tensor](uint64_t offset,uint64_t size,uint8_t* out) {
-                     return rom.readTensorRange(tensor,offset,size,out);
+                     // Bypass PageCache: retaining its raw pages alongside this
+                     // compressed cache would duplicate host residency.
+                     if (tensor.shardIndex >= rom.shards().size()) return false;
+                     const auto& shard = rom.shards()[tensor.shardIndex];
+                     if (tensor.offset > shard.dataSize ||
+                         offset > shard.dataSize - tensor.offset ||
+                         size > shard.dataSize - tensor.offset - offset ||
+                         shard.dataOffset > UINT64_MAX - tensor.offset - offset)
+                         return false;
+                     return rom.readShardRange(tensor.shardIndex,
+                         shard.dataOffset + tensor.offset + offset, out, size);
                  }, pageSize, compressedBudget) {}
     bool readRange(uint64_t offset,uint64_t size,uint8_t* out) {
         return pager_.read(offset,size,out);
