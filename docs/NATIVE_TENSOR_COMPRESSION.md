@@ -104,8 +104,10 @@ and `src/deep2/NativeTensorResidencyCache.hpp`:
   may still be retained when they reduce storage.
 
 Deep2 exposes `GetTensorResidencySnapshot()` with per-cache logical bytes,
-compressed bytes, budgets, tensor counts, hit/miss counts, decoded bytes and
-evictions for measuring actual residency.
+compressed bytes, budgets, tensor counts, hit/miss counts, decoded bytes,
+evictions and the live TensorROM pager resident-byte count. The snapshot also
+reports total tracked weight residency (compressed caches plus resident pager
+pages), so savings can be measured rather than inferred from file size.
 
 This is an in-memory runtime cache, not a change to GGUF wire types. Existing
 quantized weights remain encoded in the TensorROM pager; only the requested
