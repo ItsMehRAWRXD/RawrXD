@@ -45,6 +45,18 @@ int main() {
                         reinterpret_cast<const std::uint8_t*>(ssmNorm.data()) + 64 * sizeof(float),
                         ssmPrefix.size()) == 0);
 
+    // Attention projection biases are also range-consumed by Q/K/V
+    // dispatch after the consumer migration.
+    std::vector<float> qBias(512, 0.125f);
+    REQUIRE(store.addTensor("blk.0.attn_q.bias", qBias.data(),
+                            qBias.size() * sizeof(float), &error, 0u, true));
+    std::vector<std::uint8_t> biasPrefix(32 * sizeof(float));
+    REQUIRE(store.readRange("blk.0.attn_q.bias", 16 * sizeof(float),
+                            biasPrefix.data(), biasPrefix.size(), &error));
+    REQUIRE(std::memcmp(biasPrefix.data(),
+                        reinterpret_cast<const std::uint8_t*>(qBias.data()) + 16 * sizeof(float),
+                        biasPrefix.size()) == 0);
+
     // Read a nonzero range to ensure offset-based lazy access works for norm
     // vectors, not just their first block.
     std::vector<std::uint8_t> tail(32 * sizeof(float));
@@ -55,7 +67,7 @@ int main() {
                         tailOffset, tail.size()) == 0);
 
     const auto stats = store.stats();
-    REQUIRE(stats.tensors == 3);
+    REQUIRE(stats.tensors == 4);
     REQUIRE(stats.compressed_bytes < stats.raw_bytes);
     REQUIRE(stats.cached_decoded_bytes == 0);
     return 0;
