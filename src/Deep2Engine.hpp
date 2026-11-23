@@ -68,7 +68,7 @@ struct Deep2Engine {
     // Lossless RLE residency for sparse/repetitive encoded non-F32 payloads.
     // Already-quantized weights remain in their canonical GGUF byte layout.
     Deep2::TensorByteResidencyCache compressedEncodedWeights{512ull * 1024ull * 1024ull};
-    float compressedF32MaxAbsError = 0.0f; // Lossless by default; opt into lossy F16/BF16 explicitly.
+    std::atomic<float> compressedF32MaxAbsError{0.0f}; // Lossless by default; finite tolerance opts into F16/BF16.
     std::unique_ptr<deep2::VulkanDevice> vulkan;
     bool vulkanReady = false;
 
@@ -77,6 +77,9 @@ struct Deep2Engine {
     bool Initialize(const std::string& modelPath, const std::string& manifestPath = "", bool forceWholeLoader = false);
     void Shutdown();
     TensorResidencySnapshot GetTensorResidencySnapshot() const;
+    // Zero error preserves F32 exactly; positive finite error permits bounded F16/BF16 chunks.
+    bool ConfigureTensorCompression(size_t f32BudgetBytes, size_t encodedBudgetBytes,
+                                     float f32MaxAbsError);
 
     void SynchronizeRoPEScaling(double modelThetaConfig = 0.0);
     void ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position);
