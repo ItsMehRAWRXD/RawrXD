@@ -48,3 +48,22 @@ jobs:
               f.write(random.randbytes(65537))
           PY
           /tmp/weight_bench /tmp/weights.bin 2 4096
+  windows-native:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install zlib using vcpkg
+        shell: pwsh
+        run: |
+          vcpkg install zlib:x64-windows
+      - name: Compile and run C++17 compression tests with MSVC
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          for %%T in (tensor_aware_lossless_test decoded_block_cache_test tensor_weight_storage_test) do (
+            cl /nologo /std:c++17 /EHsc /O2 /W4 /I. /I"C:\vcpkg\installed\x64-windows\include" tests\%%T.cpp /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" zlib.lib /OUT:%%T.exe
+            if errorlevel 1 exit /b 1
+            %%T.exe
+            if errorlevel 1 exit /b 1
+          )
