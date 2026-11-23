@@ -14,7 +14,7 @@ int main() {
     for(int t=0;t<6;++t) {
         const auto type=types[t];
         assert(BlockBytes(type)==sizes[t]);
-        std::array<uint8_t,210> buf{};
+        std::array<uint8_t,292> buf{};
         double v[256]={},decoded[256]={};
         // Every zero block is exactly reproducible in all GGML K layouts.
         assert(EncodeBlock(type,v,0,buf.data()));
