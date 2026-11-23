@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include "brutal_gzip.h"
 #include "deflate_brutal_qt.hpp"
 
@@ -167,4 +168,3 @@ struct CompressionStats {
     std::string ToString() const;
 };
 
-#endif // COMPRESSION_INTERFACE_H
