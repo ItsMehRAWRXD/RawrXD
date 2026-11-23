@@ -399,6 +399,15 @@ def run(binary):
             assert result.returncode!=0
             assert destination_link.is_symlink()
             assert existing.read_bytes()==b"EXISTING MODEL ARTIFACT"
+        # An occupied output path must be rejected before creating staging.
+        # This applies even when the input contains a large tensor.
+        huge_existing=root/"huge-existing.gguf"
+        huge_existing.write_bytes(b"KEEP ORIGINAL")
+        result=subprocess.run([binary,str(huge),str(huge_existing),"0","bf16"],
+                              capture_output=True)
+        assert result.returncode!=0
+        assert huge_existing.read_bytes()==b"KEEP ORIGINAL"
+        assert not (root/"huge-existing.gguf.partial").exists()
         # A pre-existing staging file belongs to another invocation.
         # A rejected conversion must leave it byte-for-byte unchanged.
         staged=root/"already-staged.gguf.partial"
