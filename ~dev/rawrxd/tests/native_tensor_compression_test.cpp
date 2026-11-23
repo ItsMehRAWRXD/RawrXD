@@ -25,6 +25,14 @@ int main() {
     std::vector<std::uint8_t> packed;
     CHECK(compact.ExportUniform16Bit(encoding,packed));
     CHECK(packed.size()==values.size()*2);
+    const std::uint8_t* packedViewA=nullptr;
+    const std::uint8_t* packedViewB=nullptr;
+    std::size_t packedViewBytesA=0,packedViewBytesB=0;
+    CHECK(compact.GetUniform16BitView(encoding,packedViewA,packedViewBytesA));
+    CHECK(compact.GetUniform16BitView(encoding,packedViewB,packedViewBytesB));
+    CHECK(packedViewA==packedViewB && packedViewBytesA==packedViewBytesB);
+    CHECK(packedViewBytesA==packed.size());
+    CHECK(std::memcmp(packedViewA,packed.data(),packed.size())==0);
     std::vector<float> decoded(values.size());
     CHECK(compact.DecodeRange(137,decoded.size()-274,decoded.data()));
     for (std::size_t i=0;i<decoded.size()-274;++i)
