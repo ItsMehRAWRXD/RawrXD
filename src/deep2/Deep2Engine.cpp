@@ -7558,9 +7558,8 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
 // ============================================================================
 void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const float* bias, float* output, size_t outDim)
 {
-    // Keep compressed weights authoritative on CPU: LinearW_Range decodes
-    // only each worker's packed output-row slice. Vulkan currently stages one
-    // complete tensor because its existing upload interface accepts a base pointer.
+    // Keep compressed weights authoritative: CPU workers decode only their
+    // packed output-row slices, while Vulkan stages bounded one-shot row tiles.
     WeightTensor wtEffective = wt;
     std::vector<std::uint8_t> compressedGpuBytes;
 
