@@ -3447,14 +3447,16 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                    name.find(".wv.") != std::string::npos ||
                    name.find(".wo.") != std::string::npos)));
             const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
-            const bool eligibleLinearMatrix =
-                compressedModeEnabled && linearProjectionName &&
+            const bool embeddingMatrixName =
+                name == "token_embd.weight" || name == "token_embeddings.weight";
+            const bool eligibleCompressedMatrix =
+                compressedModeEnabled && (linearProjectionName || embeddingMatrixName) &&
                 t.dimensions.size() == 2 && wt.rows > 1 && wt.cols > 1 &&
                 packedRowBytes > 0 &&
                 packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
                 packedRowBytes * wt.rows == wt.sizeBytes;
 
-            if (eligibleLinearMatrix && t.data)
+            if (eligibleCompressedMatrix && t.data)
             {
                 constexpr std::size_t kDefaultCompressedModelBudget =
                     4ull * 1024ull * 1024ull * 1024ull;
@@ -4074,7 +4076,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     config.vocabSize = modelWeights.vocabSize;
 
     // Check if tied embeddings
-    if (modelWeights.lmHead.data == nullptr && modelWeights.tokenEmbed.data != nullptr)
+    if (modelWeights.lmHead.data == nullptr && !modelWeights.lmHead.hasCompressedBacking() &&
+        (modelWeights.tokenEmbed.data != nullptr || modelWeights.tokenEmbed.hasCompressedBacking()))
     {
         modelWeights.lmHead = modelWeights.tokenEmbed;
         modelWeights.tieEmbeddings = true;
@@ -5244,7 +5247,8 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path)
     }
 
     // Check tied embeddings
-    if (modelWeights.lmHead.data == nullptr && modelWeights.tokenEmbed.data != nullptr)
+    if (modelWeights.lmHead.data == nullptr && !modelWeights.lmHead.hasCompressedBacking() &&
+        (modelWeights.tokenEmbed.data != nullptr || modelWeights.tokenEmbed.hasCompressedBacking()))
     {
         modelWeights.lmHead = modelWeights.tokenEmbed;
         modelWeights.tieEmbeddings = true;
