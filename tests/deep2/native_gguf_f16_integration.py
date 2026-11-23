@@ -234,6 +234,19 @@ def run(binary):
         xd,xs,xm,xt=parse(f32only_dest)
         assert xt["blk.0.attn_q.weight"][0]==0
         assert len(xd)-xs==len(doubles)*4
+        # BF16 has a much wider exponent range than F16. Auto must select
+        # BF16 rather than the larger F32 when all values are exactly BF16.
+        f64_wide=root/"f64-bf16-range.gguf"
+        wide=bytearray(f64.read_bytes())
+        _,wide_start,_,_=parse(f64)
+        struct.pack_into("<d",wide,wide_start,2.0**100)
+        f64_wide.write_bytes(wide)
+        wide_dest=root/"f64-bf16-auto.gguf"
+        subprocess.run([binary,str(f64_wide),str(wide_dest),"0","auto"],check=True)
+        wd,ws,wm,wt=parse(wide_dest)
+        assert wt["blk.0.attn_q.weight"][0]==30
+        assert len(wd)-ws==len(doubles)*2
+        assert struct.unpack_from("<H",wd,ws)[0]==0x7180
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
