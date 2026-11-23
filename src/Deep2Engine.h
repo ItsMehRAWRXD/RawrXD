@@ -75,6 +75,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <atomic>
+#include <cstdint>
 #include <cstring>
 
 namespace Deep2
