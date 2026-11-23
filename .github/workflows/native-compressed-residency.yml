@@ -9,6 +9,8 @@ on:
       - "src/Deep2Engine.hpp"
       - "src/TensorROM.cpp"
       - "src/TensorROM.hpp"
+      - "src/TensorROM.cpp"
+      - "src/TensorROM.hpp"
       - "src/TensorView.hpp"
       - "src/quant_kernels.cpp"
       - "tests/native_*_test.cpp"
@@ -56,6 +58,8 @@ jobs:
           done
           c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include -I src tests/native_quantized_dequant_test.cpp src/quant_kernels.cpp -o build/native-compression/native_quantized_dequant_test
           build/native-compression/native_quantized_dequant_test
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -I include tests/native_compressed_inference_e2e_test.cpp -o build/native-compression/native_compressed_inference_e2e_test
+          build/native-compression/native_compressed_inference_e2e_test
 
   windows:
     runs-on: windows-latest
@@ -85,4 +89,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Compile failed: native_quantized_dequant_test" }
           & "build/native-compression/native_quantized_dequant_test.exe"
           if ($LASTEXITCODE -ne 0) { throw "Test failed: native_quantized_dequant_test" }
+          cl /nologo /std:c++17 /EHsc /W4 /WX /I include tests/native_compressed_inference_e2e_test.cpp /Fe:build/native-compression/native_compressed_inference_e2e_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Compile failed: native_compressed_inference_e2e_test" }
+          & "build/native-compression/native_compressed_inference_e2e_test.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Test failed: native_compressed_inference_e2e_test" }
 
