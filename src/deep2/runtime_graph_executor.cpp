@@ -4205,6 +4205,10 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
         // ---- Linear: queue one dot per token into the group's batch --------
         if (in.op == OpKind::Linear) {
             const size_t cap = QuantDot::BatchCapacity();
+            if (cap == 0) {
+                last_error_ = "prefill-batch: selected device has no quant batch descriptors";
+                return false;
+            }
             const bool same_group = batch_open && in.aName == batch_input &&
                                     !in.outName.empty() && in.outName != in.aName;
             if (batch_open && !same_group) {
