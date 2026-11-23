@@ -462,6 +462,59 @@ public:
             packed.insert(packed.end(), chunk.payload.begin(), chunk.payload.end());
         return packed.size() == total;
     }
+    // Copy a bounded packed F16/BF16 row window directly into caller-owned
+    // staging memory. No whole-tensor or intermediate packed allocation.
+    // Validate all intersecting chunks before writing to destination.
+    bool CopyUniform16BitRange(size_t first, size_t count, Encoding& encoding,
+                               void* destination, size_t destinationBytes) const {
+        if (first > element_count_ || count > element_count_ - first) return false;
+        if (count > std::numeric_limits<size_t>::max() / sizeof(uint16_t))
+            return false;
+        const size_t required = count * sizeof(uint16_t);
+        if (destinationBytes < required || (required && !destination)) return false;
+        if (!count) { encoding = Encoding::Raw; return true; }
+        if (!chunk_elements_) return false;
+        const size_t end = first + count;
+        const size_t firstChunk = first / chunk_elements_;
+        const size_t lastChunk = (end - 1) / chunk_elements_;
+        if (lastChunk >= chunks_.size()) return false;
+        const Encoding selected = chunks_[firstChunk].encoding;
+        if (selected != Encoding::F16 && selected != Encoding::BF16) return false;
+        size_t validated = 0;
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const Result& chunk = chunks_[i];
+            if (chunk.encoding != selected ||
+                chunk.original_bytes % sizeof(float) != 0 ||
+                chunk.payload.size() != chunk.original_bytes / 2)
+                return false;
+            if (i > std::numeric_limits<size_t>::max() / chunk_elements_)
+                return false;
+            const size_t chunkFirst = i * chunk_elements_;
+            if (chunkFirst > element_count_) return false;
+            const size_t elements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            if (elements > element_count_ - chunkFirst) return false;
+            const size_t from = std::max(first, chunkFirst);
+            const size_t to = std::min(end, chunkFirst + elements);
+            if (to < from || to - from > count - validated) return false;
+            validated += to - from;
+        }
+        if (validated != count) return false;
+        auto* out = static_cast<uint8_t*>(destination);
+        for (size_t i = firstChunk; i <= lastChunk; ++i) {
+            const Result& chunk = chunks_[i];
+            const size_t chunkFirst = i * chunk_elements_;
+            const size_t elements = static_cast<size_t>(chunk.original_bytes / sizeof(float));
+            const size_t from = std::max(first, chunkFirst);
+            const size_t to = std::min(end, chunkFirst + elements);
+            const size_t offset = (from - chunkFirst) * sizeof(uint16_t);
+            const size_t bytes = (to - from) * sizeof(uint16_t);
+            if (bytes)
+                std::memcpy(out + (from - first) * sizeof(uint16_t),
+                            chunk.payload.data() + offset, bytes);
+        }
+        encoding = selected;
+        return true;
+    }
     // Export any logical range whose intersecting chunks all use the same
     // native F16/BF16 representation. Chunk boundaries are an implementation
     // detail: slicing is performed directly on the compact payload, without
