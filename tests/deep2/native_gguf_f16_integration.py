@@ -182,6 +182,26 @@ def run(binary):
                     assert abs(minimum+delta*code-values[block*32+j])<=10000
             offq=tt["blk.0.attn_k.weight"][2]
             assert bb[bs+offq:bs+offq+32]==quant
+        # Descriptor order intentionally differs from physical tensor order.
+        # GGUF permits this; rewriting must keep offsets and payloads consistent.
+        swapped=root/"reordered.gguf"
+        kv=S("general.architecture")+U32(8)+S("llama")
+        kv+=S("general.alignment")+U32(4)+U32(ALIGN)
+        raw=struct.pack("<"+"f"*len(values),*values)
+        header=b"GGUF"+U32(3)+U64(2)+U64(2)+kv
+        header+=S("blk.0.attn_k.weight")+U32(1)+U64(32)+U32(6)+U64(len(raw))
+        header+=S("blk.0.attn_q.weight")+U32(1)+U64(len(values))+U32(0)+U64(0)
+        swapped.write_bytes(pad(header)+raw+quant)
+        for fmt,typ,tolerance in (("f16",1,"0"),("q8_0",8,"300"),("q5_0",6,"500"),("q4_1",3,"10000"),("q4_0",2,"10000")):
+            dest=root/("reordered-"+fmt+".gguf")
+            subprocess.run([binary,str(swapped),str(dest),tolerance,fmt],check=True)
+            data,ds,meta,desc=parse(dest)
+            assert meta==metadata
+            assert desc["blk.0.attn_q.weight"][0]==typ
+            assert desc["blk.0.attn_q.weight"][2]==0
+            assert desc["blk.0.attn_k.weight"][2]>0
+            offset=desc["blk.0.attn_k.weight"][2]
+            assert data[ds+offset:ds+offset+32]==quant
         bad=root/"bad.gguf";bad.write_bytes(original[:24])
         failed=subprocess.run([binary,str(bad),str(root/"bad-out.gguf"),"0"],capture_output=True)
         assert failed.returncode!=0
