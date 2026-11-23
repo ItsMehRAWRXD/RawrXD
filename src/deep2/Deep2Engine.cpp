@@ -12561,19 +12561,37 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
                 throw std::runtime_error(std::string("SSM missing ") + role);
             return nullptr;
         }
-        if (weight.type != (int)GGMLType::GGML_TYPE_F32 ||
-            weight.sizeBytes % sizeof(float) != 0)
-            throw std::runtime_error(std::string("SSM ") + role +
-                                     " must be a packed F32 tensor");
-        if (weight.hasCompressedBacking()) {
-            scratch.resize(weight.sizeBytes / sizeof(float));
-            std::string readError;
-            if (!weight.readBytes(0, scratch.data(), weight.sizeBytes, &readError))
-                throw std::runtime_error(std::string("SSM compressed ") + role +
-                                         " read failed: " + readError);
+        if (weight.type == (int)GGMLType::GGML_TYPE_F32) {
+            if (weight.sizeBytes % sizeof(float) != 0)
+                throw std::runtime_error(std::string("SSM ") + role + " has invalid F32 byte size");
+            if (weight.hasCompressedBacking()) {
+                scratch.resize(weight.sizeBytes / sizeof(float));
+                std::string readError;
+                if (!weight.readBytes(0, scratch.data(), weight.sizeBytes, &readError))
+                    throw std::runtime_error(std::string("SSM compressed ") + role +
+                                             " read failed: " + readError);
+                return scratch.data();
+            }
+            return static_cast<const float*>(weight.data);
+        }
+        if (weight.type == (int)GGMLType::GGML_TYPE_F16) {
+            if (weight.sizeBytes % sizeof(std::uint16_t) != 0)
+                throw std::runtime_error(std::string("SSM ") + role + " has invalid F16 byte size");
+            std::vector<std::uint16_t> encoded(weight.sizeBytes / sizeof(std::uint16_t));
+            if (weight.hasCompressedBacking()) {
+                std::string readError;
+                if (!weight.readBytes(0, encoded.data(), weight.sizeBytes, &readError))
+                    throw std::runtime_error(std::string("SSM compressed ") + role +
+                                             " read failed: " + readError);
+            } else {
+                std::memcpy(encoded.data(), weight.data, weight.sizeBytes);
+            }
+            scratch.resize(encoded.size());
+            for (std::size_t i = 0; i < encoded.size(); ++i)
+                scratch[i] = fp16ToFloat(encoded[i]);
             return scratch.data();
         }
-        return static_cast<const float*>(weight.data);
+        throw std::runtime_error(std::string("SSM ") + role + " must be F32 or F16");
     };
     const float* convW = getF32(lw.ssmConv1d, compressedConvWeights, "conv1d weights", true);
     const float* convBias = getF32(lw.ssmConv1dBias, compressedConvBias, "conv1d bias", true);
@@ -12679,12 +12697,20 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // in runtime_graph_executor.cpp and avoids the previous double-gating /
     // per-group scale error that inflated the residual stream.
     const float* normW = getF32(lw.ssmNorm, compressedNorm, "norm vector", true);
-    if (lw.ssmConv1d.sizeBytes < dConvDim * dConv * sizeof(float) ||
-        lw.ssmConv1dBias.sizeBytes < dConvDim * sizeof(float) ||
-        lw.ssmNorm.sizeBytes < dInner * sizeof(float) ||
-        lw.ssmA.sizeBytes < heads * sizeof(float) ||
-        lw.ssmD.sizeBytes < heads * sizeof(float) ||
-        (lw.ssmDtBias.hasBacking() && lw.ssmDtBias.sizeBytes < heads * sizeof(float)))
+    const auto hasFloatElements = [](const WeightTensor& weight, std::size_t count) {
+        const std::size_t elementBytes =
+            weight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+            weight.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+        return elementBytes != 0 && count <= weight.sizeBytes / elementBytes;
+    };
+    if (dConv != 0 && dConvDim > (std::numeric_limits<std::size_t>::max)() / dConv)
+        throw std::overflow_error("SSM convolution element count overflow");
+    if (!hasFloatElements(lw.ssmConv1d, dConvDim * dConv) ||
+        !hasFloatElements(lw.ssmConv1dBias, dConvDim) ||
+        !hasFloatElements(lw.ssmNorm, dInner) ||
+        !hasFloatElements(lw.ssmA, heads) ||
+        !hasFloatElements(lw.ssmD, heads) ||
+        (lw.ssmDtBias.hasBacking() && !hasFloatElements(lw.ssmDtBias, heads)))
         throw std::runtime_error("SSM vector or convolution tensor is smaller than its consumer geometry");
     double gatedSumSq = 0.0;
     for (size_t i = 0; i < dInner; ++i)
