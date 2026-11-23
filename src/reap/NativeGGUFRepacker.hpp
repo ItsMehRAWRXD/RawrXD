@@ -172,9 +172,17 @@ inline RepackError RepackGGUF(const std::string& input,
     // Budget check before opening destination; never silently truncate.
     uint64_t newDir=static_cast<uint64_t>(metadataEnd);
     for(const auto& t:tensors) {
-        if(t.name.size()>UINT64_MAX-newDir-8-4-4-8-8*t.dims.size())
+        // Checked addition at every step: subtraction of a compound
+        // expression could wrap before the bounds comparison.
+        const uint64_t nameBytes=static_cast<uint64_t>(t.name.size());
+        const uint64_t dimsBytes=static_cast<uint64_t>(t.dims.size())*8;
+        const uint64_t fixedBytes=8+4+4+8;
+        if(nameBytes>UINT64_MAX-fixedBytes ||
+           dimsBytes>UINT64_MAX-fixedBytes-nameBytes)
             return RepackError::Overflow;
-        newDir+=8+t.name.size()+4+8*t.dims.size()+4+8;
+        const uint64_t entryBytes=fixedBytes+nameBytes+dimsBytes;
+        if(newDir>UINT64_MAX-entryBytes)return RepackError::Overflow;
+        newDir+=entryBytes;
     }
     if(newDir>UINT64_MAX-(alignment-1))return RepackError::Overflow;
     const uint64_t newData=(newDir+alignment-1)&~(alignment-1);
@@ -209,6 +217,7 @@ inline RepackError RepackGGUF(const std::string& input,
             if(!out.write(zeros,chunk))return RepackError::Output;
             padding-=static_cast<uint64_t>(chunk);
         }
+        if(t.old_offset>UINT64_MAX-dataStart)return RepackError::Overflow;
         if(!CopyRange(in,out,dataStart+t.old_offset,t.bytes))
             return RepackError::Output;
     }
