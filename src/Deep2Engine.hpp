@@ -42,6 +42,27 @@ struct Deep2Engine {
     // across tokens/requests; bounded LRU residency).
     rawrxd::avwm::Int4WeightCache int4Cache_;
 
+    // Stage 6E: persistent GPU-resident packed INT4 weights + scales, keyed by
+    // tensor name. Avoids re-uploading the packed matrix on every matvec (the
+    // dominant PCIe cost for large weights). Bounded by a VRAM budget.
+    struct GpuInt4Tensor {
+        VkBuffer wbuf = VK_NULL_HANDLE;
+        VkBuffer sbuf = VK_NULL_HANDLE;
+        VkDeviceMemory wmem = VK_NULL_HANDLE;
+        VkDeviceMemory smem = VK_NULL_HANDLE;
+        size_t wbytes = 0, sbytes = 0;
+        uint64_t last_used = 0;
+    };
+    std::unordered_map<std::string, GpuInt4Tensor> gpuInt4Cache_;
+    size_t gpuInt4Budget_ = 512ull * 1024 * 1024; // 512 MiB VRAM budget
+    uint64_t gpuInt4Resident_ = 0;
+    uint64_t gpuInt4Clock_ = 0;
+    // Return the resident GPU buffers for `name`, uploading on first use.
+    // Returns false on allocation failure.
+    bool getOrUploadInt4(const std::string& name, const rawrxd::lossy::QuantTensor& q,
+                         const deep2::VulkanDevice::Gpu& gpu, VkBuffer& outW,
+                         VkBuffer& outS);
+
     // ---- Compressed weight residency (Stage 3) ----
     // Compressed F32 residency (lossless F32->F16/BF16 when within tolerance)
     // and lossless RLE/LZ4 residency for encoded non-F32 payloads. These are the

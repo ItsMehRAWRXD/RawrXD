@@ -431,6 +431,58 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     return true;
 }
 
+// Stage 6E: persistent GPU-resident packed INT4 weights + scales. On first use
+// for a tensor name, creates and uploads the buffers; on subsequent calls,
+// reuses them (no repeated host->device transfer). Bounded by a VRAM budget.
+bool Deep2Engine::getOrUploadInt4(const std::string& name, const lossy::QuantTensor& q,
+                                        const deep2::VulkanDevice::Gpu& gpu, VkBuffer& outW,
+                                        VkBuffer& outS) {
+    // Cache hit?
+    auto it = gpuInt4Cache_.find(name);
+    if (it != gpuInt4Cache_.end()) {
+        it->second.last_used = ++gpuInt4Clock_;
+        outW = it->second.wbuf;
+        outS = it->second.sbuf;
+        return true;
+    }
+    // Build: create + upload host-visible buffers.
+    const VkDeviceSize wsize = q.packed.size();
+    const VkDeviceSize ssize = q.scales.size() * sizeof(uint16_t);
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags hv = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    GpuInt4Tensor t;
+    void* wm = nullptr; void* sm = nullptr;
+    if (!vulkan->createBuffer(gpu, wsize, usage, hv, t.wbuf, t.wmem, &wm)) return false;
+    if (!vulkan->createBuffer(gpu, ssize, usage, hv, t.sbuf, t.smem, &sm)) {
+        vulkan->destroyBuffer(gpu, t.wbuf, t.wmem);
+        return false;
+    }
+    std::memcpy(wm, q.packed.data(), static_cast<size_t>(wsize));
+    std::memcpy(sm, q.scales.data(), static_cast<size_t>(ssize));
+    t.wbytes = wsize;
+    t.sbytes = ssize;
+    t.last_used = ++gpuInt4Clock_;
+    gpuInt4Resident_ += wsize + ssize;
+
+    // Evict if over budget (LRU, no pin tracking here -- callers use the buffer
+    // synchronously within one matvec).
+    while (gpuInt4Resident_ > gpuInt4Budget_ && gpuInt4Cache_.size() > 1) {
+        auto victim = gpuInt4Cache_.begin();
+        uint64_t oldest = UINT64_MAX;
+        for (auto kv = gpuInt4Cache_.begin(); kv != gpuInt4Cache_.end(); ++kv)
+            if (kv->second.last_used < oldest) { oldest = kv->second.last_used; victim = kv; }
+        if (victim == gpuInt4Cache_.end()) break;
+        gpuInt4Resident_ -= victim->second.wbytes + victim->second.sbytes;
+        vulkan->destroyBuffer(gpu, victim->second.wbuf, victim->second.wmem);
+        vulkan->destroyBuffer(gpu, victim->second.sbuf, victim->second.smem);
+        gpuInt4Cache_.erase(victim);
+    }
+    outW = t.wbuf;
+    outS = t.sbuf;
+    gpuInt4Cache_[name] = t;
+    return true;
+}
+
 // Stage 6B: fused INT4 GPU matvec. Quantizes W to packed INT4 (per-64-block
 // F16 scales), uploads to GPU, dispatches VulkanInt4Program, reads back, and
 // verifies against a CPU INT4 reference (bit-exact) -- proving the GPU kernel
@@ -484,31 +536,55 @@ bool Deep2Engine::vulkanInt4Gemv(const float* W, const float* x, float* y,
         }
     }
 
-    // Upload buffers (host-visible): packed INT4 weights, F16 scales, x, y.
+    // Stage 6E: persistent GPU-resident weights + scales (upload once, reuse).
+    // Only x and y buffers are per-call.
     VkBuffer Wbuf = VK_NULL_HANDLE, Sbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
-    VkDeviceMemory Wmem = VK_NULL_HANDLE, Smem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
-    void* Wmapped = nullptr; void* Smapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
-    const VkDeviceSize Wsize = q.packed.size();
-    const VkDeviceSize Ssize = q.scales.size() * sizeof(uint16_t);
+    VkDeviceMemory xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
+    VkDeviceMemory perCallWmem = VK_NULL_HANDLE, perCallSmem = VK_NULL_HANDLE; // non-persistent only
+    void* xmapped = nullptr; void* ymapped = nullptr;
     const VkDeviceSize xsize = cols * sizeof(float);
     const VkDeviceSize ysize = rows * sizeof(float);
-    auto cleanup = [&]() {
-        vulkan->destroyBuffer(*gpu, Wbuf, Wmem);
-        vulkan->destroyBuffer(*gpu, Sbuf, Smem);
-        vulkan->destroyBuffer(*gpu, xbuf, xmem);
-        vulkan->destroyBuffer(*gpu, ybuf, ymem);
-    };
     const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     const VkMemoryPropertyFlags hv = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-    if (!vulkan->createBuffer(*gpu, Wsize, usage, hv, Wbuf, Wmem, &Wmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(*gpu, Ssize, usage, hv, Sbuf, Smem, &Smapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(*gpu, xsize, usage, hv, xbuf, xmem, &xmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(*gpu, ysize, usage, hv, ybuf, ymem, &ymapped)) { cleanup(); return false; }
 
-    std::memcpy(Wmapped, q.packed.data(), static_cast<size_t>(Wsize));
-    std::memcpy(Smapped, q.scales.data(), static_cast<size_t>(Ssize));
+    // Persistent weights+scales: cached per tensor name, reused across calls.
+    if (!name.empty()) {
+        if (!getOrUploadInt4(name, q, *gpu, Wbuf, Sbuf)) {
+            fprintf(stderr, "[VULKAN_INT4] GPU weight upload failed\n");
+            return false;
+        }
+    } else {
+        // No name: upload per call (backward-compatible).
+        void* wm = nullptr; void* sm = nullptr;
+        const VkDeviceSize wsize = q.packed.size();
+        const VkDeviceSize ssize = q.scales.size() * sizeof(uint16_t);
+        if (!vulkan->createBuffer(*gpu, wsize, usage, hv, Wbuf, perCallWmem, &wm)) return false;
+        if (!vulkan->createBuffer(*gpu, ssize, usage, hv, Sbuf, perCallSmem, &sm)) {
+            vulkan->destroyBuffer(*gpu, Wbuf, perCallWmem); return false;
+        }
+        std::memcpy(wm, q.packed.data(), static_cast<size_t>(wsize));
+        std::memcpy(sm, q.scales.data(), static_cast<size_t>(ssize));
+    }
+
+    // Per-call x and y buffers.
+    if (!vulkan->createBuffer(*gpu, xsize, usage, hv, xbuf, xmem, &xmapped)) return false;
+    if (!vulkan->createBuffer(*gpu, ysize, usage, hv, ybuf, ymem, &ymapped)) {
+        vulkan->destroyBuffer(*gpu, xbuf, xmem);
+        if (perCallWmem) { vulkan->destroyBuffer(*gpu, Wbuf, perCallWmem); vulkan->destroyBuffer(*gpu, Sbuf, perCallSmem); }
+        return false;
+    }
     std::memcpy(xmapped, x, static_cast<size_t>(xsize));
     std::memset(ymapped, 0, static_cast<size_t>(ysize));
+
+    // Per-call cleanup: x/y always; W/S only when per-call (non-persistent).
+    auto cleanup = [&]() {
+        vulkan->destroyBuffer(*gpu, xbuf, xmem);
+        vulkan->destroyBuffer(*gpu, ybuf, ymem);
+        if (perCallWmem) {
+            vulkan->destroyBuffer(*gpu, Wbuf, perCallWmem);
+            vulkan->destroyBuffer(*gpu, Sbuf, perCallSmem);
+        }
+    };
 
     if (!int4Program_->dispatch(*gpu, Wbuf, Sbuf, xbuf, ybuf,
                                 (uint32_t)rows, (uint32_t)cols, bpr)) {
