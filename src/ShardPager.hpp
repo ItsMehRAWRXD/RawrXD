@@ -69,10 +69,21 @@ public:
     void evictUnleasedAll();
 
 private:
-    using Key = std::uint64_t;
-    static Key makeKey(uint32_t shard, uint64_t pageNo) {
-        return (static_cast<Key>(shard) << 32) | (pageNo & 0xFFFFFFFFull);
-    }
+    struct Key {
+        uint32_t shard;
+        uint64_t page;
+        bool operator==(const Key& other) const noexcept {
+            return shard == other.shard && page == other.page;
+        }
+    };
+    struct KeyHash {
+        std::size_t operator()(const Key& k) const noexcept {
+            const std::size_t a = std::hash<uint32_t>{}(k.shard);
+            const std::size_t b = std::hash<uint64_t>{}(k.page);
+            return a ^ (b + std::size_t{0x9e3779b9} + (a << 6) + (a >> 2));
+        }
+    };
+    static Key makeKey(uint32_t shard, uint64_t pageNo) { return {shard, pageNo}; }
 
     void touch(Page* page);              // move to front of LRU
     bool loadPage(Page* page);
@@ -84,7 +95,7 @@ private:
 
     mutable std::mutex m_mutex;
     std::list<Page*> m_lru;              // front = most recently used
-    std::unordered_map<Key, Page*> m_index;
+    std::unordered_map<Key, Page*, KeyHash> m_index;
 
     Reader m_reader;
 
@@ -104,8 +115,8 @@ public:
 
     TensorLease(const TensorLease&) = delete;
     TensorLease& operator=(const TensorLease&) = delete;
-    TensorLease(TensorLease&& other) noexcept = default;
-    TensorLease& operator=(TensorLease&& other) noexcept = default;
+    TensorLease(TensorLease&& other) noexcept;
+    TensorLease& operator=(TensorLease&& other) noexcept;
 
     explicit operator bool() const { return m_ok; }
     uint32_t shard() const { return m_shard; }
@@ -119,7 +130,7 @@ public:
     const std::uint8_t* direct(uint64_t relOffset, std::uint64_t size) const;
 
 private:
-    PageCache* m_cache;   // not owned; must outlive the lease
+    PageCache* m_cache = nullptr;   // not owned; must outlive the lease
     uint32_t m_shard = 0;
     uint64_t m_offset = 0;
     uint64_t m_size = 0;
