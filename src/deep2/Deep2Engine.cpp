@@ -7152,11 +7152,28 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
 // ============================================================================
 void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const float* bias, float* output, size_t outDim)
 {
-    if (!wt.data || !input || !output || outDim == 0)
+    // A compressed-only WeightTensor is materialized only for this kernel
+    // invocation. The store remains authoritative; the temporary buffer is
+    // bounded to this tensor and is released after CPU workers/GPU dispatch return.
+    std::vector<std::uint8_t> compressedKernelBytes;
+    WeightTensor wtEffective = wt;
+    if (!wtEffective.data && wtEffective.hasCompressedBacking())
+    {
+        compressedKernelBytes.resize(wtEffective.sizeBytes);
+        std::string decodeError;
+        if (!wtEffective.readBytes(0, compressedKernelBytes.data(),
+                                   compressedKernelBytes.size(), &decodeError))
+            throw std::runtime_error("LinearW: compressed weight decode failed for " +
+                                     wt.name + ": " + decodeError);
+        wtEffective.data = compressedKernelBytes.empty() ? nullptr : compressedKernelBytes.data();
+    }
+
+    if (!wtEffective.data || !input || !output || outDim == 0)
     {
         throw std::runtime_error(
             "LinearW: invalid arguments: name=" + wt.name +
-            ", wt.data=" + (wt.data ? "valid" : "null") +
+            ", wt.data=" + (wtEffective.data ? "valid" : "null") +
+            ", compressed=" + (wt.hasCompressedBacking() ? "yes" : "no") +
             ", input=" + (input ? "valid" : "null") +
             ", output=" + (output ? "valid" : "null") +
             ", outDim=" + std::to_string(outDim));
@@ -7165,7 +7182,6 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     // --- VAL-051.7+: Cyclone-Elastic contract ---
     // AcquireTensor guarantees CPU-resident pointer before compute.
     // No fallback to wt.data — eliminates silent page-fault escape hatch.
-    WeightTensor wtEffective = wt;
     Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
     bool acquired = false;
     if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty() && !vulkanEnabled_)
