@@ -56,6 +56,35 @@ void value(std::istream& f,uint32_t t,U fileSize,int depth=0) {
         default:throw std::runtime_error("unsupported GGUF metadata type");
     }
 }
+bool encodeQ8Block(const uint8_t* raw,uint32_t type,float tolerance,uint8_t out[34]) {
+    float v[32],maxAbs=0;
+    for(int j=0;j<32;++j) {
+        if(type==0) {
+            uint32_t bits=uint32_t(raw[4*j])|(uint32_t(raw[4*j+1])<<8)|
+                          (uint32_t(raw[4*j+2])<<16)|(uint32_t(raw[4*j+3])<<24);
+            v[j]=Float(bits);
+        } else {
+            uint16_t h=uint16_t(raw[2*j])|(uint16_t(raw[2*j+1])<<8);
+            if(type==1)v[j]=FromHalf(h);
+            else v[j]=Float(uint32_t(h)<<16);
+        }
+        if(!std::isfinite(v[j]))return false;
+        maxAbs=std::max(maxAbs,std::fabs(v[j]));
+    }
+    uint16_t h=ToHalf(maxAbs/127.0f);
+    float scale=FromHalf(h);
+    if(!std::isfinite(scale) || (maxAbs && (scale==0 || maxAbs/scale>127.5f)))
+        return false;
+    out[0]=uint8_t(h);out[1]=uint8_t(h>>8);
+    for(int j=0;j<32;++j) {
+        float qf=scale?std::round(v[j]/scale):0;
+        qf=std::max(-128.0f,std::min(127.0f,qf));
+        int q=int(qf);
+        if(!(std::fabs(scale*q-v[j])<=tolerance))return false;
+        out[2+j]=uint8_t(int8_t(q));
+    }
+    return true;
+}
 struct Tensor {std::string name;std::vector<U> dims;uint32_t type;U offset;U bytes;U newOffset;bool convert;};
 }
 int main(int argc,char** argv) {
@@ -151,9 +180,24 @@ int main(int argc,char** argv) {
         for(size_t i=0;i<ts.size();++i)outputTypes[i]=ts[i].type;
         U changed=0;
         std::vector<bool> streamHalf(ts.size(),false);
+        std::vector<bool> streamQ8(ts.size(),false);
         for(size_t i=0;i<ts.size();++i) {
             auto& t=ts[i];if(!t.convert || (t.type!=0 && !q8 && !q4 && !q5 && !q41 && !q51))continue;
             if(t.bytes>64u*1024u*1024u) {
+                if(q8 && t.dims[0]%32==0 && (t.type==0 || t.type==1 || t.type==30)) {
+                    const size_t inputBlock=t.type==0?128:64;
+                    if(t.bytes%inputBlock)continue;
+                    seek(in,add(dataStart,t.offset));
+                    uint8_t block[128],encoded[34];
+                    bool valid=true;
+                    for(U off=0;off<t.bytes;off+=inputBlock) {
+                        if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
+                            throw std::runtime_error("truncated Q8 streaming preflight");
+                        if(!encodeQ8Block(block,t.type,tolerance,encoded)){valid=false;break;}
+                    }
+                    if(valid){streamQ8[i]=true;outputTypes[i]=8;++changed;}
+                    continue;
+                }
                 if(t.type!=0 || quantized)continue;
                 // First pass: validate every F32 weight before changing its type.
                 // The second pass emits the same half values using fixed memory.
@@ -331,7 +375,7 @@ int main(int argc,char** argv) {
             auto& t=ts[i];
             cursor=align(cursor,alignment);
             t.newOffset=cursor;
-            cursor=add(cursor,streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size()));
+            cursor=add(cursor,streamQ8[i]?mul(t.bytes/(t.type==0?128:64),34):(streamHalf[i]?t.bytes/2:(converted[i].empty()?t.bytes:converted[i].size())));
         }
         for(size_t i=0;i<ts.size();++i) {
             const auto& t=ts[i];
@@ -346,7 +390,19 @@ int main(int argc,char** argv) {
             U destination=add(outStart,t.newOffset);
             if(U(out.tellp())>destination)throw std::runtime_error("output tensor overlap");
             while(U(out.tellp())<destination)out.put(0);
-            if(streamHalf[i]) {
+            if(streamQ8[i]) {
+                seek(in,add(dataStart,t.offset));
+                const size_t inputBlock=t.type==0?128:64;
+                uint8_t block[128],encoded[34];
+                for(U off=0;off<t.bytes;off+=inputBlock) {
+                    if(!in.read(reinterpret_cast<char*>(block),std::streamsize(inputBlock)))
+                        throw std::runtime_error("truncated Q8 streaming payload");
+                    if(!encodeQ8Block(block,t.type,tolerance,encoded))
+                        throw std::runtime_error("Q8 preflight mismatch");
+                    out.write(reinterpret_cast<const char*>(encoded),34);
+                    if(!out)throw std::runtime_error("Q8 streaming write failure");
+                }
+            } else if(streamHalf[i]) {
                 seek(in,add(dataStart,t.offset));
                 std::vector<uint8_t> chunk(65536);
                 std::vector<uint8_t> half(chunk.size()/2);
