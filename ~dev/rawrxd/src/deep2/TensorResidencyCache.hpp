@@ -4,6 +4,7 @@
 #include "NativeTensorCompression.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <list>
 #include <memory>
 #include <mutex>
