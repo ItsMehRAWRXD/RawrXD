@@ -154,6 +154,24 @@ blocks are expanded into the row tile consumed by the CPU or Vulkan GEMV.
 Unsupported GGUF types (including IQ formats not yet implemented in this
 decoder) fail closed rather than being interpreted with guessed geometry.
 
+### Direct packed-F32 Vulkan GEMV
+
+The separate native Deep2 Vulkan QGEMV path supports packed F16 and BF16 weight
+views. To opt in to compressing eligible F32 model weights before the GPU
+residency pass, set:
+
+- `DEEP2_F32_GPU_COMPRESSION=1`
+- `DEEP2_F32_MAX_ABS_ERROR=0` (default; only exact F16/BF16 conversions qualify)
+- `DEEP2_F32_GPU_COMPRESSED_BUDGET_MB=512` (bounded host-side packed payload)
+
+A positive finite absolute-error tolerance explicitly permits lossy F16/BF16
+conversion. The runtime admits only tensors whose complete chunk set uses one
+uniform 16-bit encoding and whose packed payload fits the configured budget.
+Mixed codecs, unsupported encodings, invalid settings and failed admissions
+stay on the original F32 route. The Vulkan QGEMV shader reads the packed bytes
+directly and performs F32 accumulation; it does not allocate a full F32 weight
+matrix on the device.
+
 ## Verification gates
 
 - The native block tests cover positive-only, negative-only, mixed-sign, and
