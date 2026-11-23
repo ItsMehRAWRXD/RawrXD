@@ -318,12 +318,10 @@ inline QByteArray compress(const void* data, std::size_t size)
     std::size_t packedSz = 0;
     void* p = deflate_brutal_masm(data, size, &packedSz);
     if (!p) return {};
-    if (packedSz > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
-        std::free(p);
+    std::unique_ptr<void, decltype(&std::free)> owner(p, &std::free);
+    if (packedSz > static_cast<std::size_t>((std::numeric_limits<int>::max)()))
         return {};
-    }
     QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
-    std::free(p);
     return out;
 #else
     const Bytes encoded = compressStoredPortable(static_cast<const uint8_t*>(data), size);
