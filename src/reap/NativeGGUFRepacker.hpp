@@ -1032,9 +1032,11 @@ inline RepackError RepackGGUF(const std::string& input,
         // F64 GGUF tensors are uncommon but can be safely narrowed to F32
         // in auto mode. Do not cascade this conversion into Q8/Q4.
         if(auto_compress && t.type==28) {
-            // F64 sensitive tensors use F16, matching the protection
-            // policy for F32. Other F64 tensors retain F32 precision.
-            if(IsQualitySensitiveTensor(t.name)) {
+            // Match the F32 auto policy: sensitive tensors and
+            // vectors (including singleton-row matrices) use F16.
+            // Multi-row nonsensitive matrices retain F32 precision.
+            const bool f64Matrix=t.dims.size()>=2 && t.dims[1]>1;
+            if(IsQualitySensitiveTensor(t.name) || !f64Matrix) {
                 t.convert_f64_to_f16=true;
                 t.type=1;
                 t.bytes/=4;
