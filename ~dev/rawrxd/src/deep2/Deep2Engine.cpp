@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <new>
 #include <stdexcept>
@@ -509,6 +510,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             wt.cols = 1;
         } else {
             return false;
+        }
+
+        // Opt-in model-load compression. The mapped GGUF remains authoritative;
+        // only F32 matrices that actually shrink under the requested absolute
+        // error budget gain a private chunked backing used by LinearW.
+        if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_F32)) {
+            const char* setting=std::getenv("RAWRXD_COMPRESS_F32_MAX_ABS_ERROR");
+            if (setting && *setting) {
+                char* end=nullptr;
+                const float tolerance=std::strtof(setting,&end);
+                if (end && *end=='\\0' && std::isfinite(tolerance) && tolerance>=0.0f) {
+                    if (wt.EnableCompressedF32(tolerance) && deep2ForwardTraceEnabled()) {
+                        std::fprintf(stderr,
+                            "[Deep2Engine] compressed F32 tensor=%s source=%zu stored=%zu\\n",
+                            wt.name.c_str(),wt.sizeBytes,wt.compressedF32->storedBytes());
+                    }
+                }
+            }
         }
         return true;
     };
