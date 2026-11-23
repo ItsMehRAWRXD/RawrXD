@@ -17,6 +17,8 @@ int main() {
     std::remove(path);
     CHECK(tensor.size() == original.size());
     CHECK(tensor.compressed_bytes() < original.size());
+    CHECK(tensor.resident_bytes() >= tensor.compressed_bytes());
+    CHECK(tensor.resident_bytes() > 0);
     std::vector<std::uint8_t> slice(9000);
     tensor.read(62000, slice.data(), slice.size());
     CHECK(std::equal(slice.begin(), slice.end(), original.begin() + 62000));
