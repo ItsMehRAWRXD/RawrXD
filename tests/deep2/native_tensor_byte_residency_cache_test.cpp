@@ -74,6 +74,25 @@ int main() {
         },4096));
     assert(repeatedNoiseReads==0);
     assert(!cache.Contains("noise"));
+    cache.SetBudget(cache.GetStats().budgetBytes);
+    size_t sameBudgetReads=0;
+    assert(!cache.RegisterFromReader("noise",noise.size(),
+        [&](size_t offset,size_t count,uint8_t* out) {
+            ++sameBudgetReads;
+            std::copy(noise.begin()+offset,noise.begin()+offset+count,out);
+            return true;
+        },4096));
+    assert(sameBudgetReads==0);
+    cache.SetBudget(cache.GetStats().budgetBytes+1);
+    size_t changedBudgetReads=0;
+    assert(!cache.RegisterFromReader("noise",noise.size(),
+        [&](size_t offset,size_t count,uint8_t* out) {
+            ++changedBudgetReads;
+            std::copy(noise.begin()+offset,noise.begin()+offset+count,out);
+            return true;
+        },4096));
+    assert(changedBudgetReads==1);
+    cache.MarkRawFallback("noise");
 
     assert(cache.Evict("shard0:weight0"));
     assert(!cache.Contains("shard0:weight0"));
