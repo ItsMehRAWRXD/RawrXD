@@ -222,11 +222,16 @@ struct WeightTensor {
         auto payload = std::atomic_load_explicit(
             &gpuF16Payload, std::memory_order_acquire);
         if (!payload) {
-            if (!compressedF32) return false;
+            // A residency-cache lease can be the sole owner of compressed
+            // weights. Capture its shared ownership before exposing a GPU view,
+            // so the packed bytes outlive the view and any deferred upload.
+            std::shared_ptr<const RawrXD::TensorCompression::ChunkedF32Storage> backing =
+                compressedF32 ? compressedF32 : compressedF32Lease.share();
+            if (!backing) return false;
             RawrXD::TensorCompression::Encoding encoding{};
             const uint8_t* packedData = nullptr;
             size_t packedBytes = 0;
-            if (!compressedF32->GetUniform16BitView(
+            if (!backing->GetUniform16BitView(
                     encoding, packedData, packedBytes) ||
                 packedBytes != rows * cols * 2 || !packedData)
                 return false;
@@ -234,7 +239,7 @@ struct WeightTensor {
             // recoverable miss, not terminate the inference process.
             try {
                 auto candidate = std::make_shared<GpuCompressedF32Payload>();
-                candidate->owner = compressedF32;
+                candidate->owner = std::move(backing);
                 candidate->data = packedData;
                 candidate->bytes = packedBytes;
                 candidate->ggmlType = encoding ==
