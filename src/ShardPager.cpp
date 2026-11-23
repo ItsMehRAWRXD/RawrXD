@@ -11,6 +11,10 @@ PageCache::PageCache(std::size_t capacityBytes, std::size_t pageSize)
     , m_capacityBytes(capacityBytes) {}
 
 PageCache::~PageCache() {
+    // Join all outstanding prefetches before deleting pages or reader state.
+    { std::lock_guard<std::mutex> lock(m_prefetchMutex);
+      for (auto& task : m_prefetchFutures) if (task.valid()) task.wait();
+      m_prefetchFutures.clear(); }
     evictUnleasedAll();
 }
 
