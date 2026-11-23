@@ -22,7 +22,7 @@ static bool writeMini(const std::filesystem::path& path,uint32_t type,
     for(uint64_t d:dims)put64(out,d);
     put32(out,type);put64(out,0);
     const size_t pos=static_cast<size_t>(out.tellp());
-    for(size_t i=pos;i%64;++i)out.put('\0');
+    for(size_t i=pos;i%alignment;++i)out.put('\0');
     std::vector<uint8_t> payload(payloadBytes,0x5A);
     out.write(reinterpret_cast<const char*>(payload.data()),std::streamsize(payload.size()));
     return bool(out);
