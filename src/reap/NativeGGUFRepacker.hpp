@@ -250,6 +250,38 @@ inline bool ConvertF64RangeToF16(std::ifstream& in,std::ofstream& out,
     }
     return true;
 }
+// Auto-mode admission probe: leave an unsafe F64 tensor untouched while
+// allowing independent tensors to shrink. Streamed and bounded in memory.
+inline bool CanNarrowF64(std::ifstream& in,uint64_t from,uint64_t bytes,bool toF16) {
+    if(bytes%8 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
+        return false;
+    in.clear();in.seekg(static_cast<std::streamoff>(from));
+    if(!in)return false;
+    unsigned char buffer[8192];
+    while(bytes) {
+        const auto n=static_cast<std::streamsize>(std::min<uint64_t>(bytes,sizeof(buffer)));
+        if(!in.read(reinterpret_cast<char*>(buffer),n))return false;
+        for(std::streamsize i=0;i<n;i+=8) {
+            uint64_t bits=0;
+            for(unsigned j=0;j<8;++j)bits|=uint64_t(buffer[i+j])<<(8*j);
+            double value=0;std::memcpy(&value,&bits,8);
+            if(!std::isfinite(value))return false;
+            if(toF16 && std::abs(value)>65504.0)return false;
+            const float intermediate=static_cast<float>(value);
+            if(!std::isfinite(intermediate) ||
+               (value!=0.0 && intermediate==0.0f))return false;
+            if(toF16) {
+                uint32_t fbits=0;std::memcpy(&fbits,&intermediate,4);
+                const uint32_t restoredBits=Float16ToFloat32Bits(Float32BitsToFloat16(fbits));
+                float restored=0;std::memcpy(&restored,&restoredBits,4);
+                if(!std::isfinite(restored) ||
+                   (value!=0.0 && restored==0.0f))return false;
+            }
+        }
+        bytes-=static_cast<uint64_t>(n);
+    }
+    return true;
+}
 inline bool ConvertF64RangeToF32(std::ifstream& in,std::ofstream& out,
                                  uint64_t from,uint64_t sourceBytes) {
     if(sourceBytes%8 || from>static_cast<uint64_t>(std::numeric_limits<std::streamoff>::max()))
@@ -1265,6 +1297,22 @@ inline RepackError RepackGGUF(const std::string& input,
     for(const auto* t:offsets) {
         if(t->old_offset<prev)return RepackError::Format;
         prev=t->old_offset+t->source_bytes;
+    }
+    // Do not abort auto compression because a separate F64 tensor has
+    // out-of-range, nonfinite, or underflowing values. Preserve its
+    // original type and bytes; explicit conversions are unaffected.
+    if(auto_compress) {
+        for(auto& t:tensors) {
+            if(!t.convert_f64_to_f32 && !t.convert_f64_to_f16)continue;
+            if(dataStart>UINT64_MAX-t.old_offset)return RepackError::Overflow;
+            if(!CanNarrowF64(in,dataStart+t.old_offset,t.source_bytes,
+                             t.convert_f64_to_f16)) {
+                t.convert_f64_to_f32=false;
+                t.convert_f64_to_f16=false;
+                t.type=28;
+                t.bytes=t.source_bytes;
+            }
+        }
     }
     // Automatic FP32 -> FP16 is opportunistic. Retain an original FP32
     // tensor if any value cannot be narrowed without overflow/underflow.
