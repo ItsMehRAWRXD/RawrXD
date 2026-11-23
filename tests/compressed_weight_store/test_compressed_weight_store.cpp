@@ -13,6 +13,25 @@
 #include <vector>
 using rawrxd::compression::CompressedWeightStore;
 
+namespace rawrxd::compression {
+struct CompressedWeightStoreTestAccess {
+ static std::vector<std::uint8_t> encode(
+  const std::vector<std::uint8_t>& bytes,bool& storedRaw) {
+  return CompressedWeightStore::encode(bytes.data(),bytes.size(),storedRaw);
+ }
+ static bool decode(const std::vector<std::uint8_t>& payload,
+                    const std::vector<std::uint8_t>& expected,
+                    bool storedRaw,std::vector<std::uint8_t>& output) {
+  CompressedWeightStore::EncodedBlock block;
+  block.payload=payload;
+  block.raw_size=static_cast<std::uint32_t>(expected.size());
+  block.checksum=CompressedWeightStore::crc32(expected.data(),expected.size());
+  block.stored_raw=storedRaw;
+  return CompressedWeightStore::decode(block,output);
+ }
+};
+} // namespace rawrxd::compression
+
 // Keep test checks active in Release builds (NDEBUG disables assert()).
 #define REQUIRE(condition) do { \
     if (!(condition)) { \
@@ -45,6 +64,27 @@ static float halfToFloat(std::uint16_t h) {
 }
 
 int main(){
+ // Eight repeated bytes encode into one final control group with two used
+ // token bits. Flipping an unused high bit must be rejected even though the
+ // decoded prefix and CRC would otherwise remain unchanged.
+ const std::vector<std::uint8_t> controlFixture(8,static_cast<std::uint8_t>('A'));
+ bool controlStoredRaw=false;
+ auto controlPayload=rawrxd::compression::CompressedWeightStoreTestAccess::encode(
+  controlFixture,controlStoredRaw);
+ REQUIRE(!controlStoredRaw&&controlPayload.size()<controlFixture.size());
+ std::vector<std::uint8_t> controlDecoded;
+ REQUIRE(rawrxd::compression::CompressedWeightStoreTestAccess::decode(
+  controlPayload,controlFixture,false,controlDecoded));
+ REQUIRE(controlDecoded==controlFixture);
+ auto corruptControl=controlPayload;
+ corruptControl[0]|=0x80u;
+ REQUIRE(!rawrxd::compression::CompressedWeightStoreTestAccess::decode(
+  corruptControl,controlFixture,false,controlDecoded));
+ auto trailingControl=controlPayload;
+ trailingControl.push_back(0);
+ REQUIRE(!rawrxd::compression::CompressedWeightStoreTestAccess::decode(
+  trailingControl,controlFixture,false,controlDecoded));
+
  CompressedWeightStore store(4096,1024);std::vector<std::uint8_t> input(8193);
  for(std::size_t i=0;i<input.size();++i)input[i]=static_cast<std::uint8_t>((i/97)%13);
  std::string error;REQUIRE(store.addTensor("layer.0.weight",input.data(),input.size(),&error));
