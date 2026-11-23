@@ -452,6 +452,19 @@ int main() {
     try { (void)runtime.generate({-1},1); }
     catch (const std::out_of_range&) { rejectedPrompt=true; }
     assert(rejectedPrompt);
+    const auto statsBeforeInvalidSuffix = model.stats();
+    bool rejectedSuffix = false;
+    try { (void)runtime.generate({prompt.front(), -1}, 1); }
+    catch (const std::out_of_range&) { rejectedSuffix = true; }
+    assert(rejectedSuffix);
+    const auto statsAfterInvalidSuffix = model.stats();
+    assert(statsAfterInvalidSuffix.cache_misses == statsBeforeInvalidSuffix.cache_misses);
+    assert(statsAfterInvalidSuffix.cache_hits == statsBeforeInvalidSuffix.cache_hits);
+
+    bool rejectedOutOfRangeSuffix = false;
+    try { (void)runtime.generate({prompt.front(), static_cast<int32_t>(vocab)}, 1); }
+    catch (const std::out_of_range&) { rejectedOutOfRangeSuffix = true; }
+    assert(rejectedOutOfRangeSuffix);
 
     bool rejectedGeometry=false;
     try {
