@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <future>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -482,6 +483,30 @@ int main() {
     try { rawrxd::compression::CompressedTransformerRuntime badEos(model,invalidEos); }
     catch (const std::invalid_argument&) { rejectedEos=true; }
     assert(rejectedEos);
+
+    // A malformed sampler geometry must not silently truncate vocabulary
+    // indices into the int32_t token domain.
+    auto invalidVocabulary = config;
+    invalidVocabulary.vocabulary =
+        static_cast<std::size_t>((std::numeric_limits<int32_t>::max)()) + 1u;
+    bool rejectedVocabulary = false;
+    try { rawrxd::compression::CompressedTransformerRuntime bad(model, invalidVocabulary); }
+    catch (const std::invalid_argument&) { rejectedVocabulary = true; }
+    assert(rejectedVocabulary);
+
+    auto invalidRms = config;
+    invalidRms.rms_epsilon = (std::numeric_limits<float>::infinity)();
+    bool rejectedRms = false;
+    try { rawrxd::compression::CompressedTransformerRuntime bad(model, invalidRms); }
+    catch (const std::invalid_argument&) { rejectedRms = true; }
+    assert(rejectedRms);
+
+    auto invalidRope = config;
+    invalidRope.rope_theta = (std::numeric_limits<float>::quiet_NaN)();
+    bool rejectedRope = false;
+    try { rawrxd::compression::CompressedTransformerRuntime bad(model, invalidRope); }
+    catch (const std::invalid_argument&) { rejectedRope = true; }
+    assert(rejectedRope);
 
     const auto stats=model.stats();
     assert(stats.tensors==owned.size());
