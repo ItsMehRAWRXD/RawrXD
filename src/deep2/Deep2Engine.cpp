@@ -10,6 +10,7 @@
 
 #include "deep2/ReapCapturePolicy.hpp"
 #include "Deep2Engine.h"
+#include "deep2/compression/CompressedGpuTilePlan.hpp"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
 #include "../sampling/advanced_sampler.hpp"
@@ -7635,25 +7636,95 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     const char* compressedGpuEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_STAGING");
     const bool allowFullCompressedGpuStaging =
         compressedGpuEnv && compressedGpuEnv[0] == '1' && compressedGpuEnv[1] == '\0';
-    // Default to bounded CPU row slices for compressed weights. The existing
-    // Vulkan upload ABI requires a full contiguous tensor; opt into that
-    // temporary expansion explicitly rather than silently defeating residency.
-    if ((!wtEffective.hasCompressedBacking() || allowFullCompressedGpuStaging) &&
+    const char* compressedGpuTileEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_TILED");
+    const bool allowCompressedGpuTiles =
+        compressedGpuTileEnv && compressedGpuTileEnv[0] == '1' && compressedGpuTileEnv[1] == '\0';
+    std::size_t compressedGpuTileBudget = 16u * 1024u * 1024u;
+    if (const char* tileBudgetEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_TILE_BYTES"))
+    {
+        char* end = nullptr;
+        const unsigned long long parsed = std::strtoull(tileBudgetEnv, &end, 10);
+        if (end != tileBudgetEnv && *end == '\0' && parsed > 0 &&
+            parsed <= (std::numeric_limits<std::size_t>::max)())
+            compressedGpuTileBudget = static_cast<std::size_t>(parsed);
+    }
+    // Compressed weights default to bounded CPU row slices. The opt-in tiled
+    // path expands row-aligned slices only, bounded by the configured staging
+    // budget. Full-tensor staging remains a separate diagnostic override.
+    if ((!wtEffective.hasCompressedBacking() || allowFullCompressedGpuStaging ||
+         allowCompressedGpuTiles) &&
         !plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         WeightTensor gpuWeight = wtEffective;
-        if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+        bool gpuDispatched = false;
+        std::vector<std::vector<std::uint8_t>> compressedGpuTileBuffers;
+        if (!gpuWeight.data && gpuWeight.hasCompressedBacking() &&
+            allowCompressedGpuTiles && !allowFullCompressedGpuStaging)
         {
-            compressedGpuBytes.resize(gpuWeight.sizeBytes);
-            std::string decodeError;
-            if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
-                                     compressedGpuBytes.size(), &decodeError))
-                throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
-                                         wt.name + ": " + decodeError);
-            gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            const std::size_t packedRowBytes = LinearW_RowBytes(gpuWeight.type, cols);
+            if (packedRowBytes != 0 &&
+                wt.fileOffset <= (std::numeric_limits<std::uint64_t>::max)() - wt.sizeBytes)
+            {
+                try
+                {
+                    const auto tiles = rawrxd::compression::PlanCompressedGpuTiles(
+                        gpuWeight.rows, outDim, packedRowBytes, compressedGpuTileBudget);
+                    compressedGpuTileBuffers.reserve(tiles.size());
+                    gpuDispatched = true;
+                    for (const auto& tile : tiles)
+                    {
+                        compressedGpuTileBuffers.emplace_back(tile.byte_count);
+                        auto& tileBytes = compressedGpuTileBuffers.back();
+                        std::string decodeError;
+                        if (!gpuWeight.readBytes(tile.byte_offset, tileBytes.data(),
+                                                 tileBytes.size(), &decodeError))
+                        {
+                            gpuDispatched = false;
+                            std::fprintf(stderr, "[COMPRESSED_GPU_TILE] read failed tensor=%s row=%zu: %s\n",
+                                wt.name.c_str(), tile.first_row, decodeError.c_str());
+                            break;
+                        }
+                        WeightTensor gpuTile = gpuWeight;
+                        gpuTile.data = tileBytes.data();
+                        gpuTile.rows = tile.row_count;
+                        gpuTile.sizeBytes = tile.byte_count;
+                        gpuTile.fileOffset = wt.fileOffset + tile.byte_offset;
+                        if (!tryVulkanGEMV(gpuTile, input, output + tile.first_row, tile.row_count))
+                        {
+                            gpuDispatched = false;
+                            std::fprintf(stderr, "[COMPRESSED_GPU_TILE] dispatch failed tensor=%s row=%zu count=%zu\n",
+                                wt.name.c_str(), tile.first_row, tile.row_count);
+                            break;
+                        }
+                    }
+                    if (gpuDispatched)
+                        std::fprintf(stderr, "[COMPRESSED_GPU_TILE] tensor=%s rows=%zu row_bytes=%zu tiles=%zu budget=%zu\n",
+                            wt.name.c_str(), outDim, packedRowBytes, tiles.size(), compressedGpuTileBudget);
+                }
+                catch (const std::exception& ex)
+                {
+                    gpuDispatched = false;
+                    std::fprintf(stderr, "[COMPRESSED_GPU_TILE] planner rejected tensor=%s: %s\n",
+                        wt.name.c_str(), ex.what());
+                }
+            }
         }
-        if (tryVulkanGEMV(gpuWeight, input, output, outDim))
+        else
+        {
+            if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+            {
+                compressedGpuBytes.resize(gpuWeight.sizeBytes);
+                std::string decodeError;
+                if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
+                                         compressedGpuBytes.size(), &decodeError))
+                    throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
+                                             wt.name + ": " + decodeError);
+                gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            }
+            gpuDispatched = tryVulkanGEMV(gpuWeight, input, output, outDim);
+        }
+        if (gpuDispatched)
         {
             ++plannedGpuGemvOps_;
 if (bias)
@@ -14878,6 +14949,8 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
             cacheKey *= 1099511628211ull;
         }
         cacheKey ^= ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols ^ (uint64_t)(uint32_t)wt.type;
+        // Distinguish row tiles that share a tensor name and shape.
+        cacheKey ^= (uint64_t)wt.fileOffset * 0x9E3779B185EBCA87ull;
     }
     else
     {
