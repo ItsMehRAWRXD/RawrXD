@@ -6,8 +6,10 @@
 namespace Deep2Rom::Compute {
 
     VulkanStagingPipeline::~VulkanStagingPipeline() {
+        if (m_device != VK_NULL_HANDLE) ::vkDeviceWaitIdle(m_device);
         std::lock_guard<std::mutex> lock(m_pool_mutex);
         for (auto& slot : m_pool) {
+            if (slot.transfer_fence != VK_NULL_HANDLE) ::vkDestroyFence(m_device, slot.transfer_fence, nullptr);
             if (slot.buffer != VK_NULL_HANDLE) {
                 if (slot.memory != VK_NULL_HANDLE && slot.mapped_ptr != nullptr) {
                     ::vkUnmapMemory(m_device, slot.memory);
@@ -113,11 +115,24 @@ namespace Deep2Rom::Compute {
     }
 
     void VulkanStagingPipeline::release_staging_buffer(StagingSlot& slot) {
+        VkFence fence = VK_NULL_HANDLE;
+        {
+            std::lock_guard<std::mutex> lock(m_pool_mutex);
+            for (auto& pooled_slot : m_pool)
+                if (pooled_slot.buffer == slot.buffer) { fence = pooled_slot.transfer_fence; break; }
+        }
+        if (fence != VK_NULL_HANDLE &&
+            ::vkWaitForFences(m_device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+            return; // Keep leased if GPU completion cannot be established.
         std::lock_guard<std::mutex> lock(m_pool_mutex);
         for (auto& pooled_slot : m_pool) {
             if (pooled_slot.buffer == slot.buffer) {
+                if (pooled_slot.transfer_fence != VK_NULL_HANDLE)
+                    ::vkDestroyFence(m_device, pooled_slot.transfer_fence, nullptr);
+                pooled_slot.transfer_fence = VK_NULL_HANDLE;
                 pooled_slot.in_use = false;
                 slot.in_use = false;
+                slot.transfer_fence = VK_NULL_HANDLE;
                 break;
             }
         }
@@ -163,15 +178,30 @@ namespace Deep2Rom::Compute {
             return false;
         }
 
+        VkFenceCreateInfo fence_info{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+        VkFence completion = VK_NULL_HANDLE;
+        if (::vkCreateFence(m_device, &fence_info, nullptr, &completion) != VK_SUCCESS) return false;
         VkSubmitInfo submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &cmd_buffer;
-
-        const VkResult submitted = ::vkQueueSubmit(transfer_queue, 1, &submit_info, VK_NULL_HANDLE);
+        const VkResult submitted = ::vkQueueSubmit(transfer_queue, 1, &submit_info, completion);
         if (submitted != VK_SUCCESS) {
+            ::vkDestroyFence(m_device, completion, nullptr);
             std::cerr << "[VulkanStaging] vkQueueSubmit failed: " << submitted << "\\n";
             return false;
         }
-        return true;
+        std::lock_guard<std::mutex> lock(m_pool_mutex);
+        for (auto& pooled_slot : m_pool) {
+            if (pooled_slot.buffer == src_slot.buffer) {
+                if (pooled_slot.transfer_fence != VK_NULL_HANDLE)
+                    ::vkDestroyFence(m_device, pooled_slot.transfer_fence, nullptr);
+                pooled_slot.transfer_fence = completion;
+                return true;
+            }
+        }
+        // Submission is live but this staging buffer is not pool-owned.
+        ::vkWaitForFences(m_device, 1, &completion, VK_TRUE, UINT64_MAX);
+        ::vkDestroyFence(m_device, completion, nullptr);
+        return false;
     }
 }
