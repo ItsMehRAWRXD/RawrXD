@@ -28,22 +28,19 @@ public:
         const auto total = deep2::TensorROM::tensorStorageBytes(tensor);
         if (encodedOffset > total || encodedSize > total - encodedOffset)
             throw std::out_of_range("encoded block exceeds tensor storage");
-        // Identity includes shard and tensor offset, avoiding cross-shard collisions.
-        // Each encoded offset identifies one block; callers must use a stable size.
-        const auto shard = tensor.shardIndex;
-        if (shard > std::numeric_limits<std::uint32_t>::max())
+        if (tensor.shardIndex > std::numeric_limits<std::uint32_t>::max())
             throw std::overflow_error("shard identifier overflow");
         const auto key = CompressedResidencyCache::Key{
-            (std::uint64_t(shard) << 32) ^ tensor.offset, encodedOffset};
-        // Only load missing blocks in a full integration. The cache currently
-        // lacks a contains/atomic load API; repeat insertion would invalidate
-        // unpinned decoded entries. This adapter deliberately exposes that
-        // limitation instead of claiming deduplicated loading.
-        std::vector<std::uint8_t> bytes(encodedSize);
-        if (!rom_.readTensorRange(tensor, encodedOffset, encodedSize, bytes.data()))
-            throw std::runtime_error("GGUF tensor block read failed");
-        cache_.insert(key, std::move(bytes), decodedSize, std::move(decoder));
-        return cache_.acquire(key);
+            tensor.offset, encodedOffset, static_cast<std::uint64_t>(tensor.shardIndex)};
+        return cache_.acquireOrLoad(
+            key, decodedSize,
+            [&]() {
+                std::vector<std::uint8_t> bytes(encodedSize);
+                if (!rom_.readTensorRange(tensor, encodedOffset, encodedSize, bytes.data()))
+                    throw std::runtime_error("GGUF tensor block read failed");
+                return bytes;
+            },
+            std::move(decoder));
     }
 private:
     deep2::TensorROM& rom_;
