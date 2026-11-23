@@ -11,6 +11,13 @@ namespace deep2 {
 // Logical shape = reverse of GGUF on-disk dim order.
 // Returns false for unsupported types.
 bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst);
+// Dequantize a bounded logical element range from a block-aligned source slice.
+// source begins at floor(firstElement / quantBlockSize(type)) and contains
+// exactly the encoded bytes for the intersecting blocks.
+bool dequantizeTensorRange(TensorType type, std::uint64_t totalElements,
+                           std::uint64_t firstElement, std::uint64_t elementCount,
+                           const std::uint8_t* source, std::size_t sourceBytes,
+                           float* destination);
 
 // Row-major GEMV: y[rows] = W[rows][cols] * x[cols].
 bool gemvFloat(const float* W, const float* x, float* y,
