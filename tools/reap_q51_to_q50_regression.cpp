@@ -9,7 +9,7 @@ int main() {
  const char* src="reap_q51_src.gguf";const char* dst="reap_q51_dst.gguf";int failures=0;
  {std::ofstream o(src,std::ios::binary);
  WriteU32(o,0x46554747);WriteU32(o,3);WriteU64(o,1);WriteU64(o,0);
- WriteName(o,"blk.0.attn_norm.weight");WriteU32(o,1);WriteU64(o,64);WriteU32(o,7);WriteU64(o,0);
+ WriteName(o,"custom.vector");WriteU32(o,1);WriteU64(o,64);WriteU32(o,7);WriteU64(o,0);
  PadTo(o,32);
  for(int b=0;b<2;++b){WriteU16(o,0x3c00u);WriteU16(o,0u);
  for(int i=0;i<4;++i)o.put(0);for(int i=0;i<16;++i)o.put(static_cast<char>(0x88));}}
