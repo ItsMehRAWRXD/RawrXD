@@ -86,6 +86,9 @@ endif()
 add_executable(rawrxd_compression_core_test
     "${RAWRXD_ROOT}/tests/compression_core_test.cpp")
 target_link_libraries(rawrxd_compression_core_test PRIVATE rawrxd_compression_core)
+if(RAWRXD_SMOKE_REQUIRE_ZLIB)
+    target_compile_definitions(rawrxd_compression_core_test PRIVATE RAWRXD_TEST_REQUIRE_ZLIB=1)
+endif()
 target_compile_features(rawrxd_compression_core_test PRIVATE cxx_std_17)
 add_test(NAME rawrxd_zlib_compression_core COMMAND rawrxd_compression_core_test)
 
