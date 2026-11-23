@@ -84,6 +84,12 @@ struct Deep2Engine {
     bool gemvTensorROM(const deep2::TensorEntry& entry, const float* input, float* output,
                        uint64_t* rowsOut = nullptr, uint64_t* colsOut = nullptr,
                        size_t tileRows = 16);
+    // Stream compressed F32 row tiles to Vulkan. Only one bounded weight tile
+    // is materialized and uploaded per dispatch; the full matrix never resides
+    // in host or device memory as contiguous F32.
+    bool gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
+                             const deep2::TensorEntry& entry, const float* input,
+                             float* output, size_t tileRows = 16);
 
     // CPU GEMV wrapper.
     bool gemvFloat(const float* W, const float* x, float* y,
