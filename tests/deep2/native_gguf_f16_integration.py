@@ -213,6 +213,15 @@ def run(binary):
         assert ft["blk.0.attn_q.weight"][:2]==(0,(len(doubles),))
         assert len(fd)-fs==len(doubles)*4
         assert struct.unpack_from("<"+"f"*len(doubles),fd,fs)==tuple(doubles)
+        # Explicit F32 mode only narrows F64 and leaves existing F32 intact.
+        f64_explicit=root/"f64-explicit-f32.gguf"
+        subprocess.run([binary,str(f64),str(f64_explicit),"0","f32"],check=True)
+        ed,es,em,et=parse(f64_explicit)
+        assert et["blk.0.attn_q.weight"][0]==0
+        assert ed[es:]==fd[fs:]
+        f32_unchanged=root/"explicit-f32-preserves-f32.gguf"
+        subprocess.run([binary,str(source),str(f32_unchanged),"300","f32"],check=True)
+        assert f32_unchanged.read_bytes()==source.read_bytes()
         # A single F64 value not exactly representable in F32 must prevent
         # conversion under a strict zero-error budget.
         f64_inexact=root/"f64-inexact.gguf"
