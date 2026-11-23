@@ -104,6 +104,8 @@ target_include_directories(reap_conversion_order_regression PRIVATE ${CMAKE_CURR
 add_executable(reap_auto_q81_numeric_regression tools/reap_auto_q81_numeric_regression.cpp)
 target_include_directories(reap_auto_q81_numeric_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_q6k_numeric_regression tools/reap_q6k_numeric_regression.cpp)
+add_executable(reap_q6k_q5_numeric_regression tools/reap_q6k_q5_numeric_regression.cpp)
+target_include_directories(reap_q6k_q5_numeric_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(reap_q6k_numeric_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(reap_auto_regression tools/reap_auto_regression.cpp)
 target_include_directories(reap_auto_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -218,6 +220,7 @@ add_test(NAME REAP_Auto_Unaligned_F32_Regression COMMAND reap_auto_unaligned_f32
 add_test(NAME REAP_Conversion_Order_Regression COMMAND reap_conversion_order_regression)
 add_test(NAME REAP_Auto_Q81_Numeric_Regression COMMAND reap_auto_q81_numeric_regression)
 add_test(NAME REAP_Q6K_Numeric_Regression COMMAND reap_q6k_numeric_regression)
+add_test(NAME REAP_Q6K_Q5_Numeric_Regression COMMAND reap_q6k_q5_numeric_regression)
 add_test(NAME REAP_Auto_Regression COMMAND reap_auto_regression)
 add_test(NAME REAP_Row_Alignment_Regression COMMAND reap_row_alignment_regression)
 add_test(NAME Deep2Engine_SmokeTest
