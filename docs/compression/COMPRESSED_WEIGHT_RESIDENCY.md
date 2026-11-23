@@ -21,13 +21,13 @@ A separate, explicitly lossy conversion can halve eligible F32 projection payloa
 $env:RAWRXD_COMPRESSED_WEIGHT_F32_TO_F16 = "1"
 ```
 
-This setting has no effect unless compressed residency is enabled. It applies only to eligible F32 linear projections with validated row geometry. Conversion is performed in bounded reader blocks using round-to-nearest-even, stores the resulting tensor as GGML F16, and updates the runtime weight type and byte geometry before kernel dispatch. If conversion admission fails, the loader retries the byte-preserving F32 path.
+This setting has no effect unless compressed residency is enabled. It applies to eligible F32 linear projections in the single-shard and standard multi-shard binding paths, with validated row geometry. Conversion is performed in bounded reader blocks using round-to-nearest-even, stores the resulting tensor as GGML F16, and updates the runtime weight type and byte geometry before kernel dispatch. If conversion admission fails, the loader retries the byte-preserving F32 path.
 
 F32-to-F16 can change model outputs. It is disabled by default and must be validated with teacher-forced logits and task-quality tests before production use. Byte-preserving compression remains the default.
 
 ## What is compressed
 
-The single-shard path selects two-dimensional linear projections routed through `LinearW` (attention/FFN projections and output projection). The standard multi-shard binding path already has an opt-in admission path for compatible matrix projections.
+The single-shard path selects two-dimensional linear projections routed through `LinearW` (attention/FFN projections and output projection). The standard multi-shard binding path uses the same opt-in admission rules for compatible matrix projections.
 
 The payload is stored byte-exactly. GGML type IDs and quantized block layouts are retained; this feature does not quantize Q4/Q5/Q6/F16/F32 tensors and does not silently convert F32 to F16.
 
