@@ -369,7 +369,7 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
                                             const float* input, float* output,
                                             size_t tileRows) {
     if (!romMode || !vulkanReady || !vulkan || !input || !output ||
-        entry.type != deep2::TensorType::F32 || entry.dims.size() != 2 ||
+        entry.dims.size() != 2 ||
         tileRows == 0 || tileRows > UINT32_MAX)
         return false;
 
@@ -397,9 +397,12 @@ bool Deep2Engine::gemvTensorROMVulkan(const deep2::VulkanDevice::Gpu& gpu,
             return false;
 
         tile.resize(elements);
-        if (!readCompressedF32Tile(entry, firstRow * cols, elements,
-                                   tile.data(), decodeScratch))
-            return false;
+        const uint64_t firstElement = firstRow * cols;
+        const bool tileRead = entry.type == deep2::TensorType::F32
+            ? readCompressedF32Tile(entry, firstElement, elements,
+                                    tile.data(), decodeScratch)
+            : readDequantizedTensorTile(entry, firstElement, elements, tile.data());
+        if (!tileRead) return false;
 
         deep2::TensorView weightTile{
             deep2::TensorType::F32,
@@ -666,7 +669,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     // existing dequantized CPU path; a failed Vulkan dispatch is fail-closed.
     auto runProjection = [this](const deep2::TensorEntry& entry,
                                 const float* input, float* output) -> bool {
-        if (vulkanReady && vulkan && entry.type == deep2::TensorType::F32) {
+        if (vulkanReady && vulkan) {
             const auto* gpu = vulkan->primary();
             if (!gpu) return false;
             return gemvTensorROMVulkan(*gpu, entry, input, output);
