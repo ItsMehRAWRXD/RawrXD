@@ -213,6 +213,8 @@ int main() {
     CHECK(lease);
     CHECK(cache.Trim(0)==0);
     CHECK(cache.GetStats().pinnedEntries==1);
+    CHECK(cache.GetStats().pinnedBytes==residentBytes);
+    CHECK(cache.GetStats().evictableBytes==0);
     auto secondPayload=std::make_shared<const ChunkedF32Storage>(std::move(exact));
     CHECK(!cache.Insert("layer1.weight",secondPayload));
     CHECK(cache.GetStats().entries==1);
@@ -220,6 +222,8 @@ int main() {
     lease=Deep2::TensorResidencyCache::Lease{};
     CHECK(cache.Trim(0)==residentBytes);
     CHECK(cache.GetStats().residentBytes==0);
+    CHECK(cache.GetStats().pinnedBytes==0);
+    CHECK(cache.GetStats().evictableBytes==0);
     CHECK(cache.GetStats().peakResidentBytes==residentBytes);
     CHECK(cache.GetStats().entries==0);
     // A failed insertion must not alter the existing high-water mark.
