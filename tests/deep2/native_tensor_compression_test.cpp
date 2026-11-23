@@ -169,6 +169,13 @@ int main() {
         resident[i]=(i%7==0)?float(i)*0.25f:float(int(i%19)-9);
     auto chunked=ChunkedF32Storage::Build(resident.data(),resident.size(),0.0f,1024);
     assert(chunked.size()==resident.size() && chunked.chunkCount()==10);
+    // Whole-chunk lossless F32 reads decode into the caller's buffer, not
+    // a duplicate temporary allocation. Partial reads remain supported.
+    std::vector<float> alignedF32(1024);
+    std::vector<uint8_t> alignedScratch;
+    chunked.ReadRange(1024, alignedF32.size(), alignedF32.data(), alignedScratch);
+    assert(std::equal(alignedF32.begin(), alignedF32.end(), resident.begin() + 1024));
+    assert(alignedScratch.empty());
     // Production admission streams bounded source tiles, rejects a tensor as
     // soon as its first chunk cannot be stored smaller, and never stages a
     // second full F32 copy.
