@@ -30,7 +30,6 @@ bool PageCache::loadPage(Page* page) {
         page->data.clear();
         return false;
     }
-    m_residentBytes += m_pageSize;
     return true;
 }
 
@@ -91,12 +90,15 @@ Page* PageCache::acquire(uint32_t shard, uint64_t pageNo) {
     page->fileOffset = pageNo * m_pageSize;
     page->leaseCount.store(1, std::memory_order_release);
 
+    if (m_capacityBytes < m_pageSize) { delete page; return nullptr; }
+    evictToFit(m_pageSize);
+    if (m_residentBytes > m_capacityBytes - m_pageSize) { delete page; return nullptr; }
     if (!loadPage(page)) {
         delete page;
         return nullptr;
     }
 
-    evictToFit(m_pageSize);  // make room for the page we just loaded (overshoot ok)
+    m_residentBytes += page->data.size();
 
     m_lru.push_front(page);
     page->lruIt = m_lru.begin();
@@ -117,28 +119,21 @@ void PageCache::release(Page* page) {
 bool PageCache::readRange(uint32_t shard, uint64_t offset, std::uint64_t size, std::uint8_t* out) {
     if (size == 0) return true;
     std::size_t firstPage = static_cast<std::size_t>(offset / m_pageSize);
+    if (!out || offset > UINT64_MAX - (size - 1)) return false;
     std::size_t lastPage = static_cast<std::size_t>((offset + size - 1) / m_pageSize);
-    std::vector<Page*> held;
-    held.reserve(lastPage - firstPage + 1);
-    for (std::size_t p = firstPage; p <= lastPage; ++p) {
-        Page* pg = acquire(shard, static_cast<uint64_t>(p));
-        if (!pg) {
-            for (Page* rel : held) release(rel);
-            return false;
-        }
-        held.push_back(pg);
-    }
+    // Read and release each page independently: large tensors must not pin the whole range.
     std::uint64_t copied = 0;
     while (copied < size) {
-        std::size_t p = static_cast<std::size_t>((offset + copied) / m_pageSize);
-        Page* pg = held[p - firstPage];
-        std::size_t pageRel = static_cast<std::size_t>((offset + copied) % m_pageSize);
-        std::size_t avail = m_pageSize - pageRel;
-        std::size_t chunk = (std::size_t)(size - copied) < avail ? (std::size_t)(size - copied) : avail;
-        std::memcpy(out + copied, pg->data.data() + pageRel, chunk);
-        copied += chunk;
+        const auto absolute = offset + copied;
+        Page* page = acquire(shard, absolute / m_pageSize);
+        if (!page) return false;
+        const std::size_t within = static_cast<std::size_t>(absolute % m_pageSize);
+        const auto count = static_cast<std::size_t>(
+            std::min<std::uint64_t>(size - copied, m_pageSize - within));
+        std::memcpy(out + copied, page->data.data() + within, count);
+        release(page);
+        copied += count;
     }
-    for (Page* rel : held) release(rel);
     return true;
 }
 
@@ -168,11 +163,12 @@ void PageCache::prefetch(uint32_t shard, uint64_t offset, std::uint64_t size) {
                     page->pageNo = tmp.pageNo;
                     page->fileOffset = tmp.fileOffset;
                     page->data = std::move(tmp.data);
-                    m_residentBytes += m_pageSize;
+                    evictToFit(m_pageSize);
+                    if (m_capacityBytes < m_pageSize || m_residentBytes > m_capacityBytes - m_pageSize) { delete page; continue; }
+                    m_residentBytes += page->data.size();
                     m_lru.push_front(page);
                     page->lruIt = m_lru.begin();
                     m_index[key] = page;
-                    evictToFit(0);
                 }
             }
         }
