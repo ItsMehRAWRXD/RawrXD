@@ -16,7 +16,7 @@ int main() {
     std::vector<std::uint8_t> halfBytes(64 * 2);
     for (std::uint16_t i = 0; i < 64; ++i) {
         // Values 0..63 are exactly representable in binary16.
-        putU16(halfBytes.data() + i * 2, static_cast<std::uint16_t>((15 + i) << 10));
+        putU16(halfBytes.data() + i * 2, static_cast<std::uint16_t>(0x4000));
     }
     float halfOut[9] = {};
     assert(deep2::dequantizeTensorRange(deep2::TensorType::F16, 64, 17, 9,
