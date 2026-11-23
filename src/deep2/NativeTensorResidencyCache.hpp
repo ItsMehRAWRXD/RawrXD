@@ -9,6 +9,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <algorithm>
 #include <limits>
@@ -86,6 +87,18 @@ public:
         return entries_.find(key)!=entries_.end();
     }
 
+    // Remember tensors that cannot be compressed safely or do not fit the
+    // current budget, so every later tile does not repeat the initial probe.
+    void MarkRawFallback(const std::string& key) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        rawFallback_.insert(key);
+    }
+
+    bool IsRawFallback(const std::string& key) const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return rawFallback_.find(key)!=rawFallback_.end();
+    }
+
     bool ReadRange(const std::string& key,size_t first,size_t count,float* destination) {
         std::vector<uint8_t> decodeScratch;
         return ReadRange(key,first,count,destination,decodeScratch);
@@ -131,6 +144,7 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         if(!entries_.empty()) evictions_+=entries_.size();
         entries_.clear();
+        rawFallback_.clear();
         compressedBytes_=0;
         logicalBytes_=0;
     }
@@ -183,5 +197,6 @@ private:
     uint64_t bytesDecoded_=0;
     uint64_t evictions_=0;
     std::unordered_map<std::string,Entry> entries_;
+    std::unordered_set<std::string> rawFallback_;
 };
 } // namespace Deep2
