@@ -1198,7 +1198,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             "f32_tensors=%zu f32_source_bytes=%zu f32_resident_bytes=%zu "
             "quantized_tensors=%zu quantized_source_bytes=%zu "
             "quantized_resident_bytes=%zu budget_bytes=%zu "
-            "f32_tolerance=%.9g\\n",
+            "f32_tolerance=%.9g\n",
             f32CompressedTensors, f32CompressedSourceBytes, f32CompressedBytes,
             quantizedCompressedTensors, quantizedCompressedSourceBytes,
             quantizedCompressedBytes, f32CompressionBudgetInitial,
