@@ -148,6 +148,12 @@ namespace Deep2Rom::Compute {
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &cmd_buffer;
 
-        return ::vkQueueSubmit(transfer_queue, 1, &submit_info, VK_NULL_HANDLE) == VK_SUCCESS;
+        // Correctness-first fallback: do not allow a pooled staging allocation
+        // or command buffer to be reused while the DMA is in flight.
+        // A future truly asynchronous path must track a fence per submission
+        // and defer release/reuse until that fence is signaled.
+        if (::vkQueueSubmit(transfer_queue, 1, &submit_info, VK_NULL_HANDLE) != VK_SUCCESS)
+            return false;
+        return ::vkQueueWaitIdle(transfer_queue) == VK_SUCCESS;
     }
 }
