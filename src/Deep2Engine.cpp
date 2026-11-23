@@ -23,7 +23,7 @@ size_t readResidencyMiB(const char* name, size_t fallback) {
     if (!text || !*text) return fallback;
     char* end = nullptr;
     const unsigned long long value = std::strtoull(text, &end, 10);
-    if (end == text || *end != '\\0' ||
+    if (end == text || *end != '\0' ||
         value > std::numeric_limits<size_t>::max() / kResidencyMiB)
         return fallback;
     return static_cast<size_t>(value) * kResidencyMiB;
@@ -58,7 +58,7 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
     if (const char* tolerance = std::getenv("DEEP2_F32_MAX_ABS_ERROR")) {
         char* end = nullptr;
         const float parsed = std::strtof(tolerance, &end);
-        if (end == tolerance || *end != '\\0' || !std::isfinite(parsed) || parsed < 0.0f) {
+        if (end == tolerance || *end != '\0' || !std::isfinite(parsed) || parsed < 0.0f) {
             fprintf(stderr, "[ROM] invalid DEEP2_F32_MAX_ABS_ERROR; expected finite nonnegative float\\n");
             return false;
         }
@@ -73,7 +73,7 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
         if (!*value || *value == '-') return false;
         char* end = nullptr;
         const unsigned long long parsed = std::strtoull(value, &end, 10);
-        if (end == value || *end != '\\0' ||
+        if (end == value || *end != '\0' ||
             parsed > static_cast<unsigned long long>(std::numeric_limits<size_t>::max()))
             return false;
         setter(static_cast<size_t>(parsed));
