@@ -172,8 +172,9 @@ WeightTensor backing predicate. This prevents the null raw pointer that is
 intentional for compressed residency from skipping required inference stages.
 
 RMSNorm admission is restricted to the F32/F16 vector names actually consumed
-by RMSNormW. Q/K head norms and SSM channel norms are not accidentally routed
-through that consumer.
+by RMSNormW, including per-head Q/K normalization vectors. Per-head Q/K norms are represented as compressed byte-offset views and read
+one head at a time through RMSNormW. SSM channel norms use the dedicated
+Mamba-2 vector materializer rather than the RMSNorm consumer.
 
 The single-shard GGUF binder additionally admits eligible Mamba-2 tensors:
 - ssm_in and ssm_out matrices use the existing LinearW compressed row-range
@@ -196,3 +197,10 @@ cache can reuse verified blocks within its configured budget.
 This expands consumer coverage but does not establish complete Deep2 model
 parity. The native engine build, Mamba-2 reference comparisons, long-context
 decode, and Vulkan parity still require execution on the target build matrix.
+Per-head Q/K normalization vectors are also admitted when their tensor names
+match the Q/K norm bindings. WeightTensor subviews carry a checked byte offset
+into the compressed source tensor, allowing each head's F32/F16 prefix to be
+read independently. The Q-norm diagnostic path uses an explicit range read
+when the source is compressed and avoids assuming a second head exists in a
+single-head vector.
+
