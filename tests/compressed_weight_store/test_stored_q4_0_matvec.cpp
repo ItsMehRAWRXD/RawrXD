@@ -22,6 +22,12 @@ int main() {
     if(!store.addTensor("q4",packed.data(),packed.size(),&error,2u,true)) return 1;
     if(store.tensorType("q4")!=2u || store.stats().compressed_bytes>=packed.size()) return 2;
 
+    std::vector<float> decodedRow(cols,0.0f);
+    StoredTensorReadRow(store,"q4",ResidentWeightType::Q4_0,0,
+                        decodedRow.data(),cols);
+    for(std::size_t i=0;i<cols;++i)
+        if(decodedRow[i]!=(i<16?0.0f:1.0f)) return 8;
+
     std::vector<float> input(cols,1.0f), output(rows,0.0f);
     StoredTensorMatvec(store,"q4",ResidentWeightType::Q4_0,
                        input.data(),output.data(),rows,cols,1);
