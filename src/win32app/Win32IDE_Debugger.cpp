@@ -987,6 +987,37 @@ void Win32IDE::debuggerDisasmAtRip()
     appendToOutput(oss.str(), "Debug", OutputSeverity::Info);
 }
 
+// D5 memory breakpoints: databp <hexaddr> [size] from the Debug Console.
+void Win32IDE::debuggerAddDataBreakpoint(const std::string& args)
+{
+    ensureNativeDebugBackend();
+    if (!m_nativeDebug || !m_nativeDebug->isActive()) {
+        appendToOutput("[DataBP] No active debug session.\n", "Debug",
+                       OutputSeverity::Info);
+        return;
+    }
+    const size_t sp = args.find(' ');
+    const std::string addrStr = args.substr(0, sp);
+    const uint32_t size = sp == std::string::npos
+        ? 1 : (uint32_t)std::strtoul(args.substr(sp + 1).c_str(), nullptr, 0);
+    const uint64_t addr = std::strtoull(addrStr.c_str(), nullptr, 16);
+    if (addr == 0) {
+        appendToOutput("[DataBP] Usage: databp <hexaddr> [size]\n", "Debug",
+                       OutputSeverity::Info);
+        return;
+    }
+    if (m_nativeDebug->addDataBreakpointAddress(addr, size, "databp")) {
+        char msg[96];
+        std::snprintf(msg, sizeof(msg),
+                      "[DataBP] armed at 0x%llx size=%u\n",
+                      (unsigned long long)addr, size);
+        appendToOutput(msg, "Debug", OutputSeverity::Info);
+    } else {
+        appendToOutput("[DataBP] failed to arm.\n", "Debug",
+                       OutputSeverity::Error);
+    }
+}
+
 void Win32IDE::updateMemoryView()
 {
     if (!m_hwndDebuggerMemory) return;
@@ -1128,6 +1159,9 @@ void Win32IDE::debuggerStepCommand(const std::string& command)
     } else if (command == "disasm") {
         // D7: disassembly at RIP.
         debuggerDisasmAtRip();
+    } else if (command.rfind("databp ", 0) == 0) {
+        // D5: databp <hexaddr> [size] — hardware data breakpoint.
+        debuggerAddDataBreakpoint(command.substr(7));
     }
 }
 

@@ -320,6 +320,70 @@ bool Win32NativeDebugBackend::addBreakpointAddress(uint64_t address, const std::
     return addBreakpointAddressUnlocked(address, label);
 }
 
+bool Win32NativeDebugBackend::addDataBreakpointAddress(uint64_t address,
+                                                       uint32_t size,
+                                                       const std::string& label) {
+    std::lock_guard<std::mutex> lock(m_mu);
+    if (address == 0) return false;
+    for (auto& bp : m_dataBps) {
+        if (bp.address == address) {
+            bp.size = size;
+            bp.label = label;
+            bp.enabled = true;
+            armDataBreakpointsUnlocked();
+            return true;
+        }
+    }
+    DataBp bp;
+    bp.address = address;
+    bp.size = size;
+    bp.label = label;
+    m_dataBps.push_back(bp);
+    armDataBreakpointsUnlocked();
+    return true;
+}
+
+void Win32NativeDebugBackend::clearDataBreakpoints() {
+    std::lock_guard<std::mutex> lock(m_mu);
+    m_dataBps.clear();
+    // Disarm DR0..DR3 on the active thread.
+    if (m_activeThread) {
+        CONTEXT ctx{};
+        if (getContext(ctx)) {
+            ctx.Dr0 = 0; ctx.Dr1 = 0; ctx.Dr2 = 0; ctx.Dr3 = 0;
+            ctx.Dr7 = 0;
+            setContext(ctx);
+        }
+    }
+}
+
+// Arm the first enabled data breakpoint in DR0 (RW=11 read/write, LEN per
+// size). Called with m_mu held whenever the debuggee pauses.
+bool Win32NativeDebugBackend::armDataBreakpointsUnlocked() {
+    if (!m_activeThread || m_dataBps.empty()) return true;
+    const DataBp* bp = nullptr;
+    for (const auto& d : m_dataBps) {
+        if (d.enabled) { bp = &d; break; }
+    }
+    CONTEXT ctx{};
+    if (!getContext(ctx)) return false;
+    ctx.ContextFlags = CONTEXT_FULL;
+    if (!bp) {
+        ctx.Dr0 = 0;
+        ctx.Dr7 = 0;
+    } else {
+        ctx.Dr0 = bp->address;
+        // LEN0: 00=1B 01=2B 10=4B 11=8B; RW0=11 (read or write).
+        uint64_t lenBits = 0;
+        if (bp->size >= 8) lenBits = 3;
+        else if (bp->size >= 4) lenBits = 2;
+        else if (bp->size >= 2) lenBits = 1;
+        ctx.Dr7 = 0x1ull | (0x3ull << 16) | (lenBits << 18);
+    }
+    ctx.Dr6 = 0;  // clear status before re-arm
+    return setContext(ctx) != FALSE;
+}
+
 bool Win32NativeDebugBackend::removeBreakpointAddress(uint64_t address) {
     std::lock_guard<std::mutex> lock(m_mu);
     auto it = std::find_if(m_bps.begin(), m_bps.end(),
@@ -690,6 +754,8 @@ bool Win32NativeDebugBackend::walkStackUnlocked(std::vector<NativeDebugFrame>& o
 
 void Win32NativeDebugBackend::publishState(const std::string& reason) {
     m_stopReason = reason;
+    // D5: (re-)arm hardware data breakpoints on every pause.
+    armDataBreakpointsUnlocked();
     refreshVariablesUnlocked();
     if (!m_onState) {
         return;
@@ -952,6 +1018,18 @@ void Win32NativeDebugBackend::handleDebugEvent(const DEBUG_EVENT& ev) {
         }
 
         if (ex.ExceptionCode == EXCEPTION_SINGLE_STEP) {
+            // D5: hardware data breakpoint hit (DR6.B0) — pause and report,
+            // keep the register armed for the next write.
+            if (ctx.Dr6 & 0x1ull) {
+                setTrapFlag(false);
+                m_state = NativeDebugState::Paused;
+                m_pendingContinue = false;
+                char msg[64];
+                std::snprintf(msg, sizeof(msg), "data:0x%llx",
+                              static_cast<unsigned long long>(ctx.Dr0));
+                publishState(msg);
+                break;
+            }
             setTrapFlag(false);
             // Re-apply BPs after step.
             for (auto& bp : m_bps) {

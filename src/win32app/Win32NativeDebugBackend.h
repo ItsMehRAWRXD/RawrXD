@@ -92,6 +92,11 @@ public:
     bool removeBreakpointAddress(uint64_t address);
     bool clearBreakpoints();
 
+    // D5 memory breakpoints: hardware debug register (DR0) write/read watch.
+    bool addDataBreakpointAddress(uint64_t address, uint32_t size = 1,
+                                  const std::string& label = {});
+    void clearDataBreakpoints();
+
     bool readMemory(uint64_t address, void* buffer, size_t size) const;
     bool evaluateExpression(const std::string& expression, std::string& outValue) const;
     NativeDebugSnapshot snapshot() const;
@@ -106,6 +111,7 @@ private:
     bool applyBreakpoint(NativeDebugBp& bp);
     bool restoreBreakpoint(NativeDebugBp& bp);
     bool setTrapFlag(bool enable);
+    bool armDataBreakpointsUnlocked();
     bool getContext(CONTEXT& ctx) const;
     bool setContext(const CONTEXT& ctx) const;
     bool resolveExportsFromImage();
@@ -136,6 +142,13 @@ private:
     std::string m_stopReason;
 
     std::vector<NativeDebugBp> m_bps;
+    struct DataBp {
+        uint64_t address = 0;
+        uint32_t size = 1;
+        std::string label;
+        bool enabled = true;
+    };
+    std::vector<DataBp> m_dataBps;
     std::vector<NativeDebugThreadInfo> m_threads;
     std::map<std::string, uint64_t> m_exports;
     std::map<std::string, std::string> m_variables;

@@ -1790,6 +1790,8 @@ public:
     void debuggerStackFollow(int index);
     // D7 disassembly at RIP (Win32IDE_Debugger.cpp).
     void debuggerDisasmAtRip();
+    // D5 memory breakpoints (Win32IDE_Debugger.cpp).
+    void debuggerAddDataBreakpoint(const std::string& args);
     // T2 coverage bridge (Win32IDE_CoverageBridge.cpp).
     void showCoverageReport();
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
