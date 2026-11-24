@@ -507,6 +507,7 @@ void main() {
             else if (pc.type == 11u) ww = q3k_weight(rb, j);
             else if (pc.type == 13u) ww = q5k_weight(rb, j);
             else if (pc.type == 20u) ww = iq4nl_weight(rb, j);
+            else ww = 0.0 / 0.0;  // fail loud: unsupported type -> NaN
             acc += ww * x[j];
         }
     }
