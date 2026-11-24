@@ -244,6 +244,18 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
     VkBufferCopy region{};
     region.srcOffset = 0; region.dstOffset = dstOffset; region.size = size;
     vkCmdCopyBuffer(cmd, staging, dst, 1, &region);
+    VkBufferMemoryBarrier uploaded{};
+    uploaded.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    uploaded.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    uploaded.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+    uploaded.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uploaded.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    uploaded.buffer = dst;
+    uploaded.offset = dstOffset;
+    uploaded.size = size;
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+                         0, nullptr, 1, &uploaded, 0, nullptr);
 
     if (vkEndCommandBuffer(cmd) != VK_SUCCESS) {
         vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
@@ -455,6 +467,20 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     uint32_t pc[2] = {rows, cols};
     vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
     vkCmdDispatch(cmd, groups, 1, 1);
+    VkBufferMemoryBarrier output{};
+    output.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    output.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    output.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT |
+                           VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_HOST_READ_BIT;
+    output.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    output.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    output.buffer = y;
+    output.offset = 0;
+    output.size = VK_WHOLE_SIZE;
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
+                         VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_HOST_BIT,
+                         0, 0, nullptr, 1, &output, 0, nullptr);
 
     if (vkEndCommandBuffer(cmd) != VK_SUCCESS || vkResetFences(m_device, 1, &m_fence) != VK_SUCCESS) {
         vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
