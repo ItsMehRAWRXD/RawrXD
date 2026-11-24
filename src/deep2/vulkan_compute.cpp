@@ -4285,8 +4285,8 @@ bool VulkanCompute::DispatchGemvQuant(
         }
         return false;
     };
-    if(type!=2 && type!=8 && type!=10 && type!=11 && type!=12 &&
-       type!=13 && type!=14 && type!=20 && type!=40) return fail("TYPE");
+    if(type!=2 && type!=3 && type!=6 && type!=7 && type!=8 && type!=10 &&
+       type!=11 && type!=12 && type!=13 && type!=14 && type!=20 && type!=40) return fail("TYPE");
     const auto checkedBytes = [](uint32_t count, size_t elem, size_t& out) {
         if (!count || elem > std::numeric_limits<size_t>::max() / count) return false;
         out = static_cast<size_t>(count) * elem;
