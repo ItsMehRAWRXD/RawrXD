@@ -134,6 +134,8 @@ install(TARGETS Deep2Engine_Benchmark DESTINATION bin)
 
 # Enable testing
 enable_testing()
+add_executable(test_rom_rotary src/test_rom_rotary.cpp)
+add_test(NAME ROM_Rotary_Regression COMMAND test_rom_rotary)
 add_test(NAME Deep2Engine_SmokeTest
     COMMAND Deep2Engine_Benchmark --help
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
