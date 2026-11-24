@@ -219,31 +219,49 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
     cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cbai.commandBufferCount = 1;
     VkCommandBuffer cmd = VK_NULL_HANDLE;
-    vkAllocateCommandBuffers(gpu.device, &cbai, &cmd);
+    if (vkAllocateCommandBuffers(gpu.device, &cbai, &cmd) != VK_SUCCESS) {
+        destroyBuffer(gpu, staging, smem);
+        return false;
+    }
 
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &cbi);
+    if (vkBeginCommandBuffer(cmd, &cbi) != VK_SUCCESS) {
+        vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
+        destroyBuffer(gpu, staging, smem);
+        return false;
+    }
 
     VkBufferCopy region{};
     region.srcOffset = 0; region.dstOffset = dstOffset; region.size = size;
     vkCmdCopyBuffer(cmd, staging, dst, 1, &region);
 
-    vkEndCommandBuffer(cmd);
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) {
+        vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
+        destroyBuffer(gpu, staging, smem);
+        return false;
+    }
     VkFence fence = VK_NULL_HANDLE;
     VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(gpu.device, &fci, nullptr, &fence);
+    if (vkCreateFence(gpu.device, &fci, nullptr, &fence) != VK_SUCCESS) {
+        vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
+        destroyBuffer(gpu, staging, smem);
+        return false;
+    }
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, fence);
-    vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
+    VkResult result = vkQueueSubmit(gpu.queue, 1, &si, fence);
+    if (result == VK_SUCCESS) {
+        result = vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
+        if (result != VK_SUCCESS && result != VK_ERROR_DEVICE_LOST) vkQueueWaitIdle(gpu.queue);
+    }
     vkDestroyFence(gpu.device, fence, nullptr);
     vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
     destroyBuffer(gpu, staging, smem);
-    return true;
+    return result == VK_SUCCESS;
 }
 
 bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize offset,
@@ -348,8 +366,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     if (vkAllocateDescriptorSets(device, &dsai, &m_set) != VK_SUCCESS) return false;
 
     VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(device, &fci, nullptr, &m_fence);
-    return true;
+    return vkCreateFence(device, &fci, nullptr, &m_fence) == VK_SUCCESS;
 }
 
 void VulkanProgram::destroy(VkDevice device) {
@@ -395,7 +412,10 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &cbi);
+    if (vkBeginCommandBuffer(cmd, &cbi) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
@@ -403,17 +423,21 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
     vkCmdDispatch(cmd, groups, 1, 1);
 
-    vkEndCommandBuffer(cmd);
-
-    vkResetFences(m_device, 1, &m_fence);
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS || vkResetFences(m_device, 1, &m_fence) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        return false;
+    }
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, m_fence);
-    vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+    VkResult result = vkQueueSubmit(gpu.queue, 1, &si, m_fence);
+    if (result == VK_SUCCESS) {
+        result = vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+        if (result != VK_SUCCESS && result != VK_ERROR_DEVICE_LOST) vkQueueWaitIdle(gpu.queue);
+    }
     vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
-    return true;
+    return result == VK_SUCCESS;
 }
 
 } // namespace deep2
