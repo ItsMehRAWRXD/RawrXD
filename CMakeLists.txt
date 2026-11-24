@@ -3531,6 +3531,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AgentPanel.cpp
         src/win32app/Win32IDE_LspCommands.cpp
         src/win32app/Win32IDE_SastBridge.cpp
+        src/win32app/Win32IDE_BuildParser.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp

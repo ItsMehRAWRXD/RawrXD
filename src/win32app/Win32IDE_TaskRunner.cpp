@@ -183,12 +183,12 @@ void Win32IDE::runSelectedTask(int index)
             buffer[safeBytes] = '\0';
             output.append(buffer, safeBytes);
             if (output.size() > 2048) {
-                appendToOutput(output, "Tasks", OutputSeverity::Info);
+                parseBuildOutputForProblems(output);
                 output.clear();
             }
         }
         if (!output.empty()) {
-            appendToOutput(output, "Tasks", OutputSeverity::Info);
+            parseBuildOutputForProblems(output);
         }
 
         WaitForSingleObject(pi.hProcess, 30000);

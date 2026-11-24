@@ -1770,7 +1770,10 @@ public:
     void installLspEditorSubclass();
     // I2 SAST inline diagnostics (Win32IDE_SastBridge.cpp).
     void scanCurrentFileSAST();
-    void scanCurrentFileSecrets();
+    void scanCurrentFileSecrets();
+    // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
+    void parseBuildOutputForProblems(const std::string& chunk);
+    int m_buildProblemCount = 0;
     void syncEditorToGpuSurface();
     void initializeEditorSurface();
     static LRESULT CALLBACK EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
