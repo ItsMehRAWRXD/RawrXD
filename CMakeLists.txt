@@ -2496,6 +2496,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dependency_audit.cpp")
     message(STATUS "rawrxd_dependency_audit + dependency_audit enabled (TOP50 S3)")
 endif()
 
+# A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
+    add_library(rawrxd_rag STATIC
+        src/rag/codebase_index.cpp
+    )
+    target_include_directories(rawrxd_rag PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_rag PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(rag_index tools/rag_index.cpp)
+    target_link_libraries(rag_index PRIVATE rawrxd_rag)
+    target_include_directories(rag_index PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(rag_rule_test tests/rag_rule_test.cpp)
+    target_link_libraries(rag_rule_test PRIVATE rawrxd_rag)
+    target_include_directories(rag_rule_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(rag_index rag_rule_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_rag + rag_index enabled (TOP50 A3)")
+endif()
+
 # AgenticLoopBridge recovery gate: exercises the real Win32 process-launch
 # lifecycle without a model or cloud service.  The executable is emitted to a
 # separate directory so no helper sibling is discoverable; this makes the
