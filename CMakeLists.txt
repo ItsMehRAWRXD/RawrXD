@@ -2476,6 +2476,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/secrets_scanner.cpp")
     message(STATUS "rawrxd_secrets + secrets_scan enabled (TOP50 S2)")
 endif()
 
+# S3 dependency audit / SCA (TOP50 S3): offline advisory matching.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dependency_audit.cpp")
+    add_library(rawrxd_dependency_audit STATIC
+        src/security/dependency_audit.cpp
+    )
+    target_include_directories(rawrxd_dependency_audit PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_dependency_audit PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(dependency_audit tools/dependency_audit.cpp)
+    target_link_libraries(dependency_audit PRIVATE rawrxd_dependency_audit)
+    target_include_directories(dependency_audit PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(dependency_rule_test tests/dependency_rule_test.cpp)
+    target_link_libraries(dependency_rule_test PRIVATE rawrxd_dependency_audit)
+    target_include_directories(dependency_rule_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(dependency_audit dependency_rule_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_dependency_audit + dependency_audit enabled (TOP50 S3)")
+endif()
+
 # AgenticLoopBridge recovery gate: exercises the real Win32 process-launch
 # lifecycle without a model or cloud service.  The executable is emitted to a
 # separate directory so no helper sibling is discoverable; this makes the

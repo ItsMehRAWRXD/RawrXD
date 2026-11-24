@@ -1,0 +1,4 @@
+# S3 requirements fixture
+requests==2.25.1
+flask==3.0.0
+py==1.10.0
