@@ -12,7 +12,16 @@ namespace deep2 {
 
 // Serialize ROM bridge queue, command pool and descriptor reuse. This is
 // deliberately conservative until per-device ownership is consolidated.
-static std::mutex romSubmissionMutex;
+static std::recursive_mutex romSubmissionMutex;
+struct RomAllocation {
+    VkDevice device;
+    VkBuffer buffer;
+    VkDeviceMemory memory;
+    VkDeviceSize size;
+    VkMemoryPropertyFlags properties;
+    bool initiallyMapped;
+};
+static std::vector<RomAllocation> romAllocations;
 
 static VkResult check(VkResult r) { return r; }
 
@@ -131,9 +140,15 @@ bool VulkanDevice::init() {
 }
 
 void VulkanDevice::shutdown() {
-    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     for (auto& g : m_gpus) {
         vkDeviceWaitIdle(g.device);
+        for (auto it = romAllocations.begin(); it != romAllocations.end();) {
+            if (it->device != g.device) { ++it; continue; }
+            vkDestroyBuffer(g.device, it->buffer, nullptr);
+            vkFreeMemory(g.device, it->memory, nullptr);
+            it = romAllocations.erase(it);
+        }
         vkDestroyCommandPool(g.device, g.pool, nullptr);
         vkDestroyDevice(g.device, nullptr);
     }
@@ -159,6 +174,7 @@ bool VulkanDevice::pickMemoryType(const Gpu& gpu, uint32_t typeBits,
 bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsageFlags usage,
                                 VkMemoryPropertyFlags memProps, VkBuffer& buf,
                                 VkDeviceMemory& mem, void** mapped) {
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
     if (mapped) *mapped = nullptr;
     if (!gpu.device || size == 0 || (mapped && !(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))) return false;
@@ -192,17 +208,32 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
     }
     if (vkBindBufferMemory(gpu.device, buf, mem, 0) != VK_SUCCESS ||
         (mapped && vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped) != VK_SUCCESS)) {
-        destroyBuffer(gpu, buf, mem);
+        vkDestroyBuffer(gpu.device, buf, nullptr);
+        vkFreeMemory(gpu.device, mem, nullptr);
         buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
         if (mapped) *mapped = nullptr;
+        return false;
+    }
+    try {
+        romAllocations.push_back({gpu.device, buf, mem, size, memProps, mapped != nullptr});
+    } catch (...) {
+        if (mapped) { vkUnmapMemory(gpu.device, mem); *mapped = nullptr; }
+        vkDestroyBuffer(gpu.device, buf, nullptr);
+        vkFreeMemory(gpu.device, mem, nullptr);
+        buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
         return false;
     }
     return true;
 }
 
 void VulkanDevice::destroyBuffer(const Gpu& gpu, VkBuffer buf, VkDeviceMemory mem) {
-    if (buf != VK_NULL_HANDLE) vkDestroyBuffer(gpu.device, buf, nullptr);
-    if (mem != VK_NULL_HANDLE) vkFreeMemory(gpu.device, mem, nullptr);
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
+    const auto it = std::find_if(romAllocations.begin(), romAllocations.end(),
+        [&](const RomAllocation& a) { return a.device == gpu.device && a.buffer == buf && a.memory == mem; });
+    if (it == romAllocations.end()) return;
+    vkDestroyBuffer(gpu.device, buf, nullptr);
+    vkFreeMemory(gpu.device, mem, nullptr);
+    romAllocations.erase(it);
 }
 
 bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dstOffset,
@@ -211,7 +242,7 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
     if (!gpu.device || !gpu.queue || !gpu.pool || !dst || !data ||
         size > (std::numeric_limits<size_t>::max)() ||
         dstOffset > (std::numeric_limits<VkDeviceSize>::max)() - size) return false;
-    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     VkBuffer staging = VK_NULL_HANDLE;
     VkDeviceMemory smem = VK_NULL_HANDLE;
     void* mapped = nullptr;
@@ -293,7 +324,12 @@ bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize 
         offset > (std::numeric_limits<VkDeviceSize>::max)() - size) return false;
     void* mapped = nullptr;
     if (offset > (std::numeric_limits<size_t>::max)() - size) return false;
-    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
+    const auto it = std::find_if(romAllocations.begin(), romAllocations.end(),
+        [&](const RomAllocation& a) { return a.device == gpu.device && a.memory == mem; });
+    if (it == romAllocations.end() || it->initiallyMapped ||
+        !(it->properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) ||
+        offset > it->size || size > it->size - offset) return false;
     // Map the entire allocation so a whole-range flush satisfies atom alignment.
     // Caller must supply a valid allocation range and an unmapped allocation.
     if (vkMapMemory(gpu.device, mem, 0, VK_WHOLE_SIZE, 0, &mapped) != VK_SUCCESS) return false;
@@ -440,7 +476,7 @@ void VulkanProgram::destroy(VkDevice device) {
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
                              uint32_t rows, uint32_t cols) {
-    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     if (m_device == VK_NULL_HANDLE || m_device != gpu.device || !m_pipeline || !m_fence ||
         !W || !x || !y || !rows || !cols) return false;
     const uint32_t groups = 1u + (rows - 1u) / 256u;
