@@ -19,6 +19,7 @@ struct RomAllocation {
     VkDeviceMemory memory;
     VkDeviceSize size;
     VkMemoryPropertyFlags properties;
+    VkBufferUsageFlags usage;
     bool initiallyMapped;
 };
 static std::vector<RomAllocation> romAllocations;
@@ -215,7 +216,7 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
         return false;
     }
     try {
-        romAllocations.push_back({gpu.device, buf, mem, size, memProps, mapped != nullptr});
+        romAllocations.push_back({gpu.device, buf, mem, size, memProps, usage, mapped != nullptr});
     } catch (...) {
         if (mapped) { vkUnmapMemory(gpu.device, mem); *mapped = nullptr; }
         vkDestroyBuffer(gpu.device, buf, nullptr);
@@ -243,6 +244,10 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
         size > (std::numeric_limits<size_t>::max)() ||
         dstOffset > (std::numeric_limits<VkDeviceSize>::max)() - size) return false;
     const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
+    const auto target = std::find_if(romAllocations.begin(), romAllocations.end(),
+        [&](const RomAllocation& a) { return a.device == gpu.device && a.buffer == dst; });
+    if (target == romAllocations.end() || !(target->usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT) ||
+        dstOffset > target->size || size > target->size - dstOffset) return false;
     VkBuffer staging = VK_NULL_HANDLE;
     VkDeviceMemory smem = VK_NULL_HANDLE;
     void* mapped = nullptr;
@@ -362,6 +367,7 @@ static std::vector<uint32_t> readFileSpv(const std::string& path) {
 }
 
 bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     if (!device || m_device) return false;
     m_device = device;
     const auto fail = [&]() { destroy(device); return false; };
@@ -424,10 +430,10 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
 
     VkDescriptorPoolSize poolSizes[1] = {};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSizes[0].descriptorCount = 8;
+    poolSizes[0].descriptorCount = 3;
     VkDescriptorPoolCreateInfo dpci{};
     dpci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dpci.maxSets = 4;
+    dpci.maxSets = 1;
     dpci.poolSizeCount = 1;
     dpci.pPoolSizes = poolSizes;
     if (vkCreateDescriptorPool(device, &dpci, nullptr, &m_pool) != VK_SUCCESS) return fail();
@@ -455,6 +461,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
 }
 
 void VulkanProgram::destroy(VkDevice device) {
+    const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     if (!m_device || device != m_device) return;
     if (m_fence) vkDestroyFence(device, m_fence, nullptr);
     if (m_pool) vkDestroyDescriptorPool(device, m_pool, nullptr);
@@ -478,15 +485,21 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
                              uint32_t rows, uint32_t cols) {
     const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     if (m_device == VK_NULL_HANDLE || m_device != gpu.device || !m_pipeline || !m_fence ||
-        !W || !x || !y || !rows || !cols) return false;
+        !gpu.queue || !gpu.pool || !m_set || !W || !x || !y || !rows || !cols) return false;
     const uint32_t groups = 1u + (rows - 1u) / 256u;
     if (groups > gpu.props.limits.maxComputeWorkGroupCount[0]) return false;
     m_queue = gpu.queue;
 
     VkDescriptorBufferInfo binfos[3] = {};
-    binfos[0].buffer = W; binfos[0].range = VK_WHOLE_SIZE;
-    binfos[1].buffer = x; binfos[1].range = VK_WHOLE_SIZE;
-    binfos[2].buffer = y; binfos[2].range = VK_WHOLE_SIZE;
+    const VkBuffer buffers[3] = {W, x, y};
+    for (unsigned i = 0; i < 3; ++i) {
+        const auto it = std::find_if(romAllocations.begin(), romAllocations.end(),
+            [&](const RomAllocation& a) { return a.device == gpu.device && a.buffer == buffers[i]; });
+        if (it == romAllocations.end() || !(it->usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) ||
+            it->size > gpu.props.limits.maxStorageBufferRange) return false;
+        binfos[i].buffer = buffers[i];
+        binfos[i].range = it->size;
+    }
     VkWriteDescriptorSet writes[3] = {};
     for (int i = 0; i < 3; ++i) {
         writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
