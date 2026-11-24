@@ -95,6 +95,14 @@
 - [ ] RX-074 Complete independent E2E certification
 - [ ] RX-075 Commit and push verified release baseline
 
+## Mandatory architecture constraints
+
+- Native Win32/C++/MASM and existing Vulkan interfaces only; no Qt in production targets.
+- No new third-party build or runtime dependencies.
+- No placeholder implementations or silent success fallbacks.
+- Preserve existing supported toolchain and Vulkan SDK requirements.
+- Record dependency and Qt-free build verification before release closure.
+
 ## Closure ledger
 
 No verified closures yet. Initial Vulkan hardening commit: 4da76c32d8b878ba49b1886cf101f4d84bc938a2 (unbuilt; no gates closed).
