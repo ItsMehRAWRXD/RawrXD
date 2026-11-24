@@ -2590,9 +2590,11 @@ bool VulkanCompute::EnsureForwardArena(
         unsigned long v = std::strtoul(e, nullptr, 10);
         if (v) seqCap = std::min<uint32_t>(maxSeq, static_cast<uint32_t>(v));
     }
-    if (maxSeq > seqCap) {
+    static bool s_capWarned = false;
+    if (maxSeq > seqCap && !s_capWarned) {
+        s_capWarned = true;
         // Context capacity enforcement: the GPU arena is capped below the
-        // requested context. Surface it instead of silently downgrading
+        // requested context. Surface it once instead of silently downgrading
         // mid-generation when pos reaches seqCap.
         std::fprintf(stderr,
             "[Deep2] GPU KV context capped: maxSeq=%u -> seqCap=%u "
@@ -3104,6 +3106,17 @@ bool VulkanCompute::DispatchRope(
         return false;
     if (rotaryDim == 0u || rotaryDim > headDim || (rotaryDim & 1u))
         rotaryDim = headDim;
+    {
+        static bool s_logged = false;
+        if (!s_logged) {
+            s_logged = true;
+            const char* name = convention == 2u ? "IMROPE" :
+                               convention == 1u ? "NEOX" : "interleaved";
+            std::fprintf(stderr, "[Deep2] RoPE convention=%s rotaryDim=%u/%u\n",
+                         name, rotaryDim, headDim);
+            std::fflush(stderr);
+        }
+    }
     OpsPush p{};
     p.op=OP_ROPE; p.p0=headDim; p.p1=heads; p.p2=kvHeads; p.p3=pos;
     p.p4=convention; p.p5=rotaryDim; p.f0=theta;
