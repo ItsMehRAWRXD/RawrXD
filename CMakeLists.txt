@@ -2597,6 +2597,21 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/testing/coverage_report.cpp")
     message(STATUS "rawrxd_coverage + coverage_report enabled (TOP50 T2)")
 endif()
 
+# T1 fuzz harnesses (TOP50 T1): real parsers, standalone main.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/test/fuzz/fuzz_targets.cpp")
+    add_executable(fuzz_targets test/fuzz/fuzz_targets.cpp)
+    target_link_libraries(fuzz_targets PRIVATE
+        rawrxd_bin_loaders rawrxd_sast rawrxd_rag)
+    target_include_directories(fuzz_targets PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/agentic)
+    if(MSVC)
+        target_compile_options(fuzz_targets PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    set_target_properties(fuzz_targets PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "fuzz_targets enabled (TOP50 T1)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
