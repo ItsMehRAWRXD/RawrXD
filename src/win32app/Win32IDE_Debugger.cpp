@@ -947,6 +947,46 @@ void Win32IDE::debuggerStackFollow(int index)
     navigateToFileLine(frame.file, (uint32_t)frame.line);
 }
 
+// D7 disassembly view: hex dump at RIP (syncs with the paused thread).
+void Win32IDE::debuggerDisasmAtRip()
+{
+    ensureNativeDebugBackend();
+    if (!m_nativeDebug || !m_nativeDebug->isActive()) {
+        appendToOutput("[Disasm] No active debug session.\n", "Debug",
+                       OutputSeverity::Info);
+        return;
+    }
+    const auto snap = m_nativeDebug->snapshot();
+    if (snap.state != rawrxd::NativeDebugState::Paused) {
+        appendToOutput("[Disasm] Debuggee is not paused.\n", "Debug",
+                       OutputSeverity::Info);
+        return;
+    }
+    unsigned char bytes[32] = {0};
+    if (!m_nativeDebug->readMemory(snap.rip, bytes, sizeof(bytes))) {
+        appendToOutput("[Disasm] readMemory failed at RIP.\n", "Debug",
+                       OutputSeverity::Error);
+        return;
+    }
+    std::ostringstream oss;
+    oss << "Disasm @ rip=0x" << std::hex << snap.rip << std::dec << "\n";
+    for (int i = 0; i < 32; i += 16) {
+        oss << "  0x" << std::hex << (snap.rip + i) << ": ";
+        for (int j = 0; j < 16; ++j) {
+            char b[8];
+            std::snprintf(b, sizeof(b), "%02x ", bytes[i + j]);
+            oss << b;
+        }
+        oss << " |";
+        for (int j = 0; j < 16; ++j) {
+            const unsigned char c = bytes[i + j];
+            oss << (char)(c >= 0x20 && c < 0x7f ? c : '.');
+        }
+        oss << "|\n";
+    }
+    appendToOutput(oss.str(), "Debug", OutputSeverity::Info);
+}
+
 void Win32IDE::updateMemoryView()
 {
     if (!m_hwndDebuggerMemory) return;
@@ -1085,6 +1125,9 @@ void Win32IDE::debuggerStepCommand(const std::string& command)
             setBreakpointCondition(m_currentFile, std::stoi(rest.substr(0, sp)),
                                    rest.substr(sp + 1));
         }
+    } else if (command == "disasm") {
+        // D7: disassembly at RIP.
+        debuggerDisasmAtRip();
     }
 }
 

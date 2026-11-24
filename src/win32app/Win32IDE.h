@@ -1788,6 +1788,8 @@ public:
                                 const std::string& condition);
     // D6 call stack follow (Win32IDE_Debugger.cpp).
     void debuggerStackFollow(int index);
+    // D7 disassembly at RIP (Win32IDE_Debugger.cpp).
+    void debuggerDisasmAtRip();
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
     void parseBuildOutputForProblems(const std::string& chunk);
     int m_buildProblemCount = 0;
