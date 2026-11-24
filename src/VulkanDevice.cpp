@@ -286,6 +286,9 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
 
 bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize offset,
                                const void* data, VkDeviceSize size) {
+    if (size == 0) return true;
+    if (!gpu.device || !mem || !data || size > (std::numeric_limits<size_t>::max)() ||
+        offset > (std::numeric_limits<VkDeviceSize>::max)() - size) return false;
     void* mapped = nullptr;
     if (vkMapMemory(gpu.device, mem, offset, size, 0, &mapped) != VK_SUCCESS) return false;
     std::memcpy(mapped, data, static_cast<size_t>(size));
