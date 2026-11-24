@@ -889,14 +889,23 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             }
             return 0;
         }
-        case WM_APP + 101: {
-            // Deep2Bridge token stream (if needed)
-            return 0;
-        }
-        case WM_APP + 102: {
-            // Deep2Bridge generation complete
-            return 0;
-        }
+        case WM_APP + 101: {
+            // A5: Deep2Bridge token stream -> agent panel transcript.
+            // Producer (Win32IDE_AgentCommands.cpp) posts a heap std::string.
+            if (ide) {
+                if (lParam) {
+                    auto* token = reinterpret_cast<std::string*>(lParam);
+                    ide->appendAgentTranscript(*token);
+                    delete token;
+                }
+            }
+            return 0;
+        }
+        case WM_APP + 102: {
+            // A5: Deep2Bridge generation complete.
+            if (ide) ide->appendAgentTranscript("\r\n[generation complete]\r\n");
+            return 0;
+        }
         case WM_APP + 103: {
             // Agentic loop progress
             if (ide) {
