@@ -49,19 +49,27 @@ target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src $
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
-# Deploy GLSL compute shaders (SPIR-V) next to the executable for the Vulkan path.
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
-    file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
-    foreach(shader ${SHADER_FILES})
-        get_filename_component(shaderName "${shader}" NAME)
-        add_custom_command(TARGET Deep2Engine_Benchmark POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${shader}"
-                     $<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/${shaderName}
-            COMMENT "Deploying shader ${shaderName}"
-            VERBATIM)
-    endforeach()
+# Compile the ROM shader from its authoritative source using the existing Vulkan SDK.
+find_program(RAWRXD_GLSLC NAMES glslc HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin")
+if(NOT RAWRXD_GLSLC)
+    message(FATAL_ERROR "The existing Vulkan SDK must provide glslc to build ROM shaders")
 endif()
+set(ROM_SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/gemv_f32.comp")
+set(ROM_SHADER_BINARY "${CMAKE_CURRENT_BINARY_DIR}/rom-shaders/gemv_f32.spv")
+add_custom_command(OUTPUT "${ROM_SHADER_BINARY}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/rom-shaders"
+    COMMAND "${RAWRXD_GLSLC}" --target-env=vulkan1.2 -fshader-stage=compute
+            "${ROM_SHADER_SOURCE}" -o "${ROM_SHADER_BINARY}"
+    DEPENDS "${ROM_SHADER_SOURCE}" "${RAWRXD_GLSLC}"
+    VERBATIM)
+add_custom_target(rawrxd_rom_shaders ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<$<BOOL:${CMAKE_CONFIGURATION_TYPES}>:$<CONFIG>>/shaders"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ROM_SHADER_BINARY}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<$<BOOL:${CMAKE_CONFIGURATION_TYPES}>:$<CONFIG>>/shaders/gemv_f32.spv"
+    DEPENDS "${ROM_SHADER_BINARY}"
+    VERBATIM)
+add_dependencies(Deep2Engine_Benchmark rawrxd_rom_shaders)
+install(FILES "${ROM_SHADER_BINARY}" DESTINATION bin/shaders)
 
 # Enable deep hardware optimization flags dynamically based on active toolchain mappings
 if(MSVC)
