@@ -3274,8 +3274,10 @@ void Win32IDE::initializeEditorSurface()
             WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
                 WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL |
                 ES_WANTRETURN,
-            0, 0, 400, 300, m_hwndMain, reinterpret_cast<HMENU>(IDC_EDITOR), m_hInstance, nullptr);
-    }
+            0, 0, 400, 300, m_hwndMain, reinterpret_cast<HMENU>(IDC_EDITOR), m_hInstance, nullptr);
+    }
+    // I1: F12 go-to-definition key subclass on the editor.
+    installLspEditorSubclass();
     if (m_hwndEditor) {
         SendMessageW(m_hwndEditor, EM_EXLIMITTEXT, 0, 64 * 1024 * 1024);
         SendMessageW(m_hwndEditor, EM_SETEVENTMASK, 0, ENM_CHANGE);

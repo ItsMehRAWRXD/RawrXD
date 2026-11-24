@@ -1764,7 +1764,10 @@ public:
     void initAgentPanel();
     void toggleAgentPanel();
     void appendAgentTranscript(const std::string& text);
-    void submitAgentPrompt();
+    void submitAgentPrompt();
+    // I1 go-to-definition (Win32IDE_LspCommands.cpp).
+    void lspGotoDefinitionAtCursor();
+    void installLspEditorSubclass();
     void syncEditorToGpuSurface();
     void initializeEditorSurface();
     static LRESULT CALLBACK EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

@@ -3529,6 +3529,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Sidebar.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
         src/win32app/Win32IDE_AgentPanel.cpp
+        src/win32app/Win32IDE_LspCommands.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp
