@@ -1,3 +1,4 @@
+#include "RomRotary.hpp"
 #include "Deep2Engine.hpp"
 #include "TensorROM.hpp"
 #include "quant_kernels.hpp"
@@ -84,18 +85,11 @@ void Deep2Engine::SynchronizeRoPEScaling(double modelThetaConfig) {
 }
 
 void Deep2Engine::ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position) {
-    size_t dim = ctx.cfg.hiddenDim / ctx.cfg.numHeads;
     (void)headIndex;
-    for (size_t i = 0; i < dim; i += 2) {
-        double frequency = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i) / dim);
-        double scaledArgument = static_cast<double>(position) * frequency * ctx.cfg.ropeScaleFactor;
-        float sinValue = std::sin(scaledArgument);
-        float cosValue = std::cos(scaledArgument);
-        float v0 = vectorData[i];
-        float v1 = vectorData[i + 1];
-        vectorData[i]     = (v0 * cosValue) - (v1 * sinValue);
-        vectorData[i + 1] = (v0 * sinValue) + (v1 * cosValue);
-    }
+    if (!ctx.cfg.numHeads) return;
+    const size_t dim = ctx.cfg.hiddenDim / ctx.cfg.numHeads;
+    deep2::rotateHead(vectorData, dim, dim, position, ctx.cfg.ropeThetaGlobal,
+                      ctx.cfg.ropeScaleFactor, deep2::RotaryLayout::Interleaved);
 }
 
 void Deep2Engine::DequantizeQ2_K_AVX512(const void* __restrict source, float* __restrict destination, size_t 
@@ -116,55 +110,9 @@ blockCount) {
     }
 }
 
-inline void FastVectorSinCos256(__m256 x, __m256& sinOut, __m256& cosOut) {
-    __m256 c1 = _mm256_set1_ps(1.0f);
-    __m256 c2 = _mm256_set1_ps(-0.5f);
-    __m256 s1 = _mm256_set1_ps(-0.166666667f);
-
-    __m256 x2 = _mm256_mul_ps(x, x);
-    
-    cosOut = _mm256_fmadd_ps(x2, c2, c1);
-    
-    __m256 x3 = _mm256_mul_ps(x2, x);
-    sinOut = _mm256_fmadd_ps(x3, s1, x);
-}
-
 void Deep2Engine::ApplyRotaryEmbeddingsAVX512(float* vectorData, size_t dim, size_t position) {
-    size_t i = 0;
-    for (; i + 16 <= dim; i += 16) {
-        __m512 vData = _mm512_loadu_ps(&vectorData[i]);
-        alignas(64) float tempFreqs[16];
-        for (size_t v = 0; v < 16; v += 2) {
-            double freq = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i + v) / dim);
-            double arg  = static_cast<double>(position) * freq * ctx.cfg.ropeScaleFactor;
-            tempFreqs[v]     = static_cast<float>(arg);
-            tempFreqs[v + 1] = static_cast<float>(arg);
-        }
-        __m512 vArgs = _mm512_load_ps(tempFreqs);
-        __m256 xLow = _mm512_extractf32x8_ps(vArgs, 0);
-        __m256 xHigh = _mm512_extractf32x8_ps(vArgs, 1);
-        __m256 sinLow, cosLow, sinHigh, cosHigh;
-        FastVectorSinCos256(xLow, sinLow, cosLow);
-        FastVectorSinCos256(xHigh, sinHigh, cosHigh);
-        __m512 vSin = _mm512_insertf32x8(_mm512_castps256_ps512(sinLow), sinHigh, 1);
-        __m512 vCos = _mm512_insertf32x8(_mm512_castps256_ps512(cosLow), cosHigh, 1);
-        __m512 vPermuted = _mm512_permute_ps(vData, _MM_SHUFFLE(2, 3, 0, 1));
-        __m512 vSignsMask = _mm512_set_ps(1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f,
-                                          1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f);
-        __m512 vRotated = _mm512_mul_ps(vPermuted, vSignsMask);
-        __m512 vFinal = _mm512_fmadd_ps(vData, vCos, _mm512_mul_ps(vRotated, vSin));
-        _mm512_storeu_ps(&vectorData[i], vFinal);
-    }
-    for (; i + 1 < dim; i += 2) {
-        double frequency = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i) / dim);
-        double scaledArgument = static_cast<double>(position) * frequency * ctx.cfg.ropeScaleFactor;
-        float sinValue = std::sin(scaledArgument);
-        float cosValue = std::cos(scaledArgument);
-        float v0 = vectorData[i];
-        float v1 = vectorData[i + 1];
-        vectorData[i]     = (v0 * cosValue) - (v1 * sinValue);
-        vectorData[i + 1] = (v0 * sinValue) + (v1 * cosValue);
-    }
+    deep2::rotateHead(vectorData, dim, dim, position, ctx.cfg.ropeThetaGlobal,
+                      ctx.cfg.ropeScaleFactor, deep2::RotaryLayout::Interleaved);
 }
 
 Deep2Engine::TensorHandle Deep2Engine::getTensor(const std::string& name) {
@@ -502,8 +450,17 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             std::vector<float> V(qkvOut.begin() + 2 * qSize, qkvOut.end());
 
             // Apply RoPE to Q and K
-            ApplyRotaryEmbeddings(Q.data(), 0, static_cast<size_t>(tokenPos));
-            ApplyRotaryEmbeddings(K.data(), 0, static_cast<size_t>(tokenPos));
+            if (!ctx.cfg.numHeads || ctx.cfg.hiddenDim % ctx.cfg.numHeads) return false;
+            const size_t headDim = ctx.cfg.hiddenDim / ctx.cfg.numHeads;
+            if (!headDim || Q.size() % headDim || K.size() % headDim ||
+                V.size() < hiddenDim) return false;
+            for (auto* tensor : {&Q, &K}) {
+                for (size_t off = 0; off < tensor->size(); off += headDim) {
+                    if (!deep2::rotateHead(tensor->data() + off, headDim, headDim,
+                            static_cast<size_t>(tokenPos), ctx.cfg.ropeThetaGlobal,
+                            ctx.cfg.ropeScaleFactor, deep2::RotaryLayout::Interleaved)) return false;
+                }
+            }
 
             // Simplified attention: softmax(Q @ K^T / sqrt(d)) @ V
             // For parity test, use V as attention output
