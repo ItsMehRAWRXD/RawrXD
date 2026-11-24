@@ -1785,9 +1785,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         m_computerUseToolsRegistered = false;
         m_agentToolsRegistry.reset();
         m_agentToolCallBridge.reset();
-        auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
-        sb.SetInteractive(false);
-        sb.SetAutoApproveConfirm(true);
+        // P0: no production consent overrides. The sandbox default
+        // (interactive=true, auto-approve=false) applies: privileged actions
+        // require real user approval.
+        auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
         int readOk = 0, searchOk = 0, shellOk = 0;
         std::string r1c = "none", r2c = "none", r3c = "none";
         try {
@@ -1825,9 +1826,9 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         } catch (...) {
             r3c = "EXC_CAUGHT";
         }
-        sb.SetInteractive(true);
-        sb.SetAutoApproveConfirm(false);
-        {
+        // P0: restore nothing — the overrides above were removed; the
+        // fail-closed interactive default was never left.
+        {
             FILE* f = nullptr;
             if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C11_TOOLS.log", "w") == 0 &&
                 f) {
@@ -1887,9 +1888,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         m_computerUseToolsRegistered = false;
         m_agentToolsRegistry.reset();
         m_agentToolCallBridge.reset();
-        auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
-        sb.SetInteractive(false);
-        sb.SetAutoApproveConfirm(true);
+        // P0: no production consent overrides. The sandbox default
+        // (interactive=true, auto-approve=false) applies: privileged actions
+        // require real user approval.
+        auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
         DeleteFileA(p1Abs);
         DeleteFileA(p2Abs);
         std::string e1 = "none", e2 = "none", e3 = "none";

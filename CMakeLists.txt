@@ -1809,6 +1809,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND EXISTS "${
     if(TARGET ggml-vulkan)
         target_link_libraries(deep2_d1_prefill_parity PRIVATE ggml-vulkan)
     endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_d1_prefill_parity PRIVATE rawrxd_compression_core)
+    endif()
     if(MSVC)
         target_compile_options(deep2_d1_prefill_parity PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     else()
@@ -1864,6 +1867,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_S
         ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
         ${_rawrxd_vk_sdk_inc}
     )
+    # gguf_loader.cpp includes codec/compression_core.h and calls
+    # rawrxd::compression::{compress,decompress}. Without this the compressed
+    # GGUF path resolves at compile time and fails at link time with two
+    # unresolved externals; the compression core is dependency-free (zlib-only)
+    # so this does not drag Deep2 or Qt into the target.
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_spec_bench PRIVATE rawrxd_compression_core)
+    endif()
     if(TARGET ggml_interface)
         target_link_libraries(deep2_spec_bench PRIVATE ggml_interface)
     endif()
@@ -2041,6 +2052,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND EXISTS "${CM
     if(TARGET ggml-vulkan)
         target_link_libraries(deep2_context_scaling PRIVATE ggml-vulkan)
     endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_context_scaling PRIVATE rawrxd_compression_core)
+    endif()
     if(MSVC)
         target_compile_options(deep2_context_scaling PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     else()
@@ -2102,6 +2116,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND EXISTS "${CMA
     endif()
     if(TARGET ggml-vulkan)
         target_link_libraries(deep2_gguf_lifecycle PRIVATE ggml-vulkan)
+    endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_gguf_lifecycle PRIVATE rawrxd_compression_core)
     endif()
     if(MSVC)
         target_compile_options(deep2_gguf_lifecycle PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -2401,6 +2418,23 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
     message(STATUS "deep2_agentic_loop enabled (Gate 9 agentic E2E harness)")
 endif()
 
+# P0 agent-security certification: executable proof for tool_security.hpp
+# (authorization, workspace guard, job isolation, cancel, durable receipts).
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/agent_security_smoke.cpp")
+    add_executable(agent_security_smoke
+        tools/agent_security_smoke.cpp
+    )
+    target_include_directories(agent_security_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_options(agent_security_smoke PRIVATE /EHsc /std:c++20 /utf-8)
+    set_target_properties(agent_security_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "agent_security_smoke enabled (P0 agent security)")
+endif()
+
 # AgenticLoopBridge recovery gate: exercises the real Win32 process-launch
 # lifecycle without a model or cloud service.  The executable is emitted to a
 # separate directory so no helper sibling is discoverable; this makes the
@@ -2611,6 +2645,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND EXISTS "${CMA
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${_rawrxd_vk_sdk_inc}
     )
+    # Same linkage reason as deep2_spec_bench: gguf_loader.cpp calls the
+    # dependency-free rawrxd::compression core, so the compressed GGUF path
+    # links instead of failing with unresolved compress/decompress.
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_prefill_parity PRIVATE rawrxd_compression_core)
+    endif()
     if(TARGET ggml_interface)
         target_link_libraries(deep2_prefill_parity PRIVATE ggml_interface)
     endif()
@@ -2704,6 +2744,9 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(rawrxd_gpu_compute PUBLIC Vulkan::Vulkan)
     endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(rawrxd_gpu_compute PUBLIC rawrxd_compression_core)
+    endif()
     if(MSVC)
         target_compile_options(rawrxd_gpu_compute PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     else()
@@ -2771,6 +2814,57 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     # management", "genuinely missing kernel" and "never called" is what
     # prevents implementing ~150 methods blind.
     # ------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # MASM x64 stubs -- MANDATORY (never skipped). These real ml64 objects are
+    # part of the production path (VwaRangeLineageX64, KN_O3KKEN,
+    # RuntimeEvidence512_*); they are assembled in EVERY build, independent of
+    # RAWRXD_BUILD_DEEP2_ENGINE. Fail closed at configure if ml64 is missing.
+    # ------------------------------------------------------------------------
+    if(MSVC)
+        if(NOT CMAKE_ASM_MASM_COMPILER)
+            message(FATAL_ERROR "MASM assembler (ml64) not found -- MASM is mandatory and must not be skipped")
+        endif()
+        set(_DEEP2_MASM_DIR ${CMAKE_CURRENT_BINARY_DIR}/reap_masm)
+        set(_DEEP2_MASM_OBJECTS)
+        foreach(_masm_name VwaRangeLineageX64 KN_O3KKEN RuntimeEvidence512_Core
+                              RuntimeEvidence512_Emit RuntimeEvidence512_Collect
+                              RuntimeEvidence512_IDEEmit RuntimeEvidence512_IDECollect)
+            if(_masm_name STREQUAL VwaRangeLineageX64 OR _masm_name STREQUAL KN_O3KKEN)
+                set(_masm_src ${CMAKE_SOURCE_DIR}/src/deep2/vwa/${_masm_name}.asm)
+                if(_masm_name STREQUAL KN_O3KKEN)
+                    set(_masm_src ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/${_masm_name}.asm)
+                endif()
+            else()
+                set(_masm_src ${CMAKE_SOURCE_DIR}/src/asm/${_masm_name}.asm)
+            endif()
+            set(_masm_obj ${_DEEP2_MASM_DIR}/${_masm_name}.obj)
+            set(_masm_deps ${_masm_src})
+            if(_masm_name STREQUAL RuntimeEvidence512_Collect)
+                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/asm/RuntimeEvidence512_Collect.inc)
+            endif()
+            if(_masm_name STREQUAL RuntimeEvidence512_IDEEmit)
+                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/asm/RuntimeEvidence512_IDEClaims.inc)
+            endif()
+            if(_masm_name STREQUAL KN_O3KKEN)
+                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/KN_O3KKEN.inc)
+            endif()
+            add_custom_command(
+                OUTPUT ${_masm_obj}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${_DEEP2_MASM_DIR}
+                COMMAND ${CMAKE_ASM_MASM_COMPILER} /nologo /c /Fo${_masm_obj} ${_masm_src}
+                DEPENDS ${_masm_deps}
+                VERBATIM
+                COMMENT "Assembling ${_masm_name}.asm with ml64"
+            )
+            list(APPEND _DEEP2_MASM_OBJECTS ${_masm_obj})
+        endforeach()
+        add_library(rawrxd_masm_stubs STATIC ${_DEEP2_MASM_OBJECTS})
+        # The target has no compiled sources (custom-command objects only), so
+        # CMake cannot infer the linker language -- set it explicitly.
+        set_target_properties(rawrxd_masm_stubs PROPERTIES LINKER_LANGUAGE CXX)
+        message(STATUS "MASM stubs mandatory: rawrxd_masm_stubs (7 objects, ml64)")
+    endif()
+
     option(RAWRXD_BUILD_DEEP2_ENGINE
         "Build the experimental Deep2 engine and link it into dependent targets"
         ON)
@@ -2976,43 +3070,9 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
             endif()
 endforeach()
 
-        # Assemble the real x64 MASM modules explicitly with ml64. Keeping
-        # them out of the CXX target's implicit .asm rule avoids CMake applying
-        # cl.exe flags and makes object paths deterministic for the archive.
-        set(_DEEP2_MASM_DIR ${CMAKE_CURRENT_BINARY_DIR}/reap_masm)
-        set(_DEEP2_MASM_OBJECTS)
-        foreach(_masm_name VwaRangeLineageX64 KN_O3KKEN RuntimeEvidence512_Core
-                              RuntimeEvidence512_Emit RuntimeEvidence512_Collect
-                              RuntimeEvidence512_IDEEmit RuntimeEvidence512_IDECollect)
-            if(_masm_name STREQUAL VwaRangeLineageX64 OR _masm_name STREQUAL KN_O3KKEN)
-                set(_masm_src ${CMAKE_SOURCE_DIR}/src/deep2/vwa/${_masm_name}.asm)
-                if(_masm_name STREQUAL KN_O3KKEN)
-                    set(_masm_src ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/${_masm_name}.asm)
-                endif()
-            else()
-                set(_masm_src ${CMAKE_SOURCE_DIR}/src/asm/${_masm_name}.asm)
-            endif()
-            set(_masm_obj ${_DEEP2_MASM_DIR}/${_masm_name}.obj)
-            set(_masm_deps ${_masm_src})
-            if(_masm_name STREQUAL RuntimeEvidence512_Collect)
-                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/asm/RuntimeEvidence512_Collect.inc)
-            endif()
-            if(_masm_name STREQUAL RuntimeEvidence512_IDEEmit)
-                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/asm/RuntimeEvidence512_IDEClaims.inc)
-            endif()
-            if(_masm_name STREQUAL KN_O3KKEN)
-                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/KN_O3KKEN.inc)
-            endif()
-            add_custom_command(
-                OUTPUT ${_masm_obj}
-                COMMAND ${CMAKE_COMMAND} -E make_directory ${_DEEP2_MASM_DIR}
-                COMMAND ${CMAKE_ASM_MASM_COMPILER} /nologo /c /Fo${_masm_obj} ${_masm_src}
-                DEPENDS ${_masm_deps}
-                VERBATIM
-                COMMENT "Assembling ${_masm_name}.asm with ml64"
-            )
-            list(APPEND _DEEP2_MASM_OBJECTS ${_masm_obj})
-        endforeach()
+        # MASM x64 stubs are assembled unconditionally above (mandatory,
+        # rawrxd_masm_stubs); the objects below feed deep2_engine_lib when the
+        # engine is enabled -- they are never skipped.
 
         # Create a static library from the engine subsystem sources so other targets
         # (deep2_gpu_decode_roofline, deep2_runtime_dispatch) can link against the
@@ -3063,6 +3123,9 @@ endforeach()
             ggml
             Vulkan::Vulkan
         )
+        if(TARGET rawrxd_compression_core)
+            target_link_libraries(deep2_engine_lib PUBLIC rawrxd_compression_core)
+        endif()
         target_compile_options(deep2_engine_lib PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
         target_compile_definitions(deep2_engine_lib PRIVATE
             NOMINMAX _CRT_SECURE_NO_WARNINGS
@@ -4422,7 +4485,17 @@ if(MSVC)
 
     # Brutal MASM benchmark
     if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
-        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+        # Assemble the MASM source with ml64 directly. Listing the .asm in
+        # add_executable made the VS generator emit it as <None> (and feed C++ flags
+        # to ml64), leaving deflate_brutal_masm unresolved at link time.
+        set(_brutal_obj ${CMAKE_CURRENT_BINARY_DIR}/deflate_brutal_masm.obj)
+        add_custom_command(
+            OUTPUT ${_brutal_obj}
+            COMMAND ${CMAKE_ASM_MASM_COMPILER} /nologo /c /Fo${_brutal_obj} ${CMAKE_SOURCE_DIR}/kernels/deflate_brutal_masm.asm
+            DEPENDS ${CMAKE_SOURCE_DIR}/kernels/deflate_brutal_masm.asm
+            COMMENT "Assembling deflate_brutal_masm.asm with ml64"
+        )
+        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp ${_brutal_obj})
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 

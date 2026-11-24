@@ -20,6 +20,7 @@
 
 #include "InferenceBackend.h"
 #include "tool_core.hpp"
+#include "tool_security.hpp"
 #include "MotdAuthorization.h"
 #include "AgentEventJournal.hpp"
 #include "ToolCallExactlyOnceGuard.hpp"
@@ -55,12 +56,9 @@ inline json BuildToolSchema(const rawrxd::tools::Tool& tool) {
     return schema;
 }
 
-inline json GetAllToolSchemas(const rawrxd::tools::Registry& registry) {
-    json schemas = json::array();
-    // We can't iterate tools directly, so we provide a known set
-    // In practice, the orchestrator maintains a registry and generates schemas
-    return schemas;
-}
+// Defined after ToolCallBridge (needs the complete type); returns the same
+// authoritative schema set as ToolCallBridge::GetToolSchemasForLLM().
+inline json GetAllToolSchemas(const rawrxd::tools::Registry& registry);
 
 // ---------------------------------------------------------------------------
 // Tool call format for LLM responses
@@ -177,12 +175,20 @@ public:
         m_journalTaskId = std::move(taskId);
     }
 
+    // P0 durable execution receipts: every allow/deny decision is appended to
+    // an append-only JSONL log (default <workspace>/.rawrxd/audit/tool-receipts.jsonl).
+    void SetReceiptLogPath(const std::string& path) {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        m_receipts = std::make_shared<rawrxd::agentic::security::ToolReceiptLog>(path);
+    }
+
     // ---- Tool schema generation for LLM ----
     // Returns OpenAI-format tool definitions for all registered tools
     json GetToolSchemasForLLM() const;
 
     // ---- Execution ----
-    // Execute a single tool call from the LLM response
+    // Execute a single tool call from the LLM response. Every call (allow AND
+    // deny) appends a durable receipt before returning.
     ToolResultMessage ExecuteToolCall(const ToolCall& call);
 
     // Execute multiple tool calls and return formatted results
@@ -207,9 +213,12 @@ private:
     std::mutex m_turnMutex;
     std::shared_ptr<AgentEventJournal> m_journal;
     std::string m_journalTaskId;
+    std::shared_ptr<rawrxd::agentic::security::ToolReceiptLog> m_receipts;
 
     // Convert LLM tool arguments (json) to rawrxd::tools::Request args (string map)
     rawrxd::tools::Request ConvertArgs(const ToolCall& call) const;
+
+    ToolResultMessage ExecuteToolCallImpl(const ToolCall& call);
 };
 
 // ---------------------------------------------------------------------------
@@ -217,77 +226,139 @@ private:
 // ---------------------------------------------------------------------------
 
 inline json ToolCallBridge::GetToolSchemasForLLM() const {
+    // Authoritative tool schemas (OpenAI function-calling format). Properties
+    // are complete and typed: the model sees exactly what each argument is and
+    // which are required. Keep in sync with register_workspace_tools().
     json schemas = json::array();
-
-    // Generate schemas for all workspace tools registered via register_workspace_tools
-    // Each tool is registered with its name, description, risk, and required args.
-    // We generate OpenAI-compatible JSON schema for each.
-
-    // Static tool list — matches register_workspace_tools registrations
-    struct ToolInfo {
-        std::string name;
-        std::string description;
-        std::vector<std::string> required;
-    };
-
-    // Canonical + Cursor-parity aliases (must match register_workspace_tools).
-    std::vector<ToolInfo> tools = {
-        {"readFile",        "Read bounded workspace file", {"path"}},
-        {"Read",            "Cursor-parity alias for readFile", {"path"}},
-        {"listDirectory",   "List workspace directory", {"path"}},
-        {"fileSearch",      "Find paths by filename substring", {"pattern"}},
-        {"Glob",            "Cursor-parity alias for fileSearch", {"pattern"}},
-        {"textSearch",      "Search bounded text files", {"needle"}},
-        {"Grep",            "Cursor-parity alias for textSearch", {"needle"}},
-        {"createDirectory", "Create directory inside workspace", {"path"}},
-        {"createFile",      "Create a new file without overwriting", {"path", "content"}},
-        {"writeFile",       "Write/overwrite a workspace file", {"path", "content"}},
-        {"Write",           "Cursor-parity alias for writeFile", {"path", "content"}},
-        {"editFiles",       "Replace exact unique text in a file", {"path", "old", "new"}},
-        {"StrReplace",      "Cursor-parity alias for editFiles", {"path", "old", "new"}},
-        {"deleteFile",      "Delete a workspace file", {"path"}},
-        {"Delete",          "Cursor-parity alias for deleteFile", {"path"}},
-        {"runInTerminal",   "Execute approved command in workspace cwd", {"command"}},
-        {"Shell",           "Cursor-parity alias for runInTerminal", {"command"}},
-        {"computer_use.screenshot", "BMP capture of allowlisted window", {"hwnd"}},
-        {"computer_use.find_window", "Find allowlisted window by title", {"title"}},
-        {"computer_use.inspect", "Enumerate child controls", {"hwnd"}},
-        {"computer_use.click", "Click client coordinates", {"hwnd", "x", "y"}},
-        {"computer_use.type", "Type Unicode text", {"hwnd", "text"}},
-        {"computer_use.key", "Send virtual-key", {"hwnd", "vk"}},
-        {"computer_use.scroll", "Scroll at client coordinates", {"hwnd", "x", "y", "delta"}},
-        {"computer_use.launch", "Launch absolute executable (no shell)", {"path"}},
-    };
-
-    for (const auto& t : tools) {
-        json schema;
-        schema["type"] = "function";
-        schema["function"] = json{
-            {"name", t.name},
-            {"description", t.description},
-            {"parameters", json{
-                {"type", "object"},
-                {"properties", json::object()},
-                {"required", t.required}
+    auto add = [&schemas](const std::string& name, const std::string& desc,
+                          json properties, json required) {
+        schemas.push_back(json{
+            {"type", "function"},
+            {"function", json{
+                {"name", name},
+                {"description", desc},
+                {"parameters", json{
+                    {"type", "object"},
+                    {"properties", std::move(properties)},
+                    {"required", std::move(required)},
+                    {"additionalProperties", false}
+                }}
             }}
-        };
-        schemas.push_back(schema);
-    }
+        });
+    };
+    const json intProp = [](const char* d) {
+        return json{{"type", "integer"}, {"description", d}};
+    };
+    const json strProp = [](const char* d) {
+        return json{{"type", "string"}, {"description", d}};
+    };
+
+    add("readFile", "Read one bounded workspace file by path.",
+        json{{"path", strProp("Workspace-relative file path")},
+             {"maxBytes", intProp("Optional cap on returned bytes (default 262144, max 524288)")}},
+        json::array({"path"}));
+    add("Read", "Cursor-parity alias for readFile.",
+        json{{"path", strProp("Workspace-relative file path")},
+             {"maxBytes", intProp("Optional cap on returned bytes")}},
+        json::array({"path"}));
+    add("listDirectory", "List immediate children of a workspace directory.",
+        json{{"path", strProp("Workspace-relative directory path")},
+             {"maxEntries", intProp("Optional entry cap (default 128, max 256)")}},
+        json::array({"path"}));
+    add("fileSearch", "Find paths by filename substring.",
+        json{{"pattern", strProp("Filename substring to match")},
+             {"path", strProp("Optional workspace-relative start directory")},
+             {"maxResults", intProp("Optional result cap (default 100, max 250)")}},
+        json::array({"pattern"}));
+    add("Glob", "Cursor-parity alias for fileSearch.",
+        json{{"pattern", strProp("Filename substring to match")},
+             {"path", strProp("Optional workspace-relative start directory")},
+             {"maxResults", intProp("Optional result cap")}},
+        json::array({"pattern"}));
+    add("textSearch", "Search bounded text files for a literal string.",
+        json{{"needle", strProp("Literal text to find")},
+             {"path", strProp("Optional workspace-relative start directory")},
+             {"maxResults", intProp("Optional match cap (default 100, max 250)")}},
+        json::array({"needle"}));
+    add("Grep", "Cursor-parity alias for textSearch.",
+        json{{"needle", strProp("Literal text to find")},
+             {"path", strProp("Optional workspace-relative start directory")},
+             {"maxResults", intProp("Optional match cap")}},
+        json::array({"needle"}));
+    add("createDirectory", "Create a directory inside the workspace.",
+        json{{"path", strProp("Workspace-relative directory path")}},
+        json::array({"path"}));
+    add("createFile", "Create a new file without overwriting.",
+        json{{"path", strProp("Workspace-relative file path")},
+             {"content", strProp("Full file content")}},
+        json::array({"path", "content"}));
+    add("writeFile", "Write or overwrite a workspace file.",
+        json{{"path", strProp("Workspace-relative file path")},
+             {"content", strProp("Full file content")}},
+        json::array({"path", "content"}));
+    add("Write", "Cursor-parity alias for writeFile.",
+        json{{"path", strProp("Workspace-relative file path")},
+             {"content", strProp("Full file content")}},
+        json::array({"path", "content"}));
+    add("editFiles", "Replace exact unique text in a file.",
+        json{{"path", strProp("Workspace-relative file path")},
+             {"old", strProp("Exact text to replace (must occur exactly once)")},
+             {"new", strProp("Replacement text")}},
+        json::array({"path", "old", "new"}));
+    add("StrReplace", "Cursor-parity alias for editFiles.",
+        json{{"path", strProp("Workspace-relative file path")},
+             {"old", strProp("Exact text to replace (must occur exactly once)")},
+             {"new", strProp("Replacement text")}},
+        json::array({"path", "old", "new"}));
+    add("deleteFile", "Delete a workspace file.",
+        json{{"path", strProp("Workspace-relative file path")}},
+        json::array({"path"}));
+    add("Delete", "Cursor-parity alias for deleteFile.",
+        json{{"path", strProp("Workspace-relative file path")}},
+        json::array({"path"}));
+    add("runInTerminal", "Execute an approved command with the workspace as cwd. Requires host authorization.",
+        json{{"command", strProp("Command line to execute")},
+             {"timeoutMs", intProp("Optional timeout in milliseconds")}},
+        json::array({"command"}));
+    add("Shell", "Cursor-parity alias for runInTerminal.",
+        json{{"command", strProp("Command line to execute")},
+             {"timeoutMs", intProp("Optional timeout in milliseconds")}},
+        json::array({"command"}));
+    add("computer_use.screenshot", "BMP capture of an allowlisted window.",
+        json{{"hwnd", intProp("Target window handle")}},
+        json::array({"hwnd"}));
+    add("computer_use.find_window", "Find an allowlisted window by title.",
+        json{{"title", strProp("Window title substring")}},
+        json::array({"title"}));
+    add("computer_use.inspect", "Enumerate child controls of a window.",
+        json{{"hwnd", intProp("Target window handle")}},
+        json::array({"hwnd"}));
+    add("computer_use.click", "Click at client coordinates.",
+        json{{"hwnd", intProp("Target window handle")},
+             {"x", intProp("Client x")}, {"y", intProp("Client y")}},
+        json::array({"hwnd", "x", "y"}));
+    add("computer_use.type", "Type Unicode text into a window.",
+        json{{"hwnd", intProp("Target window handle")},
+             {"text", strProp("Unicode text to type")}},
+        json::array({"hwnd", "text"}));
+    add("computer_use.key", "Send a virtual-key to a window.",
+        json{{"hwnd", intProp("Target window handle")},
+             {"vk", intProp("Virtual-key code")}},
+        json::array({"hwnd", "vk"}));
+    add("computer_use.scroll", "Scroll at client coordinates.",
+        json{{"hwnd", intProp("Target window handle")},
+             {"x", intProp("Client x")}, {"y", intProp("Client y")},
+             {"delta", intProp("Scroll delta")}},
+        json::array({"hwnd", "x", "y", "delta"}));
+    add("computer_use.launch", "Launch an absolute executable path (no shell).",
+        json{{"path", strProp("Absolute executable path")}},
+        json::array({"path"}));
 
     // Reserved host tool. It reads only the workspace's PassiveRoleNotRoleplay
     // policy file and records the ACK bound to the active session and turn.
-    schemas.push_back(json{
-        {"type", "function"},
-        {"function", json{
-            {"name", "read_motd"},
-            {"description", "Required first tool action each user turn: read the workspace execution policy."},
-            {"parameters", json{
-                {"type", "object"},
-                {"properties", json::object()},
-                {"additionalProperties", false}
-            }}
-        }}
-    });
+    add("read_motd",
+        "Required first tool action each user turn: read the workspace execution policy.",
+        json::object(), json::array());
 
     return schemas;
 }
@@ -335,6 +406,49 @@ inline void ToolCallBridge::RegisterTool(const rawrxd::tools::Tool& tool) {
 }
 
 inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
+    // Snapshot receipt state under the turn lock; the impl re-locks internally.
+    std::shared_ptr<rawrxd::agentic::security::ToolReceiptLog> receipts;
+    std::string session;
+    {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        receipts = m_receipts;
+        session = m_authorizationSession;
+    }
+    ToolResultMessage result_msg = ExecuteToolCallImpl(call);
+
+    // P0 durable execution receipt: one JSONL line per decision (allow/deny).
+    if (receipts && receipts->enabled()) {
+        rawrxd::agentic::security::Receipt r;
+        r.ts = rawrxd::agentic::security::NowIso8601Utc();
+        r.session = session;
+        r.tool = call.name;
+        r.target = call.arguments.is_object() && call.arguments.contains("path")
+            ? call.arguments["path"].get<std::string>() : std::string();
+        r.risk = "unknown";
+        rawrxd::tools::Tool probe;
+        if (m_registry && m_registry->find(call.name, probe)) {
+            r.risk = (probe.risk == rawrxd::tools::Risk::ReadOnly) ? "ReadOnly" :
+                     (probe.risk == rawrxd::tools::Risk::Write)    ? "Write" :
+                     (probe.risk == rawrxd::tools::Risk::Execute)  ? "Execute" :
+                     (probe.risk == rawrxd::tools::Risk::Network)  ? "Network" : "External";
+        }
+        const std::string& c = result_msg.content;
+        const bool denied = c.rfind("DENIED", 0) == 0 ||
+                            c.rfind("MOTD_REQUIRED", 0) == 0 ||
+                            c.rfind("MOTD_READ_FAILED", 0) == 0 ||
+                            c.rfind("EXACTLY_ONCE", 0) == 0 ||
+                            c.rfind("AUTHORIZATION_REQUIRED", 0) == 0;
+        r.decision = denied ? "DENY" : "ALLOW";
+        r.authorizer = "motd+approval";
+        r.detail = denied ? c.substr(0, 200) : result_msg.firstFailure;
+        r.bytes = (long long)c.size();
+        r.accepted = result_msg.accepted;
+        receipts->Write(r);
+    }
+    return result_msg;
+}
+
+inline ToolResultMessage ToolCallBridge::ExecuteToolCallImpl(const ToolCall& call) {
     std::lock_guard<std::mutex> lock(m_turnMutex);
     ToolResultMessage result_msg;
     result_msg.tool_call_id = call.id;
@@ -457,6 +571,12 @@ inline std::vector<ToolResultMessage> ToolCallBridge::ExecuteToolCalls(
         results.push_back(ExecuteToolCall(call));
     }
     return results;
+}
+
+inline json GetAllToolSchemas(const rawrxd::tools::Registry& registry) {
+    (void)registry;
+    ToolCallBridge bridge;
+    return bridge.GetToolSchemasForLLM();
 }
 
 } // namespace Agent

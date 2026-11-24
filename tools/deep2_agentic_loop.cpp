@@ -72,6 +72,7 @@
 #include "esp_metrics.hpp"
 #include "esp_cli.hpp"
 #include "../src/agentic/MotdAuthorization.h"
+#include "../src/agentic/tool_security.hpp"
 
 #include "cloud_api_client.h"
 #include <nlohmann/json.hpp>
@@ -180,6 +181,10 @@ struct Args
     //   openrouter = OpenRouter (free models)
     std::string provider = "deep2";
     std::string api_key;  // Read from env if not set
+    // P0 privileged-execution authorization: the HOST (launcher/CI) must opt in
+    // explicitly. Without this, every Execute-risk verb (bash/build/test/run)
+    // is denied with AUTHORIZATION_REQUIRED. Env fallback supports CI.
+    bool authorize_execute = false;
 };
 
 Args Parse(int argc, char* argv[])
@@ -270,6 +275,14 @@ Args Parse(int argc, char* argv[])
             const char* env_val = std::getenv(argv[++i]);
             if (env_val) a.api_key = env_val;
         }
+        else if (s == "--authorize-execute")
+            a.authorize_execute = true;
+    }
+    if (!a.authorize_execute)
+    {
+        const char* env_auth = std::getenv("RAWRXD_AUTHORIZE_EXECUTE");
+        if (env_auth && *env_auth && std::strcmp(env_auth, "0") != 0)
+            a.authorize_execute = true;
     }
     return a;
 }
@@ -545,20 +558,35 @@ static void dump_snap_output(const char* tag, const std::string& output, int eos
     }
 }
 
+// P0 subprocess isolation: every command (model-issued or host verification)
+// runs inside a per-execution Win32 Job Object with KILL_ON_JOB_CLOSE. A
+// timeout or Ctrl+C terminates the whole tree, so a cmd.exe grandchild can
+// never outlive the tool call. _popen is gone: it cannot be cancelled and it
+// orphans children on kill.
 std::string RunCmd(const std::string& cmd, int* exit_code)
 {
-    std::string out;
-    FILE* p = _popen(cmd.c_str(), "r");
-    if (!p)
+    std::string out, err;
+    bool timedOut = false;
+    int code = -1;
+    if (!rawrxd::agentic::security::JobIsolation::RunIsolated(
+            cmd, std::string(), 0ULL, out, err, code, timedOut))
     {
         *exit_code = -1;
-        return "popen failed";
+        return "CreateProcess failed";
     }
-    char buf[512];
-    while (std::fgets(buf, sizeof(buf), p))
-        out += buf;
-    *exit_code = _pclose(p);
-    return out;
+    std::string combined = out;
+    if (!err.empty())
+    {
+        if (!combined.empty()) combined += "\n";
+        combined += err;
+    }
+    if (timedOut)
+    {
+        combined += "\n[host] command timed out; job tree terminated";
+        code = -1;
+    }
+    *exit_code = code;
+    return combined;
 }
 
 // ---------------------------------------------------------------------------
@@ -2718,6 +2746,8 @@ static BOOL WINAPI Deep2ConsoleCtrlHandler(DWORD ctrl_type)
         case CTRL_BREAK_EVENT:
         case CTRL_CLOSE_EVENT:
             g_cancel_flag.store(true, std::memory_order_relaxed);
+            // Cancel must also kill any in-flight tool subprocess tree.
+            rawrxd::agentic::security::JobIsolation::KillAll();
             return TRUE;
         default:
             return FALSE;
@@ -4209,7 +4239,7 @@ int main(int argc, char* argv[])
                     "[--task text-or-file] [--workdir D] [--target-file f] "
                     "[--expected-source text] [--max-steps N] [--max-new N] "
                     "[--max-wall-time-sec N] [--batched-prefill 0|1] [--prefill-chunk N] "
-                    "[--cpu] [--toktest]\n");
+                    "[--authorize-execute] [--cpu] [--toktest]\n");
         return args.help ? 0 : 1;
     }
     if (args.motd_selftest)
@@ -4623,6 +4653,10 @@ int main(int argc, char* argv[])
 
     PatchManager patch_mgr(args.workdir);
     ExecutionLedger ledger(args.workdir);
+    // P0 durable execution receipts (allow AND deny) — same JSONL contract as
+    // the IDE ToolCallBridge path.
+    rawrxd::agentic::security::ToolReceiptLog receipts(
+        rawrxd::agentic::security::DefaultReceiptPath(args.workdir));
     patch_mgr.snapshot(args.target_file);
     const std::string initial_target = SafeWorkPath(args.workdir, args.target_file);
     if (initial_target.empty())
@@ -5605,6 +5639,13 @@ int main(int argc, char* argv[])
         int bash_exit_code = 0;
         bool tool_rejected = false;
         std::string authorizationError;
+        // P0 privileged-execution authorization (unified with the IDE path):
+        // Execute-risk verbs require explicit HOST authorization. The model
+        // asking is never authorization.
+        const bool isExecVerb = (act.tool == "bash" || act.tool == "build" ||
+                                 act.tool == "test" || act.tool == "run");
+        const auto execAuth = rawrxd::agentic::security::AuthorizeExecute(
+            args.authorize_execute, "deep2_agentic_loop --authorize-execute");
         const bool toolAuthorized = motdAuthorization.AuthorizeTool(
             act.tool, motdSession, motdTurn, authorizationError);
         const bool writeSnapshotReady = !toolAuthorized || act.tool != "write" ||
@@ -5622,6 +5663,14 @@ int main(int argc, char* argv[])
             bash_exit_code = -1;
             result = "[exit -1]\nERROR: failed to snapshot target before write\n";
             Logf_("[step %d] ERROR: Failed to snapshot %s before write\n", step, act.arg1.c_str());
+        }
+        else if (isExecVerb && !execAuth.allowed)
+        {
+            tool_rejected = true;
+            bash_exit_code = -1;
+            result = execAuth.reason;
+            Logf_("[step %d] AUTHORIZATION DENIED (tool=%s): %s\n",
+                  step, act.tool.c_str(), execAuth.reason.c_str());
         }
         else if (act.tool == "read_motd")
         {
@@ -5713,7 +5762,14 @@ int main(int argc, char* argv[])
         }
         else if (act.tool == "bash")
         {
-            if (act.arg1.find("TOOL ") != std::string::npos ||
+            if (rawrxd::agentic::security::CommandEscapesWorkspace(act.arg1))
+            {
+                tool_rejected = true;
+                bash_exit_code = -1;
+                result = "[exit -1]\nERROR: workspace escape rejected (cd outside workspace)\n";
+                Logf_("[step %d] TOOL bash REJECTED: workspace escape\n", step);
+            }
+            else if (act.arg1.find("TOOL ") != std::string::npos ||
                 act.arg1.find("$(") != std::string::npos ||
                 act.arg1.find("`") != std::string::npos ||
                 (act.arg1.find("&&") != std::string::npos && act.arg1.find("cl ") == std::string::npos))
@@ -5783,6 +5839,24 @@ int main(int argc, char* argv[])
         receipt.timestamp = std::chrono::steady_clock::now();
         retry_state.record_tool_call(receipt);
         ledger.log_tool_call(step, act.tool, act.arg1, result, bash_exit_code, !tool_rejected);
+        // P0 durable execution receipt (same JSONL contract as the IDE bridge).
+        {
+            rawrxd::agentic::security::Receipt r;
+            r.ts = rawrxd::agentic::security::NowIso8601Utc();
+            r.session = motdSession;
+            r.tool = act.tool;
+            r.target = act.arg1;
+            r.risk = isExecVerb ? "Execute" :
+                     (act.tool == "write" ? "Write" : "ReadOnly");
+            r.decision = tool_rejected ? "DENY" : "ALLOW";
+            r.authorizer = isExecVerb && execAuth.allowed
+                ? "motd+execute-flag" : "motd-only";
+            r.detail = tool_rejected ? result.substr(0, 200) : std::string();
+            r.exit_code = bash_exit_code;
+            r.bytes = (long long)result.size();
+            r.accepted = !tool_rejected && bash_exit_code == 0;
+            receipts.Write(r);
+        }
         Logf_("[step %d] TOOL %s -> %s ; observation %zu bytes; SNAP dispatch transition %.4f ms\n",
               step, act.tool.c_str(), act.arg1.c_str(), result.size(), last_transition_ms);
         Logf_("%s\n", result.c_str());

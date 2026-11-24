@@ -349,11 +349,14 @@ std::string AgentOrchestrator::act(const std::string& toolName, const json& args
             it.value().get<std::string>() : it.value().dump();
     }
 
+    // P0 fail-closed: no implicit auto-approval. Privileged execution requires
+    // explicit host authorization (same policy as ToolCallBridge and the
+    // standalone loop). This orchestrator is not on any product build target;
+    // when it is wired up, the host must supply a real approval callback.
     auto approval = [](const rawrxd::tools::Tool& tool,
                        const rawrxd::tools::Request& request) -> bool {
-        // Auto-approve all tools for autonomous operation
         (void)tool; (void)request;
-        return true;
+        return false;
     };
 
     auto result = m_toolRegistry.call(req, approval);

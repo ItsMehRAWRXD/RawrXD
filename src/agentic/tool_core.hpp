@@ -24,6 +24,7 @@
 # endif
 # include <windows.h>
 #endif
+#include "tool_security.hpp"
 namespace rawrxd::tools {
 namespace fs=std::filesystem;
 enum class Risk { ReadOnly, Write, Execute, Network, External };
@@ -240,6 +241,10 @@ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"com
     si.hStdOutput = hOutW;
     si.hStdError  = hErrW;
     PROCESS_INFORMATION pi = {};
+    // P0 subprocess isolation: every tool child runs inside a per-execution
+    // Job Object (KILL_ON_JOB_CLOSE). Timeout/cancel kills the whole tree so
+    // a cmd.exe grandchild can never outlive the tool call.
+    HANDLE job = nullptr;
     if (!CreateProcessA(nullptr, const_cast<char*>(full.c_str()), nullptr, nullptr, TRUE,
                         CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
         CloseHandle(hOutR); CloseHandle(hOutW); CloseHandle(hErrR); CloseHandle(hErrW);
@@ -247,6 +252,9 @@ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"com
     }
     // Parent closes its write ends so ReadFile sees EOF once the child exits.
     CloseHandle(hOutW); CloseHandle(hErrW);
+
+    job = rawrxd::agentic::security::JobIsolation::CreateKillJob();
+    if (job) rawrxd::agentic::security::JobIsolation::Assign(job, pi.hProcess);
 
     TrackToolChildProcess(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -284,6 +292,8 @@ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"com
                 std::chrono::steady_clock::now() - start).count();
             if (static_cast<unsigned long long>(elapsed) >= timeoutMs) {
                 timedOut = true;
+                // Kill the entire job tree, then the direct child as fallback.
+                if (job) TerminateJobObject(job, 1);
                 TerminateProcess(pi.hProcess, 1);
                 WaitForSingleObject(pi.hProcess, 5000);
                 break;
@@ -297,6 +307,7 @@ reg.add({"runInTerminal","Run command with workspace as cwd",Risk::Execute,{"com
     GetExitCodeProcess(pi.hProcess, &ec);
     UntrackToolChildProcess(pi.hProcess);
     CloseHandle(pi.hProcess);
+    if (job) CloseHandle(job);  // KILL_ON_JOB_CLOSE: tree already dead
     CloseHandle(hOutR); CloseHandle(hErrR);
 
     // G: authoritative acceptance evaluation on the SEPARATED channels.

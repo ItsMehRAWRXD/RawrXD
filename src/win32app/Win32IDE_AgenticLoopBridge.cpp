@@ -400,6 +400,10 @@ void AgenticLoopBridge::WorkerThread()
             cmd << "--max-retries " << m_currentConfig.maxRetries << " ";
             cmd << "--max-wall-time-sec " << m_currentConfig.maxWallTimeSec << " ";
             cmd << "--max-total-tokens " << m_currentConfig.maxTotalTokens << " ";
+            // P0: explicit host authorization for privileged execution. The
+            // IDE user starting the autonomous loop IS the host decision; the
+            // flag makes it auditable in the child's receipts.
+            cmd << "--authorize-execute ";
             if (m_currentConfig.contextSize > 0) {
                 cmd << "--context-size " << m_currentConfig.contextSize << " ";
             }

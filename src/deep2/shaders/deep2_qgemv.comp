@@ -8,7 +8,7 @@
 // 40TPS_BATCH2:
 //   one workgroup = one output row
 //   256 lanes cooperatively consume input columns
-//   shared-memory tree reduction emits exactly one row result
+//   shared-memory cross-subgroup reduction emits exactly one row result
 layout(local_size_x = 256) in;
 
 layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
@@ -89,16 +89,11 @@ float q4_0_weight(uint rowBase, uint col) {
     uint block = col / 32u;
     uint i = col % 32u;
     uint b = rowBase + block * 18u;
-    // Only elements 0-15 are encoded in Q4_0; columns 16-31 produce 0
-    if (i >= 16u) {
-        return 0.0f;
-    }
-    // Element i: byte i/2, nibble type i%2 (0=low, 1=high)
-    // qs[byte] is at block offset 4 + byte (after float d at offset 0)
-    uint byteIdx = i / 2u;
-    uint nibbleType = i % 2u;  // 0 = low nibble, 1 = high nibble
-    uint qsByte = getb(b + 4u + byteIdx);
-    uint nibble = (nibbleType == 0u) ? (qsByte & 15u) : ((qsByte >> 4) & 15u);
+    // Split-half: byte (i%16) at block offset 2 (after fp16 d); low nibble is
+    // element i (i<16), high nibble is element 16+i. Matches ggml
+    // dequantize_row_q4_0 (block_q4_0 = fp16 d + qs[16], 18 bytes).
+    uint q = getb(b + 2u + (i % 16u));
+    uint nibble = (i < 16u) ? (q & 15u) : (q >> 4);
     return geth(b) * (float(int(nibble)) - 8.0);
 }
 
@@ -291,7 +286,9 @@ float q6k_weight(uint rowBase, uint col) {
 }
 
 void main() {
-    uint row = gl_WorkGroupID.x;
+    // 2D dispatch: row = y * 65535 + x, so vocab-sized lm_head GEMVs
+    // (rows > 65535) are fully covered instead of overflowing vkCmdDispatch x.
+    uint row = gl_WorkGroupID.y * 65535u + gl_WorkGroupID.x;
     uint lane = gl_LocalInvocationID.x;
     if (row >= pc.rows) return;
 
