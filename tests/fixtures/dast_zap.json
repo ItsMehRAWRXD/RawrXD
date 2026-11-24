@@ -1,0 +1,25 @@
+{
+  "site": [
+    {
+      "name": "http://localhost:8080",
+      "alerts": [
+        {
+          "pluginId": "40012",
+          "name": "Cross Site Scripting (Reflected)",
+          "riskdesc": "High (Medium)",
+          "instances": [
+            {"uri": "http://localhost:8080/search", "evidence": "<script>alert(1)</script>"}
+          ]
+        },
+        {
+          "pluginId": "10021",
+          "name": "X-Content-Type-Options Header Missing",
+          "riskdesc": "Low (Low)",
+          "instances": [
+            {"uri": "http://localhost:8080/", "evidence": ""}
+          ]
+        }
+      ]
+    }
+  ]
+}

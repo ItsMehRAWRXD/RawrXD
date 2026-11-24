@@ -2612,6 +2612,26 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/test/fuzz/fuzz_targets.cpp")
     message(STATUS "fuzz_targets enabled (TOP50 T1)")
 endif()
 
+# S5 DAST bridge (TOP50 S5).
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dast_bridge.cpp")
+    add_library(rawrxd_dast STATIC
+        src/security/dast_bridge.cpp
+    )
+    target_include_directories(rawrxd_dast PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_dast PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(dast_import tools/dast_import.cpp)
+    target_link_libraries(dast_import PRIVATE rawrxd_dast)
+    target_include_directories(dast_import PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(dast_test tests/dast_test.cpp)
+    target_link_libraries(dast_test PRIVATE rawrxd_dast)
+    target_include_directories(dast_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(dast_import dast_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_dast + dast_import enabled (TOP50 S5)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
