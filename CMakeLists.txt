@@ -2456,6 +2456,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/sast_rule_engine.cpp")
     message(STATUS "rawrxd_sast + sast_scan enabled (TOP50 S1)")
 endif()
 
+# S2 secrets scanner (TOP50 S2): API keys/tokens/private keys/entropy.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/secrets_scanner.cpp")
+    add_library(rawrxd_secrets STATIC
+        src/security/secrets_scanner.cpp
+    )
+    target_include_directories(rawrxd_secrets PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_secrets PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(secrets_scan tools/secrets_scan.cpp)
+    target_link_libraries(secrets_scan PRIVATE rawrxd_secrets)
+    target_include_directories(secrets_scan PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(secrets_rule_test tests/secrets_rule_test.cpp)
+    target_link_libraries(secrets_rule_test PRIVATE rawrxd_secrets)
+    target_include_directories(secrets_rule_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(secrets_scan secrets_rule_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_secrets + secrets_scan enabled (TOP50 S2)")
+endif()
+
 # AgenticLoopBridge recovery gate: exercises the real Win32 process-launch
 # lifecycle without a model or cloud service.  The executable is emitted to a
 # separate directory so no helper sibling is discoverable; this makes the
