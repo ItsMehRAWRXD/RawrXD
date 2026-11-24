@@ -2496,6 +2496,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dependency_audit.cpp")
     message(STATUS "rawrxd_dependency_audit + dependency_audit enabled (TOP50 S3)")
 endif()
 
+# S4 SBOM export (TOP50 S4): CycloneDX from the dependency inventory.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/sbom_export.cpp")
+    add_library(rawrxd_sbom STATIC
+        src/security/sbom_export.cpp
+    )
+    target_include_directories(rawrxd_sbom PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_sbom PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(sbom_export tools/sbom_export.cpp)
+    target_link_libraries(sbom_export PRIVATE rawrxd_sbom rawrxd_dependency_audit)
+    target_include_directories(sbom_export PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(sbom_rule_test tests/sbom_rule_test.cpp)
+    target_link_libraries(sbom_rule_test PRIVATE rawrxd_sbom rawrxd_dependency_audit)
+    target_include_directories(sbom_rule_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(sbom_export sbom_rule_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_sbom + sbom_export enabled (TOP50 S4)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
