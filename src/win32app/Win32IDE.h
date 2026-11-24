@@ -1790,6 +1790,8 @@ public:
     void debuggerStackFollow(int index);
     // D7 disassembly at RIP (Win32IDE_Debugger.cpp).
     void debuggerDisasmAtRip();
+    // T2 coverage bridge (Win32IDE_CoverageBridge.cpp).
+    void showCoverageReport();
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
     void parseBuildOutputForProblems(const std::string& chunk);
     int m_buildProblemCount = 0;

@@ -677,6 +677,12 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->debuggerStackFollow((int)lParam);
                     return 0;
                 }
+                // T2 coverage report (12090).
+                if (command == 12090)
+                {
+                    ide->showCoverageReport();
+                    return 0;
+                }
 
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }

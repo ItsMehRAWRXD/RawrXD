@@ -2577,6 +2577,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/reverse_engineering/re_vuln_rules.cpp")
     message(STATUS "rawrxd_re_vuln + re_vuln_scan enabled (TOP50 R3)")
 endif()
 
+# T2 coverage report parsing (TOP50 T2).
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/testing/coverage_report.cpp")
+    add_library(rawrxd_coverage STATIC
+        src/testing/coverage_report.cpp
+    )
+    target_include_directories(rawrxd_coverage PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_coverage PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(coverage_report tools/coverage_report.cpp)
+    target_link_libraries(coverage_report PRIVATE rawrxd_coverage)
+    target_include_directories(coverage_report PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(coverage_test tests/coverage_test.cpp)
+    target_link_libraries(coverage_test PRIVATE rawrxd_coverage)
+    target_include_directories(coverage_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(coverage_report coverage_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_coverage + coverage_report enabled (TOP50 T2)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
@@ -3637,6 +3657,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_PromptTemplates.cpp
         src/win32app/Win32IDE_TestExplorerTree.cpp
         src/win32app/Win32IDE_WatchUI.cpp
+        src/win32app/Win32IDE_CoverageBridge.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp
@@ -3996,6 +4017,13 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             target_include_directories(RawrXD-Win32IDE-Native PRIVATE
                 ${CMAKE_SOURCE_DIR}/src/test_explorer)
             message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_test_explorer (I5)")
+        endif()
+        # T2: coverage bridge links the report parser.
+        if(TARGET rawrxd_coverage)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_coverage)
+            target_include_directories(RawrXD-Win32IDE-Native PRIVATE
+                ${CMAKE_SOURCE_DIR}/src/testing)
+            message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_coverage (T2)")
         endif()
         # Link the real Deep2Engine so Win32IDE_Deep2Bridge uses GPU inference
         if(TARGET deep2_engine_lib)
