@@ -1771,6 +1771,13 @@ public:
     // I2 SAST inline diagnostics (Win32IDE_SastBridge.cpp).
     void scanCurrentFileSAST();
     void scanCurrentFileSecrets();
+    // A4 prompt templates (Win32IDE_PromptTemplates.cpp).
+    struct PromptTemplate { std::string name; std::string body; std::string scope; };
+    std::vector<PromptTemplate> listPromptTemplates() const;
+    bool savePromptTemplate(const std::string& name, const std::string& body,
+                            const std::string& scope);
+    bool applyPromptTemplate(const std::string& name);
+    std::string m_activeSystemPrompt;
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
     void parseBuildOutputForProblems(const std::string& chunk);
     int m_buildProblemCount = 0;

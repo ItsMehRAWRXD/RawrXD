@@ -52,8 +52,13 @@ void Win32IDE::submitAgentPrompt() {
     if (text.empty()) return;
     appendAgentTranscript("> " + text + "\r\n");
     SetWindowTextA(m_hwndAgentInput, "");
-    // Route through the SAME backend as the copilot chat (A5 streams the
+    // A4: an applied prompt template becomes the system prefix.
+    std::string staged = text;
+    if (!m_activeSystemPrompt.empty()) {
+        staged = "[system] " + m_activeSystemPrompt + "\n\n" + text;
+    }
+    // Route through the SAME chat backend as the copilot chat (A5 streams the
     // response tokens back into this transcript).
-    stageCopilotChatInputUtf8(text);
+    stageCopilotChatInputUtf8(staged);
     HandleCopilotSend();
 }
