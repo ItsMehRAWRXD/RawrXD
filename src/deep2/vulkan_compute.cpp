@@ -2590,6 +2590,16 @@ bool VulkanCompute::EnsureForwardArena(
         unsigned long v = std::strtoul(e, nullptr, 10);
         if (v) seqCap = std::min<uint32_t>(maxSeq, static_cast<uint32_t>(v));
     }
+    if (maxSeq > seqCap) {
+        // Context capacity enforcement: the GPU arena is capped below the
+        // requested context. Surface it instead of silently downgrading
+        // mid-generation when pos reaches seqCap.
+        std::fprintf(stderr,
+            "[Deep2] GPU KV context capped: maxSeq=%u -> seqCap=%u "
+            "(set DEEP2_GPU_KV_SEQ_CAP to raise; generation beyond seqCap "
+            "will fall back to host)\n", maxSeq, seqCap);
+        std::fflush(stderr);
+    }
 
     // kvLayers=0 preserves legacy all-layer K/V sizing. A multi-GPU
     // layer-split slot only executes its own contiguous layer range, so
