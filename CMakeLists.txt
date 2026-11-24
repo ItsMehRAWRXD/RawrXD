@@ -3596,6 +3596,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_SecurityDashboard.cpp
         src/win32app/Win32IDE_PromptTemplates.cpp
         src/win32app/Win32IDE_TestExplorerTree.cpp
+        src/win32app/Win32IDE_WatchUI.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp

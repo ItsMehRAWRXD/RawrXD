@@ -660,6 +660,17 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->runTestExplorer();
                     return 0;
                 }
+                // D3 watch UI (12080 add, 12081 remove selected).
+                if (command == 12080)
+                {
+                    ide->promptAddWatchExpression();
+                    return 0;
+                }
+                if (command == 12081)
+                {
+                    ide->removeSelectedWatch();
+                    return 0;
+                }
 
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }

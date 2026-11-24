@@ -1023,6 +1023,11 @@ void Win32IDE::debuggerStepCommand(const std::string& command)
         resumeExecution();
     } else if (command == "pause") {
         pauseExecution();
+    } else if (command.rfind("watch ", 0) == 0) {
+        // D3: watch <expr> from the Debug Console.
+        addWatchExpression(command.substr(6));
+    } else if (command.rfind("unwatch ", 0) == 0) {
+        removeWatchExpression(command.substr(8));
     }
 }
 

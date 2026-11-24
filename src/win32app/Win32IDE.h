@@ -1780,6 +1780,9 @@ public:
     std::string m_activeSystemPrompt;
     // I5/T3 test explorer bridge (Win32IDE_TestExplorerTree.cpp).
     void runTestExplorer();
+    // D3 watch UI (Win32IDE_WatchUI.cpp).
+    void promptAddWatchExpression();
+    void removeSelectedWatch();
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
     void parseBuildOutputForProblems(const std::string& chunk);
     int m_buildProblemCount = 0;
