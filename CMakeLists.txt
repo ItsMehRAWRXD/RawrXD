@@ -131,7 +131,18 @@ add_test(NAME Deep2Engine_SmokeTest
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-add_test(NAME MetadataParity_Phi3
-    COMMAND test_metadata_parity "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+set(RAWRXD_PHI3_TEST_MODEL "" CACHE FILEPATH "Phi3 GGUF fixture for metadata parity")
+option(RAWRXD_REQUIRE_MODEL_TESTS "Require model fixtures for release validation" OFF)
+if(RAWRXD_PHI3_TEST_MODEL)
+    if(NOT EXISTS "${RAWRXD_PHI3_TEST_MODEL}")
+        message(FATAL_ERROR "Phi3 test fixture does not exist: ${RAWRXD_PHI3_TEST_MODEL}")
+    endif()
+    add_test(NAME MetadataParity_Phi3
+        COMMAND test_metadata_parity "${RAWRXD_PHI3_TEST_MODEL}"
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+elseif(RAWRXD_REQUIRE_MODEL_TESTS)
+    message(FATAL_ERROR "Release validation requires RAWRXD_PHI3_TEST_MODEL")
+else()
+    message(STATUS "MetadataParity_Phi3 not registered: configure RAWRXD_PHI3_TEST_MODEL")
+endif()
