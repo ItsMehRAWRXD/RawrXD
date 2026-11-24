@@ -1769,7 +1769,8 @@ public:
     void lspGotoDefinitionAtCursor();
     void installLspEditorSubclass();
     // I2 SAST inline diagnostics (Win32IDE_SastBridge.cpp).
-    void scanCurrentFileSAST();
+    void scanCurrentFileSAST();
+    void scanCurrentFileSecrets();
     void syncEditorToGpuSurface();
     void initializeEditorSurface();
     static LRESULT CALLBACK EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

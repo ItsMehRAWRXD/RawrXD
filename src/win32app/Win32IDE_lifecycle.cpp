@@ -642,6 +642,12 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->scanCurrentFileSAST();
                     return 0;
                 }
+                // I3 secrets scan of the current file (12041).
+                if (command == 12041)
+                {
+                    ide->scanCurrentFileSecrets();
+                    return 0;
+                }
 
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }

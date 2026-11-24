@@ -3874,6 +3874,11 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_sast)
             message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_sast (I2)")
         endif()
+        # I3: secrets scan bridge links the S2 engine.
+        if(TARGET rawrxd_secrets)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_secrets)
+            message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_secrets (I3)")
+        endif()
         # Link the real Deep2Engine so Win32IDE_Deep2Bridge uses GPU inference
         if(TARGET deep2_engine_lib)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE deep2_engine_lib)
