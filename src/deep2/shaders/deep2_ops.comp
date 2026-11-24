@@ -80,28 +80,44 @@ void main() {
         uint heads = pc.p1;
         uint kvHeads = pc.p2;
         uint pos = pc.p3;
-        uint pairsPerHead = headDim / 2u;
+        uint convention = pc.p4;   // 0=interleaved, 1=NEOX, 2=IMROPE
+        uint rotaryDim = pc.p5;    // 0 => full headDim
+        if (rotaryDim == 0u || rotaryDim > headDim) rotaryDim = headDim;
+        uint pairsPerHead = rotaryDim / 2u;
         uint allHeads = heads + kvHeads;
         uint totalPairs = allHeads * pairsPerHead;
         if (gid >= totalPairs || headDim == 0u || pc.f0 <= 0.0) return;
 
         uint h = gid / pairsPerHead;
         uint pair = gid % pairsPerHead;
-        uint i0 = h * headDim + pair * 2u;
-        uint i1 = i0 + 1u;
+        // IMROPE: only the temporal section (sector%3==0) rotates; other
+        // sections are identity (matches CPU applyRoPE qwen35 path).
+        if (convention == 2u && (pair % 32u) % 3u != 0u) return;
+        // Pair element offsets within a head. Interleaved pairs (2p,2p+1);
+        // NEOX/IMROPE pair (p, p+headDim/2) (half-split).
+        uint off0, off1;
+        if (convention == 0u) {
+            off0 = pair * 2u;
+            off1 = off0 + 1u;
+        } else {
+            off0 = pair;
+            off1 = pair + headDim / 2u;
+        }
         float exponent = -float(pair * 2u) / float(headDim);
         float theta = float(pos) * pow(pc.f0, exponent);
         float cs = cos(theta);
         float sn = sin(theta);
 
         if (h < heads) {
+            uint i0 = h * headDim + off0;
+            uint i1 = h * headDim + off1;
             float x0 = a[i0], x1 = a[i1];
             a[i0] = x0 * cs - x1 * sn;
             a[i1] = x0 * sn + x1 * cs;
         } else {
             uint kh = h - heads;
-            i0 = kh * headDim + pair * 2u;
-            i1 = i0 + 1u;
+            uint i0 = kh * headDim + off0;
+            uint i1 = kh * headDim + off1;
             float x0 = b[i0], x1 = b[i1];
             b[i0] = x0 * cs - x1 * sn;
             b[i1] = x0 * sn + x1 * cs;

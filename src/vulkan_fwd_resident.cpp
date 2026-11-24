@@ -509,7 +509,9 @@ bool VulkanCompute::DispatchScaledAdd(DeviceBuf& accum, DeviceBuf& src, float sc
 }
 
 bool VulkanCompute::DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim, uint32_t nHeads,
-                                 uint32_t nKv, uint32_t pos, float theta) {
+                                 uint32_t nKv, uint32_t pos, float theta,
+                                 uint32_t convention, uint32_t rotaryDim) {
+    (void)convention; (void)rotaryDim;
     if (!rope_pipe_) return false;
     VkDescriptorBufferInfo i0{q.buffer, 0, q.bytes};
     VkDescriptorBufferInfo i1{k.buffer, 0, k.bytes};

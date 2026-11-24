@@ -2282,9 +2282,33 @@ bool VulkanCompute::dispatchQuant(
                             selectedLayout, 0, 1, &set, 0, nullptr);
     vkCmdPushConstants(cmd, selectedLayout, VK_SHADER_STAGE_COMPUTE_BIT,
                        0, sizeof(dispatchPush), &dispatchPush);
-    // deep2_qgemv.comp maps exactly one 256-lane workgroup to each row.
-    vkCmdDispatch(cmd, useTiled4x ? (dispatchPush.rows + 3u) / 4u
-                                  : dispatchPush.rows, 1, 1);
+    // Diagnostic: fill the output with a sentinel before the GEMV so unwritten
+    // rows (e.g. from an incomplete/overflowing dispatch) are detectable after
+    // readback. Gated by RAWRXD_LMHEAD_SENTINEL=1 and only for large row counts
+    // (the vocab-sized lm_head).
+    {
+        static const bool s_sentinel = [] {
+            const char* e = std::getenv("RAWRXD_LMHEAD_SENTINEL");
+            return e && e[0] == '1' && e[1] == '\0';
+        }();
+        if (s_sentinel && dispatchPush.rows > 65535u) {
+            vkCmdFillBuffer(cmd, output.buffer, 0, VK_WHOLE_SIZE, 0x7F7FFFFFu);
+            recordComputeBarrier(cmd);
+            std::fprintf(stderr, "[LMHEAD_SENTINEL] filled output rows=%u\n",
+                         dispatchPush.rows);
+            std::fflush(stderr);
+        }
+    }
+    // deep2_qgemv.comp maps one 256-lane workgroup to each row. Use a 2D
+    // dispatch so rows > 65535 (e.g. the 128256-row lm_head) are covered
+    // instead of being silently dropped by the vkCmdDispatch x limit (65535).
+    if (useTiled4x) {
+        vkCmdDispatch(cmd, (dispatchPush.rows + 3u) / 4u, 1, 1);
+    } else {
+        const uint32_t gx = (dispatchPush.rows < 65535u) ? dispatchPush.rows : 65535u;
+        const uint32_t gy = (dispatchPush.rows + gx - 1u) / gx;
+        vkCmdDispatch(cmd, gx, gy, 1);
+    }
     recordComputeBarrier(cmd);
 
     if (sample) {
@@ -3063,13 +3087,17 @@ bool VulkanCompute::DispatchSwiGLU(
 
 bool VulkanCompute::DispatchRope(
     DeviceBuf& q, DeviceBuf& k, uint32_t headDim,
-    uint32_t heads, uint32_t kvHeads, uint32_t pos, float theta)
+    uint32_t heads, uint32_t kvHeads, uint32_t pos, float theta,
+    uint32_t convention, uint32_t rotaryDim)
 {
     if (!headDim || (headDim & 1u) || !heads || !kvHeads || theta <= 0.0f)
         return false;
+    if (rotaryDim == 0u || rotaryDim > headDim || (rotaryDim & 1u))
+        rotaryDim = headDim;
     OpsPush p{};
-    p.op=OP_ROPE; p.p0=headDim; p.p1=heads; p.p2=kvHeads; p.p3=pos; p.f0=theta;
-    const uint32_t pairs = (heads+kvHeads)*(headDim/2u);
+    p.op=OP_ROPE; p.p0=headDim; p.p1=heads; p.p2=kvHeads; p.p3=pos;
+    p.p4=convention; p.p5=rotaryDim; p.f0=theta;
+    const uint32_t pairs = (heads+kvHeads)*(rotaryDim/2u);
     p.n = pairs;
     return dispatchOps(q,k,q,k,p,(pairs+63u)/64u);
 }
@@ -3103,7 +3131,15 @@ bool VulkanCompute::AppendKV(
         !recordCopy(cmd,v,arenaVCache_,bytes,0,dstOff))
         return false;
 
-    if (!own) return true;
+    if (!own) {
+        // Fused path: the append is a transfer (vkCmdCopyBuffer) and the
+        // subsequent attention is a compute dispatch. Without a barrier the
+        // attention can read the KV cache before the copy is visible, so a
+        // decode step (which appends position N then attends over 0..N) can
+        // read stale data. Insert a transfer->compute barrier.
+        recordComputeBarrier(cmd);
+        return true;
+    }
     return endSubmitWait(cmd,query,GpuWorkKind::ModelCompute,
                          bytes*2,workEpoch_,nullptr);
 }
@@ -4272,6 +4308,29 @@ bool VulkanCompute::DispatchGemvQuant(
                      type, rows, cols, weightBytes, (w && *w) ? 1 : 0);
         std::fflush(stderr);
     }
+    // Decisive Q2_K test (RAWRXD_GPU_WEIGHT_READBACK=1): read the actual device
+    // weight buffer back and compare byte-for-byte with the CPU source tensor.
+    // Bytes differ -> upload/allocation/cache-identity bug. Bytes match -> the
+    // defect is in the descriptor, shader indexing, dispatch geometry, or sync.
+    {
+        static bool s_weightReadback = false;
+        const char* wrbEnv = std::getenv("RAWRXD_GPU_WEIGHT_READBACK");
+        if (!s_weightReadback && type == 10 && wrbEnv && wrbEnv[0] == '1' && wrbEnv[1] == '\0') {
+            s_weightReadback = true;
+            std::vector<unsigned char> host(weightBytes, 0);
+            const bool ok = downloadFromBuffer(*w, host.data(), weightBytes);
+            const unsigned char* src = static_cast<const unsigned char*>(weights);
+            size_t mismatch = 0;
+            size_t firstMis = static_cast<size_t>(-1);
+            for (size_t i = 0; i < weightBytes; ++i) {
+                if (host[i] != src[i]) { if (firstMis == static_cast<size_t>(-1)) firstMis = i; ++mismatch; }
+            }
+            std::fprintf(stderr,
+                "[GPU_WEIGHT_READBACK] type=10 rows=%u cols=%u bytes=%zu dl=%d mismatch=%zu first=%lld\n",
+                rows, cols, weightBytes, ok ? 1 : 0, mismatch, static_cast<long long>(firstMis));
+            std::fflush(stderr);
+        }
+    }
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
@@ -4286,6 +4345,64 @@ bool VulkanCompute::DispatchGemvQuant(
             ok=dispatchQuantNvfp4(*w,input,output,p);
     } else {
         ok=dispatchQuant(*w,input,output,p);
+    }
+    // Frozen-input Q2_K GEMV comparison (RAWRXD_Q2K_FROZEN=1): run a CPU Q2_K
+    // reference on the SAME weights + input and compare to the GPU output. Splits
+    // "GPU dispatch/descriptor/sync defect" from "shader arithmetic correct".
+    {
+        static bool s_q2kFrozen = false;
+        const char* e = std::getenv("RAWRXD_Q2K_FROZEN");
+        if (ok && !s_q2kFrozen && type == 10 && e && e[0] == '1' && e[1] == '\0') {
+            s_q2kFrozen = true;
+            auto f16f = [](uint16_t h) -> float {
+                uint32_t sign = (uint32_t)(h & 0x8000u) << 16;
+                uint32_t exp = (h >> 10) & 0x1Fu;
+                uint32_t mant = h & 0x3FFu;
+                uint32_t bits;
+                if (exp == 0) {
+                    if (mant == 0) bits = sign;
+                    else { exp = 127 - 15 + 1; while ((mant & 0x400u) == 0) { mant <<= 1; exp--; } mant &= 0x3FFu; bits = sign | (exp << 23) | (mant << 13); }
+                } else if (exp == 31) bits = sign | 0x7F800000u | (mant << 13);
+                else bits = sign | ((exp - 15 + 127) << 23) | (mant << 13);
+                float r; std::memcpy(&r, &bits, 4); return r;
+            };
+            std::vector<float> gpuOut(rows, 0.0f), inHost(cols, 0.0f), cpuOut(rows, 0.0f);
+            const bool dl = downloadFromBuffer(output, gpuOut.data(), rows * sizeof(float));
+            downloadFromBuffer(input, inHost.data(), cols * sizeof(float));
+            const uint8_t* wb = (const uint8_t*)weights;
+            const uint32_t bpr = (cols + 255u) / 256u;
+            for (uint32_t r = 0; r < rows; ++r) {
+                const uint8_t* rowp = wb + (size_t)r * bpr * 84u;
+                float sum = 0.0f;
+                for (uint32_t j = 0; j < cols; ++j) {
+                    uint32_t blk = j / 256u, id = j % 256u;
+                    const uint8_t* b = rowp + blk * 84u;
+                    float d = f16f((uint16_t)(b[80] | (b[81] << 8)));
+                    float dm = f16f((uint16_t)(b[82] | (b[83] << 8)));
+                    uint32_t chunk = id / 128u, within = id % 128u;
+                    uint32_t subB = within / 32u, grp = (within % 32u) / 16u, pos = within % 16u;
+                    uint32_t sc = chunk * 8u + subB * 2u + grp;
+                    uint8_t ps = b[sc];
+                    float ddl = d * float(ps & 15u);
+                    float mml = dm * float(ps >> 4u);
+                    uint32_t qs = chunk * 32u + grp * 16u + pos;
+                    uint32_t sh = subB * 2u;
+                    uint32_t q = (b[16u + qs] >> sh) & 3u;
+                    sum += (ddl * float(q) - mml) * inHost[j];
+                }
+                cpuOut[r] = sum;
+            }
+            double dot = 0, na = 0, nb2 = 0, maxabs = 0; size_t bad = 0, firstBad = (size_t)-1;
+            for (uint32_t r = 0; r < rows; ++r) {
+                if (!std::isfinite(gpuOut[r]) || !std::isfinite(cpuOut[r])) { if (firstBad==(size_t)-1) firstBad=r; ++bad; continue; }
+                dot += (double)gpuOut[r]*cpuOut[r]; na += (double)gpuOut[r]*gpuOut[r]; nb2 += (double)cpuOut[r]*cpuOut[r];
+                double dd = std::fabs((double)gpuOut[r]-cpuOut[r]); if (dd>maxabs) maxabs=dd;
+            }
+            double cos = (na>0 && nb2>0) ? dot/(std::sqrt(na)*std::sqrt(nb2)) : 0.0;
+            std::fprintf(stderr, "[Q2K_FROZEN] dl=%d rows=%u cols=%u cos=%.6f maxabs=%.6g nonfinite=%zu first=%lld gpu0=%.4e cpu0=%.4e\n",
+                dl?1:0, rows, cols, cos, maxabs, bad, (long long)firstBad, gpuOut[0], cpuOut[0]);
+            std::fflush(stderr);
+        }
     }
     if(ok) ++gemvSuccess_;
     return ok;
@@ -4568,9 +4685,9 @@ bool VulkanCompute::SubmitGemvPrefetch(
         } else {
                 ok = dispatchQuant(e.buffer, input, output, p);
         }
-        if(ok) ++gemvSuccess_;
-        return ok;
-    }
+    if(ok) ++gemvSuccess_;
+    return ok;
+}
     OpsPush p{};p.op=OP_GEMV_F32;p.n=rows;p.p0=cols;
     bool ok=dispatchOps(e.buffer,input,output,output,p,(rows+63u)/64u);
     if(ok) ++gemvSuccess_;

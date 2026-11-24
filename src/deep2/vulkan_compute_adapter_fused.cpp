@@ -766,11 +766,13 @@ bool VulkanCompute::DispatchScaledAdd(DeviceBuf& accum, DeviceBuf& src, float sc
 }
 
 bool VulkanCompute::DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim,
-                                 uint32_t nHeads, uint32_t nope, uint32_t rope, float theta) {
+                                 uint32_t nHeads, uint32_t nope, uint32_t rope, float theta,
+                                 uint32_t convention, uint32_t rotaryDim) {
     if (backend_ == nullptr) return false;
     Deep2::VulkanCompute::DeviceBuf bq = ToBackend(q);
     Deep2::VulkanCompute::DeviceBuf bk = ToBackend(k);
-    if (!backend_->DispatchRope(bq, bk, headDim, nHeads, nope, rope, theta)) return false;
+    if (!backend_->DispatchRope(bq, bk, headDim, nHeads, nope, rope, theta,
+                                convention, rotaryDim)) return false;
     q = FromBackend(bq);
     k = FromBackend(bk);
     return true;

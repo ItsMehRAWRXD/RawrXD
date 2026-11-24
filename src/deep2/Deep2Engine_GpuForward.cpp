@@ -485,8 +485,30 @@ bool Deep2Engine::forwardLayerGpuResident(
     // (nHeads,nope,rope), but forwards them to the backend as
     // (heads,kvHeads,pos).  Standard MHA/GQA therefore supplies kvHeads and
     // the actual token position here.  MLA remains outside this dense lane.
+    // RoPE convention must match the CPU applyRoPE selection (Deep2Engine.cpp):
+    // NEOX (minimax/qwen/gemma) pairs (i, i+headDim/2); IMROPE (qwen35) rotates
+    // only the temporal section; default interleaved (llama) pairs (2i,2i+1).
+    // Partial RoPE uses ropeDimensionCount (< headDim).
+    // RoPE convention must match CPU applyRoPE (Deep2Engine.cpp): NEOX
+    // (minimax/qwen/gemma) pairs (i,i+headDim/2); IMROPE (qwen35) rotates the
+    // temporal section; default interleaved (llama) pairs (2i,2i+1). Partial
+    // RoPE uses ropeDimensionCount (< headDim).
+    uint32_t ropeConvention = 0u;   // 0=interleaved, 1=NEOX, 2=IMROPE
+    {
+        std::string archLower = k2ShardConfig_.architecture;
+        for (char& c : archLower)
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        if (archLower == "qwen35" || archLower == "qwen35moe")
+            ropeConvention = 2u;
+        else if (archLower.find("minimax") != std::string::npos ||
+                 archLower.find("qwen") != std::string::npos ||
+                 archLower.find("gemma") != std::string::npos)
+            ropeConvention = 1u;
+    }
+    const uint32_t ropeRotaryDim = modelWeights.ropeDimensionCount;
     if (!gpu->DispatchRope(gpu->ArenaQ(), gpu->ArenaK(), headDim, heads,
-                           kvHeads, pos, modelWeights.ropeTheta))
+                           kvHeads, pos, modelWeights.ropeTheta,
+                           ropeConvention, ropeRotaryDim))
         return fail();
     ++counters.ropeOps;
 
@@ -759,12 +781,55 @@ bool Deep2Engine::forwardGpuContiguousRange(
     if (!hostIn || !hostOut) { gpuForwardTrace("reject: contiguousRange null host buffer"); return false; }
     if (lo > hi) { gpuForwardTrace("reject: contiguousRange lo > hi"); return false; }
     if (hi >= modelWeights.layers.size()) { gpuForwardTrace("reject: contiguousRange hi out of range"); return false; }
+    // Diagnostic: RAWRXD_GPU_PROBE_LAYER0=1 restricts this range to layer 0 only,
+    // so the (safe, post-submit) end-of-range readback reflects layer-0's
+    // ArenaNormed/ArenaQ/ArenaHidden. Combined with the P0 post-upload probe,
+    // this yields P0/P1/P2/P3 without any mid-layer readback (which previously
+    // caused a device loss / TDR).
+    {
+        static const bool s_probeLayer0 = [] {
+            const char* e = std::getenv("RAWRXD_GPU_PROBE_LAYER0");
+            return e && e[0] == '1' && e[1] == '\0';
+        }();
+        if (s_probeLayer0) {
+            if (lo != 0) lo = 0;
+            if (hi != 0) hi = 0;
+            std::fprintf(stderr, "[P0-P3 PROBE] layer0-only mode active\n");
+            std::fflush(stderr);
+        }
+    }
     Gpu* gpu = getVulkanComputeSlot(slot);
     if (!gpu) { gpuForwardTrace("reject: contiguousRange no gpu slot"); return false; }
     if (!ensureGpuForwardArena(slot)) { gpuForwardTrace("reject: contiguousRange arena"); return false; }
     if (!gpu->UploadHidden(hostIn, static_cast<uint32_t>(modelWeights.hiddenDim))) {
         gpuForwardTrace("reject: contiguousRange UploadHidden");
         return false;
+    }
+    // P0 probe (safe: UploadHidden is synchronous via endSubmitWait; no layer is
+    // in flight). Confirms whether the uploaded GPU input hidden is finite BEFORE
+    // any compute. If P0 is finite but the end-of-range ArenaHidden is NaN, the
+    // first divergence is inside the layer compute, not the upload.
+    {
+        static bool s_p0 = false;
+        if (!s_p0) {
+            s_p0 = true;
+            auto countNonfinite = [](const std::vector<float>& v) -> int {
+                int c = 0; for (float x : v) if (!std::isfinite(x)) ++c; return c;
+            };
+            auto firstNonfinite = [](const std::vector<float>& v) -> unsigned long long {
+                for (size_t i = 0; i < v.size(); ++i)
+                    if (!std::isfinite(v[i])) return static_cast<unsigned long long>(i);
+                return ~0ull;
+            };
+            std::vector<float> h0(modelWeights.hiddenDim, 0.0f);
+            const bool ok = gpu->DownloadBuf(gpu->ArenaHidden(), h0.data(),
+                                             static_cast<uint32_t>(modelWeights.hiddenDim));
+            std::fprintf(stderr,
+                "[P0_POST_UPLOAD] dl=%d nonfinite=%d first=%llu h0..5=%.3e %.3e %.3e %.3e %.3e %.3e\n",
+                ok ? 1 : 0, countNonfinite(h0), firstNonfinite(h0),
+                h0[0], h0[1], h0[2], h0[3], h0[4], h0[5]);
+            std::fflush(stderr);
+        }
     }
     ++gpuFwd_.hostSyncBoundaries;
     // Record the complete token's layer graph into one command buffer.  The
@@ -808,10 +873,36 @@ bool Deep2Engine::forwardGpuContiguousRange(
     // synchronous DownloadBuf in the hot path (e.g. via a debug copy buffer or
     // a post-submit hook), not by stalling the pipeline. Left as a documented
     // no-op until a safe capture mechanism exists.
+    // Batched per-layer snapshot (RAWRXD_SNAPSHOT_LAYERS=1, decode only): capture
+    // each layer's ArenaHidden after its (unfused, fenced) forward. Writes one
+    // file with all layer outputs for offline CPU-vs-GPU bisection.
+    static const bool s_snapLayers = [] {
+        const char* e = std::getenv("RAWRXD_SNAPSHOT_LAYERS");
+        return e && e[0] == '1' && e[1] == '\0';
+    }();
+    std::vector<float> layerSnaps;
+    const bool snapActive = s_snapLayers && m_inDecode && hi >= lo;
+    if (snapActive) layerSnaps.assign(static_cast<size_t>(hi - lo + 1) * modelWeights.hiddenDim, 0.0f);
     for (uint32_t layer = lo; layer <= hi; ++layer) {
         if (!forwardLayerGpuResident(layer, slot, false, false, unfused)) {
             if (!unfused) (void)gpu->EndFusedLayer();
             return false;
+        }
+        if (snapActive) {
+            const bool ok = gpu->DownloadBuf(gpu->ArenaHidden(),
+                layerSnaps.data() + static_cast<size_t>(layer - lo) * modelWeights.hiddenDim,
+                static_cast<uint32_t>(modelWeights.hiddenDim));
+            std::fprintf(stderr, "[LAYER_SNAP] layer=%u dl=%d\n", layer, ok ? 1 : 0);
+            std::fflush(stderr);
+        }
+    }
+    if (snapActive) {
+        if (FILE* fp = std::fopen("__layer_snaps.bin", "wb")) {
+            std::fwrite(layerSnaps.data(), sizeof(float), layerSnaps.size(), fp);
+            std::fclose(fp);
+            std::fprintf(stderr, "[LAYER_SNAP] wrote %zu floats (layers %u..%u)\n",
+                         layerSnaps.size(), lo, hi);
+            std::fflush(stderr);
         }
     }
     if (!unfused && !gpu->EndFusedLayer()) {
@@ -833,6 +924,152 @@ bool Deep2Engine::forwardGpuContiguousRange(
                                        static_cast<uint32_t>(modelWeights.hiddenDim));
             std::fprintf(stderr, "[S08_LAST_Q] dl=%d q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
                          qd ? 1 : 0, qh[0], qh[1], qh[2], qh[3], qh[4], qh[5]);
+            // First-nonfinite localization: was the Q2_K GEMV *input* finite?
+            // ArenaHidden = uploaded hidden; ArenaNormed = RMSNorm output (GEMV
+            // input). If normed is finite but Q is NaN -> the Q2_K GEMV (weights/
+            // descriptor) is the culprit. If normed is NaN -> RMSNorm/input path.
+            auto firstNonfinite = [](const std::vector<float>& v) -> unsigned long long {
+                for (size_t i = 0; i < v.size(); ++i)
+                    if (!std::isfinite(v[i])) return static_cast<unsigned long long>(i);
+                return ~0ull;
+            };
+            auto countNonfinite = [](const std::vector<float>& v) -> int {
+                int c = 0; for (float x : v) if (!std::isfinite(x)) ++c; return c;
+            };
+            std::vector<float> nh(modelWeights.hiddenDim, 0.0f);
+            const bool nd = gpu->DownloadBuf(gpu->ArenaNormed(), nh.data(),
+                                             static_cast<uint32_t>(modelWeights.hiddenDim));
+            std::vector<float> hh(modelWeights.hiddenDim, 0.0f);
+            const bool hd = gpu->DownloadBuf(gpu->ArenaHidden(), hh.data(),
+                                             static_cast<uint32_t>(modelWeights.hiddenDim));
+            std::fprintf(stderr,
+                "[S08_INPUT_CHECK] normed_dl=%d normed_nonfinite=%d normed_first=%llu "
+                "hidden_dl=%d hidden_nonfinite=%d hidden_first=%llu\n",
+                nd ? 1 : 0, countNonfinite(nh), firstNonfinite(nh),
+                hd ? 1 : 0, countNonfinite(hh), firstNonfinite(hh));
+            std::fprintf(stderr, "[S08_OUTPUT_CHECK] q_nonfinite=%d q_first=%llu total=%zu\n",
+                countNonfinite(qh), firstNonfinite(qh), qh.size());
+            // Which rows stayed finite? Contiguous -> bounds/offset bug;
+            // scattered -> broad shader/decode or descriptor fault.
+            {
+                std::fprintf(stderr, "[S08_FINITE_ROWS] idx:");
+                int printed = 0;
+                for (size_t i = 0; i < qh.size() && printed < 120; ++i)
+                    if (std::isfinite(qh[i])) { std::fprintf(stderr, " %zu", i); ++printed; }
+                std::fprintf(stderr, "\n");
+                std::fflush(stderr);
+            }
+            std::fflush(stderr);
+        }
+    }
+    // Decode-step layer-0 probe (fires once, on the first decode call). With
+    // RAWRXD_GPU_PROBE_LAYER0=1 the range is layer 0 only, so these arenas hold
+    // layer-0's decode output. A garbage ArenaAttn localizes the decode defect
+    // to the attention; a sane ArenaAttn points to a later layer.
+    {
+        static bool s_decodeProbeDone = false;
+        if (!s_decodeProbeDone && m_inDecode)
+        {
+            s_decodeProbeDone = true;
+            const uint32_t dpos = kvCache ? static_cast<uint32_t>(kvCache->currentLength()) : 0u;
+            auto firstNonfinite = [](const std::vector<float>& v) -> unsigned long long {
+                for (size_t i = 0; i < v.size(); ++i)
+                    if (!std::isfinite(v[i])) return static_cast<unsigned long long>(i);
+                return ~0ull;
+            };
+            auto countNonfinite = [](const std::vector<float>& v) -> int {
+                int c = 0; for (float x : v) if (!std::isfinite(x)) ++c; return c;
+            };
+            std::vector<float> attn(modelWeights.hiddenDim, 0.0f);
+            const bool aok = gpu->DownloadBuf(gpu->ArenaAttn(), attn.data(),
+                                              static_cast<uint32_t>(modelWeights.hiddenDim));
+            std::vector<float> hid(modelWeights.hiddenDim, 0.0f);
+            const bool hok = gpu->DownloadBuf(gpu->ArenaHidden(), hid.data(),
+                                              static_cast<uint32_t>(modelWeights.hiddenDim));
+            std::fprintf(stderr,
+                "[DECODE_PROBE] pos=%u attn_dl=%d attn_nf=%d attn_first=%llu attn0..2=%.3e %.3e %.3e "
+                "hid_dl=%d hid_nf=%d hid_first=%llu hid0..2=%.3e %.3e %.3e\n",
+                dpos, aok ? 1 : 0, countNonfinite(attn), firstNonfinite(attn),
+                (double)attn[0], (double)attn[1], (double)attn[2],
+                hok ? 1 : 0, countNonfinite(hid), firstNonfinite(hid),
+                (double)hid[0], (double)hid[1], (double)hid[2]);
+            // Q2_K frozen comparison at a VALID post-submit sync point (ArenaQ is
+            // written and the range fence has completed). Compares the GPU Q2_K
+            // GEMV output to a CPU scalar reference on the same ArenaNormed + wq.
+            {
+                static bool s_q2kDone = false;
+                const char* e = std::getenv("RAWRXD_Q2K_FROZEN");
+                if (!s_q2kDone && e && e[0] == '1' && e[1] == '\0' &&
+                    hi < modelWeights.layers.size()) {
+                    s_q2kDone = true;
+                    const auto& wq = modelWeights.layers[hi].wq;
+                    if (wq.type == 10 && wq.data && wq.cols > 0 && wq.rows > 0) {
+                        auto f16f = [](uint16_t h) -> float {
+                            uint32_t sign = (uint32_t)(h & 0x8000u) << 16;
+                            uint32_t exp = (h >> 10) & 0x1Fu, mant = h & 0x3FFu, bits;
+                            if (exp == 0) { if (mant == 0) bits = sign; else { exp = 127-14; while ((mant & 0x400u)==0){mant<<=1;exp--;} mant &= 0x3FFu; bits = sign|(exp<<23)|(mant<<13); } }
+                            else if (exp == 31) bits = sign | 0x7F800000u | (mant << 13);
+                            else bits = sign | ((exp - 15 + 127) << 23) | (mant << 13);
+                            float r; std::memcpy(&r, &bits, 4); return r;
+                        };
+                        const uint32_t rows = wq.rows, cols = wq.cols;
+                        std::vector<float> inHost(cols, 0.0f), gpuOut(rows, 0.0f), cpuOut(rows, 0.0f);
+                        gpu->DownloadBuf(gpu->ArenaNormed(), inHost.data(), cols);
+                        bool ok = gpu->DownloadBuf(gpu->ArenaQ(), gpuOut.data(), rows);
+                        const uint8_t* wb = (const uint8_t*)wq.data;
+                        const uint32_t bpr = (cols + 255u) / 256u;
+                        for (uint32_t r = 0; r < rows; ++r) {
+                            const uint8_t* rowp = wb + (size_t)r * bpr * 84u;
+                            float sum = 0.0f;
+                            for (uint32_t j = 0; j < cols; ++j) {
+                                uint32_t blk = j/256u, id = j%256u;
+                                const uint8_t* b = rowp + blk*84u;
+                                float d = f16f((uint16_t)(b[80]|(b[81]<<8)));
+                                float dm = f16f((uint16_t)(b[82]|(b[83]<<8)));
+                                uint32_t chunk=id/128u, within=id%128u;
+                                uint32_t subB=within/32u, grp=(within%32u)/16u, pos=within%16u;
+                                uint8_t ps = b[chunk*8u + subB*2u + grp];
+                                float dl = d*float(ps & 15u), ml = dm*float(ps>>4u);
+                                uint32_t qs = chunk*32u + grp*16u + pos, sh = subB*2u;
+                                uint32_t q = (b[16u + qs] >> sh) & 3u;
+                                sum += (dl*float(q) - ml) * inHost[j];
+                            }
+                            cpuOut[r] = sum;
+                        }
+                        double dot=0, na=0, nb2=0, maxabs=0; size_t bad=0, firstBad=(size_t)-1;
+                        for (uint32_t r=0;r<rows;++r) {
+                            if (!std::isfinite(gpuOut[r])||!std::isfinite(cpuOut[r])) { if(firstBad==(size_t)-1)firstBad=r; ++bad; continue; }
+                            dot+=(double)gpuOut[r]*cpuOut[r]; na+=(double)gpuOut[r]*gpuOut[r]; nb2+=(double)cpuOut[r]*cpuOut[r];
+                            double dd=std::fabs((double)gpuOut[r]-cpuOut[r]); if(dd>maxabs)maxabs=dd;
+                        }
+                        double cos=(na>0&&nb2>0)?dot/(std::sqrt(na)*std::sqrt(nb2)):0.0;
+                        std::fprintf(stderr, "[Q2K_POSTSUBMIT] layer=%u dl=%d rows=%u cols=%u cos=%.6f maxabs=%.6g nonfinite=%zu first=%lld gpu0=%.4e cpu0=%.4e\n",
+                            hi, ok?1:0, rows, cols, cos, maxabs, bad, (long long)firstBad, gpuOut[0], cpuOut[0]);
+                        std::fflush(stderr);
+                    }
+                }
+            }
+            // Full-tensor dumps for CPU-vs-GPU parity (RAWRXD_DUMP_ATTN=1).
+            // With RAWRXD_GPU_PROBE_LAYER0=1 these hold LAYER-0 decode tensors.
+            {
+                const char* dmp = std::getenv("RAWRXD_DUMP_ATTN");
+                if (dmp && dmp[0] == '1') {
+                    std::vector<float> nrm(modelWeights.hiddenDim, 0.0f);
+                    gpu->DownloadBuf(gpu->ArenaNormed(), nrm.data(),
+                                     static_cast<uint32_t>(modelWeights.hiddenDim));
+                    auto wr = [](const char* p, const std::vector<float>& v) {
+                        if (FILE* f = std::fopen(p, "wb")) {
+                            std::fwrite(v.data(), sizeof(float), v.size(), f);
+                            std::fclose(f);
+                        }
+                    };
+                    wr("__gpu_normed.bin", nrm);
+                    wr("__gpu_attn.bin", attn);
+                    wr("__gpu_hid.bin", hid);
+                    std::fprintf(stderr, "[GPU_DUMP] normed+attn+hid written hidden=%zu\n",
+                                 modelWeights.hiddenDim);
+                }
+            }
             std::fflush(stderr);
         }
     }
@@ -969,6 +1206,34 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
         vulkanEnabled_ = false;
         gpuForwardTrace("reject: device forward failed; Vulkan lane disabled");
         return false;
+    }
+
+    // Fail-closed output validation (invariant: a prefill position must not
+    // advance to sampling unless its forward actually completed successfully).
+    // A GPU dispatch can report submission success while producing a zero or
+    // non-finite hidden state (e.g. bad weight residency or a kernel fault).
+    // Such a result is NOT a completed forward: it would otherwise be mistaken
+    // for success and silently emit empty/garbage tokens. Validate the
+    // materialized host hidden state and, if invalid, treat the dispatch as
+    // failed so the caller uses the explicit host reference path.
+    {
+        double sumsq = 0.0;
+        bool finite = true;
+        const size_t hd = static_cast<size_t>(config.hiddenDim);
+        for (size_t i = 0; i < hd; ++i) {
+            const float v = hidden[i];
+            if (!std::isfinite(v)) { finite = false; break; }
+            sumsq += static_cast<double>(v) * static_cast<double>(v);
+        }
+        const double norm = std::sqrt(sumsq);
+        if (!finite || !(norm > 1.0e-12)) {
+            gpuFwd_ = countersBefore;
+            ++gpuFwd_.forwardFallbacks;
+            gpuFwdCommitted_ = false;
+            vulkanEnabled_ = false;
+            gpuForwardTrace("reject: GPU forward produced invalid hidden state (norm/NaN)");
+            return false;
+        }
     }
 
     gpuFwd_.gpuLayersLastToken = gpuFwd_.forwardLayers - before;

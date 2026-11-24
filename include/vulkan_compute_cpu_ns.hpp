@@ -159,8 +159,9 @@ public:
                              uint32_t n);
     bool DispatchScaledAdd(DeviceBuf& accum, DeviceBuf& src, float scale,
                            uint32_t n);
-    bool DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim,
-                      uint32_t nHeads, uint32_t nope, uint32_t rope, float theta);
+     bool DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim,
+                       uint32_t nHeads, uint32_t nope, uint32_t rope, float theta,
+                       uint32_t convention = 0, uint32_t rotaryDim = 0);
     bool DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& out,
                         uint32_t n);
     bool DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
