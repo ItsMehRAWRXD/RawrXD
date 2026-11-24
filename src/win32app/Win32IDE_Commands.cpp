@@ -171,6 +171,34 @@ std::string configuredBuildTarget()
     return target;
 }
 
+// C2 build configurations: Debug / Release / RelWithDebInfo / MinSizeRel.
+// Selected via RAWRXD_BUILD_CONFIG (env) or .rawrxd/build_config.json;
+// invalid values fail closed to Release. ASan/coverage builds are expressed
+// through RAWRXD_BUILD_COMMAND (e.g. -DENABLE_ASAN=1) which already overrides
+// the whole command line.
+std::string configuredBuildConfiguration(const std::string& workspaceRoot)
+{
+    std::string config;
+    if (const char* configured = std::getenv("RAWRXD_BUILD_CONFIG")) {
+        config = configured;
+    } else if (!workspaceRoot.empty()) {
+        std::ifstream in(workspaceRoot + "\\.rawrxd\\build_config.json");
+        if (in) {
+            std::stringstream ss;
+            ss << in.rdbuf();
+            const std::string body = ss.str();
+            static const std::regex cfg_re(R"re("configuration"\s*:\s*"([^"]+)")re");
+            std::smatch m;
+            if (std::regex_search(body, m, cfg_re)) config = m[1].str();
+        }
+    }
+    if (config == "Debug" || config == "Release" ||
+        config == "RelWithDebInfo" || config == "MinSizeRel") {
+        return config;
+    }
+    return "Release";
+}
+
 std::string configuredBuildCommand()
 {
     const char* configured = std::getenv("RAWRXD_BUILD_COMMAND");
@@ -893,7 +921,7 @@ void Win32IDE::handleToolsCommand(int commandId) {
             "if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { "
             "cmd.exe /d /s /c ('call \"' + $vcvars + '\" && " +
             (buildCommand.empty()
-                ? "cmake --build \"' + " + buildLiteral + " + '\" --target " + buildTarget + " --config Release"
+                ? "cmake --build \"' + " + buildLiteral + " + '\" --target " + buildTarget + " --config " + configuredBuildConfiguration(workspaceRoot)
                 : buildCommand) +
             "'); $rc=$LASTEXITCODE }; "
             "Write-Output ('[RAWRXD_BUILD_RESULT] EXIT=' + $rc); "
