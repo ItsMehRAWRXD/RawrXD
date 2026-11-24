@@ -161,7 +161,7 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
                                 VkDeviceMemory& mem, void** mapped) {
     buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
     if (mapped) *mapped = nullptr;
-    if (size == 0 || (mapped && !(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))) return false;
+    if (!gpu.device || size == 0 || (mapped && !(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))) return false;
 
     VkBufferCreateInfo bci{};
     bci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -208,7 +208,9 @@ void VulkanDevice::destroyBuffer(const Gpu& gpu, VkBuffer buf, VkDeviceMemory me
 bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dstOffset,
                                   const void* data, VkDeviceSize size) {
     if (size == 0) return true;
-    if (!dst || !data || size > (std::numeric_limits<size_t>::max)()) return false;
+    if (!gpu.device || !gpu.queue || !gpu.pool || !dst || !data ||
+        size > (std::numeric_limits<size_t>::max)() ||
+        dstOffset > (std::numeric_limits<VkDeviceSize>::max)() - size) return false;
     const std::lock_guard<std::mutex> lock(romSubmissionMutex);
     VkBuffer staging = VK_NULL_HANDLE;
     VkDeviceMemory smem = VK_NULL_HANDLE;
