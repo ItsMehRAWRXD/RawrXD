@@ -369,6 +369,16 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
 
     VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     if (vkCreateFence(device, &fci, nullptr, &m_fence) != VK_SUCCESS) return fail();
+    uint64_t fingerprint = 14695981039346656037ull;
+    for (uint32_t word : spv) {
+        for (unsigned shift = 0; shift < 32; shift += 8) {
+            fingerprint ^= (word >> shift) & 0xffu;
+            fingerprint *= 1099511628211ull;
+        }
+    }
+    fprintf(stderr, "[VULKAN_PIPELINE] backend=ROM entry=main shader=%s bytes=%zu fnv1a64=%016llx bindings=3 push_bytes=8 dispatch_width=256\n",
+            spvPath.c_str(), spv.size() * sizeof(uint32_t),
+            static_cast<unsigned long long>(fingerprint));
     return true;
 }
 
