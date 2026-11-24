@@ -1759,7 +1759,12 @@ public:
     void armAgentThoughtTimer();
     void disarmAgentThoughtTimer();
     void setWindowText(HWND hwnd, const std::string& text);
-    void appendText(HWND hwnd, const std::string& text);
+    void appendText(HWND hwnd, const std::string& text);
+    // A1 agent panel host (Win32IDE_AgentPanel.cpp).
+    void initAgentPanel();
+    void toggleAgentPanel();
+    void appendAgentTranscript(const std::string& text);
+    void submitAgentPrompt();
     void syncEditorToGpuSurface();
     void initializeEditorSurface();
     static LRESULT CALLBACK EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -2788,7 +2793,13 @@ public:
     HWND m_hwndDebugToolbar = nullptr;
     HWND m_hwndDebugVariables = nullptr;
     HWND m_hwndDebugCallStack = nullptr;
-    HWND m_hwndDebugConsole = nullptr;
+    HWND m_hwndDebugConsole = nullptr;
+    // A1 agent panel host: transcript + input + send, docked as panel tab 4.
+    HWND m_hwndAgentPanel = nullptr;
+    HWND m_hwndAgentTranscript = nullptr;
+    HWND m_hwndAgentInput = nullptr;
+    HWND m_hwndAgentSendBtn = nullptr;
+    bool m_agentPanelSeeded = false;
     bool m_debuggingActive;
     // m_breakpoints defined in Debugger State section with Breakpoint struct
     
@@ -2949,12 +2960,13 @@ public:
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     
     // Panel (Bottom) - Terminal, Output, Problems, Debug Console
-    enum class PanelTab {
-        Terminal = 0,
-        Output = 1,
-        Problems = 2,
-        DebugConsole = 3
-    };
+    enum class PanelTab {
+        Terminal = 0,
+        Output = 1,
+        Problems = 2,
+        DebugConsole = 3,
+        Agent = 4
+    };
     HWND m_hwndPanelContainer = nullptr;
     HWND m_hwndPanelTabs = nullptr;
     HWND m_hwndPanelToolbar = nullptr;

@@ -67,6 +67,10 @@ static std::vector<ProblemStringHeap*> g_problemHeapObjects;
 #define IDC_PANEL_DEBUG_CONSOLE 1305
 #define IDC_PANEL_TOOLBAR 1306
 #define IDC_PANEL_BTN_NEW_TERMINAL 1307
+// A1 agent panel controls.
+#define IDC_PANEL_AGENT_TRANSCRIPT 1308
+#define IDC_PANEL_AGENT_INPUT 1309
+#define IDC_PANEL_AGENT_SEND 1310
 #define IDC_PANEL_BTN_SPLIT_TERMINAL 1308
 #define IDC_PANEL_BTN_KILL_TERMINAL 1309
 #define IDC_PANEL_BTN_MAXIMIZE 1310
@@ -666,6 +670,8 @@ void Win32IDE::createPanel(HWND hwndParent)
     SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 2, reinterpret_cast<LPARAM>(&tie));
     tie.pszText = const_cast<char*>("DEBUG CONSOLE");
     SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 3, reinterpret_cast<LPARAM>(&tie));
+    tie.pszText = const_cast<char*>("AGENT");
+    SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 4, reinterpret_cast<LPARAM>(&tie));
     
     // Create panel toolbar (right side)
     m_hwndPanelToolbar = CreateWindowExA(
@@ -976,6 +982,41 @@ void Win32IDE::ensurePanelTabBodies()
 
     makeEdit(m_hwndDebugConsole, IDC_PANEL_DEBUG_CONSOLE,
              "Debug Console ready. Start a debug session to see debugger output.\r\n");
+
+    // A1 agent panel body: transcript (read-only rich edit) + input + send.
+    if (!m_hwndAgentPanel || !IsWindow(m_hwndAgentPanel)) {
+        m_hwndAgentTranscript = CreateWindowExA(
+            WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
+            WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
+            0, 26, 800, (std::max)(1, bodyH - 30), m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_AGENT_TRANSCRIPT)),
+            m_hInstance, nullptr);
+        if (!m_hwndAgentTranscript) {
+            m_hwndAgentTranscript = CreateWindowExA(
+                WS_EX_CLIENTEDGE, "EDIT", "",
+                WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
+                0, 26, 800, (std::max)(1, bodyH - 30), m_hwndPanelContainer,
+                reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_AGENT_TRANSCRIPT)),
+                m_hInstance, nullptr);
+        }
+        m_hwndAgentInput = CreateWindowExA(
+            WS_EX_CLIENTEDGE, "EDIT", "",
+            WS_CHILD | ES_AUTOHSCROLL,
+            0, 0, 700, 24, m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_AGENT_INPUT)),
+            m_hInstance, nullptr);
+        m_hwndAgentSendBtn = CreateWindowExA(
+            0, "BUTTON", "Send",
+            WS_CHILD | BS_PUSHBUTTON,
+            0, 0, 80, 24, m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_AGENT_SEND)),
+            m_hInstance, nullptr);
+        // Transcript doubles as the visibility anchor for the tab body.
+        m_hwndAgentPanel = m_hwndAgentTranscript;
+        if (m_hwndAgentTranscript) ShowWindow(m_hwndAgentTranscript, SW_HIDE);
+        if (m_hwndAgentInput) ShowWindow(m_hwndAgentInput, SW_HIDE);
+        if (m_hwndAgentSendBtn) ShowWindow(m_hwndAgentSendBtn, SW_HIDE);
+    }
 }
 
 void Win32IDE::switchPanelTab(PanelTab tab)
@@ -1040,6 +1081,10 @@ void Win32IDE::switchPanelTab(PanelTab tab)
     showBody(m_hwndPanelOutput, showOutput);
     showBody(m_hwndProblemsListView, showProblems);
     showBody(m_hwndDebugConsole, showDebugConsole);
+    const bool showAgent = (tab == PanelTab::Agent);
+    showBody(m_hwndAgentPanel, showAgent);
+    if (m_hwndAgentInput) ShowWindow(m_hwndAgentInput, showAgent ? SW_SHOW : SW_HIDE);
+    if (m_hwndAgentSendBtn) ShowWindow(m_hwndAgentSendBtn, showAgent ? SW_SHOW : SW_HIDE);
 
     // Peer legacy panes stay hidden so they cannot cover 1302/1303 VisId bodies.
     for (auto& pane : m_terminalPanes) {

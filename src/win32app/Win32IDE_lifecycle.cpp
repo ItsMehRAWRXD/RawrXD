@@ -630,6 +630,13 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     }
                     return 0;
                 }
+                // A1 agent panel Send button (IDC_PANEL_AGENT_SEND = 1310).
+                if (command == 1310)
+                {
+                    ide->submitAgentPrompt();
+                    return 0;
+                }
+
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }
             return 0;

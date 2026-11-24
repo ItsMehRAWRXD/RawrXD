@@ -246,10 +246,10 @@ inline json ToolCallBridge::GetToolSchemasForLLM() const {
             }}
         });
     };
-    const json intProp = [](const char* d) {
+    const auto intProp = [](const char* d) {
         return json{{"type", "integer"}, {"description", d}};
     };
-    const json strProp = [](const char* d) {
+    const auto strProp = [](const char* d) {
         return json{{"type", "string"}, {"description", d}};
     };
 
