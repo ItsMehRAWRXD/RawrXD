@@ -3530,6 +3530,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_VSCodeUI.cpp
         src/win32app/Win32IDE_AgentPanel.cpp
         src/win32app/Win32IDE_LspCommands.cpp
+        src/win32app/Win32IDE_SastBridge.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp
@@ -3867,6 +3868,11 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         endif()
         if(TARGET rawrxd_agent_esp)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_agent_esp)
+        endif()
+        # I2: SAST inline diagnostics bridge links the S1 engine.
+        if(TARGET rawrxd_sast)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_sast)
+            message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_sast (I2)")
         endif()
         # Link the real Deep2Engine so Win32IDE_Deep2Bridge uses GPU inference
         if(TARGET deep2_engine_lib)

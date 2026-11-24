@@ -1767,7 +1767,9 @@ public:
     void submitAgentPrompt();
     // I1 go-to-definition (Win32IDE_LspCommands.cpp).
     void lspGotoDefinitionAtCursor();
-    void installLspEditorSubclass();
+    void installLspEditorSubclass();
+    // I2 SAST inline diagnostics (Win32IDE_SastBridge.cpp).
+    void scanCurrentFileSAST();
     void syncEditorToGpuSurface();
     void initializeEditorSurface();
     static LRESULT CALLBACK EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

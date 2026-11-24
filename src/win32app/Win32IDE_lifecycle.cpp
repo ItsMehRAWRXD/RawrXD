@@ -636,6 +636,12 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->submitAgentPrompt();
                     return 0;
                 }
+                // I2 SAST scan of the current file (IDM_SECURITY_SCAN_SAST).
+                if (command == 12040)
+                {
+                    ide->scanCurrentFileSAST();
+                    return 0;
+                }
 
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }
