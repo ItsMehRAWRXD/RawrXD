@@ -6,8 +6,13 @@
 #include <algorithm>
 #include <set>
 #include <limits>
+#include <mutex>
 
 namespace deep2 {
+
+// Serialize ROM bridge queue, command pool and descriptor reuse. This is
+// deliberately conservative until per-device ownership is consolidated.
+static std::mutex romSubmissionMutex;
 
 static VkResult check(VkResult r) { return r; }
 
@@ -126,6 +131,7 @@ bool VulkanDevice::init() {
 }
 
 void VulkanDevice::shutdown() {
+    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
     for (auto& g : m_gpus) {
         vkDeviceWaitIdle(g.device);
         vkDestroyCommandPool(g.device, g.pool, nullptr);
@@ -202,6 +208,8 @@ void VulkanDevice::destroyBuffer(const Gpu& gpu, VkBuffer buf, VkDeviceMemory me
 bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dstOffset,
                                   const void* data, VkDeviceSize size) {
     if (size == 0) return true;
+    if (!dst || !data || size > (std::numeric_limits<size_t>::max)()) return false;
+    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
     VkBuffer staging = VK_NULL_HANDLE;
     VkDeviceMemory smem = VK_NULL_HANDLE;
     void* mapped = nullptr;
@@ -404,6 +412,7 @@ void VulkanProgram::destroy(VkDevice device) {
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
                              uint32_t rows, uint32_t cols) {
+    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
     if (m_device == VK_NULL_HANDLE || m_device != gpu.device || !m_pipeline || !m_fence ||
         !W || !x || !y || !rows || !cols) return false;
     const uint32_t groups = 1u + (rows - 1u) / 256u;
