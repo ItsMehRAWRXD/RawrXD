@@ -2557,6 +2557,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/reverse_engineering/binary_loaders.cpp")
     message(STATUS "rawrxd_bin_loaders + bin_info enabled (TOP50 R1)")
 endif()
 
+# R3 RE vulnerability rules (TOP50 R3).
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reverse_engineering/re_vuln_rules.cpp")
+    add_library(rawrxd_re_vuln STATIC
+        src/reverse_engineering/re_vuln_rules.cpp
+    )
+    target_include_directories(rawrxd_re_vuln PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_re_vuln PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(re_vuln_scan tools/re_vuln_scan.cpp)
+    target_link_libraries(re_vuln_scan PRIVATE rawrxd_re_vuln)
+    target_include_directories(re_vuln_scan PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(re_vuln_test tests/re_vuln_test.cpp)
+    target_link_libraries(re_vuln_test PRIVATE rawrxd_re_vuln)
+    target_include_directories(re_vuln_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(re_vuln_scan re_vuln_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_re_vuln + re_vuln_scan enabled (TOP50 R3)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
