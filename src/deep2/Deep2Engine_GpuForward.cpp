@@ -495,7 +495,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     // RoPE uses ropeDimensionCount (< headDim).
     uint32_t ropeConvention = 0u;   // 0=interleaved, 1=NEOX, 2=IMROPE
     {
-        std::string archLower = k2ShardConfig_.architecture;
+        std::string archLower = modelWeights.architecture;
         for (char& c : archLower)
             c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
         if (archLower == "qwen35" || archLower == "qwen35moe")

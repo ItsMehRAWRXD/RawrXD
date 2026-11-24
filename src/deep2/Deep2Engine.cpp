@@ -2947,6 +2947,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
            meta.architecture.c_str(), meta.hiddenSize, meta.numLayers, meta.numHeads, meta.numKeyValueHeads,
            meta.intermediateSize, meta.vocabSize);
     modelWeights.hiddenDim = meta.hiddenSize;
+    modelWeights.architecture = meta.architecture;
     modelWeights.numLayers = meta.numLayers;
     modelWeights.numHeads = meta.numHeads;
     modelWeights.numKVHeads = meta.numKeyValueHeads > 0 ? meta.numKeyValueHeads : meta.numHeads;

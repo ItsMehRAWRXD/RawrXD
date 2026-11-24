@@ -194,6 +194,7 @@ namespace Deep2
         std::vector<LayerWeights> layers;
 
         // Architecture metadata
+        std::string architecture;   // GGUF general.architecture (llama/qwen/gemma/...)
         size_t hiddenDim = 0;
         size_t numLayers = 0;
         size_t numHeads = 0;
@@ -931,6 +932,7 @@ namespace Deep2
 
     private:
         GenerationStopReason m_generationStop = GenerationStopReason::NONE;
+        bool m_inDecode = false;  // diagnostic: true while in the decode loop (set before decode, cleared after)
         EngineConfig config;
         std::unique_ptr<ThreadPool> threadPool;
         std::unique_ptr<KVCache> kvCache;
