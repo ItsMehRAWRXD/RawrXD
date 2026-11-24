@@ -1786,6 +1786,8 @@ public:
     // D4 conditional breakpoints (Win32IDE_Debugger.cpp).
     void setBreakpointCondition(const std::string& file, int line,
                                 const std::string& condition);
+    // D6 call stack follow (Win32IDE_Debugger.cpp).
+    void debuggerStackFollow(int index);
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
     void parseBuildOutputForProblems(const std::string& chunk);
     int m_buildProblemCount = 0;

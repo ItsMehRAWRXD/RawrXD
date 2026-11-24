@@ -671,6 +671,12 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->removeSelectedWatch();
                     return 0;
                 }
+                // D6 call stack follow (frame index in lParam).
+                if (command == 1400)
+                {
+                    ide->debuggerStackFollow((int)lParam);
+                    return 0;
+                }
 
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }
@@ -762,6 +768,15 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 if (selected >= 0 && selected <= 3) {
                     ide->switchPanelTab(static_cast<Win32IDE::PanelTab>(selected));
                 }
+            } else if (nmhdr->idFrom == 2113 && // IDC_DEBUGGER_STACK_LIST (D6)
+                       (nmhdr->code == NM_CLICK || nmhdr->code == NM_DBLCLK ||
+                        nmhdr->code == LVN_ITEMACTIVATE)) {
+                const auto* activation =
+                    reinterpret_cast<const NMITEMACTIVATE*>(lParam);
+                if (activation && activation->iItem >= 0) {
+                    PostMessageW(hwnd, WM_COMMAND, 1400,
+                                 (LPARAM)activation->iItem);
+                }
             } else if (nmhdr->idFrom == kPanelProblemsListId &&
                        (nmhdr->code == NM_DBLCLK || nmhdr->code == NM_CLICK ||
                         nmhdr->code == LVN_ITEMACTIVATE)) {

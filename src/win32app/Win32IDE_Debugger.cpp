@@ -938,6 +938,15 @@ void Win32IDE::updateCallStack()
     }
 }
 
+// D6 call stack with source: double-click a frame opens the file at the line.
+void Win32IDE::debuggerStackFollow(int index)
+{
+    if (index < 0 || index >= (int)m_callStack.size()) return;
+    const auto& frame = m_callStack[index];
+    if (frame.file.empty()) return;
+    navigateToFileLine(frame.file, (uint32_t)frame.line);
+}
+
 void Win32IDE::updateMemoryView()
 {
     if (!m_hwndDebuggerMemory) return;
