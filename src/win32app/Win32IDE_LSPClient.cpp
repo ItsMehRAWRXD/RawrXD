@@ -96,7 +96,10 @@ void Win32IDE::initLSPClient()
     cppCfg.language = LSPLanguage::Cpp;
     cppCfg.name = "clangd";
     cppCfg.executablePath = "clangd";  // Expect on PATH
-    cppCfg.args = {"--background-index", "--clang-tidy", "--header-insertion=never"};
+    cppCfg.args = {"--background-index", "--clang-tidy", "--header-insertion=never",
+                   // C3: consume compile_commands.json (build pipeline mirrors
+                   // it to the workspace root; clangd also searches upward).
+                   "--compile-commands-dir=."};
     cppCfg.enabled = true;
     cppCfg.initTimeoutMs = 15000;
 

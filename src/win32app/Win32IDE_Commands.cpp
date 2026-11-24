@@ -919,6 +919,13 @@ void Win32IDE::handleToolsCommand(int commandId) {
             "if(-not $vcvars){ $vcvars=@('C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat',"
             "'C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat') | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1 }; "
             "if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { "
+            // C3: ensure compile_commands.json exists (configure exports it)
+            // and mirror it to the workspace root for clangd.
+            "$cc=" + buildLiteral + " + '\\compile_commands.json'; "
+            "if(-not (Test-Path -LiteralPath $cc)){ "
+            "cmd.exe /d /s /c ('call \"' + $vcvars + '\" >nul 2>&1 && cmake -S ' + " +
+            rootLiteral + " + ' -B ' + " + buildLiteral + " + ' -DCMAKE_EXPORT_COMPILE_COMMANDS=ON') | Out-Null }; "
+            "if(Test-Path -LiteralPath $cc){ Copy-Item -LiteralPath $cc -Destination 'compile_commands.json' -Force }; "
             "cmd.exe /d /s /c ('call \"' + $vcvars + '\" && " +
             (buildCommand.empty()
                 ? "cmake --build \"' + " + buildLiteral + " + '\" --target " + buildTarget + " --config " + configuredBuildConfiguration(workspaceRoot)
