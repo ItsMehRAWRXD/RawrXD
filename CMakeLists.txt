@@ -2632,6 +2632,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dast_bridge.cpp")
     message(STATUS "rawrxd_dast + dast_import enabled (TOP50 S5)")
 endif()
 
+# S7 tamper-evident audit log (TOP50 S7): real SHA-256 hash chain.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/audit_log.cpp")
+    add_library(rawrxd_audit STATIC
+        src/security/audit_log.cpp
+    )
+    target_include_directories(rawrxd_audit PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_audit PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(audit_log tools/audit_log.cpp)
+    target_link_libraries(audit_log PRIVATE rawrxd_audit)
+    target_include_directories(audit_log PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(audit_log_test tests/audit_log_test.cpp)
+    target_link_libraries(audit_log_test PRIVATE rawrxd_audit)
+    target_include_directories(audit_log_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(audit_log audit_log_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_audit + audit_log enabled (TOP50 S7)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
