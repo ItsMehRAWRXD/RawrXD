@@ -458,6 +458,18 @@ void Win32IDE::applyNativeDebugSnapshot(const rawrxd::NativeDebugSnapshot& snap)
     }
     updateDebugVariables();
     updateDebuggerUI();
+    // D1 source-level stepping: reveal the paused line in the editor so each
+    // step/breakpoint stop is visible at the source level.
+    if (snap.state != rawrxd::NativeDebugState::Terminated &&
+        m_debuggerCurrentLine > 0) {
+        if (m_debuggerCurrentFile.empty() || m_debuggerCurrentFile == m_currentFile ||
+            m_currentFile.empty()) {
+            navigateToLine(m_debuggerCurrentLine);
+        } else {
+            navigateToFileLine(m_debuggerCurrentFile,
+                               (uint32_t)m_debuggerCurrentLine);
+        }
+    }
 }
 
 LRESULT Win32IDE::handleNativeDebugState(WPARAM wParam, LPARAM lParam)
