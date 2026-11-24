@@ -3158,7 +3158,11 @@ bool VulkanCompute::DispatchAttnDecode(
         !seqLen || seqLen>maxSeq_) return false;
 
     uint64_t base = static_cast<uint64_t>(relLayer)*maxSeq_*kvDim_;
-    if (base > std::numeric_limits<uint32_t>::max()) return false;
+    // Overflow-safe: the shader indexes up to base + seqLen*kvDim - 1
+    // (t in [0,seqLen), kh in [0,kvHeads), od in [0,headDim)). Require the
+    // whole 32-bit index range to fit, not just the base.
+    if (base + static_cast<uint64_t>(seqLen)*kvDim_ >
+        std::numeric_limits<uint32_t>::max()) return false;
 
     OpsPush p{};
     p.op=OP_ATTN;
