@@ -55,9 +55,11 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
     foreach(shader ${SHADER_FILES})
         get_filename_component(shaderName "${shader}" NAME)
         add_custom_command(TARGET Deep2Engine_Benchmark POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "${shader}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${shader}"
                      $<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/${shaderName}
-            COMMENT "Deploying shader ${shaderName}")
+            COMMENT "Deploying shader ${shaderName}"
+            VERBATIM)
     endforeach()
 endif()
 
