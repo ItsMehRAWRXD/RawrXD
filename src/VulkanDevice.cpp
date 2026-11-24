@@ -290,11 +290,13 @@ static std::vector<uint32_t> readFileSpv(const std::string& path) {
 }
 
 bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
+    if (!device || m_device) return false;
     m_device = device;
+    const auto fail = [&]() { destroy(device); return false; };
     auto spv = readFileSpv(spvPath);
     if (spv.empty()) {
         fprintf(stderr, "[VULKAN] could not read SPIR-V: %s\n", spvPath.c_str());
-        return false;
+        return fail();
     }
 
     VkShaderModuleCreateInfo smci{};
@@ -303,7 +305,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     smci.pCode = spv.data();
     if (vkCreateShaderModule(device, &smci, nullptr, &m_shader) != VK_SUCCESS) {
         fprintf(stderr, "[VULKAN] vkCreateShaderModule failed\n");
-        return false;
+        return fail();
     }
 
     VkPipelineShaderStageCreateInfo ssi{};
@@ -324,7 +326,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     dslci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     dslci.bindingCount = 3;
     dslci.pBindings = bindings;
-    if (vkCreateDescriptorSetLayout(device, &dslci, nullptr, &m_dsl) != VK_SUCCESS) return false;
+    if (vkCreateDescriptorSetLayout(device, &dslci, nullptr, &m_dsl) != VK_SUCCESS) return fail();
 
     VkPushConstantRange pcr{};
     pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -337,7 +339,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     plci.pSetLayouts = &m_dsl;
     plci.pushConstantRangeCount = 1;
     plci.pPushConstantRanges = &pcr;
-    if (vkCreatePipelineLayout(device, &plci, nullptr, &m_layout) != VK_SUCCESS) return false;
+    if (vkCreatePipelineLayout(device, &plci, nullptr, &m_layout) != VK_SUCCESS) return fail();
 
     VkComputePipelineCreateInfo cpci{};
     cpci.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -345,7 +347,7 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     cpci.layout = m_layout;
     if (vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &cpci, nullptr, &m_pipeline) != VK_SUCCESS) {
         fprintf(stderr, "[VULKAN] vkCreateComputePipelines failed\n");
-        return false;
+        return fail();
     }
 
     VkDescriptorPoolSize poolSizes[1] = {};
@@ -356,26 +358,38 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     dpci.maxSets = 4;
     dpci.poolSizeCount = 1;
     dpci.pPoolSizes = poolSizes;
-    if (vkCreateDescriptorPool(device, &dpci, nullptr, &m_pool) != VK_SUCCESS) return false;
+    if (vkCreateDescriptorPool(device, &dpci, nullptr, &m_pool) != VK_SUCCESS) return fail();
 
     VkDescriptorSetAllocateInfo dsai{};
     dsai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     dsai.descriptorPool = m_pool;
     dsai.descriptorSetCount = 1;
     dsai.pSetLayouts = &m_dsl;
-    if (vkAllocateDescriptorSets(device, &dsai, &m_set) != VK_SUCCESS) return false;
+    if (vkAllocateDescriptorSets(device, &dsai, &m_set) != VK_SUCCESS) return fail();
 
     VkFenceCreateInfo fci{}; fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    return vkCreateFence(device, &fci, nullptr, &m_fence) == VK_SUCCESS;
+    if (vkCreateFence(device, &fci, nullptr, &m_fence) != VK_SUCCESS) return fail();
+    return true;
 }
 
 void VulkanProgram::destroy(VkDevice device) {
+    if (!m_device || device != m_device) return;
     if (m_fence) vkDestroyFence(device, m_fence, nullptr);
     if (m_pool) vkDestroyDescriptorPool(device, m_pool, nullptr);
     if (m_dsl) vkDestroyDescriptorSetLayout(device, m_dsl, nullptr);
     if (m_pipeline) vkDestroyPipeline(device, m_pipeline, nullptr);
     if (m_layout) vkDestroyPipelineLayout(device, m_layout, nullptr);
     if (m_shader) vkDestroyShaderModule(device, m_shader, nullptr);
+    m_fence = VK_NULL_HANDLE;
+    m_pool = VK_NULL_HANDLE;
+    m_dsl = VK_NULL_HANDLE;
+    m_pipeline = VK_NULL_HANDLE;
+    m_layout = VK_NULL_HANDLE;
+    m_shader = VK_NULL_HANDLE;
+    m_set = VK_NULL_HANDLE;
+    m_cmd = VK_NULL_HANDLE;
+    m_queue = VK_NULL_HANDLE;
+    m_device = VK_NULL_HANDLE;
 }
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
