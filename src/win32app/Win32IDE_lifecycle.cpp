@@ -648,6 +648,12 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->scanCurrentFileSecrets();
                     return 0;
                 }
+                // S6 security dashboard (12050).
+                if (command == 12050)
+                {
+                    ide->showSecurityDashboard();
+                    return 0;
+                }
 
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }

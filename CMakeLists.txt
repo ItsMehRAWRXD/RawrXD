@@ -3572,6 +3572,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_LspCommands.cpp
         src/win32app/Win32IDE_SastBridge.cpp
         src/win32app/Win32IDE_BuildParser.cpp
+        src/win32app/Win32IDE_SecurityDashboard.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp
@@ -3919,6 +3920,11 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         if(TARGET rawrxd_secrets)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_secrets)
             message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_secrets (I3)")
+        endif()
+        # S6: security dashboard links the S3 inventory engine.
+        if(TARGET rawrxd_dependency_audit)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_dependency_audit)
+            message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_dependency_audit (S6)")
         endif()
         # Link the real Deep2Engine so Win32IDE_Deep2Bridge uses GPU inference
         if(TARGET deep2_engine_lib)
