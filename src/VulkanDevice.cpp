@@ -290,10 +290,21 @@ bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize 
     if (!gpu.device || !mem || !data || size > (std::numeric_limits<size_t>::max)() ||
         offset > (std::numeric_limits<VkDeviceSize>::max)() - size) return false;
     void* mapped = nullptr;
-    if (vkMapMemory(gpu.device, mem, offset, size, 0, &mapped) != VK_SUCCESS) return false;
-    std::memcpy(mapped, data, static_cast<size_t>(size));
+    if (offset > (std::numeric_limits<size_t>::max)() - size) return false;
+    const std::lock_guard<std::mutex> lock(romSubmissionMutex);
+    // Map the entire allocation so a whole-range flush satisfies atom alignment.
+    // Caller must supply a valid allocation range and an unmapped allocation.
+    if (vkMapMemory(gpu.device, mem, 0, VK_WHOLE_SIZE, 0, &mapped) != VK_SUCCESS) return false;
+    std::memcpy(static_cast<unsigned char*>(mapped) + static_cast<size_t>(offset),
+                data, static_cast<size_t>(size));
+    VkMappedMemoryRange range{};
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = mem;
+    range.offset = 0;
+    range.size = VK_WHOLE_SIZE;
+    const VkResult result = vkFlushMappedMemoryRanges(gpu.device, 1, &range);
     vkUnmapMemory(gpu.device, mem);
-    return true;
+    return result == VK_SUCCESS;
 }
 
 // ---------------- VulkanProgram ----------------
