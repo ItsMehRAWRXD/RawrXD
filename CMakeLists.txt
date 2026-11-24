@@ -2537,6 +2537,26 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/test_explorer/test_explorer.cpp")
     message(STATUS "rawrxd_test_explorer + test_explorer enabled (TOP50 I5/T3)")
 endif()
 
+# R1 ELF/Mach-O/PE loaders (TOP50 R1).
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reverse_engineering/binary_loaders.cpp")
+    add_library(rawrxd_bin_loaders STATIC
+        src/reverse_engineering/binary_loaders.cpp
+    )
+    target_include_directories(rawrxd_bin_loaders PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_bin_loaders PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(bin_info tools/bin_info.cpp)
+    target_link_libraries(bin_info PRIVATE rawrxd_bin_loaders)
+    target_include_directories(bin_info PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(bin_info_test tests/bin_info_test.cpp)
+    target_link_libraries(bin_info_test PRIVATE rawrxd_bin_loaders)
+    target_include_directories(bin_info_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(bin_info bin_info_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_bin_loaders + bin_info enabled (TOP50 R1)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
