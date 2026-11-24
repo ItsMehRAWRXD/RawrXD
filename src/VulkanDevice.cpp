@@ -7,6 +7,7 @@
 #include <set>
 #include <limits>
 #include <mutex>
+#include <map>
 
 namespace deep2 {
 
@@ -366,6 +367,71 @@ static std::vector<uint32_t> readFileSpv(const std::string& path) {
     return buf;
 }
 
+// Validate the fixed ROM GEMV interface before handing the module to Vulkan.
+// This is a narrow ABI check, not a replacement for full SPIR-V validation.
+static bool validateRomGemvAbi(const std::vector<uint32_t>& s) {
+    if (s.size() < 5 || s[0] != 0x07230203u || s[4] != 0 || !s[3]) return false;
+    struct Decorations { uint32_t set = UINT32_MAX, binding = UINT32_MAX; };
+    std::map<uint32_t, Decorations> decorations;
+    std::map<uint32_t, uint32_t> storage;
+    std::map<uint32_t, uint32_t> pointerType, variableType;
+    std::map<uint32_t, std::vector<uint32_t>> structs;
+    std::map<uint32_t, uint32_t> unsignedInts;
+    std::map<std::pair<uint32_t,uint32_t>, uint32_t> offsets;
+    std::set<uint32_t> blocks, localSize;
+    uint32_t entry = 0;
+    for (size_t i = 5; i < s.size();) {
+        const uint32_t n = s[i] >> 16, op = s[i] & 0xffffu;
+        if (!n || n > s.size() - i) return false;
+        const uint32_t* p = s.data() + i;
+        if (op == 15 && n >= 5 && p[1] == 5 && p[3] == 0x6e69616du && p[4] == 0) {
+            if (entry) return false;
+            entry = p[2];
+        } else if (op == 16 && n == 6 && p[2] == 17 && p[3] == 256 && p[4] == 1 && p[5] == 1) {
+            localSize.insert(p[1]);
+        } else if (op == 71 && n >= 3) {
+            if (p[2] == 2) blocks.insert(p[1]);
+            if (n == 4 && p[2] == 33) decorations[p[1]].binding = p[3];
+            if (n == 4 && p[2] == 34) decorations[p[1]].set = p[3];
+        } else if (op == 72 && n == 5 && p[3] == 35) {
+            offsets[{p[1],p[2]}] = p[4];
+        } else if (op == 21 && n == 4 && p[3] == 0) {
+            unsignedInts[p[1]] = p[2];
+        } else if (op == 30 && n >= 2) {
+            structs[p[1]] = std::vector<uint32_t>(p+2,p+n);
+        } else if (op == 32 && n == 4) {
+            pointerType[p[1]] = p[3];
+        } else if (op == 59 && n >= 4) {
+            variableType[p[2]] = p[1];
+            storage[p[2]] = p[3];
+        }
+        i += n;
+    }
+    if (!entry || !localSize.count(entry)) return false;
+    unsigned mask = 0, pushes = 0;
+    for (const auto& v : storage) {
+        const uint32_t id = v.first, cls = v.second;
+        if (cls == 12) {
+            const auto d = decorations.find(id);
+            if (d == decorations.end() || d->second.set != 0 || d->second.binding >= 3) return false;
+            const unsigned bit = 1u << d->second.binding;
+            if (mask & bit || !blocks.count(pointerType[variableType[id]])) return false;
+            mask |= bit;
+        } else if (cls == 9) {
+            const uint32_t type = pointerType[variableType[id]];
+            const auto t = structs.find(type);
+            if (++pushes != 1 || !blocks.count(type) || t == structs.end() || t->second.size() != 2) return false;
+            for (uint32_t j = 0; j < 2; ++j) {
+                const auto off = offsets.find({type,j});
+                if (off == offsets.end() || off->second != j*4 || unsignedInts[t->second[j]] != 32) return false;
+            }
+        } else if (cls == 0 || cls == 2) {
+            return false;
+        }
+    }
+    return mask == 7 && pushes == 1;
+}
+
 bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     const std::lock_guard<std::recursive_mutex> lock(romSubmissionMutex);
     if (!device || m_device) return false;
@@ -374,6 +440,11 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     auto spv = readFileSpv(spvPath);
     if (spv.empty()) {
         fprintf(stderr, "[VULKAN] could not read SPIR-V: %s\n", spvPath.c_str());
+        return fail();
+    }
+
+    if (!validateRomGemvAbi(spv)) {
+        fprintf(stderr, "[VULKAN] ROM GEMV shader ABI mismatch: %s\n", spvPath.c_str());
         return fail();
     }
 
