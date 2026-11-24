@@ -1,0 +1,46 @@
+name: fuzz-gate
+
+# T4 (TOP50 T4): CI fuzz gate. Builds the T1 harnesses (fuzz_targets) and
+# runs every mode over the seed corpus with a hard timeout. Any non-zero
+# exit (crash) fails the gate.
+
+on:
+  push:
+    branches: [main, 'fix/**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  fuzz:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (Ninja, Release)
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+          cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_TESTS=OFF
+        shell: cmd
+
+      - name: Build fuzz_targets
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+          cmake --build build-fuzz --target fuzz_targets
+        shell: cmd
+
+      - name: Run fuzz smoke over seed corpus (timeout 60s each)
+        run: |
+          setlocal enabledelayedexpansion
+          set FUZZ=build-fuzz\bin\fuzz_targets.exe
+          for %%f in (tests\fixtures\*) do (
+            echo === binary %%f ===
+            "%FUZZ%" binary "%%f" || exit /b 1
+            echo === sast %%f ===
+            "%FUZZ%" sast "%%f" || exit /b 1
+            echo === rag %%f ===
+            "%FUZZ%" rag "%%f" || exit /b 1
+          )
+          echo FUZZ_GATE_PASS
+        shell: cmd
+        timeout-minutes: 10
