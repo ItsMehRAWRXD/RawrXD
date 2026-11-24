@@ -106,9 +106,13 @@ float q2k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
     uint b = rowBase + block * 84u;
-    float ds = geth(b + 0u);
-    float dm = geth(b + 2u);
-
+    // GGML block_q2_K layout (84 bytes): scales[16] @0, qs[64] @16,
+    // d (f16) @80, dmin (f16) @82. The previous offsets assumed d/dmin came
+    // first (d@0, dmin@2, scales@4, qs@20), so it read the scales/qs bytes as
+    // f16 -> Inf/NaN for most blocks -> NaN GEMV output despite byte-correct
+    // weights. Use the real GGML offsets.
+    float ds = geth(b + 80u);   // d
+    float dm = geth(b + 82u);   // dmin
     uint chunk = idx / 128u;
     uint rem = idx % 128u;
     uint subBlock = rem / 32u;
@@ -116,13 +120,13 @@ float q2k_weight(uint rowBase, uint col) {
     uint pos = rem % 16u;
 
     uint scaleIdx = chunk * 8u + subBlock * 2u + group;
-    uint packedScale = getb(b + 4u + scaleIdx);
+    uint packedScale = getb(b + scaleIdx);          // scales[16]
     float dl = ds * float(packedScale & 15u);
     float ml = dm * float(packedScale >> 4u);
 
-    uint qsIdx = chunk * 32u + group * 16u + pos;
+    uint qsIdx = chunk * 32u + group * 16u + pos;   // qs[64]
     uint shift = subBlock * 2u;
-    uint q = (getb(b + 20u + qsIdx) >> shift) & 3u;
+    uint q = (getb(b + 16u + qsIdx) >> shift) & 3u;
     return dl * float(q) - ml;
 }
 
