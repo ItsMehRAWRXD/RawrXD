@@ -2435,6 +2435,27 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/agent_security_smoke.cpp")
     message(STATUS "agent_security_smoke enabled (P0 agent security)")
 endif()
 
+# S1 SAST rule engine (TOP50 S1): dependency-free C/C++ static analysis with
+# a declarative rule table; emits JSON findings for the Problems panel.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/sast_rule_engine.cpp")
+    add_library(rawrxd_sast STATIC
+        src/security/sast_rule_engine.cpp
+    )
+    target_include_directories(rawrxd_sast PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(rawrxd_sast PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(sast_scan tools/sast_scan.cpp)
+    target_link_libraries(sast_scan PRIVATE rawrxd_sast)
+    target_include_directories(sast_scan PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(sast_rule_test tests/sast_rule_test.cpp)
+    target_link_libraries(sast_rule_test PRIVATE rawrxd_sast)
+    target_include_directories(sast_rule_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(sast_scan sast_rule_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_sast + sast_scan enabled (TOP50 S1)")
+endif()
+
 # AgenticLoopBridge recovery gate: exercises the real Win32 process-launch
 # lifecycle without a model or cloud service.  The executable is emitted to a
 # separate directory so no helper sibling is discoverable; this makes the
