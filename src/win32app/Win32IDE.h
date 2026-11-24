@@ -1778,6 +1778,8 @@ public:
                             const std::string& scope);
     bool applyPromptTemplate(const std::string& name);
     std::string m_activeSystemPrompt;
+    // I5/T3 test explorer bridge (Win32IDE_TestExplorerTree.cpp).
+    void runTestExplorer();
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
     void parseBuildOutputForProblems(const std::string& chunk);
     int m_buildProblemCount = 0;

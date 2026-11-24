@@ -654,6 +654,12 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->showSecurityDashboard();
                     return 0;
                 }
+                // I5/T3 test explorer (12070).
+                if (command == 12070)
+                {
+                    ide->runTestExplorer();
+                    return 0;
+                }
 
                 ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }

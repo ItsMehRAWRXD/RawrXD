@@ -2516,6 +2516,27 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/sbom_export.cpp")
     message(STATUS "rawrxd_sbom + sbom_export enabled (TOP50 S4)")
 endif()
 
+# I5/T3 test explorer (TOP50 I5/T3): discovery + isolated execution.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/test_explorer/test_explorer.cpp")
+    add_library(rawrxd_test_explorer STATIC
+        src/test_explorer/test_explorer.cpp
+    )
+    target_include_directories(rawrxd_test_explorer PUBLIC
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/agentic)
+    if(MSVC)
+        target_compile_options(rawrxd_test_explorer PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    add_executable(test_explorer tools/test_explorer.cpp)
+    target_link_libraries(test_explorer PRIVATE rawrxd_test_explorer)
+    target_include_directories(test_explorer PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    add_executable(test_explorer_rule_test tests/test_explorer_rule_test.cpp)
+    target_link_libraries(test_explorer_rule_test PRIVATE rawrxd_test_explorer)
+    target_include_directories(test_explorer_rule_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(test_explorer test_explorer_rule_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "rawrxd_test_explorer + test_explorer enabled (TOP50 I5/T3)")
+endif()
+
 # A3 codebase RAG index (TOP50 A3): BM25 lexical retrieval, dependency-free.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rag/codebase_index.cpp")
     add_library(rawrxd_rag STATIC
@@ -3574,6 +3595,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_BuildParser.cpp
         src/win32app/Win32IDE_SecurityDashboard.cpp
         src/win32app/Win32IDE_PromptTemplates.cpp
+        src/win32app/Win32IDE_TestExplorerTree.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp
@@ -3926,6 +3948,13 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         if(TARGET rawrxd_dependency_audit)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_dependency_audit)
             message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_dependency_audit (S6)")
+        endif()
+        # I5/T3: test explorer bridge links the discovery/execution engine.
+        if(TARGET rawrxd_test_explorer)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_test_explorer)
+            target_include_directories(RawrXD-Win32IDE-Native PRIVATE
+                ${CMAKE_SOURCE_DIR}/src/test_explorer)
+            message(STATUS "RawrXD-Win32IDE-Native: linked rawrxd_test_explorer (I5)")
         endif()
         # Link the real Deep2Engine so Win32IDE_Deep2Bridge uses GPU inference
         if(TARGET deep2_engine_lib)
