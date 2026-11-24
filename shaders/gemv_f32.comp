@@ -1,0 +1,14 @@
+#version 450
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout(std430, set = 0, binding = 0) readonly buffer Weights { float w[]; };
+layout(std430, set = 0, binding = 1) readonly buffer Input { float x[]; };
+layout(std430, set = 0, binding = 2) writeonly buffer Output { float y[]; };
+layout(push_constant) uniform Geometry { uint rows; uint cols; } pc;
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= pc.rows) return;
+    float sum = 0.0;
+    for (uint col = 0; col < pc.cols; ++col)
+        sum += w[row * pc.cols + col] * x[col];
+    y[row] = sum;
+}
