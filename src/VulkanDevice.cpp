@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <set>
+#include <limits>
 
 namespace deep2 {
 
@@ -153,7 +154,8 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
                                 VkMemoryPropertyFlags memProps, VkBuffer& buf,
                                 VkDeviceMemory& mem, void** mapped) {
     buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
-    if (size == 0) return true;
+    if (mapped) *mapped = nullptr;
+    if (size == 0 || (mapped && !(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))) return false;
 
     VkBufferCreateInfo bci{};
     bci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -168,6 +170,7 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
     uint32_t mt = 0;
     if (!pickMemoryType(gpu, mr.memoryTypeBits, memProps, mt)) {
         vkDestroyBuffer(gpu.device, buf, nullptr);
+        buf = VK_NULL_HANDLE;
         return false;
     }
 
@@ -177,12 +180,16 @@ bool VulkanDevice::createBuffer(const Gpu& gpu, VkDeviceSize size, VkBufferUsage
     ai.memoryTypeIndex = mt;
     if (vkAllocateMemory(gpu.device, &ai, nullptr, &mem) != VK_SUCCESS) {
         vkDestroyBuffer(gpu.device, buf, nullptr);
+        buf = VK_NULL_HANDLE;
+        mem = VK_NULL_HANDLE;
         return false;
     }
-    vkBindBufferMemory(gpu.device, buf, mem, 0);
-
-    if (mapped && (memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
-        vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped);
+    if (vkBindBufferMemory(gpu.device, buf, mem, 0) != VK_SUCCESS ||
+        (mapped && vkMapMemory(gpu.device, mem, 0, mr.size, 0, mapped) != VK_SUCCESS)) {
+        destroyBuffer(gpu, buf, mem);
+        buf = VK_NULL_HANDLE; mem = VK_NULL_HANDLE;
+        if (mapped) *mapped = nullptr;
+        return false;
     }
     return true;
 }
@@ -253,12 +260,14 @@ bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize 
 VulkanProgram::VulkanProgram() = default;
 VulkanProgram::~VulkanProgram() { /* caller must call destroy before device teardown */ }
 
-static std::vector<uint8_t> readFileSpv(const std::string& path) {
+static std::vector<uint32_t> readFileSpv(const std::string& path) {
     std::ifstream f(path, std::ios::binary | std::ios::ate);
     if (!f.is_open()) return {};
-    std::streamsize sz = f.tellg(); f.seekg(0, std::ios::beg);
-    std::vector<uint8_t> buf(sz);
-    if (!f.read(reinterpret_cast<char*>(buf.data()), sz)) return {};
+    std::streamsize sz = f.tellg();
+    if (sz < 20 || sz % 4 != 0) return {};
+    f.seekg(0, std::ios::beg);
+    std::vector<uint32_t> buf(static_cast<size_t>(sz / 4));
+    if (!f.read(reinterpret_cast<char*>(buf.data()), sz) || buf[0] != 0x07230203u) return {};
     return buf;
 }
 
@@ -272,8 +281,8 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
 
     VkShaderModuleCreateInfo smci{};
     smci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    smci.codeSize = spv.size();
-    smci.pCode = reinterpret_cast<const uint32_t*>(spv.data());
+    smci.codeSize = spv.size() * sizeof(uint32_t);
+    smci.pCode = spv.data();
     if (vkCreateShaderModule(device, &smci, nullptr, &m_shader) != VK_SUCCESS) {
         fprintf(stderr, "[VULKAN] vkCreateShaderModule failed\n");
         return false;
@@ -354,7 +363,10 @@ void VulkanProgram::destroy(VkDevice device) {
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
                              uint32_t rows, uint32_t cols) {
-    if (m_device == VK_NULL_HANDLE) return false;
+    if (m_device == VK_NULL_HANDLE || m_device != gpu.device || !m_pipeline || !m_fence ||
+        !W || !x || !y || !rows || !cols) return false;
+    const uint32_t groups = 1u + (rows - 1u) / 256u;
+    if (groups > gpu.props.limits.maxComputeWorkGroupCount[0]) return false;
     m_queue = gpu.queue;
 
     VkDescriptorBufferInfo binfos[3] = {};
@@ -389,7 +401,6 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
     uint32_t pc[2] = {rows, cols};
     vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
-    uint32_t groups = (rows + 255) / 256;
     vkCmdDispatch(cmd, groups, 1, 1);
 
     vkEndCommandBuffer(cmd);
