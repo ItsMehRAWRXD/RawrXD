@@ -1783,6 +1783,9 @@ public:
     // D3 watch UI (Win32IDE_WatchUI.cpp).
     void promptAddWatchExpression();
     void removeSelectedWatch();
+    // D4 conditional breakpoints (Win32IDE_Debugger.cpp).
+    void setBreakpointCondition(const std::string& file, int line,
+                                const std::string& condition);
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
     void parseBuildOutputForProblems(const std::string& chunk);
     int m_buildProblemCount = 0;

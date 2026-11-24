@@ -447,6 +447,25 @@ void Win32IDE::applyNativeDebugSnapshot(const rawrxd::NativeDebugSnapshot& snap)
                 bp.hitCount++;
             }
         }
+        // D4: evaluate the hit breakpoint's condition; false -> auto-continue.
+        for (const auto& bp : m_breakpoints) {
+            if (!bp.enabled || bp.condition.empty()) continue;
+            if (bp.file == m_debuggerCurrentFile && bp.line == m_debuggerCurrentLine) {
+                std::string value;
+                if (m_nativeDebug && m_nativeDebug->evaluateExpression(bp.condition, value)) {
+                    const bool truthy = !(value.empty() || value == "0" ||
+                                          value == "false" || value == "FALSE");
+                    appendToOutput(" Condition [" + bp.condition + "] -> " +
+                                       value + (truthy ? " (pause)" : " (skip)") +
+                                       "\n",
+                                   "Debug", OutputSeverity::Info);
+                    if (!truthy) {
+                        resumeExecution();
+                        return;
+                    }
+                }
+            }
+        }
     }
     if (m_hwndDebuggerStatus) {
         std::ostringstream oss;
@@ -663,6 +682,27 @@ void Win32IDE::clearAllBreakpoints()
     m_breakpoints.clear();
     updateBreakpointList();
     appendToOutput(" All breakpoints cleared", "Output", OutputSeverity::Info);
+}
+
+// D4 conditional breakpoints: attach a condition expression to a breakpoint.
+// On hit, applyNativeDebugSnapshot evaluates it with the backend expression
+// evaluator; a false result auto-continues instead of pausing.
+void Win32IDE::setBreakpointCondition(const std::string& file, int line,
+                                      const std::string& condition)
+{
+    for (auto& bp : m_breakpoints) {
+        if (bp.file == file && bp.line == line) {
+            bp.condition = condition;
+            updateBreakpointList();
+            appendToOutput(" Breakpoint condition at " + file + ":" +
+                               std::to_string(line) + " = " + condition,
+                           "Output", OutputSeverity::Info);
+            return;
+        }
+    }
+    appendToOutput(" No breakpoint at " + file + ":" + std::to_string(line) +
+                       " to set a condition on",
+                   "Output", OutputSeverity::Warning);
 }
 
 void Win32IDE::updateBreakpointList()
@@ -1028,6 +1068,14 @@ void Win32IDE::debuggerStepCommand(const std::string& command)
         addWatchExpression(command.substr(6));
     } else if (command.rfind("unwatch ", 0) == 0) {
         removeWatchExpression(command.substr(8));
+    } else if (command.rfind("cond ", 0) == 0) {
+        // D4: cond <line> <expr> applies to the current file.
+        const std::string rest = command.substr(5);
+        const size_t sp = rest.find(' ');
+        if (sp != std::string::npos && !m_currentFile.empty()) {
+            setBreakpointCondition(m_currentFile, std::stoi(rest.substr(0, sp)),
+                                   rest.substr(sp + 1));
+        }
     }
 }
 
