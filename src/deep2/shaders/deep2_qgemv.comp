@@ -97,6 +97,37 @@ float q4_0_weight(uint rowBase, uint col) {
     return geth(b) * (float(int(nibble)) - 8.0);
 }
 
+// Q4_1 (type 3): block_q4_1 = fp16 d + fp16 m + qs[16], 20 bytes, 32 values.
+// Split-half nibbles; value = d*nibble + m (explicit min, no -8 offset).
+float q4_1_weight(uint rowBase, uint col) {
+    uint block = col / 32u;
+    uint i = col % 32u;
+    uint b = rowBase + block * 20u;
+    uint q = getb(b + 4u + (i % 16u));
+    uint nibble = (i < 16u) ? (q & 15u) : (q >> 4);
+    return geth(b) * float(nibble) + geth(b + 2u);
+}
+
+// Q5_1 (type 7): block_q5_1 = fp16 d + fp16 m + qh[4] + qs[16], 24 bytes,
+// 32 values. 5th bit from qh; value = d*nibble + m.
+float q5_1_weight(uint rowBase, uint col) {
+    uint block = col / 32u;
+    uint i = col % 32u;
+    uint b = rowBase + block * 24u;
+    uint j = i % 16u;
+    uint qh = getb(b + 4u) | (getb(b + 5u) << 8) | (getb(b + 6u) << 16) | (getb(b + 7u) << 24);
+    uint q = getb(b + 8u + j);
+    uint nib;
+    if (i < 16u) {
+        uint xh = ((qh >> j) << 4) & 0x10u;
+        nib = (q & 15u) | xh;
+    } else {
+        uint xh = (qh >> (j + 12u)) & 0x10u;
+        nib = (q >> 4) | xh;
+    }
+    return geth(b) * float(nib) + geth(b + 2u);
+}
+
 float q2k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
@@ -468,7 +499,9 @@ void main() {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
             if (pc.type == 2u) ww = q4_0_weight(rb, j);
+            else if (pc.type == 3u) ww = q4_1_weight(rb, j);
             else if (pc.type == 6u) ww = q5_0_weight(rb, j);
+            else if (pc.type == 7u) ww = q5_1_weight(rb, j);
             else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
             else if (pc.type == 11u) ww = q3k_weight(rb, j);
