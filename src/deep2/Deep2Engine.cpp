@@ -8660,6 +8660,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
     std::printf("[AGENT] DECODE_BEGIN max_out=%zu\n", maxOutputLen);
     std::fflush(stdout);
     auto decodeStart = std::chrono::high_resolution_clock::now();
+    m_inDecode = true;  // diagnostic: marks the decode phase for the layer-0 decode probe
     for (size_t t = 0; t < maxOutputLen; ++t)
     {
         if (isCancelRequested())
@@ -8782,16 +8783,32 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 }
             }
 
-            if (modelWeights.finalNorm.data)
+        // CPU final-hidden dump (layer-27 output, pre-final-norm) for CPU-vs-GPU
+        // parity at the first decode. Same semantic tensor as GPU ArenaHidden.
+        {
+            static bool s_cpuHid = false;
+            const char* dmp = std::getenv("RAWRXD_DUMP_ATTN");
+            if (!s_cpuHid && m_inDecode && t == 1 && dmp && dmp[0] == '1')
             {
-                RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
+                s_cpuHid = true;
+                if (FILE* fp = std::fopen("__cpu_hid.bin", "wb"))
+                {
+                    std::fwrite(h, sizeof(float), config.hiddenDim, fp);
+                    std::fclose(fp);
+                    std::fprintf(stderr, "[CPU_HID_DUMP] hidden=%zu\n", config.hiddenDim);
+                }
             }
+        }
+        if (modelWeights.finalNorm.data)
+        {
+            RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
+        }
 
-            // The generated token has now entered the KV cache.
-            if (kvCache)
-            {
-                kvCache->advance();
-            }
+        // The generated token has now entered the KV cache.
+        if (kvCache)
+        {
+            kvCache->advance();
+        }
         }
 
         // Compute logits
@@ -8878,6 +8895,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             fprintf(stderr, "[B3_FAIL] invalid logits pos=%zu size=%zu\n", position, config.vocabSize);
             return tokensGenerated;
         }
+        // Degenerate / zero-logit forward guard: if every logit is (near-)
+        // equal the distribution carries no information and sampling is
+        // arbitrary. Reject rather than emit garbage.
+        {
+            float lmin = logits[0], lmax = logits[0];
+            for (size_t i = 1; i < config.vocabSize; ++i) {
+                const float v = logits[i];
+                if (v < lmin) lmin = v;
+                if (v > lmax) lmax = v;
+            }
+            if (config.vocabSize > 1 && (lmax - lmin) < 1e-6f) {
+                fprintf(stderr, "[B3_FAIL] degenerate logits pos=%zu range=%.3e (zero-logit forward)\n",
+                        position, double(lmax - lmin));
+                return tokensGenerated;
+            }
+        }
 
         // Sample next token
         if (B3_LogitsTraceEnabled())
@@ -8897,7 +8930,24 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             obs.logits_count = static_cast<uint64_t>(config.vocabSize);
             referenceObserver_(obs, referenceObserverUser_);
         }
-        int nextToken = sampleToken(logits);
+        int nextToken;
+        {
+            // Test-only teacher-forcing hook (RAWRXD_FORCE_DECODE_TOKEN=<id>):
+            // force the first generated token (t=0) so the first decode step
+            // consumes a known token instead of relying on the sampler. This
+            // makes CPU/GPU comparisons use identical decode inputs.
+            static const char* s_forceTok = std::getenv("RAWRXD_FORCE_DECODE_TOKEN");
+            if (s_forceTok && s_forceTok[0] && tokensGenerated == 0)
+            {
+                nextToken = std::atoi(s_forceTok);
+                std::fprintf(stderr, "[FORCE_DECODE] pos=%zu forced_token=%d\n", position, nextToken);
+                std::fflush(stderr);
+            }
+            else
+            {
+                nextToken = sampleToken(logits);
+            }
+        }
         std::printf("[DBG] sampled token=%d eosId=%d\n", nextToken, tokenizer ? tokenizer->GetSpecialTokens().eosId : -1);
         std::fflush(stdout);
         if (B3_LogitsTraceEnabled())
@@ -9748,7 +9798,24 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         if (isGdn)
             computeGDN(layer, layerTemp, output);
         else
-            computeAttention(layer, layerTemp, output, seqLen);
+            // CPU layer-0 decode normed-input dump (RMSNorm output) for CPU-vs-GPU
+        // parity. Same semantic boundary as GPU ArenaNormed (pre-QKV).
+        {
+            static bool s_cpuNorm = false;
+            const char* dmp = std::getenv("RAWRXD_DUMP_ATTN");
+            if (!s_cpuNorm && layer == 0 && m_inDecode && dmp && dmp[0] == '1')
+            {
+                s_cpuNorm = true;
+                if (FILE* fp = std::fopen("__cpu_normed.bin", "wb"))
+                {
+                    std::fwrite(layerTemp, sizeof(float), static_cast<size_t>(hiddenDim), fp);
+                    std::fclose(fp);
+                    std::fprintf(stderr, "[CPU_NORMED_DUMP] layer=0 hidden=%u\n",
+                                 static_cast<unsigned>(hiddenDim));
+                }
+            }
+        }
+        computeAttention(layer, layerTemp, output, seqLen);
         if (std::getenv("DEEP2_MINIMAX_Q_DIAG") && layer == 0)
         {
             std::fprintf(stderr, "[MINIMAX_Q_DIAG] stage=COMPUTE_ATTENTION_RETURN\n");
@@ -13137,6 +13204,77 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
     LinearW(modelWeights.lmHead, hiddenState, nullptr, logits, config.vocabSize);
 
+    // Diagnostic: sentinel coverage check (RAWRXD_LMHEAD_SENTINEL=1). Distinguishes
+    // incomplete dispatch (sentinel rows remain) from NaN/Inf or arithmetic error.
+    {
+        static const bool s_sentinel = [] {
+            const char* e = std::getenv("RAWRXD_LMHEAD_SENTINEL");
+            return e && e[0] == '1' && e[1] == '\0';
+        }();
+        if (s_sentinel && config.vocabSize > 65536)
+        {
+            size_t sentinelRemaining = 0, nanInf = 0;
+            for (size_t i = 0; i < config.vocabSize; ++i)
+            {
+                if (logits[i] > 1.0e30f) ++sentinelRemaining;
+                if (!std::isfinite(logits[i])) ++nanInf;
+            }
+            const size_t last = config.vocabSize - 1;
+            std::fprintf(stderr,
+                "[LMHEAD_SENTINEL] rows=%zu sentinel_remaining=%zu nan_inf=%zu "
+                "row65534=%.4e row65535=%.4e row65536=%.4e last=%.4e\n",
+                config.vocabSize, sentinelRemaining, nanInf,
+                logits[65534], logits[65535], logits[65536], logits[last]);
+            std::fflush(stderr);
+        }
+    }
+
+    // Frozen-input dual-backend projection diagnostic (RAWRXD_PROJ_DIAG=1).
+    // Runs CPU and GPU lm_head projections on the SAME immutable hiddenState,
+    // twice for the GPU (to test determinism / state contamination), and
+    // compares full-vocab logits. Isolates the projection from the forward.
+    {
+        static const bool s_projDiag = [] {
+            const char* e = std::getenv("RAWRXD_PROJ_DIAG");
+            return e && e[0] == '1' && e[1] == '\0';
+        }();
+        static int s_projStep = 0;
+        if (s_projDiag && s_projStep < 2 && config.vocabSize > 0)
+        {
+            const int step = s_projStep++;
+            std::vector<float> cpuL(config.vocabSize, 0.0f);
+            std::vector<float> gpuL1(config.vocabSize, 0.0f);
+            std::vector<float> gpuL2(config.vocabSize, 0.0f);
+            const bool savedVk = vulkanEnabled_;
+            vulkanEnabled_ = false;  // force CPU projection
+            LinearW(modelWeights.lmHead, hiddenState, nullptr, cpuL.data(), config.vocabSize);
+            vulkanEnabled_ = savedVk;
+            const bool g1 = tryVulkanGEMV(modelWeights.lmHead, hiddenState, gpuL1.data(), config.vocabSize);
+            const bool g2 = tryVulkanGEMV(modelWeights.lmHead, hiddenState, gpuL2.data(), config.vocabSize);
+            auto cmp = [&](const std::vector<float>& a, const std::vector<float>& b) {
+                double dot = 0, na = 0, nb = 0, maxabs = 0;
+                size_t amA = 0, amB = 0;
+                for (size_t i = 0; i < a.size(); ++i) {
+                    dot += (double)a[i] * b[i];
+                    na += (double)a[i] * a[i];
+                    nb += (double)b[i] * b[i];
+                    double d = std::fabs((double)a[i] - b[i]);
+                    if (d > maxabs) maxabs = d;
+                    if (a[i] > a[amA]) amA = i;
+                    if (b[i] > b[amB]) amB = i;
+                }
+                double cos = (na > 0 && nb > 0) ? dot / (std::sqrt(na) * std::sqrt(nb)) : 0.0;
+                std::fprintf(stderr, "  argmax cpu=%zu(%.4f) gpu=%zu(%.4f) cos=%.6f maxabs=%.6g\n",
+                             amA, a[amA], amB, b[amB], cos, maxabs);
+            };
+            std::fprintf(stderr, "[PROJ_DIAG step=%d] cpu-vs-gpu1 (g1=%d):\n", step, g1 ? 1 : 0);
+            if (g1) cmp(cpuL, gpuL1);
+            std::fprintf(stderr, "[PROJ_DIAG step=%d] gpu1-vs-gpu2 (g2=%d, determinism):\n", step, g2 ? 1 : 0);
+            if (g1 && g2) cmp(gpuL1, gpuL2);
+            std::fflush(stderr);
+        }
+    }
+
     // S07 diagnostic: dump top-5 logits once (first forward's logits).
     {
         static bool s_logitDiag = false;
@@ -13185,6 +13323,51 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
 // ============================================================================
 int Deep2Engine::sampleToken(const float* logits)
 {
+    // ── First-token diagnostic (gated; first call only) ─────────────────
+    // Compares CPU vs GPU first-decode logits to localize the server GPU
+    // EOS-collapse. The first sampleToken() call of a single-request run is
+    // the first generated token (decode position == promptLen). Enable with
+    // RAWRXD_FIRST_TOKEN_DIAG=1; dump the full logits vector to the path in
+    // RAWRXD_FIRST_TOKEN_LOGITS for numerical parity comparison.
+    {
+        static int s_diagCount = 0;
+        const char* diag = std::getenv("RAWRXD_FIRST_TOKEN_DIAG");
+        if (diag && diag[0] == '1' && s_diagCount < 4)
+        {
+            const int idx = s_diagCount++;
+            int best = -1;
+            float bestLogit = NAN;
+            int nonfinite = 0;
+            for (size_t i = 0; i < config.vocabSize; ++i)
+            {
+                if (!std::isfinite(logits[i])) { ++nonfinite; continue; }
+                if (best < 0 || logits[i] > bestLogit) { bestLogit = logits[i]; best = static_cast<int>(i); }
+            }
+            int eosId = tokenizer ? tokenizer->GetSpecialTokens().eosId : -1;
+            float eosLogit =
+                (eosId >= 0 && static_cast<size_t>(eosId) < config.vocabSize) ? logits[eosId] : NAN;
+            const bool finite = (nonfinite == 0) && std::isfinite(bestLogit);
+            std::fprintf(stderr,
+                         "[STEP_DIAG %d] argmax=%d argmax_logit=%.6f eos=%d eos_logit=%.6f "
+                         "nonfinite=%d finite=%d vocab=%zu\n",
+                         idx, best, bestLogit, eosId, eosLogit, nonfinite, finite ? 1 : 0,
+                         config.vocabSize);
+            const char* dumpPath = std::getenv("RAWRXD_FIRST_TOKEN_LOGITS");
+            if (dumpPath && dumpPath[0])
+            {
+                char path[1024];
+                std::snprintf(path, sizeof(path), "%s_%d.bin", dumpPath, idx);
+                if (FILE* fp = std::fopen(path, "wb"))
+                {
+                    std::fwrite(logits, sizeof(float), config.vocabSize, fp);
+                    std::fclose(fp);
+                    std::fprintf(stderr, "[STEP_DIAG %d] logits_written=%s floats=%zu\n",
+                                 idx, path, config.vocabSize);
+                }
+            }
+        }
+    }
+
     // ── Deterministic greedy (temperature <= 0 / topK <= 1) ───────────
     // Hard argmax over finite logits. No TopK, RNG, temperature, top-p,
     // chamber override, or stochastic sampler in this branch.
