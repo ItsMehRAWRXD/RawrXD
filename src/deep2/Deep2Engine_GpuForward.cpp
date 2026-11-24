@@ -1205,6 +1205,9 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
         gpuFwdCommitted_ = false;
         vulkanEnabled_ = false;
         gpuForwardTrace("reject: device forward failed; Vulkan lane disabled");
+        std::fprintf(stderr, "[Deep2] GPU forward fault: Vulkan lane disabled for the "
+                             "remainder of this request (falling back to host reference)\n");
+        std::fflush(stderr);
         return false;
     }
 
@@ -1232,6 +1235,9 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             gpuFwdCommitted_ = false;
             vulkanEnabled_ = false;
             gpuForwardTrace("reject: GPU forward produced invalid hidden state (norm/NaN)");
+            std::fprintf(stderr, "[Deep2] GPU forward produced invalid hidden state "
+                                 "(norm/NaN): Vulkan lane disabled (host fallback)\n");
+            std::fflush(stderr);
             return false;
         }
     }
