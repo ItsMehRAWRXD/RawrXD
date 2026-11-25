@@ -1166,6 +1166,11 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp" AND
     set_target_properties(deep2_benchmark PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     message(STATUS "deep2_benchmark enabled (canonical production timing witness)")
+    # Regression wiring: register the benchmark as a CTest. Without --model it
+    # exits non-zero (usage), so WILL_FAIL passes only when the target is built
+    # and executable (no model/GPU required).
+    add_test(NAME deep2_benchmark_wiring COMMAND deep2_benchmark)
+    set_tests_properties(deep2_benchmark_wiring PROPERTIES WILL_FAIL TRUE)
 else()
     message(STATUS "deep2_benchmark EXCLUDED: benchmark source or Vulkan SDK unavailable")
 endif()
