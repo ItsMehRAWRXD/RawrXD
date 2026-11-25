@@ -14,6 +14,8 @@ set(_RAWRXD_REQUIRED_DEEP2_SOURCES
     src/deep2/op_linear.cpp
     src/deep2/op_gdn.cpp
     src/vulkan_compute.cpp
+    src/win32app/main_win32.cpp
+    tools/deep2_bench_tps.cpp
 )
 set(_RAWRXD_MISSING_DEEP2_SOURCES "")
 foreach(_src IN LISTS _RAWRXD_REQUIRED_DEEP2_SOURCES)
