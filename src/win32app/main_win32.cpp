@@ -445,6 +445,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     startupTrace("entering message loop");
     int rc = ide.runMessageLoop();
     LOG_INFO("Message loop exited with code " + std::to_string(rc));
+    // Package 3/4: guarantee exactly one terminal receipt per --chat-smoke
+    // invocation. If the message loop exited without the smoke writing its
+    // receipt (early WM_QUIT / window destroyed mid-run), emit a terminal FAIL
+    // receipt so an invocation can never silently exit zero without evidence.
+    if (lpCmdLine && std::strstr(lpCmdLine, "--chat-smoke")) {
+        const char* receipt = nullptr;
+        if (const char* env = std::getenv("RAWRXD_CHAT_SMOKE_RECEIPT")) {
+            if (*env) receipt = env;
+        }
+        std::string rp = receipt ? receipt
+            : "F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013\\CHAT_SMOKE_RECEIPT.txt";
+        std::FILE* rf = std::fopen(rp.c_str(), "r");
+        const bool alreadyWritten = rf != nullptr;
+        if (rf) std::fclose(rf);
+        if (!alreadyWritten) {
+            if (std::FILE* wf = std::fopen(rp.c_str(), "w")) {
+                std::fprintf(wf,
+                    "OVERALL=FAIL\nREASON=NO_TERMINAL_RECEIPT_FROM_SMOKE\nrc=%d\n",
+                    rc);
+                std::fclose(wf);
+            }
+            startupTrace("chat-smoke terminal FAIL receipt written (message-loop exit)");
+        }
+    }
     if (extQuit) {
         // Skip ~Win32IDE join of discovery/HTTP workers past smoke WaitForExit.
         startupTrace("ext-quit ExitProcess");
