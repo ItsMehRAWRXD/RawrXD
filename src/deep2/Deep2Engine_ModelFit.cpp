@@ -19,6 +19,7 @@
 #include "GGUFLoader.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Deep2DeviceManager.hpp"
+#include "AdapterIdentity.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -146,6 +147,13 @@ static void enumerateGpusIntoSnapshot(void* userdata) {
         // estimator selects CPU_ONLY rather than assuming a working GPU.
     }
 
+    // ---- reduce Vulkan devices to identity refs for exact LUID matching ----
+    std::vector<Deep2::AdapterRef> vkRefs;
+    vkRefs.reserve(vkDevs.size());
+    for (const auto& v : vkDevs)
+        vkRefs.push_back({v.luid, v.luidValid, v.vendorId, v.deviceId,
+                          v.compute, v.discrete, v.deviceLocalBytes});
+
     // ---- the runtime's own inventory: what enableVulkan() can open ----
     Deep2::DeviceManagerSnapshot devSnap{};
     bool haveDevices = false;
@@ -170,15 +178,24 @@ static void enumerateGpusIntoSnapshot(void* userdata) {
         g.discrete = !id.integrated;
         g.deviceIndex = id.index;
         g.compute = false;
+        g.identityExact = false;
 
-        for (const auto& v : vkDevs) {
-            if (v.vendorId == id.vendorId && v.deviceId == id.deviceId) {
-                g.compute = true;
-                // Trust the Vulkan heap measurement when it disagrees with DXGI.
-                if (v.deviceLocalBytes) g.deviceLocalBytes = v.deviceLocalBytes;
-                if (v.discrete) g.discrete = true;
-                break;
-            }
+        // Exact LUID match is authoritative; vendor/device-only is ambiguous and
+        // must not authorize strict (free-VRAM) admission.
+        const Deep2::AdapterMatch am =
+            Deep2::matchAdapter(id.luid, id.vendorId, id.deviceId, vkRefs);
+        g.compute = am.compute;
+        g.identityExact = am.exact;
+        if (am.discrete) g.discrete = true;
+        if (am.exact) {
+            if (am.deviceLocalBytes) g.deviceLocalBytes = am.deviceLocalBytes;
+            // availableVramKnown already carries id.availableVramKnown (exact).
+        } else {
+            g.availableVramKnown = false;   // ambiguous -> non-strict (physical fallback)
+            std::fprintf(stderr,
+                "VK_IDENTITY_AMBIGUOUS name=%s vendor=0x%04X device=0x%04X "
+                "reason=NO_EXACT_LUID strict_admission=disabled\n",
+                id.name, id.vendorId, id.deviceId);
         }
         snap->gpus.push_back(std::move(g));
     }

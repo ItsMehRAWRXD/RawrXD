@@ -196,13 +196,17 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
         d.compute = compute;
         d.name = p.deviceName;
         std::memcpy(d.deviceUUID, idp.deviceUUID, VK_UUID_SIZE);
+        // Preserve the full 8-byte LUID for exact DXGI<->Vulkan identity.
+        std::memcpy(&d.luid, idp.deviceLUID, sizeof(d.luid));
+        d.luidValid = idp.deviceLUIDValid != 0;
         std::fprintf(stderr,
             "VK_PHYS ordinal=%u name=%s vendor=0x%04X device=0x%04X type=%u "
-            "discrete=%d compute=%d localGB=%.2f\n",
+            "discrete=%d compute=%d localGB=%.2f luid=%016llX luid_valid=%d\n",
             d.ordinal, d.name.c_str(), d.vendorId, d.deviceId,
             (unsigned)p.deviceType,
             d.discrete ? 1 : 0, d.compute ? 1 : 0,
-            (double)d.deviceLocalBytes / (1024.0*1024.0*1024.0));
+            (double)local / (1024.0 * 1024.0 * 1024.0),
+            (unsigned long long)d.luid, d.luidValid ? 1 : 0);
         out.push_back(std::move(d));
     }
 

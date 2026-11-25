@@ -62,6 +62,10 @@ struct GpuDeviceInfo {
     bool availableVramKnown = false; // true once a live free-VRAM measurement
                                      // succeeded (a KNOWN 0 means fully allocated
                                      // and must reject, not fall back to total).
+    bool identityExact = false;      // true only when the Vulkan device was matched
+                                     // to this DXGI adapter by exact 8-byte LUID.
+                                     // Vendor/device-only matches are ambiguous and
+                                     // must NOT authorize strict residency admission.
     uint64_t sharedBytes = 0;
     bool discrete = false;
     bool compute = false;
