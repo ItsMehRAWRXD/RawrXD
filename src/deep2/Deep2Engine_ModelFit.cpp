@@ -487,6 +487,17 @@ rawrxd::ModelFitPlan Deep2Engine::estimateModelFit(const std::string& ggufPath,
         std::fprintf(stderr, "MODEL_FIT_RESERVATION_OK devices=%zu id=%llu\n",
                      reqs.size(), (unsigned long long)res.id);
     }
+    // Dual-device placement visibility (placement half of the GPU_MULTI milestone).
+    // This reports the PLAN's per-device weight split; it does NOT assert that
+    // both devices executed concurrently (that requires a real 2-GPU run + parity).
+    if (plan.lane == rawrxd::FitExecutionLane::GPU_MULTI && plan.devices.size() >= 2) {
+        std::fprintf(stderr,
+            "GPU0_WEIGHT_BYTES=%llu GPU1_WEIGHT_BYTES=%llu devices=%zu "
+            "(placement plan; concurrent execution not yet certified)\n",
+            (unsigned long long)plan.devices[0].weightBytes,
+            (unsigned long long)plan.devices[1].weightBytes,
+            plan.devices.size());
+    }
     return plan;
 }
 
