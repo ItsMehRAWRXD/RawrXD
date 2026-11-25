@@ -9,6 +9,9 @@ Reflects TRUE state at HEAD. `CERTIFIED=0`, `PROMOTE=0`, `RELEASE=HELD`. No gate
 - [x] Crash-filter acceptance (AV `0xC0000005` + div0 `0xC0000094` → witness + minidump)
 - [x] Deep2 fail-fast build enforcement (missing engine/GPU source → FATAL_ERROR)
 - [x] Cancellation lifecycle (`--cancel-after`, CANCELLED=PASS)
+- [x] Session-writer consolidation (FileOps single owner; duplicate removed from orphaned Session.cpp)
+- [x] Model-driven completion popup (LSP-backed `lspCompletion`, keyword fallback)
+- [x] Provider routing verified (BackendRouter Deep2/Ollama, cloud off) — by inspection
 - [x] GPU MoE router implemented (opt-in `DEEP2_GPU_ROUTER`) — **PARITY-PENDING**
 
 ## Blocked (environment-gated)
