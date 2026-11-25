@@ -2262,6 +2262,57 @@ else()
     message(STATUS "deep2_fused_lmhead_verify EXCLUDED: test source or Vulkan SDK unavailable")
 endif()
 
+# deep2_benchmark — production Deep2Engine benchmark (REAP/Deep2 matrix A–G).
+# Drives the REAL engine (no simplified inference): GGUF load, Vulkan device
+# selection, warmup/prefill/decode timing, GPU dispatch + MoE counters, JSON.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2_benchmark.cpp" AND Vulkan_FOUND AND
+   _rawrxd_vk_sdk_inc)
+    add_executable(deep2_benchmark
+        src/deep2_benchmark.cpp
+        # Logf_() is defined exactly once, in Deep2Log.cpp.
+        src/deep2/Deep2Log.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/vulkan_compute.cpp
+        # MoE timing counters (Deep2Bench_Moe* accessors) — standalone, no ggml.
+        src/deep2/moe_timing.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
+        src/streaming_gguf_loader.cpp
+    )
+    target_link_libraries(deep2_benchmark PRIVATE deep2_engine_lib)
+    target_include_directories(deep2_benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_benchmark PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_benchmark PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_benchmark PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_benchmark PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_benchmark PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_benchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_benchmark enabled (production Deep2Engine benchmark; ggml + Vulkan SDK)")
+else()
+    message(STATUS "deep2_benchmark EXCLUDED: source or Vulkan SDK unavailable")
+endif()
+
 # Gate 10 — Q6_K Row-Level Differential Test
 # Verifies Q6_K GEMV kernel produces identical results for direct call vs row-sliced call
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/q6k_row_differential_test.cpp")
@@ -4128,6 +4179,15 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         )
         target_compile_options(RawrXD-Win32IDE-Native PRIVATE
             /EHsc /FS $<$<CONFIG:Release>:/O2>
+            # Emit a PDB for Release so the unhandled-exception filter can
+            # symbolize the faulting worker frame (previously no .pdb existed
+            # and crash logs were 0 bytes).
+            $<$<CONFIG:Release>:/Zi>
+            # Disable inline-function expansion (/OPT:NOICF) so the crash
+            # handler's SymFromAddr resolves the exact faulting function +
+            # source line instead of folded/nearby ICF-mangled frames
+            # (e.g. GetHwnd+0x242c4 release-folded symbol).
+            $<$<CONFIG:Release>:/OPT:NOICF>
         )
         # RichEdit 2.0 ("RichEdit20A" / RICHEDIT_CLASSA) is used by the editor,
         # terminal and PowerShell-panel controls. The IDE reaches it only as a

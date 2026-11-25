@@ -12,6 +12,8 @@
 #include <cstring>
 #include <cerrno>
 #include <mutex>
+#include <chrono>
+#include <cstdlib>
 #include <unordered_set>
 #include <utility>
 
@@ -2755,9 +2757,45 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     return true;
 }
 
+// ---- RAWRXD_MOE_TIMING: env-gated CPU router / expert-dispatch timing -------
+// Diagnostic only (benchmark correction #4): zero cost unless RAWRXD_MOE_TIMING
+// is set, so performance runs are never distorted. Accumulated per token and
+// printed at exit as "router_ms=... expert_dispatch_ms=..." for the harness.
+// MoE timing state is defined in moe_timing.cpp (standalone, no ggml deps) so
+// the production benchmark links it without the graph executor.
+extern double g_moe_router_ms;
+extern double g_moe_expert_ms;
+extern unsigned long g_moe_router_calls;
+extern unsigned long g_moe_expert_calls;
+struct MoeTimingGuard {
+    bool active;
+    std::chrono::steady_clock::time_point t0;
+    double* acc;
+    unsigned long* calls;
+    MoeTimingGuard(double* a, unsigned long* c)
+        : active(std::getenv("RAWRXD_MOE_TIMING") != nullptr),
+          t0(active ? std::chrono::steady_clock::now()
+                    : std::chrono::steady_clock::time_point{}),
+          acc(a), calls(c) { if (active) ++*calls; }
+    ~MoeTimingGuard() {
+        if (active) *acc += std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - t0).count();
+    }
+};
+struct MoeTimingPrinter {
+    ~MoeTimingPrinter() {
+        if (g_moe_router_calls || g_moe_expert_calls) {
+            std::fprintf(stderr,
+                "router_ms=%.3f router_calls=%lu expert_dispatch_ms=%.3f expert_calls=%lu\n",
+                g_moe_router_ms, g_moe_router_calls, g_moe_expert_ms, g_moe_expert_calls);
+        }
+    }
+} g_moe_timing_printer;
+
 bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
                             const std::vector<float>& x,
                             std::vector<uint32_t>& ids, std::vector<float>& w) {
+    MoeTimingGuard _moeRt(&g_moe_router_ms, &g_moe_router_calls);
     (void)topk;
     if (router.b < 0) { last_error_ = "router: no weight"; return false; }
     const TensorRec& rt = tensors_[(size_t)router.b];
@@ -2998,6 +3036,7 @@ void Executor::SetStrataCachePolicy(int policy)
 bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {
+    MoeTimingGuard _moeEt(&g_moe_expert_ms, &g_moe_expert_calls);
     y.assign(spec_.embd, 0.0f);
     const char* moeDumpDir = std::getenv("DEEP2_MOE_COMPARE_DUMP_DIR");
     int moeDumpBlock = -1;
