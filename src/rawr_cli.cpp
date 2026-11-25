@@ -1252,7 +1252,14 @@ static int cmdRun(const std::vector<std::string>& args) {
         }
         if (!localEngine->loadModel(modelPath)) {
             out("ERROR: Deep2Engine failed to load model: " + model);
-            out("Falling back to HTTP backend on 127.0.0.1:8080...");
+            // An explicit native request is a standalone contract.  Do not
+            // silently turn a local-model failure into an external-server
+            // request; callers need the real Deep2 error and a non-success
+            // exit code.  Automatic backend selection may still choose its
+            // configured fallback before entering this path.
+            if (!backendFlag.empty() && backendFlag != "auto")
+                return EXIT_NO_INFERENCE;
+            out("Falling back to the configured HTTP backend...");
             useLocalDeep2 = false;
             localEngine.reset();
         } else {
