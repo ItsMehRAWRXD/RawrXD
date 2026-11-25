@@ -3540,6 +3540,7 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_ModelFit.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MultiGPU/VRAMAllocator.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/MultiGPU/MultiGPUScheduler.cpp
             ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp
