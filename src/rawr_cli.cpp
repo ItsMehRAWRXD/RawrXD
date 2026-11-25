@@ -1304,18 +1304,33 @@ static int cmdRun(const std::vector<std::string>& args) {
         }
 
         completeFn = [&httpClient](const std::vector<json>& msgs, int maxTokens) {
-            InferenceResult r = httpClient.completeStream(
-                msgs, maxTokens, 0.2,
-                [](const std::string& delta) {
-                    if (!g_json && !delta.empty())
-                        std::fwrite(delta.data(), 1, delta.size(), stderr);
-                },
-                []() {
-                    return InterlockedCompareExchange(&g_interrupted, 0, 0) != 0;
-                });
-            if (!g_json && r.streamDeltas > 0) std::fputc('\n', stderr);
-            std::fprintf(stderr, "STREAM_DELTAS=%d CANCELED=%d\n", r.streamDeltas,
-                         r.canceled ? 1 : 0);
+            InferenceResult r;
+            if (g_stream_tokens) {
+                // Opt-in SSE path: emit deltas as they arrive so cancel can be
+                // observed between tokens.
+                r = httpClient.completeStream(
+                    msgs, maxTokens, 0.2,
+                    [](const std::string& delta) {
+                        if (!g_json && !delta.empty())
+                            std::fwrite(delta.data(), 1, delta.size(), stderr);
+                    },
+                    []() {
+                        return InterlockedCompareExchange(&g_interrupted, 0, 0) != 0;
+                    });
+                if (!g_json && r.streamDeltas > 0) std::fputc('\n', stderr);
+                std::fprintf(stderr, "STREAM_DELTAS=%d CANCELED=%d\n", r.streamDeltas,
+                             r.canceled ? 1 : 0);
+            } else {
+                // Non-streaming baseline (default): one blocking completion.
+                // This is the reliable path; STREAM_DELTAS is not required here.
+                r = httpClient.complete(msgs, maxTokens, 0.2);
+                if (!g_json && !r.content.empty()) {
+                    std::fwrite(r.content.data(), 1, r.content.size(), stderr);
+                    std::fputc('\n', stderr);
+                }
+                std::fprintf(stderr, "COMPLETE_TOKENS=%d CANCELED=%d\n",
+                             r.completionTokens, r.canceled ? 1 : 0);
+            }
             return r;
         };
     } else {

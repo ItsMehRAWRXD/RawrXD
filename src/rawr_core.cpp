@@ -1122,7 +1122,11 @@ InferenceResult InferenceClient::completeStream(const std::vector<json>& message
         return out;
     }
     DWORD t = static_cast<DWORD>(timeoutMs_);
-    WinHttpSetTimeouts(req, t, t, t, t);
+    // Bound the per-read wait: [DONE] terminates the loop, but a server that
+    // keeps the connection alive without closing must not block for the full
+    // request timeout.
+    DWORD rt = t > 60000 ? 60000 : t;
+    WinHttpSetTimeouts(req, t, t, t, rt);
     if (!WinHttpSendRequest(req, L"Content-Type: application/json\r\n", -1L,
                             const_cast<char*>(body.data()),
                             static_cast<DWORD>(body.size()),
@@ -1148,6 +1152,7 @@ InferenceResult InferenceClient::completeStream(const std::vector<json>& message
     }
 
     std::string carry;
+    bool streamDone = false;
     auto ingestLine = [&](const std::string& line) {
         if (line.rfind("data:", 0) != 0) return;
         std::string payload = line.substr(5);
@@ -1155,6 +1160,7 @@ InferenceResult InferenceClient::completeStream(const std::vector<json>& message
             payload.erase(payload.begin());
         if (payload == "[DONE]") {
             out.finishReason = out.finishReason.empty() ? "stop" : out.finishReason;
+            streamDone = true;
             return;
         }
         try {
@@ -1186,6 +1192,7 @@ InferenceResult InferenceClient::completeStream(const std::vector<json>& message
     };
 
     for (;;) {
+        if (streamDone) break;
         if (shouldCancel && shouldCancel()) {
             out.canceled = true;
             out.finishReason = "cancelled";
@@ -1207,9 +1214,11 @@ InferenceResult InferenceClient::completeStream(const std::vector<json>& message
             carry.erase(0, nl + 1);
             if (!line.empty() && line.back() == '\r') line.pop_back();
             if (!line.empty()) ingestLine(line);
+            if (streamDone) break;
         }
+        if (streamDone) break;
     }
-    if (!carry.empty()) ingestLine(carry);
+    if (!carry.empty() && !streamDone) ingestLine(carry);
     if (!out.canceled) {
         out.ok = !out.content.empty() || out.finishReason == "stop";
         if (!out.ok && out.error.empty()) out.error = "empty stream";
