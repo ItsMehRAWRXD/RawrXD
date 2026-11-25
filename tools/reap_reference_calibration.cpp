@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -79,23 +80,13 @@ static bool requested_trace_layers(std::vector<int> & layers) {
         char * end = nullptr;
         const long value = std::strtol(p, &end, 10);
         if (end == p || value < 0 || value > 46) return false;
-        if (std::find(layers.begin(), layers.end(), static_cast<int>(value)) == layers.end())
-            layers.push_back(static_cast<int>(value));
+        if (std::find(layers.begin(), layers.end(), static_cast<int>(value)) != layers.end()) return false;
+        layers.push_back(static_cast<int>(value));
         if (*end == '\0') break;
-        if (*end != ',') return false;
+        if (*end != ',' || end[1] == '\0') return false;
         p = end + 1;
     }
     return !layers.empty();
-}
-
-static bool required_trace_family(const std::string & name) {
-    static constexpr const char * families[] = {
-        "attn_norm-", "q-", "q_nope-", "q_nope_absorbed-",
-        "q_nope_absorbed_perm-", "q_pe-", "Qcur-", "kv_cmpr_pe-",
-        "kv_cmpr-", "Vcur-", "k_pe-", "Kcur-", "kqv_out-", "ffn_inp-"
-    };
-    for (const char * family : families) if (starts(name.c_str(), family)) return true;
-    return false;
 }
 
 static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
@@ -294,7 +285,7 @@ int main(int argc, char ** argv) {
         return 7;
     }
     std::vector<size_t> traceCounts(traceLayers.size(), 0);
-    std::vector<std::map<std::string, size_t>> traceFamilies(traceLayers.size());
+    std::vector<std::set<std::string>> capturedNames(traceLayers.size());
     for (const std::string & descriptor : instrumented.capture.trace) {
         const size_t colon = descriptor.find(':');
         if (colon == std::string::npos) continue;
@@ -304,8 +295,7 @@ int main(int argc, char ** argv) {
         if (it != traceLayers.end()) {
             const size_t index = static_cast<size_t>(it - traceLayers.begin());
             ++traceCounts[index];
-            if (required_trace_family(descriptor.substr(0, colon)))
-                ++traceFamilies[index][descriptor.substr(0, descriptor.find('-'))];
+            capturedNames[index].insert(descriptor.substr(0, colon));
         }
     }
     for (size_t i = 0; i < traceLayers.size(); ++i) {
@@ -319,7 +309,8 @@ int main(int argc, char ** argv) {
             "kqv_out", "ffn_inp"
         };
         for (const char * family : required) {
-            if (traceFamilies[i].find(family) == traceFamilies[i].end()) {
+            const std::string expected = std::string(family) + "-" + std::to_string(traceLayers[i]);
+            if (capturedNames[i].find(expected) == capturedNames[i].end()) {
                 std::fprintf(stderr, "CALIBRATION_FAIL=MISSING_TRACE_FAMILY layer=%d family=%s\n",
                              traceLayers[i], family);
                 return 7;
