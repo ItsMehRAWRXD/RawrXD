@@ -3538,6 +3538,7 @@ endforeach()
             # DEEP2_MODEL_FIT_AUTHORITY_001 / DEEP2_EXECUTION_AUTHORITY_001 /
             # DEEP2_BATCHED_PREFILL_001: admission-to-execution contract.
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_ModelFit.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/MultiGPU/VRAMAllocator.cpp
             ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp
