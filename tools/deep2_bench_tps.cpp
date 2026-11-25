@@ -456,10 +456,17 @@ int main(int argc, char* argv[]) {
         std::printf("RUN%zu GENSTREAM:", run);
         for (uint32_t t : gen) std::printf(" %u", t);
         std::printf("\n");
-        if (!finite || (gpu && st.cpu_calls != 0) || !gpu_complete) {
+        bool degenerate = gen.size() >= 4;
+        for (size_t i = 1; degenerate && i < gen.size(); ++i)
+            degenerate = gen[i] == gen[0];
+        if (degenerate)
+            std::printf("RUN%zu: SEMANTIC_WATCHDOG=REPEATED_GREEDY_TOKEN token=%u count=%zu\n",
+                        run, gen[0], gen.size());
+        if (!finite || (gpu && st.cpu_calls != 0) || !gpu_complete || degenerate) {
             std::printf("RUN%zu VERDICT: FAIL (finite=%d cpu_calls_on_gpu=%llu "
-                        "gpu_complete=%d)\n", run, (int)finite,
-                        (unsigned long long)st.cpu_calls, (int)gpu_complete);
+                        "gpu_complete=%d degenerate=%d)\n", run, (int)finite,
+                        (unsigned long long)st.cpu_calls, (int)gpu_complete,
+                        (int)degenerate);
             return 2;
         }
         std::printf("RUN%zu VERDICT: PASS\n", run);
