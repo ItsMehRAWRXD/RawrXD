@@ -206,8 +206,12 @@ extern "C" unsigned Deep2Device_ScoreAdapter(unsigned long long dedicated,
                                               unsigned long long shared,
                                               unsigned flags) {
     // Weighted score: dedicated VRAM is worth more than shared VRAM.
-    // Use unsigned long long arithmetic to avoid overflow; cap at UINT_MAX.
-    unsigned long long score = dedicated * 2u + shared;
+    // Integrated adapters (dedicated < 1 GiB) get their shared system-memory
+    // contribution heavily discounted so a discrete GPU is never displaced
+    // by an iGPU's large shared pool (P0 GPU selection).
+    const bool integrated = dedicated < (4ull << 30);
+    unsigned long long score = dedicated * 2u +
+        (integrated ? shared / 16u : shared);
     if (flags & 1u) score += dedicated / 4u;  // bonus for compute-capable flag
     if (score > UINT_MAX) score = UINT_MAX;
     return static_cast<unsigned>(score);

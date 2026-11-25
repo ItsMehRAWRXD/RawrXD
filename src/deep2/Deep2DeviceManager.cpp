@@ -427,7 +427,7 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
             // even for discrete cards.  sharedVram > dedicatedVram alone is
             // NOT evidence of an iGPU; do not use it here.  A true iGPU has
             // very small dedicated VRAM (< 1 GB).
-            id.integrated = id.dedicatedVram < (1ull << 30);
+            id.integrated = id.dedicatedVram < (4ull << 30);
             id.score = Deep2Device_ScoreAdapter(id.dedicatedVram, id.sharedVram,
                                                 NameFlags(id.name, id.dedicatedVram));
             id.healthy = true;
