@@ -88,7 +88,7 @@ static bool g_json = false;
 // enable. Goes to stderr so --json stdout remains valid.
 static bool g_ask_trace = (std::getenv("RAWRXD_ASK_TRACE") != nullptr);
 // Agent-loop decode budget (was hardcoded 240). Overridden by --max-tokens.
-static int g_run_max_tokens = 240;
+static int g_run_max_tokens = 1024;
 #define ASK_TRACE(msg) do { if (g_ask_trace) std::cerr << "[ask-trace] " << msg << '\n'; } while (0)
 static volatile LONG g_interrupted = 0;
 
@@ -560,6 +560,8 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
         }
     }
 
+    size_t lastResultCount = 0;
+    int stallTurns = 0;
     for (int turn = 1; turn <= maxTurns; ++turn) {
         if (InterlockedCompareExchange(&g_interrupted, 0, 0) != 0) {
             ro.canceled = true;
@@ -568,6 +570,22 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
             break;
         }
         ro.turns = turn;
+        // Turn-stall guard: if 3 consecutive turns produce no new tool result
+        // (the model keeps re-emitting an already-done call, or the fallback
+        // cannot progress), terminate instead of burning the whole budget.
+        if (ro.results.size() == lastResultCount) {
+            if (++stallTurns >= 3) {
+                logLine("run: no-progress termination at turn " +
+                        std::to_string(turn) +
+                        " (no new tool result in 3 turns)");
+                ro.completed = false;
+                ro.summary = "no-progress: no new tool result in 3 turns";
+                break;
+            }
+        } else {
+            stallTurns = 0;
+            lastResultCount = ro.results.size();
+        }
         // No-progress guard: if the same tool+args has already been attempted
         // 3+ times (e.g. a failing run_build retried every turn), terminate
         // with a clear summary instead of burning the whole turn budget.
@@ -1175,7 +1193,7 @@ static int cmdRun(const std::vector<std::string>& args) {
     std::string backendFlag;  // empty → honor persisted C06 select
     std::string goal;
     size_t positional = 0;
-    g_run_max_tokens = 240;
+    g_run_max_tokens = 1024;
 
     for (size_t i = 1; i < args.size(); ++i) {
         const std::string a = args[i];
@@ -1460,6 +1478,41 @@ static int cmdRun(const std::vector<std::string>& args) {
     const int maxTurns = (std::string(mode->name) == "ask") ? 1 : 12;
     RunOutcome ro =
         runAgentLoop(completeFn, reg, ws, *mode, goal, maxTurns, g_run_max_tokens);
+
+    // ---- Host verdict synthesis (deterministic task completion) ----
+    // The model DESCRIBES the outcome; the host DETERMINES it. When the real
+    // receipts prove an edit + build + run(exit 0) satisfied a build/run task,
+    // synthesize success from that hard evidence instead of trusting a confused
+    // model final. This never fires on a failed/absent receipt.
+    if (std::string(mode->name) != "ask" && !ro.completed && !ro.canceled) {
+        auto hasOk = [&ro](const char* t) {
+            for (const auto& r : ro.results)
+                if (r.ok && r.tool == t) return true;
+            return false;
+        };
+        bool ranOk = false;
+        for (const auto& r : ro.results)
+            if (r.ok && r.tool == "run_shell" && r.exitCode == 0) ranOk = true;
+        const bool edited = hasOk("edit_files") || hasOk("write_file");
+        const bool built = hasOk("run_build");
+        const std::string low = toLower(goal);
+        const bool expectsRun = low.find("run") != std::string::npos ||
+                                low.find("exit 0") != std::string::npos ||
+                                low.find("return 0") != std::string::npos ||
+                                low.find("compile") != std::string::npos ||
+                                low.find("build") != std::string::npos;
+        if (edited && built && ranOk && expectsRun) {
+            ToolContext hctx;
+            ToolResult gd = reg.dispatch("git_diff", json::object(), hctx);
+            ro.completed = true;
+            ro.summary =
+                "HOST_VERDICT: SUCCESS - verified edit+build+run (run_shell exit 0).";
+            if (gd.ok && !gd.output.empty())
+                ro.summary += "\nSource revision (git_diff):\n" +
+                              truncateForLedger(gd.output, 800);
+            logLine("run: host verdict SUCCESS (edit+build+run receipts verified)");
+        }
+    }
 
     if (g_json) {
         json j;

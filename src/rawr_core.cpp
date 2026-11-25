@@ -648,8 +648,10 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                 cmd = "cmake --build \"" + bdir + "\" --config " + config;
             } else {
                 // Prefer the live IDE build tree when present; fall back through
-                // common local cmake dirs instead of hard-failing on build_vs.
-                std::string bdir = "build_vs";
+                // common local cmake dirs. If none exist but the workspace root
+                // is a CMake project, configure+build it so a model that omitted
+                // "dir" still produces a real build (workspace-aware).
+                std::string bdir;
                 for (const char* cand : {"build_ide", "build", "build_vs", "build_ninja"}) {
                     std::error_code bec;
                     if (fs::exists(fs::path(ws.root()) / cand, bec) && !bec) {
@@ -657,7 +659,31 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                         break;
                     }
                 }
-                cmd = "cmake --build " + bdir + " --config " + config;
+                if (bdir.empty()) {
+                    std::string rootAbs = ws.resolve(".", true);
+                    if (!rootAbs.empty() && hasCMake(rootAbs)) {
+                        std::string nbdir = rootAbs + "\\build";
+                        CommandResult cfg = runBoundedCommand(
+                            "cmake -S \"" + rootAbs + "\" -B \"" + nbdir + "\"",
+                            ws.root(), 300000);
+                        r.output = cfg.output;
+                        if (!(cfg.launched && cfg.completed && cfg.exitCode == 0)) {
+                            r.ok = false;
+                            r.exitCode = cfg.exitCode;
+                            if (!cfg.completed)
+                                r.output += "\nBUILD_CONFIGURE_DID_NOT_COMPLETE";
+                            return r;
+                        }
+                        cmd = "cmake --build \"" + nbdir + "\" --config " + config;
+                    } else {
+                        r.output =
+                            "ERROR: no build directory and no CMakeLists.txt in "
+                            "workspace root";
+                        return r;
+                    }
+                } else {
+                    cmd = "cmake --build " + bdir + " --config " + config;
+                }
             }
             CommandResult c = runBoundedCommand(cmd, ws.root(), 900000);
             r.output += c.output;
