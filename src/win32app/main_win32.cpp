@@ -6,6 +6,7 @@
 #include <fstream>
 #include <mutex>
 #include <atomic>
+#include <cstdlib>
 #include <dbghelp.h>
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
 #include "Win32IDE_ExtHostWire.h"
@@ -23,11 +24,19 @@ LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
         info.ThreadId = GetCurrentThreadId();
         info.ExceptionPointers = ep;
         info.ClientPointers = FALSE;
-        MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file,
-                          static_cast<MINIDUMP_TYPE>(
-                              MiniDumpWithDataSegs | MiniDumpWithHandleData |
-                              MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules),
-                          ep ? &info : nullptr, nullptr, nullptr);
+        // The thread-info/unloaded-module dump can fail on some faulting paths
+        // (e.g. 0xC000041D fatal user-callback), leaving a 0-byte file. Retry
+        // with a plain normal dump so the minidump is never empty.
+        if (!MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file,
+                              static_cast<MINIDUMP_TYPE>(
+                                  MiniDumpWithDataSegs | MiniDumpWithHandleData |
+                                  MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules),
+                              ep ? &info : nullptr, nullptr, nullptr)) {
+            SetFilePointer(file, 0, nullptr, FILE_BEGIN);
+            SetEndOfFile(file);
+            MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file,
+                              MiniDumpNormal, ep ? &info : nullptr, nullptr, nullptr);
+        }
         CloseHandle(file);
     }
     HANDLE log = CreateFileA(
@@ -35,57 +44,85 @@ LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
         GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL, nullptr);
     if (log != INVALID_HANDLE_VALUE) {
+        char line[1024];
+        DWORD written = 0;
+        auto writeLine = [&](const char* text) {
+            WriteFile(log, text, static_cast<DWORD>(std::strlen(text)), &written, nullptr);
+        };
+        const auto* record = ep ? ep->ExceptionRecord : nullptr;
+        const auto* context = ep ? ep->ContextRecord : nullptr;
+        // Fault line is written UNCONDITIONALLY (outside any SymInitialize
+        // guard) so a missing PDB can never reduce the log to 0 bytes.
+        std::snprintf(line, sizeof(line),
+                      "fault=0x%08lX access=%llu address=0x%llX rip=0x%llX rsp=0x%llX rbp=0x%llX rcx=0x%llX rdx=0x%llX r8=0x%llX r9=0x%llX\n",
+                      record ? record->ExceptionCode : 0,
+                      record && record->NumberParameters > 0
+                          ? static_cast<unsigned long long>(record->ExceptionInformation[0]) : 0ull,
+                      record && record->NumberParameters > 1
+                          ? static_cast<unsigned long long>(record->ExceptionInformation[1]) : 0ull,
+                      context ? static_cast<unsigned long long>(context->Rip) : 0ull,
+                      context ? static_cast<unsigned long long>(context->Rsp) : 0ull,
+                      context ? static_cast<unsigned long long>(context->Rbp) : 0ull,
+                      context ? static_cast<unsigned long long>(context->Rcx) : 0ull,
+                      context ? static_cast<unsigned long long>(context->Rdx) : 0ull,
+                      context ? static_cast<unsigned long long>(context->R8) : 0ull,
+                      context ? static_cast<unsigned long long>(context->R9) : 0ull);
+        writeLine(line);
+        void* frames[64]{};
+        const USHORT count = CaptureStackBackTrace(0, 64, frames, nullptr);
+        std::snprintf(line, sizeof(line), "exception=0x%08lX thread=%lu frames=%u\n",
+                      record ? record->ExceptionCode : 0,
+                      GetCurrentThreadId(), static_cast<unsigned>(count));
+        writeLine(line);
+        // Symbolication is best-effort. Module+RVA is ALWAYS emitted per frame
+        // so the fault resolves against a PDB/.map even when SymInitialize fails
+        // (the previous 0-byte-log failure mode).
         SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
-        if (SymInitialize(GetCurrentProcess(), "F:\\rawrxd\\build\\bin\\Release", TRUE)) {
-            void* frames[64]{};
-            const USHORT count = CaptureStackBackTrace(0, 64, frames, nullptr);
-            char line[512];
-            DWORD written = 0;
-            auto writeLine = [&](const char* text) {
-                WriteFile(log, text, static_cast<DWORD>(std::strlen(text)), &written, nullptr);
-            };
-            const auto* record = ep ? ep->ExceptionRecord : nullptr;
-            const auto* context = ep ? ep->ContextRecord : nullptr;
-            std::snprintf(line, sizeof(line),
-                          "fault=0x%08lX access=%llu address=0x%llX rip=0x%llX rsp=0x%llX rbp=0x%llX rcx=0x%llX rdx=0x%llX r8=0x%llX r9=0x%llX\n",
-                          record ? record->ExceptionCode : 0,
-                          record && record->NumberParameters > 0
-                              ? static_cast<unsigned long long>(record->ExceptionInformation[0]) : 0ull,
-                          record && record->NumberParameters > 1
-                              ? static_cast<unsigned long long>(record->ExceptionInformation[1]) : 0ull,
-                          context ? static_cast<unsigned long long>(context->Rip) : 0ull,
-                          context ? static_cast<unsigned long long>(context->Rsp) : 0ull,
-                          context ? static_cast<unsigned long long>(context->Rbp) : 0ull,
-                          context ? static_cast<unsigned long long>(context->Rcx) : 0ull,
-                          context ? static_cast<unsigned long long>(context->Rdx) : 0ull,
-                          context ? static_cast<unsigned long long>(context->R8) : 0ull,
-                          context ? static_cast<unsigned long long>(context->R9) : 0ull);
-            writeLine(line);
-            std::snprintf(line, sizeof(line), "exception=0x%08lX thread=%lu frames=%u\n",
-                          record ? record->ExceptionCode : 0,
-                          GetCurrentThreadId(), static_cast<unsigned>(count));
-            writeLine(line);
-            for (USHORT i = 0; i < count; ++i) {
-                const DWORD64 address = reinterpret_cast<DWORD64>(frames[i]);
+        const bool symReady =
+            SymInitialize(GetCurrentProcess(), "F:\\rawrxd\\build\\bin\\Release", TRUE) != FALSE;
+        for (USHORT i = 0; i < count; ++i) {
+            const DWORD64 address = reinterpret_cast<DWORD64>(frames[i]);
+            char modName[MAX_PATH];
+            modName[0] = '\0';
+            DWORD64 base = 0;
+            HMODULE mod = nullptr;
+            if (GetModuleHandleExA(
+                    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                    reinterpret_cast<LPCSTR>(address), &mod) && mod) {
+                base = reinterpret_cast<DWORD64>(mod);
+                GetModuleFileNameA(mod, modName, MAX_PATH);
+            } else {
+                std::snprintf(modName, sizeof(modName), "<unknown>");
+            }
+            const DWORD64 rva = (base && address >= base) ? (address - base) : 0ull;
+            bool symbolized = false;
+            if (symReady) {
                 alignas(SYMBOL_INFO) char storage[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
                 auto* symbol = reinterpret_cast<PSYMBOL_INFO>(storage);
                 symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
                 symbol->MaxNameLen = MAX_SYM_NAME;
                 DWORD64 displacement = 0;
                 if (SymFromAddr(GetCurrentProcess(), address, &displacement, symbol)) {
-                    std::snprintf(line, sizeof(line), "#%u %s+0x%llX @0x%llX\n",
+                    std::snprintf(line, sizeof(line),
+                                  "#%u %s+0x%llX @0x%llX (%s+0x%llX)\n",
                                   static_cast<unsigned>(i), symbol->Name,
                                   static_cast<unsigned long long>(displacement),
-                                  static_cast<unsigned long long>(address));
-                } else {
-                    std::snprintf(line, sizeof(line), "#%u <unknown> @0x%llX\n",
-                                  static_cast<unsigned>(i),
-                                  static_cast<unsigned long long>(address));
+                                  static_cast<unsigned long long>(address),
+                                  modName, static_cast<unsigned long long>(rva));
+                    writeLine(line);
+                    symbolized = true;
                 }
+            }
+            if (!symbolized) {
+                std::snprintf(line, sizeof(line), "#%u <unknown> @0x%llX (%s+0x%llX)\n",
+                              static_cast<unsigned>(i),
+                              static_cast<unsigned long long>(address),
+                              modName, static_cast<unsigned long long>(rva));
                 writeLine(line);
             }
-            SymCleanup(GetCurrentProcess());
         }
+        if (symReady) SymCleanup(GetCurrentProcess());
         CloseHandle(log);
     }
     return EXCEPTION_EXECUTE_HANDLER;
@@ -260,7 +297,13 @@ void applyUserDataDirFromCmdLine(const char* lpCmdLine)
 } // namespace
 
 
-// RAWRXD_GUARD_5: minimal unhandled-exception witness (no stack walk).
+// RAWRXD_GUARD_5: authoritative top-level unhandled-exception filter.
+// Writes a lightweight witness (code / address / module / thread) using only
+// stack storage and C stdio (no heap, no locks), then chains to the minidump
+// filter so a SINGLE install produces both the witness line and the full dump.
+// Fixes two prior defects: (1) a second SetUnhandledExceptionFilter() replaced
+// this filter and left the witness dead; (2) `if (std::FILE* f = nullptr)` was
+// always false, so the witness never wrote at all.
 static LONG WINAPI RawrxdCrashFilter(EXCEPTION_POINTERS* ep)
 {
     if (!ep || !ep->ExceptionRecord) return EXCEPTION_CONTINUE_SEARCH;
@@ -275,22 +318,50 @@ static LONG WINAPI RawrxdCrashFilter(EXCEPTION_POINTERS* ep)
             (LPCSTR)addr, &mod)) {
         GetModuleFileNameA(mod, module, MAX_PATH);
     }
-    if (std::FILE* f = nullptr) {
-        if (fopen_s(&f, "F:\\rawrxd\\evidence\\IDE_CRASH.log", "a") == 0 && f) {
-            fprintf(f, "[CRASH] code=0x%08lX addr=%p module=%s tid=%lu\n",
-                    (unsigned long)code, addr, module, (unsigned long)GetCurrentThreadId());
-            fclose(f);
-        }
+    char line[512];
+    std::snprintf(line, sizeof(line),
+                  "[CRASH] code=0x%08lX addr=%p module=%s tid=%lu\n",
+                  (unsigned long)code, addr, module, (unsigned long)GetCurrentThreadId());
+    std::FILE* f = nullptr;
+    if (fopen_s(&f, "F:\\rawrxd\\evidence\\IDE_CRASH.log", "a") == 0 && f) {
+        fputs(line, f);
+        fclose(f);
     }
-    return EXCEPTION_CONTINUE_SEARCH;
+    // Chain to the minidump filter (single authoritative install in WinMain).
+    return rawrxdUnhandledException(ep);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    // Single authoritative filter: RawrxdCrashFilter writes the witness and
+    // chains to rawrxdUnhandledException (minidump). Installing the minidump
+    // filter again here would replace the witness and leave it dead (prior bug).
     SetUnhandledExceptionFilter(RawrxdCrashFilter);
-    SetUnhandledExceptionFilter(rawrxdUnhandledException);
     startupTrace("WinMain entered");
     startupTrace(lpCmdLine && *lpCmdLine ? lpCmdLine : "WinMain command line empty");
+
+    // Test hook (E2E acceptance for the crash filter): --crash-inject=<av|div0|abort>
+    // deliberately faults so the unhandled-exception filter -> witness ->
+    // minidump -> termination path can be validated end-to-end. Defense in depth:
+    // it is inert unless BOTH the CLI flag AND the RAWRXD_TEST_HOOKS env var are
+    // present, so it cannot be activated in a distributed production config.
+    if (lpCmdLine && std::strstr(lpCmdLine, "--crash-inject") &&
+        GetEnvironmentVariableA("RAWRXD_TEST_HOOKS", nullptr, 0) != 0) {
+        const char* kind = std::strstr(lpCmdLine, "--crash-inject=");
+        kind = kind ? kind + 15 : "av";
+        startupTrace("crash-inject requested");
+        if (std::strstr(kind, "div0")) {
+            volatile int z = 0;
+            volatile int x = 1 / z;  // EXCEPTION_INT_DIVIDE_BY_ZERO
+            (void)x;
+        } else if (std::strstr(kind, "abort")) {
+            std::abort();            // SIGABRT / fail-fast
+        } else {
+            volatile int* p = nullptr;
+            *p = 1;                  // EXCEPTION_ACCESS_VIOLATION (default)
+        }
+    }
+
     applyUserDataDirFromCmdLine(lpCmdLine);
 
     // Terminal product ConPTY smoke: run before IDE ctor (no UI/GPU races).

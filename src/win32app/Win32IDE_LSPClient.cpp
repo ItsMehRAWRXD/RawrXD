@@ -31,6 +31,7 @@
 #include "Win32IDE_Types.h"
 #include "core/problems_aggregator.hpp"
 #include "lsp/RawrXD_LSPServer.h"
+#include "lsp_content_length.h"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -771,7 +772,13 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
                 size_t valStart = clPos + 15;  // strlen("Content-Length:")
                 while (valStart < header.size() && header[valStart] == ' ')
                     valStart++;
-                contentLength = std::stoi(header.substr(valStart));
+                // Strict parse (shared with the acceptance test): accepts only
+                // pure decimal digits, bounded, no trailing garbage. Reject ->
+                // contentLength stays 0 -> the frame is dropped below without
+                // allocating (explicit stream recovery).
+                int parsed = 0;
+                rawrxd::ParseLspContentLength(header, valStart, parsed);
+                contentLength = parsed;
             }
 
             if (contentLength <= 0)
