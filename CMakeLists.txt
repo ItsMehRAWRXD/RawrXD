@@ -1080,6 +1080,66 @@ else()
     message(STATUS "deep2_bench_tps EXCLUDED: benchmark source or Vulkan SDK unavailable")
 endif()
 
+# Canonical production benchmark target (Package 1). Same production link set as
+# deep2_bench_tps, exposed under the stable name deep2_benchmark so the benchmark
+# matrix has a single authoritative executable to build and run.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND
+   Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_benchmark
+        tools/deep2_bench_tps.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/op_gdn.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
+    )
+    target_include_directories(deep2_benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_benchmark PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_benchmark PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_benchmark PRIVATE ggml-vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_benchmark PRIVATE /EHsc /std:c++20 /bigobj
+            $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_benchmark PRIVATE -std=c++20 -fexceptions
+            $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_benchmark PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_benchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_benchmark enabled (canonical production timing witness)")
+else()
+    message(STATUS "deep2_benchmark EXCLUDED: benchmark source or Vulkan SDK unavailable")
+endif()
+
 # Full-model certification runner.  This is intentionally a separate target
 # from the metadata probes: it binds the complete runtime graph, executes the
 # supplied token sequence, and compares the full vocabulary logits on the GPU
