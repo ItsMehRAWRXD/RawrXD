@@ -1150,6 +1150,8 @@ void Win32IDE::saveIdeSession() {
         root["editor_state"] = {{"selStart", (int)sel.cpMin}, {"selEnd", (int)sel.cpMax},
                                 {"scrollX", (int)sp.x}, {"scrollY", (int)sp.y}};
     }
+    // Active theme (item 7).
+    root["theme"] = m_appearance.themeName;
 
     nlohmann::json chat = nlohmann::json::object();
     chat["active"] = m_activeChatSession;
@@ -1436,6 +1438,11 @@ void Win32IDE::loadIdeSession() {
             SendMessageA(m_hwndEditor, EM_SETSEL, (WPARAM)s0, (LPARAM)s1);
             POINT sp{es.value("scrollX", 0), es.value("scrollY", 0)};
             SendMessageA(m_hwndEditor, EM_SETSCROLLPOS, 0, (LPARAM)&sp);
+        }
+        // Restore active theme (item 7).
+        if (root.contains("theme") && root["theme"].is_string()) {
+            m_appearance.themeName = root["theme"].get<std::string>();
+            applyTheme(m_appearance.themeName);
         }
         if (m_openDocuments.empty()) {
             addDocumentTab(std::string());
