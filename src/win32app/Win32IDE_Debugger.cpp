@@ -467,6 +467,13 @@ void Win32IDE::applyNativeDebugSnapshot(const rawrxd::NativeDebugSnapshot& snap)
             }
         }
     }
+    if (snap.stopReason.rfind("data:", 0) == 0) {
+        // D5: hardware data breakpoint stop — surface it in the Debug Console
+        // and park the debugger on the watched address.
+        appendToOutput("Data breakpoint hit (native WaitForDebugEvent) " +
+                           snap.stopReason + "\n",
+                       "Debug", OutputSeverity::Warning);
+    }
     if (m_hwndDebuggerStatus) {
         std::ostringstream oss;
         oss << "Native debug: " << snap.stopReason << " rip=0x" << std::hex << snap.rip;
@@ -509,6 +516,9 @@ LRESULT Win32IDE::handleNativeDebugState(WPARAM wParam, LPARAM lParam)
     if (snap->stopReason.rfind("breakpoint:", 0) == 0) {
         appendToOutput("Breakpoint hit (native WaitForDebugEvent)\n", "Debug",
                        OutputSeverity::Warning);
+    } else if (snap->stopReason.rfind("data:", 0) == 0) {
+        appendToOutput("Data breakpoint hit (native WaitForDebugEvent) " +
+                           snap->stopReason + "\n", "Debug", OutputSeverity::Warning);
     } else if (snap->state == rawrxd::NativeDebugState::Terminated) {
         appendToOutput(std::string("Debuggee exited code=") +
                            std::to_string(snap->exitCode) + "\n",
