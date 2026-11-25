@@ -1794,6 +1794,8 @@ public:
     void debuggerStackFollow(int index);
     // D7 disassembly at RIP (Win32IDE_Debugger.cpp).
     void debuggerDisasmAtRip();
+    // P0 chat worker trace (Win32IDE_ComputerUse.cpp).
+    void ChatTraceMark(const char* op);
     // D5 memory breakpoints (Win32IDE_Debugger.cpp).
     void debuggerAddDataBreakpoint(const std::string& args);
     // A6 sub-agent panel (Win32IDE_SubAgentPanel.cpp).
@@ -2987,8 +2989,11 @@ public:
     std::unique_ptr<ModelDiscoveryPayload> m_deferredModelDiscovery;
     bool m_modelDiscoveryUpdateDeferred = false;
     std::vector<std::pair<std::string, std::string>> m_chatHistory; // role, message
-    std::vector<ChatSessionState> m_chatSessions;
-    std::vector<ChatSessionState> m_closedChatSessions;
+    std::vector<ChatSessionState> m_chatSessions;
+    std::vector<ChatSessionState> m_closedChatSessions;
+    // P0: responseBuffer is written by the inference worker and read by the
+    // UI timer thread (chat smoke) - every access must hold this mutex.
+    mutable std::mutex m_responseBufferMutex;
     int m_activeChatSession = -1;
     int m_nextChatSessionId = 1;
 

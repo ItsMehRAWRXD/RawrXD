@@ -9969,8 +9969,12 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
                 appendCopilotChatUtf8("\r\nAI: ");
             }
         }
-        session->responseBuffer += response;
-        if (active && m_hwndCopilotChatOutput && !response.empty()) {
+        ChatTraceMark("callback enter");
+        {
+            std::lock_guard<std::mutex> _rbLock(m_responseBufferMutex);
+            session->responseBuffer += response;
+        }
+        if (active && m_hwndCopilotChatOutput && !response.empty()) {
             appendCopilotChatUtf8(response);
         }
         appendNativeDebugOutput(std::string("[CHAT_RUNTIME] partial_buffer_bytes=") +
@@ -9991,8 +9995,12 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
                 std::to_string(g_lastChatDispatchId.load(
                     std::memory_order_acquire)));
         }
-        session->responseBuffer += response;
-        if (active && m_hwndCopilotChatOutput) {
+        ChatTraceMark("callback partial done");
+        {
+            std::lock_guard<std::mutex> _rbLock(m_responseBufferMutex);
+            session->responseBuffer += response;
+        }
+        if (active && m_hwndCopilotChatOutput) {
             const std::string line = firstResponse
                 ? "\r\nAI: " + response + "\r\n\r\n"
                 : response;
@@ -10033,8 +10041,11 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
         SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
             reinterpret_cast<LPARAM>(status.c_str()));
     }
-    session->responseBuffer.clear();
-    session->running = false;
+        {
+            std::lock_guard<std::mutex> _rbLock(m_responseBufferMutex);
+            session->responseBuffer.clear();
+        }
+        session->running = false;
     if (active && m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
     if (active) m_chatHistory = session->history;
     updateChatSessionTabs();
@@ -10088,10 +10099,11 @@ void Win32IDE::HandleCopilotStop()
     if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
     m_agentStepTimeline.closeThoughtIfOpen();
     m_agentStepTimeline.addChip("stopped", "generation cancelled");
-    if (auto* session = activeChatSession()) {
-        session->running = false;
-        session->responseBuffer.clear();
-    }
+    if (auto* session = activeChatSession()) {
+        std::lock_guard<std::mutex> _rbLock(m_responseBufferMutex);
+        session->running = false;
+        session->responseBuffer.clear();
+    }
     if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
     if (m_hwndStatusBar) {
         const std::string status = "Chat generation stopped.";

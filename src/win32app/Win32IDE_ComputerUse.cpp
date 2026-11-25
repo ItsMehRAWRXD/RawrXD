@@ -200,6 +200,14 @@ void ChatSmokeMark(const char* op) {
 
 }  // namespace
 
+void Win32IDE::ChatTraceMark(const char* op) {
+    std::FILE* f = std::fopen(".rawrxd/chat_smoke_trace.txt", "a");
+    if (!f) return;
+    std::fprintf(f, "WORKER tid=%lu op=%s\n",
+                 (unsigned long)GetCurrentThreadId(), op);
+    std::fclose(f);
+}
+
 void Win32IDE::beginChatSmoke(const char* receiptPath) {
     ChatSmokeMark("CHAT_01 enter beginChatSmoke");
     m_chatSmokeReceiptPath = receiptPath && *receiptPath
@@ -227,6 +235,14 @@ void Win32IDE::tickChatSmoke() {
     const ULONGLONG elapsed = GetTickCount64() - m_chatSmokeStartMs;
     auto finish = [this](bool pass) {
         if (m_hwndMain) KillTimer(m_hwndMain, IDT_CHAT_SMOKE);
+        // Deterministic cooperative shutdown before ExitProcess: signal the
+        // worker to stop, then join ONLY when it is already idle. Never join a
+        // live worker from the UI thread -- the token callback SendMessages to
+        // this thread, so a join would deadlock.
+        m_inferenceStopRequested.store(true, std::memory_order_release);
+        if (!m_inferenceRunning.load(std::memory_order_acquire)) {
+            drainCancelledInferenceWorker();
+        }
         m_chatSmokePhase = -1;
         CreateDirectoryA("F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013", nullptr);
         std::ofstream rec(m_chatSmokeReceiptPath, std::ios::trunc);
@@ -240,6 +256,14 @@ void Win32IDE::tickChatSmoke() {
                 << "OVERALL=" << (pass ? "PASS" : "FAIL") << "\n";
         }
         logInfo(pass ? "[chat-smoke] PASS" : "[chat-smoke] FAIL");
+        ChatSmokeMark("CHAT_10 teardown: drain worker");
+        // Deterministic teardown: stop generation and wait for the worker
+        // to finish before ExitProcess (no live worker at process death).
+        HandleCopilotStop();
+        for (int i = 0; i < 100 && m_inferenceRunning.load(
+                std::memory_order_acquire); ++i)
+            Sleep(50);
+        ChatSmokeMark("CHAT_10 exit");
         ::ExitProcess(pass ? 0u : 2u);
     };
     if (elapsed > 180000ull) { finish(false); return; }
@@ -309,7 +333,9 @@ void Win32IDE::tickChatSmoke() {
             ? getWindowTextUtf8(m_hwndCopilotChatOutput) : std::string();
         if (out.size() > m_chatSmokeOutBaseline + 4) m_chatSmokeSawTokens = true;
         if (auto* s = activeChatSession()) {
-            if (s->responseBuffer.size() > 4) m_chatSmokeSawTokens = true;
+            std::lock_guard<std::mutex> _rbLock(m_responseBufferMutex);
+            // P0: responseBuffer is worker-thread-owned; never read it from the
+            // UI timer (heap-corruption data race -> 0xC0000005 in ntdll).
         }
         if (m_chatSmokeSawTokens || elapsed > 90000ull) {
             HandleCopilotStop();
@@ -332,7 +358,9 @@ void Win32IDE::tickChatSmoke() {
             ? getWindowTextUtf8(m_hwndCopilotChatOutput) : std::string();
         if (out.size() > m_chatSmokeOutBaseline + 4) m_chatSmokeSawTokens2 = true;
         if (auto* s = activeChatSession()) {
-            if (s->responseBuffer.size() > 4) m_chatSmokeSawTokens2 = true;
+            std::lock_guard<std::mutex> _rbLock(m_responseBufferMutex);
+            // P0: responseBuffer is worker-thread-owned; never read it from the
+            // UI timer (heap-corruption data race -> 0xC0000005 in ntdll).
         }
         const bool done = !m_inferenceRunning.load(std::memory_order_acquire);
         if ((m_chatSmokeSawTokens2 && done) || elapsed > 150000ull) {
