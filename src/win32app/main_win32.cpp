@@ -304,9 +304,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
     }
 
-    // Initialize logger early
+    // Initialize logger early. P0: workspace-local by default (the old
+    // C:\ path is outside the sandbox and unreadable for diagnostics).
     try {
-        IDELogger::getInstance().initialize("C:\\RawrXD_IDE.log");
+        const char* logEnv = std::getenv("RAWRXD_IDE_LOG");
+        IDELogger::getInstance().initialize(
+            logEnv && *logEnv ? logEnv : ".rawrxd/ide.log");
         IDELogger::getInstance().setLevel(IDELogger::Level::DEBUG);
         LOG_INFO("WinMain started - RawrXD Win32 IDE initializing");
     } catch (...) {

@@ -188,7 +188,20 @@ std::vector<std::string> Win32IDE::listComputerUseTools() const {
 #endif
 }
 
+namespace {
+
+// P0 chat-smoke crash diagnostics: flushed marker file (workspace-local).
+void ChatSmokeMark(const char* op) {
+    std::FILE* f = std::fopen(".rawrxd/chat_smoke_trace.txt", "a");
+    if (!f) return;
+    std::fprintf(f, "%s op=%s\n", __func__, op);
+    std::fclose(f);
+}
+
+}  // namespace
+
 void Win32IDE::beginChatSmoke(const char* receiptPath) {
+    ChatSmokeMark("CHAT_01 enter beginChatSmoke");
     m_chatSmokeReceiptPath = receiptPath && *receiptPath
         ? receiptPath
         : "F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013\\CHAT_SMOKE_RECEIPT.txt";
@@ -232,10 +245,19 @@ void Win32IDE::tickChatSmoke() {
     if (elapsed > 180000ull) { finish(false); return; }
 
     if (m_chatSmokePhase == 0) {
-        if (!m_hwndModelSelector) return;
+        ChatSmokeMark("CHAT_02 phase0 model selector check");
+        if (!m_hwndModelSelector || !IsWindow(m_hwndModelSelector)) {
+            ChatSmokeMark("CHAT_03 model selector HWND invalid");
+            return;
+        }
         int comboRow = -1;
         const int count = static_cast<int>(
             SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0));
+        {
+            const std::string rows = "CHAT_04 model rows=" +
+                                     std::to_string(count);
+            ChatSmokeMark(rows.c_str());
+        }
         for (int r = 0; r < count; ++r) {
             const LRESULT data = SendMessage(
                 m_hwndModelSelector, CB_GETITEMDATA, static_cast<WPARAM>(r), 0);
@@ -261,22 +283,29 @@ void Win32IDE::tickChatSmoke() {
             }
         }
         if (comboRow < 0) return;
+        ChatSmokeMark("CHAT_05 send");
         SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(comboRow), 0);
         onModelSelectionChanged();
+        ChatSmokeMark("CHAT_06 model selected");
         m_chatSmokeModelOk =
             m_selectedChatModel.source == ChatModelEntry::Source::Ollama &&
             !m_selectedChatModel.identifier.empty();
         if (!m_chatSmokeModelOk) return;
-        m_chatSmokeOutBaseline = m_hwndCopilotChatOutput
+        m_chatSmokeOutBaseline = (m_hwndCopilotChatOutput &&
+            IsWindow(m_hwndCopilotChatOutput))
             ? getWindowTextUtf8(m_hwndCopilotChatOutput).size() : 0;
+        ChatSmokeMark("CHAT_07 copilot send");
         stageCopilotChatInputUtf8("Reply with exactly: PONG_GUI_SMOKE_1");
         HandleCopilotSend();
+        ChatSmokeMark("CHAT_08 sent");
         m_chatSmokePhase = 1;
         return;
     }
     if (m_chatSmokePhase == 1) {
-        const std::string out = m_hwndCopilotChatOutput
+        ChatSmokeMark("CHAT_09 poll tokens");
+        const std::string out = (m_hwndCopilotChatOutput &&
+            IsWindow(m_hwndCopilotChatOutput))
             ? getWindowTextUtf8(m_hwndCopilotChatOutput) : std::string();
         if (out.size() > m_chatSmokeOutBaseline + 4) m_chatSmokeSawTokens = true;
         if (auto* s = activeChatSession()) {
