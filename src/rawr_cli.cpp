@@ -40,6 +40,7 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <regex>
 #include <sstream>
@@ -342,7 +343,11 @@ static bool resolveRunToolCall(const json& obj, RunToolCall& t) {
 
     static const std::set<std::string> known = {
         "list_repo", "read_file", "search_text", "git_status",
-        "write_file", "run_build", "run_tests", "edit_files", "git_diff"};
+        "write_file", "run_build", "run_tests", "edit_files", "git_diff",
+        "run_shell"};
+    // The action field is authoritative when it names a known tool; otherwise
+    // fall back to the tool field. This prevents a stale/conflicting "tool"
+    // from overriding the model's actual intent (e.g. action=run_shell).
     if (known.count(fromAction)) t.tool = fromAction;
     else if (known.count(fromTool)) t.tool = fromTool;
     else t.tool = fromAction.empty() ? fromTool : fromAction;
@@ -563,6 +568,26 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
             break;
         }
         ro.turns = turn;
+        // No-progress guard: if the same tool+args has already been attempted
+        // 3+ times (e.g. a failing run_build retried every turn), terminate
+        // with a clear summary instead of burning the whole turn budget.
+        {
+            std::map<std::string, int> attemptCounts;
+            for (const auto& res : ro.results)
+                attemptCounts[res.tool + "|" + res.argsJson]++;
+            int worstRepeat = 0;
+            std::string worstKey;
+            for (const auto& kv : attemptCounts)
+                if (kv.second > worstRepeat) { worstRepeat = kv.second; worstKey = kv.first; }
+            if (worstRepeat >= 3) {
+                logLine("run: no-progress termination at turn " + std::to_string(turn) +
+                        " after " + std::to_string(worstRepeat) + "x " + worstKey);
+                ro.completed = false;
+                ro.summary = "no-progress: repeated tool call " + worstKey +
+                             " (" + std::to_string(worstRepeat) + " attempts)";
+                break;
+            }
+        }
         const int turnBudget =
             (finalOnly && !askMode) ? (std::max)(decodeBudget, 900) : decodeBudget;
         InferenceResult r = completeFn(messages, turnBudget);
@@ -625,7 +650,7 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
             donePre.insert(res.tool + "|" + res.argsJson);
         static const std::set<std::string> kKnownTools = {
             "list_repo", "read_file", "search_text", "git_status", "write_file",
-            "run_build", "run_tests", "edit_files", "git_diff"};
+            "run_build", "run_tests", "edit_files", "git_diff", "run_shell"};
         bool modelHasPendingTool = false;
         bool modelHasFinal = false;
         for (const auto& cand : objects) {
@@ -872,8 +897,8 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
         for (const auto& res : ro.results) done.insert(res.tool + "|" + res.argsJson);
 
         bool haveNext = false, planExhausted = false, haveFinal = false;
-        std::string nextTool;
-        json nextArgs = json::object();
+        std::vector<std::pair<std::string, json>> pendingCalls;
+        std::set<std::string> queued;
         const json* finalObj = nullptr;
 
         for (const auto& cand : objects) {
@@ -897,15 +922,15 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
             }
             RunToolCall tc;
             if (!resolveRunToolCall(cand, tc)) continue;
-            if (done.count(tc.tool + "|" + tc.args.dump())) continue;
-            haveNext = true;
-            nextTool = tc.tool;
-            nextArgs = tc.args;
-            break;  // first pending step (plan order)
+            std::string key = tc.tool + "|" + tc.args.dump();
+            if (done.count(key)) continue;
+            if (!queued.insert(key).second) continue;  // dedup within the turn
+            pendingCalls.emplace_back(tc.tool, tc.args);
         }
+        haveNext = !pendingCalls.empty();
         planExhausted = (!haveNext && haveFinal == false && !ro.results.empty());
 
-        if (finalObj && !planExhausted) {
+        if (finalObj && !planExhausted && !haveNext) {
             // GROUNDING GATE: a final answer must carry substance and, when it
             // asserts repository or file facts, rest on at least one real
             // execution. Without this the loop accepted a git_status request
@@ -1045,26 +1070,28 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
         }
 
         if (haveNext) {
-            logLine("run: tool call " + nextTool + " args=" + nextArgs.dump());
-            ToolResult tr = reg.dispatch(nextTool, nextArgs, ctx);
-            ro.results.push_back(tr);
-            if (tr.denied) ++ro.denied;
-            writeAgentCheckpoint(&ro, "after_" + nextTool, goal);
+            std::string combined;
+            for (const auto& call : pendingCalls) {
+                logLine("run: tool call " + call.first + " args=" + call.second.dump());
+                ToolResult tr = reg.dispatch(call.first, call.second, ctx);
+                ro.results.push_back(tr);
+                if (tr.denied) ++ro.denied;
+                writeAgentCheckpoint(&ro, "after_" + call.first, goal);
 
-            // Capture read_file output for orchestrator fallback diagnosis
-            if (nextTool == "read_file" && tr.ok) {
-                fbFileContents = tr.output;
+                // Capture read_file output for orchestrator fallback diagnosis
+                if (call.first == "read_file" && tr.ok) fbFileContents = tr.output;
+
+                std::string firstLine = tr.output.substr(0, tr.output.find('\n'));
+                if (firstLine.size() > 140) firstLine = firstLine.substr(0, 140);
+                combined += "- " + tr.tool + " " + tr.argsJson + " -> " +
+                            (tr.ok ? "OK" : (tr.denied ? "DENIED" : "FAILED")) + " | " +
+                            firstLine + "\n";
             }
-
-            std::string firstLine = tr.output.substr(0, tr.output.find('\n'));
-            if (firstLine.size() > 140) firstLine = firstLine.substr(0, 140);
-            digest += "- " + tr.tool + " " + tr.argsJson + " -> " +
-                      (tr.ok ? "OK" : (tr.denied ? "DENIED" : "FAILED")) + " | " +
-                      firstLine + "\n";
+            digest += combined;
 
             if (static_cast<int>(ro.results.size()) >= 9) finalOnly = true;
-            commit("TOOL_RESULT " + tr.tool + " (real output, summarized):\n" +
-                   truncateForLedger(tr.output, 1400) +
+            commit("TOOL_RESULT (real output, summarized):\n" +
+                   truncateForLedger(combined, 1400) +
                    "\n\nContinue with the next step of your plan, or reply with "
                    "{\"action\":\"final\",\"summary\":\"...\",\"findings\":[...],"
                    "\"next_actions\":[...]}");

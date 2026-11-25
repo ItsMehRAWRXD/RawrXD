@@ -612,11 +612,27 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
             r.tool = "run_build";
             std::string config = args.value("config", std::string("Release"));
             std::string dir = args.value("dir", std::string());
+            // Separate compiler flags from the build configuration: a value such
+            // as "-std=c++17" is a compiler flag, not a CMake --config. Coerce
+            // anything that is empty or flag-like to a real configuration.
+            if (config.empty() || config[0] == '-') config = "Release";
+            auto hasCMake = [](const std::string& d) {
+                std::error_code ec;
+                return fs::exists(fs::path(d) / "CMakeLists.txt", ec) && !ec;
+            };
             std::string cmd;
             if (!dir.empty()) {
                 std::string abs = ws.resolve(dir, true);
-                if (abs.empty()) {
-                    r.output = "ERROR: build dir outside workspace or not found: " + dir;
+                // Workspace-aware build detection: if the requested dir has no
+                // CMakeLists.txt (e.g. the model passed "src"), fall back to the
+                // workspace root, the common single-project layout.
+                if (abs.empty() || !hasCMake(abs)) {
+                    std::string rootAbs = ws.resolve(".", true);
+                    if (!rootAbs.empty() && hasCMake(rootAbs)) abs = rootAbs;
+                }
+                if (abs.empty() || !hasCMake(abs)) {
+                    r.output = "ERROR: no CMakeLists.txt in build dir '" + dir +
+                               "' or workspace root";
                     return r;
                 }
                 std::string bdir = abs + "\\build";
