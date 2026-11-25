@@ -635,7 +635,8 @@ static bool loadCalibrationEvidence(const std::string& path,
             schema == "rawrxd.reap.reference_calibration.001" ||
             schema == "rawrxd.reap.reference_calibration.002" ||
             schema == "rawrxd.reap.reference_calibration.003" ||
-            schema == "rawrxd.reap.reference_calibration.004";
+            schema == "rawrxd.reap.reference_calibration.004" ||
+            schema == "rawrxd.reap.reference_calibration.005";
         if (!legacy && !referenceCalibration) {
             out.reason = "unsupported calibration receipt schema";
             return false;

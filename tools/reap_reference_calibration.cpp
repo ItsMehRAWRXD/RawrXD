@@ -44,6 +44,33 @@ static bool parse_layer(const char * name, const char * prefix, int & layer) {
     return true;
 }
 
+static bool trace_layer_enabled(int layer) {
+    const char * filter = std::getenv("RAWRXD_REFERENCE_TRACE_LAYERS");
+    if (!filter || !*filter) return layer == 0;
+    const char * p = filter;
+    while (*p) {
+        char * end = nullptr;
+        const long value = std::strtol(p, &end, 10);
+        if (end != p && value == layer) return true;
+        if (!end || *end == '\0') break;
+        p = end + 1;
+    }
+    return false;
+}
+
+static bool trace_name_layer(const char * name, int & layer) {
+    static constexpr const char * prefixes[] = {
+        "attn_norm-", "attn_out-", "attn_output-", "kqv_out-",
+        "kqv_mla-", "kq_soft_max-", "q-", "kv_cmpr_pe-", "kv_cmpr-",
+        "k_pe-", "q_nope-", "q_pe-", "q_nope_absorbed-",
+        "q_nope_absorbed_perm-", "Qcur-", "Kcur-", "Vcur-", "ffn_inp-"
+    };
+    for (const char * prefix : prefixes) {
+        if (parse_layer(name, prefix, layer)) return true;
+    }
+    return false;
+}
+
 static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
     auto * c = static_cast<Capture *>(user);
     if (!c || !c->enabled || !t || !t->name) return false;
@@ -51,25 +78,15 @@ static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
     const bool isIds = parse_layer(t->name, "ffn_moe_topk-", layer);
     const bool isWeights = parse_layer(t->name, "ffn_moe_weights_norm-", layer);
     if (!isIds && !isWeights) {
-        const bool traceTensor = t->name && (std::strncmp(t->name, "attn_norm-0", 11) == 0 ||
-            std::strncmp(t->name, "attn_out-0", 10) == 0 ||
-            std::strncmp(t->name, "attn_output-0", 13) == 0 ||
-            std::strncmp(t->name, "kqv_out-0", 9) == 0 ||
-            std::strncmp(t->name, "kqv_mla-0", 9) == 0 ||
-            std::strncmp(t->name, "kq_soft_max-0", 13) == 0 ||
-            std::strncmp(t->name, "q-0", 3) == 0 || std::strncmp(t->name, "kv_cmpr_pe-0", 12) == 0 ||
-            std::strncmp(t->name, "kv_cmpr-0", 9) == 0 || std::strncmp(t->name, "k_pe-0", 6) == 0 ||
-            std::strncmp(t->name, "q_nope-0", 8) == 0 || std::strncmp(t->name, "q_pe-0", 6) == 0 ||
-            std::strncmp(t->name, "q_nope_absorbed-0", 17) == 0 ||
-            std::strncmp(t->name, "q_nope_absorbed_perm-0", 22) == 0 ||
-            std::strncmp(t->name, "Qcur-0", 6) == 0 || std::strncmp(t->name, "Kcur-0", 6) == 0 ||
-            std::strncmp(t->name, "Vcur-0", 6) == 0 || std::strncmp(t->name, "ffn_inp-0", 9) == 0);
+        int traceLayer = -1;
+        const bool traceTensor = trace_name_layer(t->name, traceLayer) &&
+            trace_layer_enabled(traceLayer);
         if (traceTensor && ask) return true;
         if (traceTensor) {
             size_t elements = 1; for (int d = 0; d < GGML_MAX_DIMS; ++d) { if (t->ne[d] <= 0 || static_cast<size_t>(t->ne[d]) > SIZE_MAX / elements) return false; elements *= static_cast<size_t>(t->ne[d]); }
-            if (t->type != GGML_TYPE_F32 || elements == 0) { c->invalid = true; c->error = "layer-0 trace tensor is not readable F32"; return false; }
+            if (t->type != GGML_TYPE_F32 || elements == 0) { c->invalid = true; c->error = "reference trace tensor is not readable F32"; return false; }
             std::vector<float> values(elements); p_ggml_backend_tensor_get(t, values.data(), 0, elements * sizeof(float));
-            for (float value : values) if (!std::isfinite(value)) { c->invalid = true; c->error = "layer-0 trace tensor is nonfinite"; return false; }
+            for (float value : values) if (!std::isfinite(value)) { c->invalid = true; c->error = "reference trace tensor is nonfinite"; return false; }
             c->trace.emplace_back(std::string(t->name) + ":" + std::to_string(elements));
             c->trace_values.emplace_back(t->name, std::move(values));
             return true;
@@ -234,7 +251,8 @@ int main(int argc, char ** argv) {
     if (maxDiff != 0.0f || instrumented.capture.invalid || !coverageOk) { std::fprintf(stderr, "CALIBRATION_FAIL=PARITY_OR_COVERAGE max_logit_diff=%g layers=%zu weights=%zu error=%s\n", maxDiff, instrumented.capture.ids.size(), instrumented.capture.weights.size(), instrumented.capture.error.c_str()); return 6; }
     std::ofstream receipt(fs::path(outDir) / "calibration_receipt.json", std::ios::binary | std::ios::trunc);
     if (!receipt) return 7;
-    if (instrumented.capture.trace.size() < 22) {
+    const char * traceFilter = std::getenv("RAWRXD_REFERENCE_TRACE_LAYERS");
+    if ((!traceFilter || !*traceFilter) && instrumented.capture.trace.size() < 22) {
         std::fprintf(stderr, "CALIBRATION_FAIL=INCOMPLETE_LAYER0_TRACE count=%zu minimum=22\n", instrumented.capture.trace.size());
         return 7;
     }
@@ -254,7 +272,7 @@ int main(int argc, char ** argv) {
         logitsFile.write(reinterpret_cast<const char *>(row), static_cast<std::streamsize>(plain.vocab * sizeof(float)));
         if (!logitsFile) return 7;
     }
-    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.004\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"layer0_trace_count\":" << instrumented.capture.trace.size() << ",\"layer0_trace_names\":[";
+    receipt << "{\"schema\":\"rawrxd.reap.reference_calibration.005\",\"model_sha256\":\"" << modelHash << "\",\"prompt_set_sha256\":\"" << promptHash << "\",\"reference_revision\":\"" << revision << "\",\"tokens\":" << tokens.size() << ",\"layers\":46,\"top_k\":4,\"instrumented_uninstrumented_max_logit_diff\":" << maxDiff << ",\"telemetry_validated\":true,\"trace_count\":" << instrumented.capture.trace.size() << ",\"trace_names\":[";
     for (size_t i = 0; i < instrumented.capture.trace.size(); ++i) {
         if (i) receipt << ',';
         receipt << '"' << instrumented.capture.trace[i] << '"';
