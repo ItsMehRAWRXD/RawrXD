@@ -1128,6 +1128,7 @@ void Win32IDE::saveIdeSession() {
     };
 
     nlohmann::json root;
+    root["schema"] = 2;  // session schema version (item 7); v1 = absent
     root["active"] = m_activeDocument;
     root["chat_mode"] = m_chatMode ? 1 : 0;
     nlohmann::json docs = nlohmann::json::array();
@@ -1305,6 +1306,17 @@ void Win32IDE::loadIdeSession() {
     const bool skipChatRestore = false;
     try {
         nlohmann::json root = nlohmann::json::parse(serialized);
+        // Session schema versioning (item 7): absent => v1 (backward compat);
+        // future (>2) => preserve and best-effort restore known fields.
+        const int schema = root.value("schema", 1);
+        if (schema > 2) {
+            LOG_WARNING("[SESSION] future schema " + std::to_string(schema) +
+                        "; best-effort restore of known fields");
+        }
+        if (schema < 1) {
+            LOG_WARNING("[SESSION] invalid schema; restore skipped");
+            return;
+        }
 
         // P08: restore panel.height FIRST — document/chat restore can throw into
         // the outer catch and previously skipped dock height (HLoad stuck 250).
