@@ -42,6 +42,7 @@ Receipt g_receipt;
 BackendStats g_backend;
 int32_t g_preferred_device = -1;   // STRATA_S05: device pin, applied at first init
 int32_t g_active_device = -1;      // RAWRXD_MULTI_GPU: per-op device override (-1 = default Gpu(); set via SetActiveDevice for split-model dual-GPU). Default keeps single-GPU behaviour byte-identical.
+int32_t g_batch_device = -1;       // device captured by the current logical batch
 int64_t g_weight_cache_budget = 0;
 static bool g_weight_cache_retention = false; // RAWRXD_G04: residency budget pin, applied at first init
 
@@ -146,9 +147,16 @@ bool BeginBatchImpl()
     if (std::getenv("RR_GPU_CHECK")) return true;
     if (g_batch_active) return false;
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
-    const bool gpu_ok = Gpu().BeginQuantDotBatch();
+    const bool gpu_ok = (g_active_device >= 0)
+        ? GpuFor(g_active_device).BeginQuantDotBatch()
+        : Gpu().BeginQuantDotBatch();
     QDTRACE_DISPATCH("BeginBatch gpu_ok=" << (int)gpu_ok << " batch_active_before=" << (int)g_batch_active);
     if (!gpu_ok) return false;
+    // Prefill opens the logical batch before entering each per-op device
+    // scope. Capture the preferred device in that case so later scoped dots
+    // join the same physical batch instead of executing synchronously and
+    // leaving the device batch open with no queued entries.
+    g_batch_device = (g_active_device >= 0) ? g_active_device : g_preferred_device;
     g_batch_active = true;
     g_queued.clear();
     return true;
@@ -191,9 +199,23 @@ bool EndBatchImpl()
     if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
     if (!g_batch_active) return false;
     g_batch_active = false;
+    const int32_t batch_device = g_batch_device;
+    g_batch_device = -1;
+    VulkanCompute& batch_gpu = (batch_device >= 0) ? GpuFor(batch_device) : Gpu();
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);
-    if (qs.empty()) return true;
+    if (qs.empty()) {
+        // Q4_K currently remains on the synchronous path until its packed
+        // activation-arena contract is proven.  The logical batch can
+        // therefore contain no queued entries, but the physical device batch
+        // was still opened and must be closed before the next group.
+        if (!batch_gpu.EndQuantDotBatch()) {
+            g_receipt = Receipt{};
+            g_receipt.fallback_reason = "empty quant-dot batch close failed";
+            return false;
+        }
+        return true;
+    }
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     // RAWRXD_DEEP2_MOE_BATCH_CHUNK_001. One device batch holds BatchCapacity()
@@ -212,7 +234,7 @@ bool EndBatchImpl()
     size_t chunks_ok = 0;
     for (size_t base = 0; base < qs.size() && ok; base += chunk) {
         const size_t end = (qs.size() - base) < chunk ? qs.size() : base + chunk;
-        if (base > 0 && !Gpu().BeginQuantDotBatch()) {
+        if (base > 0 && !batch_gpu.BeginQuantDotBatch()) {
             ok = false;
             fail_stage = "begin";
             fail_index = qs.size();
@@ -222,7 +244,7 @@ bool EndBatchImpl()
         for (size_t i = base; i < end; ++i) {
             const QueuedDot& e = qs[i];
             const bool queued_ok =
-                Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
+                batch_gpu.QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
                                     e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
             if (!queued_ok) {
                 ok = false;
@@ -235,7 +257,7 @@ bool EndBatchImpl()
         }
         if (!ok) break;
         QDTRACE_DISPATCH("EndBatch chunk base=" << base << " count=" << (end - base));
-        if (!Gpu().EndQuantDotBatch()) {
+        if (!batch_gpu.EndQuantDotBatch()) {
             ok = false;
             fail_stage = "end";
             fail_index = qs.size();
@@ -632,7 +654,8 @@ bool DotBlocked(int kind,
     // EndBatch has a chance to submit the work.
     const bool differential_check = std::getenv("RR_GPU_CHECK") != nullptr;
     if (std::getenv("DEEP2_SUBMIT_TRACE") &&
-        !(g_batch_active && !differential_check && g_active_device < 0 &&
+        !(g_batch_active && !differential_check &&
+          (g_active_device >= 0 ? g_active_device : g_preferred_device) == g_batch_device &&
           !force_cpu && !g_force_cpu)) {
         std::fprintf(stderr,
             "SUBMIT_TRACE kind=DotBlocked mode=SYNC n_out=%zu "
@@ -646,7 +669,8 @@ bool DotBlocked(int kind,
     // has independent upload/barrier/readback ownership and is numerically
     // verified. Do not return a queued result for Q4_K while its output is not
     // yet trustworthy.
-    if (g_batch_active && kind != 0 && !differential_check && g_active_device < 0 &&
+    if (g_batch_active && kind != 0 && !differential_check &&
+        (g_active_device >= 0 ? g_active_device : g_preferred_device) == g_batch_device &&
         !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
             g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
