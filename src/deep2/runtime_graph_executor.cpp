@@ -1971,6 +1971,21 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                                                         : spec_.key_length);
     const size_t vl = (size_t)(spec_.value_length_mla > 0 ? spec_.value_length_mla
                                                           : spec_.value_length);
+    // DeepSeek/GLM MLA stores expanded K and V for every query head even when
+    // the GGUF metadata advertises one latent KV head.  The generic GQA width
+    // inference above cannot derive that relationship from qPerHead (the
+    // expanded KV width is the MLA key/value width, not the query width).
+    // Bind the physical expanded streams to H heads only when their exact
+    // metadata geometry matches; otherwise retain the generic path and let the
+    // existing fail-closed checks reject the descriptor.
+    const bool mlaExpandedGeometry =
+        spec_.kv_lora_rank > 0 && H > 0 && kl > 0 && vl > 0 &&
+        kWidth == H * kl && vWidth == H * vl;
+    if (mlaExpandedGeometry) {
+        hk = H;
+        kPerHead = kl;
+        vPerHead = vl;
+    }
     // MLA is a property of the ARCHITECTURE, not of a width inequality.
     // The previous test `kl > vl` was only true for DeepSeek-V3 (key 576 >
     // value 512). GLM-4.7-Flash has key_length_mla == value_length_mla == 256,
@@ -4370,8 +4385,12 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                 for (size_t t = 0; t < P; ++t) {
                     std::vector<float> k, v;
                     std::string e;
+                    std::string activationName = in.detail;
+                    const size_t actMark = activationName.find(";act=");
+                    if (actMark != std::string::npos)
+                        activationName = activationName.substr(actMark + 5);
                     const std::vector<float>* detailP =
-                        in.detail.empty() ? nullptr : findAct(t, in.detail);
+                        activationName.empty() ? nullptr : findAct(t, activationName);
                     const std::vector<float>& mlaIn = detailP ? *detailP : resolveIn(t, in, ok);
                     if (!ok) return false;
                     if (!OpMlaDecompress(in, mlaIn, k, v, startPos + t, e)) {
@@ -4429,7 +4448,13 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                         continue;
                     }
                     std::vector<float> qv, kv, vv;
-                    const std::vector<float>* q = findAct(t, "q");
+                    // MLA query absorption publishes the expanded query as qcur.
+                    // Prefer it over the compact q stream; using q here silently
+                    // feeds the pre-absorption 256-wide-per-head query to the
+                    // attention core and produces valid-looking but incorrect
+                    // logits.
+                    const std::vector<float>* q = findAct(t, "qcur");
+                    if (!q || q->empty()) q = findAct(t, "q");
                     const std::vector<float>* k = findAct(t, "k");
                     const std::vector<float>* v = findAct(t, "v");
                     if (q && !q->empty()) qv = *q; else qv = ts[t].hidden;
@@ -5448,8 +5473,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     // c (kv_b). The activation this op consumes rides in `detail`
                     // so resolveIn can find it in the arena rather than falling
                     // back to hidden_, which is `q` by the time this op runs.
+                    std::string activationName = in.detail;
+                    const size_t actMark = activationName.find(";act=");
+                    if (actMark != std::string::npos)
+                        activationName = activationName.substr(actMark + 5);
                     const std::vector<float>& mlaIn =
-                        act.count(in.detail) ? act[in.detail] : xi;
+                        (!activationName.empty() && act.count(activationName))
+                            ? act[activationName] : xi;
                     if (!OpMlaDecompress(in, mlaIn, k, v, position, e)) { last_error_ = e; return false; }
                 }
                 // The arena entry this op publishes is the K stream it just
@@ -5499,7 +5529,9 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     std::fprintf(stderr, "[attn-enter] block=%d pos=%zu aName='%s' hidden_=%zu\n",
                                  (int)in.block, position, in.aName.c_str(), hidden_.size());
                 }
-                std::vector<float> qv = arena("q"), kv = arena("k"), vv = arena("v");
+                std::vector<float> qv = arena("qcur");
+                if (qv.empty()) qv = arena("q");
+                std::vector<float> kv = arena("k"), vv = arena("v");
                 if (std::getenv("ATTN_TRACE")) {
                     std::fprintf(stderr, "[attn-inputs] qv=%zu kv=%zu vv=%zu kvcache=%zu,%zu\n",
                                  qv.size(), kv.size(), vv.size(),
