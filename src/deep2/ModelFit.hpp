@@ -527,7 +527,31 @@ inline ModelFitPlan ModelFitEstimator::Estimate(
     // Greedy proportional fill: each slot takes layers until it would exceed
     // its weight budget.  Guarantees every active slot gets >= 1 layer.
     std::vector<uint32_t> slotLayerCount(slots.size(), 0);
-    {
+    if (p.lane == FitExecutionLane::GPU_MULTI && slots.size() > 1 && model.layerCount > 0) {
+        // Multi-GPU: split layers proportionally to each slot's weight budget so
+        // the primary does NOT take the whole model when a second GPU can share.
+        // (The greedy fill below would give everything to a primary whose budget
+        // already fits the full model, collapsing a requested 2-device plan to 1.)
+        uint64_t totalBudget = 0;
+        for (const auto& s : slots) totalBudget += s.weightBudget;
+        uint32_t assigned = 0;
+        for (size_t s = 0; s < slots.size() && assigned < model.layerCount; ++s) {
+            uint32_t share;
+            if (s + 1 == slots.size()) {
+                share = static_cast<uint32_t>(model.layerCount - assigned);
+            } else {
+                share = totalBudget
+                    ? static_cast<uint32_t>(static_cast<uint64_t>(model.layerCount) *
+                                            slots[s].weightBudget / totalBudget)
+                    : 0;
+                if (share == 0) share = 1;   // never starve a device
+            }
+            if (assigned + share > model.layerCount)
+                share = static_cast<uint32_t>(model.layerCount - assigned);
+            slotLayerCount[s] = share;
+            assigned += share;
+        }
+    } else {
         size_t layer = 0;
         bool progress = true;
         while (layer < model.layerCount && progress) {
