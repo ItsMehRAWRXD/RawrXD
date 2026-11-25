@@ -54,6 +54,9 @@ static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
         const bool traceTensor = t->name && (std::strncmp(t->name, "attn_norm-0", 11) == 0 ||
             std::strncmp(t->name, "attn_out-0", 10) == 0 ||
             std::strncmp(t->name, "attn_output-0", 13) == 0 ||
+            std::strncmp(t->name, "kqv_out-0", 9) == 0 ||
+            std::strncmp(t->name, "kqv_mla-0", 9) == 0 ||
+            std::strncmp(t->name, "kq_soft_max-0", 13) == 0 ||
             std::strncmp(t->name, "q-0", 3) == 0 || std::strncmp(t->name, "kv_cmpr_pe-0", 12) == 0 ||
             std::strncmp(t->name, "kv_cmpr-0", 9) == 0 || std::strncmp(t->name, "k_pe-0", 6) == 0 ||
             std::strncmp(t->name, "q_nope-0", 8) == 0 || std::strncmp(t->name, "q_pe-0", 6) == 0 ||
