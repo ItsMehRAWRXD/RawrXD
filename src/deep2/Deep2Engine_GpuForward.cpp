@@ -761,8 +761,19 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++counters.forwardLayers;
     if (slot < 8) ++counters.forwardSlot[slot];
     GpuTransfer_RecordFwdLayerExec(1);
-    if (multiGpuLayerPlan_.active)
+    if (multiGpuLayerPlan_.active) {
         Deep2MultiGpu_MarkLayerExecuted(multiGpuLayerPlan_, layer);
+        // Per-LUID execution instrumentation.  Reached only after EndFusedLayer()
+        // (GPU sync) succeeded and never on CPU fallback, so these are completed
+        // GPU operations attributed to the slot that owns the layer.
+        if (slot < 8) {
+            multiGpuLayerPlan_.slotLayersCompleted[slot]++;
+            multiGpuLayerPlan_.slotDispatchesSubmitted[slot]++;
+            multiGpuLayerPlan_.slotDispatchesCompleted[slot]++;
+            multiGpuLayerPlan_.slotWeightBytesActual[slot] =
+                multiGpuLayerPlan_.vramBytes[slot];
+        }
+    }
     return true;
 }
 

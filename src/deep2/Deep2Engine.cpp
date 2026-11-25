@@ -7598,6 +7598,9 @@ void Deep2Engine::unloadModel()
     for (auto& kv : modelReservationIds_)
         reservationLedger_.Release(kv.second);
     modelReservationIds_.clear();
+    // Emit the per-LUID execution receipt (actual completed-layer counters).
+    if (multiGpuLayerPlan_.active)
+        Deep2MultiGpu_EmitExecutionReceipt(stderr, multiGpuLayerPlan_);
     printf("[Deep2Engine] Unloading model...\n");
 
     std::fprintf(stderr, "[LIFE] unloadModel close bp16Streamer\n");
