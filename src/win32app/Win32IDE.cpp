@@ -4295,10 +4295,24 @@ void Win32IDE::executeCommand()
     // T080/T15 harnesses and normal users can persist the active transcript
     // without entering terminal or model mode.  Keep this command local to
     // the IDE so it cannot be interpreted by an arbitrary shell.
-    if (command == "save" || command == "/save") {
-        saveChatLog();
-        return;
-    }
+    if (command == "save" || command == "/save") {
+        saveChatLog();
+        return;
+    }
+
+    // A6 multi-agent orchestration commands (real subagent_core manager).
+    if (command == "agents") {
+        refreshSubAgentList();
+        return;
+    }
+    if (command.rfind("spawn ", 0) == 0) {
+        spawnSubAgent(command.substr(6));
+        return;
+    }
+    if (command.rfind("kill ", 0) == 0) {
+        killSubAgent(command.substr(5));
+        return;
+    }
     
     // Check if we're in chat mode with a loaded model
     if (m_chatMode && isModelLoaded()) {

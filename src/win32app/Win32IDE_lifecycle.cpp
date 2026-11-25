@@ -771,7 +771,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ? nmhdr->hwndFrom
                     : ide->m_hwndPanelTabs;
                 const int selected = TabCtrl_GetCurSel(tabs);
-                if (selected >= 0 && selected <= 3) {
+                if (selected >= 0 && selected <= 5) {
                     ide->switchPanelTab(static_cast<Win32IDE::PanelTab>(selected));
                 }
             } else if (nmhdr->idFrom == 2113 && // IDC_DEBUGGER_STACK_LIST (D6)

@@ -1792,6 +1792,11 @@ public:
     void debuggerDisasmAtRip();
     // D5 memory breakpoints (Win32IDE_Debugger.cpp).
     void debuggerAddDataBreakpoint(const std::string& args);
+    // A6 sub-agent panel (Win32IDE_SubAgentPanel.cpp).
+    void initSubAgentPanel();
+    void refreshSubAgentList();
+    void spawnSubAgent(const std::string& description);
+    void killSubAgent(const std::string& agentId);
     // T2 coverage bridge (Win32IDE_CoverageBridge.cpp).
     void showCoverageReport();
     // I4/C1 build output -> Problems (Win32IDE_BuildParser.cpp).
@@ -2831,7 +2836,10 @@ public:
     HWND m_hwndAgentTranscript = nullptr;
     HWND m_hwndAgentInput = nullptr;
     HWND m_hwndAgentSendBtn = nullptr;
-    bool m_agentPanelSeeded = false;
+    bool m_agentPanelSeeded = false;
+    // A6 sub-agent panel (tab 5).
+    HWND m_hwndSubAgentList = nullptr;
+    HWND m_hwndSubAgentSpawnInput = nullptr;
     bool m_debuggingActive;
     // m_breakpoints defined in Debugger State section with Breakpoint struct
     
@@ -2997,7 +3005,8 @@ public:
         Output = 1,
         Problems = 2,
         DebugConsole = 3,
-        Agent = 4
+        Agent = 4,
+        Agents = 5
     };
     HWND m_hwndPanelContainer = nullptr;
     HWND m_hwndPanelTabs = nullptr;

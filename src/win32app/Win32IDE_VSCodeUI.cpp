@@ -672,6 +672,8 @@ void Win32IDE::createPanel(HWND hwndParent)
     SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 3, reinterpret_cast<LPARAM>(&tie));
     tie.pszText = const_cast<char*>("AGENT");
     SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 4, reinterpret_cast<LPARAM>(&tie));
+    tie.pszText = const_cast<char*>("AGENTS");
+    SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 5, reinterpret_cast<LPARAM>(&tie));
     
     // Create panel toolbar (right side)
     m_hwndPanelToolbar = CreateWindowExA(
@@ -1017,6 +1019,38 @@ void Win32IDE::ensurePanelTabBodies()
         if (m_hwndAgentInput) ShowWindow(m_hwndAgentInput, SW_HIDE);
         if (m_hwndAgentSendBtn) ShowWindow(m_hwndAgentSendBtn, SW_HIDE);
     }
+
+    // A6 sub-agent list (tab 5): id/parent, description, state.
+    if (!m_hwndSubAgentList || !IsWindow(m_hwndSubAgentList)) {
+        m_hwndSubAgentList = CreateWindowExA(
+            WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
+            WS_CHILD | WS_VSCROLL | LVS_REPORT | LVS_SINGLESEL,
+            0, 26, 800, (std::max)(1, bodyH - 30), m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1311)),
+            m_hInstance, nullptr);
+        if (m_hwndSubAgentList) {
+            LVCOLUMNA col = {0};
+            col.mask = LVCF_TEXT | LVCF_WIDTH;
+            col.pszText = const_cast<char*>("Agent");
+            col.cx = 220;
+            SendMessageA(m_hwndSubAgentList, LVM_INSERTCOLUMNA, 0, (LPARAM)&col);
+            col.pszText = const_cast<char*>("Description");
+            col.cx = 320;
+            SendMessageA(m_hwndSubAgentList, LVM_INSERTCOLUMNA, 1, (LPARAM)&col);
+            col.pszText = const_cast<char*>("State");
+            col.cx = 100;
+            SendMessageA(m_hwndSubAgentList, LVM_INSERTCOLUMNA, 2, (LPARAM)&col);
+            ShowWindow(m_hwndSubAgentList, SW_HIDE);
+        }
+        m_hwndSubAgentSpawnInput = CreateWindowExA(
+            WS_EX_CLIENTEDGE, "EDIT", "command box: spawn <description> | kill <id>",
+            WS_CHILD | ES_AUTOHSCROLL,
+            0, 0, 700, 24, m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1312)),
+            m_hInstance, nullptr);
+        if (m_hwndSubAgentSpawnInput)
+            ShowWindow(m_hwndSubAgentSpawnInput, SW_HIDE);
+    }
 }
 
 void Win32IDE::switchPanelTab(PanelTab tab)
@@ -1085,6 +1119,11 @@ void Win32IDE::switchPanelTab(PanelTab tab)
     showBody(m_hwndAgentPanel, showAgent);
     if (m_hwndAgentInput) ShowWindow(m_hwndAgentInput, showAgent ? SW_SHOW : SW_HIDE);
     if (m_hwndAgentSendBtn) ShowWindow(m_hwndAgentSendBtn, showAgent ? SW_SHOW : SW_HIDE);
+    const bool showAgents = (tab == PanelTab::Agents);
+    showBody(m_hwndSubAgentList, showAgents);
+    if (m_hwndSubAgentSpawnInput)
+        ShowWindow(m_hwndSubAgentSpawnInput, showAgents ? SW_SHOW : SW_HIDE);
+    if (showAgents) refreshSubAgentList();
 
     // Peer legacy panes stay hidden so they cannot cover 1302/1303 VisId bodies.
     for (auto& pane : m_terminalPanes) {
