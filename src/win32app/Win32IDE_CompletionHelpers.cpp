@@ -14,22 +14,40 @@ std::pair<int, int> Win32IDE::getCursorPosition() const {
 std::vector<Win32IDE::HybridCompletionItem> Win32IDE::requestHybridCompletion(
     const std::string& filePath, int line, int column) {
     std::vector<HybridCompletionItem> items;
-    (void)filePath;
-    (void)line;
-    (void)column;
+
+    // Real LSP completion (code intelligence) when a language server is running.
+    // Falls through to the keyword list only when LSP yields nothing.
+    if (!filePath.empty()) {
+        std::string uri = "file:///";
+        for (char c : filePath) uri += (c == '\\') ? '/' : c;
+        const auto lsp = lspCompletion(uri, line, column);
+        items.reserve(lsp.size());
+        for (const auto& c : lsp) {
+            HybridCompletionItem it;
+            it.label = c.label;
+            it.insertText = c.insertText;
+            it.detail = c.detail;
+            it.source = "lsp";
+            it.confidence = 0.9f;
+            items.push_back(std::move(it));
+        }
+    }
+
     // Keyword fallback so the popup has real items when LSP is offline.
-    static const char* kKeywords[] = {
-        "if", "else", "for", "while", "return", "class", "struct", "namespace",
-        "public", "private", "protected", "virtual", "override", "const", "auto"
-    };
-    for (const char* kw : kKeywords) {
-        HybridCompletionItem item;
-        item.label = kw;
-        item.insertText = kw;
-        item.detail = "keyword";
-        item.source = "keyword";
-        item.confidence = 0.5f;
-        items.push_back(item);
+    if (items.empty()) {
+        static const char* kKeywords[] = {
+            "if", "else", "for", "while", "return", "class", "struct", "namespace",
+            "public", "private", "protected", "virtual", "override", "const", "auto"
+        };
+        for (const char* kw : kKeywords) {
+            HybridCompletionItem item;
+            item.label = kw;
+            item.insertText = kw;
+            item.detail = "keyword";
+            item.source = "keyword";
+            item.confidence = 0.5f;
+            items.push_back(item);
+        }
     }
     return items;
 }
