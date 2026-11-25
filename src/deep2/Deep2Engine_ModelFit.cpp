@@ -413,6 +413,17 @@ rawrxd::ModelFitPlan Deep2Engine::estimateModelFit(const std::string& ggufPath,
                     devicePlan.openCount);
             }
             hw.gpus = std::move(selected);
+            // Device-count reconciliation trace: exposes admission-vs-execution
+            // topology mismatch (e.g. execution opens 2 but admission selects 1).
+            std::fprintf(stderr,
+                "MODEL_FIT_DEVICE_COUNTS policy=%u detected=%zu open=%u selected=%zu\n",
+                static_cast<unsigned>(devicePlan.policy), measuredCount,
+                devicePlan.openCount, hw.gpus.size());
+            for (const auto& g : hw.gpus)
+                std::fprintf(stderr, "MODEL_FIT_GPU_SELECTED stable_id=%s luid=%016llX free=%llu\n",
+                             g.stableId.c_str(), (unsigned long long)g.luid,
+                             (unsigned long long)(g.availableVramKnown ? g.availableVramBytes
+                                                                       : g.deviceLocalBytes));
         }
     }
 
