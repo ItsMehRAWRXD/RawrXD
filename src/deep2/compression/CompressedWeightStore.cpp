@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstring>
 #include <limits>
+#include <new>
 #include <iterator>
 #include <stdexcept>
 
@@ -13,9 +14,9 @@ inline std::uint32_t hash4(const std::uint8_t* p) {
  return (v*2654435761u)>>16;
 }
 }
-CompressedWeightStore::CompressedWeightStore(std::size_t budget,std::size_t block_bytes)
- : block_bytes_(block_bytes),cache_budget_(budget) {
- if(!block_bytes_||block_bytes_>std::numeric_limits<std::uint32_t>::max()) throw std::invalid_argument("invalid block size");
+CompressedWeightStore::CompressedWeightStore(std::size_t budget,std::size_t block_bytes,std::size_t encoded_budget)
+ : block_bytes_(block_bytes),cache_budget_(budget),encoded_residency_budget_(encoded_budget) {
+ if(!block_bytes_||block_bytes_>static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) throw std::invalid_argument("invalid block size: exceeds signed match index capacity");
 }
 std::uint32_t CompressedWeightStore::crc32(const std::uint8_t* p,std::size_t n) {
  std::uint32_t crc=0xFFFFFFFFu;
@@ -24,6 +25,7 @@ std::uint32_t CompressedWeightStore::crc32(const std::uint8_t* p,std::size_t n) 
 }
 // Independent LZ tokens: control byte, then up to eight literals or (distance-1:u16,length:u8) matches.
 std::vector<std::uint8_t> CompressedWeightStore::encode(const std::uint8_t* src,std::size_t n,bool& stored_raw) {
+ if(n>static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) throw std::length_error("compressed block exceeds 32-bit match index");
  if(n==0){stored_raw=true;return{};}
  std::vector<std::uint8_t> out;out.reserve(n);std::vector<std::int32_t> last(1u<<16,-1);std::size_t pos=0;
  while(pos<n){const auto cp=out.size();out.push_back(0);std::uint8_t control=0;
@@ -50,13 +52,57 @@ bool CompressedWeightStore::decode(const EncodedBlock& b,std::vector<std::uint8_
  return out.size()==b.raw_size&&crc32(out.data(),out.size())==b.checksum;
 }
 bool CompressedWeightStore::addTensor(std::string name,const void* bytes,std::size_t size,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
- if(name.empty()||(!bytes&&size)){if(error)*error="name and source bytes are required";return false;}
- const auto* src=static_cast<const std::uint8_t*>(bytes);Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
- for(std::size_t off=0;off<size;){const auto take=std::min(block_bytes_,size-off);EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(src+off,take);b.payload=encode(src+off,take,b.stored_raw);tensor.blocks.emplace_back(std::move(b));off+=take;}
- std::size_t encoded_size=0;for(const auto& b:tensor.blocks){if(b.payload.size()>max_encoded_bytes-std::min(encoded_size,max_encoded_bytes)){if(error)*error="encoded tensor exceeds residency budget";return false;}encoded_size+=b.payload.size();}
- if(encoded_size>max_encoded_bytes||(require_savings&&encoded_size>=size)){if(error)*error=require_savings?"compression did not reduce tensor size":"encoded tensor exceeds residency budget";return false;}
- std::lock_guard<std::mutex> lock(mutex_);if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
- counters_.raw_bytes+=size;for(const auto& b:tensor.blocks)counters_.compressed_bytes+=b.payload.size();counters_.blocks+=tensor.blocks.size();++counters_.tensors;tensors_.emplace(std::move(name),std::move(tensor));return true;
+ if(!bytes&&size){if(error)*error="source bytes are required";return false;}
+ return addTensorFromReader(std::move(name),size,
+  [](void* context,std::size_t offset,void* destination,std::size_t length)->bool {
+   if(length)std::memcpy(destination,static_cast<const std::uint8_t*>(context)+offset,length);
+   return true;
+  },const_cast<void*>(bytes),error,ggml_type,require_savings,max_encoded_bytes);
+}
+bool CompressedWeightStore::addTensorFromReader(std::string name,std::size_t size,TensorReadCallback reader,void* context,std::string* error,std::uint32_t ggml_type,bool require_savings,std::size_t max_encoded_bytes) {
+ if(name.empty()||!reader){if(error)*error="name and tensor reader are required";return false;}
+ if(size && size > std::numeric_limits<std::size_t>::max() - (block_bytes_ - 1)){if(error)*error="tensor size cannot be safely partitioned";return false;}
+ std::lock_guard<std::mutex> lock(mutex_);
+ if(tensors_.find(name)!=tensors_.end()){if(error)*error="tensor already exists";return false;}
+ const auto resident=static_cast<std::size_t>(counters_.compressed_bytes);
+ if(resident>encoded_residency_budget_){if(error)*error="encoded residency accounting exceeds budget";return false;}
+ const auto admission_limit=std::min(max_encoded_bytes,encoded_residency_budget_-resident);
+ Tensor tensor;tensor.raw_size=size;tensor.ggml_type=ggml_type;
+ std::size_t encoded_size=0;
+ try {
+  std::vector<std::uint8_t> scratch(block_bytes_);
+  for(std::size_t off=0;off<size;){
+   const auto take=std::min(block_bytes_,size-off);
+   if(!reader(context,off,scratch.data(),take)){if(error)*error="tensor reader failed before completing requested range";return false;}
+   EncodedBlock b;b.raw_size=static_cast<std::uint32_t>(take);b.checksum=crc32(scratch.data(),take);
+   b.payload=encode(scratch.data(),take,b.stored_raw);
+   if(encoded_size>admission_limit||b.payload.size()>admission_limit-encoded_size){if(error)*error="encoded tensor exceeds residency budget";return false;}
+   encoded_size+=b.payload.size();tensor.blocks.emplace_back(std::move(b));off+=take;
+  }
+  if(require_savings&&encoded_size>=size){if(error)*error="compression did not reduce tensor size";return false;}
+  if(encoded_size>std::numeric_limits<std::uint64_t>::max()-counters_.compressed_bytes ||
+     size>std::numeric_limits<std::uint64_t>::max()-counters_.raw_bytes ||
+     tensor.blocks.size()>std::numeric_limits<std::uint64_t>::max()-counters_.blocks){
+   if(error)*error="compressed residency counters would overflow";return false;
+  }
+  const std::size_t block_count=tensor.blocks.size();
+  const auto inserted=tensors_.emplace(std::move(name),std::move(tensor));
+  if(!inserted.second){if(error)*error="tensor publication conflict";return false;}
+  counters_.raw_bytes+=size;
+  counters_.compressed_bytes+=encoded_size;
+  counters_.blocks+=block_count;
+  ++counters_.tensors;
+  return true;
+ } catch(const std::bad_alloc&) {
+  if(error)*error="allocation failed while admitting compressed tensor";
+  return false;
+ } catch(const std::exception& ex) {
+  if(error)*error=std::string("tensor reader/codec failed: ")+ex.what();
+  return false;
+ } catch(...) {
+  if(error)*error="unknown failure while admitting compressed tensor";
+  return false;
+ }
 }
 bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error) {
  if(!values&&count){if(error)*error="source values are required";return false;}
@@ -65,13 +111,43 @@ bool CompressedWeightStore::addTensorF32AsF16(std::string name,const float* valu
  for(std::size_t i=0;i<count;++i) converted[i]=floatToHalfRNE(values[i]);
  return addTensor(std::move(name),converted.data(),converted.size()*sizeof(std::uint16_t),error,GGML_TYPE_F16);
 }
+bool CompressedWeightStore::addTensorF32AsF16FromReader(
+    std::string name,const float* values,std::size_t count,std::string* error,
+    std::size_t max_encoded_bytes) {
+ if(!values&&count){if(error)*error="source values are required";return false;}
+ if(count>std::numeric_limits<std::size_t>::max()/sizeof(std::uint16_t)){
+  if(error)*error="F32-to-F16 tensor size overflow";return false;
+ }
+ struct Context { const float* values; std::size_t count; } context{values,count};
+ const std::size_t outputBytes=count*sizeof(std::uint16_t);
+ return addTensorFromReader(std::move(name),outputBytes,
+  [](void* opaque,std::size_t offset,void* destination,std::size_t length)->bool {
+   auto* ctx=static_cast<Context*>(opaque);
+   if(!ctx||(!destination&&length)||offset>ctx->count*2||length>ctx->count*2-offset)
+    return false;
+   auto* out=static_cast<std::uint8_t*>(destination);
+   const std::size_t end=offset+length;
+   for(std::size_t i=offset/2;i<(end+1)/2;++i){
+    const std::uint16_t half=floatToHalfRNE(ctx->values[i]);
+    const std::uint8_t encoded[2]={
+     static_cast<std::uint8_t>(half&0xffu),
+     static_cast<std::uint8_t>((half>>8)&0xffu)};
+    const std::size_t wordStart=i*2;
+    const std::size_t copyStart=(std::max)(offset,wordStart);
+    const std::size_t copyEnd=(std::min)(end,wordStart+2);
+    if(copyEnd>copyStart)
+     std::memcpy(out+(copyStart-offset),encoded+(copyStart-wordStart),copyEnd-copyStart);
+   }
+   return true;
+  },&context,error,GGML_TYPE_F16,false,max_encoded_bytes);
+}
 std::uint32_t CompressedWeightStore::tensorType(const std::string& n)const {
  std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?GGML_TYPE_OPAQUE:i->second.ggml_type;
 }
 bool CompressedWeightStore::contains(const std::string& n)const{std::lock_guard<std::mutex>l(mutex_);return tensors_.find(n)!=tensors_.end();}
 std::size_t CompressedWeightStore::tensorBytes(const std::string& n)const{std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?0:i->second.raw_size;}
 std::size_t CompressedWeightStore::tensorBlocks(const std::string& n)const{std::lock_guard<std::mutex>l(mutex_);auto i=tensors_.find(n);return i==tensors_.end()?0:i->second.blocks.size();}
-std::string CompressedWeightStore::cacheKey(const std::string& n,std::size_t i){return n+'\x1f'+std::to_string(i);}
+std::string CompressedWeightStore::cacheKey(const std::string& n,std::size_t i){return std::to_string(n.size())+":"+n+":"+std::to_string(i);}
 CompressedWeightStore::BlockLease CompressedWeightStore::acquireBlock(const std::string& name,std::size_t index,std::string* error) {
  std::lock_guard<std::mutex>lock(mutex_);auto t=tensors_.find(name);if(t==tensors_.end()||index>=t->second.blocks.size()){if(error)*error="unknown tensor or block index out of range";return{};}
  const auto key=cacheKey(name,index);auto hit=cache_.find(key);if(hit!=cache_.end()){++counters_.cache_hits;lru_.splice(lru_.begin(),lru_,hit->second.lru);return hit->second.data;}

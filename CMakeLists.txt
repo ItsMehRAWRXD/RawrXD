@@ -470,6 +470,13 @@ target_compile_features(rawrxd_compression_core PUBLIC cxx_std_17)
 if(ZLIB_FOUND AND TARGET ZLIB::ZLIB)
     target_link_libraries(rawrxd_compression_core PUBLIC ZLIB::ZLIB)
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+elseif(ZLIB_FOUND AND ZLIB_LIBRARIES AND ZLIB_INCLUDE_DIRS)
+    # Older FindZLIB providers can report FOUND without exporting an imported
+    # target. Honor their actual link/include results instead of silently
+    # compiling the unsupported codec branch.
+    target_link_libraries(rawrxd_compression_core PUBLIC ${ZLIB_LIBRARIES})
+    target_include_directories(rawrxd_compression_core PUBLIC ${ZLIB_INCLUDE_DIRS})
+    target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
 elseif(TARGET zlib)
     # FetchContent fallback (FETCHCONTENT_ZLIB=ON) defines a plain `zlib` target
     # that does not export include directories, so add them explicitly. Both the
@@ -6642,8 +6649,24 @@ foreach(_rawrxd_quantdot_consumer IN ITEMS
   endif()
 endforeach()
 
+# Native zlib codec roundtrip/corruption/output-ceiling smoke.
+if(RAWRXD_BUILD_TESTS)
+    add_executable(rawrxd_compression_core_test tests/compression_core_test.cpp)
+    target_link_libraries(rawrxd_compression_core_test PRIVATE rawrxd_compression_core)
+    target_compile_features(rawrxd_compression_core_test PRIVATE cxx_std_17)
+    add_test(NAME rawrxd_compression_core_test COMMAND rawrxd_compression_core_test)
+endif()
+
 # Native compressed tensor-block residency (byte-exact; lazy decode).
 add_subdirectory(src/deep2/compression)
 if(TARGET deep2_engine_lib)
     target_link_libraries(deep2_engine_lib PUBLIC rawrxd_compressed_weight_store)
+endif()
+
+# Bounded compressed-resident CPU inference kernel smoke (no Vulkan dependency).
+if(RAWRXD_BUILD_TESTS)
+    add_executable(native_resident_matvec_test tests/native_resident_matvec_test.cpp)
+    target_include_directories(native_resident_matvec_test PRIVATE "${CMAKE_SOURCE_DIR}/include")
+    target_compile_features(native_resident_matvec_test PRIVATE cxx_std_20)
+    add_test(NAME native_resident_matvec_test COMMAND native_resident_matvec_test)
 endif()

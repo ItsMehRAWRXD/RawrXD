@@ -58,18 +58,29 @@ public:
     static constexpr std::size_t DefaultBlockBytes=64u*1024u;
     using BlockLease=std::shared_ptr<const std::vector<std::uint8_t>>;
     explicit CompressedWeightStore(std::size_t decoded_cache_budget=256u*1024u*1024u,
-                                   std::size_t block_bytes=DefaultBlockBytes);
+                                   std::size_t block_bytes=DefaultBlockBytes,
+                                   std::size_t encoded_residency_budget=(std::numeric_limits<std::size_t>::max)());
     CompressedWeightStore(const CompressedWeightStore&)=delete;
     CompressedWeightStore& operator=(const CompressedWeightStore&)=delete;
+    using TensorReadCallback = bool (*)(void* context, std::size_t offset, void* destination, std::size_t length);
+    bool addTensorFromReader(std::string name, std::size_t size, TensorReadCallback reader,
+                   void* context, std::string* error=nullptr,
+                   std::uint32_t ggml_type=GGML_TYPE_OPAQUE,
+                   bool require_savings=false,
+                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     bool addTensor(std::string name,const void* bytes,std::size_t size,std::string* error=nullptr,
                    std::uint32_t ggml_type=GGML_TYPE_OPAQUE,
                    bool require_savings=false,
                    std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     bool addTensorF32AsF16(std::string name,const float* values,std::size_t count,std::string* error=nullptr);
+    bool addTensorF32AsF16FromReader(std::string name,const float* values,
+                   std::size_t count,std::string* error=nullptr,
+                   std::size_t max_encoded_bytes=(std::numeric_limits<std::size_t>::max)());
     std::uint32_t tensorType(const std::string& name) const;
     bool contains(const std::string& name) const;
     std::size_t tensorBytes(const std::string& name) const;
     std::size_t tensorBlocks(const std::string& name) const;
+    std::size_t blockBytes() const noexcept { return block_bytes_; }
     BlockLease acquireBlock(const std::string& name,std::size_t block_index,std::string* error=nullptr);
     bool readRange(const std::string& name,std::size_t offset,void* destination,std::size_t length,std::string* error=nullptr);
     StoreStats stats() const;
@@ -87,6 +98,7 @@ private:
     const std::size_t block_bytes_;
     mutable std::mutex mutex_;
     std::size_t cache_budget_,cache_bytes_=0;
+    const std::size_t encoded_residency_budget_;
     std::unordered_map<std::string,Tensor> tensors_;
     std::unordered_map<std::string,CacheEntry> cache_;
     std::list<std::string> lru_;

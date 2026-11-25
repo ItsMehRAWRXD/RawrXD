@@ -42,7 +42,6 @@ Receipt g_receipt;
 BackendStats g_backend;
 int32_t g_preferred_device = -1;   // STRATA_S05: device pin, applied at first init
 int32_t g_active_device = -1;      // RAWRXD_MULTI_GPU: per-op device override (-1 = default Gpu(); set via SetActiveDevice for split-model dual-GPU). Default keeps single-GPU behaviour byte-identical.
-int32_t g_batch_device = -1;       // device captured by the current logical batch
 int64_t g_weight_cache_budget = 0;
 static bool g_weight_cache_retention = false; // RAWRXD_G04: residency budget pin, applied at first init
 
@@ -132,6 +131,8 @@ struct QueuedDot {
     CpuDot cpu;
 };
 bool g_batch_active = false;
+// Capture the batch device once; the active per-op scope may change later.
+int32_t g_batch_device = -1;
 std::vector<QueuedDot> g_queued;
 
 // Implementation of the public BeginBatch: opens a batch on the device fast
@@ -147,16 +148,18 @@ bool BeginBatchImpl()
     if (std::getenv("RR_GPU_CHECK")) return true;
     if (g_batch_active) return false;
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
-    const bool gpu_ok = (g_active_device >= 0)
-        ? GpuFor(g_active_device).BeginQuantDotBatch()
-        : Gpu().BeginQuantDotBatch();
+    const int32_t device = (g_active_device >= 0) ? g_active_device : g_preferred_device;
+    bool gpu_ok = false;
+    try {
+        gpu_ok = (device >= 0 ? GpuFor(device) : Gpu()).BeginQuantDotBatch();
+    } catch (const std::exception& e) {
+        g_receipt.fallback_reason = "batch device initialization failed";
+        QDTRACE_DISPATCH("BeginBatch device error=" << e.what());
+        return false;
+    }
     QDTRACE_DISPATCH("BeginBatch gpu_ok=" << (int)gpu_ok << " batch_active_before=" << (int)g_batch_active);
     if (!gpu_ok) return false;
-    // Prefill opens the logical batch before entering each per-op device
-    // scope. Capture the preferred device in that case so later scoped dots
-    // join the same physical batch instead of executing synchronously and
-    // leaving the device batch open with no queued entries.
-    g_batch_device = (g_active_device >= 0) ? g_active_device : g_preferred_device;
+    g_batch_device = device;
     g_batch_active = true;
     g_queued.clear();
     return true;
@@ -199,25 +202,33 @@ bool EndBatchImpl()
     if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
     if (!g_batch_active) return false;
     g_batch_active = false;
-    const int32_t batch_device = g_batch_device;
+    const int32_t device = g_batch_device;
     g_batch_device = -1;
-    VulkanCompute& batch_gpu = (batch_device >= 0) ? GpuFor(batch_device) : Gpu();
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);
     if (qs.empty()) {
-        // Q4_K currently remains on the synchronous path until its packed
-        // activation-arena contract is proven.  The logical batch can
-        // therefore contain no queued entries, but the physical device batch
-        // was still opened and must be closed before the next group.
-        if (!batch_gpu.EndQuantDotBatch()) {
-            g_receipt = Receipt{};
-            g_receipt.fallback_reason = "empty quant-dot batch close failed";
-            return false;
-        }
-        return true;
+        // BeginBatch already opened a device command buffer. Close it even
+        // when no dot was admitted, otherwise the next batch cannot begin.
+        std::lock_guard<std::mutex> lk(g_gpu_mutex);
+        try { return (device >= 0 ? GpuFor(device) : Gpu()).EndQuantDotBatch(); }
+        catch (const std::exception&) { return false; }
     }
+    // Restoring pointers here also covers CPU replay after device initialization
+    // or submission failure; the owned storage survived vector relocations.
+    for (auto& q : qs) q.q8 = q.q8_storage.data();
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
+    // The same Vulkan context owns Begin, Queue, and End. Never mix queues
+    // from separate physical devices in a single batch.
+    VulkanCompute* batch_gpu = nullptr;
+    try {
+        batch_gpu = &(device >= 0 ? GpuFor(device) : Gpu());
+    } catch (const std::exception&) {
+        g_receipt = Receipt{};
+        g_receipt.fallback_reason = "batch device unavailable at submit";
+        ReplayQueuedOnCpu(qs);
+        return false;
+    }
     // RAWRXD_DEEP2_MOE_BATCH_CHUNK_001. One device batch holds BatchCapacity()
     // descriptor sets. A MoE block queues one dot per selected expert, so a
     // 199-expert model asks for 199 entries and entry 32 was rejected before any
@@ -234,7 +245,7 @@ bool EndBatchImpl()
     size_t chunks_ok = 0;
     for (size_t base = 0; base < qs.size() && ok; base += chunk) {
         const size_t end = (qs.size() - base) < chunk ? qs.size() : base + chunk;
-        if (base > 0 && !batch_gpu.BeginQuantDotBatch()) {
+        if (base > 0 && !batch_gpu->BeginQuantDotBatch()) {
             ok = false;
             fail_stage = "begin";
             fail_index = qs.size();
@@ -242,9 +253,10 @@ bool EndBatchImpl()
             break;
         }
         for (size_t i = base; i < end; ++i) {
-            const QueuedDot& e = qs[i];
+            QueuedDot& e = qs[i];
+            e.q8 = e.q8_storage.data();
             const bool queued_ok =
-                batch_gpu.QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
+                batch_gpu->QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
                                     e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
             if (!queued_ok) {
                 ok = false;
@@ -257,7 +269,7 @@ bool EndBatchImpl()
         }
         if (!ok) break;
         QDTRACE_DISPATCH("EndBatch chunk base=" << base << " count=" << (end - base));
-        if (!batch_gpu.EndQuantDotBatch()) {
+        if (!batch_gpu->EndQuantDotBatch()) {
             ok = false;
             fail_stage = "end";
             fail_index = qs.size();
@@ -515,9 +527,14 @@ void SetPreferredDevice(int index) {
 }
 
 size_t BatchCapacity() {
-    // kQuantBatchMaxSets: the descriptor ring bounds one batch. Reported, not
-    // asserted, so callers can chunk instead of failing closed.
-    return Gpu().QuantDotBatchCapacity();
+    // Match the active GPU's descriptor capacity to the device that will
+    // own BeginBatch. Device initialization errors fail closed to capacity 0.
+    try {
+        return (g_active_device >= 0 ? GpuFor(g_active_device) : Gpu())
+            .QuantDotBatchCapacity();
+    } catch (const std::exception&) {
+        return 0;
+    }
 }
 
 const Receipt& LastReceipt() { return g_receipt; }
@@ -669,6 +686,15 @@ bool DotBlocked(int kind,
     // has independent upload/barrier/readback ownership and is numerically
     // verified. Do not return a queued result for Q4_K while its output is not
     // yet trustworthy.
+    // A scope transition must not send a dot to a different GPU while a
+    // command buffer is already open on the batch's captured device.
+    if (g_batch_active && !differential_check &&
+        (g_active_device >= 0 ? g_active_device : g_preferred_device) != g_batch_device &&
+        !force_cpu && !g_force_cpu) {
+        g_receipt.used_gpu = false;
+        g_receipt.fallback_reason = "batch device scope mismatch";
+        return false;
+    }
     if (g_batch_active && kind != 0 && !differential_check &&
         (g_active_device >= 0 ? g_active_device : g_preferred_device) == g_batch_device &&
         !force_cpu && !g_force_cpu) {
@@ -687,9 +713,15 @@ bool DotBlocked(int kind,
             g_receipt.fallback_reason = "batch queue with a misaligned activation buffer";
             return false;
         }
+        if (q8_bytes == 0) {
+            g_receipt.fallback_reason = "batch queue with empty activation buffer";
+            return false;
+        }
         qd.q8_storage.resize(q8_bytes / sizeof(float));
         std::memcpy(qd.q8_storage.data(), q8_interleaved, q8_bytes);
-        qd.q8 = qd.q8_storage.data();
+        // q8_storage is moved into the vector below; resolve the pointer
+        // after all vector reallocations, immediately before device queueing.
+        qd.q8 = nullptr;
         qd.q8_bytes = q8_bytes;
         qd.out = y;
         qd.out_bytes = n_out * sizeof(float);
