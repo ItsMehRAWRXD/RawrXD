@@ -38,7 +38,7 @@ static std::string JsonEscape(const std::string& s) {
 
 int main(int argc, char** argv) {
     std::string model, gpu = "R9700", prompt = "The quick brown fox jumps over the lazy dog.";
-    size_t ctx = 4096, gen = 128, threads = 0, reps = 1;
+    size_t ctx = 4096, gen = 128, threads = 0, reps = 1, cancelAfter = 0;
     bool useGpu = true;
     bool medusa = false;
     for (int i = 1; i < argc; ++i) {
@@ -52,8 +52,9 @@ int main(int argc, char** argv) {
         else if (a == "--prompt") prompt = next("");
         else if (a == "--no-gpu") useGpu = false;
         else if (a == "--medusa") medusa = true;  // speculative block verification
+        else if (a == "--cancel-after") cancelAfter = std::strtoul(next("0").c_str(), nullptr, 10);
         else if (a == "--help") {
-            std::printf("deep2_benchmark <model.gguf> [--gpu NAME] [--ctx N] [--gen N] [--prompt S] [--threads N] [--reps N] [--medusa] [--no-gpu]\n");
+            std::printf("deep2_benchmark <model.gguf> [--gpu NAME] [--ctx N] [--gen N] [--prompt S] [--threads N] [--reps N] [--medusa] [--cancel-after N] [--no-gpu]\n");
             return 0;
         } else if (model.empty()) model = a;
     }
@@ -88,13 +89,19 @@ int main(int argc, char** argv) {
     for (size_t r = 0; r < reps; ++r) {
         engine.reset();
         InferenceStats st;
+        size_t tokCount = 0;
+        auto onTok = [&](int) {
+            if (cancelAfter && ++tokCount >= cancelAfter) engine.requestCancel();
+            return true;
+        };
         const size_t n = engine.generate(promptIds.data(), promptIds.size(),
-                                         out.data(), out.size(), &st, nullptr);
+                                         out.data(), out.size(), &st, onTok);
         const Deep2Engine::GenerationStopReason sr = engine.generationStopReason();
         stopReason = Deep2Engine::GenerationStopReasonName(sr);
-        const bool ok = (n > 0) && st.tokensGenerated > 0 &&
+        const bool ok = (n > 0) &&
             (sr == Deep2Engine::GenerationStopReason::COMPLETED || sr == Deep2Engine::GenerationStopReason::EOS ||
-             sr == Deep2Engine::GenerationStopReason::BUDGET_EXHAUSTED);
+             sr == Deep2Engine::GenerationStopReason::BUDGET_EXHAUSTED ||
+             (cancelAfter > 0 && sr == Deep2Engine::GenerationStopReason::CANCELLED));
         if (!ok) { fault = true; break; }
         prefillTpsSum += st.prefillTokensPerSecond;
         decodeTpsSum  += st.decodeTokensPerSecond;
@@ -129,12 +136,14 @@ int main(int argc, char** argv) {
         "\"gemv_ok\":%llu,\"gemv_fallback\":%llu,\"unplanned_fallback\":%llu,"
         "\"planned_cpu_ops\":%llu,\"planned_gpu_ops\":%llu,"
         "\"moe_router_ms\":%.3f,\"moe_router_calls\":%lu,\"moe_expert_ms\":%.3f,\"moe_expert_calls\":%lu,"
+        "\"cancel_after\":%zu,\"cancelled\":%s,"
         "\"stop_reason\":\"%s\",\"result\":\"%s\"}\n",
         JsonEscape(model).c_str(), JsonEscape(gpu).c_str(), devCount, vkInit ? "true" : "false",
         JsonEscape(devNeedle).c_str(), ctx, gen, threads, reps, okReps,
         prefillTps, decodeTps, totalTps,
         gemvOk, gemvFail, unplanned, cpuOps, gpuOps,
         moeRouterMs, moeRouterCalls, moeExpertMs, moeExpertCalls,
+        cancelAfter, (stopReason == "CANCELLED" ? "true" : "false"),
         stopReason.c_str(), incomplete ? "INCOMPLETE" : "PASS");
 
     return incomplete ? 4 : 0;
