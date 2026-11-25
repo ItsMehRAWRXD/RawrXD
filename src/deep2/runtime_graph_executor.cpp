@@ -4023,15 +4023,20 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
         if (VB.size() < vLayout.logicalElements) { err = "mla: v_b dequant short"; return false; }
     }
 
-    // 1. latentFull = x @ kv_a_mqa
+    // 1. latentFull = x @ kv_a_mqa.  This projection is a complete
+    // model-defined contraction; silently accepting a short activation would
+    // produce plausible-looking but mathematically invalid attention state.
+    if (x.size() != kvA_in) {
+        err = "mla: kv_a_mqa activation width does not match model input width";
+        return false;
+    }
     std::vector<float> latentFull(kvA_out, 0.0f);
-    const size_t inL = std::min(kvA_in, x.size());
     for (size_t j = 0; j < kvA_out; ++j) {
         double acc = 0.0;
         // GGML stores ne[0] contiguously.  For kv_a_mqa the tensor is
         // [input, output], so output row j contains input coefficients
         // [j*input + i].
-        for (size_t i = 0; i < inL; ++i)
+        for (size_t i = 0; i < kvA_in; ++i)
             acc += double(A[j * kvA_in + i]) * double(x[i]);
         latentFull[j] = (float)acc;
     }
