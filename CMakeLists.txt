@@ -3828,6 +3828,9 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Sidebar.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
         src/win32app/Win32IDE_AgentPanel.cpp
+        src/win32app/Win32IDE_AgentControllerBridge.cpp
+        src/rawr_core.cpp
+        src/agent/agent_controller.cpp
         src/win32app/Win32IDE_LspCommands.cpp
         src/win32app/Win32IDE_SastBridge.cpp
         src/win32app/Win32IDE_BuildParser.cpp

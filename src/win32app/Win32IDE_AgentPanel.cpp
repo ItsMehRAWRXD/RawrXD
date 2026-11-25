@@ -11,7 +11,13 @@
 #include "Win32IDE.h"
 
 #include <cstdio>
+#include <filesystem>
 #include <string>
+
+// A5: native IDE routes through the shared agent controller (same production
+// loop as the CLI). Implemented in Win32IDE_AgentControllerBridge.cpp.
+void RawrXD_IDE_RunAgenticTask(HWND transcriptHwnd, const std::string& goal,
+                               const std::string& root);
 
 // Control IDs are defined in Win32IDE_VSCodeUI.cpp (1308 transcript,
 // 1309 input, 1310 send). The WM_COMMAND case lives in Win32IDE_lifecycle.cpp.
@@ -57,8 +63,11 @@ void Win32IDE::submitAgentPrompt() {
     if (!m_activeSystemPrompt.empty()) {
         staged = "[system] " + m_activeSystemPrompt + "\n\n" + text;
     }
-    // Route through the SAME chat backend as the copilot chat (A5 streams the
-    // response tokens back into this transcript).
-    stageCopilotChatInputUtf8(staged);
-    HandleCopilotSend();
+    // A5: route through the SHARED agent controller (rawr::runAgentController)
+    // on a worker thread — the same production loop the CLI uses — instead of a
+    // parallel chat path. Tool receipts and the host verdict stream back into
+    // this transcript.
+    std::string root = std::filesystem::current_path().string();
+    appendAgentTranscript("[agent] dispatching to shared controller...\r\n");
+    RawrXD_IDE_RunAgenticTask(m_hwndAgentTranscript, staged, root);
 }
