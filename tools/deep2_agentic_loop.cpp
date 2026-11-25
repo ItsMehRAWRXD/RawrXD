@@ -3936,6 +3936,9 @@ static int OllamaAgentRun(const Args& args)
             Logf_("OLLAMA_AGENT_CREATE attempt=%d path=%s build=%d run=%d "
                   "verified=%d\n", attempt, safe.c_str(), buildExit, runExit,
                   verified ? 1 : 0);
+            if (!verified)
+                Logf_("[ollama] create build_output:\n%s\nrun_output:\n%s\n",
+                      buildOut.c_str(), runOut.c_str());
             if (verified)
             {
                 Logf_("OLLAMA_AGENT_VERDICT PASS\n");
