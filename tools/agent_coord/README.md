@@ -69,3 +69,29 @@ pwsh tools/agent_coord/coord.ps1 reclaim -Agent agent-ide -Item chat-smoke -Owne
   no reset, no shared mutable build state.
 - **Commit-specific receipts** â€” acceptance evidence is bound to a commit, never
   to a shared workspace.
+## v2 additions (mandatory enforcement + hardening)
+
+- **Repo-scoped mutex**: the registry RMW lock is a named kernel mutex whose
+  name hashes this repo's shared state dir, so unrelated repos never contend.
+- **PID-reuse protection**: each claim records the owner's process start time;
+  a recycled PID with a different start time is treated as stale.
+- **Dependency-aware `next`**: only items whose `deps` are `CLOSED` are offered.
+- **`preedit`** — fail-closed ownership guard (exit 0 = owned, 1 = not). Wire it
+  before any source/build/test action.
+- **`receipt`** — commit-bound acceptance receipt; rejects commits not in HEAD
+  history (`RECEIPT_NOT_ANCESTOR`).
+- **`done`** — requires ownership; releases + marks the backlog item `CLOSED`.
+- **`provision`** — transactional worktree/build/test/port/instance allocation
+  with rollback on failure.
+- **`selftest`** — N-way concurrent claim; `SELFTEST_PASS=1` iff exactly 1 winner.
+
+### Mandatory startup
+
+```powershell
+pwsh tools/agent_coord/agent-startup.ps1 -Agent agent-ide -Item interactive-cert `
+    -Worktree F:\wt\ide -Branch feat/ide -NewWorktree
+```
+
+Provisions + claims + enforces ownership, then prints the env (BUILD_DIR, TEST_WS,
+PORT, INSTANCE_ID, RECEIPT_DIR) and the heartbeat/preedit/done/receipt commands.
+An agent that skips startup has no claim, so `preedit` denies its actions.

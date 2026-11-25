@@ -1,15 +1,134 @@
-{
-  "version": 1,
-  "description": "RawrXD implementation backlog for agent coordination. Each item is an exclusively-owned package. status: OPEN | ACTIVE | CLOSED. The coord.ps1 'next' command selects the first non-CLOSED item that is free or stale.",
-  "items": [
-    { "id": "a5-graphical",          "package": "native-ide",        "title": "Graphical edit -> build -> run acceptance", "status": "CLOSED" },
-    { "id": "chat-smoke",            "package": "native-ide",        "title": "Chat-smoke concurrency + deterministic shutdown", "status": "ACTIVE" },
-    { "id": "response-buffer-mutex", "package": "native-ide",        "title": "Synchronize responseBuffer access sites", "status": "ACTIVE" },
-    { "id": "interactive-cert",      "package": "native-ide",        "title": "Certify 9 interactive IDE features", "status": "OPEN" },
-    { "id": "session-reliability",   "package": "native-ide",        "title": "Persistent sessions, cancellation, worker cleanup, recovery", "status": "OPEN" },
-    { "id": "self-hosted-dev",       "package": "native-ide",        "title": "Open RawrXD in RawrXD; real repo improvement; commit via RawrXD", "status": "OPEN" },
-    { "id": "branch-reconciliation", "package": "integration",       "title": "Non-destructive reconciliation of 3195 ahead / 769 behind", "status": "OPEN" },
-    { "id": "deep2-parity",          "package": "parallel-track",    "title": "Deep2 numerical parity (independent track)", "status": "ACTIVE" },
-    { "id": "compression-residency", "package": "parallel-track",    "title": "Compression residency (independent track)", "status": "ACTIVE" }
-  ]
+﻿{
+    "version":  2,
+    "description":  "RawrXD implementation backlog for agent coordination. Each item is an exclusively-owned package. status: OPEN | ACTIVE | CLOSED. deps: ids that must be CLOSED first. \u0027coord.ps1 next\u0027 selects the first non-CLOSED item whose deps are satisfied and that is free or stale.",
+    "items":  [
+                  {
+                      "id":  "a5-graphical",
+                      "package":  "native-ide",
+                      "title":  "Graphical edit -\u003e build -\u003e run acceptance",
+                      "status":  "CLOSED",
+                      "deps":  [
+
+                               ]
+                  },
+                  {
+                      "id":  "chat-smoke",
+                      "package":  "native-ide",
+                      "title":  "Chat-smoke concurrency + deterministic shutdown",
+                      "status":  "ACTIVE",
+                      "deps":  [
+
+                               ]
+                  },
+                  {
+                      "id":  "response-buffer-mutex",
+                      "package":  "native-ide",
+                      "title":  "Synchronize responseBuffer access sites",
+                      "status":  "ACTIVE",
+                      "deps":  [
+                                   "chat-smoke"
+                               ]
+                  },
+                  {
+                      "id":  "interactive-cert",
+                      "package":  "native-ide",
+                      "title":  "Certify 9 interactive IDE features",
+                      "status":  "OPEN",
+                      "deps":  [
+                                   "chat-smoke",
+                                   "response-buffer-mutex"
+                               ]
+                  },
+                  {
+                      "id":  "session-reliability",
+                      "package":  "native-ide",
+                      "title":  "Persistent sessions, cancellation, worker cleanup, recovery",
+                      "status":  "OPEN",
+                      "deps":  [
+                                   "chat-smoke"
+                               ]
+                  },
+                  {
+                      "id":  "self-hosted-dev",
+                      "package":  "native-ide",
+                      "title":  "Open RawrXD in RawrXD; real repo improvement; commit via RawrXD",
+                      "status":  "OPEN",
+                      "deps":  [
+                                   "interactive-cert",
+                                   "session-reliability"
+                               ]
+                  },
+                  {
+                      "id":  "branch-reconciliation",
+                      "package":  "integration",
+                      "title":  "Non-destructive reconciliation of 3195 ahead / 769 behind",
+                      "status":  "OPEN",
+                      "deps":  [
+
+                               ]
+                  },
+                  {
+                      "id":  "coord-mandatory",
+                      "package":  "coordination",
+                      "title":  "Mandatory ownership checks in agent startup + hooks",
+                      "status":  "ACTIVE",
+                      "deps":  [
+
+                               ]
+                  },
+                  {
+                      "id":  "coord-provision",
+                      "package":  "coordination",
+                      "title":  "Auto-provision worktree/build/test/port per agent",
+                      "status":  "ACTIVE",
+                      "deps":  [
+                                   "coord-mandatory"
+                               ]
+                  },
+                  {
+                      "id":  "coord-five-agent",
+                      "package":  "coordination",
+                      "title":  "Certify simultaneous five-agent execution",
+                      "status":  "OPEN",
+                      "deps":  [
+                                   "coord-provision"
+                               ]
+                  },
+                  {
+                      "id":  "deep2-parity",
+                      "package":  "parallel-track",
+                      "title":  "Deep2 remaining production numerical parity",
+                      "status":  "ACTIVE",
+                      "deps":  [
+
+                               ]
+                  },
+                  {
+                      "id":  "vulkan-gpu",
+                      "package":  "parallel-track",
+                      "title":  "Vulkan GPU execution and shader certification",
+                      "status":  "ACTIVE",
+                      "deps":  [
+
+                               ]
+                  },
+                  {
+                      "id":  "compression-residency",
+                      "package":  "parallel-track",
+                      "title":  "Production compressed-weight residency",
+                      "status":  "ACTIVE",
+                      "deps":  [
+
+                               ]
+                  },
+                  {
+                      "id":  "validation-regression",
+                      "package":  "parallel-track",
+                      "title":  "Independent regression and hardware acceptance",
+                      "status":  "OPEN",
+                      "deps":  [
+
+                               ]
+                  }
+              ]
 }
