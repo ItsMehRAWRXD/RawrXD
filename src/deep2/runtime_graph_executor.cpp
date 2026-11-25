@@ -2470,6 +2470,25 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         }
     }
     std::vector<float> scores(T);
+    // Diagnostic-only position-zero witness.  At the first causal position
+    // softmax([score]) is exactly [1], so the attention output must equal the
+    // expanded V stream.  Dump the actual production V input before any score
+    // or AV work; callers opt in explicitly and no inference state changes.
+    if (const char* dumpV = std::getenv("DEEP2_DUMP_MLA_V");
+        dumpV && *dumpV && isMla && position == 0 && in.block == 0) {
+        std::FILE* vf = std::fopen(dumpV, "wb");
+        if (!vf) {
+            err = std::string("attention: cannot open MLA V diagnostic: ") + dumpV;
+            return false;
+        }
+        const size_t vCount = vWidth;
+        const size_t wrote = std::fwrite(V.data(), sizeof(float), vCount, vf);
+        std::fclose(vf);
+        if (wrote != vCount) {
+            err = "attention: short MLA V diagnostic write";
+            return false;
+        }
+    }
     // GQA groups: consecutive query heads share one KV head.
     const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
     // MLA score = q_nopeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_nope  +  q_ropeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_rope.
@@ -4009,11 +4028,20 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
     const size_t inL = std::min(kvA_in, x.size());
     for (size_t j = 0; j < kvA_out; ++j) {
         double acc = 0.0;
-        // GGML stores the [input, output] projection with the input
-        // dimension contiguous: element (i,j) is i*output+j.
+        // GGML stores ne[0] contiguously.  For kv_a_mqa the tensor is
+        // [input, output], so output row j contains input coefficients
+        // [j*input + i].
         for (size_t i = 0; i < inL; ++i)
-            acc += double(A[i * kvA_out + j]) * double(x[i]);
+            acc += double(A[j * kvA_in + i]) * double(x[i]);
         latentFull[j] = (float)acc;
+    }
+    if (const char* dumpLatentFull = std::getenv("DEEP2_DUMP_MLA_LATENT_FULL");
+        dumpLatentFull && *dumpLatentFull && mla.block == 0 && position == 0) {
+        std::FILE* lf = std::fopen(dumpLatentFull, "wb");
+        if (!lf) { err = std::string("mla: cannot open full latent diagnostic: ") + dumpLatentFull; return false; }
+        const size_t wrote = std::fwrite(latentFull.data(), sizeof(float), latentFull.size(), lf);
+        std::fclose(lf);
+        if (wrote != latentFull.size()) { err = "mla: short full latent diagnostic write"; return false; }
     }
 
     // 2. RMSNorm the latent part ONLY. This is the step the earlier version
@@ -4025,6 +4053,14 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
         const float scale = 1.0f / std::sqrt(float(ss / double(lora)) + 1e-6f);
         for (size_t i = 0; i < lora; ++i)
             latent[i] = latentFull[i] * (i < nw.size() ? nw[i] : 1.0f) * scale;
+    }
+    if (const char* dumpLatent = std::getenv("DEEP2_DUMP_MLA_LATENT");
+        dumpLatent && *dumpLatent && mla.block == 0 && position == 0) {
+        std::FILE* lf = std::fopen(dumpLatent, "wb");
+        if (!lf) { err = std::string("mla: cannot open latent diagnostic: ") + dumpLatent; return false; }
+        const size_t wrote = std::fwrite(latent.data(), sizeof(float), latent.size(), lf);
+        std::fclose(lf);
+        if (wrote != latent.size()) { err = "mla: short latent diagnostic write"; return false; }
     }
 
     // 3. up-projection.  The same logical operation uses a different physical
@@ -4041,9 +4077,13 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
                 const size_t globalO = (p.head_count == H) ? o : h * perHeadOut + o;
                 double acc = 0.0;
                 for (size_t i = 0; i < lora; ++i) {
+                    // For [lora, output] GGML storage, output rows are
+                    // contiguous input vectors.  For [output, lora], the
+                    // latent dimension is ne[1] and storage is input-row
+                    // major.  Rank-3 heads use the same rule within headBase.
                     const size_t idx = headBase +
-                        (p.output_major ? globalO * lora + i
-                                        : i * (p.head_count == H ? p.output : kOut) + globalO);
+                        (p.output_major ? i * p.output + globalO
+                                        : globalO * lora + i);
                     acc += double(weights[idx]) * double(latent[i]);
                 }
                 out[h * perHeadOut + o] = (float)acc;
