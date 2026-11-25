@@ -164,6 +164,7 @@ static void enumerateGpusIntoSnapshot(void* userdata) {
         g.vendorId = id.vendorId;
         g.deviceId = id.deviceId;
         g.deviceLocalBytes = id.dedicatedVram;
+        g.availableVramBytes = id.availableVram;   // live free VRAM (admission capacity)
         g.sharedBytes = id.sharedVram;
         g.discrete = !id.integrated;
         g.deviceIndex = id.index;

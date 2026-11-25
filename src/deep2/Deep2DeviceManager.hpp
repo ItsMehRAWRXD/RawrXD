@@ -39,6 +39,7 @@ struct DeviceIdentity {
     char instanceId[256]{};
     uint64_t dedicatedVram = 0;
     uint64_t sharedVram = 0;
+    uint64_t availableVram = 0;   // free device-local VRAM now (Budget-CurrentUsage)
     uint64_t luid = 0;
     uint32_t vendorId = 0;
     uint32_t deviceId = 0;

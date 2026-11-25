@@ -12,6 +12,7 @@
 #endif
 #include <windows.h>
 #include <dxgi.h>
+#include <dxgi1_4.h>
 #include <cfgmgr32.h>
 #include <setupapi.h>
 #include <devguid.h>
@@ -421,6 +422,23 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
                       uint64_t(uint32_t(d.AdapterLuid.LowPart));
             id.dedicatedVram = (uint64_t)d.DedicatedVideoMemory;
             id.sharedVram = (uint64_t)d.SharedSystemMemory;
+            // Live FREE device-local VRAM (Budget - CurrentUsage) via
+            // IDXGIAdapter3::QueryVideoMemoryInfo.  This is what admission must
+            // use so a shared GPU is not oversubscribed on total capacity.
+            id.availableVram = 0;
+            IDXGIAdapter3* adapter3 = nullptr;
+            if (SUCCEEDED(adapter->QueryInterface(__uuidof(IDXGIAdapter3),
+                                                  reinterpret_cast<void**>(&adapter3)))
+                && adapter3) {
+                DXGI_QUERY_VIDEO_MEMORY_INFO vmi{};
+                if (SUCCEEDED(adapter3->QueryVideoMemoryInfo(
+                        0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vmi))) {
+                    const uint64_t budget = (uint64_t)vmi.Budget;
+                    const uint64_t used = (uint64_t)vmi.CurrentUsage;
+                    id.availableVram = budget > used ? budget - used : 0;
+                }
+                adapter3->Release();
+            }
             // An adapter is integrated when it has no meaningful dedicated
             // VRAM.  On Windows, DXGI reports shared system memory (system RAM
             // that can be used by the GPU) which often exceeds dedicated VRAM

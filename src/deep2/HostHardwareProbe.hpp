@@ -55,18 +55,36 @@ struct GpuDeviceInfo {
     std::string name;        // adapter description (used as InitializeSolo needle)
     uint32_t vendorId = 0;
     uint32_t deviceId = 0;
-    uint64_t deviceLocalBytes = 0;   // measured dedicated VRAM
+    uint64_t deviceLocalBytes = 0;   // measured dedicated VRAM (physical)
+    uint64_t availableVramBytes = 0; // measured FREE device-local VRAM now
+                                     // (DXGI QueryVideoMemoryInfo Budget-CurrentUsage,
+                                     //  or VK_EXT_memory_budget). 0 = unknown.
     uint64_t sharedBytes = 0;
     bool discrete = false;
     bool compute = false;
     int deviceIndex = -1;    // index in the runtime's own enumeration
 
+    // Capacity the admission planner may allocate against.  Uses the LIVE free
+    // VRAM when it is known, so a shared GPU with little free VRAM cannot be
+    // oversubscribed on the strength of its total capacity.  Falls back to the
+    // physical size when free VRAM has not been measured (older callers).
+    uint64_t capacityBytes() const {
+        if (availableVramBytes) {
+            return deviceLocalBytes
+                ? (availableVramBytes < deviceLocalBytes ? availableVramBytes
+                                                         : deviceLocalBytes)
+                : availableVramBytes;
+        }
+        return deviceLocalBytes;
+    }
+
     // Effective budget after the resident-fraction reserve.  This is the only
     // number placement planning may allocate model bytes against.
     uint64_t budgetBytes(double residentFraction = kDefaultResidentFraction) const {
-        if (!deviceLocalBytes) return 0;
+        const uint64_t cap = capacityBytes();
+        if (!cap) return 0;
         const uint64_t v = static_cast<uint64_t>(
-            static_cast<double>(deviceLocalBytes) * residentFraction);
+            static_cast<double>(cap) * residentFraction);
         return v;
     }
 };
