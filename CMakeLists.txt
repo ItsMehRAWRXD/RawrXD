@@ -2637,6 +2637,64 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/subagent_acceptance_test.cpp")
     message(STATUS "subagent_acceptance enabled (A6/HexMag backend)")
 endif()
 
+# HexMag swarm orchestrator acceptance (TOP50 HexMag): real linkage proof.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/agentic/HexMagSwarmOrchestrator.cpp")
+    add_executable(hexmag_acceptance
+        tests/hexmag_acceptance_test.cpp
+        src/agentic/HexMagSwarmOrchestrator.cpp
+        src/agentic/AgentOrchestrator.cpp
+        src/agentic/AdvancedAgentCoordinator.cpp
+        src/agentic/conflict_resolution.cpp
+        src/agent/autonomous_subagent.cpp
+        src/agent/delegated_agents.cpp
+        src/agent/adaptive_retry.cpp
+        src/agent_history.cpp
+        src/agent_policy.cpp
+        src/subagent_core.cpp
+        src/agentic/SubAgentManager.cpp
+    )
+    if(TARGET deep2_engine_lib)
+        target_link_libraries(hexmag_acceptance PRIVATE deep2_engine_lib)
+    endif()
+    target_include_directories(hexmag_acceptance PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/agents
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/win32app
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/json/include
+    )
+    if(MSVC)
+        target_compile_options(hexmag_acceptance PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    set_target_properties(hexmag_acceptance PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "hexmag_acceptance enabled (HexMag linkage)")
+endif()
+
+# D5 live hardware data breakpoint acceptance (backend-level).
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/data_breakpoint_test.cpp")
+    enable_language(C)
+    add_executable(d5_debuggee tests/fixtures/d5_debuggee.cpp)
+    # Export main so the backend's export-breakpoint resolution can bind it.
+    target_link_options(d5_debuggee PRIVATE "/EXPORT:main")
+    set_target_properties(d5_debuggee PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    add_executable(data_breakpoint_test
+        tests/data_breakpoint_test.cpp
+        src/win32app/Win32NativeDebugBackend.cpp
+    )
+    target_include_directories(data_breakpoint_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/win32app)
+    if(MSVC)
+        target_compile_options(data_breakpoint_test PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    set_target_properties(data_breakpoint_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "data_breakpoint_test enabled (TOP50 D5)")
+endif()
+
 # S5 DAST bridge (TOP50 S5).
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dast_bridge.cpp")
     add_library(rawrxd_dast STATIC

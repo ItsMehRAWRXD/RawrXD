@@ -339,8 +339,7 @@ bool Win32NativeDebugBackend::addDataBreakpointAddress(uint64_t address,
     bp.size = size;
     bp.label = label;
     m_dataBps.push_back(bp);
-    armDataBreakpointsUnlocked();
-    return true;
+    return armDataBreakpointsUnlocked();
 }
 
 void Win32NativeDebugBackend::clearDataBreakpoints() {
@@ -381,7 +380,27 @@ bool Win32NativeDebugBackend::armDataBreakpointsUnlocked() {
         ctx.Dr7 = 0x1ull | (0x3ull << 16) | (lenBits << 18);
     }
     ctx.Dr6 = 0;  // clear status before re-arm
-    return setContext(ctx) != FALSE;
+    // Arm on the active thread AND every other live thread (the write may
+    // execute on any of them).
+    DWORD activeTid = m_activeTid;
+    bool ok = setContext(ctx) != FALSE;
+    for (auto& t : m_threads) {
+        if (!t.alive || t.tid == activeTid) continue;
+        m_activeThread = t.handle;
+        ok = setContext(ctx) != FALSE || ok;
+    }
+    m_activeThread = nullptr;
+    for (auto& t : m_threads) {
+        if (t.alive && t.tid == activeTid) {
+            m_activeThread = t.handle;
+            break;
+        }
+    }
+    if (m_onOutput)
+        m_onOutput("[native-debug] arm dr0=" + std::to_string(ctx.Dr0) +
+                   " dr7=" + std::to_string(ctx.Dr7) +
+                   " ok=" + (ok ? "1" : "0"));
+    return ok;
 }
 
 bool Win32NativeDebugBackend::removeBreakpointAddress(uint64_t address) {
@@ -1018,6 +1037,9 @@ void Win32NativeDebugBackend::handleDebugEvent(const DEBUG_EVENT& ev) {
         }
 
         if (ex.ExceptionCode == EXCEPTION_SINGLE_STEP) {
+            if (m_onOutput)
+                m_onOutput("[native-debug] single_step dr6=0x" +
+                           std::to_string(ctx.Dr6));
             // D5: hardware data breakpoint hit (DR6.B0) — pause and report,
             // keep the register armed for the next write.
             if (ctx.Dr6 & 0x1ull) {
@@ -1067,6 +1089,9 @@ void Win32NativeDebugBackend::handleDebugEvent(const DEBUG_EVENT& ev) {
         break;
     }
     default:
+        if (m_onOutput)
+            m_onOutput("[native-debug] event code=" +
+                       std::to_string(ev.dwDebugEventCode));
         m_pendingContinue = true;
         break;
     }
