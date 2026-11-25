@@ -85,8 +85,9 @@ static void printUsage(const char* prog) {
         "Options:\n"
         "  --model <path>    Path to GGUF model file (required)\n"
         "  --port  <n>       HTTP port (default: 11436)\n"
-        "  --threads <n>     CPU thread count (default: auto)\n"
-        "  --vulkan          Enable Vulkan GPU acceleration\n"
+        "  --threads <n>    CPU thread count (default: auto)\n"
+        "  --vulkan          Enable Vulkan GPU acceleration (verified at load)\n"
+        "  --cpu             Force CPU-only (default when --vulkan is omitted)\n"
         "  --help            Show this message\n"
         "\n"
         "Environment:\n"
@@ -99,12 +100,20 @@ static void printUsage(const char* prog) {
         prog, prog, prog);
 }
 
+extern "C" const char* Deep2_EngineBuildStamp();
+
 int main(int argc, char** argv) {
     const char* prog = (argc > 0) ? argv[0] : "deep2_server";
+    // P0 provenance: build identity in the startup output so a run can be
+    // matched to the exact binary (stale-executable detection).
+    std::fprintf(stderr, "[server] build=%s %s exe=%s engine=%s\n", __DATE__,
+                 __TIME__, prog, Deep2_EngineBuildStamp());
+    std::fflush(stderr);
 
     std::string modelPath;
     uint16_t    port = 11436;
     bool        vulkan = false;
+    bool        cpu = false;
     int         numThreads = 0;
 
     // Environment defaults
@@ -125,6 +134,8 @@ int main(int argc, char** argv) {
             numThreads = std::atoi(argv[++i]);
         } else if (std::strcmp(argv[i], "--vulkan") == 0) {
             vulkan = true;
+        } else if (std::strcmp(argv[i], "--cpu") == 0) {
+            cpu = true;
         } else if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
             printUsage(prog);
             return 0;
@@ -141,15 +152,33 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    if (cpu && vulkan) {
+        std::fprintf(stderr,
+            "[server] ERROR: --cpu and --vulkan are mutually exclusive\n");
+        return 1;
+    }
+
     std::fprintf(stderr,
         "=============================================\n"
         "  Deep2 OpenAI-Compatible Local Model Server\n"
         "=============================================\n");
 
-    // Product floor before model open. Tip GPU forward (single or dual) greedily
-    // collapses TinyLlama chat to EOS-only (completion_tokens=1, content="").
-    // R25 ProductOpen PASS and this P04 remasure require HOST_DECODE / DualStick
-    // held. Override only with RAWRXD_ALLOW_GPU=1.
+    // Resolve device policy BEFORE model open so the engine selects the GPU
+    // during loadModel (enabling Vulkan after load is too late — the engine has
+    // already chosen CPU_NATIVE). Default (no explicit GPU request) keeps the
+    // conservative CPU host-decode floor (Tip GPU forward can greedily EOS-collapse
+    // chat to EOS-only). An explicit --vulkan honors the GPU request via the
+    // documented RAWRXD_ALLOW_GPU escape hatch; the floor then becomes a no-op.
+    // This does NOT remove the conservative default for normal invocations.
+    if (vulkan) {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_ALLOW_GPU", "1");
+#else
+        setenv("RAWRXD_ALLOW_GPU", "1", 1);
+#endif
+        std::fprintf(stderr,
+            "[server] --vulkan: explicit GPU request; bypassing CPU host-decode floor\n");
+    }
     ApplyOpenAiHostDecodeFloor();
 
     fprintf(stderr, "D2LOAD_S00_SERVER_LOAD_ENTER\n"); fflush(stderr);
@@ -161,6 +190,15 @@ int main(int argc, char** argv) {
 
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
+
+    // Apply the device policy to the engine BEFORE loadModel so device selection
+    // happens with Vulkan enabled. (enableVulkan after load is too late: the
+    // engine already picked CPU_NATIVE during load, so --vulkan was a no-op.)
+    if (vulkan) {
+        server.engine().enableVulkan(true);
+        std::fprintf(stderr,
+            "[server] enableVulkan(true) applied BEFORE loadModel\n");
+    }
 
     // Load model
     std::fprintf(stderr, "[server] Loading model: %s\n", modelPath.c_str());
@@ -174,10 +212,22 @@ int main(int argc, char** argv) {
     }
     fprintf(stderr, "D2LOAD_S06_MODEL_LOAD_PASS\n"); fflush(stderr);
 
-    // Enable Vulkan if requested
+    // Verify the ACTUAL backend when GPU was explicitly requested.
+    // Fail closed: never silently serve on CPU when --vulkan was asked for.
     if (vulkan) {
-        server.engine().enableVulkan(true);
-        std::fprintf(stderr, "[server] Vulkan GPU acceleration enabled.\n");
+        Deep2::Deep2Engine& eng = server.engine();
+        const unsigned ndev = eng.vulkanDeviceCount();
+        std::fprintf(stderr,
+            "[server] GPU_VERIFY requested=1 vulkanEnabled=%d vulkanInitialized=%d devices=%u\n",
+            (int)eng.isVulkanEnabled(), (int)eng.isVulkanInitialized(), ndev);
+        if (ndev == 0) {
+            std::fprintf(stderr,
+                "[server] FATAL: GPU_INIT_FAILED - --vulkan requested but no Vulkan "
+                "device was opened; refusing silent CPU fallback (fail-closed).\n");
+            return 1;
+        }
+        std::fprintf(stderr,
+            "[server] Vulkan GPU acceleration verified: %u device(s) opened.\n", ndev);
     }
 
     // Set thread count

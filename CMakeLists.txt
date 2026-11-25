@@ -3418,6 +3418,7 @@ endforeach()
         # same implementation instead of re-listing sources and risking ODR violations.
         add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/engine_build_stamp.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntimePlan.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntime.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapPhysicalReduce.cpp
@@ -3540,6 +3541,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/deep2_openai_server.cpp"
     add_executable(deep2_openai_server
         ${CMAKE_SOURCE_DIR}/src/deep2/deep2_openai_server_main.cpp
         ${CMAKE_SOURCE_DIR}/src/deep2/deep2_openai_server.cpp
+        ${CMAKE_SOURCE_DIR}/src/deep2/engine_build_stamp.cpp
     )
     target_include_directories(deep2_openai_server PRIVATE
         ${CMAKE_SOURCE_DIR}/src

@@ -10,6 +10,7 @@
 
 #include "deep2/ReapCapturePolicy.hpp"
 #include "Deep2Engine.h"
+#include "layer_snapshot.hpp"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
 #include "../sampling/advanced_sampler.hpp"
@@ -8812,6 +8813,14 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                     auto layerT1 = std::chrono::high_resolution_clock::now();
                     double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
                     ResidencyCounters::RecordLayerTime(layer, layerMs);
+                    // P0 shared layer capture (opt-in, post-forward, decode
+                    // only): same format as the GPU hook.
+                    if (rawrxd::deep2::snap::Enabled() && m_inDecode) {
+                        rawrxd::deep2::snap::Write(
+                            "__layer_snaps.bin", "inline-b3",
+                            (uint64_t)inputPos,
+                            layerOutput, 1, (uint32_t)config.hiddenDim);
+                    }
                     float* temp = layerInput;
                     layerInput = layerOutput;
                     layerOutput = temp;

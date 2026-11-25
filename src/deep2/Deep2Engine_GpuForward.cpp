@@ -882,6 +882,17 @@ bool Deep2Engine::forwardGpuContiguousRange(
     }();
     std::vector<float> layerSnaps;
     const bool snapActive = s_snapLayers && m_inDecode && hi >= lo;
+    {
+        static bool s_gateLogged = false;
+        if (!s_gateLogged && s_snapLayers) {
+            s_gateLogged = true;
+            std::fprintf(stderr,
+                "[LAYER_SNAP_GATE] s_snapLayers=1 m_inDecode=%d lo=%u hi=%u "
+                "snapActive=%d\n",
+                m_inDecode ? 1 : 0, lo, hi, snapActive ? 1 : 0);
+            std::fflush(stderr);
+        }
+    }
     if (snapActive) layerSnaps.assign(static_cast<size_t>(hi - lo + 1) * modelWeights.hiddenDim, 0.0f);
     for (uint32_t layer = lo; layer <= hi; ++layer) {
         if (!forwardLayerGpuResident(layer, slot, false, false, unfused)) {
