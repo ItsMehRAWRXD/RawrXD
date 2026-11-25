@@ -2610,6 +2610,45 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     // environment variables.
     {
         probeHostHardware(ggufPath);
+        // P0 adaptive VRAM admission: derive the session budget from the
+        // ACTUAL device memory when the static cap would force CPU_ONLY.
+        // Session authority preserves explicit user-locked caps.
+        {
+            const uint64_t cap = Deep2::Exec::PolicyVramHardCapBytes();
+            std::error_code modelEc;
+            const uint64_t modelBytes =
+                std::filesystem::file_size(ggufPath, modelEc);
+            if (cap > 0 && !modelEc && modelBytes > cap) {
+                DeviceManagerSnapshot snap;
+                if (Deep2Device_Enumerate(snap))
+                {
+                    // Evaluate ALL eligible devices: prefer the largest
+                    // dedicated VRAM (ties -> lowest index); never pick the
+                    // first device that merely exceeds the old cap.
+                    int best = -1;
+                    for (unsigned i = 0; i < snap.deviceCount; ++i)
+                    {
+                        if (snap.devices[i].dedicatedVram == 0) continue;
+                        if (best < 0 ||
+                            snap.devices[i].dedicatedVram >
+                                snap.devices[best].dedicatedVram)
+                            best = (int)i;
+                    }
+                    if (best >= 0)
+                    {
+                        uint64_t budget = 0;
+                        const auto r = Deep2::Exec::ApplyAdaptiveVramAdmission(
+                            snap.devices[best].dedicatedVram, modelBytes, &budget);
+                        std::fprintf(stderr,
+                            "[Deep2Engine] ADAPTIVE_VRAM device=%llu "
+                            "model=%llu budget=%llu ok=%d\n",
+                            (unsigned long long)snap.devices[best].dedicatedVram,
+                            (unsigned long long)modelBytes,
+                            (unsigned long long)budget, (int)r.ok);
+                    }
+                }
+            }
+        }
         const rawrxd::ModelFitPlan plan = estimateModelFit(ggufPath, config.maxSeqLen);
         fitPlan_ = plan;
         fitPlanValid_ = true;

@@ -84,9 +84,9 @@ void OverlayTunable(Tunable<T>& dst, const Tunable<T>& src) {
     if (dst.present && AuthorityOutranks(dst.authority, src.authority))
         return;
     if (dst.present && dst.authority == SettingAuthority::UserLocked &&
-        src.authority != SettingAuthority::UserLocked &&
-        src.authority != SettingAuthority::Session)
-        return;
+        src.authority != SettingAuthority::UserLocked)
+        return;   // user-locked fields are authoritative; only a new
+                // UserLocked write may replace them (P0 requirement)
     dst = src;
 }
 

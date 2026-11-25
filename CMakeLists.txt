@@ -2698,6 +2698,22 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/data_breakpoint_test.cpp")
     message(STATUS "data_breakpoint_test enabled (TOP50 D5)")
 endif()
 
+# P0 adaptive VRAM admission certification.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/execution_policy_test.cpp")
+    add_executable(execution_policy_test
+        tests/execution_policy_test.cpp
+    )
+    target_link_libraries(execution_policy_test PRIVATE deep2_engine_lib)
+    target_include_directories(execution_policy_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2)
+    if(MSVC)
+        target_compile_options(execution_policy_test PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    set_target_properties(execution_policy_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "execution_policy_test enabled (P0 adaptive VRAM)")
+endif()
+
 # S5 DAST bridge (TOP50 S5).
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dast_bridge.cpp")
     add_library(rawrxd_dast STATIC
