@@ -32,6 +32,14 @@ int main() {
     expect("oversized",         "Content-Length: 268435457",           16, false, 0);
     expect("valid-then-header", "Content-Length: 7\r\nContent-Type: x",16, true, 7);
     expect("max-ok",            "Content-Length: 268435456",           16, true, 268435456);
+    // Stream-recovery / edge matrix (item 5): malformed frame is rejected (0)
+    // so the reader drops it and the next valid frame parses.
+    expect("multi-digit",       "Content-Length: 2048",                16, true, 2048);
+    expect("plus-sign",         "Content-Length: +5",                  16, false, 0);
+    expect("decimal",           "Content-Length: 5.0",                 16, false, 0);
+    expect("leading-space",     "Content-Length:    7",                19, true, 7);
+    expect("recover-after-bad", "Content-Length: xyz",                 16, false, 0);
+    expect("recover-valid",     "Content-Length: 9",                   16, true, 9);
 
     std::printf(g_fail ? "RESULT: FAIL (%d)\n" : "RESULT: PASS\n", g_fail);
     return g_fail ? 1 : 0;
