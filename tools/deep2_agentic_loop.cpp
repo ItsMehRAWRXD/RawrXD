@@ -49,6 +49,8 @@
 #include <io.h>
 #include <string>
 #include <regex>
+#include "build_verify.h"
+#include "process_runner.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -559,39 +561,10 @@ static void dump_snap_output(const char* tag, const std::string& output, int eos
     }
 }
 
-// P0 subprocess isolation: every command (model-issued or host verification)
-// runs inside a per-execution Win32 Job Object with KILL_ON_JOB_CLOSE. A
-// timeout or Ctrl+C terminates the whole tree, so a cmd.exe grandchild can
-// never outlive the tool call. _popen is gone: it cannot be cancelled and it
-// orphans children on kill.
-std::string RunCmd(const std::string& cmd, int* exit_code)
+// P0: RunCmd is the shared production runner (tools/process_runner.cpp).
+static std::string RunCmd(const std::string& cmd, int* exitCode)
 {
-    std::string out, err;
-    bool timedOut = false;
-    int code = -1;
-    // Wrap in cmd.exe /d /c: callers pass shell syntax (cd /d ... && ...,
-    // 2>&1 redirections) that CreateProcess alone does not interpret. The
-    // job object still contains the whole tree (P0 isolation preserved).
-    const std::string wrapped = "cmd.exe /d /c " + cmd;
-    if (!rawrxd::agentic::security::JobIsolation::RunIsolated(
-            wrapped, std::string(), 0ULL, out, err, code, timedOut))
-    {
-        *exit_code = -1;
-        return "CreateProcess failed";
-    }
-    std::string combined = out;
-    if (!err.empty())
-    {
-        if (!combined.empty()) combined += "\n";
-        combined += err;
-    }
-    if (timedOut)
-    {
-        combined += "\n[host] command timed out; job tree terminated";
-        code = -1;
-    }
-    *exit_code = code;
-    return combined;
+    return rawrxd::agentic::RunProcess(cmd, exitCode);
 }
 
 // ---------------------------------------------------------------------------
@@ -645,6 +618,38 @@ static bool ExistsOnPath(const char* exe)
         start = end + 1;
     }
     return false;
+}
+
+// Shared build+run+verify (P0: CREATE and REPAIR use ONE implementation).
+// Distinguishes infrastructure failures (empty output with exit 0 -> retry
+// the drain once) from source failures (real compiler/test diagnostics).
+static std::string WithMsvcEnv(const MsvcEnv& env, const std::string& cmd);
+struct BuildRunVerify {
+    int buildExit = -1;
+    int runExit = -1;
+    bool verified = false;
+    std::string buildOut;
+    std::string runOut;
+};
+
+static BuildRunVerify VerifyBuildRun(const std::string& workdir,
+                                     const std::string& buildCmd,
+                                     const std::string& runCmd,
+                                     const MsvcEnv& msvc,
+                                     const std::string& expected)
+{
+    // Delegate to the shared verification core (also used by the
+    // deterministic test - no model calls).
+    auto r = rawrxd::agentic::VerifyBuildRunWith(
+        [](const std::string& c, int* e) { return RunCmd(c, e); },
+        workdir, buildCmd, runCmd, WithMsvcEnv(msvc, ""), expected);
+    BuildRunVerify out;
+    out.buildExit = r.buildExit;
+    out.runExit = r.runExit;
+    out.buildOut = r.buildOut;
+    out.runOut = r.runOut;
+    out.verified = r.verified();
+    return out;
 }
 
 static MsvcEnv InitMsvcEnv()
@@ -3919,16 +3924,13 @@ static int OllamaAgentRun(const Args& args)
                     continue;
                 }
             }
-            int buildExit = -1, runExit = -1;
-            const std::string buildOut = RunCmd(
-                "cd /d \"" + args.workdir + "\" && " +
-                WithMsvcEnv(msvc, buildCmd) + " 2>&1", &buildExit);
-            std::string runOut;
-            if (buildExit == 0)
-                runOut = RunCmd("cd /d \"" + args.workdir + "\" && " +
-                                runCmd + " 2>&1", &runExit);
-            const bool verified = buildExit == 0 && runExit == 0 &&
-                runOut.find(expected) != std::string::npos;
+            const auto vr = VerifyBuildRun(args.workdir, buildCmd, runCmd,
+                                           msvc, expected);
+            const int buildExit = vr.buildExit;
+            const int runExit = vr.runExit;
+            const std::string& buildOut = vr.buildOut;
+            const std::string& runOut = vr.runOut;
+            const bool verified = vr.verified;
             ledger.log_verification(verified,
                 "create fast path attempt " + std::to_string(attempt) +
                 ": build=" + std::to_string(buildExit) +
@@ -3955,6 +3957,144 @@ static int OllamaAgentRun(const Args& args)
         }
         Logf_("OLLAMA_AGENT_VERDICT FAIL: %d attempts exhausted: %s\n",
               kMaxAttempts, lastFailure.c_str());
+        return 1;
+    }
+
+    // P0 REPAIR fast path (structured existing-file edit): the model makes
+    // structured JSON calls with the CURRENT source + the repair task; the
+    // host writes, builds, runs and verifies with bounded correction. The
+    // same adapter/authorization as CREATE - no multi-step TOOL protocol.
+    if (targetExists)
+    {
+        const std::string expected = args.expected_output;
+        const std::string original = ReadFile(targetPath);
+        const std::string schema =
+            "{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},"
+            "\"content\":{\"type\":\"string\"}},\"required\":[\"path\","
+            "\"content\"],\"additionalProperties\":false}";
+        const std::string basePrompt =
+            "Repair the file " + args.target_file + " in the workspace.\n"
+            "Task: " + (args.task.empty() ? "make the requested fix" : args.task) +
+            "\nRequirements:\n- The program must print exactly: " + expected +
+            "\n- Return exit code 0.\n- Preserve all unrelated content.\n"
+            "Current file content:\n" + original +
+            "\nReturn a single JSON object matching this schema: " + schema;
+        std::string lastContent = original, lastBuildOut, lastRunOut;
+        std::string lastFailure = "no attempt executed";
+        int lastBuild = -1, lastRun = -1;
+        constexpr int kRepairAttempts = 3;
+        for (int attempt = 1; attempt <= kRepairAttempts; ++attempt)
+        {
+            std::string prompt = basePrompt;
+            if (attempt > 1)
+                prompt +=
+                    "\n\nThe previous repair attempt FAILED verification. Do "
+                    "not repeat it.\nPrevious content:\n" + lastContent +
+                    "\nBuild exit: " + std::to_string(lastBuild) +
+                    "\nBuild output:\n" + lastBuildOut +
+                    "\nRun exit: " + std::to_string(lastRun) +
+                    "\nRun output:\n" + lastRunOut +
+                    "\nExpected exactly: " + expected +
+                    "\nReturn a corrected JSON object.";
+            std::vector<std::pair<std::string, std::string>> msgs{
+                {"user", prompt}};
+            const auto reply = OllamaChat(args.model, msgs, args.max_new,
+                                          65536, 0.2f, false);
+            if (!reply.error.empty() || reply.content.empty())
+            {
+                lastFailure = "repair call failed: " + reply.error;
+                continue;
+            }
+            std::string body = reply.content;
+            const size_t b0 = body.find('{');
+            size_t b1 = std::string::npos;
+            if (b0 != std::string::npos)
+            {
+                int depth = 0;
+                bool inStr = false;
+                for (size_t i = b0; i < body.size(); ++i)
+                {
+                    const char c = body[i];
+                    if (inStr)
+                    {
+                        if (c == '\\') { ++i; continue; }
+                        if (c == '"') inStr = false;
+                        continue;
+                    }
+                    if (c == '"') { inStr = true; continue; }
+                    if (c == '{') ++depth;
+                    else if (c == '}')
+                    {
+                        if (--depth == 0) { b1 = i; break; }
+                    }
+                }
+            }
+            if (b0 == std::string::npos || b1 == std::string::npos)
+            {
+                lastFailure = "no complete JSON object in repair response";
+                continue;
+            }
+            body = body.substr(b0, b1 - b0 + 1);
+            nlohmann::json doc;
+            try { doc = nlohmann::json::parse(body); }
+            catch (const std::exception& e)
+            {
+                lastFailure = std::string("repair JSON parse: ") + e.what();
+                continue;
+            }
+            if (!doc.is_object() || !doc.contains("content") ||
+                !doc["content"].is_string())
+            {
+                lastFailure = "repair JSON missing string content";
+                continue;
+            }
+            const std::string content = doc["content"].get<std::string>();
+            if (content.empty() || content == original)
+            {
+                lastFailure = "repair produced no change";
+                continue;
+            }
+            {
+                std::ofstream out(targetPath, std::ios::binary);
+                out << content;
+                if (!out)
+                {
+                    lastFailure = "repair write failed";
+                    continue;
+                }
+            }
+            const auto vr = VerifyBuildRun(args.workdir, buildCmd, runCmd,
+                                           msvc, expected);
+            const int buildExit = vr.buildExit;
+            const int runExit = vr.runExit;
+            const std::string& buildOut = vr.buildOut;
+            const std::string& runOut = vr.runOut;
+            const bool verified = vr.verified;
+            ledger.log_verification(verified,
+                "repair fast path attempt " + std::to_string(attempt) +
+                ": build=" + std::to_string(buildExit) +
+                " run=" + std::to_string(runExit));
+            Logf_("OLLAMA_AGENT_REPAIR attempt=%d build=%d run=%d verified=%d\n",
+                  attempt, buildExit, runExit, verified ? 1 : 0);
+            if (!verified)
+                Logf_("[ollama] repair build_output:\n%s\nrun_output:\n%s\n",
+                      buildOut.c_str(), runOut.c_str());
+            if (verified)
+            {
+                Logf_("OLLAMA_AGENT_VERDICT PASS\n");
+                return 0;
+            }
+            lastContent = content;
+            lastBuildOut = buildOut;
+            lastRunOut = runOut;
+            lastBuild = buildExit;
+            lastRun = runExit;
+            lastFailure = "verification failed (build=" +
+                          std::to_string(buildExit) + " run=" +
+                          std::to_string(runExit) + ")";
+        }
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: %d repair attempts exhausted: %s\n",
+              kRepairAttempts, lastFailure.c_str());
         return 1;
     }
     std::vector<std::pair<std::string, std::string>> messages;

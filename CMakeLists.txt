@@ -2631,6 +2631,24 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/verify_buildrun_test.cpp")
     message(STATUS "verify_buildrun_test enabled (deterministic)")
 endif()
 
+# Deterministic RunProcess exit-code certification.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/process_runner_test.cpp")
+    add_executable(process_runner_test
+        tests/process_runner_test.cpp
+        tools/process_runner.cpp
+    )
+    target_include_directories(process_runner_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic)
+    if(MSVC)
+        target_compile_options(process_runner_test PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    set_target_properties(process_runner_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "process_runner_test enabled (exit codes)")
+endif()
+
 # A6/HexMag shared backend acceptance (agent_history, agent_policy,
 # bulk_fix, subagent_core, agentic/SubAgentManager).
 if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/subagent_acceptance_test.cpp")
