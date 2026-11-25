@@ -20,6 +20,7 @@
  *  42  driver crashed (unhandled exception captured)
  */
 #include "rawr_core.hpp"
+#include "agent/agent_controller.hpp"
 #include "backend_preferences.h"
 #include "rawr_reasoning.hpp"
 #include "Deep2Engine.h"
@@ -485,7 +486,53 @@ static bool assertsRepoFacts(const std::string& text) {
     return false;
 }
 
+// Shared controller entry: both the CLI and the native IDE route through
+// rawr::runAgentController (single production implementation). This thin
+// adapter maps the CLI's ModeProfile/RunOutcome to the shared types.
 static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<json>&, int)> completeFn,
+                               ToolRegistry& reg, const Workspace& ws, const ModeProfile& mode,
+                               const std::string& goal, int maxTurns = 12,
+                               int maxTokensPerTurn = 0) {
+    rawr::AgentConfig cfg;
+    cfg.goal = goal;
+    cfg.modeName = (mode.name && *mode.name) ? std::string(mode.name)
+                                             : std::string("code");
+    cfg.modeDescription =
+        (mode.description && *mode.description) ? std::string(mode.description)
+                                                : std::string();
+    cfg.sourceEditsAllowed = mode.sourceEditsAllowed;
+    cfg.executeByDefault = mode.executeByDefault;
+    cfg.maxTurns = maxTurns;
+    cfg.maxTokensPerTurn = maxTokensPerTurn;
+    rawr::AgentResult ar = rawr::runAgentController(
+        completeFn, reg, ws, cfg,
+        [](const std::string& s) { logLine(s); },
+        []() { return InterlockedCompareExchange(&g_interrupted, 0, 0) != 0; });
+    RunOutcome ro;
+    ro.turns = ar.turns;
+    ro.toolCalls = ar.toolCalls;
+    ro.denied = ar.denied;
+    ro.completed = ar.completed;
+    ro.canceled = ar.canceled;
+    ro.summary = ar.summary;
+    ro.findings = ar.findings;
+    ro.nextActions = ar.nextActions;
+    for (const auto& a : ar.results) {
+        ToolResult t;
+        t.tool = a.tool;
+        t.argsJson = a.args;
+        t.output = a.output;
+        t.ok = a.ok;
+        t.denied = a.denied;
+        t.exitCode = static_cast<DWORD>(a.exitCode);
+        ro.results.push_back(t);
+    }
+    return ro;
+}
+
+// Legacy CLI-only loop (retained for reference; unused). The production path is
+// runAgentLoop above -> rawr::runAgentController.
+static RunOutcome runAgentLoop_legacy(std::function<InferenceResult(const std::vector<json>&, int)> completeFn,
                                ToolRegistry& reg, const Workspace& ws, const ModeProfile& mode,
                                const std::string& goal, int maxTurns = 12,
                                int maxTokensPerTurn = 0) {

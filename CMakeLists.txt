@@ -2323,6 +2323,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp")
     add_executable(deep2_agentic_loop
         tools/deep2_agentic_loop.cpp
+        tools/process_runner.cpp
         # Logf_() is defined exactly once, in Deep2Log.cpp, for this target too.
         src/deep2/Deep2Log.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -2610,6 +2611,24 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/test/fuzz/fuzz_targets.cpp")
     set_target_properties(fuzz_targets PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     message(STATUS "fuzz_targets enabled (TOP50 T1)")
+endif()
+
+# Deterministic VerifyBuildRun certification (no model calls).
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/verify_buildrun_test.cpp")
+    add_executable(verify_buildrun_test
+        tests/verify_buildrun_test.cpp
+        tools/process_runner.cpp
+    )
+    target_include_directories(verify_buildrun_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic)
+    if(MSVC)
+        target_compile_options(verify_buildrun_test PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    set_target_properties(verify_buildrun_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "verify_buildrun_test enabled (deterministic)")
 endif()
 
 # A6/HexMag shared backend acceptance (agent_history, agent_policy,
@@ -5884,6 +5903,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
         src/collab/crdt_buffer.cpp
         src/collab/websocket_hub.cpp
         src/rawr_core.cpp
+        src/agent/agent_controller.cpp
         src/core/project_rag_lite.cpp
         src/core/vram_kv_controls.cpp
         src/core/crash_minidump.cpp
