@@ -48,7 +48,16 @@ void RawrXD_IDE_RunAgenticTask(HWND transcriptHwnd, const std::string& goal,
 
         rawr::InferenceClient client;
         client.setEndpoint(11434);          // Ollama (ROCm) backend
-        client.setModel("llama3.2:3b");
+        // Resolve the model dynamically -- never hardcode an absent model.
+        // The IDE sets RAWRXD_AGENT_MODEL from the model dropdown/settings;
+        // otherwise fall back to an installed default. An unavailable model is
+        // reported explicitly (below), not silently turned into empty inference.
+        std::string model;
+        if (const char* env = std::getenv("RAWRXD_AGENT_MODEL")) {
+            if (*env) model = env;
+        }
+        if (model.empty()) model = "llama3.2:3b";  // fast, native tool-capable
+        client.setModel(model);
 
         rawr::Workspace ws;
         ws.setRoot(root);
@@ -81,6 +90,9 @@ void RawrXD_IDE_RunAgenticTask(HWND transcriptHwnd, const std::string& goal,
             std::ofstream rec(g_e2eReceipt, std::ios::trunc);
             if (rec) {
                 rec << "COMPLETED=" << (r.completed ? "PASS" : "FAIL") << "\n";
+                if (!r.completed && r.results.empty())
+                    rec << "REASON=MODEL_UNAVAILABLE_OR_NO_TOOL_CALL model="
+                        << model << "\n";
                 rec << "TURNS=" << r.turns << "\n";
                 rec << "TOOL_CALLS=" << r.toolCalls << "\n";
                 rec << "DENIED=" << r.denied << "\n";
