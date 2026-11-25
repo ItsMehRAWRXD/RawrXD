@@ -579,16 +579,17 @@ bool HexMagSwarmOrchestrator::initialize(const std::string& workingDir) {
     m_subAgentManager = std::make_unique<SubAgentManager>(nullptr);
 
     // AgentOrchestrator (agentic loop + advanced coordinator)
-    m_agentOrchestrator = std::make_unique<Agent::AgentOrchestrator>();
-    m_agentOrchestrator->SetConfig(Agent::OrchestratorConfig{
-        15, 32000, true, true, false, true, m_workingDir});
+    Agent::AgentOrchestrator::Config orchCfg;
+    orchCfg.maxIterations = 15;
+    orchCfg.maxToolCallsPerStep = 3;
+    orchCfg.totalTimeoutMs = 32000;
+    orchCfg.verbose = true;
+    orchCfg.workspaceRoot = m_workingDir;
+    m_agentOrchestrator = std::make_unique<Agent::AgentOrchestrator>(orchCfg);
 
-      // Enable advanced coordination (load balancing, health, scaling, fault tol)
-      m_agentOrchestrator->EnableAdvancedCoordination(Agentic::ScalingPolicy{}, Agentic::RedundancyConfig{});
-      // instance() returns a reference to a process-wide singleton owned by
-      // AdvancedAgentCoordinator itself. A unique_ptr previously tried to take
-      // ownership via operator=(raw*) (which does not exist) and would have been
-      // wrong anyway, so this is a non-owning observer pointer.
+      // Advanced coordination is attached via the AdvancedAgentCoordinator
+      // singleton below (m_advancedCoordinator); AgentOrchestrator itself has
+      // no EnableAdvancedCoordination API — do not fabricate one.
       m_advancedCoordinator = &Agentic::AdvancedAgentCoordinator::instance();
 
     // CEOAgent (autonomous engineering controller)
@@ -645,7 +646,7 @@ void HexMagSwarmOrchestrator::shutdown() {
     m_running.store(false);
     if (m_subAgentManager) m_subAgentManager->cancelAll();
     if (m_agentOrchestrator) {
-        m_agentOrchestrator->Cancel();
+        m_agentOrchestrator->abort();
     }
     m_initialized.store(false);
 }

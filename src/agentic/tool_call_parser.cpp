@@ -167,8 +167,8 @@ static bool parseNaturalLanguageToolCall(const std::string& text,
 // ---------------------------------------------------------------------------
 // Public parse entry point
 // ---------------------------------------------------------------------------
-ToolCallParseResult ToolCallParser::parse(const std::string& modelOutput) {
-    ToolCallParseResult result;
+ToolCallParseOutput ToolCallParser::parse(const std::string& modelOutput) {
+    ToolCallParseOutput result;
 
     // Try structured XML format first
     ParsedToolCall call;

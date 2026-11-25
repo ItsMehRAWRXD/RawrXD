@@ -2642,9 +2642,13 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/agentic/HexMagSwarmOrchestrator.cpp
     add_executable(hexmag_acceptance
         tests/hexmag_acceptance_test.cpp
         src/agentic/HexMagSwarmOrchestrator.cpp
+        src/agentic/HexMagRepeatTunerBridge.cpp
         src/agentic/AgentOrchestrator.cpp
         src/agentic/AdvancedAgentCoordinator.cpp
         src/agentic/conflict_resolution.cpp
+        src/agents/AgentMemory.cpp
+        src/agents/Planner.cpp
+        src/agents/CEOAgent.cpp
         src/agent/autonomous_subagent.cpp
         src/agent/delegated_agents.cpp
         src/agent/adaptive_retry.cpp
@@ -2652,10 +2656,9 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/agentic/HexMagSwarmOrchestrator.cpp
         src/agent_policy.cpp
         src/subagent_core.cpp
         src/agentic/SubAgentManager.cpp
+        src/deep2/Deep2InferenceService.cpp
     )
-    if(TARGET deep2_engine_lib)
-        target_link_libraries(hexmag_acceptance PRIVATE deep2_engine_lib)
-    endif()
+    target_link_libraries(hexmag_acceptance PRIVATE deep2_engine_lib)
     target_include_directories(hexmag_acceptance PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/agentic
