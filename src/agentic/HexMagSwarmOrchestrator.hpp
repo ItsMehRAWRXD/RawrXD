@@ -175,6 +175,13 @@ public:
     std::string getStatusSummary() const;
     nlohmann::json getMetrics() const;
 
+    // ---- Public workload entry ----
+    // Runs the real pipeline: decompose -> specialist prompts -> parallel
+    // execution (fail closed without an engine) -> verify/merge. Returns the
+    // merged output; empty only when the pipeline produced nothing AND
+    // nothing failed (never fabricated).
+    std::string executeTask(const std::string& userRequest);
+
 private:
     // ---- Core Pipeline Stages ----
     TaskDecomposition decomposeTask(const std::string& userRequest);

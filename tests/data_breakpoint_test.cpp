@@ -62,6 +62,7 @@ int main(int argc, char** argv) {
     }
     std::printf("[INFO] watch address 0x%llx\n",
                 (unsigned long long)watchAddr);
+    std::remove("d5_loop_marker.txt");
     if (!backend.addDataBreakpointAddress(watchAddr, 4, "g_watched")) {
         std::printf("[FAIL] addDataBreakpointAddress refused\n");
         ++failures;
@@ -77,6 +78,13 @@ int main(int argc, char** argv) {
     } else {
         std::printf("[FAIL] data breakpoint never hit\n");
         ++failures;
+    }
+    // Did the debuggee's loop actually run under the debugger?
+    std::ifstream marker("d5_loop_marker.txt");
+    if (marker) {
+        std::printf("[INFO] loop marker present (debuggee executed)\n");
+    } else {
+        std::printf("[INFO] loop marker absent (debuggee did not reach loop)\n");
     }
     backend.stop(true);
     std::printf("DATA_BREAKPOINT_TEST %s (failures=%d)\n",

@@ -174,8 +174,12 @@ bool Win32NativeDebugBackend::restart() {
 bool Win32NativeDebugBackend::continueExecution() {
     std::lock_guard<std::mutex> lock(m_mu);
     if (m_state != NativeDebugState::Paused && m_state != NativeDebugState::Stepping) {
+        if (m_onOutput)
+            m_onOutput("[native-debug] continue ignored, state=" +
+                       std::to_string((int)m_state));
         return false;
     }
+    if (m_onOutput) m_onOutput("[native-debug] continue -> running");
     // Re-apply software BPs before resume (except at current RIP temporarily handled in step).
     for (auto& bp : m_bps) {
         if (bp.enabled && bp.address != m_currentRip) {

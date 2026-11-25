@@ -34,6 +34,21 @@ int main() {
             std::printf("[FAIL] still initialized after shutdown\n");
             ++failures;
         }
+
+        // Full workload: the public executeTask pipeline must run and fail
+        // closed without an engine (no fabricated success).
+        RawrXD::HexMag::HexMagSwarmOrchestrator orch2;
+        if (!orch2.initialize(".")) {
+            std::printf("[FAIL] second initialize\n");
+            ++failures;
+        }
+        const std::string out = orch2.executeTask("verify the linkage");
+        std::printf("[INFO] executeTask -> %s\n", out.c_str());
+        if (out.empty()) {
+            std::printf("[FAIL] executeTask empty (no fail-closed reason)\n");
+            ++failures;
+        }
+        orch2.shutdown();
     } catch (const std::exception& e) {
         std::printf("[FAIL] exception: %s\n", e.what());
         ++failures;

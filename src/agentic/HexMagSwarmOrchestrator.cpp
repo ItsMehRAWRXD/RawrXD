@@ -641,6 +641,22 @@ bool HexMagSwarmOrchestrator::initialize(const std::string& workingDir) {
     return true;
 }
 
+std::string HexMagSwarmOrchestrator::executeTask(const std::string& userRequest) {
+    if (!m_initialized.load()) return "ERROR: swarm not initialized";
+    if (userRequest.empty()) return "ERROR: empty task";
+    // Real pipeline: decompose -> prompts -> parallel agents -> verify/merge.
+    const TaskDecomposition decomposition = decomposeTask(userRequest);
+    const std::vector<std::string> prompts = createSpecialistPrompts(decomposition);
+    SwarmExecutionResult raw = executeParallelAgents(prompts, decomposition);
+    if (raw.mergedOutput.empty() && raw.errors.empty() && !m_deep2Engine) {
+        // Fail closed: no engine attached at this layer.
+        return "ERROR: No Deep2 engine attached; task not executed";
+    }
+    const SwarmExecutionResult verified =
+        verifyAndMergeResults(raw, decomposition);
+    return verified.mergedOutput;
+}
+
 void HexMagSwarmOrchestrator::shutdown() {
     if (!m_initialized.load()) return;
     m_running.store(false);
