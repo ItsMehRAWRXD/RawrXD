@@ -635,7 +635,8 @@ public:
 
     // A5 native --agent-e2e-test: drive the real agent-panel submission path in
     // an isolated workspace and write an execution receipt, then ExitProcess.
-    void beginAgentE2ETest(const char* receiptPath);
+    void beginAgentE2ETest(const char* receiptPath);
+    void beginGraphicalE2ETest(const char* receiptPath);
     void tickChatSmoke();
     bool ensureProductAgentSession(const std::string& modelIdentity,
                                    const std::string& workspaceRoot,

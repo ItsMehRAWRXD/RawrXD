@@ -392,6 +392,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ide.beginAgentE2ETest(receipt);
     }
 
+    // A5 native graphical acceptance: real editor buffer (open -> modify ->
+    // save) then build + run via the agent panel -> receipt -> ExitProcess.
+    if (lpCmdLine && std::strstr(lpCmdLine, "--graphical-e2e-test")) {
+        CreateDirectoryA("F:\\rawrxd\\evidence\\AGENT_E2E", nullptr);
+        const char* receipt = "F:\\rawrxd\\evidence\\AGENT_E2E\\graphical_receipt.txt";
+        if (const char* env = std::getenv("RAWRXD_GRAPH_E2E_RECEIPT")) {
+            if (*env) receipt = env;
+        }
+        startupTrace("graphical-e2e-test begin");
+        ide.beginGraphicalE2ETest(receipt);
+    }
+
     bool extQuit = false;
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
     ExtHostWireResult extWire{};
