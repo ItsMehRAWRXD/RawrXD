@@ -20,6 +20,7 @@
 #include "QuantKernelRegistry.hpp"
 #include "Deep2DeviceManager.hpp"
 #include "AdapterIdentity.hpp"
+#include "MultiGPU/ReservationLedger.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -30,6 +31,7 @@
 #include <cstring>
 #include <limits>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #ifdef _WIN32
@@ -171,6 +173,7 @@ static void enumerateGpusIntoSnapshot(void* userdata) {
         g.name = id.name;
         g.vendorId = id.vendorId;
         g.deviceId = id.deviceId;
+        g.luid = id.luid;
         g.deviceLocalBytes = id.dedicatedVram;
         g.availableVramBytes = id.availableVram;   // live free VRAM (admission capacity)
         g.availableVramKnown = id.availableVramKnown;
@@ -434,6 +437,42 @@ rawrxd::ModelFitPlan Deep2Engine::estimateModelFit(const std::string& ggufPath,
     ctx.kvQuant = rawrxd::KVQuantType::KV_Q8_0;
 
     plan = rawrxd::ModelFitEstimator::Estimate(geo, hw, ctx, requestedContext);
+
+    // ---- Atomic per-LUID reservation gate (fail-closed admission) ----------
+    // The plan is admitted only if the LIVE free VRAM (exact-LUID DXGI budget)
+    // can hold every GPU placement.  This prevents oversubscription under
+    // contention: if free VRAM is insufficient the plan is REJECTED here rather
+    // than loading and spilling.  Uses the atomic ReservationLedger so concurrent
+    // admissions cannot double-commit the same device.
+    if (plan.accepted && !plan.devices.empty()) {
+        Deep2::MultiGPU::ReservationLedger ledger;
+        std::unordered_map<std::string, uint64_t> luidByStable;
+        for (const auto& g : hw.gpus) {
+            luidByStable[g.stableId] = g.luid;
+            ledger.SetCapacity(g.luid,
+                g.availableVramKnown ? g.availableVramBytes : g.deviceLocalBytes);
+        }
+        for (const auto& d : plan.devices) {
+            if (d.tier == rawrxd::FitTier::HOST_RAM) continue; // host RAM, not VRAM
+            auto it = luidByStable.find(d.stableId);
+            const uint64_t key = (it != luidByStable.end()) ? it->second : 0;
+            const uint64_t need = d.weightBytes + d.kvBytes + d.arenaBytes;
+            Deep2::MultiGPU::Reservation res;
+            if (!ledger.TryReserve(key, need, /*allowUnknown=*/false, res)) {
+                plan.accepted = false;
+                plan.lane = rawrxd::FitExecutionLane::REJECTED;
+                plan.rejectReason =
+                    "reservation rejected: insufficient live free VRAM for " + d.name;
+                std::fprintf(stderr,
+                    "MODEL_FIT_RESERVATION_REJECT device=%s need=%llu free=%llu\n",
+                    d.name.c_str(), (unsigned long long)need,
+                    (unsigned long long)ledger.Capacity(key));
+                return plan;
+            }
+        }
+        std::fprintf(stderr, "MODEL_FIT_RESERVATION_OK devices=%zu\n",
+                     plan.devices.size());
+    }
     return plan;
 }
 

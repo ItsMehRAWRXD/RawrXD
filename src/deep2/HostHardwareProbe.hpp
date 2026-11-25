@@ -55,6 +55,7 @@ struct GpuDeviceInfo {
     std::string name;        // adapter description (used as InitializeSolo needle)
     uint32_t vendorId = 0;
     uint32_t deviceId = 0;
+    uint64_t luid = 0;               // DXGI adapter LUID (exact Vulkan identity key)
     uint64_t deviceLocalBytes = 0;   // measured dedicated VRAM (physical)
     uint64_t availableVramBytes = 0; // measured FREE device-local VRAM now
                                      // (DXGI QueryVideoMemoryInfo Budget-CurrentUsage,
