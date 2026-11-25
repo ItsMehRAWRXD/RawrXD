@@ -4457,30 +4457,57 @@ bool VulkanCompute::DispatchGemvQuant(
         if(topK <= 0) return false;
         if(routerWeights.type < 0 || routerWeights.type > 40) return false;
 
-        // Route based on weight type and distribution
-        switch(routerWeights.type) {
-            case 2: // Q4_0
-                // Dispatch Q4_0 GEMV through deep2_qgemv.comp
-                // Each expert gets a separate dispatch with type=2
-                break;
-            case 8: // F8_0
-            case 10: // F16_0
-            case 12: // F16_1
-            case 14: // BF16
-                // Dispatch standard quantized GEMV
-                break;
-            case 40: // NVFP4
-                // Dispatch NVFP4 GEMV through dispatchQuantNvfp4
-                break;
-            default:
-                return false;
-        }
+        // GPU MoE router — OPT-IN (DEEP2_GPU_ROUTER) and PARITY-PENDING.
+        // Default path stays CPU (return false) so behavior is unchanged until
+        // the GPU logits/top-k are validated against a reference on hardware.
+        if (std::getenv("DEEP2_GPU_ROUTER") == nullptr) return false;
 
-        // TODO: Implement full router logic with expert weighting and selection.
-        // For now, return false to retain CPU fallback behavior.
-        printf("[Router] DispatchRouter called: type=%d, topK=%d [PENDING]\n",
-               routerWeights.type, topK);
-        return false;
+        DeviceBuf* wbuf = nullptr;
+        if (!ensureWeightQuant(routerWeights.type, routerWeights.data,
+                               routerWeights.bytes, wbuf, routerWeights.key) || !wbuf)
+            return false;
+
+        const uint32_t nExp = routerWeights.rows;
+        const uint32_t nIn  = routerWeights.cols;
+        DeviceBuf inBuf{}, outBuf{};
+        bool ok =
+            createBuffer(nIn * sizeof(float),
+                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         inBuf) &&
+            createBuffer(nExp * sizeof(float),
+                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         outBuf);
+        if (ok) ok = uploadToBuffer(inBuf, hiddenState, nIn * sizeof(float));
+        QPush p{};
+        p.type = static_cast<uint32_t>(routerWeights.type);
+        p.rows = nExp;
+        p.cols = nIn;
+        p.weightBytes = static_cast<uint32_t>(routerWeights.bytes);
+        if (ok) ok = dispatchQuant(*wbuf, inBuf, outBuf, p);
+        std::vector<float> logits(nExp, 0.0f);
+        if (ok) ok = downloadFromBuffer(outBuf, logits.data(), nExp * sizeof(float));
+        destroyBuffer(inBuf);
+        destroyBuffer(outBuf);
+        if (!ok) return false;
+
+        // Host top-k + softmax normalization over the selected experts.
+        std::vector<int> order(nExp);
+        for (uint32_t i = 0; i < nExp; ++i) order[i] = static_cast<int>(i);
+        const int k = std::min<int>(topK, static_cast<int>(nExp));
+        std::partial_sort(order.begin(), order.begin() + k, order.end(),
+                          [&](int a, int b) { return logits[a] > logits[b]; });
+        const double maxv = logits[order[0]];
+        double sum = 0.0;
+        for (int i = 0; i < k; ++i) sum += std::exp(static_cast<double>(logits[order[i]]) - maxv);
+        const int n = std::min<int>(k, static_cast<int>(expertIds.size()));
+        for (int i = 0; i < n; ++i) {
+            expertIds[i] = order[i];
+            weights[i] = static_cast<float>(
+                std::exp(static_cast<double>(logits[order[i]]) - maxv) / (sum > 0.0 ? sum : 1.0));
+        }
+        return true;
     }
 
 bool VulkanCompute::DispatchGemvQ4KBatch(
