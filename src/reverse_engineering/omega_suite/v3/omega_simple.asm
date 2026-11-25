@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT SIMPLE v1.0
+; OMEGA-POLYGLOT SIMPLE v1.0
 ; Basic PE Analysis Tool
 .386
 .model flat, stdcall

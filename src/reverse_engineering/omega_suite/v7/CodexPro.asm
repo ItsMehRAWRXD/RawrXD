@@ -1,4 +1,4 @@
-﻿;============================================================================
+;============================================================================
 ; CODEX REVERSE ENGINE PRO v7.0
 ; Professional Reverse Engineering & Source Reconstruction Platform
 ;

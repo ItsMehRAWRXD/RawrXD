@@ -1,4 +1,4 @@
-﻿; RawrXD_Titan_MetaReverse.asm - Self-Contained PE (No kernel32.lib required)
+; RawrXD_Titan_MetaReverse.asm - Self-Contained PE (No kernel32.lib required)
 ; Builds with: ml64 /c /Zi /O2 /arch:AVX512 RawrXD_Titan_MetaReverse.asm
 ; Links with: link /SUBSYSTEM:WINDOWS /NODEFAULTLIB /ENTRY:PEBMain RawrXD_Titan_MetaReverse.obj
 ; Result: Zero static imports, finds kernel32 via PEB walking, resolves all APIs dynamically

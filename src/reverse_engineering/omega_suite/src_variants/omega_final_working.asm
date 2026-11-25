@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - FINAL WORKING EDITION
+; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - FINAL WORKING EDITION
 ; Professional Reverse Engineering Suite for AI Integration
 ; Full PE32/PE32+ Analysis, Import Reconstruction, Shannon Entropy, String Extraction
 

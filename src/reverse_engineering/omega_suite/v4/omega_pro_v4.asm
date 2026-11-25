@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v4.0 PRO (Codex Reverse Enhanced)
+; OMEGA-POLYGLOT v4.0 PRO (Codex Reverse Enhanced)
 ; Professional PE Reverse Engineering & Source Reconstruction
 ; Multi-Engine: Claude/Moonshot/DeepSeek/Professional RE Integration
 .386

@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - Minimal Professional Version
+; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - Minimal Professional Version
 .386
 .model flat, stdcall
 option casemap:none

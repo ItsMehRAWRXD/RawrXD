@@ -1,4 +1,4 @@
-﻿;================================================================================
+;================================================================================
 ; RawrXD_MetaReverse.asm
 ; COMPLETE META-REVERSE ENGINEERING IMPLEMENTATION
 ; ALL FUNCTIONS FILLED - NO STUBS

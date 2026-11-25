@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - Working Edition
+; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - Working Edition
 ; Professional Reverse Engineering Suite for Claude/Moonshot/DeepSeek
 ; Features: PE32/PE32+ Analysis, Import Reconstruction, String Extraction
 .386

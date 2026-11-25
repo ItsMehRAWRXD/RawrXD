@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAXIMUM v3.0 PRO
+; OMEGA-POLYGLOT MAXIMUM v3.0 PRO
 ; Claude/Moonshot/DeepSeek Professional Reverse Engineering Suite
 ; Full PE32/PE32+ Reconstruction, Entropy Analysis, Control Flow Recovery
 .386

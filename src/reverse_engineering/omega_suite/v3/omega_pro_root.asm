@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v3.0P (Professional Reverse Edition)
+; OMEGA-POLYGLOT v3.0P (Professional Reverse Edition)
 ; Claude/Moonshot/DeepSeek Enhanced PE Analysis + Source Reconstruction
 ; 50-Lang Deobfuscation with Real Import/Export/Resource Parsing
 .386

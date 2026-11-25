@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAX v3.1 (Professional Reverse Edition)
+; OMEGA-POLYGLOT MAX v3.1 (Professional Reverse Edition)
 ; Claude/Moonshot/DeepSeek AI-Augmented Decompilation Engine
 ; Full PE Reconstruction, IAT/EAT Parsing, Multi-Lang Heuristics, Control Flow Recovery
 .386

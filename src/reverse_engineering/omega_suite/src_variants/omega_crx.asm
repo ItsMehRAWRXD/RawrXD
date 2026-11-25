@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v3.0E (Codex Reverse Edition)
+; OMEGA-POLYGLOT v3.0E (Codex Reverse Edition)
 ; 50-Lang Deobfuscation Engine - MASM32 Ultra-Compact
 .386
 .model flat, stdcall

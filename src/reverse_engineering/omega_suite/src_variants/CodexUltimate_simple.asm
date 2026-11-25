@@ -1,4 +1,4 @@
-﻿;============================================================================
+;============================================================================
 ; CODEX ULTIMATE EDITION v7.0 - SIMPLIFIED VERSION
 ; Professional Reverse Engineering & Source Reconstruction Platform
 ; COMPILABLE WITH ml64.exe (Visual Studio Build Tools)

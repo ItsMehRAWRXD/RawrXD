@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAX v3.1 PRO
+; OMEGA-POLYGLOT MAX v3.1 PRO
 ; Professional Reverse Engineering Suite - MASM32
 ; Real PE/ELF/Mach-O parsing, import/export reconstruction, string analysis
 .386

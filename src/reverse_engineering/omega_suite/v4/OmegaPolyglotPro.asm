@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAX v4.0 PRO
+; OMEGA-POLYGLOT MAX v4.0 PRO
 ; Professional Reverse Engineering Suite - MASM32
 ; Full PE Analysis, Import/Export Reconstruction, Source Recovery, Control Flow
 .386

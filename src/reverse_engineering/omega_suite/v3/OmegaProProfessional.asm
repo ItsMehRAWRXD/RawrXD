@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v3.0P (Professional Reverse Engineering Edition)
+; OMEGA-POLYGLOT v3.0P (Professional Reverse Engineering Edition)
 ; Claude/Moonshot/DeepSeek AI-Grade Analysis + Source Reconstruction
 ; Full PE32/PE32+ Parser, IAT Reconstruction, Control Flow Recovery
 .386

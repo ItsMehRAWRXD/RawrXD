@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v3.0 PRO (Codex Reverse Edition)
+; OMEGA-POLYGLOT v3.0 PRO (Codex Reverse Edition)
 ; Professional PE Reconstructor + Multi-Lang Deobfuscator
 ; 50 Language Support | Entropy Analysis | Import/Export Reconstruction
 .386

@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAXIMUM v3.0 PRO
+; OMEGA-POLYGLOT MAXIMUM v3.0 PRO
 ; Claude/Moonshot/DeepSeek Hybrid Reverse Engineering Engine
 ; Professional PE Analysis + Source Reconstruction + Control Flow Recovery
 .386

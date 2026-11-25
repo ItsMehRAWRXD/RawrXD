@@ -1,4 +1,4 @@
-﻿// RawrXD Deobfuscator Test Harness
+// RawrXD Deobfuscator Test Harness
 #include <windows.h>
 #include <stdio.h>
 

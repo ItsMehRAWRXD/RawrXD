@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - Professional Reverse Engineering Suite
+; OMEGA-POLYGLOT MAXIMUM v3.0 PRO - Professional Reverse Engineering Suite
 ; Claude/Moonshot/DeepSeek Enhanced PE Analysis Tool
 .386
 .model flat, stdcall

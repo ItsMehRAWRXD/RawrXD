@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v4.0 PRO (MASM32 Edition)
+; OMEGA-POLYGLOT v4.0 PRO (MASM32 Edition)
 ; Professional PE Reverse Engineering & Binary Analysis CLI
 ; Complete working assembly implementation for Windows PE analysis
 .386

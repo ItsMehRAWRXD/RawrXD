@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v4.0 PRO (Professional Reverse Engineering Suite)
+; OMEGA-POLYGLOT v4.0 PRO (Professional Reverse Engineering Suite)
 ; Multi-AI Model Integration (Claude/Moonshot/DeepSeek/Codex)
 ; Advanced PE Analysis + Source Reconstruction + Control Flow Recovery
 .386

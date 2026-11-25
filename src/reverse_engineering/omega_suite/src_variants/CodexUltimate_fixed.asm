@@ -1,4 +1,4 @@
-﻿;============================================================================
+;============================================================================
 ; CODEX ULTIMATE EDITION v7.0
 ; Professional Reverse Engineering & Source Reconstruction Platform
 ; FIXED VERSION - Uses Standard Windows SDK

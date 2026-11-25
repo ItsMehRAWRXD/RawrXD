@@ -1,4 +1,4 @@
-﻿; OMEGA-POLYGLOT v4.0 PRO (Professional Reverse Engineering Edition)
+; OMEGA-POLYGLOT v4.0 PRO (Professional Reverse Engineering Edition)
 ; Claude/Moonshot/DeepSeek Enhanced - Full PE Reconstruction Engine
 .386
 .model flat, stdcall
