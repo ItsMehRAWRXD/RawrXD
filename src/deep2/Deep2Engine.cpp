@@ -7593,6 +7593,11 @@ void Deep2Engine::unloadModel()
     // BP16 maps — never _aligned_free them. Release via FreeTensorData once.
     std::fprintf(stderr, "[LIFE] unloadModel BEGIN\n");
     std::fflush(stderr);
+    // Release the persistent admission reservation(s) held for loaded models so
+    // the freed VRAM is available to subsequent admissions.
+    for (auto& kv : modelReservationIds_)
+        reservationLedger_.Release(kv.second);
+    modelReservationIds_.clear();
     printf("[Deep2Engine] Unloading model...\n");
 
     std::fprintf(stderr, "[LIFE] unloadModel close bp16Streamer\n");

@@ -445,33 +445,47 @@ rawrxd::ModelFitPlan Deep2Engine::estimateModelFit(const std::string& ggufPath,
     // than loading and spilling.  Uses the atomic ReservationLedger so concurrent
     // admissions cannot double-commit the same device.
     if (plan.accepted && !plan.devices.empty()) {
-        Deep2::MultiGPU::ReservationLedger ledger;
+        // Re-plan: release any prior reservation held for this model path so a
+        // repeated estimate does not leak a hold.
+        auto prior = modelReservationIds_.find(ggufPath);
+        if (prior != modelReservationIds_.end()) {
+            reservationLedger_.Release(prior->second);
+            modelReservationIds_.erase(prior);
+        }
+        // Persistent per-LUID capacities.  A device with an UNKNOWN free budget
+        // is left unknown so the strict reserve below rejects it (fail-closed);
+        // we never fall back to total physical capacity for an unverified budget.
         std::unordered_map<std::string, uint64_t> luidByStable;
         for (const auto& g : hw.gpus) {
             luidByStable[g.stableId] = g.luid;
-            ledger.SetCapacity(g.luid,
-                g.availableVramKnown ? g.availableVramBytes : g.deviceLocalBytes);
+            if (g.availableVramKnown)
+                reservationLedger_.SetCapacity(g.luid, g.availableVramBytes);
+            else
+                reservationLedger_.SetUnknown(g.luid);
         }
+        std::vector<Deep2::MultiGPU::ReserveHold> reqs;
         for (const auto& d : plan.devices) {
             if (d.tier == rawrxd::FitTier::HOST_RAM) continue; // host RAM, not VRAM
             auto it = luidByStable.find(d.stableId);
             const uint64_t key = (it != luidByStable.end()) ? it->second : 0;
-            const uint64_t need = d.weightBytes + d.kvBytes + d.arenaBytes;
-            Deep2::MultiGPU::Reservation res;
-            if (!ledger.TryReserve(key, need, /*allowUnknown=*/false, res)) {
-                plan.accepted = false;
-                plan.lane = rawrxd::FitExecutionLane::REJECTED;
-                plan.rejectReason =
-                    "reservation rejected: insufficient live free VRAM for " + d.name;
-                std::fprintf(stderr,
-                    "MODEL_FIT_RESERVATION_REJECT device=%s need=%llu free=%llu\n",
-                    d.name.c_str(), (unsigned long long)need,
-                    (unsigned long long)ledger.Capacity(key));
-                return plan;
-            }
+            reqs.push_back({key, d.weightBytes + d.kvBytes + d.arenaBytes});
         }
-        std::fprintf(stderr, "MODEL_FIT_RESERVATION_OK devices=%zu\n",
-                     plan.devices.size());
+        // Single transactional reserve across all GPU placements: either every
+        // device holds the requirement or none does (no partial overcommit).
+        Deep2::MultiGPU::Reservation res;
+        if (!reservationLedger_.TryReserveMulti(reqs, /*allowUnknown=*/false, res)) {
+            plan.accepted = false;
+            plan.lane = rawrxd::FitExecutionLane::REJECTED;
+            plan.rejectReason =
+                "reservation rejected: insufficient or unknown live free VRAM (fail-closed)";
+            std::fprintf(stderr,
+                "MODEL_FIT_RESERVATION_REJECT devices=%zu reason=insufficient_or_unknown\n",
+                reqs.size());
+            return plan;
+        }
+        modelReservationIds_[ggufPath] = res.id;   // held until unloadModel
+        std::fprintf(stderr, "MODEL_FIT_RESERVATION_OK devices=%zu id=%llu\n",
+                     reqs.size(), (unsigned long long)res.id);
     }
     return plan;
 }

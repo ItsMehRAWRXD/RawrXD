@@ -20,6 +20,7 @@
 #include "MoEWeightProxy.hpp"
 #include "MedusaDecoder.hpp"
 #include "NUFusedPacker.hpp"
+#include "deep2/MultiGPU/ReservationLedger.hpp"
 #include "WarmupScheduler.hpp"
 #include "CompressedKVCache.h"
 #include "NVMeStream.h"
@@ -1078,6 +1079,11 @@ namespace Deep2
         // ====================================================================
         rawrxd::ModelFitPlan fitPlan_;
         bool fitPlanValid_ = false;
+        // Persistent cross-request reservation ledger (per-LUID).  Reservations
+        // are visible to concurrent/subsequent admissions and released on
+        // unloadModel, so two requests cannot independently commit the same VRAM.
+        mutable Deep2::MultiGPU::ReservationLedger reservationLedger_;
+        mutable std::unordered_map<std::string, uint64_t> modelReservationIds_;
         rawrxd::ExecutionTelemetry execTelemetry_;
         rawrxd::ModelInstanceId sessionModelId_;
         std::string fitRejectReason_;
