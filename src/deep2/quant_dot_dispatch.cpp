@@ -680,14 +680,13 @@ bool DotBlocked(int kind,
             n_out);
         std::fflush(stderr);
     }
-    // Q4_K batch descriptors currently share a packed activation arena with
-    // per-entry offsets. Keep Q4_K on the synchronous path until that arena
-    // contract is proven against real model projections; the synchronous path
-    // has independent upload/barrier/readback ownership and is numerically
-    // verified. Do not return a queued result for Q4_K while its output is not
-    // yet trustworthy.
+    // Q4_K batching is enabled after the real-model serial-vs-batched parity
+    // gate passed. Keep an explicit rollback switch for diagnostics and
+    // differential investigations; normal production execution stays GPU-only
+    // and fail-closed on batch errors.
     // A scope transition must not send a dot to a different GPU while a
     // command buffer is already open on the batch's captured device.
+    const bool q4k_batch_enabled = std::getenv("DEEP2_NO_Q4K_BATCH") == nullptr;
     if (g_batch_active && !differential_check &&
         (g_active_device >= 0 ? g_active_device : g_preferred_device) != g_batch_device &&
         !force_cpu && !g_force_cpu) {
@@ -695,7 +694,7 @@ bool DotBlocked(int kind,
         g_receipt.fallback_reason = "batch device scope mismatch";
         return false;
     }
-    if (g_batch_active && kind != 0 && !differential_check &&
+    if (g_batch_active && (kind != 0 || q4k_batch_enabled) && !differential_check &&
         (g_active_device >= 0 ? g_active_device : g_preferred_device) == g_batch_device &&
         !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
