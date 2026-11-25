@@ -38,7 +38,9 @@ std::uint32_t HexMag_Tuner_Init(std::uint32_t maxAttempts) {
     std::lock_guard<std::mutex> lock(g_mu);
     g_maxAttempts = maxAttempts > 0 ? maxAttempts : 1;
     g_profiles.clear();
-    return g_maxAttempts;
+    // Authoritative convention (HexMagRepeatTunerBridge.hpp RepeatSession):
+    // 0 = success; nonzero = failure. The MASM fixed variant returns 0.
+    return 0;
 }
 
 std::uint32_t HexMag_Tuner_Reset(std::uint64_t requestIdHash) {
@@ -56,6 +58,10 @@ std::uint64_t HexMag_Tuner_Initial(std::uint64_t requestIdHash,
     p.tempMilli = 700;
     p.topPMilli = 950;
     p.candidateCount = 1;
+    // RepeatSession::valid() contract: blocking queue with 3 passes and a
+    // zero weight delta at initialization.
+    p.blockingPasses = 3;
+    p.queuePolicy = HX_QUEUE_Q_BLOCKING;
     g_profiles[requestIdHash] = p;
     g_last = p;
     if (out) *out = p;
@@ -82,6 +88,8 @@ std::uint64_t HexMag_Tuner_Next(std::uint64_t requestIdHash,
                                          : HX_SPEC_PLANNER);
     p.candidateCount = 1 + (attempt % 4);
     p.mutationNonce = attempt;
+    p.blockingPasses = 3;
+    p.queuePolicy = HX_QUEUE_Q_BLOCKING;
     g_profiles[requestIdHash] = p;
     g_last = p;
     if (out) *out = p;
@@ -110,7 +118,9 @@ std::uint32_t HexMag_Tuner_GetProfile(GenProfile* out) {
 
 std::uint32_t HexMag_Tuner_WeightDelta() {
     std::lock_guard<std::mutex> lock(g_mu);
-    return g_last.candidateCount;
+    // Weight delta is the mutation nonce: 0 at initialization, then the
+    // attempt index (RepeatSession::valid() requires 0 initially).
+    return g_last.mutationNonce;
 }
 
 std::uint32_t HexMag_Tuner_Attempt() {
