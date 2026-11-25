@@ -140,7 +140,11 @@ bool mlaLayerReady(const LayerWeights& lw, bool isMoe) noexcept {
     // MoE layers carry no dense FFN tensors; their experts live in the proxy.
     const bool ffnReady = isMoe ? true
         : (usableWeight(lw.wGate) && usableWeight(lw.wUp) && usableWeight(lw.wDown));
-    return usableWeight(lw.attnNorm) && usableWeight(lw.wq) &&
+    // Direct-Q MLA stores the full Q in wq; low-rank (compressed) MLA uses
+    // attn_q_a -> norm -> attn_q_b and has no wq.  Accept whichever is present.
+    const bool queryReady = usableWeight(lw.wq) ||
+        (usableWeight(lw.attnQ_a) && usableWeight(lw.attnQ_b));
+    return usableWeight(lw.attnNorm) && queryReady &&
            usableWeight(wo) &&
            usableWeight(lw.ffnNorm) && ffnReady;
 }
@@ -265,8 +269,13 @@ bool Deep2Engine::forwardLayerGpuResident(
         // Output projection aliases lw.wo on the raw load path and lw.attnO on
         // the mapped path; resolve the alias before testing readiness.
         const WeightTensor& woReady = lw.wo.data ? lw.wo : lw.attnO;
+        // Architecture-aware query validation: direct-Q MLA keeps the full Q in
+        // wq; low-rank (compressed) MLA uses attn_q_a -> norm -> attn_q_b and has
+        // NO wq.  Require whichever the model actually provides.
+        const bool queryReady = usableWeight(lw.wq) ||
+            (usableWeight(lw.attnQ_a) && usableWeight(lw.attnQ_b));
         layerReady = usableWeight(lw.attnNorm) &&
-                     usableWeight(lw.wq) &&
+                     queryReady &&
                      usableWeight(woReady) &&
                      usableWeight(lw.attnKV_a_mqa) &&
                      usableWeight(lw.attnK_b) &&
@@ -310,10 +319,11 @@ bool Deep2Engine::forwardLayerGpuResident(
             if (lw.wq.rows != static_cast<size_t>(heads * headDim))
                 return reject("reject: wq.rows mismatch (direct-Q MLA)");
         } else {
-            // Compressed-Q (Q LoRA): q_a -> norm -> q_b.
-            if (!usableWeight(lw.attnQ_a) ||
-                lw.attnQ_b.rows != static_cast<size_t>(heads * headDim))
-                return reject("reject: attnQ_b.rows mismatch");
+            // Compressed-Q (Q LoRA): q_a -> norm -> q_b.  attn_q_b outputs
+            // heads*(qk_nope+qk_rope), which is model-specific (not heads*headDim),
+            // so require presence rather than a hardcoded width.
+            if (!usableWeight(lw.attnQ_a) || !usableWeight(lw.attnQ_b))
+                return reject("reject: attnQ_a/attnQ_b absent");
         }
         // KV latent + positional key originate from attnKV_a_mqa; its exact
         // width is model-specific, so require presence rather than 512.
@@ -322,7 +332,8 @@ bool Deep2Engine::forwardLayerGpuResident(
         if (!usableWeight(lw.attnK_b))
             return reject("reject: attnK_b absent");
         const WeightTensor& woMla = lw.wo.data ? lw.wo : lw.attnO;
-        if (woMla.rows != hidden || woMla.cols != hidden)
+        // attn_output maps heads*value_dim -> hidden; input width is model-specific.
+        if (woMla.rows != hidden || woMla.cols == 0)
             return reject("reject: attnO shape mismatch");
     } else {
         // Dense layer geometry checks
@@ -1186,7 +1197,11 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             ? true
             : (supportedDenseWeight(lw.wGate) && supportedDenseWeight(lw.wUp) &&
                supportedDenseWeight(lw.wDown));
-        if (!supportedDenseWeight(lw.wq) ||
+        // MLA-aware query type check: compressed-Q MLA has an empty wq and uses
+        // attn_q_a/attn_q_b, so do not reject the empty dense wq.
+        const bool queryTypeOk = supportedDenseWeight(lw.wq) ||
+            (supportedDenseWeight(lw.attnQ_a) && supportedDenseWeight(lw.attnQ_b));
+        if (!queryTypeOk ||
             !supportedDenseWeight(wo) ||
             !ffnTypesOk)
         {
