@@ -105,6 +105,7 @@ int main(int argc, char* argv[]) {
     bool gpu = true;
     bool serial_prefill = false;
     bool wide_batch = true;
+    bool json = false;   // emit one machine-readable JSON object per run (harness)
     int device_index = -1;   // -1 = score-based auto-select; >=0 pins the Vulkan device
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -119,6 +120,7 @@ int main(int argc, char* argv[]) {
         else if (a == "--serial-prefill") serial_prefill = true;
         else if (a == "--no-wide-batch") wide_batch = false;
         else if (a == "--wide-batch") wide_batch = true;
+        else if (a == "--json") json = true;
         else if (a == "--no-batch") {
             SetEnv1("DEEP2_NO_DOT_BATCH", "1");
             wide_batch = false;
@@ -415,6 +417,21 @@ int main(int argc, char* argv[]) {
                     bs.upload_bytes / 1048576.0);
         std::printf("RUN%zu: ram_peak=%.1f MB ram_cur=%.1f MB\n", run,
                     peak_ws / 1048576.0, cur_ws / 1048576.0);
+        // Harness JSON: one machine-readable object per run for regression tests.
+        if (json) {
+            std::printf("{\"run\":%zu,\"prefill_tps\":%.3f,\"decode_tps\":%.3f,"
+                        "\"steady_decode_tps\":%.3f,\"e2e_tps\":%.3f,"
+                        "\"prefill_ms\":%.1f,\"decode_ms\":%.1f,\"bind_ms\":%.1f,"
+                        "\"gpu_calls\":%llu,\"cpu_calls\":%llu,\"submits\":%llu,"
+                        "\"waits\":%llu,\"device_peak_mb\":%.1f,\"ram_peak_mb\":%.1f,"
+                        "\"finite\":%s,\"gpu_complete\":%s}\n",
+                        run, prefill_tps, decode_tps, steady_tps,
+                        tokens.size() * 1000.0 / e2e_ms, prefill_ms, decode_ms, bind_ms,
+                        (unsigned long long)st.gpu_calls, (unsigned long long)st.cpu_calls,
+                        (unsigned long long)run_submits, (unsigned long long)run_waits,
+                        bs.device_bytes_peak / 1048576.0, peak_ws / 1048576.0,
+                        finite ? "true" : "false", gpu_complete ? "true" : "false");
+        }
         // ---- TPS-driven allocation diagnostic -------------------------------
         // These rules NAME a suspect so the next run is targeted. They do not prove
         // a cause: a zero-submission run is a dispatch fact, not a memory fact, and
