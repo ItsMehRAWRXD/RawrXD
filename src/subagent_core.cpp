@@ -62,6 +62,13 @@ std::string SubAgentManager::spawnSubAgent(
 {
     metric("subagent.spawns_total");
 
+    // Fail closed: without an inference engine there is no real work to run.
+    // Throwing here (documented contract) prevents a thread from dereferencing
+    // a null engine and fabricating output.
+    if (!m_engine) {
+        throw std::runtime_error("No AgenticEngine available");
+    }
+
     std::string agentId = generateUUID();
 
     auto agent = std::make_shared<SubAgent>();

@@ -2612,6 +2612,31 @@ if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/test/fuzz/fuzz_targets.cpp")
     message(STATUS "fuzz_targets enabled (TOP50 T1)")
 endif()
 
+# A6/HexMag shared backend acceptance (agent_history, agent_policy,
+# bulk_fix, subagent_core, agentic/SubAgentManager).
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tests/subagent_acceptance_test.cpp")
+    add_executable(subagent_acceptance
+        tests/subagent_acceptance_test.cpp
+        src/agent_history.cpp
+        src/agent_policy.cpp
+        src/agent/autonomous_subagent.cpp
+        src/subagent_core.cpp
+        src/agentic/SubAgentManager.cpp
+    )
+    target_include_directories(subagent_acceptance PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/win32app
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_compile_options(subagent_acceptance PRIVATE /EHsc /std:c++20 /utf-8)
+    endif()
+    set_target_properties(subagent_acceptance PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "subagent_acceptance enabled (A6/HexMag backend)")
+endif()
+
 # S5 DAST bridge (TOP50 S5).
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/security/dast_bridge.cpp")
     add_library(rawrxd_dast STATIC
@@ -3925,12 +3950,21 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/cloud_api_client.cpp
     )
     set(RAWRXD_NATIVE_IDE_COMPLETE TRUE)
+    set(_rawrxd_ide_missing "")
     foreach(_src ${RAWRXD_NATIVE_IDE_SOURCES})
         if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_src}")
             set(RAWRXD_NATIVE_IDE_COMPLETE FALSE)
-            message(STATUS "RawrXD-Win32IDE-Native: missing source ${_src}")
+            list(APPEND _rawrxd_ide_missing "${_src}")
         endif()
     endforeach()
+    # A requested production executable must never be silently omitted:
+    # fail configuration with the full list of missing sources.
+    if(NOT RAWRXD_NATIVE_IDE_COMPLETE)
+        message(FATAL_ERROR
+            "RawrXD-Win32IDE-Native requested (RAWRXD_BUILD_WIN32IDE=ON) but "
+            "required sources are missing:\n  ${_rawrxd_ide_missing}\n"
+            "Fix the source list or disable RAWRXD_BUILD_WIN32IDE.")
+    endif()
 
     if(RAWRXD_NATIVE_IDE_COMPLETE)
         add_executable(RawrXD-Win32IDE-Native ${RAWRXD_NATIVE_IDE_SOURCES}
