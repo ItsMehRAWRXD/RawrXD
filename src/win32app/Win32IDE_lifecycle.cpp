@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Win32IDE_lifecycle.cpp - core window lifecycle for the RawrXD Win32 IDE
  *
  * Implements the declared-but-unimplemented public/private lifecycle surface
@@ -105,8 +105,8 @@ constexpr UINT kMsgReclaimDocTabs = WM_APP + 0x44;
 constexpr UINT kMsgFinishDocTabs = WM_APP + 0x45;
 constexpr UINT kMsgFinishSession = WM_APP + 0x46;
 constexpr UINT kMsgDeferredClosePrompt = WM_APP + 0x50;
-// W3: createPowerShellPanel TabCtrl_SetCurSel fires TCN_SELCHANGE â†’
-// hidePowerShellPanel â†’ sync onSize during WM_CREATE (0xC000041D / AV).
+// W3: createPowerShellPanel TabCtrl_SetCurSel fires TCN_SELCHANGE →
+// hidePowerShellPanel → sync onSize during WM_CREATE (0xC000041D / AV).
 thread_local int g_onSizeDepth = 0;
 thread_local bool g_inOnCreateChrome = false;
 // showWindow() sync-sends WM_SIZE after CreateWindow returns but before the
@@ -215,7 +215,7 @@ LRESULT Win32IDE::handleThemeControlColor(UINT message, WPARAM wParam, LPARAM lP
     SetBkColor(hdc, background);
     SetTextColor(hdc, text);
     // Brush lifetime: owned by applyTheme() which deletes+recreates on switch.
-    // Never cache a static HBRUSH here â€” that retained startup colors.
+    // Never cache a static HBRUSH here — that retained startup colors.
     if (!m_backgroundBrush) {
         m_backgroundBrush = CreateSolidBrush(background);
     }
@@ -226,7 +226,7 @@ LRESULT Win32IDE::handleThemeControlColor(UINT message, WPARAM wParam, LPARAM lP
 
 // --- Temporary Execute-path diagnostics (P0 terminal routing) ----------------
 // Append-only trace so the Execute chain is observable from outside the
-// process. Logs handles, ids and lengths only — never command text.
+// process. Logs handles, ids and lengths only � never command text.
 static unsigned long long g_execTraceSeq = 0;
 static void ExecTrace(const char* fmt, ...)
 {
@@ -372,7 +372,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             }
             return DefWindowProcA(hwnd, uMsg, wParam, lParam);
         case kMsgReclaimDocTabs:
-            // Posted after CreateWindowExA returns â€” EnumChildWindows is unsafe
+            // Posted after CreateWindowExA returns — EnumChildWindows is unsafe
             // inside WM_CREATE (hang observed on Ext tip).
             if (ide) {
                 ide->reclaimDocumentTabControlId();
@@ -723,7 +723,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             } else if (nmhdr->idFrom == IDC_CHAT_SESSIONS && nmhdr->code == TCN_SELCHANGE) {
                 // Ignore selection churn from TabCtrl_DeleteAllItems/InsertItem
                 // inside updateChatSessionTabs (nested switchChatSession AVs
-                // comctl32 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â BATCH1 Request A crash).
+                // comctl32 Ã¢â‚¬â€ BATCH1 Request A crash).
                 if (!ide->m_updatingChatSessionTabs) {
                     ide->switchChatSession(TabCtrl_GetCurSel(nmhdr->hwndFrom));
                 }
@@ -736,7 +736,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 };
                 constexpr int kOutputKeyCount =
                     static_cast<int>(sizeof(outputKeys) / sizeof(outputKeys[0]));
-                // During WM_CREATE chrome, skip show/hidePowerShellPanel â€” both
+                // During WM_CREATE chrome, skip show/hidePowerShellPanel — both
                 // call sync onSize and caused A4B95 CreateWindow AV / 0xC000041D.
                 if (g_inOnCreateChrome || g_onSizeDepth > 0) {
                     if (selected >= 0 && selected < kOutputKeyCount) {
@@ -786,7 +786,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             } else if (nmhdr->idFrom == kPanelProblemsListId &&
                        (nmhdr->code == NM_DBLCLK || nmhdr->code == NM_CLICK ||
                         nmhdr->code == LVN_ITEMACTIVATE)) {
-                // Resolve row, then PostMessage WM_COMMAND 1399 → goToProblem.
+                // Resolve row, then PostMessage WM_COMMAND 1399 ? goToProblem.
                 // Never call goToProblem inline from WM_NOTIFY (0xC000041D).
                 int idx = -1;
                 if (nmhdr->code == LVN_ITEMACTIVATE || nmhdr->code == NM_DBLCLK ||
@@ -852,7 +852,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             return 0;
         }
         case WM_PAINT: {
-            // Theme brush â€” never COLOR_WINDOW (system gray dock/client).
+            // Theme brush — never COLOR_WINDOW (system gray dock/client).
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             HBRUSH brush = ide && ide->m_backgroundBrush
@@ -901,7 +901,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
         case kRawrxdNativeDebugState: {
             // Native-Ext links lifecycle WindowProc, not Core::handleMessage.
             // Without this dispatch, WaitForDebugEvent snapshots never reach
-            // handleNativeDebugState â†’ WFDE_BP_HIT_RECEIPT never lands (S11).
+            // handleNativeDebugState → WFDE_BP_HIT_RECEIPT never lands (S11).
             if (ide) {
                 // Emit WFDE journal under RAWRXD_LOG_DIR before consuming snap.
                 // Harness S11 requires WFDE_BP_HIT=1 + WaitForDebugEvent on disk.
@@ -945,6 +945,17 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             }
             return 0;
         }
+        case WM_APP + 120: {
+            // P0: worker chat text -> UI thread. Payload is a heap string.
+            if (ide) {
+                auto* text = reinterpret_cast<std::string*>(lParam);
+                if (text) {
+                    ide->appendCopilotChatUtf8(*text);
+                    delete text;
+                }
+            }
+            return 0;
+        }
         case WM_APP + 101: {
             // A5: Deep2Bridge token stream -> agent panel transcript.
             // Producer (Win32IDE_AgentCommands.cpp) posts a heap std::string.
@@ -1033,7 +1044,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     ide->appendPowerShellOutput(
                         "\n[PowerShell session ended with code: " +
                         std::to_string(update->exitCode) + "]\n", update->color);
-                    // Pane-local only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â do not mirror [powershell:...] into chat transcript.
+                    // Pane-local only Ã¢â‚¬â€ do not mirror [powershell:...] into chat transcript.
                     ide->updatePowerShellStatus();
                 }
             }
@@ -1077,7 +1088,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     }
                     // Keep terminal HWNDs alive after Build/fixture exit so
                     // Output/Problems GUI E2E can still enum children. Mark
-                    // inactive only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â do not HideWindow the pane controls.
+                    // inactive only Ã¢â‚¬â€ do not HideWindow the pane controls.
                     if (auto* pane = ide->findTerminalPane(update->paneId)) {
                         pane->isActive = false;
                     }
@@ -1318,7 +1329,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     // Match Send/Clear/Stop by control HWND or by dialog ID so cross-process
     // BM_CLICK / synthetic WM_COMMAND (lParam may be null) still reach the
     // same HandleCopilotSend path as a real button press.
-    // Agent mode: route to AgenticLoopBridge (chatâ†’AgentSessionâ†’tools), not
+    // Agent mode: route to AgenticLoopBridge (chat→AgentSession→tools), not
     // Copilot text-only inference.
     if (codeNotify == BN_CLICKED &&
         (hwndCtl == m_hwndCopilotSendBtn || id == IDC_COPILOT_SEND_BTN)) {
@@ -1446,13 +1457,13 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
     // Search panel Find/Replace live under m_hwndSidebar (STATIC).  BN_CLICKED
-    // may arrive with or without a control HWND — handle by id before hwndCtl gate.
+    // may arrive with or without a control HWND � handle by id before hwndCtl gate.
     if (codeNotify == BN_CLICKED || codeNotify == 0) {
         if (id == 10905) { performSearch(); return; }
         if (id == 10906) { performSearchReplace(false); return; }
         if (id == 10907) { performSearchReplace(true); return; }
     }
-    // Audit / security dashboards (Native tip — Core TU not linked)
+    // Audit / security dashboards (Native tip � Core TU not linked)
     if (id == 9500 || id == IDM_AUDIT_SHOW_DASHBOARD || id == IDM_AUDIT_RUN_FULL) {
         {
             FILE* f = nullptr;
@@ -1514,7 +1525,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         }
         return;
     }
-    // C14 agent diff apply/reject (Native tip — Core TU not linked)
+    // C14 agent diff apply/reject (Native tip � Core TU not linked)
     if (id == 14003 || id == IDM_AGENT_DIFF_APPLY) {
         if (!m_aiEditPending || m_aiEditResult.empty()) {
             const std::string before = m_hwndEditor ? getEditorTextUtf8ForFile() : std::string();
@@ -1613,7 +1624,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
     if (id == 9612 || id == IDM_AGENT_SHELL_CANCEL_PROBE) {
-        // C34: product shell tool + cancel — run a bounded cmd echo then cancel agent loop.
+        // C34: product shell tool + cancel � run a bounded cmd echo then cancel agent loop.
         // Never SendMessage cancel here (nested WM_COMMAND deadlock on UI thread).
         char outPath[MAX_PATH]{};
         sprintf_s(outPath, "F:\\rawrxd\\evidence\\TOP25_C34_SHELL_OUT.txt");
@@ -1798,7 +1809,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
     if (id == 9617 || id == IDM_PROJECT_RAG_PROBE) {
-        // C53: Project RAG / semantic index — index + search product path (local).
+        // C53: Project RAG / semantic index � index + search product path (local).
         RawrXD::Search::IndexProjectFile(
             "probe_c53.cpp",
             "semantic rag index probe token_alpha layer_evict");
@@ -1898,7 +1909,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         } catch (...) {
             r3c = "EXC_CAUGHT";
         }
-        // P0: restore nothing — the overrides above were removed; the
+        // P0: restore nothing � the overrides above were removed; the
         // fail-closed interactive default was never left.
         {
             FILE* f = nullptr;
@@ -2040,7 +2051,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
     if (id == 9622 || id == IDM_PLAN_MODE_PROBE) {
-        // C13: plan mode orchestration crumb (plan → approve → execute marker).
+        // C13: plan mode orchestration crumb (plan ? approve ? execute marker).
         const char* planPath = "F:\\rawrxd\\evidence\\TOP25_C13_PLAN.json";
         {
             FILE* f = nullptr;
@@ -2078,7 +2089,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
     if (id == 9623 || id == IDM_SWARM_ORCH_PROBE) {
-        // C17: multi-agent swarm orchestration — N workers + join barrier.
+        // C17: multi-agent swarm orchestration � N workers + join barrier.
         constexpr int kWorkers = 3;
         std::atomic<int> done{0};
         std::vector<std::thread> pool;
@@ -2559,7 +2570,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
     if (hwndCtl) {
-        // Bulk editor updates suppress dirty tracking — do not forward to GhostText.
+        // Bulk editor updates suppress dirty tracking � do not forward to GhostText.
         if (hwndCtl == m_hwndEditor) {
             // Coalesce EN_UPDATE (1024) noise; keep EN_CHANGE evidence.
             if (codeNotify == EN_CHANGE) {
@@ -2609,7 +2620,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         }
     }
     // Debugger panel IDs (Win32IDE_Debugger.cpp 2100-2108) + TERMINAL_LIST 4010.
-    // Core TU is not in Native-Ext ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â mirror keep-alive handlers (no modal).
+    // Core TU is not in Native-Ext Ã¢â‚¬â€ mirror keep-alive handlers (no modal).
     switch (id) {
     case 2100:  // IDC_DEBUGGER_CONTAINER
     case 2101:  // IDC_DEBUGGER_TOOLBAR
@@ -2648,7 +2659,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         default: break;
         }
         return;
-    case 4010:  // COMMAND_TABLE TERMINAL_LIST ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â keep-alive, no modal
+    case 4010:  // COMMAND_TABLE TERMINAL_LIST Ã¢â‚¬â€ keep-alive, no modal
         appendToOutput("Terminal list (native panes)\n", "Output", OutputSeverity::Info);
         for (size_t i = 0; i < m_terminalPanes.size(); ++i) {
             const auto& pane = m_terminalPanes[i];
@@ -2783,7 +2794,7 @@ int Win32IDE::runMessageLoop()
     for (;;) {
         const BOOL gm = GetMessageA(&msg, nullptr, 0, 0);
         if (gm == 0) {
-            break; // WM_QUIT â€” wParam is the intended exit code
+            break; // WM_QUIT — wParam is the intended exit code
         }
         if (gm < 0) {
             onCreateBreadcrumb("GetMessage.error");
@@ -2809,7 +2820,7 @@ int Win32IDE::runMessageLoop()
         }
         // AIM chat: Ctrl+Enter = SEND; Enter / Shift+Enter = newline.
         // Must run before TranslateMessage so WM_CHAR '\r' is not synthesized
-        // for the send chord. (Core TU not linked on Native tip ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â live here.)
+        // for the send chord. (Core TU not linked on Native tip Ã¢â‚¬â€ live here.)
         {
             const HWND chatInput = m_hwndCopilotChatInput;
             const bool chatFocus =
@@ -2919,18 +2930,18 @@ void Win32IDE::onSize(int width, int height)
     if (m_hwndMain && IsWindow(m_hwndMain) && IsIconic(m_hwndMain)) {
         return;
     }
-    // Skip while WM_CREATE chrome is still assembling â€” child CreateWindow
+    // Skip while WM_CREATE chrome is still assembling — child CreateWindow
     // WS_VISIBLE can deliver WM_SIZE mid-onCreate (A4B95 AV @ onSize dock).
     if (g_inOnCreateChrome) {
         return;
     }
-    // Skip until finishSession arms layout (showWindow sync WM_SIZE race â†’
+    // Skip until finishSession arms layout (showWindow sync WM_SIZE race →
     // post-CreateWindow 0xC0000005 on half-initialized chrome).
     if (!g_layoutReady) {
         return;
     }
     // Re-entrancy guard: TabCtrl / ShowWindow / hidePowerShellPanel nest here
-    // during create â†’ stack death (INTEG_007 / A4B95 onSize@1376).
+    // during create → stack death (INTEG_007 / A4B95 onSize@1376).
     if (g_onSizeDepth > 0) {
         return;
     }
@@ -3441,7 +3452,7 @@ void Win32IDE::createDocumentTabs()
 
     // Unicode tab control + W inserts: A-entry inserts were observed to leave
     // TCM_GETITEMCOUNT stuck at 1 while vectors grew (T08).
-    // During WM_CREATE use WS_CHILD only (no WS_VISIBLE) â€” visible tab create
+    // During WM_CREATE use WS_CHILD only (no WS_VISIBLE) — visible tab create
     // was observed to stall the CreateWindowExA user-callback (MAIN_HWND=0).
     const DWORD tabStyle = WS_CHILD | WS_CLIPSIBLINGS | TCS_TABS | TCS_SINGLELINE |
         (g_inOnCreateChrome ? 0u : WS_VISIBLE);
@@ -3513,7 +3524,7 @@ void Win32IDE::addDocumentTab(const std::string& path)
         return;
     }
 
-    // Non-empty path already open ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ activate only (no duplicate tab).
+    // Non-empty path already open Ã¢â€ â€™ activate only (no duplicate tab).
     // Empty path ("Untitled") may only exist once; a second "" activates it.
     const int existing = findDocumentTab(path);
     if (existing >= 0) {
@@ -3524,7 +3535,7 @@ void Win32IDE::addDocumentTab(const std::string& path)
     if (m_openDocuments.size() >= kMaxOpenDocuments) {
         char msg[160];
         wsprintfA(msg,
-            "Cannot open more documents ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â maximum of %u is open.\nClose a tab and try again.",
+            "Cannot open more documents Ã¢â‚¬â€ maximum of %u is open.\nClose a tab and try again.",
             static_cast<unsigned>(kMaxOpenDocuments));
         MessageBoxA(m_hwndMain, msg, "Document Limit", MB_OK | MB_ICONWARNING);
         return;
@@ -3636,7 +3647,7 @@ void Win32IDE::switchDocumentTab(int index)
         return;
     }
     // Same tab: do not re-load (would wipe live unsaved HWND text if the
-    // prior capture path was empty ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â T08 FAIL_PRESERVED_1).  Cold launch may
+    // prior capture path was empty Ã¢â‚¬â€ T08 FAIL_PRESERVED_1).  Cold launch may
     // have restored m_activeDocument before the editor existed (T10).
     const bool deferMaterialize = m_pendingSessionEditorMaterialize;
     if (index == m_activeDocument && !deferMaterialize) {
@@ -3713,7 +3724,7 @@ void Win32IDE::switchDocumentTab(int index)
 
     // Fail-closed rollback: restore outgoing tab if incoming load failed.
     // Dead tabs with unopenable paths (e.g. leaf-only "t8 01 doc") used to
-    // remain selected in the vector but never activate ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â demote them so the
+    // remain selected in the vector but never activate Ã¢â‚¬â€ demote them so the
     // UI cannot stick on a non-file name.
     if (!loaded) {
         const int badIndex = index;

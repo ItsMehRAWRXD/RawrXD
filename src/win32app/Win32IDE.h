@@ -1798,6 +1798,8 @@ public:
     void ChatTraceMark(const char* op);
     // D5 memory breakpoints (Win32IDE_Debugger.cpp).
     void debuggerAddDataBreakpoint(const std::string& args);
+    // P0 worker->UI chat text dispatch (Win32IDE.cpp).
+    void PostChatTextToUi(const std::string& text);
     // A6 sub-agent panel (Win32IDE_SubAgentPanel.cpp).
     void initSubAgentPanel();
     void refreshSubAgentList();

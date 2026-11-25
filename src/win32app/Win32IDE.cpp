@@ -1,4 +1,4 @@
-﻿// Win32IDE.cpp - RawrXD Win32 IDE shell
+// Win32IDE.cpp - RawrXD Win32 IDE shell
 //
 // NOTE: the destructor used to be emitted here, ABOVE the #include block, so
 // Win32IDE/RawrXD::CPUInferenceEngine/Win32TerminalManager were all undeclared
@@ -136,7 +136,7 @@ void WriteChatRuntimeEvidence(const std::string& line)
 }
 
 // Process-lifetime send journal id for fail-closed chat correlation
-// (CHAT_SEND_ATTEMPT â†” request_id). Never reused across process restarts.
+// (CHAT_SEND_ATTEMPT ↔ request_id). Never reused across process restarts.
 static std::atomic<uint64_t> g_chatSendSeq{0};
 // Last allocated DISPATCH_ID (HandleCopilotSend) for BACKEND/RESPONSE join.
 static std::atomic<uint64_t> g_lastChatDispatchId{0};
@@ -157,7 +157,7 @@ std::wstring Utf8ToWideText(const std::string& text)
     return wide;
 }
 
-// Forward decl â€” body below; ConPTY chunk ingest needs the parser.
+// Forward decl — body below; ConPTY chunk ingest needs the parser.
 bool parseCompilerDiagnostic(const std::string& line,
                              std::string& file,
                              int& lineNumber,
@@ -241,7 +241,7 @@ void ingestTerminalDiagnostics(Win32IDE* ide, TerminalPane* pane, const std::str
                         << " line=" << lineNumber << " sev=" << severity
                         << " msg=" << message << '\n';
             }
-            // Public trampoline â€” free function cannot touch private addProblem.
+            // Public trampoline — free function cannot touch private addProblem.
             ide->addProblemPublic(file, lineNumber, column, message, severity);
             if (receipt) receipt << "PROBLEM_ADDED\n";
         }
@@ -1109,7 +1109,7 @@ static void publishOllamaHandle(std::atomic<void*>* slot, HINTERNET handle) {
 }
 
 // Close only if this thread still owns the published slot. Stop may have
-// already closed and nulled the slot â€” a second CloseHandle would be unsafe.
+// already closed and nulled the slot — a second CloseHandle would be unsafe.
 static bool closeOwnedOllamaHandle(std::atomic<void*>* slot, HINTERNET handle) {
     if (!handle) return false;
     if (!slot) {
@@ -3625,7 +3625,7 @@ void Win32IDE::setActiveTerminalPane(int paneId)
     // WM_CREATE chrome / deferred WM_SIZE are still settling; focusing the
     // RichEdit re-enters comctl32 paint and has produced EXIT=-1 /
     // 0xC000041D (Issue49 IDE_EXIT_BEFORE_EDIT). Activation is bookkeeping
-    // only â€” user click / explicit command paths own focus later.
+    // only — user click / explicit command paths own focus later.
     bool found = false;
     for (auto& pane : m_terminalPanes) {
         if (pane.id == paneId) {
@@ -3647,7 +3647,7 @@ void Win32IDE::layoutTerminalPanes(int width, int top, int height)
     if (width <= 0 || height <= 0 || m_terminalPanes.empty()) return;
     auto conptyResize = [](TerminalPane& pane, int pxW, int pxH) {
         if (!pane.manager) return;
-        // Consolas 9pt â‰ˆ 8x16 px cell; keep ConPTY geometry live on layout.
+        // Consolas 9pt ≈ 8x16 px cell; keep ConPTY geometry live on layout.
         const short cols = static_cast<short>(std::max(20, pxW / 8));
         const short rows = static_cast<short>(std::max(5, (pxH - 32) / 16));
         pane.manager->resize(cols, rows);
@@ -4848,11 +4848,11 @@ void Win32IDE::createOutputTabs()
     struct TabDef { const char* text; int id; const char* key; };
     // Independent product channels (Build/Tasks/Terminal/ExtensionHost/Ollama/
     // Deep2/IDE/Debugger) plus legacy Output/Errors/Debug/Find Results.
-    // Product-channel HWND ids: 1604â€“1611. Forbidden ranges:
+    // Product-channel HWND ids: 1604–1611. Forbidden ranges:
     //   1202/1204/1208 = chat input/send/sessions (prior 1200+i collision)
-    //   1400â€“1411 = status-bar parts (IDC_STATUS_*)
+    //   1400–1411 = status-bar parts (IDC_STATUS_*)
     // TIP005_HWND: IdLen(1204) hit Send button (LEN=4); SampleVisibleEdit then
-    // mis-read chat "> User:" history as Build output â†’ OUTPUT_HWND=FAIL.
+    // mis-read chat "> User:" history as Build output → OUTPUT_HWND=FAIL.
     TabDef defs[] = {
         {"Output", IDC_OUTPUT_EDIT_GENERAL, "Output"},
         {"Errors", IDC_OUTPUT_EDIT_ERRORS,  "Errors"},
@@ -4871,7 +4871,7 @@ void Win32IDE::createOutputTabs()
 
     for (int i = 0; i < defCount; ++i) {
         TCITEMA tie{}; tie.mask = TCIF_TEXT; tie.pszText = const_cast<char*>(defs[i].text);
-        // TCM_INSERTITEMA (ANSI) â€” TabCtrl_InsertItem maps to the W variant under
+        // TCM_INSERTITEMA (ANSI) — TabCtrl_InsertItem maps to the W variant under
         // UNICODE, which would reinterpret this TCITEMA/pszText as UTF-16 and
         // render the labels as CJK mojibake.
         SendMessageA(m_hwndOutputTabs, TCM_INSERTITEMA, static_cast<WPARAM>(i),
@@ -4883,7 +4883,7 @@ void Win32IDE::createOutputTabs()
             m_hwndMain, (HMENU)(INT_PTR)defs[i].id,
             m_hInstance, nullptr);
         if (!hEdit) {
-            // Fallback EDIT if RichEdit class unavailable â€” keep stable control IDs.
+            // Fallback EDIT if RichEdit class unavailable — keep stable control IDs.
             hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
                 0, tabBarHeight, client.right, m_outputTabHeight - tabBarHeight,
@@ -4977,7 +4977,7 @@ void Win32IDE::createOutputTabs()
     }
 
     // Four-panel dock owns the bottom rectangle when m_panelVisible. Do not
-    // show the legacy Output strip / bodies here â€” that stacks Build over
+    // show the legacy Output strip / bodies here — that stacks Build over
     // TERMINAL/OUTPUT/PROBLEMS and covers the dock tabs + chat buttons.
     const bool legacyStrip = m_outputPanelVisible && !m_panelVisible;
     for (auto& kv : m_outputWindows) {
@@ -5028,7 +5028,7 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
     }
     
     // Panel Debug/Errors hosts are plain EDIT controls. formatOutput uses
-    // RichEdit-only EM_SETTEXTEX/EM_SETCHARFORMAT and silently drops text â€”
+    // RichEdit-only EM_SETTEXTEX/EM_SETCHARFORMAT and silently drops text —
     // hiding "Native debug launched" / BP evidence. Always appendText first.
     {
         auto itHwnd = m_outputWindows.find(target);
@@ -7889,7 +7889,7 @@ void Win32IDE::generateResponseAsync(
             : std::exchange(m_pendingInferenceModel, ChatModelEntry{});
     // Harness-only force route: P11 / agentic gates set this so a hung
     // preferred 69B breadcrumb cannot steal the fence when /api/tags UI
-    // publish is still partial. Empty/unset â†’ product selector unchanged.
+    // publish is still partial. Empty/unset → product selector unchanged.
     if (const char* forceModel = std::getenv("RAWRXD_P11_FORCE_OLLAMA_MODEL")) {
         if (forceModel[0]) {
             selectedModel.source = ChatModelEntry::Source::Ollama;
@@ -7936,7 +7936,7 @@ void Win32IDE::generateResponseAsync(
             const std::string& result, bool success) {
             const uint64_t active =
                 m_activeInferenceGeneration.load(std::memory_order_acquire);
-            // A newer Request B owns the slot â€” never clear its busy flag.
+            // A newer Request B owns the slot — never clear its busy flag.
             if (active != 0 && active != requestGeneration) {
                 return;
             }
@@ -8227,7 +8227,7 @@ void Win32IDE::drainCancelledInferenceWorker()
     // Never join a live generation from the UI stop path.
     if (!m_inferenceThread.joinable()) return;
     if (m_activeInferenceGeneration.load(std::memory_order_acquire) != 0) return;
-    // Do not hold m_inferenceMutex across join â€” the worker may take it in
+    // Do not hold m_inferenceMutex across join — the worker may take it in
     // teardown helpers, and Stop/Send both run on the UI thread.
     m_inferenceThread.join();
     m_inferenceCallback = {};
@@ -8646,7 +8646,7 @@ void Win32IDE::createChatPanel() {
         SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, 8192);
         ShowWindow(m_hwndContextSlider, SW_HIDE);
     }
-    // Instant/default chat budget: 8K (was 64K â€” caused Ollama TTFT hangs).
+    // Instant/default chat budget: 8K (was 64K — caused Ollama TTFT hangs).
     m_currentContextTokens = 8192;
 
     m_hwndContextSelector = CreateWindowExA(
@@ -8906,7 +8906,7 @@ void Win32IDE::updateChatSessionTabs()
             TCITEMA item{};
             item.mask = TCIF_TEXT;
             item.pszText = const_cast<char*>(session.label.c_str());
-            // ANSI insert â€” see TCM_INSERTITEMA note in createOutputPanel().
+            // ANSI insert — see TCM_INSERTITEMA note in createOutputPanel().
             SendMessageA(m_hwndChatSessionTabs, TCM_INSERTITEMA, static_cast<WPARAM>(i),
                          reinterpret_cast<LPARAM>(&item));
         }
@@ -9436,7 +9436,7 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
         return combo && SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0) != FALSE;
     };
     // Defer before any GhostText/COMCTL teardown. invalidateNativeGhostText
-    // must not run while chat generate + thought-timer share the UI cadence â€”
+    // must not run while chat generate + thought-timer share the UI cadence —
     // that ordering produced APPCRASH (comctl32 / 0xC000041D) on Request A.
     const bool inferenceBusy =
         m_inferenceRunning.load(std::memory_order_acquire) ||
@@ -9646,7 +9646,7 @@ void Win32IDE::HandleCopilotSend() {
     if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput) return;
 
     // Get input text (UTF-8; preserve multiline / Unicode). Empty or
-    // whitespace-only â†’ no send and do not clear the control.
+    // whitespace-only → no send and do not clear the control.
     // Prefer HWND text; fall back to CHIN cache when harness staged UTF-8
     // via WM_COPYDATA but the edit control was not yet readable.
     std::string userMessage = getWindowTextUtf8(m_hwndCopilotChatInput);
@@ -9715,7 +9715,7 @@ void Win32IDE::HandleCopilotSend() {
 
     // Fence discovery COMCTL rebuilds for the entire Send lifetime BEFORE any
     // other UI work. Dump evidence: fault RIP in comctl32.dll (RVA 0xBD02),
-    // exit 0xC000041D, ~650ms after REQUEST_A_SUBMITTED â€” matching a queued
+    // exit 0xC000041D, ~650ms after REQUEST_A_SUBMITTED — matching a queued
     // WM_APP+106 catalog publish (invalidateNativeGhostText + CB_RESETCONTENT)
     // racing the Send path.
     m_blockModelDiscoveryUi.store(true, std::memory_order_release);
@@ -9727,7 +9727,7 @@ void Win32IDE::HandleCopilotSend() {
     // Typing into the chat input arms NativeGhostTextController's debounce
     // WM_TIMER on the subclassed EDIT. If that timer fires while this Send
     // path is still on the UI stack, requestCompletion re-enters provider
-    // admission from a window proc â†’ STATUS_FATAL_USER_CALLBACK_EXCEPTION
+    // admission from a window proc → STATUS_FATAL_USER_CALLBACK_EXCEPTION
     // (exit 0xC000041D) wrapping an AV (0xC0000005). Dismiss/kill the chat
     // GhostText timer before any further nested UI or generateResponseAsync.
     for (auto& controller : m_ghostTextInputs) {
@@ -9772,7 +9772,7 @@ void Win32IDE::HandleCopilotSend() {
     // no transcript SetWindowText, no status-bar COMCTL, no input clear EN_CHANGE.
     // Keep session bookkeeping in memory only; arm Stop; start worker.
     const int sessionId = activeChatSession() ? activeChatSession()->id : 0;
-    // Embed dispatch_id in transcript text for 1:1 UIâ†”log correlation
+    // Embed dispatch_id in transcript text for 1:1 UI↔log correlation
     // (EXACTLY_ONCE remains NOT_VERIFIED until multi-send map is measured).
     const std::string userWithDispatch =
         "[dispatch_id=" + std::to_string(sendSeq) + "] " + userMessage;
@@ -9862,7 +9862,7 @@ void Win32IDE::HandleCopilotSend() {
     };
     
     // C03: feed prior session turns into the product chat path (history was
-    // stored but previously discarded for inference â€” single-turn only).
+    // stored but previously discarded for inference — single-turn only).
     std::string promptForModel = userMessage;
     {
         std::vector<std::pair<std::string, std::string>> turns;
@@ -9966,7 +9966,7 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
             if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
             m_agentStepTimeline.closeThoughtIfOpen();
             if (active && m_hwndCopilotChatOutput) {
-                appendCopilotChatUtf8("\r\nAI: ");
+                PostChatTextToUi("\\r\\nAI: ");
             }
         }
         ChatTraceMark("callback enter");
@@ -9975,7 +9975,7 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
             session->responseBuffer += response;
         }
         if (active && m_hwndCopilotChatOutput && !response.empty()) {
-            appendCopilotChatUtf8(response);
+            PostChatTextToUi(response);
         }
         appendNativeDebugOutput(std::string("[CHAT_RUNTIME] partial_buffer_bytes=") +
                                 std::to_string(session->responseBuffer.size()) +
@@ -10004,7 +10004,7 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
             const std::string line = firstResponse
                 ? "\r\nAI: " + response + "\r\n\r\n"
                 : response;
-            appendCopilotChatUtf8(line);
+            PostChatTextToUi(line);
         }
     } else if (active && m_hwndCopilotChatOutput && !session->responseBuffer.empty()) {
         appendCopilotChatUtf8("\r\n\r\n");
@@ -10125,9 +10125,27 @@ void Win32IDE::disarmAgentThoughtTimer()
     if (m_hwndMain) KillTimer(m_hwndMain, IDT_AGENT_THOUGHT);
 }
 
+// P0: worker-side chat text dispatch. The payload is a heap std::string
+// posted to the UI thread (WM_APP+110); the handler deletes it. If the
+// post fails or the window is gone, the payload is deleted here - no leak,
+// no cross-thread UI access.
+void Win32IDE::PostChatTextToUi(const std::string& text)
+{
+    if (text.empty()) return;
+    if (!m_hwndMain || !IsWindow(m_hwndMain)) return;
+    std::string* payload = new std::string(text);
+    if (!PostMessageA(m_hwndMain, WM_APP + 120, 0,
+                      reinterpret_cast<LPARAM>(payload)))
+    {
+        delete payload;
+    }
+}
+
 void Win32IDE::appendCopilotChatUtf8(const std::string& text)
 {
     if (!m_hwndCopilotChatOutput || text.empty()) return;
+    // P0: workers never touch UI controls directly. PostChatTextToUi is the
+    // only worker-side entry; this method runs on the UI thread.
     // Identify the real transcript HWND for harnesses: child ids are scoped to
     // their parent, so reading a guessed id from another window is meaningless.
     std::fprintf(stderr, "[CHAT_OUTPUT_APPEND] hwnd=%p len=%zu tid=%lu\n",
