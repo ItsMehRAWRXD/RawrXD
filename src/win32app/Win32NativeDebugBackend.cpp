@@ -370,11 +370,13 @@ bool Win32NativeDebugBackend::armDataBreakpointsUnlocked() {
     }
     CONTEXT ctx{};
     if (!getContext(ctx)) return false;
-    ctx.ContextFlags = CONTEXT_FULL;
+    ctx.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
     if (!bp) {
         ctx.Dr0 = 0;
         ctx.Dr7 = 0;
     } else {
+        // Dr0 on AMD64 is a full 64-bit debug register (DWORD64 in winnt.h
+        // for CONTEXT_AMD64); no truncation to 32 bits.
         ctx.Dr0 = bp->address;
         // LEN0: 00=1B 01=2B 10=4B 11=8B; RW0=11 (read or write).
         uint64_t lenBits = 0;
@@ -549,7 +551,7 @@ bool Win32NativeDebugBackend::getContext(CONTEXT& ctx) const {
     if (!m_activeThread) {
         return false;
     }
-    ctx.ContextFlags = CONTEXT_FULL;
+    ctx.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
     return GetThreadContext(m_activeThread, &ctx) != FALSE;
 }
 
@@ -1011,6 +1013,22 @@ void Win32NativeDebugBackend::handleDebugEvent(const DEBUG_EVENT& ev) {
 
         if (ex.ExceptionCode == EXCEPTION_BREAKPOINT) {
             uint64_t hitAddr = reinterpret_cast<uint64_t>(ex.ExceptionAddress);
+            // D5: hardware data breakpoint hit (DR6.B0 -> DR0 fired) — pause and
+            // report, keep the register armed for the next write. Hardware data
+            // breakpoints surface here before any software INT3 RIP heuristic.
+            if (ctx.Dr6 & 0x1ull) {
+                setTrapFlag(false);
+                m_state = NativeDebugState::Paused;
+                m_pendingContinue = false;
+                char msg[64];
+                std::snprintf(msg, sizeof(msg), "data:0x%llx",
+                              static_cast<unsigned long long>(ctx.Dr0));
+                publishState(msg);
+                // Clear the DR6 status latch so the armed breakpoint can re-fire.
+                ctx.Dr6 = 0;
+                setContext(ctx);
+                break;
+            }
             // INT3 stops after instruction; rewind RIP for software BP.
             if (ctx.Rip == hitAddr + 1 || ctx.Rip == hitAddr) {
                 const uint64_t bpAddr = (ctx.Rip == hitAddr + 1) ? hitAddr : ctx.Rip;
@@ -1054,6 +1072,9 @@ void Win32NativeDebugBackend::handleDebugEvent(const DEBUG_EVENT& ev) {
                 std::snprintf(msg, sizeof(msg), "data:0x%llx",
                               static_cast<unsigned long long>(ctx.Dr0));
                 publishState(msg);
+                // Clear the DR6 status latch so the armed breakpoint can re-fire.
+                ctx.Dr6 = 0;
+                setContext(ctx);
                 break;
             }
             setTrapFlag(false);
