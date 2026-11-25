@@ -631,7 +631,11 @@ public:
     void onAgenticLoopStatus();
     bool stageCopilotChatInputUtf8(const std::string& utf8);
     // Native --chat-smoke: local Ollama send/cancel/recover + editor save probe.
-    void beginChatSmoke(const char* receiptPath);
+    void beginChatSmoke(const char* receiptPath);
+
+    // A5 native --agent-e2e-test: drive the real agent-panel submission path in
+    // an isolated workspace and write an execution receipt, then ExitProcess.
+    void beginAgentE2ETest(const char* receiptPath);
     void tickChatSmoke();
     bool ensureProductAgentSession(const std::string& modelIdentity,
                                    const std::string& workspaceRoot,
@@ -2837,6 +2841,9 @@ public:
     HWND m_hwndAgentInput = nullptr;
     HWND m_hwndAgentSendBtn = nullptr;
     bool m_agentPanelSeeded = false;
+    // A5: when non-empty, the agent panel uses this workspace root instead of
+    // the process current directory (used by --agent-e2e-test isolation).
+    std::string m_agentRootOverride;
     // A6 sub-agent panel (tab 5).
     HWND m_hwndSubAgentList = nullptr;
     HWND m_hwndSubAgentSpawnInput = nullptr;

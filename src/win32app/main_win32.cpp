@@ -377,6 +377,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ide.beginChatSmoke(receipt);
     }
 
+    // A5 native graphical agent E2E: isolated workspace, real agent-panel
+    // submission path, host verdict -> receipt -> ExitProcess.
+    if (lpCmdLine && std::strstr(lpCmdLine, "--agent-e2e-test")) {
+        CreateDirectoryA("F:\\rawrxd\\evidence\\AGENT_E2E", nullptr);
+        const char* receipt = "F:\\rawrxd\\evidence\\AGENT_E2E\\receipt.txt";
+        if (const char* env = std::getenv("RAWRXD_AGENT_E2E_RECEIPT")) {
+            if (*env) receipt = env;
+        }
+        startupTrace("agent-e2e-test begin");
+        ide.beginAgentE2ETest(receipt);
+    }
+
     bool extQuit = false;
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
     ExtHostWireResult extWire{};

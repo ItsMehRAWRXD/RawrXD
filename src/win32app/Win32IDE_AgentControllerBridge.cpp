@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -17,6 +18,7 @@
 
 namespace {
 std::atomic<bool> g_agentCancel{false};
+std::string g_e2eReceipt;  // when set, worker writes receipt + ExitProcess
 
 void appendToTranscript(HWND h, const std::string& s) {
     if (!h || !IsWindow(h)) return;
@@ -26,6 +28,12 @@ void appendToTranscript(HWND h, const std::string& s) {
     SendMessageA(h, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(s.c_str()));
 }
 }  // namespace
+
+// A5 E2E: bind a receipt path. When set, the worker writes an execution
+// receipt (real tool results + host verdict) and ExitProcess with 0/2.
+void RawrXD_IDE_SetE2EReceipt(const char* path) {
+    g_e2eReceipt = path ? path : std::string();
+}
 
 // Free-function entry so Win32IDE_AgentPanel.cpp does not need a new member.
 // transcriptHwnd: the agent transcript edit control. root: workspace root.
@@ -66,8 +74,25 @@ void RawrXD_IDE_RunAgenticTask(HWND transcriptHwnd, const std::string& goal,
             []() { return g_agentCancel.load(); });
 
         log(std::string("=== verdict: ") +
-            (r.completed ? "SUCCESS" : "INCOMPLETE") + " ===");
-        if (!r.summary.empty()) log(r.summary);
-        log("[agent] done.");
+            (r.completed ? "SUCCESS" : "INCOMPLETE") + " ===\n");
+        if (!r.summary.empty()) log(r.summary + "\r\n");
+
+        if (!g_e2eReceipt.empty()) {
+            std::ofstream rec(g_e2eReceipt, std::ios::trunc);
+            if (rec) {
+                rec << "COMPLETED=" << (r.completed ? "PASS" : "FAIL") << "\n";
+                rec << "TURNS=" << r.turns << "\n";
+                rec << "TOOL_CALLS=" << r.toolCalls << "\n";
+                rec << "DENIED=" << r.denied << "\n";
+                for (const auto& t : r.results)
+                    rec << "TOOL=" << t.tool << " OK=" << (t.ok ? 1 : 0)
+                        << " DENIED=" << (t.denied ? 1 : 0)
+                        << " EXIT=" << t.exitCode << " ARGS=" << t.args
+                        << " OUT=" << t.output.substr(0, 200) << "\n";
+                rec << "SUMMARY=" << r.summary << "\n";
+            }
+            ::ExitProcess(r.completed ? 0u : 2u);
+        }
+        log("[agent] done.\r\n");
     }).detach();
 }

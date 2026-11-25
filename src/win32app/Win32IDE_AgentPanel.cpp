@@ -12,12 +12,14 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <string>
 
 // A5: native IDE routes through the shared agent controller (same production
 // loop as the CLI). Implemented in Win32IDE_AgentControllerBridge.cpp.
 void RawrXD_IDE_RunAgenticTask(HWND transcriptHwnd, const std::string& goal,
                                const std::string& root);
+void RawrXD_IDE_SetE2EReceipt(const char* path);
 
 // Control IDs are defined in Win32IDE_VSCodeUI.cpp (1308 transcript,
 // 1309 input, 1310 send). The WM_COMMAND case lives in Win32IDE_lifecycle.cpp.
@@ -67,7 +69,41 @@ void Win32IDE::submitAgentPrompt() {
     // on a worker thread — the same production loop the CLI uses — instead of a
     // parallel chat path. Tool receipts and the host verdict stream back into
     // this transcript.
-    std::string root = std::filesystem::current_path().string();
+    std::string root = m_agentRootOverride.empty()
+                           ? std::filesystem::current_path().string()
+                           : m_agentRootOverride;
     appendAgentTranscript("[agent] dispatching to shared controller...\r\n");
     RawrXD_IDE_RunAgenticTask(m_hwndAgentTranscript, staged, root);
+}
+
+// A5 native --agent-e2e-test: build an isolated workspace with a deliberately
+// broken program, then drive the REAL agent-panel submission path. The worker
+// writes the receipt and ExitProcess (0 = host-verified success).
+void Win32IDE::beginAgentE2ETest(const char* receiptPath) {
+    namespace fs = std::filesystem;
+    const std::string ws = "F:\\rawrxd\\_e2e_ws";
+    std::error_code ec;
+    fs::remove_all(ws, ec);
+    fs::create_directories(fs::path(ws) / "src", ec);
+    {
+        std::ofstream c(fs::path(ws) / "CMakeLists.txt", std::ios::trunc);
+        c << "cmake_minimum_required(VERSION 3.20)\nproject(e2e C)\n"
+             "add_executable(e2e src/main.c)\n";
+    }
+    {
+        std::ofstream m(fs::path(ws) / "src" / "main.c", std::ios::trunc);
+        m << "#include <stdio.h>\nint main(void){ return 1; }\n";
+    }
+    m_agentRootOverride = ws;
+    RawrXD_IDE_SetE2EReceipt(receiptPath);
+    if (m_hwndAgentInput && IsWindow(m_hwndAgentInput)) {
+        SetWindowTextA(
+            m_hwndAgentInput,
+            "Edit src/main.c: replace return 1 with return 0. Then call "
+            "run_build with dir=\".\" config=\"Release\". Then call run_shell "
+            "with command \"build\\Release\\e2e.exe\". Reply final.");
+    }
+    appendAgentTranscript(
+        "[e2e] isolated workspace ready; submitting via agent panel...\r\n");
+    submitAgentPrompt();
 }
