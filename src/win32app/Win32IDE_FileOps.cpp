@@ -1152,6 +1152,16 @@ void Win32IDE::saveIdeSession() {
     }
     // Active theme (item 7).
     root["theme"] = m_appearance.themeName;
+    // Inline annotations (item 7).
+    {
+        nlohmann::json anns = nlohmann::json::array();
+        for (const auto& a : m_annotations) {
+            anns.push_back({{"line", a.line}, {"column", a.column},
+                            {"severity", (int)a.severity}, {"text", a.text},
+                            {"source", a.source}, {"visible", a.visible}});
+        }
+        root["annotations"] = anns;
+    }
 
     nlohmann::json chat = nlohmann::json::object();
     chat["active"] = m_activeChatSession;
@@ -1443,6 +1453,20 @@ void Win32IDE::loadIdeSession() {
         if (root.contains("theme") && root["theme"].is_string()) {
             m_appearance.themeName = root["theme"].get<std::string>();
             applyTheme(m_appearance.themeName);
+        }
+        // Restore inline annotations (item 7); clear-first prevents duplicates.
+        if (root.contains("annotations") && root["annotations"].is_array()) {
+            m_annotations.clear();
+            for (const auto& aj : root["annotations"]) {
+                InlineAnnotation a;
+                a.line = aj.value("line", 0);
+                a.column = aj.value("column", 0);
+                a.severity = (AnnotationSeverity)aj.value("severity", 0);
+                a.text = aj.value("text", "");
+                a.source = aj.value("source", "agent");
+                a.visible = aj.value("visible", true);
+                m_annotations.push_back(std::move(a));
+            }
         }
         if (m_openDocuments.empty()) {
             addDocumentTab(std::string());
