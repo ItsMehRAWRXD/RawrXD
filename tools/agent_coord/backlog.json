@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "description": "RawrXD implementation backlog for agent coordination. Each item is an exclusively-owned package. status: OPEN | ACTIVE | CLOSED. The coord.ps1 'next' command selects the first non-CLOSED item that is free or stale.",
+  "items": [
+    { "id": "a5-graphical",          "package": "native-ide",        "title": "Graphical edit -> build -> run acceptance", "status": "CLOSED" },
+    { "id": "chat-smoke",            "package": "native-ide",        "title": "Chat-smoke concurrency + deterministic shutdown", "status": "ACTIVE" },
+    { "id": "response-buffer-mutex", "package": "native-ide",        "title": "Synchronize responseBuffer access sites", "status": "ACTIVE" },
+    { "id": "interactive-cert",      "package": "native-ide",        "title": "Certify 9 interactive IDE features", "status": "OPEN" },
+    { "id": "session-reliability",   "package": "native-ide",        "title": "Persistent sessions, cancellation, worker cleanup, recovery", "status": "OPEN" },
+    { "id": "self-hosted-dev",       "package": "native-ide",        "title": "Open RawrXD in RawrXD; real repo improvement; commit via RawrXD", "status": "OPEN" },
+    { "id": "branch-reconciliation", "package": "integration",       "title": "Non-destructive reconciliation of 3195 ahead / 769 behind", "status": "OPEN" },
+    { "id": "deep2-parity",          "package": "parallel-track",    "title": "Deep2 numerical parity (independent track)", "status": "ACTIVE" },
+    { "id": "compression-residency", "package": "parallel-track",    "title": "Compression residency (independent track)", "status": "ACTIVE" }
+  ]
+}
