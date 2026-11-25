@@ -184,10 +184,10 @@ template <class T> static bool resolve(const char * n, T & out) {
 static bool load_api() {
     lib = LoadLibraryExW(L"F:\\llama.cpp-ref\\build\\bin\\llama.dll", nullptr,
                          LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
-    if (!lib) return false;
+    if (!lib) { std::fprintf(stderr, "CALIBRATION_LOAD_LIBRARY_FAILED=llama.dll error=%lu\n", GetLastError()); return false; }
     ggml_lib = LoadLibraryExW(L"F:\\llama.cpp-ref\\build\\bin\\ggml.dll", nullptr,
                               LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
-    if (!ggml_lib) return false;
+    if (!ggml_lib) { std::fprintf(stderr, "CALIBRATION_LOAD_LIBRARY_FAILED=ggml.dll error=%lu\n", GetLastError()); return false; }
 #define R(n) if (!resolve(#n, p_##n)) return false
     R(llama_backend_init); R(llama_backend_free); R(llama_model_default_params);
     R(llama_context_default_params); R(llama_model_load_from_file); R(llama_init_from_model);
@@ -257,7 +257,8 @@ int main(int argc, char ** argv) {
     } else {
         for (int i = 6; i < argc; ++i) tokens.push_back(std::atoi(argv[i]));
     }
-    if (tokens.empty() || !load_api()) { std::fprintf(stderr, "CALIBRATION_FAIL=API_OR_INPUT\n"); return 3; }
+    if (tokens.empty()) { std::fprintf(stderr, "CALIBRATION_FAIL=INPUT_EMPTY\n"); return 3; }
+    if (!load_api()) { std::fprintf(stderr, "CALIBRATION_FAIL=API_UNAVAILABLE\n"); return 3; }
     fs::create_directories(outDir);
     Run plain, instrumented;
     if (!run_once(model, tokens, false, plain) || !run_once(model, tokens, true, instrumented)) { std::fprintf(stderr, "CALIBRATION_FAIL=REFERENCE_DECODE\n"); return 4; }
