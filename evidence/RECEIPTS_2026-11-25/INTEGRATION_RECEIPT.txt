@@ -1,0 +1,25 @@
+RawrXD — Combined Integration Receipt (2026-11-25)
+=================================================
+Integration branch: integration/combined-2026-11-25
+Base commit:        f50ebd4ccb7ad2cbb379f4095dabd7eddf1f28da
+Integration head:   c4615cffffff7be30d503bf93430d74b928900e2 (pre-receipt; see commit after this file)
+
+Build (Release, MSVC + Vulkan):
+  RawrXD-Win32IDE-Native.exe  -> OK  sha256 DAE4F8A0063F807EB8D3C86598F204CB55CD942A62F2AB10E2BEB15356224227
+  deep2_benchmark.exe         -> OK  sha256 3BA523115D909AEE063E982E641AEC788F4F957114CE7B16056F5DA4C12C480C
+
+Regression tests:
+  lsp_content_length_test      -> RESULT PASS (16/16), exit 0
+  deep2_benchmark --help       -> exit 0
+  deep2_benchmark (no args)    -> exit 2 (fail-closed)
+  RawrXD-Win32IDE-Native --term-smoke --term-quit -> exit 0 (START/CONPTY/ALIVE_ECHO PASS)
+
+Packages integrated (7+): 1 benchmark, 2 harness JSON, 5 LSP matrix, 6 crash-filter,
+  8 session-writer consolidation, 10 build enforcement, 11 LSP completion popup,
+  12 provider routing (verified), 13 cancellation, 15 release checklist, + GPU MoE router (parity-pending).
+
+Disposition:
+  INTEGRATION_BUILD = PASS
+  INTEGRATION_TESTS = PASS
+  CERTIFIED = 0   PROMOTE = 0   RELEASE = HELD
+  Hardware/elevation gates (GPU parity, perf, chat fault capture) remain externally blocked.
