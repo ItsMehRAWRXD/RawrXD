@@ -435,7 +435,9 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
                         0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vmi))) {
                     const uint64_t budget = (uint64_t)vmi.Budget;
                     const uint64_t used = (uint64_t)vmi.CurrentUsage;
+                    // Known measurement (may legitimately be 0 = fully used).
                     id.availableVram = budget > used ? budget - used : 0;
+                    id.availableVramKnown = true;
                 }
                 adapter3->Release();
             }

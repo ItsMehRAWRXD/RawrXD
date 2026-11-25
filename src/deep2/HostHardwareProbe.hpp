@@ -59,6 +59,9 @@ struct GpuDeviceInfo {
     uint64_t availableVramBytes = 0; // measured FREE device-local VRAM now
                                      // (DXGI QueryVideoMemoryInfo Budget-CurrentUsage,
                                      //  or VK_EXT_memory_budget). 0 = unknown.
+    bool availableVramKnown = false; // true once a live free-VRAM measurement
+                                     // succeeded (a KNOWN 0 means fully allocated
+                                     // and must reject, not fall back to total).
     uint64_t sharedBytes = 0;
     bool discrete = false;
     bool compute = false;
@@ -69,13 +72,15 @@ struct GpuDeviceInfo {
     // oversubscribed on the strength of its total capacity.  Falls back to the
     // physical size when free VRAM has not been measured (older callers).
     uint64_t capacityBytes() const {
-        if (availableVramBytes) {
+        if (availableVramKnown) {
+            // A live measurement exists.  A KNOWN 0 (fully allocated) yields 0
+            // so admission rejects rather than oversubscribing on total size.
             return deviceLocalBytes
                 ? (availableVramBytes < deviceLocalBytes ? availableVramBytes
                                                          : deviceLocalBytes)
                 : availableVramBytes;
         }
-        return deviceLocalBytes;
+        return deviceLocalBytes;   // unknown -> fall back to physical size
     }
 
     // Effective budget after the resident-fraction reserve.  This is the only

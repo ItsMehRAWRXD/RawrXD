@@ -1,6 +1,7 @@
 // Standalone acceptance test for Deep2::ResidencyBudget (Gate B).
 // Compile: g++ -std=c++17 -O2 -Wall -Wextra residency_budget_test.cpp -o t && t
 #include "../../../src/deep2/ResidencyBudget.hpp"
+#include "../../../src/deep2/HostHardwareProbe.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -57,6 +58,30 @@ int main() {
     tight.physical = tight.budget = 1000ull << 20;
     CHECK(!admitModel(tight, (600ull << 20), (600ull << 20), 0, 0)); // kv overflows
     CHECK(admitModel(tight, (400ull << 20), (300ull << 20), (200ull << 20), (100ull << 20)));
+
+    // --- zero-vs-unknown semantics at the GpuDeviceInfo capacity level ---
+    const uint64_t thirtyTwoG = 32624ull << 20;
+    rawrxd::GpuDeviceInfo unknown;
+    unknown.deviceLocalBytes = thirtyTwoG;
+    unknown.availableVramBytes = 0;
+    unknown.availableVramKnown = false;          // not measured
+    CHECK(unknown.capacityBytes() == thirtyTwoG); // unknown -> physical fallback
+
+    rawrxd::GpuDeviceInfo knownZero;
+    knownZero.deviceLocalBytes = thirtyTwoG;
+    knownZero.availableVramBytes = 0;
+    knownZero.availableVramKnown = true;         // measured: 0 free
+    CHECK(knownZero.capacityBytes() == 0);        // known 0 -> reject, not total
+
+    rawrxd::GpuDeviceInfo contendedGpu;
+    contendedGpu.deviceLocalBytes = thirtyTwoG;
+    contendedGpu.availableVramBytes = 7541ull << 20;
+    contendedGpu.availableVramKnown = true;
+    CHECK(contendedGpu.capacityBytes() == (7541ull << 20));
+    CHECK(contendedGpu.budgetBytes(1.0) == (7541ull << 20));
+
+    // --- ResidencyBudget unknown budget (0) falls back to physical ---
+    // (covered above by noBudget)
 
     std::printf(
         "usable_contended=%llu MiB (reject=%d)\n"
