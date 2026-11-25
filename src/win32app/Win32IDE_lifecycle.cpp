@@ -2992,7 +2992,7 @@ void Win32IDE::onSize(int width, int height)
         if (m_hwndCloseChatBtn) MoveWindow(m_hwndCloseChatBtn, actionsX + 62, 3, 24, 27, TRUE);
         if (m_hwndRestoreChatBtn) MoveWindow(m_hwndRestoreChatBtn, actionsX + 90, 3, 58, 27, TRUE);
         if (m_hwndRollbackChatBtn) MoveWindow(m_hwndRollbackChatBtn, actionsX + 152, 3, 64, 27, TRUE);
-        if (m_hwndSecondarySidebarHeader) MoveWindow(m_hwndSecondarySidebarHeader, 5, 34, std::max(0, rightWidth - 10), 22, TRUE);
+        if (m_hwndSecondarySidebarHeader) MoveWindow(m_hwndSecondarySidebarHeader, 5, 34, std::max(0, rightWidth - 10), 22, TRUE);        if (m_hwndBackendSelector) {            MoveWindow(m_hwndBackendSelector, 95, 5, std::max(0, rightWidth - 100), 24, TRUE);            SetWindowPos(m_hwndBackendSelector, HWND_TOP, 0, 0, 0, 0,                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);        }
         if (m_hwndModelLabel) MoveWindow(m_hwndModelLabel, 5, 35, 85, 18, TRUE);
         if (m_hwndModelSelector) {
             MoveWindow(m_hwndModelSelector, 95, 35, std::max(0, rightWidth - 100), 24, TRUE);

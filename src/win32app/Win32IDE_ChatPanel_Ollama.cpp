@@ -207,11 +207,12 @@ void Win32IDE::sendChatMessageToOllama(const std::string& message,
 {
     // Get selected model
     int modelIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    std::string modelName = "llama3.2:3b"; // default
-    
-    if (modelIdx >= 0 && modelIdx < (int)m_availableModels.size()) {
-        modelName = m_availableModels[modelIdx];
+    if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size() ||
+        m_availableModels[modelIdx].empty()) {
+        if (callback) callback("Error: no installed model is selected; refresh the model list and choose one", true);
+        return;
     }
+    const std::string modelName = m_availableModels[modelIdx];
     
     // Get max tokens
     int maxTokens = m_currentMaxTokens;

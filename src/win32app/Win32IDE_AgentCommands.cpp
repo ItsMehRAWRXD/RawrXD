@@ -5,6 +5,7 @@
 #include "backend_preferences.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Deep2Bridge.h"
+#include "../deep2/quant_dot_dispatch.hpp"
 #include "Win32IDE_AgenticLoopBridge.h"
 #include "ModelConnection.h"
 #include "IDELogger.h"
@@ -2233,15 +2234,13 @@ void Win32IDE::onBackendSelectionChanged()
     // Selection is retained even when the runtime is unavailable; only routing
     // changes, so the GUI matches the CLI contract.
     if (pref == "deep2") {
+        RawrXD::Deep2::QuantDot::SetWeightCacheRetention(false);
         SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", "deep2");
     } else if (pref == "strata") {
+        RawrXD::Deep2::QuantDot::SetWeightCacheRetention(true);
         SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", "strata");
-        MessageBoxA(m_hwndSecondarySidebar,
-                    "STRATA_NOT_ROUTABLE: expert residency is not activated on this "
-                    "path. The selection is stored, but chat inference is blocked "
-                    "until residency is available. Deep2 is not substituted.",
-                    "RawrXD backend", MB_ICONWARNING | MB_OK);
     } else {
+        RawrXD::Deep2::QuantDot::SetWeightCacheRetention(false);
         SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", nullptr);
     }
     appendCopilotChatUtf8(std::string("\n[backend] ") + pref +

@@ -487,7 +487,12 @@ void ChatWindow::GenerateResponse(const std::string& userMessage) {
 
     std::string model = GetSelectedModel();
     if (model.empty()) {
-        model = "llama3.2:3b";
+        m_isGenerating = false;
+        EnableWindow(m_hBtnSend, TRUE);
+        EnableWindow(m_hBtnCancel, FALSE);
+        UpdateStatus("Error: no installed model is selected; refresh the model list and choose one");
+        AddMessage("system", "No installed model is selected. Refresh models and choose an available model.");
+        return;
     }
 
     if (m_generationThread.joinable()) m_generationThread.join();

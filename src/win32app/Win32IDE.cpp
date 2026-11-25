@@ -7788,8 +7788,7 @@ void Win32IDE::generateResponseAsync(
     // Snapshot the selected backend once. Explicit unsupported values must
     // never silently fall through to the selected model's default transport.
     const std::string backend = environmentValue("RAWRXD_CHAT_BACKEND");
-    if (!backend.empty() && backend != "deep2" && backend != "ollama") {
-        const std::string reason = backend == "strata"
+    if (!backend.empty() && backend != "deep2" && backend != "strata" && backend != "ollama") {        const std::string reason = backend == "strata"
             ? "STRATA_NOT_ROUTABLE: expert residency is not activated on this path."
             : "Unsupported inference backend: " + backend;
         if (m_activeInferenceGeneration.load(std::memory_order_acquire) == 0) {
@@ -7800,9 +7799,7 @@ void Win32IDE::generateResponseAsync(
         if (callback) callback(reason, true, false);
         return;
     }
-    const bool explicitDeep2 = backend == "deep2";
-
-    // HandleCopilotSend may already have claimed m_inferenceRunning to close
+    const bool explicitDeep2 = backend == "deep2" || backend == "strata";    // HandleCopilotSend may already have claimed m_inferenceRunning to close
     // a BN_CLICKED race.  A live worker is generation != 0; stopInference and
     // finishIfCurrent clear generation when releasing. Join drained threads
     // even when the pre-claim set running=true for THIS admission.
@@ -8735,8 +8732,7 @@ void Win32IDE::createChatPanel() {
     m_hwndBackendSelector = CreateWindowExA(
         0, "COMBOBOX", "Backend: Ollama",
         WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
-        5, 442, 210, 200, m_hwndSecondarySidebar,
-        reinterpret_cast<HMENU>(IDC_COPILOT_BACKEND_SELECTOR), m_hInstance, nullptr);
+        95, 5, 200, 200, m_hwndSecondarySidebar,        reinterpret_cast<HMENU>(IDC_COPILOT_BACKEND_SELECTOR), m_hInstance, nullptr);
     if (m_hwndBackendSelector) {
         SendMessageA(m_hwndBackendSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
         SendMessageA(m_hwndBackendSelector, CB_ADDSTRING, 0, (LPARAM) "Deep2 (Vulkan)");
