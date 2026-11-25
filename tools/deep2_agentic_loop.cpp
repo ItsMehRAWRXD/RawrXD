@@ -3810,9 +3810,11 @@ static int OllamaAgentRun(const Args& args)
     Logf_("OLLAMA_AGENT_MOTD_SHA256 %s\n", policyHash.c_str());
 
     // P0 CREATE fast path (deterministic host orchestration): for a new
-    // target the model makes ONE structured call (JSON path+content); the
-    // host validates the path, writes the file, builds, runs and verifies.
-    // No multi-step model decisions for a straightforward file creation.
+    // target the model makes structured calls (JSON path+content); the host
+    // validates the path, writes the file, builds, runs and verifies. On
+    // failure the ACTUAL source + build/run diagnostics are fed back for a
+    // bounded number of correction attempts (compile-error AND output-
+    // mismatch repair). Authorization/validation are never weakened.
     if (!targetExists)
     {
         const std::string expected = args.expected_output;
@@ -3820,102 +3822,137 @@ static int OllamaAgentRun(const Args& args)
             "{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},"
             "\"content\":{\"type\":\"string\"}},\"required\":[\"path\","
             "\"content\"],\"additionalProperties\":false}";
-        const std::string prompt =
+        const std::string basePrompt =
             "Generate a complete C source file named " + args.target_file +
             ". Requirements:\n- Print exactly: " + expected +
             "\n- Return exit code 0.\nReturn a single JSON object matching "
             "this schema: " + schema;
-        std::vector<std::pair<std::string, std::string>> createMsgs{
-            {"user", prompt}};
-        const auto reply = OllamaChat(args.model, createMsgs, args.max_new,
-                                      65536, 0.2f, false);
-        if (!reply.error.empty() || reply.content.empty())
+        std::string lastContent, lastBuildOut, lastRunOut, lastFailure =
+            "no attempt executed";
+        int lastBuild = -1, lastRun = -1;
+        constexpr int kMaxAttempts = 3;
+        for (int attempt = 1; attempt <= kMaxAttempts; ++attempt)
         {
-            Logf_("OLLAMA_AGENT_VERDICT FAIL: create call failed: %s\n",
-                  reply.error.c_str());
-            return 1;
-        }
-        // Tolerate code fences and trailing text: extract the FIRST complete
-        // JSON object via brace matching.
-        std::string body = reply.content;
-        const size_t b0 = body.find('{');
-        size_t b1 = std::string::npos;
-        if (b0 != std::string::npos)
-        {
-            int depth = 0;
-            bool inStr = false;
-            for (size_t i = b0; i < body.size(); ++i)
+            std::string prompt = basePrompt;
+            if (attempt > 1)
+                prompt +=
+                    "\n\nThe previous attempt FAILED verification. Do not "
+                    "repeat it.\nPrevious source:\n" + lastContent +
+                    "\nBuild exit: " + std::to_string(lastBuild) +
+                    "\nBuild output:\n" + lastBuildOut +
+                    "\nRun exit: " + std::to_string(lastRun) +
+                    "\nRun output:\n" + lastRunOut +
+                    "\nExpected exactly: " + expected +
+                    "\nReturn a corrected JSON object.";
+            std::vector<std::pair<std::string, std::string>> createMsgs{
+                {"user", prompt}};
+            const auto reply = OllamaChat(args.model, createMsgs,
+                                          args.max_new, 65536, 0.2f, false);
+            if (!reply.error.empty() || reply.content.empty())
             {
-                const char c = body[i];
-                if (inStr)
+                lastFailure = "create call failed: " + reply.error;
+                Logf_("[ollama] create attempt %d failed: %s\n", attempt,
+                      lastFailure.c_str());
+                continue;
+            }
+            // Extract the FIRST complete JSON object via brace matching
+            // (tolerates fences and trailing text).
+            std::string body = reply.content;
+            const size_t b0 = body.find('{');
+            size_t b1 = std::string::npos;
+            if (b0 != std::string::npos)
+            {
+                int depth = 0;
+                bool inStr = false;
+                for (size_t i = b0; i < body.size(); ++i)
                 {
-                    if (c == '\\') { ++i; continue; }
-                    if (c == '"') inStr = false;
+                    const char c = body[i];
+                    if (inStr)
+                    {
+                        if (c == '\\') { ++i; continue; }
+                        if (c == '"') inStr = false;
+                        continue;
+                    }
+                    if (c == '"') { inStr = true; continue; }
+                    if (c == '{') ++depth;
+                    else if (c == '}')
+                    {
+                        if (--depth == 0) { b1 = i; break; }
+                    }
+                }
+            }
+            if (b0 == std::string::npos || b1 == std::string::npos)
+            {
+                lastFailure = "no complete JSON object in response";
+                continue;
+            }
+            body = body.substr(b0, b1 - b0 + 1);
+            nlohmann::json doc;
+            try { doc = nlohmann::json::parse(body); }
+            catch (const std::exception& e)
+            {
+                lastFailure = std::string("JSON parse: ") + e.what();
+                continue;
+            }
+            if (!doc.is_object() || !doc.contains("content") ||
+                !doc["content"].is_string())
+            {
+                lastFailure = "JSON missing string content";
+                continue;
+            }
+            const std::string content = doc["content"].get<std::string>();
+            const std::string rel =
+                (doc.contains("path") && doc["path"].is_string())
+                    ? doc["path"].get<std::string>() : args.target_file;
+            const std::string safe = SafeWorkPath(args.workdir, rel);
+            if (safe.empty() || content.empty())
+            {
+                lastFailure = "unsafe path or empty content";
+                continue;
+            }
+            {
+                std::ofstream out(safe, std::ios::binary);
+                out << content;
+                if (!out)
+                {
+                    lastFailure = "write failed";
                     continue;
                 }
-                if (c == '"') { inStr = true; continue; }
-                if (c == '{') ++depth;
-                else if (c == '}')
-                {
-                    if (--depth == 0) { b1 = i; break; }
-                }
             }
-        }
-        if (b0 == std::string::npos || b1 == std::string::npos)
-        {
-            Logf_("OLLAMA_AGENT_VERDICT FAIL: create response has no complete JSON object\n");
-            return 1;
-        }
-        body = body.substr(b0, b1 - b0 + 1);
-        nlohmann::json doc;
-        try { doc = nlohmann::json::parse(body); }
-        catch (const std::exception& e)
-        {
-            Logf_("OLLAMA_AGENT_VERDICT FAIL: create JSON parse: %s\n", e.what());
-            return 1;
-        }
-        if (!doc.is_object() || !doc.contains("content") ||
-            !doc["content"].is_string())
-        {
-            Logf_("OLLAMA_AGENT_VERDICT FAIL: create JSON missing string content\n");
-            return 1;
-        }
-        const std::string content = doc["content"].get<std::string>();
-        const std::string rel =
-            (doc.contains("path") && doc["path"].is_string())
-                ? doc["path"].get<std::string>() : args.target_file;
-        const std::string safe = SafeWorkPath(args.workdir, rel);
-        if (safe.empty() || content.empty())
-        {
-            Logf_("OLLAMA_AGENT_VERDICT FAIL: unsafe path or empty content\n");
-            return 1;
-        }
-        {
-            std::ofstream out(safe, std::ios::binary);
-            out << content;
-            if (!out)
+            int buildExit = -1, runExit = -1;
+            const std::string buildOut = RunCmd(
+                "cd /d \"" + args.workdir + "\" && " +
+                WithMsvcEnv(msvc, buildCmd) + " 2>&1", &buildExit);
+            std::string runOut;
+            if (buildExit == 0)
+                runOut = RunCmd("cd /d \"" + args.workdir + "\" && " +
+                                runCmd + " 2>&1", &runExit);
+            const bool verified = buildExit == 0 && runExit == 0 &&
+                runOut.find(expected) != std::string::npos;
+            ledger.log_verification(verified,
+                "create fast path attempt " + std::to_string(attempt) +
+                ": build=" + std::to_string(buildExit) +
+                " run=" + std::to_string(runExit));
+            Logf_("OLLAMA_AGENT_CREATE attempt=%d path=%s build=%d run=%d "
+                  "verified=%d\n", attempt, safe.c_str(), buildExit, runExit,
+                  verified ? 1 : 0);
+            if (verified)
             {
-                Logf_("OLLAMA_AGENT_VERDICT FAIL: write failed\n");
-                return 1;
+                Logf_("OLLAMA_AGENT_VERDICT PASS\n");
+                return 0;
             }
+            lastContent = content;
+            lastBuildOut = buildOut;
+            lastRunOut = runOut;
+            lastBuild = buildExit;
+            lastRun = runExit;
+            lastFailure = "verification failed (build=" +
+                          std::to_string(buildExit) + " run=" +
+                          std::to_string(runExit) + ")";
         }
-        int buildExit = -1, runExit = -1;
-        const std::string buildOut = RunCmd(
-            "cd /d \"" + args.workdir + "\" && " + WithMsvcEnv(msvc, buildCmd) +
-            " 2>&1", &buildExit);
-        std::string runOut;
-        if (buildExit == 0)
-            runOut = RunCmd("cd /d \"" + args.workdir + "\" && " + runCmd +
-                            " 2>&1", &runExit);
-        const bool verified = buildExit == 0 && runExit == 0 &&
-            runOut.find(expected) != std::string::npos;
-        ledger.log_verification(verified,
-            "create fast path: build=" + std::to_string(buildExit) +
-            " run=" + std::to_string(runExit));
-        Logf_("OLLAMA_AGENT_CREATE path=%s build=%d run=%d verified=%d\n",
-              safe.c_str(), buildExit, runExit, verified ? 1 : 0);
-        Logf_("OLLAMA_AGENT_VERDICT %s\n", verified ? "PASS" : "FAIL");
-        return verified ? 0 : 1;
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: %d attempts exhausted: %s\n",
+              kMaxAttempts, lastFailure.c_str());
+        return 1;
     }
     std::vector<std::pair<std::string, std::string>> messages;
     messages.push_back({"system",
