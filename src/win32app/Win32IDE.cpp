@@ -8865,7 +8865,7 @@ void Win32IDE::createChatPanel() {
             session.model = m_selectedChatModel;
             session.reasoningMode = m_reasoningMode;
             session.webBrowsingEnabled = m_webBrowsingEnabled;
-            m_chatSessions.push_back(std::move(session));
+            m_chatSessions.push_back(std::make_shared<ChatSessionState>(std::move(session)));
         }
         m_activeChatSession = 0;
         updateChatSessionTabs();
@@ -8887,7 +8887,7 @@ ChatSessionState* Win32IDE::activeChatSession()
         m_activeChatSession >= static_cast<int>(m_chatSessions.size())) {
         return nullptr;
     }
-    return &m_chatSessions[static_cast<size_t>(m_activeChatSession)];
+    return m_chatSessions[static_cast<size_t>(m_activeChatSession)].get();
 }
 
 void Win32IDE::updateChatSessionTabs()
@@ -8896,7 +8896,8 @@ void Win32IDE::updateChatSessionTabs()
         m_updatingChatSessionTabs = true;
         TabCtrl_DeleteAllItems(m_hwndChatSessionTabs);
         for (size_t i = 0; i < m_chatSessions.size(); ++i) {
-            auto& session = m_chatSessions[i];
+            const auto& sp = m_chatSessions[i];
+            auto& session = *sp;
             // Compute and persist the tab label on the session object so the
             // tab control's pszText pointer remains valid across loop
             // iterations (local std::string would dangle immediately).
@@ -8941,7 +8942,7 @@ void Win32IDE::createChatSession(const std::string& requestedTitle)
     session.model = m_selectedChatModel;
     session.reasoningMode = m_reasoningMode;
     session.webBrowsingEnabled = m_webBrowsingEnabled;
-    m_chatSessions.push_back(std::move(session));
+    m_chatSessions.push_back(std::make_shared<ChatSessionState>(std::move(session)));
     updateChatSessionTabs();
     switchChatSession(static_cast<int>(m_chatSessions.size()) - 1);
 }
@@ -8952,7 +8953,7 @@ void Win32IDE::closeActiveChatSession()
     int index = m_activeChatSession;
     if (index < 0 || index >= static_cast<int>(m_chatSessions.size())) index = 0;
 
-    if (m_chatSessions[static_cast<size_t>(index)].running) HandleCopilotStop();
+    if (m_chatSessions[static_cast<size_t>(index)]->running) HandleCopilotStop();
     m_closedChatSessions.push_back(std::move(m_chatSessions[static_cast<size_t>(index)]));
     m_chatSessions.erase(m_chatSessions.begin() + index);
 
@@ -9089,7 +9090,8 @@ void Win32IDE::switchChatSession(int index)
     }
 
     m_activeChatSession = index;
-    auto& session = m_chatSessions[static_cast<size_t>(index)];
+    const auto& sp = m_chatSessions[static_cast<size_t>(index)];
+    auto& session = *sp;
     m_chatHistory = session.history;
     m_selectedChatModel = session.model;
     invalidateNativeGhostText();
@@ -9947,13 +9949,24 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
                              std::to_string(generation) +
                              " rendered=1 complete=" + (complete ? "1" : "0") +
                              " response_bytes=" + std::to_string(response.size()));
-    ChatSessionState* session = nullptr;
-    for (auto& candidate : m_chatSessions) {
-        if (candidate.id == sessionId) { session = &candidate; break; }
-    }
-    if (!session) return;
-
-    const int sessionIndex = static_cast<int>(session - m_chatSessions.data());
+    ChatSessionState* session = nullptr;
+    std::shared_ptr<ChatSessionState> keepAlive;   // holds the session alive
+    int sessionIndex = -1;
+    {
+        // P0: the worker iterates the session vector while the UI thread may
+        // close/erase sessions - hold the chat mutex for the lookup, and
+        // keep the shared_ptr alive for the whole callback.
+        std::lock_guard<std::mutex> _chatLock(m_chatMutex);
+        for (size_t i = 0; i < m_chatSessions.size(); ++i) {
+            if (m_chatSessions[i] && m_chatSessions[i]->id == sessionId) {
+                keepAlive = m_chatSessions[i];
+                session = keepAlive.get();
+                sessionIndex = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+    if (!session) return;
     const bool active = m_activeChatSession == sessionIndex;
     if (!complete) {
         if (session->responseBuffer.empty()) {

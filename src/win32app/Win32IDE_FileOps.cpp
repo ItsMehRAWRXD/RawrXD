@@ -1145,7 +1145,8 @@ void Win32IDE::saveIdeSession() {
     chat["active"] = m_activeChatSession;
     chat["next_id"] = m_nextChatSessionId;
     chat["sessions"] = nlohmann::json::array();
-    for (const auto& session : m_chatSessions) {
+    for (const auto& sp : m_chatSessions) {
+        const auto& session = *sp;
         nlohmann::json serialized{
             {"id", session.id},
             {"title", session.title},
@@ -1487,10 +1488,12 @@ void Win32IDE::loadIdeSession() {
                     restored.push_back(std::move(session));
                 }
                 if (!restored.empty()) {
-                    m_chatSessions = std::move(restored);
+                    for (auto& s : restored)
+                        m_chatSessions.push_back(
+                            std::make_shared<ChatSessionState>(std::move(s)));
                     m_closedChatSessions.clear();
                     int maxId = 0;
-                    for (const auto& session : m_chatSessions) maxId = std::max(maxId, session.id);
+                    for (const auto& sp : m_chatSessions) maxId = std::max(maxId, sp->id);
                     m_nextChatSessionId = std::max(
                         chat.value("next_id", maxId + 1), maxId + 1);
                     int activeChat = chat.value("active", 0);

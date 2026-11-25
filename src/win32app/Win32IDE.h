@@ -2991,11 +2991,17 @@ public:
     std::unique_ptr<ModelDiscoveryPayload> m_deferredModelDiscovery;
     bool m_modelDiscoveryUpdateDeferred = false;
     std::vector<std::pair<std::string, std::string>> m_chatHistory; // role, message
-    std::vector<ChatSessionState> m_chatSessions;
-    std::vector<ChatSessionState> m_closedChatSessions;
+    // P0: shared_ptr ownership - an in-flight worker callback holds the
+    // session alive by value even if the UI thread closes/clears the list.
+    std::vector<std::shared_ptr<ChatSessionState>> m_chatSessions;
+    std::vector<std::shared_ptr<ChatSessionState>> m_closedChatSessions;
     // P0: responseBuffer is written by the inference worker and read by the
     // UI timer thread (chat smoke) - every access must hold this mutex.
     mutable std::mutex m_responseBufferMutex;
+    // P0: chat session registry (m_chatSessions/m_closedChatSessions) is
+    // mutated by the UI thread and iterated by workers - registry access
+    // holds this mutex. Distinct from m_responseBufferMutex.
+    mutable std::mutex m_chatMutex;
     int m_activeChatSession = -1;
     int m_nextChatSessionId = 1;
 
