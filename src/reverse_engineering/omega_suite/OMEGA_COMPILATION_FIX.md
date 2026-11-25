@@ -1,4 +1,4 @@
-# MASM64 COMPILATION FIX PATCH for omega.asm
+﻿# MASM64 COMPILATION FIX PATCH for omega.asm
 
 This patch resolves the 3 remaining compilation errors:
 
