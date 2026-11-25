@@ -17,12 +17,24 @@ static LRESULT CALLBACK LspEditorKeyProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                                          LPARAM lParam, UINT_PTR idSubclass,
                                          DWORD_PTR dwRefData) {
     (void)idSubclass; (void)dwRefData;
+    // P0: the editor can be destroyed while a subclass message is in flight;
+    // IsWindow filters the dead-HWND call into DefSubclassProc (the
+    // confirmed LspEditorKeyProc+0x5c access violation).
+    if (!IsWindow(hwnd))
+        return DefSubclassProc(hwnd, uMsg, wParam, lParam);
     if (uMsg == WM_KEYDOWN && wParam == VK_F12) {
         auto* self = reinterpret_cast<Win32IDE*>(
             GetPropW(hwnd, L"RawrXD_IDE_PTR"));
         if (self) {
-            self->lspGotoDefinitionAtCursor();
-            return 0;
+            // Reentrancy guard: F12 autorepeat must not re-enter the LSP
+            // request path while a previous definition request is in flight.
+            static thread_local bool s_inDefinition = false;
+            if (!s_inDefinition) {
+                s_inDefinition = true;
+                self->lspGotoDefinitionAtCursor();
+                s_inDefinition = false;
+                return 0;
+            }
         }
     }
     return DefSubclassProc(hwnd, uMsg, wParam, lParam);
