@@ -1141,6 +1141,16 @@ void Win32IDE::saveIdeSession() {
     }
     root["documents"] = docs;
 
+    // Editor cursor/scroll (incremental session restoration, item 7).
+    if (m_hwndEditor) {
+        CHARRANGE sel{};
+        SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+        POINT sp{};
+        SendMessageA(m_hwndEditor, EM_GETSCROLLPOS, 0, (LPARAM)&sp);
+        root["editor_state"] = {{"selStart", (int)sel.cpMin}, {"selEnd", (int)sel.cpMax},
+                                {"scrollX", (int)sp.x}, {"scrollY", (int)sp.y}};
+    }
+
     nlohmann::json chat = nlohmann::json::object();
     chat["active"] = m_activeChatSession;
     chat["next_id"] = m_nextChatSessionId;
@@ -1418,6 +1428,15 @@ void Win32IDE::loadIdeSession() {
         }
         m_activeDocument = -1;
         updateDocumentTabs();
+        // Restore editor cursor/scroll (incremental session restoration, item 7).
+        if (m_hwndEditor && root.contains("editor_state") && root["editor_state"].is_object()) {
+            const auto& es = root["editor_state"];
+            const int s0 = es.value("selStart", 0);
+            const int s1 = es.value("selEnd", 0);
+            SendMessageA(m_hwndEditor, EM_SETSEL, (WPARAM)s0, (LPARAM)s1);
+            POINT sp{es.value("scrollX", 0), es.value("scrollY", 0)};
+            SendMessageA(m_hwndEditor, EM_SETSCROLLPOS, 0, (LPARAM)&sp);
+        }
         if (m_openDocuments.empty()) {
             addDocumentTab(std::string());
             // Still restore dock height/visibility for P08 even with empty docs.
