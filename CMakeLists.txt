@@ -1,6 +1,34 @@
 cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 
+# DEEP2_BUILD_ENFORCE_001 — required Deep2 runtime components must not silently
+# disappear from the build. Fail configuration (not a warning) if any mandatory
+# runtime source is missing, so a partial checkout / bad merge cannot produce a
+# "successful" build with the production inference path silently absent.
+set(_RAWRXD_REQUIRED_DEEP2_SOURCES
+    src/deep2/Deep2Engine.cpp
+    src/deep2/runtime_graph_executor.cpp
+    src/deep2/quant_dot_dispatch.cpp
+    src/deep2/generic_vulkan_matmul.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/op_linear.cpp
+    src/deep2/op_gdn.cpp
+    src/vulkan_compute.cpp
+)
+set(_RAWRXD_MISSING_DEEP2_SOURCES "")
+foreach(_src IN LISTS _RAWRXD_REQUIRED_DEEP2_SOURCES)
+    if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_src}")
+        list(APPEND _RAWRXD_MISSING_DEEP2_SOURCES "${_src}")
+    endif()
+endforeach()
+if(_RAWRXD_MISSING_DEEP2_SOURCES)
+    message(FATAL_ERROR
+        "DEEP2_BUILD_ENFORCE: required runtime source(s) missing: "
+        "${_RAWRXD_MISSING_DEEP2_SOURCES}. The production inference path would "
+        "be silently absent; refusing to configure a partial build.")
+endif()
+message(STATUS "deep2 build enforcement: all required runtime sources present")
+
 # DEEP2_GPU_CODE31_RESET_001 — inject VK lost / Win32 code 31; assert reset seq.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_code31_reset_smoke.cpp" AND
    EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/lavapath/GpuDeviceLostReset.cpp")
