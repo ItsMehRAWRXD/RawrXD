@@ -26,12 +26,13 @@ MultiGPUScheduler::~MultiGPUScheduler() {
     Shutdown();
 }
 
-bool MultiGPUScheduler::Initialize() {
+bool MultiGPUScheduler::Initialize(ExecutionMode defaultMode) {
     std::lock_guard<std::mutex> lock(workerMutex_);
     
     if (initialized_) {
         return true;
     }
+    defaultMode_ = defaultMode;
     
     // Initialize device registry
     gpuRegistry_ = &GPUDeviceRegistry::Instance();
@@ -46,7 +47,7 @@ bool MultiGPUScheduler::Initialize() {
 void MultiGPUScheduler::Shutdown() {
     {
         std::lock_guard<std::mutex> lock(workerMutex_);
-        stop_ = true;
+        stopWorkers_ = true;
         queueCV_.notify_all();
     }
     
