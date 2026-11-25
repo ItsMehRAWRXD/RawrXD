@@ -71,22 +71,31 @@ static bool trace_name_layer(const char * name, int & layer) {
     return false;
 }
 
-static std::vector<int> requested_trace_layers() {
-    std::vector<int> layers;
+static bool requested_trace_layers(std::vector<int> & layers) {
     const char * filter = std::getenv("RAWRXD_REFERENCE_TRACE_LAYERS");
-    if (!filter || !*filter) { layers.push_back(0); return layers; }
+    if (!filter || !*filter) { layers.push_back(0); return true; }
     const char * p = filter;
     while (*p) {
         char * end = nullptr;
         const long value = std::strtol(p, &end, 10);
-        if (end != p && value >= 0 && value <= 46 &&
-            std::find(layers.begin(), layers.end(), static_cast<int>(value)) == layers.end()) {
+        if (end == p || value < 0 || value > 46) return false;
+        if (std::find(layers.begin(), layers.end(), static_cast<int>(value)) == layers.end())
             layers.push_back(static_cast<int>(value));
-        }
-        if (!end || *end == '\0') break;
+        if (*end == '\0') break;
+        if (*end != ',') return false;
         p = end + 1;
     }
-    return layers;
+    return !layers.empty();
+}
+
+static bool required_trace_family(const std::string & name) {
+    static constexpr const char * families[] = {
+        "attn_norm-", "q-", "q_nope-", "q_nope_absorbed-",
+        "q_nope_absorbed_perm-", "q_pe-", "Qcur-", "kv_cmpr_pe-",
+        "kv_cmpr-", "Vcur-", "k_pe-", "Kcur-", "kqv_out-", "ffn_inp-"
+    };
+    for (const char * family : families) if (starts(name.c_str(), family)) return true;
+    return false;
 }
 
 static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
@@ -279,20 +288,42 @@ int main(int argc, char ** argv) {
     if (maxDiff != 0.0f || instrumented.capture.invalid || !coverageOk) { std::fprintf(stderr, "CALIBRATION_FAIL=PARITY_OR_COVERAGE max_logit_diff=%g layers=%zu weights=%zu error=%s\n", maxDiff, instrumented.capture.ids.size(), instrumented.capture.weights.size(), instrumented.capture.error.c_str()); return 6; }
     std::ofstream receipt(fs::path(outDir) / "calibration_receipt.json", std::ios::binary | std::ios::trunc);
     if (!receipt) return 7;
-    const auto traceLayers = requested_trace_layers();
+    std::vector<int> traceLayers;
+    if (!requested_trace_layers(traceLayers)) {
+        std::fprintf(stderr, "CALIBRATION_FAIL=INVALID_TRACE_LAYER_SELECTOR\n");
+        return 7;
+    }
     std::vector<size_t> traceCounts(traceLayers.size(), 0);
+    std::vector<std::map<std::string, size_t>> traceFamilies(traceLayers.size());
     for (const std::string & descriptor : instrumented.capture.trace) {
         const size_t colon = descriptor.find(':');
         if (colon == std::string::npos) continue;
         int layer = -1;
         if (!trace_name_layer(descriptor.substr(0, colon).c_str(), layer)) continue;
         const auto it = std::find(traceLayers.begin(), traceLayers.end(), layer);
-        if (it != traceLayers.end()) ++traceCounts[static_cast<size_t>(it - traceLayers.begin())];
+        if (it != traceLayers.end()) {
+            const size_t index = static_cast<size_t>(it - traceLayers.begin());
+            ++traceCounts[index];
+            if (required_trace_family(descriptor.substr(0, colon)))
+                ++traceFamilies[index][descriptor.substr(0, descriptor.find('-'))];
+        }
     }
     for (size_t i = 0; i < traceLayers.size(); ++i) {
         if (traceCounts[i] == 0) {
             std::fprintf(stderr, "CALIBRATION_FAIL=MISSING_REQUESTED_TRACE_LAYER layer=%d\n", traceLayers[i]);
             return 7;
+        }
+        static constexpr const char * required[] = {
+            "attn_norm", "q", "q_nope", "q_nope_absorbed", "q_nope_absorbed_perm",
+            "q_pe", "Qcur", "kv_cmpr_pe", "kv_cmpr", "Vcur", "k_pe", "Kcur",
+            "kqv_out", "ffn_inp"
+        };
+        for (const char * family : required) {
+            if (traceFamilies[i].find(family) == traceFamilies[i].end()) {
+                std::fprintf(stderr, "CALIBRATION_FAIL=MISSING_TRACE_FAMILY layer=%d family=%s\n",
+                             traceLayers[i], family);
+                return 7;
+            }
         }
     }
     if (traceLayers.size() == 1 && traceLayers[0] == 0 && instrumented.capture.trace.size() < 22) {
