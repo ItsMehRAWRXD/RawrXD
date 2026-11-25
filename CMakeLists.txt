@@ -3117,6 +3117,15 @@ endif()
 # The headers now ship beside the engine in src/deep2/, so a quoted include
 # from src/deep2/ finds them before the include/ path.
 # ============================================================================
+# Deep2 build enforcement: if a product that REQUIRES these sources is requested
+# but the source is missing, fail closed at configure instead of silently
+# omitting the engine/GPU library (which would yield a green build without Deep2).
+if(ENABLE_VULKAN AND NOT EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp)
+    message(FATAL_ERROR "ENABLE_VULKAN=ON but src/deep2/vulkan_compute.cpp is missing")
+endif()
+if(RAWRXD_BUILD_DEEP2_ENGINE AND NOT EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp)
+    message(FATAL_ERROR "RAWRXD_BUILD_DEEP2_ENGINE=ON but src/deep2/Deep2Engine.cpp is missing")
+endif()
 if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
     add_library(rawrxd_gpu_compute STATIC
         src/deep2/vulkan_compute.cpp
