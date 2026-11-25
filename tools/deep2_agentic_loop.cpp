@@ -48,6 +48,7 @@
 #include <direct.h>
 #include <io.h>
 #include <string>
+#include <regex>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -568,8 +569,12 @@ std::string RunCmd(const std::string& cmd, int* exit_code)
     std::string out, err;
     bool timedOut = false;
     int code = -1;
+    // Wrap in cmd.exe /d /c: callers pass shell syntax (cd /d ... && ...,
+    // 2>&1 redirections) that CreateProcess alone does not interpret. The
+    // job object still contains the whole tree (P0 isolation preserved).
+    const std::string wrapped = "cmd.exe /d /c " + cmd;
     if (!rawrxd::agentic::security::JobIsolation::RunIsolated(
-            cmd, std::string(), 0ULL, out, err, code, timedOut))
+            wrapped, std::string(), 0ULL, out, err, code, timedOut))
     {
         *exit_code = -1;
         return "CreateProcess failed";
@@ -3893,9 +3898,74 @@ static int OllamaAgentRun(const Args& args)
         Action action = ParseAction(reply.content + "\n");
         if (!action.valid)
         {
-            messages.push_back({"user", "Invalid command. Reply with exactly one complete TOOL command."});
-            ledger.log_retry(step, "invalid_tool_format", step < args.max_steps);
-            continue;
+            // P0 model-response adapter: normalize ordinary instruct-model
+            // output (markdown-fenced code) into the native write protocol.
+            // One block -> authorized file creation; multiple identical ->
+            // accepted; multiple different -> fail closed (ambiguity).
+            std::vector<std::string> blocks;
+            {
+                static const std::regex fence(
+                    R"(```[A-Za-z0-9_+-]*\s*\n([\s\S]*?)```)");
+                for (std::sregex_iterator it(reply.content.begin(),
+                                             reply.content.end(), fence), end;
+                     it != end; ++it)
+                    blocks.push_back((*it)[1].str());
+            }
+            if (!blocks.empty())
+            {
+                const std::string& first = blocks.front();
+                bool allSame = true;
+                for (const auto& b : blocks)
+                    if (b != first) { allSame = false; break; }
+                // Explicit ambiguity resolution: if the first block contains
+                // every other block (others are truncated/partial variants),
+                // the first is the complete answer.
+                bool firstIsSuperset = allSame;
+                if (!firstIsSuperset) {
+                    firstIsSuperset = true;
+                    for (const auto& b : blocks)
+                        if (b.size() > first.size() ||
+                            first.find(b) == std::string::npos) {
+                            firstIsSuperset = false;
+                            break;
+                        }
+                }
+                if (!allSame && !firstIsSuperset)
+                {
+                    messages.push_back({"user",
+                        "Ambiguous response: multiple different code blocks. "
+                        "Reply with exactly one complete TOOL command."});
+                    ledger.log_retry(step, "ambiguous_code_blocks",
+                                     step < args.max_steps);
+                    continue;
+                }
+                if (!targetExists)
+                {
+                    // CREATE mode: an absent target is an explicit observation;
+                    // authorize it so the write path accepts creation.
+                    const std::string key =
+                        WorkspacePathKey(args.workdir, args.target_file);
+                    if (!key.empty()) readFiles.insert(key);
+                }
+                Action wa;
+                wa.valid = true;
+                wa.tool = "write";
+                wa.arg1 = args.target_file;
+                wa.arg2 = first;
+                action = wa;
+                Logf_("[ollama] response adapter: %zu fenced block(s) -> "
+                      "TOOL write %s (%zu bytes)\n",
+                      blocks.size(), args.target_file.c_str(), first.size());
+            }
+            else
+            {
+                messages.push_back({"user",
+                    "Invalid command. Reply with exactly one complete TOOL "
+                    "command."});
+                ledger.log_retry(step, "invalid_tool_format",
+                                 step < args.max_steps);
+                continue;
+            }
         }
         std::string result;
         int exitCode = 0;
