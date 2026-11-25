@@ -71,6 +71,24 @@ static bool trace_name_layer(const char * name, int & layer) {
     return false;
 }
 
+static std::vector<int> requested_trace_layers() {
+    std::vector<int> layers;
+    const char * filter = std::getenv("RAWRXD_REFERENCE_TRACE_LAYERS");
+    if (!filter || !*filter) { layers.push_back(0); return layers; }
+    const char * p = filter;
+    while (*p) {
+        char * end = nullptr;
+        const long value = std::strtol(p, &end, 10);
+        if (end != p && value >= 0 && value <= 46 &&
+            std::find(layers.begin(), layers.end(), static_cast<int>(value)) == layers.end()) {
+            layers.push_back(static_cast<int>(value));
+        }
+        if (!end || *end == '\0') break;
+        p = end + 1;
+    }
+    return layers;
+}
+
 static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
     auto * c = static_cast<Capture *>(user);
     if (!c || !c->enabled || !t || !t->name) return false;
@@ -87,7 +105,17 @@ static bool capture_eval(struct ggml_tensor * t, bool ask, void * user) {
             if (t->type != GGML_TYPE_F32 || elements == 0) { c->invalid = true; c->error = "reference trace tensor is not readable F32"; return false; }
             std::vector<float> values(elements); p_ggml_backend_tensor_get(t, values.data(), 0, elements * sizeof(float));
             for (float value : values) if (!std::isfinite(value)) { c->invalid = true; c->error = "reference trace tensor is nonfinite"; return false; }
-            c->trace.emplace_back(std::string(t->name) + ":" + std::to_string(elements));
+            std::string descriptor = std::string(t->name) + ":" + std::to_string(elements) + ":dims=";
+            for (int d = 0; d < GGML_MAX_DIMS; ++d) {
+                if (d) descriptor += 'x';
+                descriptor += std::to_string(t->ne[d]);
+            }
+            descriptor += ":strides=";
+            for (int d = 0; d < GGML_MAX_DIMS; ++d) {
+                if (d) descriptor += 'x';
+                descriptor += std::to_string(t->nb[d]);
+            }
+            c->trace.emplace_back(std::move(descriptor));
             c->trace_values.emplace_back(t->name, std::move(values));
             return true;
         }
@@ -251,8 +279,23 @@ int main(int argc, char ** argv) {
     if (maxDiff != 0.0f || instrumented.capture.invalid || !coverageOk) { std::fprintf(stderr, "CALIBRATION_FAIL=PARITY_OR_COVERAGE max_logit_diff=%g layers=%zu weights=%zu error=%s\n", maxDiff, instrumented.capture.ids.size(), instrumented.capture.weights.size(), instrumented.capture.error.c_str()); return 6; }
     std::ofstream receipt(fs::path(outDir) / "calibration_receipt.json", std::ios::binary | std::ios::trunc);
     if (!receipt) return 7;
-    const char * traceFilter = std::getenv("RAWRXD_REFERENCE_TRACE_LAYERS");
-    if ((!traceFilter || !*traceFilter) && instrumented.capture.trace.size() < 22) {
+    const auto traceLayers = requested_trace_layers();
+    std::vector<size_t> traceCounts(traceLayers.size(), 0);
+    for (const std::string & descriptor : instrumented.capture.trace) {
+        const size_t colon = descriptor.find(':');
+        if (colon == std::string::npos) continue;
+        int layer = -1;
+        if (!trace_name_layer(descriptor.substr(0, colon).c_str(), layer)) continue;
+        const auto it = std::find(traceLayers.begin(), traceLayers.end(), layer);
+        if (it != traceLayers.end()) ++traceCounts[static_cast<size_t>(it - traceLayers.begin())];
+    }
+    for (size_t i = 0; i < traceLayers.size(); ++i) {
+        if (traceCounts[i] == 0) {
+            std::fprintf(stderr, "CALIBRATION_FAIL=MISSING_REQUESTED_TRACE_LAYER layer=%d\n", traceLayers[i]);
+            return 7;
+        }
+    }
+    if (traceLayers.size() == 1 && traceLayers[0] == 0 && instrumented.capture.trace.size() < 22) {
         std::fprintf(stderr, "CALIBRATION_FAIL=INCOMPLETE_LAYER0_TRACE count=%zu minimum=22\n", instrumented.capture.trace.size());
         return 7;
     }
