@@ -2219,6 +2219,21 @@ bool VulkanCompute::dispatchQuant(
     DeviceBuf& weights, DeviceBuf& input, DeviceBuf& output,
     const QPush& push)
 {
+    static std::atomic<uint32_t> selectionDiagCount{0};
+    const char* selectionDiagEnv = std::getenv("RAWRXD_Q4K_SELECTION_DIAG");
+    const bool selectionDiag = selectionDiagEnv && selectionDiagEnv[0] == '1' &&
+        selectionDiagEnv[1] == '\0';
+    const uint32_t selectionDiagIndex = selectionDiag
+        ? selectionDiagCount.fetch_add(1, std::memory_order_relaxed) : UINT32_MAX;
+    const bool selectionDiagEmit = selectionDiagIndex < 64u;
+    if (selectionDiagEmit) {
+        std::fprintf(stderr,
+            "Q4K_SELECTION_DIAGNOSTIC dispatchQuant_entered=1 quant_type=%u "
+            "rows=%u cols=%u weight_bytes=%u weights=%d input=%d output=%d\n",
+            push.type, push.rows, push.cols, push.weightBytes,
+            weights ? 1 : 0, input ? 1 : 0, output ? 1 : 0);
+        std::fflush(stderr);
+    }
     const bool traceLargeQ = push.type == 12 && push.rows >= 24576u;
     const auto fail = [&](const char* stage) {
         if (traceLargeQ) {
@@ -2239,6 +2254,18 @@ bool VulkanCompute::dispatchQuant(
     const bool tiledOptIn = tiledEnv && tiledEnv[0] == '1' && tiledEnv[1] == '\0';
     const bool useTiled4x = tiledOptIn && push.type == 12u && push.rows >= 4u &&
         qTiled4xPipeline_ != VK_NULL_HANDLE;
+    if (selectionDiagEmit) {
+        const char* reason = !tiledOptIn ? "env_disabled" :
+            push.type != 12u ? "quant_type_not_q4k" :
+            push.rows < 4u ? "rows_below_4" :
+            qTiled4xPipeline_ == VK_NULL_HANDLE ? "pipeline_unavailable" : "selected";
+        std::fprintf(stderr,
+            "Q4K_SELECTION_DIAGNOSTIC env_enabled=%d tiled_pipeline_valid=%d "
+            "descriptor_compatible=deferred selected_pipeline=%s rejection_reason=%s\n",
+            tiledOptIn ? 1 : 0, qTiled4xPipeline_ != VK_NULL_HANDLE ? 1 : 0,
+            useTiled4x ? "tiled4x" : "reference", reason);
+        std::fflush(stderr);
+    }
     if (!qPipeline_ && !useTiled4x) return fail("Q_PIPELINE");
     if (!weights) return fail("WEIGHT_BUFFER");
     if (!input) return fail("INPUT_BUFFER");
@@ -4588,6 +4615,25 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     DeviceBuf& inputBatch,DeviceBuf& outputBatch,
     uint32_t rows,uint32_t cols,uint32_t batch)
 {
+    static std::atomic<uint32_t> batchDiagCount{0};
+    const char* diagEnv = std::getenv("RAWRXD_Q4K_SELECTION_DIAG");
+    const bool diag = diagEnv && diagEnv[0] == '1' && diagEnv[1] == '\0';
+    const uint32_t diagIndex = diag ? batchDiagCount.fetch_add(1, std::memory_order_relaxed)
+                                    : UINT32_MAX;
+    if (diagIndex < 64u) {
+        const bool four = qBatch4RowPipeline_ != VK_NULL_HANDLE;
+        const bool eight = qBatch8RowPipeline_ != VK_NULL_HANDLE;
+        std::fprintf(stderr,
+            "Q4K_SELECTION_DIAGNOSTIC batch_route_entered=1 rows=%u cols=%u "
+            "batch=%u weight_bytes=%zu q4row_pipeline=%d q8row_pipeline=%d "
+            "selected_pipeline=%s rejection_reason=%s\n",
+            rows, cols, batch, weightBytes, four ? 1 : 0, eight ? 1 : 0,
+            (rows >= 4u && four) ? ((rows >= 8u && eight) ? "batch8row" : "batch4row") : "reference",
+            (!weights || !weightBytes) ? "invalid_weight" :
+            (!rows || !cols || !batch || batch > 4u) ? "invalid_geometry" :
+            (rows < 4u || !four) ? "batch4row_unavailable" : "selected");
+        std::fflush(stderr);
+    }
     if(rows>=4 && qBatch4RowPipeline_) {
         const Q4KBatchTile tile=SelectQ4KBatchTile(
             weights,weightBytes,inputBatch,outputBatch,
