@@ -226,17 +226,32 @@ AgentResult runAgentController(
 
     // F04-V16/V17: initial workspace baseline + source fingerprint for stale
     // build/test receipt invalidation. Bounded to avoid scanning huge trees.
+    bool fingerprintIncomplete = false;  // V17: scan cap hit -> cannot certify
     auto sourceFingerprint = [&]() -> uint64_t {
         uint64_t h = 1469598103934665603ULL;
         std::error_code ec;
         size_t scanned = 0;
+        fingerprintIncomplete = false;
         for (auto it = std::filesystem::recursive_directory_iterator(ws.root(), ec);
              it != std::filesystem::recursive_directory_iterator(); it.increment(ec)) {
             if (ec) break;
-            if (++scanned > 20000) break;
+            if (++scanned > 20000) { fingerprintIncomplete = true; break; }
             if (!it->is_regular_file(ec)) continue;
+            const std::string name = it->path().filename().string();
             const std::string ext = it->path().extension().string();
-            if (ext == ".cpp" || ext == ".cc" || ext == ".h" || ext == ".hpp") {
+            // V17: cover C/C++ sources, assembly, shaders, build/config inputs.
+            bool covered = name == "CMakeLists.txt" || name == "Makefile" ||
+                           name == "meson.build" || name == "BUILD";
+            if (!covered) {
+                for (const char* e : {".cpp", ".cc", ".cxx", ".c", ".h", ".hpp",
+                                      ".asm", ".s", ".S", ".inc", ".inl",
+                                      ".glsl", ".vert", ".frag", ".geom", ".comp",
+                                      ".tesc", ".tese", ".spv", ".cmake", ".in",
+                                      ".json", ".yaml", ".yml"}) {
+                    if (ext == e) { covered = true; break; }
+                }
+            }
+            if (covered) {
                 std::string c;
                 if (readFileStr(it->path().string(), c)) h ^= fnv1a(c);
             }
@@ -250,7 +265,8 @@ AgentResult runAgentController(
     // is a completion REQUEST, not proof. The controller verifies real tool
     // evidence before issuing an authoritative receipt.
     std::map<std::string, uint64_t> writtenHashes;  // path -> content hash at write
-    auto verifyCompletion = [&](std::string& reason) -> bool {
+    auto verifyCompletion = [&](const std::string& summary,
+                                std::string& reason) -> bool {
         const std::string goalLow = lc(cfg.goal);
         const bool wantsWrite =
             goalLow.find("create") != std::string::npos ||
@@ -307,7 +323,35 @@ AgentResult runAgentController(
             if (r.tool == "run_tests") hasTest = true;
             if (r.tool == "run_shell" && r.exitCode == 0) hasRun = true;
         }
-        // F04-V17: a build/test receipt is stale if source changed after it.
+        // V16: a claimed CREATION must reflect an actual content change vs the
+        // initial baseline (a preexisting/unchanged file is not a creation).
+        const std::string sumLow = lc(summary);
+        const bool claimsCreation =
+            sumLow.find("creat") != std::string::npos ||
+            sumLow.find("new file") != std::string::npos ||
+            sumLow.find("added") != std::string::npos;
+        if (claimsCreation && !writtenHashes.empty()) {
+            bool anyChanged = false;
+            for (const auto& kv : writtenHashes) {
+                auto b = baselineHashes.find(kv.first);
+                if (b == baselineHashes.end() || b->second != kv.second) {
+                    anyChanged = true;
+                    break;
+                }
+            }
+            if (!anyChanged) {
+                reason = "claimed creation but no file content actually changed "
+                         "(preexisting/unchanged)";
+                return false;
+            }
+        }
+
+        // V17: a build/test receipt is stale if source changed after it.
+        if (fingerprintIncomplete && lastBuildSrcFp != 0) {
+            reason = "build-input fingerprint incomplete (scan cap reached); cannot "
+                     "certify the build/test";
+            return false;
+        }
         if ((hasBuild || hasTest || hasRun) && lastBuildSrcFp != 0 &&
             lastBuildSrcFp != sourceFingerprint()) {
             reason = "source changed after the last successful build/test; rebuild "
@@ -518,7 +562,7 @@ AgentResult runAgentController(
             }
             // F04-V: independent completion verification against real evidence.
             std::string vreason;
-            if (!verifyCompletion(vreason)) {
+            if (!verifyCompletion(proposed, vreason)) {
                 if (strikes < 3) {
                     ++strikes;
                     if (log)
