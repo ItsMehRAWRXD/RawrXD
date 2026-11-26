@@ -113,6 +113,28 @@ static string RunCmd(const string& cmd) {
     return out;
 }
 
+static BOOL WINAPI CtrlHandler(DWORD t) { if (t == CTRL_C_EVENT || t == CTRL_BREAK_EVENT) g_cancel.store(true); return TRUE; }
+
+// Functional completion: real APIs in source + exe exists + exe launches (bounded).
+static bool VerifyFunctional() {
+    namespace fs = std::filesystem;
+    if (!fs::exists(fs::path(g_ws) / "sysmon.cpp")) return false;
+    if (!SrcHasRealApi()) return false;
+    if (!fs::exists(fs::path(g_ws) / "sysmon.exe")) return false;
+    string cmd = "\"" + g_ws + "\\sysmon.exe\"";
+    vector<wchar_t> w(cmd.begin(), cmd.end()); w.push_back(0);
+    std::wstring wdir(g_ws.begin(), g_ws.end());
+    STARTUPINFOW si{}; si.cb = sizeof(si); PROCESS_INFORMATION pi{};
+    if (!CreateProcessW(nullptr, w.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, wdir.c_str(), &si, &pi))
+        return false;
+    WaitForSingleObject(pi.hProcess, 2000);
+    DWORD code = 0; GetExitCodeProcess(pi.hProcess, &code);
+    const bool alive = (code == STILL_ACTIVE);
+    if (alive) TerminateProcess(pi.hProcess, 0);
+    CloseHandle(pi.hProcess); CloseHandle(pi.hThread);
+    return alive || code == 0;   // launched and did not immediately crash
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -135,6 +157,17 @@ int main(int argc, char** argv) {
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
     g_tel.start = NowS();
+    SetConsoleCtrlHandler(CtrlHandler, TRUE);
+    // Compiler discovery: tell the model the real build environment.
+    string envNote;
+    {
+        const char* vcvars = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat";
+        if (std::filesystem::exists(vcvars))
+            envNote = "\nCOMPILER_ENV: MSVC cl is NOT on PATH. build.cmd MUST call \"" + string(vcvars) +
+                      "\" before cl. Example build.cmd: @echo off / call \"...vcvars64.bat\" >nul 2>&1 / cl /nologo /std:c++17 /EHsc sysmon.cpp /Fe:sysmon.exe /link user32.lib gdi32.lib";
+        else
+            envNote = "\nCOMPILER_ENV: no MSVC found; use g++ (on PATH) if available.";
+    }
 
     const string sys =
         "You are RawrXD, an autonomous software engineer operating a real workstation. "
@@ -148,9 +181,11 @@ int main(int argc, char** argv) {
 
     vector<pair<string,string>> msgs; // role, content
     msgs.push_back({"system", sys});
-    msgs.push_back({"user", "OBJECTIVE: " + objective + "\nWorkspace: " + g_ws + ". Begin."});
+    msgs.push_back({"user", "OBJECTIVE: " + objective + "\nWorkspace: " + g_ws + envNote + ". Begin."});
 
     string finalSummary;
+    int finishRejects = 0;
+    string lastCall; int repeatCount = 0;
     for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
         // Build /api/chat body.
         string body = "{\"model\":\"" + model + "\",\"stream\":false,\"keep_alive\":\"10m\",\"options\":{\"temperature\":0,\"seed\":42},\"messages\":[";
@@ -173,16 +208,25 @@ int main(int argc, char** argv) {
         printf("[turn %d] model_tool=%s\n", turn, tool.empty() ? "(none)" : tool.c_str());
         if (tool.empty()) { msgs.push_back({"user", "You must output exactly one JSON tool call."}); continue; }
         ++g_tel.toolCalls;
+        // Repeated-action detection: identical tool call 3x => corrective feedback.
+        if (!call.empty() && call == lastCall) {
+            if (++repeatCount >= 3) {
+                msgs.push_back({"user", "You are repeating the IDENTICAL tool call. STOP. Take a different action that advances the objective (write the source, then build)."}); 
+                g_tel.corrections++; repeatCount = 0;
+                msgs.push_back({"assistant", content});
+                continue;
+            }
+        } else { lastCall = call; repeatCount = 1; }
         string result;
         if (tool == "finish") {
-            bool src = std::filesystem::exists(std::filesystem::path(g_ws) / "sysmon.cpp");
-            bool exe = std::filesystem::exists(std::filesystem::path(g_ws) / "sysmon.exe");
-            bool api = SrcHasRealApi();
-            if (src && exe && api) { finalSummary = ExtractJsonString(call, "summary"); printf("FINISH: %s\n", finalSummary.c_str()); break; }
-            printf("  finish REJECTED (src=%d exe=%d real_api=%d) — continue\n", (int)src, (int)exe, (int)api);
+            if (VerifyFunctional()) { finalSummary = ExtractJsonString(call, "summary"); printf("FINISH: %s\n", finalSummary.c_str()); break; }
+            ++finishRejects; ++g_tel.corrections;
+            printf("  finish REJECTED (#%d) — functional check failed; continue\n", finishRejects);
             msgs.push_back({"assistant", content});
-            msgs.push_back({"user", "Completion rejected: sysmon.cpp and sysmon.exe must both exist. Create sysmon.cpp, write build.cmd, run it, fix errors, then finish."});
-            g_tel.corrections++;
+            if (finishRejects >= 3)
+                msgs.push_back({"user", "You have claimed completion 3+ times without a working app. Do NOT call finish. Use run to invoke build.cmd (it must call vcvars64.bat first), READ the compiler errors, WRITE a corrected sysmon.cpp that uses GetSystemTimes/GlobalMemoryStatusEx/GetDiskFreeSpaceExW/EnumDisplayDevicesW, and only finish after sysmon.exe launches."});
+            else
+                msgs.push_back({"user", "Completion rejected: sysmon.cpp must use the Win32 stat APIs, build.cmd must call vcvars64.bat then cl, and sysmon.exe must launch. Continue working."});
             continue;
         }
         else if (tool == "write") {
@@ -216,10 +260,8 @@ int main(int argc, char** argv) {
     printf("TOOL_CALLS=%d TOOL_OK=%d TOOL_FAIL=%d CORRECTIONS=%d\n", g_tel.toolCalls, g_tel.toolOk, g_tel.toolFail, g_tel.corrections);
     printf("ELAPSED_S=%.1f FINISHED=%s\n", el, finalSummary.empty() ? "no" : "yes");
     // Evidence-based completion: a source file exists and an exe was produced.
-    bool exe = std::filesystem::exists(std::filesystem::path(g_ws) / "sysmon.exe");
-    bool src = std::filesystem::exists(std::filesystem::path(g_ws) / "sysmon.cpp");
-    bool api = SrcHasRealApi();
-    printf("EVIDENCE src=%d exe=%d real_api=%d\n", (int)src, (int)exe, (int)api);
-    printf("RESULT=%s\n", (src && exe && api) ? "PASS" : "INCOMPLETE");
-    return (src && exe) ? 0 : 1;
+    bool func = VerifyFunctional();
+    printf("EVIDENCE functional=%d\n", (int)func);
+    printf("RESULT=%s\n", func ? "PASS" : "INCOMPLETE");
+    return func ? 0 : 1;
 }
