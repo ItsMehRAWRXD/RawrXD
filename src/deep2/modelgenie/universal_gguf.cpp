@@ -556,7 +556,12 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".ssm_a") != std::string::npos) return Role::SsmA;
     if (n.find(".ssm_conv1d.weight") != std::string::npos) return Role::SsmConv1dW;
     if (n.find(".ssm_conv1d.bias") != std::string::npos) return Role::SsmConv1dB;
-    if (n.find(".ssm_dt") != std::string::npos) return Role::SsmDtB;
+    // Architecture-safe: match .ssm_dt as a whole name component
+    // (.ssm_dt.weight / .ssm_dt.bias / exact .ssm_dt), not a bare substring, so
+    // .ssm_d and unrelated names are unaffected.
+    if (n.find(".ssm_dt.") != std::string::npos ||
+        (n.size() >= 8 && n.compare(n.size() - 8, 8, ".ssm_dt") == 0))
+        return Role::SsmDtB;
     if (n.find(".ssm_d") != std::string::npos) return Role::SsmD;
     if (n.find(".ssm_in.weight") != std::string::npos) return Role::SsmIn;
     if (n.find(".ssm_out.weight") != std::string::npos) return Role::SsmOut;
