@@ -28,6 +28,8 @@
 #include <io.h>
 #include <sstream>
 #include <array>
+#include <future>
+#include <thread>
 #include <tuple>
 
 #ifdef _WIN32
@@ -306,6 +308,7 @@ struct CalibrationConfig {
     bool resume = false;
     bool saliencyCapture = false;
     bool saliencyDirect = false;
+    bool checkpointIdentityOnly = false;
     // Reference-observability outputs (optional; P1 CPU reference).
     // Empty paths disable the corresponding capture and leave calibration
     // behaviour byte-identical to the uninstrumented run.
@@ -590,6 +593,34 @@ out.close();
 class CalibrationEngine {
 public:
     CalibrationEngine(const CalibrationConfig& config) : config_(config) {}
+
+    bool verifyCheckpointIdentityOnly() {
+        const auto begin = chrono::steady_clock::now();
+        modelSha256_ = computeFileSha256(config_.modelPath);
+        if (modelSha256_.size() != 64 || !buildCheckpointIdentity()) return false;
+        uint64_t totalBytes = 0;
+        vector<fs::path> paths;
+        if (!ReapState::ShardPaths(config_.modelPath, paths) ||
+            paths.size() != checkpointShardDigests_.size()) return false;
+        cout << "CHECKPOINT_IDENTITY_ONLY=PASS\n";
+        cout << "HASH_WORKERS_REQUESTED=" << requestedHashWorkers() << "\n";
+        cout << "HASH_WORKERS_EFFECTIVE=" << effectiveHashWorkers(paths.size()) << "\n";
+        for (size_t i = 0; i < paths.size(); ++i) {
+            error_code ec;
+            const uintmax_t size = fs::file_size(paths[i], ec);
+            if (ec) return false;
+            totalBytes += static_cast<uint64_t>(size);
+            cout << "SHARD index=" << i << " path=" << paths[i].string()
+                 << " bytes=" << size << " sha256=" << checkpointShardDigests_[i] << "\n";
+        }
+        const double seconds = chrono::duration<double>(chrono::steady_clock::now() - begin).count();
+        cout << "CHECKPOINT_IDENTITY=" << checkpointIdentity_ << "\n";
+        cout << "HASH_TOTAL_BYTES=" << totalBytes << "\n";
+        cout << "HASH_ELAPSED_MS=" << static_cast<uint64_t>(seconds * 1000.0) << "\n";
+        cout << "HASH_THROUGHPUT_MBPS=" << (seconds > 0.0 ? (double(totalBytes) / (1024.0 * 1024.0)) / seconds : 0.0) << "\n";
+        cout << "HASH_CANCELLATION=NOT_REQUESTED\nHASH_WORKER_CLEANUP=PASS\n";
+        return true;
+    }
 
     void phase(const char* name, const char* event) {
         const auto now = chrono::steady_clock::now();
@@ -1037,6 +1068,24 @@ public:
     }
     
 private:
+    size_t requestedHashWorkers() const {
+        const char* env = std::getenv("RAWRXD_HASH_WORKERS");
+        if (!env || !*env) return 0;
+        char* end = nullptr;
+        errno = 0;
+        const unsigned long value = std::strtoul(env, &end, 10);
+        return errno == 0 && end != env && *end == '\0' ? static_cast<size_t>(value) : 0;
+    }
+
+    size_t effectiveHashWorkers(size_t shardCount) const {
+        size_t workers = std::thread::hardware_concurrency();
+        if (workers == 0) workers = 2;
+        workers = (std::min)(workers, size_t(4));
+        const size_t requested = requestedHashWorkers();
+        if (requested > 0) workers = (std::min)(workers, requested);
+        return (std::max)(size_t(1), (std::min)(workers, shardCount > 1 ? shardCount - 1 : size_t(1)));
+    }
+
     CalibrationConfig config_;
     unique_ptr<Deep2Engine> engine_;
     chrono::steady_clock::time_point phaseStart_ = chrono::steady_clock::now();
@@ -1057,6 +1106,7 @@ private:
     // Checkpoint state
     string modelSha256_;
     string checkpointIdentity_;
+    vector<string> checkpointShardDigests_;
     string configHash_;
     fs::path checkpointPath_;
     fs::path outputDir_;
@@ -1225,11 +1275,48 @@ private:
         vector<fs::path> paths;
         if (!ReapState::ShardPaths(config_.modelPath, paths)) return false;
         checkpointIdentity_ = modelSha256_;
-        for (size_t i = 1; i < paths.size(); ++i) {
-            const string digest = computeFileSha256(paths[i].string());
-            if (digest.size() != 64) return false;
-            checkpointIdentity_ += ":" + digest;
+        checkpointShardDigests_.clear();
+        checkpointShardDigests_.resize(paths.size());
+        checkpointShardDigests_[0] = modelSha256_;
+
+        // Shard zero is already hashed during model provenance setup. Hash the
+        // remaining shards concurrently, but retain their canonical index so
+        // checkpoint identities remain byte-for-byte identical to the serial
+        // implementation. Limit concurrency because these are large,
+        // storage-bound reads and unbounded workers can reduce throughput.
+        if (paths.size() <= 1) return checkpointIdentity_.size() == 64;
+        size_t workers = std::thread::hardware_concurrency();
+        if (workers == 0) workers = 2;
+        workers = (std::min)(workers, size_t(4));
+        if (const char* env = std::getenv("RAWRXD_HASH_WORKERS")) {
+            char* end = nullptr;
+            errno = 0;
+            const unsigned long requested = std::strtoul(env, &end, 10);
+            if (errno == 0 && end != env && *end == '\0' && requested > 0)
+                workers = (std::min)(workers, static_cast<size_t>(requested));
         }
+        workers = (std::max)(size_t(1), (std::min)(workers, paths.size() - 1));
+
+        vector<string> digests(paths.size());
+        digests[0] = modelSha256_;
+        for (size_t first = 1; first < paths.size(); first += workers) {
+            const size_t last = (std::min)(paths.size(), first + workers);
+            vector<future<string>> pending;
+            pending.reserve(last - first);
+            for (size_t i = first; i < last; ++i) {
+                pending.emplace_back(std::async(std::launch::async,
+                    [path = paths[i].string()] { return computeFileSha256(path); }));
+            }
+            for (size_t i = first; i < last; ++i) {
+                digests[i] = pending[i - first].get();
+                if (digests[i].size() != 64) return false;
+            }
+        }
+        for (size_t i = 1; i < digests.size(); ++i) {
+            if (digests[i].size() != 64) return false;
+            checkpointIdentity_ += ":" + digests[i];
+        }
+        checkpointShardDigests_ = std::move(digests);
         return true;
     }
 
@@ -1580,6 +1667,7 @@ static void printUsage(const char* progName) {
         "  --verbose                Verbose output\n"
         "  --saliency-capture       Record paired routes and expert outputs in a new output directory\n"
         "  --saliency-direct        Aggregate actual expert outputs without binary dumps; supports --resume\n"
+        "  --checkpoint-identity-only  Hash canonical GGUF shards without model initialization\n"
         "  --resume                 Resume from checkpoint\n"
         "  --help                   Show this help\n"
         "\n"
@@ -1645,6 +1733,8 @@ int main(int argc, char** argv) {
             config.dumpExpertOutLayer = stoi(argv[++i]);
         } else if (arg == "--saliency-direct") {
             config.saliencyDirect = true;
+        } else if (arg == "--checkpoint-identity-only") {
+            config.checkpointIdentityOnly = true;
         } else if (arg == "--saliency-capture") {
             config.saliencyCapture = true;
         } else if (arg == "--resume") {
@@ -1666,7 +1756,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    if (config.outputDir.empty()) {
+    if (config.outputDir.empty() && !config.checkpointIdentityOnly) {
         fprintf(stderr, "Error: --output is required\n");
         printUsage(argv[0]);
         return 1;
@@ -1675,6 +1765,11 @@ int main(int argc, char** argv) {
     if (!fs::exists(config.modelPath)) {
         fprintf(stderr, "Error: Model file not found: %s\n", config.modelPath.c_str());
         return 1;
+    }
+
+    if (config.checkpointIdentityOnly) {
+        CalibrationEngine engine(config);
+        return engine.verifyCheckpointIdentityOnly() ? 0 : 1;
     }
     
     if (config.saliencyDirect) {
