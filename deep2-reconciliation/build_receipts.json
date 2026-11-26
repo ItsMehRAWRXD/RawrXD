@@ -1,0 +1,8 @@
+{
+  "schema": "deep2-build-receipt-v1",
+  "status": "BLOCKED",
+  "configure": {"status": "PASS", "generator": "Ninja", "vulkan_sdk": "1.4.357"},
+  "requested_targets": ["deep2_engine_lib", "deep2_parity_trace", "deep2_benchmark"],
+  "build": {"status": "FAIL", "exit_code": 1, "log": "deep2-reconciliation/build_engine.log", "failure": "vulkan-shaders-gen external-project configure cannot find D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include"},
+  "revision": "f51af405a0f0ca8c295443d18031f9fb71b14537"
+}

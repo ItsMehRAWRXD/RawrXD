@@ -1,0 +1,12 @@
+{
+  "schema": "deep2-transplant-receipt-v1",
+  "status": "NO_TRANSPLANTS_COMMITTED",
+  "reason": "Reconciliation did not establish a task-owned upstream delta that can be safely transplanted before the affected-target build is unblocked.",
+  "source_manifest": "deep2-reconciliation/upstream_source_manifest.json",
+  "upstream_roots": [
+    "C:/Users/Garrett/AppData/Local/Temp/Deep2-Upstream/ollama",
+    "C:/Users/Garrett/AppData/Local/Temp/Deep2-Upstream/llama.cpp"
+  ],
+  "baseline_commit": "f51af405a0f0ca8c295443d18031f9fb71b14537",
+  "packages": []
+}

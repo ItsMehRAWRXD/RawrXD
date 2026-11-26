@@ -1,0 +1,7 @@
+{
+  "schema": "deep2-benchmark-receipt-v1",
+  "status": "NOT_RUN",
+  "reason": "Benchmark executables were not produced because the affected build stopped during external-project configuration.",
+  "hardware": ["AMD Radeon AI PRO R9700", "AMD Radeon RX 7800 XT"],
+  "revision": "f51af405a0f0ca8c295443d18031f9fb71b14537"
+}

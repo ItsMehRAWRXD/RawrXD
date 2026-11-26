@@ -1,0 +1,9 @@
+{
+  "schema": "deep2-blocker-ledger-v1",
+  "status": "OPEN",
+  "blockers": [
+    {"id": "BUILD-EXT-001", "scope": "affected Deep2 targets", "detail": "vulkan-shaders-gen configure inherits a stale absolute RawrXD-ModelLoader include path D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include", "evidence": "deep2-reconciliation/build_engine.log", "owner": "build integration"},
+    {"id": "PARITY-001", "scope": "B06/B07 certification", "detail": "real-model numerical parity is untested because no affected executable was built", "evidence": "deep2-reconciliation/parity_receipts.json", "owner": "Deep2 runtime"},
+    {"id": "BENCH-001", "scope": "R9700/RX7800XT performance", "detail": "hardware benchmark is untested because no affected executable was built", "evidence": "deep2-reconciliation/benchmark_receipts.json", "owner": "Deep2 runtime"}
+  ]
+}
