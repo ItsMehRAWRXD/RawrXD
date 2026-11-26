@@ -16,7 +16,13 @@
     "generic_path_tiled4x_selector": "src/deep2/vulkan_compute.cpp:2238 (dispatchQuant, gated RAWRXD_DEEP2_ENABLE_TILED4X)",
     "tiled4x_kernel": "src/deep2/shaders/deep2_qgemv_tiled4x.comp (8038 B) + .spv (8132 B)",
     "tiled4x_pipeline_created": "src/deep2/vulkan_compute.cpp:762-765",
-    "gap": "Q4_K decode uses DispatchGEMVFusedQ4KT (fused), which never calls dispatchQuant; tiled4x is unreachable from the decode path (REC-15 PASS, REC-18 OPEN)"
+    "gap": "Q4_K decode uses DispatchGEMVFusedQ4KT (fused), which never calls dispatchQuant; tiled4x is unreachable from the decode path (REC-15 PASS, REC-18 OPEN)",
+    "two_layer_dependency": {
+      "adapter_layer": "src/deep2/vulkan_compute.cpp dispatchQuant (has tiled4x selector + qTiled4xPipeline_)",
+      "backend_layer": "src/vulkan_fwd_q4k_fused.cpp DispatchGEMVFusedQ4KT (real decode GEMV; NO tiled4x)",
+      "adapter_forwards": "src/deep2/vulkan_compute_adapter_fused.cpp:262 -> backend_",
+      "consequence": "tiled4x must be PORTED to the backend VulkanCompute (pipeline + selector in src/vulkan_fwd_q4k_fused.cpp / backend header) OR the decode must route through the adapter dispatchQuant. This is a newly discovered cross-layer dependency (REC-16 scope expansion)."
+    }
   },
   "remaining_packages": [
     {"id":"REC-16","desc":"reconcile tiled4x descriptor layout + push constants with fused Q4K (QPush vs fused pc)","status":"OPEN","evidence":"vulkan_fwd_q4k_fused.cpp:207-212 vs vulkan_compute.cpp:2298-2310"},
