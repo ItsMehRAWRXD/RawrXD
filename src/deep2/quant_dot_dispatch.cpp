@@ -197,7 +197,13 @@ void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
 bool EndBatchImpl()
 {
     if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
-    if (!g_batch_active) return false;
+    if (!g_batch_active) {
+        // BP-03C: (Inactive dispatcher, Active backend) -> reconcile by
+        // completing the matching GPU batch so ownership releases across all
+        // three layers. Never finalizes an unrelated or nonexistent batch.
+        if (Gpu().QuantBatchActive()) return Gpu().EndQuantDotBatch();
+        return false;
+    }
     g_batch_active = false;
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);

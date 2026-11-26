@@ -221,6 +221,9 @@ public:
     void SetWeightCacheRetention(bool enabled) { weight_cache_retention_ = enabled; }
     bool WeightCacheRetention() const { return weight_cache_retention_; }
     bool weight_cache_retention_ = false;
+    // BP-03C: authoritative backend batch-ownership query so the dispatcher
+    // can reconcile an active GPU batch when its own flag was cleared early.
+    bool QuantBatchActive() const { return quant_batch_active_; }
     // D1: the batch descriptor-ring capacity (kQuantBatchMaxSets).
     static constexpr uint32_t QuantDotBatchCapacity() { return kQuantBatchMaxSets; }
 
