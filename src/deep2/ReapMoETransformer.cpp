@@ -302,6 +302,17 @@ bool isProjection(const std::string& name, const char* part) {
     return name.find(".ffn_" + std::string(part) + "_exps.weight") != std::string::npos;
 }
 
+// Per-expert bias tensors (e.g. gpt-oss ffn_{gate,up,down}_exps.bias) carry one
+// contiguous block per expert on the same trailing expert axis as the packed
+// projections (dims.back() == packed expert count). They must be sliced by the
+// retained expert set exactly like projections, otherwise the rewrite is
+// rejected as an unsupported expert layout. exp_probs_b.bias is a router bias
+// and is intentionally excluded (it does not contain "_exps.bias").
+bool isExpertBias(const std::string& name) {
+    return name.find(".ffn_") != std::string::npos &&
+           name.find("_exps.bias") != std::string::npos;
+}
+
 // GGUF dimension layout for packed MoE tensors:
 //   GGUF/ggml stores dimensions slowest-varying last. For Kimi K2 packed expert
 //   projections the expert dimension is dims.back() (384), and experts are laid
@@ -673,6 +684,7 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
             }
             const bool expertTensor = isProjection(tensor.name, "gate") ||
                 isProjection(tensor.name, "up") || isProjection(tensor.name, "down") ||
+                isExpertBias(tensor.name) ||
                 tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
                 tensor.name.find(".exp_probs_b.bias") != std::string::npos;
             if (expertTensor && (tensor.dims.empty() || !bank.ObserveAxis(tensor.dims.back()))) {
@@ -784,7 +796,8 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         }
         for (const auto& tensor : shard.tensors) {
             const bool projection=isProjection(tensor.name,"gate") ||
-                isProjection(tensor.name,"up") || isProjection(tensor.name,"down");
+                isProjection(tensor.name,"up") || isProjection(tensor.name,"down") ||
+                isExpertBias(tensor.name);
             const bool router=tensor.name.find(".ffn_gate_inp.weight")!=std::string::npos ||
                 tensor.name.find(".exp_probs_b.bias")!=std::string::npos;
             const bool unsupported=tensor.name.find(".ffn_")!=std::string::npos &&
@@ -900,7 +913,7 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
         for (const auto& tensor : shard.tensors) {
             TensorDesc out = tensor;
             uint32_t layer = 0;
-            const bool projection = isProjection(tensor.name, "gate") || isProjection(tensor.name, "up") || isProjection(tensor.name, "down");
+            const bool projection = isProjection(tensor.name, "gate") || isProjection(tensor.name, "up") || isProjection(tensor.name, "down") || isExpertBias(tensor.name);
             const bool router = tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
                                 tensor.name.find(".exp_probs_b.bias") != std::string::npos;
             const bool expertTensor = projection || router || tensor.name.find(".ffn_") != std::string::npos && tensor.name.find("_exps.") != std::string::npos;
@@ -978,7 +991,7 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
             }
             std::ifstream in(shard.path, std::ios::binary);
             if (!in) { result.error = "source shard reopen failed"; return result; }
-            const bool projection = isProjection(tensor.name, "gate") || isProjection(tensor.name, "up") || isProjection(tensor.name, "down");
+            const bool projection = isProjection(tensor.name, "gate") || isProjection(tensor.name, "up") || isProjection(tensor.name, "down") || isExpertBias(tensor.name);
             const bool router = tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
                                 tensor.name.find(".exp_probs_b.bias") != std::string::npos;
             const auto original = std::find_if(shard.tensors.begin(), shard.tensors.end(), [&](const TensorDesc& x){ return x.name == tensor.name; });
