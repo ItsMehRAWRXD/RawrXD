@@ -217,8 +217,24 @@ static InferenceResult deep2Complete(Deep2Engine& engine,
 }
 
 // Track E: true if `text` contains at least one COMPLETE, balanced JSON object
-// (a finished action). Used to end a decode turn early instead of generating the
-// full token budget once the model has emitted a complete tool call / final.
+// that is a SCHEMA-VALID action (a known tool call or a final). Used to end a
+// decode turn early once the model has emitted a finished action -- not merely
+// the first balanced object (which may be unrelated reasoning JSON). Mirrors the
+// controller's resolveCall/isFinal rules so early-stop and the controller agree.
+static bool isKnownToolName(const std::string& n) {
+    static const std::set<std::string> known = {
+        "list_repo", "read_file", "search_text", "git_status", "write_file",
+        "run_build", "run_tests", "edit_files", "git_diff", "run_shell"};
+    return known.count(n) > 0;
+}
+static bool isFinalActionName(const std::string& a) {
+    return a == "final" || a == "finish" || a == "done" || a == "final_answer" ||
+           a == "result";
+}
+static std::string lowerStr(std::string s) {
+    for (auto& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return s;
+}
 static bool hasCompleteJsonObject(const std::string& text) {
     const size_t n = text.size();
     size_t i = 0;
@@ -242,7 +258,16 @@ static bool hasCompleteJsonObject(const std::string& text) {
         if (depth == 0 && j <= n && j > i) {
             try {
                 const json o = json::parse(text.substr(i, j - i));
-                if (o.is_object()) return true;
+                if (o.is_object()) {
+                    std::string action, tool;
+                    if (o.contains("action") && o["action"].is_string())
+                        action = lowerStr(o["action"].get<std::string>());
+                    if (o.contains("tool") && o["tool"].is_string())
+                        tool = lowerStr(o["tool"].get<std::string>());
+                    if (isFinalActionName(action) || isKnownToolName(action) ||
+                        isKnownToolName(tool))
+                        return true;  // schema-valid finished action
+                }
             } catch (...) {
             }
             i = j;
