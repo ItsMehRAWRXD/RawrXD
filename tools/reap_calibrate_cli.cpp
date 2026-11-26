@@ -43,6 +43,7 @@
 #include "deep2/ReapCapturePolicy.hpp"
 #include "deep2/ReapCalibrationState.hpp"
 #include "deep2/ReapShardIdentity.hpp"
+#include "deep2/ModelIdentity.hpp"
 #include "deep2/ReapSaliencyAccumulator.hpp"
 #include "Deep2Engine.h"
 #include "ChatTemplate.hpp"
@@ -306,6 +307,7 @@ struct CalibrationConfig {
     bool resume = false;
     bool saliencyCapture = false;
     bool saliencyDirect = false;
+    bool identityOnly = false;
     // Reference-observability outputs (optional; P1 CPU reference).
     // Empty paths disable the corresponding capture and leave calibration
     // behaviour byte-identical to the uninstrumented run.
@@ -321,6 +323,43 @@ struct CalibrationConfig {
     string dumpExpertOutPath;
     int dumpExpertOutLayer = -1;
 };
+
+static int runStructuralBeacon(const std::string& modelPath) {
+    std::vector<std::filesystem::path> shards;
+    if (!ReapState::ShardPaths(modelPath, shards) || shards.empty()) {
+        std::fprintf(stderr, "Beaconism: shard discovery failed\n");
+        return 1;
+    }
+    const auto metadata = Deep2::GGUFLoader::LoadMetadata(shards.front().string().c_str());
+    if (!metadata.success) {
+        std::fprintf(stderr, "Beaconism: metadata load failed: %s\n", metadata.error.c_str());
+        return 1;
+    }
+    uint32_t expertTensorCount = 0;
+    for (const auto& tensor : metadata.tensors) {
+        if (tensor.name.find(".experts.") != std::string::npos ||
+            tensor.name.find(".expert.") != std::string::npos ||
+            tensor.name.find("_exps") != std::string::npos)
+            ++expertTensorCount;
+    }
+    ModelIdentity identity;
+    if (!ModelIdentity::BuildStructural(
+            shards, metadata.metadata.architecture,
+            static_cast<uint32_t>(metadata.tensors.size()), expertTensorCount,
+            metadata.metadata.numExperts, metadata.metadata.numExpertsPerToken,
+            metadata.metadata.numLayers, identity)) {
+        std::fprintf(stderr, "Beaconism: structural beacon construction failed\n");
+        return 1;
+    }
+    std::printf("BEACONISM_SCHEMA=2\nIDENTITY_KIND=metadata_structural\n");
+    std::printf("BEACON_ID=%s\nSHARDS=%u\nTENSORS=%u\nEXPERT_TENSORS=%u\n",
+                identity.beaconId.c_str(), identity.shardCount,
+                identity.tensorCount, identity.expertTensorCount);
+    std::printf("TOTAL_BYTES=%llu\nMODEL_SHA256=null\nFULL_CONTENT_HASH_REQUIRED=0\n",
+                static_cast<unsigned long long>(identity.totalBytes));
+    std::printf("PAYLOAD_BYTES_READ=0\nGPU_INITIALIZED=0\nCALIBRATION_STARTED=0\n");
+    return 0;
+}
 
 // ---------------------------------------------------------------------------
 // Reference logits observer (P1). Copies each pre-sampling logits buffer
@@ -663,6 +702,7 @@ public:
         
         // Get model info
         const auto& modelWeights = engine_->getModelWeights();
+        modelArchitecture_ = modelWeights.architecture;
         modelInfo_.numLayers = static_cast<uint32_t>(modelWeights.numLayers);
         modelInfo_.hiddenDim = static_cast<uint32_t>(modelWeights.hiddenDim);
         modelInfo_.numExperts = static_cast<uint32_t>(modelWeights.numExperts);
@@ -1056,6 +1096,7 @@ private:
     
     // Checkpoint state
     string modelSha256_;
+    string modelArchitecture_;
     string checkpointIdentity_;
     string configHash_;
     fs::path checkpointPath_;
@@ -1224,6 +1265,17 @@ private:
     bool buildCheckpointIdentity() {
         vector<fs::path> paths;
         if (!ReapState::ShardPaths(config_.modelPath, paths)) return false;
+        const char* beacon = std::getenv("RAWRXD_BEACONISM");
+        if (beacon && beacon[0] == '1' && beacon[1] == '\0') {
+            ModelIdentity identity;
+            if (!ModelIdentity::BuildStructural(paths, modelArchitecture_,
+                    static_cast<uint32_t>(modelInfo_.numLayers), 0,
+                    modelInfo_.numExperts, modelInfo_.numActiveExperts,
+                    modelInfo_.numLayers, identity)) return false;
+            checkpointIdentity_ = "beacon:v2:" + identity.beaconId;
+            modelSha256_.clear();
+            return true;
+        }
         checkpointIdentity_ = modelSha256_;
         for (size_t i = 1; i < paths.size(); ++i) {
             const string digest = computeFileSha256(paths[i].string());
@@ -1581,6 +1633,7 @@ static void printUsage(const char* progName) {
         "  --saliency-capture       Record paired routes and expert outputs in a new output directory\n"
         "  --saliency-direct        Aggregate actual expert outputs without binary dumps; supports --resume\n"
         "  --resume                 Resume from checkpoint\n"
+        "  --checkpoint-identity-only  Emit structural Beaconism identity without engine/GPU init\n"
         "  --help                   Show this help\n"
         "\n"
         "Output:\n"
@@ -1649,6 +1702,8 @@ int main(int argc, char** argv) {
             config.saliencyCapture = true;
         } else if (arg == "--resume") {
             config.resume = true;
+        } else if (arg == "--checkpoint-identity-only") {
+            config.identityOnly = true;
         } else if (arg == "--help" || arg == "-h") {
             printUsage(argv[0]);
             return 0;
@@ -1664,6 +1719,10 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Error: --model is required\n");
         printUsage(argv[0]);
         return 1;
+    }
+
+    if (config.identityOnly) {
+        return runStructuralBeacon(config.modelPath);
     }
     
     if (config.outputDir.empty()) {

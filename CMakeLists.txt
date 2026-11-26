@@ -3307,7 +3307,7 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     if(MSVC)
         target_compile_options(rawrxd_gpu_compute PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     else()
-        target_compile_options(rawrxd_gpu_compute PRIVATE -std:c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+        target_compile_options(rawrxd_gpu_compute PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
     endif()
     target_compile_definitions(rawrxd_gpu_compute PRIVATE
         NOMINMAX _CRT_SECURE_NO_WARNINGS DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
@@ -3687,7 +3687,11 @@ endforeach()
         if(TARGET rawrxd_compression_core)
             target_link_libraries(deep2_engine_lib PUBLIC rawrxd_compression_core)
         endif()
-        target_compile_options(deep2_engine_lib PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        if(MSVC)
+            target_compile_options(deep2_engine_lib PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        else()
+            target_compile_options(deep2_engine_lib PRIVATE -std=c++20 -fexceptions -mavx2 -mfma -mf16c $<$<CONFIG:Release>:-O2>)
+        endif()
         target_compile_definitions(deep2_engine_lib PRIVATE
             NOMINMAX _CRT_SECURE_NO_WARNINGS
             DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
@@ -6471,6 +6475,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_calibrate_cli.cpp" AND
    TARGET deep2_engine_lib)
     add_executable(reap-calibrate tools/reap_calibrate_cli.cpp)
     target_link_libraries(reap-calibrate PRIVATE deep2_engine_lib bcrypt)
+    if(WIN32)
+        target_link_libraries(reap-calibrate PRIVATE dxgi)
+    endif()
     target_include_directories(reap-calibrate PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/include
