@@ -5685,7 +5685,15 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (!in.bName.empty() && in.bName[0] != '<') {
                     auto it = act.find(in.bName);
                     if (it != act.end()) add = &it->second;
-                    else { last_error_ = "residualadd: addend '" + in.bName + "' missing"; return false; }
+                    else {
+                        // PF-01/02 diagnostic: reveal what the producer actually
+                        // published (no bypass, no substitute tensor).
+                        std::string keys;
+                        for (const auto& kv : act) { if (!keys.empty()) keys += ','; keys += kv.first; }
+                        last_error_ = "residualadd: addend '" + in.bName +
+                                      "' missing; arena=[" + keys + "]";
+                        return false;
+                    }
                 }
                 const size_t n = std::max(resid->size(), add->size());
                 if (n == 0) { last_error_ = "residualadd: empty operands"; return false; }

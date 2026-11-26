@@ -556,7 +556,7 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".ssm_a") != std::string::npos) return Role::SsmA;
     if (n.find(".ssm_conv1d.weight") != std::string::npos) return Role::SsmConv1dW;
     if (n.find(".ssm_conv1d.bias") != std::string::npos) return Role::SsmConv1dB;
-    if (n.find(".ssm_dt.bias") != std::string::npos) return Role::SsmDtB;
+    if (n.find(".ssm_dt") != std::string::npos) return Role::SsmDtB;
     if (n.find(".ssm_d") != std::string::npos) return Role::SsmD;
     if (n.find(".ssm_in.weight") != std::string::npos) return Role::SsmIn;
     if (n.find(".ssm_out.weight") != std::string::npos) return Role::SsmOut;
@@ -700,7 +700,12 @@ void DetectArch(ModelSpec& s, const std::vector<TensorRec>& tensors) {
     // The previous branch returned here after pushing "Deep2 has no SSM scan
     // primitive yet". That note is stale: Op::SsmScan and Executor::OpSsmScan
     // now exist, so the SSM graph is built and executed.
-    if (hasAny(".ssm_in.weight")) {
+    if (hasAny(".ssm_in.weight") || hasAny(".ssm_out.weight")) {
+        // Kimi/qwen35 SSM blocks expose ssm_out (and sometimes only ssm_out,
+        // not ssm_in). Detecting either keeps the model on the SSM-hybrid path
+        // so the scan/MLP mixer runs and writes attn_proj; otherwise the block
+        // fell through LlamaLike with no mixer and failed "residualadd: addend
+        // 'attn_proj' missing".
         s.kind = ArchKind::SsmHybrid;
     } else if (s.expert_count > 0) {
         s.kind = ArchKind::MoeOnly;
