@@ -98,6 +98,7 @@ static inline StepResult Step(Blackboard& bb, ExecutorFn exec) {
     if (bb.havePending && bb.pending.batch == cand.batch && bb.pending.threads == cand.threads)
         bb.pendingSamples.push_back(m.decodeTps);
     else { bb.pending = cand; bb.pendingSamples.clear(); bb.pendingSamples.push_back(m.decodeTps); bb.havePending = true; }
+    if (bb.pendingSamples.size() > 7) bb.pendingSamples.erase(bb.pendingSamples.begin()); // bounded (<=7)
     if (bb.pendingSamples.size() >= 3) {
         std::vector<double> s = bb.pendingSamples;
         std::sort(s.begin(), s.end());
