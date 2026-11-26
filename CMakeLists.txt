@@ -1311,6 +1311,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         tools/deep2_strata_bench.cpp
         src/deep2/op_gdn.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
