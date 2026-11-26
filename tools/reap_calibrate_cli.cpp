@@ -1106,6 +1106,7 @@ private:
     uint64_t beaconTokenCount_ = 0;
     uint64_t beaconLayerObservations_ = 0;
     uint64_t beaconExpertObservations_ = 0;
+    uint64_t checkpointSequence_ = 0;
     
     bool runDirectSaliency(const vector<string>& prompts) {
         if (expectedSaliencyLayers_.size() != modelInfo_.numLayers ||
@@ -1314,6 +1315,10 @@ private:
             metrics.emplace(std::make_pair(size_t(m.layer),size_t(m.expert)),
                             ReapExpertMetric{m.count,m.activation,m.weight});
         accumulator_.Restore(std::move(metrics), state.observations);
+        beaconTokenCount_ = state.beaconTokens;
+        beaconLayerObservations_ = state.beaconLayerObservations;
+        beaconExpertObservations_ = state.beaconExpertObservations;
+        checkpointSequence_ = state.checkpointSequence;
         completed = std::move(state.completed);
         start = 0;
         while (start < completed.size() && completed[start]) ++start;
@@ -1327,6 +1332,10 @@ private:
                          size_t lastCompleted) {
         ReapState::State state;
         state.completed = completedTokensPerPrompt;
+        state.checkpointSequence = ++checkpointSequence_;
+        state.beaconTokens = beaconTokenCount_;
+        state.beaconLayerObservations = beaconLayerObservations_;
+        state.beaconExpertObservations = beaconExpertObservations_;
         if (lastCompleted >= state.completed.size() || !state.completed[lastCompleted]) return false;
         state.observations = accumulator_.tokenCount();
         for (const auto& entry : accumulator_.Snapshot()) {
