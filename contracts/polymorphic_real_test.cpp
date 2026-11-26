@@ -23,16 +23,14 @@ int main(int argc, char** argv) {
     int successes = 0, transportFails = 0;
     std::printf("=== POLYMORPHIC ENGINE REAL INFERENCE (%d, RNG-free, fail-closed) ===\n", n);
     for (int i = 0; i < n; ++i) {
-        const rawrxd::poly::Cand attempted = rawrxd::polybb::NextObs(bb); // attempted
-        const size_t prevObs = bb.obs.size();
         const auto t0 = std::chrono::steady_clock::now();
-        rawrxd::polybb::Step(bb, &OllamaAdapter);
+        const rawrxd::polybb::StepResult R = rawrxd::polybb::Step(bb, &OllamaAdapter);
         const double ms = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - t0).count();
-        const bool ok = bb.obs.size() > prevObs;   // a new observation = success
+        const bool ok = R.success;                 // authoritative receipt
         if (ok) ++successes; else ++transportFails;
         std::printf("IT %2d: attempted=%4d/%2d ok=%d | cur=%4d/%2d dec=%6.1f | BEST=%6.1f(rep=%d) | %.0f ms\n",
-            i + 1, attempted.batch, attempted.threads, ok ? 1 : 0,
+            i + 1, R.cand.batch, R.cand.threads, ok ? 1 : 0,
             bb.current.batch, bb.current.threads, bb.st.curDecode,
             bb.bestDecode, bb.bestRepeats, ms);
     }

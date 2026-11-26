@@ -27,6 +27,7 @@ struct Blackboard {
     double bestDecode = 0; int bestRepeats = 0; bool haveBest = false;
     poly::Cand pending; double pendingDecode = 0; int pendingRepeats = 0; bool havePending = false;
     uint64_t alloc0 = 0, alloc1 = 0, iters = 0, accepts = 0, rejects = 0, failures = 0;
+    uint64_t successes = 0;          // monotonic successful-execution counter (bounded-safe)
     double a = 0, b = 0, c = 0, residVar = 1.0;  // deterministic LMS
     size_t cap = 256;
 };
@@ -63,17 +64,23 @@ static inline poly::Cand NextObs(const Blackboard& bb) {
     return c;
 }
 
+// Authoritative execution receipt: the ACTUAL candidate run and its result.
+struct StepResult { poly::Cand cand; Measured m; bool success = false; };
+
 // One deterministic cycle: predict -> execute -> correct -> accept -> validate.
-static inline void Step(Blackboard& bb, ExecutorFn exec) {
+// Returns an authoritative receipt (single candidate selection; no double-pick).
+static inline StepResult Step(Blackboard& bb, ExecutorFn exec) {
+    StepResult R;
     ++bb.iters;
     const int fam = AllocSelect(bb);
-    // Deliberate repeated validation: re-run a pending (consistent) candidate
-    // once so a promising config is measured >=2 before promotion.
-    const poly::Cand cand = (bb.havePending && bb.pendingRepeats == 1)
-                                ? bb.pending : NextObs(bb);
+    R.cand = (bb.havePending && bb.pendingRepeats == 1) ? bb.pending : NextObs(bb);
     if (fam == 0) ++bb.alloc0; else ++bb.alloc1;     // ratio allocation accounting
     Measured m;
-    if (!exec(cand, m) || !m.valid || m.decodeTps <= 0) { ++bb.failures; ++bb.rejects; return; }
+    if (!exec(R.cand, m) || !m.valid || m.decodeTps <= 0) {
+        ++bb.failures; ++bb.rejects; R.success = false; return R;
+    }
+    R.success = true; R.m = m; ++bb.successes;        // monotonic (bounded-safe)
+    const poly::Cand& cand = R.cand;
     const double pred = Predict(bb, cand);
     Correct(bb, cand, m.decodeTps);
     if (bb.obs.size() >= bb.cap) bb.obs.erase(bb.obs.begin());
@@ -94,6 +101,7 @@ static inline void Step(Blackboard& bb, ExecutorFn exec) {
     bb.st.predErr = std::fabs(pred - m.decodeTps);
     if (m.decodeTps > bb.st.bestDecode) bb.st.stagnation = 0; else ++bb.st.stagnation;
     bb.st.bestDecode = bb.bestDecode;
+    return R;
 }
 
 } // namespace polybb
