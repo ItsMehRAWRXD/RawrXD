@@ -1365,13 +1365,21 @@ Result Run(const fs::path& shardDir,
         lockDevs.reserve(hw.gpus.size());
         for (const auto& g : hw.gpus) {
             rawrxd::dualgpu::DualGpuDevice d;
-            d.stableId         = g.stableId;
-            d.name             = g.name;
-            d.vendorId         = g.vendorId;
-            d.deviceId         = g.deviceId;
-            d.measuredCapBytes = g.capacityBytes();
+            d.stableId = g.stableId;
+            d.name     = g.name;
+            d.vendorId = g.vendorId;
+            d.deviceId = g.deviceId;
+            // MB-09E: use the MEASURED current budget (driver free-VRAM, sourced
+            // from DXGI QueryVideoMemoryInfo / VK_EXT_memory_budget by the
+            // probe), NEVER heap capacity. Unknown measurement -> 0 -> the
+            // locked profile fails closed. When the engine exposes the actual
+            // VkPhysicalDevice handles (MB-09A) this must be replaced by
+            // rawrxd::vkbudget::QueryDeviceMemoryBudget(pd) + SafeBudgetBytes().
+            d.measuredCapBytes = g.availableVramKnown ? g.availableVramBytes : 0;
             d.identityExact    = g.identityExact;
-            d.healthy          = true;
+            // MB-09F: health is derived from a live measurement and compute
+            // capability, not an unconditional "true".
+            d.healthy = g.availableVramKnown && g.compute;
             lockDevs.push_back(d);
         }
         const auto adm = rawrxd::dualgpu::AdmitLockedProfile(lockDevs);

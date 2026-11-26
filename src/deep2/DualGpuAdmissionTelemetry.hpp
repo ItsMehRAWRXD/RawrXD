@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <mutex>
 #include <cstdlib>
+#include <cstring>
 
 namespace rawrxd {
 namespace dualgpu {
@@ -304,11 +305,13 @@ inline bool ActiveWeightResidency(uint64_t residentReqBytes, uint64_t totalReqBy
 
 // True when the locked dual-GPU bandwidth profile is explicitly requested.
 // Default (unset) preserves compatibility mode — no admission enforcement.
+// MB-09G: activation requires an EXACT "1" value (not any string starting
+// with '1'), so "10"/"1x" etc. do not accidentally enable the lock.
 inline bool DualGpuLockRequested() {
     const char* a = std::getenv("RAWRXD_DUAL_GPU_BANDWIDTH_LOCK_001");
-    if (a && a[0] == '1') return true;
+    if (a && std::strcmp(a, "1") == 0) return true;
     const char* b = std::getenv("RAWRXD_DUAL_GPU_LOCK");
-    return b && b[0] == '1';
+    return b && std::strcmp(b, "1") == 0;
 }
 
 } // namespace dualgpu
