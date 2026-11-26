@@ -265,7 +265,9 @@ bool EndBatchImpl()
         }
         ++chunks_ok;
     }
-    QDTRACE_DISPATCH("EndBatch done ok=" << (int)ok << " chunks_ok=" << chunks_ok);
+    QDTRACE_DISPATCH("EndBatch done ok=" << (int)ok << " chunks_ok=" << chunks_ok
+        << " fail_stage=" << (fail_stage ? fail_stage : "-")
+        << " fail_index=" << fail_index << " queued=" << qs.size());
     g_receipt = Receipt{};
     // used_gpu stays true when earlier chunks already ran on the device, even if a
     // later chunk failed: those rows were really computed there and must not be
