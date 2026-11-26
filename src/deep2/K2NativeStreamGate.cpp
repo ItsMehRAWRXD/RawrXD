@@ -17,6 +17,7 @@
 #include "K2TokenEmbedding.hpp"
 #include "Deep2LivePath.hpp"
 #include "K2LivePathTensorCache.hpp"
+#include "K2LivePolicy.hpp"
 #include "K2LivePathOwnership.hpp"
 #include "K2WeightResolve.hpp"
 #include "StreamTransferCounters.hpp"
@@ -87,12 +88,19 @@ bool MlaTraceEnabled() {
     return enabled;
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
+#endif
 template <typename... Args>
 void MlaTrace(const char* format, Args... args) {
     if (!MlaTraceEnabled()) return;
     std::fprintf(stderr, format, args...);
     std::fflush(stderr);
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 void TrackAlloc(uint64_t bytes) {
     g_currentResidency += bytes;
@@ -1338,7 +1346,16 @@ Result Run(const fs::path& shardDir,
     Deep2::K2ShardIo_ResetCounters();
     if (Deep2::K2LiveCache_Entries() == 0) {
         Deep2::K2ShardIo_Reset(); // cold only
-        Deep2::K2LiveCache_Reset((std::max)(cfg.budgetBytes, 12288ull << 20));
+        // The live-cache policy is the authoritative residency budget.  The
+        // previous reset path ignored DEEP2_LIVE_CACHE_BUDGET_MIB and always
+        // collapsed the effective budget to the 12 GiB floor, making policy
+        // measurements unable to change production admission.  Keep the
+        // conservative floor, but honor an explicitly configured policy
+        // budget at this actual cache-ownership boundary.
+        const uint64_t policyBudget = Deep2::K2LivePolicy_CacheBudgetBytes();
+        Deep2::K2LiveCache_Reset((std::max)(cfg.budgetBytes,
+                                            (std::max)(policyBudget,
+                                                       12288ull << 20)));
     }
 
     if (shards.empty()) {
