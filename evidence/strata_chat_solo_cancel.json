@@ -1,0 +1,21 @@
+{
+  "tag": "solo_cancel",
+  "model": "F:\ollamamodels\n4-tiny-oracle.gguf",
+  "prompt_text": "Hello",
+  "prompt_tokens": 1,
+  "prompt_ids": [15043],
+  "generate_tokens": 2,
+  "generated_ids": [23650, 292],
+  "cancelled": true,
+  "bind_ms": 2528.08,
+  "prefill_ms": 333.981,
+  "decode_ms": 302.747,
+  "total_ms": 3164.81,
+  "decode_tps": 6.60618,
+  "gpu_calls": 0,
+  "cpu_calls": 465,
+  "fallback": "legacy quant dot: force_cpu (weight=blk.0.attn_q.weight)",
+  "nonfinite_logits": 0,
+  "expert_ledger": {"observations": 0, "hits": 0, "misses": 0, "evictions": 0, "hit_rate": 0, "distinct_experts": 0},
+  "cleanup": "ok"
+}
