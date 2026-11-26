@@ -904,6 +904,11 @@ public:
         return timelineEnabled_ && timelineSemaphore_ != VK_NULL_HANDLE;
     }
     uint64_t NextTimelineValue() noexcept { return ++timelineNextValue_; }
+    // P0-A: current signaled value of the timeline semaphore (0 if disabled or
+    // on query failure). Used to gate deferred resident destruction on GPU
+    // completion. Conservative: a caller that cannot read the value keeps the
+    // retired buffer (never destroys early).
+    uint64_t TimelineSignaledValue() const;
     uint64_t TimelineSignals() const noexcept { return timelineSignals_; }
     uint64_t TimelineWaits() const noexcept { return timelineWaits_; }
     VkSemaphore TimelineSemaphore() const noexcept { return timelineSemaphore_; }
@@ -1297,6 +1302,11 @@ public:
         int type = 0;
         uint32_t rows = 0;
         uint32_t cols = 0;
+        // P0-A: timeline value outstanding when this resident was retired. The
+        // buffer may be destroyed only after the timeline reaches this value
+        // (all referencing GPU submissions complete) AND CPU readers released.
+        // 0 means "no outstanding GPU reference" (synchronous path / no timeline).
+        uint64_t retireTimeline = 0;
         // Back-reference for LRU eviction (the handle itself never
         // moves: unordered_map nodes are pointer-stable and are NEVER
         // erased, not even across cleanup()/initialize() — the map dies
@@ -1744,6 +1754,14 @@ private:
     std::unordered_map<uint64_t, ResidentHotHandle> hotHandles_;
     std::vector<std::unique_ptr<ResidentWeight>> residentObjects_; // LRU order
     size_t residentObjectBytes_ = 0;
+    // P0-A: bytes detached into retireQueue_ but not yet destroyed. Counted in
+    // the unified weight budget so deferred destruction cannot let live +
+    // pending-retirement memory exceed weightBudgetBytes_.
+    size_t pendingRetireBytes_ = 0;
+    // P0-A: outstanding allocation reservations (bytes reserved but not yet
+    // committed to weightCache_/residentObjects_). Counted in the strict budget
+    // (W+R+P+A+I<=B) so concurrent in-flight allocations cannot over-commit.
+    std::atomic<size_t> allocReservedBytes_{0};
     std::atomic<uint32_t> residentReaderCount_{0};
     uint64_t rcuHotAcquires_ = 0;
     uint64_t rcuPublishes_ = 0;
@@ -1781,6 +1799,12 @@ private:
     // LRU eviction of published ResidentWeight objects to satisfy the
     // weight budget. Removes the hot pointer BEFORE retiring.
     bool EvictResidentObjectsFor(size_t incomingBytes);
+    // P0-A coordinated-admission primitives (strict physical accounting
+    // W+R+P [+A]+I <= B). Caller integration (out-of-lock drain-and-retry)
+    // is the remaining step; these are the authoritative budget predicates.
+    size_t PhysicalCommittedBytes() const noexcept;
+    bool StrictAdmissionFits(size_t incomingBytes) const noexcept;
+    void DrainRetireOutsideLock();  // MUST be called WITHOUT apiMu_ held
     // cleanup()-only: device is idle; drop everything without grace spin.
     void ReclaimAllResidents();
 

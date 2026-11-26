@@ -30,9 +30,20 @@ namespace {
 using Gpu = CPUInference::VulkanCompute;
 using DeviceBuf = Gpu::DeviceBuf;
 
+// NCRO hot-path logging gate. This is evaluated at the top of every
+// forwardGpuContiguousRange() call (i.e. once per generated token) and on every
+// reject path, so it must not perform an OS query per call. The environment is
+// process-lifetime immutable, so the getenv() result is cached in a function-local
+// static (thread-safe one-time init, C++11 magic statics): after the first call
+// the gate is a single atomic-guard load with NO getenv / allocation / syscall.
+// This mirrors the other cached env reads in this file (s_probeLayer0, unfused,
+// s_snapLayers) and removes the last per-token getenv from the GPU forward path.
 bool gpuForwardTraceEnabled() noexcept {
-    const char* value = std::getenv("DEEP2_GPU_FORWARD_TRACE");
-    return value && value[0] == '1';
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_GPU_FORWARD_TRACE");
+        return value && value[0] == '1';
+    }();
+    return enabled;
 }
 
 void gpuForwardTrace(const char* message) noexcept {
@@ -794,7 +805,7 @@ bool Deep2Engine::forwardGpuContiguousRange(
     if (gpuForwardTraceEnabled()) {
         std::fprintf(stderr,
             "[GPU_FORWARD_TRACE] contiguousRange slot=%u lo=%u hi=%u "
-            "layers=%zu numLayers=%u hostIn=%p hostOut=%p\n",
+            "layers=%zu numLayers=%zu hostIn=%p hostOut=%p\n",
             slot, lo, hi, modelWeights.layers.size(),
             modelWeights.numLayers, static_cast<const void*>(hostIn),
             static_cast<void*>(hostOut));

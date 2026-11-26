@@ -38,6 +38,27 @@ std::recursive_mutex g_gpuSubmitGate;
 std::atomic<uint64_t> g_gpuSubmitSequence{0};
 std::atomic<uint32_t> g_gpuInFlight{0};
 
+// P0-A: RAII allocation reservation. Reserves `n` bytes against the strict
+// physical budget on construction and releases them on scope exit (rollback on
+// failure, or after the bytes are committed to a committed category on success).
+// Never counts the same allocation twice: the reservation is released as the
+// commit (weightCacheBytes_ += n) takes effect before the guard destructs.
+struct AllocReservation {
+    std::atomic<size_t>& counter;
+    size_t n;
+    AllocReservation(std::atomic<size_t>& c, size_t bytes) noexcept
+        : counter(c), n(bytes) {
+        counter.fetch_add(n, std::memory_order_relaxed);
+    }
+    ~AllocReservation() { counter.fetch_sub(n, std::memory_order_relaxed); }
+    // Release the reservation without a rollback (used at the commit point so the
+    // bytes are counted once, under the authoritative apiMu_ lock, with no
+    // transient A+W double count observable to admission).
+    void release() noexcept { n = 0; }
+    AllocReservation(const AllocReservation&) = delete;
+    AllocReservation& operator=(const AllocReservation&) = delete;
+};
+
 bool GlobalGpuSerialEnabled() {
     const char* v = std::getenv("GLOBAL_GPU_SERIAL");
     return v && v[0] == '1' && v[1] == '\0';
@@ -2733,6 +2754,12 @@ VulkanCompute::DeviceBuf* VulkanCompute::ResolveResidentF32(
     if (!src || !count ||
         count > std::numeric_limits<size_t>::max() / sizeof(float))
         return nullptr;
+    // P0-A coordinated admission (caller integration): reclaim GPU-complete
+    // retirements BEFORE the cold allocation. No apiMu_ is held here (the fused
+    // adapter forwards without the lock), so ProcessRetireQueue may spin on the
+    // reader count safely. This keeps pending (P) bounded so the subsequent
+    // in-lock eviction/admission is not blocked by not-yet-destroyed buffers.
+    DrainRetireOutsideLock();
     DeviceBuf* out = nullptr;
     if (!ensureWeightF32(src, key, count * sizeof(float), out))
         return nullptr;
@@ -4060,6 +4087,7 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
                      "live_allocation_count=%zu "
                      "live_device_bytes=%zu live_device_allocations=%llu "
                      "evicted_weight_bytes=%zu resident_reclaimed_bytes=%zu "
+                     "pending_retire_bytes=%zu committed_bytes=%zu "
                      "heap_headroom_bytes=%zu\n",
                      static_cast<const void*>(this),
                  completedBlock, pinnedWeightBytes_, weightCacheBytes_,
@@ -4068,6 +4096,7 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
                  liveDeviceBytes_,
                  static_cast<unsigned long long>(liveDeviceAllocations_),
                  evictedBytes, beforeResidentBytes,
+                 pendingRetireBytes_, PhysicalCommittedBytes(),
                  deviceLocalHeapHeadroom());
     (void)beforeEntries;
     return true;
@@ -4149,6 +4178,12 @@ bool VulkanCompute::ensureWeightF32(
         return false;
     }
 
+    // P0-A: reserve `bytes` against the strict physical budget for the duration
+    // of the allocation. Released automatically on every exit path (rollback on
+    // failure; on success the bytes are committed to weightCacheBytes_ first, so
+    // the reservation release does not double-count).
+    AllocReservation reservation(allocReservedBytes_, bytes);
+
     WeightCacheEntry e{};
     size_t padded = (bytes+3u)&~size_t(3u);
     if (!createBuffer(padded,
@@ -4163,6 +4198,10 @@ bool VulkanCompute::ensureWeightF32(
     }
     e.bytes=bytes; e.type=0; e.lastUse=weightUseClock_++;
     auto ins = weightCache_.emplace(key,std::move(e)).first;
+    // P0-A: transfer reservation -> committed (W) atomically w.r.t. admission
+    // (both under apiMu_). Release the reservation immediately before the commit
+    // so there is no transient A+W double count.
+    reservation.release();
     weightCacheBytes_ += bytes;
     ++weightUploads_;
     out=&ins->second.buffer;
@@ -6122,9 +6161,17 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
     // A live MoE fused graph owns all published resident views until its
     // matching EndMoePinHold. Refuse eviction during that interval; callers
     // then fail closed instead of invalidating a device-visible weight.
+    // NOTE (P0-A admission progress): pendingRetireBytes_ is intentionally NOT
+    // added to the eviction-loop budget here. This function runs under apiMu_ and
+    // cannot drain retireQueue_ (spinning on residentReaderCount_ under the lock
+    // would deadlock). Charging pending bytes in the loop would move every
+    // resident into pending without freeing memory and then falsely fail
+    // admission. Pending memory is reclaimed by ProcessRetireQueue() immediately
+    // after each dispatch (outside apiMu_); full GPU-completion-aware inclusion
+    // in the budget is deferred to that coordinated drain (P0-A open).
     if (weightBudgetBytes_ && MoePinHoldActive() &&
-        weightCacheBytes_ + residentObjectBytes_ + pendingRetireBytes_ +
-            incomingBytes > weightBudgetBytes_)
+        weightCacheBytes_ + residentObjectBytes_ + incomingBytes >
+            weightBudgetBytes_)
         return false;
 
     auto totalResidentBytes = [&]() -> size_t {
@@ -6132,8 +6179,8 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
     };
 
     while (weightBudgetBytes_ &&
-           weightCacheBytes_ + residentObjectBytes_ + pendingRetireBytes_ +
-               incomingBytes > weightBudgetBytes_) {
+           weightCacheBytes_ + residentObjectBytes_ + incomingBytes >
+               weightBudgetBytes_) {
         if (residentObjects_.empty())
             return false;
         // LRU: front of vector is oldest.
@@ -6153,6 +6200,12 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
         // P0-A: the detached buffer is not yet destroyed; account it as pending
         // retirement so the budget covers live + deferred-destroy memory.
         pendingRetireBytes_ += victim->bytes;
+        // P0-A: stamp the outstanding GPU frontier. The buffer is destroyed only
+        // after the timeline reaches this value (all referencing submissions done)
+        // AND CPU readers released. 0 => synchronous path / no timeline => eligible
+        // as soon as readers drain (the per-op endSubmitWait already fenced it).
+        victim->retireTimeline =
+            TimelineSemaphoreEnabled() ? timelineNextValue_ : 0;
         // DETACH ONLY (liveness architecture): the grace spin + buffer
         // destroy happen in ProcessRetireQueue() OUTSIDE apiMu_. A hot-path
         // reader may hold the RCU reader count across a locked fallback
@@ -6180,11 +6233,23 @@ void VulkanCompute::ProcessRetireQueue()
     while (residentReaderCount_.load(std::memory_order_seq_cst) != 0) {
         std::this_thread::yield();
     }
+    // P0-A: destroy only allocations whose referencing GPU work has completed.
+    // retireTimeline==0 -> synchronous path (per-op fence already waited) or no
+    // timeline: eligible now. Otherwise eligible only once the signaled timeline
+    // value reaches the stamped frontier. Non-eligible entries are retained for a
+    // later drain (never destroyed early; bounded by in-flight GPU work).
+    const uint64_t signaled = TimelineSignaledValue();
+    size_t kept = 0;
     for (auto& obj : retireQueue_) {
-        if (obj) destroyBuffer(obj->buffer);
+        if (!obj) continue;
+        const bool gpuDone =
+            obj->retireTimeline == 0 || signaled >= obj->retireTimeline;
+        if (!gpuDone) { retireQueue_[kept++] = std::move(obj); continue; }
+        pendingRetireBytes_ -= obj->bytes;
+        destroyBuffer(obj->buffer);
         obj.reset();
     }
-    retireQueue_.clear();
+    retireQueue_.resize(kept);
 }
 
 void VulkanCompute::ProcessRetireQueueLocked()
@@ -6197,10 +6262,38 @@ void VulkanCompute::ProcessRetireQueueLocked()
         std::this_thread::yield();
     }
     for (auto& obj : retireQueue_) {
-        if (obj) destroyBuffer(obj->buffer);
+        if (obj) { pendingRetireBytes_ -= obj->bytes; destroyBuffer(obj->buffer); }
         obj.reset();
     }
     retireQueue_.clear();
+}
+
+size_t VulkanCompute::PhysicalCommittedBytes() const noexcept {
+    // P0-A strict physical accounting: active cached weights + active resident
+    // objects + pending (detached, not-yet-destroyed) retirement bytes +
+    // outstanding allocation reservations. These categories are mutually exclusive
+    // (a detached victim is subtracted from residentObjectBytes_ and added to
+    // pendingRetireBytes_; a reservation is released when its bytes are committed
+    // to weightCache_/residentObjects_), so no double count. Saturating add.
+    const size_t m = std::numeric_limits<size_t>::max();
+    auto sat = [m](size_t a, size_t b) noexcept -> size_t {
+        return b > m - a ? m : a + b;
+    };
+    return sat(sat(sat(weightCacheBytes_, residentObjectBytes_), pendingRetireBytes_),
+               allocReservedBytes_.load(std::memory_order_relaxed));
+}
+
+bool VulkanCompute::StrictAdmissionFits(size_t incomingBytes) const noexcept {
+    // W+R+P+I <= B, overflow-safe (subtraction form avoids c+I overflow).
+    if (weightBudgetBytes_ == 0) return true;          // no physical bound
+    if (incomingBytes > weightBudgetBytes_) return false; // incoming alone > B
+    return PhysicalCommittedBytes() <= weightBudgetBytes_ - incomingBytes;
+}
+
+void VulkanCompute::DrainRetireOutsideLock() {
+    // P0-A coordinated-admission step: reclaim GPU-complete retirements. MUST be
+    // called WITHOUT apiMu_ (ProcessRetireQueue spins on residentReaderCount_).
+    ProcessRetireQueue();
 }
 
 void VulkanCompute::ReclaimAllResidents()
@@ -6223,6 +6316,7 @@ void VulkanCompute::ReclaimAllResidents()
     // Any detached-but-undrained retirements also die here; device idle
     // means the grace spin is trivially satisfied.
     ProcessRetireQueueLocked();
+    pendingRetireBytes_ = 0;
 }
 
 bool VulkanCompute::RunCpuQuantRowsFull(
@@ -8612,6 +8706,17 @@ bool VulkanCompute::WaitTimelineValue(uint64_t value, uint64_t timeoutNs) {
         return true;
     }
     return false;
+}
+
+uint64_t VulkanCompute::TimelineSignaledValue() const {
+    // P0-A: current signaled value of the timeline semaphore. Conservative:
+    // returns 0 (treated as "not beyond any stamp" -> keep) if the timeline is
+    // disabled or the query fails, so a retired buffer is never destroyed early.
+    if (!TimelineSemaphoreEnabled()) return 0;
+    uint64_t value = 0;
+    if (vkGetSemaphoreCounterValue(device_, timelineSemaphore_, &value) != VK_SUCCESS)
+        return 0;
+    return value;
 }
 
 bool VulkanCompute::SubmitTimelineCommand(
