@@ -1,0 +1,9 @@
+S01 full-logit numerical parity — CPU vs GPU (llama3.2-3b-Q2_K, prompt "Hello", prefill pos 0)
+files: lg_cpu.bin (CPU), lg_gpu.bin (GPU); 128256 float32 logits + 8-byte header
+n=128256
+max_abs_diff=0.0451504588
+rms=0.0106496560
+mean_abs=0.0085746041
+cosine=0.9999679295
+argmax_cpu=14924 argmax_gpu=14924 (identical top-1)
+interpretation: near-identical logits (cosine ~1.0, small max diff consistent with CPU/GPU quant-dot rounding). Full-logit parity PASS (not bit-exact). Token-selection parity already 8/8. Not a certification of bit-exactness.
