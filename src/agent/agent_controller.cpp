@@ -3,8 +3,11 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
+#include <fstream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -17,6 +20,21 @@ std::string lc(std::string s) {
 }
 std::string trunc(const std::string& s, size_t n) {
     return s.size() <= n ? s : s.substr(0, n);
+}
+
+// FNV-1a 64-bit content hash for deliverable-integrity verification.
+uint64_t fnv1a(const std::string& s) {
+    uint64_t h = 1469598103934665603ULL;
+    for (unsigned char c : s) { h ^= c; h *= 1099511628211ULL; }
+    return h;
+}
+bool readFileStr(const std::string& path, std::string& out) {
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return false;
+    std::ostringstream ss;
+    ss << f.rdbuf();
+    out = ss.str();
+    return true;
 }
 
 // Extract concatenated JSON objects from free text (models often wrap JSON in
@@ -194,6 +212,63 @@ AgentResult runAgentController(
     size_t lastCount = 0;
     int stall = 0;
 
+    // F04-V completion integrity: per-session deliverable evidence. A model FINAL
+    // is a completion REQUEST, not proof. The controller verifies real tool
+    // evidence before issuing an authoritative receipt.
+    std::map<std::string, uint64_t> writtenHashes;  // path -> content hash at write
+    auto verifyCompletion = [&](std::string& reason) -> bool {
+        if (res.results.empty()) {
+            reason = "no tool was executed; emit a real tool call first";
+            return false;
+        }
+        for (const auto& r : res.results) {
+            if (!r.ok && !r.denied) {
+                reason = "tool " + r.tool + " failed (exit " +
+                         std::to_string(r.exitCode) +
+                         "); fix the failure before finishing";
+                return false;
+            }
+        }
+        // Session-written files must still exist with the content we recorded.
+        for (const auto& kv : writtenHashes) {
+            std::string content;
+            const std::string abs = ws.root() + "/" + kv.first;
+            if (!readFileStr(abs, content)) {
+                reason = "deliverable missing: " + kv.first;
+                return false;
+            }
+            if (fnv1a(content) != kv.second) {
+                reason = "deliverable modified after write: " + kv.first;
+                return false;
+            }
+        }
+        bool hasWrite = false, hasExecOk = false;
+        for (const auto& r : res.results) {
+            if (r.ok && (r.tool == "write_file" || r.tool == "edit_files"))
+                hasWrite = true;
+            if (r.ok && (r.tool == "run_build" || r.tool == "run_tests" ||
+                         (r.tool == "run_shell" && r.exitCode == 0)))
+                hasExecOk = true;
+        }
+        if (!hasWrite && !hasExecOk) {
+            reason = "no verified deliverable (no successful write_file/edit_files "
+                     "or build/run) — do the real work before finishing";
+            return false;
+        }
+        const std::string low = lc(cfg.goal);
+        const bool expectsExec =
+            low.find("compile") != std::string::npos ||
+            low.find("build") != std::string::npos ||
+            low.find("test") != std::string::npos ||
+            low.find("run") != std::string::npos;
+        if (expectsExec && !hasExecOk) {
+            reason = "task requires compilation/tests but no successful build/run "
+                     "was executed";
+            return false;
+        }
+        return true;
+    };
+
     for (int turn = 1; turn <= cfg.maxTurns; ++turn) {
         if (cancel && cancel()) {
             res.canceled = true;
@@ -287,6 +362,22 @@ AgentResult runAgentController(
                 ar.exitCode = static_cast<int>(tr.exitCode);
                 res.results.push_back(ar);
                 if (tr.denied) ++res.denied;
+                // F04-V: record deliverable evidence for later verification.
+                if (tr.ok && (pc.tool == "write_file" || pc.tool == "edit_files")) {
+                    std::string path =
+                        pc.args.contains("path") && pc.args["path"].is_string()
+                            ? pc.args["path"].get<std::string>()
+                            : std::string();
+                    if (!path.empty()) {
+                        std::string content;
+                        if (pc.tool == "write_file" && pc.args.contains("content") &&
+                            pc.args["content"].is_string())
+                            content = pc.args["content"].get<std::string>();
+                        else
+                            readFileStr(ws.root() + "/" + path, content);
+                        writtenHashes[path] = fnv1a(content);
+                    }
+                }
                 std::string fl = tr.output.substr(0, tr.output.find('\n'));
                 if (fl.size() > 140) fl = fl.substr(0, 140);
                 combined += "- " + tr.tool + " " + tr.argsJson + " -> " +
@@ -314,42 +405,7 @@ AgentResult runAgentController(
                 low.find("not run") != std::string::npos ||
                 low.find("failed") != std::string::npos ||
                 low.find("incomplete") != std::string::npos;
-            auto hasOk = [&res](const char* t) {
-                for (const auto& r : res.results)
-                    if (r.ok && r.tool == t) return true;
-                return false;
-            };
-            const bool claimsRepair =
-                !negated && (low.find("fix") != std::string::npos ||
-                             low.find("repair") != std::string::npos ||
-                             low.find("patch") != std::string::npos);
-            const bool claimsExec =
-                !negated && (low.find("compil") != std::string::npos ||
-                             low.find("build") != std::string::npos ||
-                             low.find("ran ") != std::string::npos ||
-                             low.find("execut") != std::string::npos);
-            const bool repairReceipt = hasOk("edit_files") || hasOk("write_file");
-            const bool execReceipt =
-                hasOk("run_build") || hasOk("run_tests") || hasOk("run_shell");
-            const bool ungrounded =
-                !vacuous &&
-                ((claimsRepair && !repairReceipt) ||
-                 (claimsExec && !execReceipt));
-            if (strikes < 3 && (vacuous || ungrounded)) {
-                ++strikes;
-                if (log)
-                    log("run: final answer rejected strike " +
-                        std::to_string(strikes));
-                commit(vacuous
-                           ? std::string("Your last reply had an empty \"summary\". "
-                                         "Reply with a tool_call JSON or a final "
-                                         "with a real summary.")
-                           : std::string("You claimed a result but no "
-                                         "edit/build/run tool succeeded. Emit "
-                                         "the real tool call and wait for its "
-                                         "output."));
-                continue;
-            }
+            // A model FINAL is a completion REQUEST, not proof of completion.
             if (negated) {
                 res.summary = proposed;
                 res.completed = false;
@@ -358,6 +414,40 @@ AgentResult runAgentController(
                         "completed=false");
                 break;
             }
+            if (vacuous) {
+                if (strikes < 3) {
+                    ++strikes;
+                    if (log)
+                        log("run: final answer rejected (empty summary) strike " +
+                            std::to_string(strikes));
+                    commit("Your last reply had an empty \"summary\". Reply with a "
+                           "tool_call JSON or a final with a real summary.");
+                    continue;
+                }
+                res.completed = false;
+                res.summary = "no-progress: repeated empty final summary";
+                break;
+            }
+            // F04-V: independent completion verification against real evidence.
+            std::string vreason;
+            if (!verifyCompletion(vreason)) {
+                if (strikes < 3) {
+                    ++strikes;
+                    if (log)
+                        log("run: COMPLETION REJECTED: " + vreason + " (strike " +
+                            std::to_string(strikes) + ")");
+                    commit("COMPLETION REJECTED: " + vreason +
+                           ". Do the real work with the tools, wait for the real "
+                           "output, then reply with {\"action\":\"final\","
+                           "\"summary\":\"...\"}.");
+                    continue;
+                }
+                res.completed = false;
+                res.summary = "verification failed: " + vreason;
+                if (log) log("run: completion verification exhausted retries");
+                break;
+            }
+            // Accepted: controller-owned authoritative completion receipt.
             res.summary = proposed;
             if (finalObj->contains("findings"))
                 res.findings = (*finalObj)["findings"].dump(2);
@@ -365,8 +455,10 @@ AgentResult runAgentController(
                 res.nextActions = (*finalObj)["next_actions"].dump(2);
             res.completed = true;
             if (log)
-                log("run: agent produced FINAL answer at turn " +
-                    std::to_string(turn));
+                log("run: VERIFIED completion at turn " + std::to_string(turn) +
+                    " (" + std::to_string(res.results.size()) +
+                    " tool results, " + std::to_string(writtenHashes.size()) +
+                    " deliverables verified)");
             break;
         }
 
