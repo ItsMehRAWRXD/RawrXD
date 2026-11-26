@@ -72,13 +72,26 @@ public:
         std::vector<int> outIds;
         std::string streamed;
         uint32_t next = 0;
+        // Strip non-printable control characters (keep \n, \t, and >= 0x20) so
+        // the reported/visible text matches the raw detokenized bytes. Control
+        // bytes are single-byte, so this is UTF-8 safe and never splits a
+        // multibyte sequence. Special-token glyphs are thus excluded.
+        auto clean = [](const std::string& s) {
+            std::string o;
+            o.reserve(s.size());
+            for (char c : s) {
+                const unsigned char u = static_cast<unsigned char>(c);
+                if (u >= 0x20 || c == '\n' || c == '\t') o += c;
+            }
+            return o;
+        };
         for (size_t i = 0; i < opt.maxTokens; ++i) {
             if (opt.cancelled && opt.cancelled()) break;
             if (!sess.Step(next)) break;
             outIds.push_back(static_cast<int>(next));
-            // Incremental UTF-8: detokenize the accumulated ids and emit only
-            // the newly completed suffix (never split a multibyte sequence).
-            const std::string full = detok_(outIds);
+            // Incremental UTF-8: detokenize the accumulated ids, strip control
+            // chars, and emit only the newly completed suffix.
+            const std::string full = clean(detok_(outIds));
             if (full.size() > streamed.size()) {
                 const std::string piece = full.substr(streamed.size());
                 streamed = full;
