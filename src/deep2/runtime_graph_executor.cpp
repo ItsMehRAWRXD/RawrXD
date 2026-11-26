@@ -1234,6 +1234,15 @@ bool Executor::FlushDotBatch() {
     }
     const bool ok = QuantDot::EndBatch();
     if (!ok) {
+        static const bool strictBatchAdmission = [] {
+            const char* v = std::getenv("RAWRXD_STRICT_BATCH_ADMISSION");
+            return v && v[0] == '1' && v[1] == '\0';
+        }();
+        if (strictBatchAdmission) {
+            last_error_ = "quant-dot batch completion failed; strict admission rejects CPU replay";
+            dot_batch_broken_ = true;
+            return false;
+        }
         // EndBatch's failure contract: every queued dot was REPLAYED on the
         // CPU fallback and its output buffer holds real numbers. The batch
         // therefore produced correct math but zero GPU calls, and the
@@ -1464,8 +1473,10 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             // apparently successful single-dot execution. Keep the supported
             // production fallback for ordinary runs, but make the contract
             // fail closed when explicitly requested by acceptance tooling.
-            static const bool strictBatchAdmission =
-                std::getenv("RAWRXD_STRICT_BATCH_ADMISSION") != nullptr;
+            static const bool strictBatchAdmission = [] {
+                const char* v = std::getenv("RAWRXD_STRICT_BATCH_ADMISSION");
+                return v && v[0] == '1' && v[1] == '\0';
+            }();
             if (strictBatchAdmission) {
                 err = "linear: quantized batch admission rejected for weight=" + w.name;
                 return false;
@@ -4314,6 +4325,11 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
         // submission failed. Continue with the replayed results instead of
         // aborting the entire prefill - the output buffers hold real numbers.
         if (!ok) {
+            const char* strict = std::getenv("RAWRXD_STRICT_BATCH_ADMISSION");
+            if (strict && strict[0] == '1' && strict[1] == '\0') {
+                last_error_ = "prefill-batch: quantized batch completion failed; strict admission rejects CPU replay";
+                return false;
+            }
             gpu_calls_ = (gpu_calls_ >= dots) ? gpu_calls_ - dots : 0;
             cpu_calls_ += dots;
             if (cpu_fallback_reason_.empty()) {
