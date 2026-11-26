@@ -83,7 +83,7 @@ bool CompressedWeightStore::addTensorFromReader(std::string name,std::size_t siz
    if (constant) { b.stored_fill=true; b.fill=scratch[0]; }
    else {
     std::size_t nonzero=0; for (std::size_t i=0; i<take; ++i) nonzero += scratch[i] != 0;
-    if (nonzero && nonzero <= 4 && nonzero * 3 < take) { b.stored_sparse=true; for (std::size_t i=0; i<take; ++i) if (scratch[i]) { b.sparse.push_back(static_cast<std::uint8_t>(i)); b.sparse.push_back(static_cast<std::uint8_t>(i>>8)); b.sparse.push_back(scratch[i]); } }
+    if (take <= 65535 && nonzero && nonzero <= 4 && nonzero * 3 < take) { b.stored_sparse=true; for (std::size_t i=0; i<take; ++i) if (scratch[i]) { b.sparse.push_back(static_cast<std::uint8_t>(i)); b.sparse.push_back(static_cast<std::uint8_t>(i>>8)); b.sparse.push_back(scratch[i]); } }
     else {
     std::size_t period=0;
     for (std::size_t candidate=1; candidate<=std::min<std::size_t>(16,take); ++candidate) {
@@ -94,7 +94,9 @@ bool CompressedWeightStore::addTensorFromReader(std::string name,std::size_t siz
     else b.payload=encode(scratch.data(),take,b.stored_raw);
     }
    }
-   const auto block_encoded_size = b.stored_fill ? std::size_t(0) : (b.stored_sparse ? b.sparse.size() : (b.stored_pattern ? b.pattern.size() : b.payload.size()));
+   // Every encoded block carries representation metadata even when its payload
+   // is reconstructed from a fill byte. Keep accounting tied to resident bytes.
+   const auto block_encoded_size = std::size_t(1) + (b.stored_fill ? std::size_t(0) : (b.stored_sparse ? b.sparse.size() : (b.stored_pattern ? b.pattern.size() : b.payload.size())));
    if(encoded_size>admission_limit||block_encoded_size>admission_limit-encoded_size){if(error)*error="encoded tensor exceeds residency budget";return false;}
    encoded_size+=block_encoded_size;tensor.blocks.emplace_back(std::move(b));off+=take;
   }

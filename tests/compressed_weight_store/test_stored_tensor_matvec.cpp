@@ -229,13 +229,16 @@ int main() {
                                  &budgetError, GGML_TYPE_F16, false, admittedBytes));
     assert(!cappedStore.contains("oversized"));
     const auto beforeCumulative = cappedStore.stats().compressed_bytes;
+    bool capacityRejected = false;
     for (int i = 0; i < 16; ++i) {
         const auto name = std::string("capacity_") + std::to_string(i);
         if (!cappedStore.addTensor(name, weights.data(), weights.size(), &budgetError,
                                    GGML_TYPE_F16, false, 1024)) {
+            capacityRejected = true;
             break;
         }
     }
+    assert(capacityRejected);
     assert(cappedStore.stats().compressed_bytes <= 4096);
     assert(cappedStore.stats().compressed_bytes >= beforeCumulative);
 
