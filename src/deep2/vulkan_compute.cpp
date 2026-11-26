@@ -2265,7 +2265,8 @@ bool VulkanCompute::dispatchQuant(
         if (lane < 3) {
             ++q4kDispatchCount_[lane];
             q4kRows_[lane] += dispatchPush.rows;
-            q4kPipelineSeen_[lane] = qPipeline_;
+            // The selected pipeline is recorded below, after opt-in selection;
+            // do not report the reference pipeline for a real tiled dispatch.
         }
     }
 
@@ -2302,6 +2303,11 @@ bool VulkanCompute::dispatchQuant(
         std::fprintf(stderr, "[Q4K_TILED4X_DISPATCH] rows=%u cols=%u weightBytes=%u\n",
                      dispatchPush.rows, dispatchPush.cols, dispatchPush.weightBytes);
         std::fflush(stderr);
+    }
+    {
+        const uint32_t lane = q4kLane_;
+        if (lane < 3)
+            q4kPipelineSeen_[lane] = selectedPipeline;
     }
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, selectedPipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
