@@ -269,6 +269,27 @@ public:
             return result;
         }
 
+        // Authoritative context-capacity admission BEFORE any GPU prefill. The
+        // limit is model-derived (EngineConfig::maxSeqLen) unless overridden for
+        // boundary testing. Oversized prompts and prompt+generation arithmetic
+        // overflow are rejected fail-closed, never silently truncated.
+        size_t ctxLimit = tokenizer_.getConfig().maxSeqLen;
+        if (const char* cl = std::getenv("RAWRXD_STRATA_CONTEXT_LIMIT"))
+            ctxLimit = static_cast<size_t>(std::strtoull(cl, nullptr, 10));
+        const size_t genBudget = static_cast<size_t>((std::max)(1, maxTokens));
+        const bool overflow = (cur.size() + genBudget < cur.size());
+        if (ctxLimit > 0 && (overflow || cur.size() + genBudget > ctxLimit)) {
+            result.error =
+                overflow ? "context capacity overflow"
+                         : "context capacity exceeded: prompt " +
+                               std::to_string(cur.size()) + " + gen " +
+                               std::to_string(genBudget) + " > limit " +
+                               std::to_string(ctxLimit);
+            std::fprintf(stderr, "CONTEXT_REJECT tokens=%zu gen=%zu limit=%zu\n",
+                         cur.size(), genBudget, ctxLimit);
+            return result;  // reject BEFORE GPU prefill
+        }
+
         // Reuse only when the previous prompt tokens are an EXACT prefix of the
         // current ones (prefix-stable extension). Any mismatch falls back to a
         // clean full reset so stale KV is never reused.
@@ -1679,6 +1700,32 @@ static int cmdRun(const std::vector<std::string>& args) {
                          a1.completionTokens, a2.ok ? 1 : 0, a2.completionTokens,
                          parity ? "MATCH" : "DIFF", c1.canceled ? 1 : 0,
                          c1.ok ? 1 : 0, d0.ok ? 1 : 0, d0.completionTokens);
+            return EXIT_OK;
+        }
+        // F03-B context-capacity: env-gated. With RAWRXD_STRATA_CONTEXT_LIMIT set
+        // small, an oversized prompt must be rejected BEFORE GPU prefill and a
+        // subsequent valid prompt must still succeed (recovery after rejection).
+        if (std::getenv("RAWRXD_STRATA_CTXTEST")) {
+            auto one = [](PersistentStrataRunner& r, const std::string& p) {
+                std::vector<json> m;
+                json j;
+                j["role"] = "user";
+                j["content"] = p;
+                m.push_back(j);
+                return r.Complete(m, 8);
+            };
+            const InferenceResult big = one(
+                *strataRunner,
+                "one two three four five six seven eight nine ten eleven twelve "
+                "thirteen fourteen fifteen sixteen seventeen eighteen");
+            const InferenceResult ok =
+                one(*strataRunner, "The capital of France is");
+            std::fprintf(stderr,
+                         "CTXTEST oversized_ok=%d (expect 0) err=%s\n"
+                         "CTXTEST recovery_ok=%d gen=%d (expect 1)\n"
+                         "CTXTEST done\n",
+                         big.ok ? 1 : 0, big.error.c_str(), ok.ok ? 1 : 0,
+                         ok.completionTokens);
             return EXIT_OK;
         }
     }
