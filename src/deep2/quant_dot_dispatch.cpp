@@ -56,6 +56,11 @@ VulkanCompute& Gpu()
         // RAWRXD_G04: honour a residency-budget pin requested before the first
         // dispatch (0 keeps the derived default).
         gpu.SetQuantWeightBudgetBytes((size_t)g_weight_cache_budget);
+        // RAWRXD_STRATA_RETENTION: mirror the process-wide retention policy onto
+        // the device context. The device context owns the policy now (it is the
+        // object that actually trims), so small tool binaries do not need to
+        // link the Deep2 dispatcher to resolve WeightCacheRetention().
+        gpu.SetWeightCacheRetention(g_weight_cache_retention != 0);
         gpu.Initialize();                  // false stays false; receipt explains
     }
     return gpu;
@@ -80,6 +85,9 @@ VulkanCompute& GpuFor(int32_t device_index)
     auto vk = std::make_unique<VulkanCompute>();
     vk->SetPreferredDeviceIndex(key);
     if (g_weight_cache_budget > 0) vk->SetQuantWeightBudgetBytes((size_t)g_weight_cache_budget);
+    // RAWRXD_STRATA_RETENTION: secondary devices inherit the process-wide
+    // retention policy too, so a split-model run trims consistently.
+    vk->SetWeightCacheRetention(g_weight_cache_retention != 0);
     if (!vk->Initialize())
         throw std::runtime_error("GpuFor: device init failed");
     VulkanCompute& ref = *vk;
@@ -406,8 +414,27 @@ size_t TrimUnpinnedQuantWeights() {
 // RAWRXD_G04: the budget is a device-lifetime setting resolved on first use, so
 // it is recorded here and applied by Gpu()/GpuFor() at initialisation, exactly
 // like SetPreferredDevice's device pin.
-void SetWeightCacheBudget(int64_t bytes) { g_weight_cache_budget = bytes; }
-void SetWeightCacheRetention(bool enabled) { g_weight_cache_retention = enabled; }
+void SetWeightCacheBudget(int64_t bytes) {
+    g_weight_cache_budget = bytes;
+    // Re-apply to any already-initialized device so a budget set AFTER the first
+    // dispatch (e.g. a session that opens later) still takes effect on the live
+    // device context, mirroring SetWeightCacheRetention. A non-positive value
+    // leaves the device-derived default in place.
+    if (bytes > 0) {
+        if (g_active_device >= 0)
+            GpuFor(g_active_device).SetQuantWeightBudgetBytes((size_t)bytes);
+        else
+            Gpu().SetQuantWeightBudgetBytes((size_t)bytes);
+    }
+}
+void SetWeightCacheRetention(bool enabled) {
+    g_weight_cache_retention = enabled;
+    // Apply immediately so a retention request issued *after* the first dispatch
+    // still takes effect on the live device context. Before the first dispatch
+    // this is the value Gpu()/GpuFor() mirror at init.
+    if (g_active_device >= 0) GpuFor(g_active_device).SetWeightCacheRetention(enabled);
+    else Gpu().SetWeightCacheRetention(enabled);
+}
 bool WeightCacheRetention() { return g_weight_cache_retention; }
 
 // RAWRXD_G04: expose the device the dispatcher actually uses, so gates can
