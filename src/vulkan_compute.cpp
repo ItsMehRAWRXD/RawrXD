@@ -1942,6 +1942,20 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
         const char* v = std::getenv("RAWRXD_QD_BATCH_DIAG");
         return v && v[0] == '1' && v[1] == '\0';
     }();
+    static std::atomic<uint32_t> route_diag_count{0};
+    const char* route_diag_env = std::getenv("RAWRXD_Q4K_SELECTION_DIAG");
+    const bool route_diag = route_diag_env && route_diag_env[0] == '1' &&
+        route_diag_env[1] == '\0';
+    const uint32_t route_diag_index = route_diag
+        ? route_diag_count.fetch_add(1, std::memory_order_relaxed) : UINT32_MAX;
+    if (route_diag_index < 16u) {
+        std::fprintf(stderr,
+            "Q4K_SELECTION_DIAGNOSTIC quantdot_route_entered=1 quant_type=%d "
+            "rows=%zu cols=%zu weight_bytes=%zu batch_active=%d "
+            "tiled4x_route=unavailable rejection_reason=quantdot_backend\n",
+            kind, n_out, n_in, packed_bytes, quant_batch_active_ ? 1 : 0);
+        std::fflush(stderr);
+    }
     const auto reject = [&](const char* predicate, size_t block_bytes = 0,
                             size_t need_packed = 0, size_t need_q8 = 0,
                             size_t n_blocks = 0) {
