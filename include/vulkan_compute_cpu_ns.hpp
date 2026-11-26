@@ -67,6 +67,11 @@ public:
     // Check if Vulkan backend is initialized
     bool initialized() const noexcept { return initialized_; }
 
+    // LIFE-02/06: non-owning access to the real Deep2::VulkanCompute backend that
+    // owns the VkPhysicalDevice/VkDevice/VkQueue. Valid only while this wrapper
+    // (and its backend_) is alive.
+    Deep2::VulkanCompute* Backend() const noexcept { return backend_.get(); }
+
     VulkanCompute(const VulkanCompute&)            = delete;
     VulkanCompute& operator=(const VulkanCompute&) = delete;
     VulkanCompute(VulkanCompute&&)                 = delete;

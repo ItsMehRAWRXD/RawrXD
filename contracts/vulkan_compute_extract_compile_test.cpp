@@ -1,9 +1,11 @@
-// Compile check: extract a record from the real VulkanCompute owner (LIFE-06).
+// Compile check: extract a record from the engine's real slot type
+// (CPUInference::VulkanCompute, as returned by getVulkanComputeSlot).
+#include "vulkan_compute_cpu_ns.hpp"
 #include "vulkan_compute.h"
 #include "VulkanComputeExtract.hpp"
 
 int main() {
-    Deep2::VulkanCompute* slot = nullptr;
-    auto r = rawrxd::dualgpu::RecordFromVulkanSlot(slot);
-    return (r.dev == VK_NULL_HANDLE) ? 0 : 1;
+    CPUInference::VulkanCompute* slot = nullptr;
+    auto r = rawrxd::dualgpu::RecordFromCpuSlot(slot);
+    return (r.dev == VK_NULL_HANDLE && r.phys == VK_NULL_HANDLE) ? 0 : 1;
 }
