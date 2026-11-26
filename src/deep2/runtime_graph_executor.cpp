@@ -1423,7 +1423,10 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         q8_scratch.resize(n_blk * 273);
         BuildInterleavedQ8K(x.data(), n_in, q8_scratch.data());
         y.assign(n_out, 0.0f);
-        if (std::getenv("QUANT_TRACE")) {
+        // NCRO: cache the diagnostic-gate env lookups (were per-linear getenv,
+        // hundreds/token). Thread-safe one-time init.
+        static const bool quantTrace = std::getenv("QUANT_TRACE") != nullptr;
+        if (quantTrace) {
             std::fprintf(stderr, "[quant] w=%s kind=%d n_in=%zu n_out=%zu n_blk=%zu rb=%zu wbytes=%zu need=%zu\n",
                          w.name.c_str(), kind, n_in, n_out, n_blk, rb, w.bytes,
                          rb * n_out);
@@ -1436,7 +1439,8 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         // guarantees runs before any op that reads y.
         // The differential per-op GPU check runs on the single-call path only:
         // it reads y immediately, which a queued dot cannot honour.
-        if (join_batch && dot_batch_open_ && !std::getenv("RR_GPU_CHECK")) {
+        static const bool gpuCheckEnv = std::getenv("RR_GPU_CHECK") != nullptr;
+        if (join_batch && dot_batch_open_ && !gpuCheckEnv) {
             const bool qok = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                                   x.data(), n_in, y.data(), n_out, cpu,
                                                   q8_scratch.data(), q8_scratch.size() * sizeof(float),
