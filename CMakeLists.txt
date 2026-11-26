@@ -2445,6 +2445,52 @@ else()
     message(STATUS "deep2_benchmark EXCLUDED: source or Vulkan SDK unavailable")
 endif()
 
+# RAWRXD_POLYMORPHIC_NATIVE_EXECUTION_005 — native blackboard acceptance (Deep2).
+if(EXISTS "${CMAKE_SOURCE_DIR}/contracts/blackboard_native_execution_test.cpp" AND Vulkan_FOUND AND
+   _rawrxd_vk_sdk_inc)
+    add_executable(deep2_blackboard_native
+        contracts/blackboard_native_execution_test.cpp
+        src/deep2/Deep2Log.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
+        src/streaming_gguf_loader.cpp
+    )
+    target_link_libraries(deep2_blackboard_native PRIVATE deep2_engine_lib)
+    target_include_directories(deep2_blackboard_native PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_blackboard_native PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_blackboard_native PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_blackboard_native PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_blackboard_native PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_blackboard_native PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_blackboard_native PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_blackboard_native enabled (native polymorphic blackboard; Deep2Engine)")
+endif()
+
 # Gate 10 — Q6_K Row-Level Differential Test
 # Verifies Q6_K GEMV kernel produces identical results for direct call vs row-sliced call
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/q6k_row_differential_test.cpp")

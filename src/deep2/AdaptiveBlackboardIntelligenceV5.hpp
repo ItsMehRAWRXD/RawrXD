@@ -150,9 +150,12 @@ struct V5Blackboard {
     V5Blackboard() {
         for (int p = 0; p < 3; ++p) {
             for (int k = 0; k < 5; ++k) { w[p][k] = 0.0; pw[p][k] = 0.0; }
+            // Every competing predictor starts from the SAME weak prior intercept so
+            // none begins near zero (which would make a zero-weight estimator win the
+            // active-predictor contest and collapse predictions early in a run).
+            w[p][0] = 200.0; pw[p][0] = 600.0;
             err[p] = 1.0; perr[p] = 1.0; lr[p] = 0.05;
         }
-        w[0][0] = 200.0; pw[0][0] = 600.0;   // weak priors; corrected by real data
         SeedStrategies();
     }
 
@@ -342,7 +345,7 @@ static inline Controls PredictiveSelect(V5Blackboard& bb, int activeP) {
 // ---- strategy evolution (metacognition) --------------------------------------
 static inline void NormalizeStrategy(Strategy& s) {
     double sum = 0; for (int m = 0; m < M_COUNT; ++m) { if (s.w[m] < 0) s.w[m] = 0; sum += s.w[m]; }
-    if (sum <= 0) { for (int m = 0; m < M_COUNT; ++m) s.w[m] = 1.0/M_COUNT; return; }
+    if (sum <= 0) { for (int m = 0; m < M_COUNT; ++m) s.w[m] = 1.0 / (double)M_COUNT; return; }
     for (int m = 0; m < M_COUNT; ++m) s.w[m] /= sum;
 }
 static inline void EvolveStrategies(V5Blackboard& bb) {

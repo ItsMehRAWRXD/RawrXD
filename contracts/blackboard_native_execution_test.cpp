@@ -30,6 +30,9 @@ int main(int argc, char** argv) {
 
     int N = 20;
     if (argc > 2) { N = std::atoi(argv[2]); if (N < 1) N = 1; }
+    if (const char* e = std::getenv("RAWRXD_N")) { N = std::atoi(e); if (N < 1) N = 1; }
+    if (const char* e = std::getenv("RAWRXD_NUM_PREDICT"))
+        rawrxd::deep2_native::Global().numPredict_ = (size_t)std::max(1, std::atoi(e));
 
     // 3) Drive the deterministic blackboard with the native executor.
     V5Blackboard bb;
