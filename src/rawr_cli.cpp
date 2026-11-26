@@ -371,15 +371,24 @@ public:
         const size_t maxTok = static_cast<size_t>((std::max)(1, maxTokens));
         for (size_t i = 0; i < maxTok; ++i) {
             if (InterlockedCompareExchange(&g_interrupted, 0, 0) != 0) break;
-            // R06 decode diagnostic: log the absolute position about to be
-            // generated (flushed) so the last completed token is provable if the
-            // GPU decode stalls.
+            // R06 decode diagnostic: distinguish ATTEMPTED (BEGIN) from COMPLETED
+            // (COMPLETE) positions, and record absolute KV position separately
+            // from the generated-token index.
+            const size_t absPos = totalPrompt + generated;
             if (traceTokens) {
-                std::fprintf(stderr, "DECODE_POS=%zu\n", totalPrompt + generated);
+                std::fprintf(stderr, "DECODE_BEGIN absolute_pos=%zu generated=%zu\n",
+                             absPos, generated);
                 std::fflush(stderr);
             }
             uint32_t nt = 0;
-            if (!session_->Step(nt, nullptr)) break;  // step failure
+            const bool stepOk = session_->Step(nt, nullptr);
+            if (traceTokens) {
+                std::fprintf(stderr,
+                             "DECODE_COMPLETE absolute_pos=%zu generated=%zu ok=%d\n",
+                             absPos, generated, stepOk ? 1 : 0);
+                std::fflush(stderr);
+            }
+            if (!stepOk) break;  // step failure
             genIds.push_back(static_cast<int>(nt));
             ++generated;
         }
