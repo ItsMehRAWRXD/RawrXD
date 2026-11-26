@@ -85,13 +85,22 @@ int main() {
       double ov = 0.0; bool m = OverlapFraction(t, ov);
       std::printf("OVERLAP_FRACTION=%.2f\n", ov);
       check(m && ov > 0.49 && ov < 0.51, "overlap_0.5_from_intervals");
-      check(BothDevicesContributed(t) == false, "no_active_time_no_contribution"); }
+      // DGL-F05: contribution derived from intervals — both present => true.
+      check(BothDevicesContributed(t) == true, "contribution_from_intervals");
+      Telemetry one; one.BeginWindow();
+      one.AddActiveInterval(0, 0ull, 1000000000ull); // only GPU0 active
+      one.EndWindow(1000000000ull);
+      check(BothDevicesContributed(one) == false, "single_contributor_rejected"); }
 
-    // DGL-11: byte-weighted residency 950/1000 = 0.95, clamped to <= 1.
-    { double r = ActiveWeightResidency(950, 1000);
+    // DGL-11 / DGL-F01: residency 950/1000 = 0.95; invalid (resident>total) is
+    // REJECTED (false), not clamped to a misleading 100%.
+    { double r = 0.0; bool m = ActiveWeightResidency(950, 1000, r);
       std::printf("ACTIVE_WEIGHT_RESIDENCY=%.2f\n", r);
-      check(r > 0.949 && r < 0.951, "residency_0.95");
-      check(ActiveWeightResidency(1200, 1000) == 1.0, "residency_clamped_to_1"); }
+      check(m && r > 0.949 && r < 0.951, "residency_0.95");
+      double bad = 1.0; bool mb = ActiveWeightResidency(1200, 1000, bad);
+      check(!mb, "residency_invalid_rejected");
+      double z = 1.0; bool mz = ActiveWeightResidency(0, 0, z);
+      check(!mz, "residency_zero_total_rejected"); }
 
     // Lifecycle: physical bandwidth UNVERIFIED (false) when no window is set.
     { Telemetry t; double bw = -1.0; bool m = AggregatePhysicalBandwidthGbps(t, bw);

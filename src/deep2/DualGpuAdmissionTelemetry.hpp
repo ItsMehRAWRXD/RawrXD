@@ -289,13 +289,16 @@ inline bool BothDevicesContributed(Telemetry& t) {
     return !a.empty() && !b.empty();
 }
 
-// DGL-11: active weight residency = resident requested / total requested, in
-// [0,1]. Invalid accounting is rejected with 0 rather than converted into a
-// false 100% residency result.
-inline double ActiveWeightResidency(uint64_t residentReqBytes, uint64_t totalReqBytes) {
-    if (!totalReqBytes) return 0.0;
-    if (residentReqBytes > totalReqBytes) return 0.0;
-    return static_cast<double>(residentReqBytes) / static_cast<double>(totalReqBytes);
+// DGL-11 / DGL-F01: active weight residency = resident requested / total
+// requested, in [0,1]. FAILS CLOSED (returns false, outFrac=0) on invalid
+// accounting (resident > total, or total == 0) so a bad measurement is
+// rejected and never reported as a misleading 100% (or a valid 0%).
+inline bool ActiveWeightResidency(uint64_t residentReqBytes, uint64_t totalReqBytes,
+                                  double& outFrac) {
+    outFrac = 0.0;
+    if (!totalReqBytes || residentReqBytes > totalReqBytes) return false;
+    outFrac = static_cast<double>(residentReqBytes) / static_cast<double>(totalReqBytes);
+    return true;
 }
 
 } // namespace dualgpu
