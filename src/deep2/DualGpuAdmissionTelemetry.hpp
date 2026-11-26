@@ -47,7 +47,9 @@ struct DualGpuDevice {
 // independently verifies the two devices are the expected adapters by vendor
 // and/or case-insensitive name needle — identity is not merely caller-asserted.
 struct ExpectedHardware {
-    bool        enforce        = false;
+    // The locked profile must verify the named physical adapters. Callers
+    // using ordinary compatibility mode should not invoke this authority.
+    bool        enforce        = true;
     uint32_t    gpu0Vendor      = 0x1002; // AMD
     uint32_t    gpu1Vendor      = 0x1002; // AMD
     std::string gpu0NameNeedle  = "R9700";
@@ -116,7 +118,9 @@ inline AdmissionResult AdmitLockedProfile(const std::vector<DualGpuDevice>& devs
             }
         }
     }
-    if (expect.enforce) {                          // independent identity check
+    // DGL-F03: expected-hardware verification is MANDATORY under the locked
+    // profile (identity is never merely caller-asserted).
+    {
         const DualGpuDevice& g0 = devs[0];
         const DualGpuDevice& g1 = devs[1];
         const bool g0ok = (expect.gpu0Vendor == 0 || g0.vendorId == expect.gpu0Vendor) &&
@@ -211,6 +215,18 @@ static inline uint64_t IntersectLen(std::vector<std::pair<uint64_t,uint64_t>> a,
     }
     return total;
 }
+// DGL-F04: clip intervals to [lo,hi) (the shared window) BEFORE intersection.
+static inline void ClipIntervals(std::vector<std::pair<uint64_t,uint64_t>>& v,
+                                 uint64_t lo, uint64_t hi) {
+    std::vector<std::pair<uint64_t,uint64_t>> out;
+    out.reserve(v.size());
+    for (const auto& iv : v) {
+        const uint64_t s = std::max(iv.first, lo);
+        const uint64_t e = std::min(iv.second, hi);
+        if (e > s) out.emplace_back(s, e);
+    }
+    v.swap(out);
+}
 
 // DGL-10: aggregate PHYSICAL bandwidth = (B0+B1)/T_shared. bytes/ns == GB/s.
 // Returns false (UNMEASURED) when there is no valid window or no counter-backed
@@ -220,7 +236,10 @@ inline bool AggregatePhysicalBandwidthGbps(Telemetry& t, double& outGbps) {
     std::lock_guard<std::mutex> l(t.mu);
     outGbps = 0.0;
     if (!t.windowValid || !t.sharedWallNs) return false;
-    if (!t.dev[0].vramCounterBacked && !t.dev[1].vramCounterBacked) return false;
+    // A locked dual-device result is invalid unless both contributors have
+    // independently counter-backed traffic. Logical bytes cannot certify the
+    // missing device by substitution.
+    if (!t.dev[0].vramCounterBacked || !t.dev[1].vramCounterBacked) return false;
     const uint64_t b = t.dev[0].vramReadBytes + t.dev[0].vramWriteBytes +
                        t.dev[1].vramReadBytes + t.dev[1].vramWriteBytes;
     outGbps = static_cast<double>(b) / static_cast<double>(t.sharedWallNs);
@@ -244,8 +263,13 @@ inline bool OverlapFraction(Telemetry& t, double& outFrac) {
     std::lock_guard<std::mutex> l(t.mu);
     outFrac = 0.0;
     if (!t.windowValid || !t.sharedWallNs) return false;
-    uint64_t ov = IntersectLen(t.dev[0].activeIntervals, t.dev[1].activeIntervals);
-    if (ov > t.sharedWallNs) ov = t.sharedWallNs; // clamp to window
+    // DGL-F04: clip each device's intervals to the shared window BEFORE
+    // intersecting, so out-of-window time cannot inflate overlap.
+    auto a = t.dev[0].activeIntervals;
+    auto b = t.dev[1].activeIntervals;
+    ClipIntervals(a, 0ull, t.sharedWallNs);
+    ClipIntervals(b, 0ull, t.sharedWallNs);
+    const uint64_t ov = IntersectLen(a, b);
     outFrac = static_cast<double>(ov) / static_cast<double>(t.sharedWallNs);
     return true;
 }
@@ -253,14 +277,24 @@ inline bool OverlapFraction(Telemetry& t, double& outFrac) {
 // True only when both devices recorded useful active time in the window.
 inline bool BothDevicesContributed(Telemetry& t) {
     std::lock_guard<std::mutex> l(t.mu);
-    return t.dev[0].activeNs != 0 && t.dev[1].activeNs != 0;
+    // DGL-F05: contribution is derived from verified execution intervals, not
+    // an independent counter. Each device needs a positive-length interval
+    // within the shared window.
+    auto a = t.dev[0].activeIntervals;
+    auto b = t.dev[1].activeIntervals;
+    if (t.windowValid && t.sharedWallNs) {
+        ClipIntervals(a, 0ull, t.sharedWallNs);
+        ClipIntervals(b, 0ull, t.sharedWallNs);
+    }
+    return !a.empty() && !b.empty();
 }
 
 // DGL-11: active weight residency = resident requested / total requested, in
-// [0,1]. Resident is clamped to total so the ratio can never exceed 1.
+// [0,1]. Invalid accounting is rejected with 0 rather than converted into a
+// false 100% residency result.
 inline double ActiveWeightResidency(uint64_t residentReqBytes, uint64_t totalReqBytes) {
     if (!totalReqBytes) return 0.0;
-    if (residentReqBytes > totalReqBytes) residentReqBytes = totalReqBytes;
+    if (residentReqBytes > totalReqBytes) return 0.0;
     return static_cast<double>(residentReqBytes) / static_cast<double>(totalReqBytes);
 }
 
