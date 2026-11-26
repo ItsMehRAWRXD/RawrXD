@@ -200,7 +200,8 @@ public:
         bool emit_esp_events = true;       // Emit Agent ESP events
     };
 
-    explicit StaleProcessScanner(const Config& config = {});
+    StaleProcessScanner();
+    explicit StaleProcessScanner(const Config& config);
 
     // Scan for stale processes matching target executable.
     StaleProcessReport scan() const;

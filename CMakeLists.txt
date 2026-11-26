@@ -2500,6 +2500,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
         src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/vulkan_compute.cpp
@@ -2569,7 +2570,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
     endif()
     # Link WinHTTP for cloud API client
     if(MSVC)
-        target_link_libraries(deep2_agentic_loop PRIVATE winhttp.lib)
+        target_link_libraries(deep2_agentic_loop PRIVATE winhttp.lib bcrypt.lib advapi32.lib)
+    elseif(MINGW)
+        target_link_libraries(deep2_agentic_loop PRIVATE winhttp bcrypt advapi32 dbghelp psapi)
     endif()
     if(MSVC)
         # /utf-8: keep UTF-8 punctuation as UTF-8 in the binary. Without it MSVC
@@ -6128,7 +6131,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
         src/deep2/runtime_graph_executor.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/moe_timing.cpp
-        src/deep2/moe_timing_graph.cpp
         src/deep2/moe_timing_graph.cpp
         src/core/project_rag_lite.cpp
         src/core/vram_kv_controls.cpp

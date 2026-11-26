@@ -201,6 +201,11 @@ public:
     // how much VRAM the host happens to have.
     void SetQuantWeightBudgetBytes(size_t bytes) { quant_weight_budget_bytes_ = bytes; }
     size_t QuantWeightBudgetBytes() const { return quant_weight_budget_bytes_; }
+    // Process-wide Strata residency policy mirrored by quant_dot_dispatch.
+    // This header is also consumed by the dispatcher, so keep the contract
+    // available in the public include tree as well as the engine-local header.
+    void SetWeightCacheRetention(bool enabled) { weight_cache_retention_ = enabled; }
+    bool WeightCacheRetention() const { return weight_cache_retention_; }
     // RAWRXD_G04 observability: the residency-safety invariants a gate can
     // assert without trusting any counter's intent.
     size_t OutstandingWeightLeases() const;   // leases not yet released
@@ -383,6 +388,7 @@ private:
     // first use so an existing deployment keeps the historical behaviour
     // unless the operator opts in.
     int weight_cache_policy_ = -1;
+    bool weight_cache_retention_ = false;
 
     // ---- RAWRXD_G04: concurrent-safe residency --------------------------------
     // The residency cache, the pooled scratch, the descriptor rings, the batch

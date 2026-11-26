@@ -592,12 +592,12 @@ static bool ExistsOnPath(const char* exe)
 {
     // `where` is a cmd builtin; use GetEnvironmentVariable on PATH directly so
     // no shell is spawned (the shell is exactly what may not exist yet).
-    char* path = nullptr;
-    size_t len = 0;
-    if (_dupenv_s(&path, &len, "PATH") != 0 || !path)
+    char pathBuffer[32768] = {};
+    const DWORD pathLength = GetEnvironmentVariableA("PATH", pathBuffer,
+                                                     static_cast<DWORD>(sizeof(pathBuffer)));
+    if (pathLength == 0 || pathLength >= sizeof(pathBuffer))
         return false;
-    std::string p(path);
-    free(path);
+    std::string p(pathBuffer, pathLength);
     size_t start = 0;
     while (start <= p.size())
     {
@@ -5378,14 +5378,14 @@ int main(int argc, char* argv[])
                 Logf_("WRITE_PREVIEW    %s\n", act.arg2.substr(0, 200).c_str());
 
                 // Compile
-                Logf_("[build] %s\n", build_cmd);
+                Logf_("[build] %s\n", build_cmd.c_str());
                 int code = 0;
                 std::string build_out = RunCmd("cd /d \"" + args.workdir + "\" && " + build_cmd + " 2>&1", &code);
                 Logf_("BUILD_EXIT       %d\n", code);
                 if (code == 0)
                 {
                     // Run test
-                    Logf_("[run] %s\n", run_cmd);
+                    Logf_("[run] %s\n", run_cmd.c_str());
                     int run_code = 0;
                     std::string run_out = RunCmd("cd /d \"" + args.workdir + "\" && " + run_cmd + " 2>&1", &run_code);
                     Logf_("RUN_EXIT         %d\n", run_code);
@@ -6264,7 +6264,23 @@ int main(int argc, char* argv[])
         // ---- Feed the observation back as the next user turn -------------------
         Logf_("RESULT_REINJECTION step=%d tool=%s target=%s observation_bytes=%zu status=PASS\n",
               step, act.tool.c_str(), act.arg1.c_str(), result.size());
-        std::string reinject = "Result of your command:\n" + result;
+        // The MOTD is an authorization read, not task context.  Reinjecting
+        // the complete policy document causes every native Deep2 continuation
+        // to prefill thousands of redundant tokens.  The policy is already
+        // present in the system prompt; carry only the verified receipt into
+        // the next turn so the model can observe authorization without
+        // exhausting the wall budget on repeated full-prefix prefill.
+        std::string reinject;
+        if (act.tool == "read_motd" && !tool_rejected)
+        {
+            reinject = "Result of your command:\nMOTD read succeeded. "
+                       "Authorization is active for this turn. "
+                       "Continue with the requested task.";
+        }
+        else
+        {
+            reinject = "Result of your command:\n" + result;
+        }
         if (forceLocalAgentic && approveMutationsEnv && !tool_rejected) {
             if (act.tool == "read_motd") {
                 reinject +=

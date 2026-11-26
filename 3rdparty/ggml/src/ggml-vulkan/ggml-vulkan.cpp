@@ -22,6 +22,7 @@ DispatchLoaderDynamic & ggml_vk_default_dispatcher();
 #include <vulkan/vulkan.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <iomanip>
 #include <iostream>

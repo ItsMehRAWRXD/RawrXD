@@ -352,6 +352,7 @@ bool ProcessTerminator::try_graceful(DWORD pid, DWORD timeout_ms) const {
 // StaleProcessScanner implementation
 // ============================================================================
 
+StaleProcessScanner::StaleProcessScanner() : config_{} {}
 StaleProcessScanner::StaleProcessScanner(const Config& config) : config_(config) {}
 
 StaleProcessReport StaleProcessScanner::scan() const {

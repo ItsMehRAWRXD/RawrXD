@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <thread>
 #include <cmath>
 #include <cstring>
 #if defined(_MSC_VER) || defined(__x86_64__)
@@ -1323,8 +1324,8 @@ bool VulkanCompute::EnsureQuantTimestampPool() {
 #define QDTRACE(msg) do { \
     static const bool qd_trace_on_ = (std::getenv("RR_QD_TRACE") != nullptr); \
     if (qd_trace_on_) { \
-        std::stringstream _qd_ss_; _qd_ss_ << std::this_thread::get_id(); \
-        std::cerr << "[qd-trace t" << _qd_ss_.str().substr(_qd_ss_.str().size() - 4) << "] " << msg << std::endl; \
+        const auto _qd_tid_ = std::hash<std::thread::id>{}(std::this_thread::get_id()); \
+        std::cerr << "[qd-trace t" << (_qd_tid_ & 0xffffu) << "] " << msg << std::endl; \
     } \
 } while (0)
 bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
