@@ -1,0 +1,21 @@
+{
+  "tag": "solo_e2e",
+  "model": "F:\rawrxd\llama3.2-3b-Q2_K.gguf",
+  "prompt_text": "Hello",
+  "prompt_tokens": 1,
+  "prompt_ids": [9906],
+  "generate_tokens": 4,
+  "generated_ids": [14924, 198, 791, 2768],
+  "cancelled": false,
+  "bind_ms": 4612.85,
+  "prefill_ms": 2229.41,
+  "decode_ms": 7647.28,
+  "total_ms": 14489.5,
+  "decode_tps": 0.523062,
+  "gpu_calls": 0,
+  "cpu_calls": 985,
+  "fallback": "k-quant dot: force_cpu (weight=blk.0.attn_q.weight)",
+  "nonfinite_logits": 0,
+  "expert_ledger": {"observations": 0, "hits": 0, "misses": 0, "evictions": 0, "hit_rate": 0, "distinct_experts": 0},
+  "cleanup": "ok"
+}
