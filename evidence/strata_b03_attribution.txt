@@ -1,0 +1,5 @@
+B02/B03 measured attribution — Strata 3B Q2_K, R9700, 64 tokens
+baseline (retention off): ~221 gpu_calls/token, 1.77 tps
+retention ON (RAWRXD_STRATA_RETAIN_WEIGHTS=1, DEEP2_WEIGHT_BUDGET_MIB=8192): 209.3 gpu_calls/token, 1.73 tps
+conclusion: persistent weight residency (B03) has NO throughput effect on the dense 3B — the model is dispatch-bound, not upload-bound. ~209 dispatches/token = ~7 per 28-block layer (q/k/v/o + gate/up/down), each a vkQueueSubmit+fence.
+lever: B06 (consolidate/batch compatible dispatches, fuse q/k/v and gate/up) and B07 (remove per-op fence waits) are the real levers, not B03/B04. llama.cpp Vulkan ref = 200 tps (~118x). Closing the gap requires the large dispatch/fusion rewrite; not done speculatively. Parity preserved (cosine 0.9982, nonfinite=0).
