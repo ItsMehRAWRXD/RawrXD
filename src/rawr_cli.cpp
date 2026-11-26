@@ -1654,15 +1654,31 @@ static int cmdRun(const std::vector<std::string>& args) {
             const InferenceResult a0 = one(*strataRunner, p0);
             const InferenceResult a1 = one(*strataRunner, p1);
             const InferenceResult a2 = one(*strataRunner, p2);
+            // Independent numerical parity: a fresh session on the SAME prompt p1
+            // must produce identical greedy text to the incremental (KV-reuse)
+            // result. Reset frees the first session before the reference opens.
+            strataRunner->Reset();
+            PersistentStrataRunner fresh(modelPath, *strataTokenizer);
+            const InferenceResult b1 = one(fresh, p1);
+            const bool parity = (a1.content == b1.content);
+            // Cancellation recovery: interrupt before a completion; the runner
+            // must report canceled and leave reusable state clean (no corruption).
+            InterlockedExchange(&g_interrupted, 1);
+            const InferenceResult c1 = one(*strataRunner, p0);
+            InterlockedExchange(&g_interrupted, 0);
+            const InferenceResult d0 = one(*strataRunner, p0);  // post-cancel reuse
             std::fprintf(stderr,
-                         "SELFTEST turn0_ok=%d gen=%d (expect reuse=0)\n"
-                         "SELFTEST turn1_ok=%d gen=%d (expect reuse=1)\n"
-                         "SELFTEST turn2_ok=%d gen=%d (expect reuse=0 invalidation)\n"
-                         "SELFTEST turn1_text=[%s]\n"
+                         "SELFTEST turn0_ok=%d gen=%d (reuse=0)\n"
+                         "SELFTEST turn1_ok=%d gen=%d (reuse=1)\n"
+                         "SELFTEST turn2_ok=%d gen=%d (reuse=0 invalidation)\n"
+                         "SELFTEST parity_incremental_vs_fresh=%s\n"
+                         "SELFTEST cancel_reported=%d (ok=%d)\n"
+                         "SELFTEST post_cancel_ok=%d gen=%d\n"
                          "SELFTEST done\n",
                          a0.ok ? 1 : 0, a0.completionTokens, a1.ok ? 1 : 0,
                          a1.completionTokens, a2.ok ? 1 : 0, a2.completionTokens,
-                         a1.content.c_str());
+                         parity ? "MATCH" : "DIFF", c1.canceled ? 1 : 0,
+                         c1.ok ? 1 : 0, d0.ok ? 1 : 0, d0.completionTokens);
             return EXIT_OK;
         }
     }
