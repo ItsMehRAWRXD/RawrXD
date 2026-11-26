@@ -354,6 +354,15 @@ int main(int argc,char**argv){
     const auto started=std::chrono::steady_clock::now();
     Deep2::ReapActivationAccumulator acc; acc.Reset();
     Deep2::ReapRouteTracker::Instance().Install([&](size_t l,const auto& p,const auto& ids,const auto& w){acc.Observe(l,p,ids,w);});
+    // Enable MoE route observation on the routers. The routers only call
+    // ReapRouteTracker::Observe when RAWR_REAP_CALIBRATION is set; without this
+    // a replay captures zero route metrics (e.g. gpt-oss) and the certified
+    // receipt is (correctly) rejected for missing route metrics.
+#if defined(_WIN32)
+    _putenv_s("RAWR_REAP_CALIBRATION", "1");
+#else
+    setenv("RAWR_REAP_CALIBRATION", "1", 1);
+#endif
     Deep2::Deep2Engine engine;
     if(!engine.loadModel(argv[1])){std::cerr<<"MODEL_LOAD_FAILED\n"; Deep2::ReapRouteTracker::Instance().Clear(); return 4;}
     std::ifstream in(argv[2]); if(!in){std::cerr<<"CORPUS_OPEN_FAILED\n"; return 4;}
