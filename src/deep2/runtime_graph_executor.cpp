@@ -3839,7 +3839,15 @@ bool Executor::OpMlaQueryAbsorb(const Instr& in, const std::vector<float>& q,
     const size_t d0 = (size_t)w.dims[0], d1 = (size_t)w.dims[1], wh = w.dims.size() == 3 ? (size_t)w.dims[2] : 1;
     if (w.dims.size() == 3 && wh != H) { err = "mla-query: attn_k_b head axis mismatch"; return false; }
     const bool inputFirst = d0 == nope && d1 == latent, outputFirst = d0 == latent && d1 == nope;
-    if (!inputFirst && !outputFirst) { err = "mla-query: attn_k_b does not match compact query geometry"; return false; }
+    const size_t metadataValueWidth = (size_t)spec_.value_length_mla;
+    const bool fusedInputFirst = d0 == latent && d1 >= H * (nope + 1) && d1 % H == 0;
+    const bool fusedOutputFirst = d1 == latent && d0 >= H * (nope + 1) && d0 % H == 0;
+    const size_t fusedWidth = fusedInputFirst ? d1 : (fusedOutputFirst ? d0 : 0);
+    const size_t valueWidth = fusedWidth ? (fusedWidth / H - nope) : metadataValueWidth;
+    if (!inputFirst && !outputFirst && !fusedInputFirst && !fusedOutputFirst) {
+        err = "mla-query: attn_k_b does not match compact query geometry";
+        return false;
+    }
     std::vector<float> wb; DequantPrefix(w, wb, d0 * d1 * wh);
     if (wb.size() < d0 * d1 * wh) { err = "mla-query: attn_k_b payload is short"; return false; }
     out.assign(H * (latent + rope), 0.0f);
@@ -3849,7 +3857,15 @@ bool Executor::OpMlaQueryAbsorb(const Instr& in, const std::vector<float>& q,
             double acc = 0.0;
             for (size_t i = 0; i < nope; ++i) {
                 const size_t base = w.dims.size() == 3 ? h * d0 * d1 : 0;
-                const size_t wi = base + (inputFirst ? o * d0 + i : i * d1 + o);
+                size_t wi;
+                if (fusedInputFirst) {
+                    // Fused attn_kv_b is [latent, heads * (K_nope + V)].
+                    wi = base + o * d1 + h * (nope + valueWidth) + i;
+                } else if (fusedOutputFirst) {
+                    wi = base + (h * (nope + valueWidth) + i) * d1 + o;
+                } else {
+                    wi = base + (inputFirst ? o * d0 + i : i * d1 + o);
+                }
                 acc += double(q[qb + i]) * double(wb[wi]);
             }
             out[ob + o] = (float)acc;
