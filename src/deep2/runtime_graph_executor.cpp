@@ -1194,6 +1194,18 @@ bool Executor::DequantCached(int32_t slot, size_t need, std::vector<float>& out)
     return true;
 }
 
+const std::vector<float>* Executor::DequantCachedPtr(int32_t slot, size_t need) {
+    if (slot < 0 || need == 0 || static_cast<size_t>(slot) >= tensors_.size()) return nullptr;
+    auto it = dequant_cache_.find(slot);
+    if (it != dequant_cache_.end() && it->second.size() >= need) return &it->second;
+    std::vector<float> fresh;
+    const size_t got = DequantPrefix(tensors_[(size_t)slot], fresh, need);
+    if (got < need) return nullptr;
+    fresh.resize(need);
+    auto inserted = dequant_cache_.insert_or_assign(slot, std::move(fresh));
+    return &inserted.first->second;
+}
+
 bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
                          std::vector<float>& y) {
     if (in.b < 0) { last_error_ = "rmsnorm: no weight slot"; return false; }
@@ -3848,8 +3860,8 @@ bool Executor::OpMlaQueryAbsorb(const Instr& in, const std::vector<float>& q,
         err = "mla-query: attn_k_b does not match compact query geometry";
         return false;
     }
-    std::vector<float> wb; DequantPrefix(w, wb, d0 * d1 * wh);
-    if (wb.size() < d0 * d1 * wh) { err = "mla-query: attn_k_b payload is short"; return false; }
+    const std::vector<float>* wb = DequantCachedPtr(in.b, d0 * d1 * wh);
+    if (!wb || wb->size() < d0 * d1 * wh) { err = "mla-query: attn_k_b payload is short"; return false; }
     out.assign(H * (latent + rope), 0.0f);
     for (size_t h = 0; h < H; ++h) {
         const size_t qb = h * compact, ob = h * (latent + rope);
@@ -3866,7 +3878,7 @@ bool Executor::OpMlaQueryAbsorb(const Instr& in, const std::vector<float>& q,
                 } else {
                     wi = base + (inputFirst ? o * d0 + i : i * d1 + o);
                 }
-                acc += double(q[qb + i]) * double(wb[wi]);
+                acc += double(q[qb + i]) * double((*wb)[wi]);
             }
             out[ob + o] = (float)acc;
         }

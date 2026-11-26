@@ -509,6 +509,7 @@ private:
       // `need` is the number of elements the caller requires; a cached vector
       // shorter than that is re-decoded. Returns false on decode failure.
       bool DequantCached(int32_t slot, size_t need, std::vector<float>& out);
+      const std::vector<float>* DequantCachedPtr(int32_t slot, size_t need);
       // Optional SSM profiling counters. They remain dormant unless
       // DEEP2_SSM_PROFILE=1 is set, so production execution has no logging
       // cost while controlled runs can separate cache and recurrent work.
