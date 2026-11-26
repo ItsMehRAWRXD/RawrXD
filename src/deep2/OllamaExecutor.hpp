@@ -82,12 +82,15 @@ inline std::string HttpDo(const wchar_t* method, const std::wstring& host, int p
             status = 0;
         if (status != 200) { ok = false; return out; }   // HTTP error, not success
         // Direct bounded read (no WinHttpQueryDataAvailable loop, which can
-        // stall). Read until a zero-length chunk = complete body.
+        // stall). Cancellation + 16 MiB accumulated-response cap.
         char buf[16384];
+        constexpr size_t MaxBody = 16ull << 20;
         for (;;) {
+            if (g_cancel.load()) { ok = false; return out; }   // cancellation
             DWORD received = 0;
             if (!WinHttpReadData(hr.get(), buf, (DWORD)sizeof(buf), &received)) { ok = false; return out; }
-            if (received == 0) break;                     // complete
+            if (received == 0) break;                          // complete
+            if (out.size() + received > MaxBody) { ok = false; return out; } // bounded
             out.append(buf, received);
         }
         ok = !out.empty();                                // success only if full body

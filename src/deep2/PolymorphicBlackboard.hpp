@@ -23,7 +23,7 @@ struct Blackboard {
     poly::Ratio ratio;                 // 50 50 default, runtime-configurable
     poly::State st;
     std::vector<poly::Cand> obs;       // bounded
-    poly::Cand current, best;
+    poly::Cand current{16, 1}, best{16, 1};   // LIFE: seed known-good (16/1)
     double bestDecode = 0; int bestRepeats = 0; bool haveBest = false;
     poly::Cand pending; double pendingDecode = 0; int pendingRepeats = 0; bool havePending = false;
     uint64_t alloc0 = 0, alloc1 = 0, iters = 0, accepts = 0, rejects = 0, failures = 0;
@@ -58,7 +58,7 @@ static inline poly::Cand NextObs(const Blackboard& bb) {
     const int fam = AllocSelect(bb);
     const int off = (int)(bb.st.predErr) % 7 - 3;   // from prediction error
     poly::Cand c;
-    if (fam == 0) { c.batch = std::max(1, bb.st.bestBatch + off * 32); c.threads = std::max(1, bb.st.bestThreads + off); }
+    if (fam == 0) { c.batch = std::max(16, bb.st.bestBatch + off * 32); c.threads = std::max(1, bb.st.bestThreads + off); }
     else { const int k = bb.st.stagnation % 8; c.batch = 16 + k * 64; c.threads = 1 + k * 4; }
     c.batch = std::min(4096, c.batch);
     return c;
