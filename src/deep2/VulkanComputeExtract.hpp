@@ -45,7 +45,8 @@ inline ExecutionDeviceRecord RecordFromCpuSlot(const CPUInference::VulkanCompute
     ExecutionDeviceRecord r = RecordFromVulkanSlot(s->Backend());
     // Layer wrapper health on top: the slot must be initialized and not lost.
     r.initialized = s->initialized() && r.initialized;
-    r.deviceLost  = s->DeviceIsLost();
+    // Conservatively combine backend and wrapper device-loss state.
+    r.deviceLost  = r.deviceLost || s->DeviceIsLost();
     return r;
 }
 
