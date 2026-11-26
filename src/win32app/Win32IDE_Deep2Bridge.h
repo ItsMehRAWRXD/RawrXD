@@ -59,6 +59,12 @@ public:
     // Synchronous generation (blocking)
     std::string GenerateSync(const std::string& prompt, int maxTokens = 512);
 
+    // Tokenizer bridge for native Strata text execution. Delegates to the
+    // loaded engine vocab; returns empty until a model is loaded. Lets the
+    // StrataChatSession path tokenize text without a new dependency.
+    std::vector<int> Tokenize(const std::string& text);
+    std::string Detokenize(const std::vector<int>& tokens);
+
     // Control
     void Cancel();
     void Stop();

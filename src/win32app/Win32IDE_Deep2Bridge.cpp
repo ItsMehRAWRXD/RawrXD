@@ -560,6 +560,20 @@ void Deep2Bridge::OnGenerationComplete(bool cancelled)
     }
 }
 
+std::vector<int> Deep2Bridge::Tokenize(const std::string& text)
+{
+    // Delegate to the loaded engine vocab (same tokenizer the Deep2 path uses).
+    // Empty until a model is loaded -- callers must handle that explicitly.
+    if (!m_cpuEngine) return {};
+    return m_cpuEngine->Tokenize(text);
+}
+
+std::string Deep2Bridge::Detokenize(const std::vector<int>& tokens)
+{
+    if (!m_cpuEngine || tokens.empty()) return {};
+    return m_cpuEngine->Detokenize(tokens);
+}
+
 std::string Deep2Bridge::GenerateSync(const std::string& prompt, int maxTokens)
 {
     if (!m_initialized.load()) {
