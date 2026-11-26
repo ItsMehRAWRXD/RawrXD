@@ -156,6 +156,10 @@ const char* RUN_PROMPT =
     "and must NOT be empty. Keep \"old\" short but unique.\n"
     "- Relative paths only; never escape the workspace.\n"
     "- You will receive the real tool result, then continue or finish.\n"
+    "- Do NOT reply with a final until you have ACTUALLY created or modified the "
+    "required files with write_file/edit_files and have seen the real tool result. "
+    "A final with no prior successful write/edit is REJECTED and you must redo the "
+    "work with a real tool call.\n"
     "- To finish, reply with {\"action\":\"final\",\"summary\":\"...\","
     "\"findings\":[...],\"next_actions\":[...]}\n"
     "- Never invent tool output. Base every claim on a result you actually saw.\n";
