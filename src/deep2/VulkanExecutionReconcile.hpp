@@ -49,6 +49,7 @@ inline uint64_t QueryDeviceLUID(VkPhysicalDevice pd,
     p.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     p.pNext = &idp;
     fn(pd, &p);
+    if (!idp.deviceLUIDValid) return 0; // reject invalid Vulkan LUID
     uint64_t luid = 0;
     for (int i = 0; i < 8; ++i)
         luid |= static_cast<uint64_t>(idp.deviceLUID[i]) << (8 * i);
@@ -76,7 +77,9 @@ inline bool ReconcileForAdmission(const std::vector<ExecutionDeviceRecord>& exec
                                   std::vector<DualGpuDevice>& out) {
     out.clear();
     for (const auto& e : exec) {
-        if (!e.initialized || e.deviceLost || !e.phys) continue; // OWN-09
+        // OWN-09 + handle validation: require initialized, non-null logical
+        // device and compute queue, and no device loss.
+        if (!e.initialized || e.deviceLost || !e.phys || !e.dev || !e.queue) continue;
         // OWN-04: match to a device-manager entry by exact LUID.
         const Deep2::DeviceIdentity* match = nullptr;
         if (e.deviceLUID != 0) {
@@ -99,7 +102,8 @@ inline bool ReconcileForAdmission(const std::vector<ExecutionDeviceRecord>& exec
             d.measuredCapBytes = (match && match->availableVramKnown)
                                      ? match->availableVram : 0;
         d.identityExact = (match != nullptr) && (e.deviceLUID != 0);
-        d.healthy       = e.initialized && !e.deviceLost;
+        // OWN-09: reconcile Vulkan runtime health with device-manager PnP health.
+        d.healthy       = e.initialized && !e.deviceLost && (match && match->healthy);
         out.push_back(d);
     }
     // OWN-05: normalize lane order R9700 -> 0, RX 7800 XT -> 1, others last.
@@ -112,7 +116,9 @@ inline bool ReconcileForAdmission(const std::vector<ExecutionDeviceRecord>& exec
         [&](const DualGpuDevice& a, const DualGpuDevice& b) {
             return laneOf(a) < laneOf(b);
         });
-    return out.size() >= 2;
+    // Final authority is AdmitLockedProfile (exact-two, identity, budget,
+    // health), not a raw record count — invalid records are rejected here.
+    return AdmitLockedProfile(out).admitted;
 }
 
 } // namespace dualgpu
