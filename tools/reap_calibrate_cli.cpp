@@ -1506,6 +1506,9 @@ private:
         if (!out) return false;
         out << "beaconism_schema=2\n"
             << "execution_kind=reap_calibration\n"
+            << "identity_kind=" << (modelSha256_.empty() ? "metadata_structural" : "sha256_content") << '\n'
+            << "checkpoint_generation="
+            << CheckpointManifest::hashString(checkpointIdentity_ + "|" + configHash_) << '\n'
             << "tokens_observed=" << beaconTokenCount_ << '\n'
             << "layer_observations=" << beaconLayerObservations_ << '\n'
             << "expert_observations=" << beaconExpertObservations_ << '\n'
@@ -1513,9 +1516,15 @@ private:
             << "payload_identity_hash_required=0\n";
         out.close();
         if (!out) return false;
+#if defined(_WIN32)
+        // Replace atomically; on failure the previous valid receipt remains.
+        return MoveFileExW(tmp.wstring().c_str(), path.wstring().c_str(),
+                           MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+#else
         std::error_code ec;
         fs::rename(tmp, path, ec);
         return !ec;
+#endif
     }
     
     bool writeFinalOutput() {
