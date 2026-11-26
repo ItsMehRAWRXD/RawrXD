@@ -1,0 +1,53 @@
+{
+  "schema": "rawrxd.deep2_perf_recovery_manifest.v1",
+  "date": "2026-11-26",
+  "worktree": "F:\\rawrxd",
+  "branch": "integration/combined-2026-11-25",
+  "objective": "Recover historical Deep2 high-throughput Q4_K execution (tiled4x) with numerical parity, then extend to R9700 + dual-GPU.",
+  "historical_targets": {
+    "rx7800xt_deep2_q4km_tps": 8259,
+    "rx7800xt_vulkan_reference_prefill_tps": 8463.96,
+    "r9700_rc1_tps": 8240,
+    "r9700_recent_vulkan_reference_tps": 5170,
+    "current_phi3_prefill_estimate_tps": 3.88,
+    "note": "Historical/user-reported; not independently reproduced. Recovery targets only."
+  },
+  "packages": [
+    {"id": "REC-01", "name": "Locate historical kernel", "status": "PASS", "evidence": "src/deep2/shaders/deep2_qgemv_tiled4x.comp (commit d2fda6be2c)"},
+    {"id": "REC-02", "name": "Locate production dispatch gate", "status": "PASS", "evidence": "src/deep2/vulkan_compute.cpp:2240 useTiled4x"},
+    {"id": "REC-03", "name": "Identify disabled default", "status": "PASS", "evidence": "RAWRXD_DEEP2_ENABLE_TILED4X gate (vulkan_compute.cpp:2238)"},
+    {"id": "REC-04", "name": "Verify shader compilation", "status": "PASS", "evidence": "glslangValidator -V --target-env vulkan1.3 exit 0"},
+    {"id": "REC-04A", "name": "Permanent Vulkan 1.3 shader build rule", "status": "PASS", "evidence": "commit eb9d75ffd1 (target env 1.2->1.3); build-tree output move + shaderPath discovery OPEN"},
+    {"id": "REC-06", "name": "Tail-row barrier divergence", "status": "PASS", "evidence": "commit 01b375d9e1 (rowActive flag; no early return before barrier)"},
+    {"id": "REC-05A", "name": "Production-connected GPU parity harness", "status": "OPEN", "next": "Reuse Deep2 device/buffer/pipeline/readback; select qPipeline_ vs qTiled4xPipeline_ on identical Q4_K tensors"},
+    {"id": "REC-05B", "name": "Independent CPU Q4_K oracle", "status": "OPEN", "next": "CPU dequant + GEMV reference (independent of GPU path)"},
+    {"id": "REC-05C", "name": "R9700 parity matrix", "status": "OPEN", "blocked_by": ["REC-05A", "REC-05B"]},
+    {"id": "REC-05D", "name": "RX 7800 XT parity matrix", "status": "OPEN", "blocked_by": ["REC-05A", "REC-05B"]},
+    {"id": "REC-06A", "name": "Non-multiple-of-four rows", "status": "OPEN", "note": "shader fixed; needs runtime parity over rows {1,2,3,4,5,7,8,15,16,17,128,4096}"},
+    {"id": "REC-06B", "name": "Block boundaries and alignment", "status": "OPEN"},
+    {"id": "REC-07A", "name": "Pipeline-selection telemetry", "status": "OPEN"},
+    {"id": "REC-07B", "name": "Batched-prefill dispatch reachability", "status": "OPEN"},
+    {"id": "REC-08", "name": "Hardware-aware certified auto-select", "status": "OPEN", "blocked_by": ["REC-05C", "REC-05D", "REC-07B"]},
+    {"id": "REC-09", "name": "RX 7800 XT throughput recovery", "status": "OPEN", "blocked_by": ["REC-08"]},
+    {"id": "REC-10", "name": "R9700 throughput acceptance", "status": "OPEN", "blocked_by": ["REC-08"]},
+    {"id": "REC-11", "name": "Dual-GPU throughput acceptance", "status": "OPEN", "blocked_by": ["REC-08"]},
+    {"id": "REC-12", "name": "Independent full-logit parity", "status": "OPEN"},
+    {"id": "REC-13", "name": "Native autonomous backend E2E", "status": "OPEN"},
+    {"id": "REC-14", "name": "Revision-bound receipts, commit, push", "status": "OPEN"}
+  ],
+  "verified_commits": ["eb9d75ffd1", "01b375d9e1"],
+  "gates": {
+    "SHADER_SOURCE_PROVENANCE": "REQUIRED",
+    "SHADER_BINARY_PROVENANCE": "REQUIRED",
+    "REFERENCE_KERNEL_EXECUTED": "REQUIRED",
+    "FUSED_KERNEL_EXECUTED": "REQUIRED",
+    "TILED4X_KERNEL_EXECUTED": "REQUIRED",
+    "CPU_ORACLE_PARITY": "REQUIRED",
+    "R9700_PARITY": "REQUIRED",
+    "RX7800XT_PARITY": "REQUIRED",
+    "TRUE_BATCHED_PREFILL": "REQUIRED",
+    "HISTORICAL_THROUGHPUT_RECOVERY": "REQUIRED",
+    "NATIVE_AUTONOMOUS_E2E": "REQUIRED"
+  },
+  "certification": {"PROMOTE": 0, "CERTIFIED": 0, "RELEASE": "HELD"}
+}
