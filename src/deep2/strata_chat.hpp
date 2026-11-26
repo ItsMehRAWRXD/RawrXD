@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <vector>
@@ -158,19 +159,33 @@ private:
     bool PrefillChunked(const std::vector<uint32_t>& tokens, size_t startPos)
     {
         constexpr size_t kChunk = 64;
+        size_t batches = 0;
+        size_t serialTokens = 0;
         for (size_t i = 0; i < tokens.size(); i += kChunk) {
             const size_t n = (kChunk < tokens.size() - i) ? kChunk
                                                           : (tokens.size() - i);
             std::vector<uint32_t> chunk(tokens.begin() + i,
                                         tokens.begin() + i + n);
-            if (executor_->PrefillBatch(chunk, startPos + i, nullptr)) continue;
-            // Serial reference fallback for the remainder.
+            if (executor_->PrefillBatch(chunk, startPos + i, nullptr)) {
+                ++batches;
+                continue;
+            }
+            // Serial reference fallback for the remainder. Log the authoritative
+            // reason so batch-vs-serial selection is provable from the receipt.
+            std::fprintf(stderr,
+                         "PREFILL_BATCH_FALLBACK at=%zu tokens=%zu reason=%s\n",
+                         i, tokens.size(), executor_->LastError().c_str());
             for (size_t j = i; j < tokens.size(); ++j) {
                 if (!executor_->ExecuteToken(tokens[j], startPos + j))
                     return false;
+                ++serialTokens;
             }
-            return true;
+            break;
         }
+        if (serialTokens == 0)
+            std::fprintf(stderr,
+                         "PREFILL_BATCH_OK chunks=%zu tokens=%zu start=%zu\n",
+                         batches, tokens.size(), startPos);
         return true;
     }
 

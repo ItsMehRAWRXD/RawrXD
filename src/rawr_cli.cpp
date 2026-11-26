@@ -1588,6 +1588,21 @@ static int cmdRun(const std::vector<std::string>& args) {
     }
 
     if (useStrata) {
+        // Track F: expert-weight cache budget. The process-global budget must be
+        // set BEFORE the tokenizer's loadModel initialises the Vulkan device,
+        // otherwise the device resolves its default (0 = no cache) first. Driven
+        // by RAWRXD_STRATA_WEIGHT_CACHE_MB (per-device memory admission still
+        // applies inside the residency owner). This does not modify R06 source.
+        if (const char* mb = std::getenv("RAWRXD_STRATA_WEIGHT_CACHE_MB")) {
+            const long long m = std::atoll(mb);
+            if (m > 0) {
+                ::RawrXD::Deep2::QuantDot::SetWeightCacheBudget(
+                    static_cast<int64_t>(m) * 1024 * 1024);
+                ::RawrXD::Deep2::QuantDot::SetWeightCacheRetention(true);
+                if (!g_json)
+                    out("Strata weight cache budget: " + std::to_string(m) + " MB");
+            }
+        }
         // Track F: production Strata completion dispatch. The tokenizer is
         // model-identity matched to the GGUF the StrataChatSession executes, and
         // is loaded once (resident). No fallback: a load failure is fatal here.
