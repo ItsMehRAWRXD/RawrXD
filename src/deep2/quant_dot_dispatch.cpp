@@ -207,7 +207,14 @@ bool EndBatchImpl()
     g_batch_active = false;
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);
-    if (qs.empty()) return true;
+    if (qs.empty()) {
+        // BP-03C: the executor queues dots DIRECTLY to the backend, so the
+        // dispatcher's g_queued is empty even though a GPU batch is open.
+        // Release the backend batch here (reconcile) so ownership does not
+        // stay active and reject the next BeginBatch as "nesting:active".
+        if (Gpu().QuantBatchActive()) return Gpu().EndQuantDotBatch();
+        return true;
+    }
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     // RAWRXD_DEEP2_MOE_BATCH_CHUNK_001. One device batch holds BatchCapacity()
