@@ -217,18 +217,31 @@ AgentResult runAgentController(
     // evidence before issuing an authoritative receipt.
     std::map<std::string, uint64_t> writtenHashes;  // path -> content hash at write
     auto verifyCompletion = [&](std::string& reason) -> bool {
-        if (res.results.empty()) {
-            reason = "no tool was executed; emit a real tool call first";
-            return false;
-        }
-        for (const auto& r : res.results) {
-            if (!r.ok && !r.denied) {
-                reason = "tool " + r.tool + " failed (exit " +
-                         std::to_string(r.exitCode) +
-                         "); fix the failure before finishing";
+        const std::string goalLow = lc(cfg.goal);
+        const bool wantsWrite =
+            goalLow.find("create") != std::string::npos ||
+            goalLow.find("write") != std::string::npos ||
+            goalLow.find("file") != std::string::npos ||
+            goalLow.find("implement") != std::string::npos ||
+            goalLow.find("generate") != std::string::npos;
+        const bool wantsBuild = goalLow.find("compile") != std::string::npos ||
+                                goalLow.find("build") != std::string::npos;
+        const bool wantsTest = goalLow.find("test") != std::string::npos;
+        const bool wantsExec = wantsBuild || wantsTest ||
+                               goalLow.find("run") != std::string::npos;
+
+        // A failed attempt is SUPERSEDED by any later successful tool (corrective
+        // execution, F04-C). Only an unresolved TRAILING failure blocks completion.
+        if (!res.results.empty()) {
+            const AgentReceipt& last = res.results.back();
+            if (!last.ok && !last.denied) {
+                reason = "last tool " + last.tool + " failed (exit " +
+                         std::to_string(last.exitCode) +
+                         "); fix it and re-run before finishing";
                 return false;
             }
         }
+
         // Session-written files must still exist with the content we recorded.
         for (const auto& kv : writtenHashes) {
             std::string content;
@@ -242,28 +255,35 @@ AgentResult runAgentController(
                 return false;
             }
         }
-        bool hasWrite = false, hasExecOk = false;
+
+        bool hasWrite = false, hasBuild = false, hasTest = false, hasRun = false;
         for (const auto& r : res.results) {
-            if (r.ok && (r.tool == "write_file" || r.tool == "edit_files"))
-                hasWrite = true;
-            if (r.ok && (r.tool == "run_build" || r.tool == "run_tests" ||
-                         (r.tool == "run_shell" && r.exitCode == 0)))
-                hasExecOk = true;
+            if (!r.ok) continue;
+            if (r.tool == "write_file" || r.tool == "edit_files") hasWrite = true;
+            if (r.tool == "run_build") hasBuild = true;
+            if (r.tool == "run_tests") hasTest = true;
+            if (r.tool == "run_shell" && r.exitCode == 0) hasRun = true;
         }
-        if (!hasWrite && !hasExecOk) {
-            reason = "no verified deliverable (no successful write_file/edit_files "
-                     "or build/run) — do the real work before finishing";
+        const bool hasExecOk = hasBuild || hasTest || hasRun;
+
+        // Read-only tasks need no filesystem/exec deliverable.
+        if (res.results.empty() && (wantsWrite || wantsExec)) {
+            reason = "no tool was executed; emit a real tool call first";
             return false;
         }
-        const std::string low = lc(cfg.goal);
-        const bool expectsExec =
-            low.find("compile") != std::string::npos ||
-            low.find("build") != std::string::npos ||
-            low.find("test") != std::string::npos ||
-            low.find("run") != std::string::npos;
-        if (expectsExec && !hasExecOk) {
-            reason = "task requires compilation/tests but no successful build/run "
-                     "was executed";
+        if (wantsWrite && !hasWrite) {
+            reason = "task requires a file deliverable but no write_file/edit_files "
+                     "succeeded";
+            return false;
+        }
+        // Compilation and testing are SEPARATE receipts when both are required.
+        if (wantsBuild && !hasBuild && !hasRun) {
+            reason = "task requires compilation but no successful build/run was "
+                     "executed";
+            return false;
+        }
+        if (wantsTest && !hasTest && !hasRun) {
+            reason = "task requires tests but no successful test/run was executed";
             return false;
         }
         return true;
