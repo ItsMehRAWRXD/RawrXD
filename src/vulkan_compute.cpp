@@ -2072,6 +2072,17 @@ bool VulkanCompute::EndQuantDotBatch() {
     // epoch's fence is waited on before the lock (and the pins) are released.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!quant_batch_active_) return false;
+    // BP-03F: a prior submission (e.g. an earlier op) may still be in flight.
+    // Complete it via its EXISTING fence (bounded wait) so batch-ownership
+    // release reflects actual completion. Never force-clear on failure or
+    // quarantine, and never re-submit an already-pending command buffer.
+    if (quant_submission_in_flight_) {
+        const VkResult wr = WaitQuantFence(device_, quant_fence_);
+        if (!Deep2::Submit::RecordQuantWait(static_cast<int>(wr),
+                quant_submission_in_flight_, quant_submission_failed_))
+            return false; // propagate; keep ownership until valid recovery
+        NoteSubmissionComplete();
+    }
     if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
             quant_submission_failed_, cleanup_quarantined_)) return false;
     quant_batch_active_ = false;
