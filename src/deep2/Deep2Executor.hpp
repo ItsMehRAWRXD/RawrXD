@@ -100,6 +100,10 @@ public:
             da.cmdDispatchCount, da.queueSubmitCount, da.gpuExecutionNs,
             Deep2::Deep2GpuForward_Resident(gf)
         };
+        // If no GPU forward layers executed, the GPU path did not engage
+        // (device-lost or forced CPU fallback). Flag it so the blackboard treats
+        // this as a hardware failure, not a valid low-performance sample.
+        m.hardwareFailure = (gf.forwardLayers == 0);
         return true;
     }
 

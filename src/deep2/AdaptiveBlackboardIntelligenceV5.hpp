@@ -42,6 +42,7 @@ struct Measured {
     double prefillTps = 0.0, decodeTps = 0.0;
     int    tokens = 0;
     bool   consistent = false, valid = false;
+    bool   hardwareFailure = false;   // device-lost / forced CPU fallback: NOT a valid perf sample
 };
 using ExecutorFn = bool (*)(const Controls&, Measured&);
 
@@ -104,6 +105,7 @@ struct V5Blackboard {
     std::vector<Scored> frontObserved;   // measured prefill AND measured decode
     std::vector<Scored> frontValidated;  // measured, repeat-validated best
     std::vector<Scored> rejected;        // measured-but-rejected (learning evidence)
+    std::vector<Scored> hwFailures;      // hardware-failure observations (diagnostic only, never learned)
 
     Bounds bounds;
 
@@ -136,6 +138,26 @@ struct V5Blackboard {
     PolymorphicRatio ratio;
     double structReward = 0.0, emergReward = 0.0;   // feedback for ratio adaptation
 
+    // Universal peak-percentage objective (backend-independent). The requested
+    // percentage is a TARGET only; it never fabricates achieved throughput. The
+    // four evidence categories stay strictly separate:
+    //   requested  = requestedPercent (objective, may exceed 100%)
+    //   modeled    = predictions (frontModeled)
+    //   measured   = observedPeak (max single measured decode)
+    //   validated  = validatedPeak (repeat-validated bestDecode)
+    struct PeakObjective {
+        double requestedPercent = 100.0;
+        double observedPeak = 0.0;
+        double validatedPeak = 0.0;
+        bool   parityCertified = false;
+    } objective;
+
+    // Dynamically discovered backend capabilities (which controls actually apply).
+    struct BackendCapabilities {
+        bool batch = true, threads = true, prefill = true, decode = true, context = true;
+        bool gpu = false, residency = false, expertPaging = false, dualGpu = false;
+    } caps;
+
     // Evolving deterministic internal state (no RNG). Variation comes from here,
     // which is itself driven only by real observations.
     uint64_t state = 0x9E3779B97F4A7C15ULL;
@@ -145,6 +167,7 @@ struct V5Blackboard {
     static constexpr int STRAT_CAP = 8;
     static constexpr int PENDING_CAP = 5;
     static constexpr int REJECT_CAP = 64;
+    static constexpr int HW_FAIL_CAP = 32;
     static constexpr int FRONT_CAP = 64;
 
     V5Blackboard() {
@@ -509,8 +532,14 @@ static inline void ExploreCycleV5(V5Blackboard& bb, ExecutorFn exec, CycleInfo* 
         info->temperature = bb.temperature; info->activePredictor = ap;
         info->wasRepeat = wasRepeat;
     }
-    if (!ran || !m.valid || m.decodeTps <= 0) {   // failure path: account, fabricate nothing
+    if (!ran || !m.valid || m.decodeTps <= 0 || m.hardwareFailure) {
+        // Hardware failure (device-lost / forced CPU fallback) or transport failure:
+        // account it, preserve for diagnostics, but NEVER let it contaminate the
+        // throughput predictors, observation matrix or acceptance. The last
+        // validated healthy best is left intact.
         ++bb.failures; ++bb.rejects;
+        if (bb.hwFailures.size() >= V5Blackboard::HW_FAIL_CAP) bb.hwFailures.erase(bb.hwFailures.begin());
+        bb.hwFailures.push_back(Scored{cand, m.prefillTps, m.decodeTps, true});
         strat.reward = 0.9 * strat.reward + 0.1 * (-0.5);
         strat.useCount += 1.0;
         return;
@@ -529,6 +558,8 @@ static inline void ExploreCycleV5(V5Blackboard& bb, ExecutorFn exec, CycleInfo* 
     ParetoAdd(bb.frontObserved, Scored{cand, m.prefillTps, m.decodeTps, false});
     ParetoAdd(bb.frontModeled,  Scored{cand, predPf, pred, false});   // fully modeled
     ObsAdd(bb, Scored{cand, m.prefillTps, m.decodeTps, false});
+    // Measured peak (single-shot) — kept separate from the validated peak.
+    bb.objective.observedPeak = std::max(bb.objective.observedPeak, m.decodeTps);
 
     // Measured-vs-measured acceptance. Inconsistent candidates may NOT become current.
     bool accept = m.consistent && (m.decodeTps >= bb.curDecode);
@@ -579,6 +610,9 @@ static inline void ExploreCycleV5(V5Blackboard& bb, ExecutorFn exec, CycleInfo* 
 
     // Evolve the strategy population occasionally (policy-level learning).
     if (bb.NextInt(3) == 0) EvolveStrategies(bb);
+
+    // Validated peak mirrors the independently repeat-validated best only.
+    bb.objective.validatedPeak = bb.bestDecode;
 
     if (info) {
         info->ran = true; info->measured = m.decodeTps; info->prefill = m.prefillTps;

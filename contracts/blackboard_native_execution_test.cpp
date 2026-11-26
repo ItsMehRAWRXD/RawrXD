@@ -54,9 +54,13 @@ int main(int argc, char** argv) {
     std::printf("=== SUMMARY ===\n");
     std::printf("BEST_MEASURED_DECODE=%.2f prefill=%.2f (batch=%d thr=%d repeats=%d)\n",
         bb.bestDecode, bb.bestPrefill, bb.best.batch, bb.best.threads, bb.bestRepeats);
-    std::printf("ACCEPTED=%llu REJECTED=%llu FAILURES=%llu ITERS=%llu DISTINCT_METHODS=%d\n",
+    std::printf("ACCEPTED=%llu REJECTED=%llu FAILURES=%llu ITERS=%llu DISTINCT_METHODS=%d HWFAILS=%zu\n",
         (unsigned long long)bb.accepts, (unsigned long long)bb.rejects,
-        (unsigned long long)bb.failures, (unsigned long long)bb.iterations, distinct);
+        (unsigned long long)bb.failures, (unsigned long long)bb.iterations, distinct,
+        bb.hwFailures.size());
+    std::printf("OBJECTIVE requested=%.0f%% observed=%.2f validated=%.2f parity=%d\n",
+        bb.objective.requestedPercent, bb.objective.observedPeak,
+        bb.objective.validatedPeak, (int)bb.objective.parityCertified);
 
     int fails = 0;
     auto ck = [&](bool ok, const char* n) { std::printf("%s %s\n", ok ? "OK" : "FAIL", n); if (!ok) ++fails; };
@@ -64,6 +68,7 @@ int main(int argc, char** argv) {
     ck(bb.bestDecode > 0.0, "native_best_measured");
     ck(distinct >= 3, "native_dynamic_selection");
     ck(bb.obs.size() <= bb.cap, "native_bounded_memory");
+    ck(bb.hwFailures.size() <= V5Blackboard::HW_FAIL_CAP, "native_hf_bounded");
     std::printf("FAILS=%d\nRESULT=%s\n", fails, fails == 0 ? "PASS" : "FAIL");
     return fails ? 1 : 0;
 }
