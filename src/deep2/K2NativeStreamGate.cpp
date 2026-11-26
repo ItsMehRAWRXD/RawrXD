@@ -19,6 +19,7 @@
 #include "K2LivePathTensorCache.hpp"
 #include "DualGpuAdmissionTelemetry.hpp"
 #include "HostHardwareProbe.hpp"
+#include "Deep2DeviceManager.hpp"
 #include "K2LivePathOwnership.hpp"
 #include "K2WeightResolve.hpp"
 #include "StreamTransferCounters.hpp"
@@ -1360,26 +1361,34 @@ Result Run(const fs::path& shardDir,
     // measured budgets; until then a requested lock rejects (never a silent
     // single-GPU run).
     if (rawrxd::dualgpu::DualGpuLockRequested()) {
-        const rawrxd::HostHardwareSnapshot hw = rawrxd::HostHardwareProbe::Probe();
+        // MB-09A/C/D: use the authoritative Deep2 device manager (adapter
+        // inventory with MEASURED free-VRAM budget, LUID-based stable identity
+        // and runtime PnP health) instead of a bare host probe. This makes the
+        // locked profile capable of SUCCESSFUL admission of two healthy,
+        // budget-known GPUs, while still failing closed otherwise. The
+        // manager's availableVram is the DXGI current-budget (Budget-Current-
+        // Usage); the Vulkan VkPhysicalDevice QueryDeviceMemoryBudget path from
+        // the execution owner is the MB-09B/09D refinement.
+        Deep2::DeviceManagerSnapshot snap;
+        Deep2::Deep2Device_Enumerate(snap);
+        Deep2::Deep2Device_RefreshPnPHealth(snap);
         std::vector<rawrxd::dualgpu::DualGpuDevice> lockDevs;
-        lockDevs.reserve(hw.gpus.size());
-        for (const auto& g : hw.gpus) {
+        for (unsigned i = 0; i < snap.deviceCount && i < 8; ++i) {
+            const Deep2::DeviceIdentity& g = snap.devices[i];
+            if (g.duty == Deep2::DeviceDuty::Excluded ||
+                g.duty == Deep2::DeviceDuty::Display) continue;
             rawrxd::dualgpu::DualGpuDevice d;
             d.stableId = g.stableId;
             d.name     = g.name;
             d.vendorId = g.vendorId;
             d.deviceId = g.deviceId;
-            // MB-09E: use the MEASURED current budget (driver free-VRAM, sourced
-            // from DXGI QueryVideoMemoryInfo / VK_EXT_memory_budget by the
-            // probe), NEVER heap capacity. Unknown measurement -> 0 -> the
-            // locked profile fails closed. When the engine exposes the actual
-            // VkPhysicalDevice handles (MB-09A) this must be replaced by
-            // rawrxd::vkbudget::QueryDeviceMemoryBudget(pd) + SafeBudgetBytes().
-            d.measuredCapBytes = g.availableVramKnown ? g.availableVramBytes : 0;
-            d.identityExact    = g.identityExact;
-            // MB-09F: health is derived from a live measurement and compute
-            // capability, not an unconditional "true".
-            d.healthy = g.availableVramKnown && g.compute;
+            // MB-09E: measured current budget, never heap capacity. Unknown -> 0
+            // -> fail closed.
+            d.measuredCapBytes = g.availableVramKnown ? g.availableVram : 0;
+            // MB-09C: stable LUID-based identity established by the manager.
+            d.identityExact = (g.luid != 0) && g.stableId[0] != '\0';
+            // MB-09F: runtime health from the device manager PnP refresh.
+            d.healthy = g.healthy;
             lockDevs.push_back(d);
         }
         const auto adm = rawrxd::dualgpu::AdmitLockedProfile(lockDevs);
