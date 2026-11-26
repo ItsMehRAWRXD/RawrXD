@@ -4011,7 +4011,7 @@ bool VulkanCompute::PinWeightView(const GpuWeightView& view) {
         if (!ensureWeightF32((const float*)view.data, key, view.bytes, b))
             return false;
     } else {
-        if (!ensureWeightQuant(view.type, view.data, view.bytes, b))
+        if (!ensureWeightQuant(view.type, view.data, view.bytes, b, view.key))
             return false;
     }
     const uint64_t key = view.key
