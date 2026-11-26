@@ -29,6 +29,7 @@
 #include "agentic/BackendRegistry.hpp"
 #include "agentic/InferenceRouter.hpp"
 #include "agentic/StrataReadiness.hpp"
+#include "agentic/StrataTextRunner.hpp"
 #include "agentic/tool_call_parser.h"
 #include "core/project_rag_lite.hpp"
 #include "core/vram_kv_controls.hpp"
@@ -212,6 +213,110 @@ static InferenceResult deep2Complete(Deep2Engine& engine,
     result.completionTokens = static_cast<int>(gr.generatedTokens);
     result.promptTokens = static_cast<int>(gr.promptTokens);
     result.finishReason = "stop";
+    return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Strata production completion adapter (Track F).
+//
+// Routes agent-loop turns through the SAME production text-inference core the
+// native IDE bridge uses (rawrxd::StrataTextRunner) with a model-identity
+// matched tokenizer. This is the missing connection between Strata inference
+// and the production autonomous controller (rawr::runAgentController): the
+// controller owns orchestration, permissions, the structured tool-call parser
+// and the execution feedback loop; this adapter only supplies real, model
+// generated content for each reasoning turn.
+//
+// Residency: the caller keeps `tokenizer` (a Deep2Engine holding the GGUF) alive
+// for the whole session, so the model is loaded once and stays resident across
+// iterations. Conversation context is carried by the controller's message list
+// (it rebuilds the full prompt each turn). Expert-cache residency is per-session
+// inside StrataTextRunner (a fresh StrataChatSession per Run); that is the
+// established production behaviour of the shared core and is not weakened here.
+//
+// Fail-closed: Open/Prefill/Step failures, cancellation and empty generation are
+// reported as !ok / canceled rather than silently falling back to another
+// backend or fabricating content.
+// ─────────────────────────────────────────────────────────────────────────
+static InferenceResult strataComplete(const std::string& modelPath,
+                                      Deep2Engine& tokenizer,
+                                      const std::vector<json>& messages,
+                                      int maxTokens) {
+    InferenceResult result;
+    result.ok = false;
+
+    // Flatten the controller's message list into a single prompt using the same
+    // general "role: content" layout deep2Complete uses, so the model's
+    // structured JSON tool calls remain parseable by runAgentController.
+    std::string prompt;
+    for (const auto& m : messages) {
+        const std::string role = m.value("role", std::string("user"));
+        const std::string content = m.value("content", std::string());
+        if (content.empty()) continue;
+        if (!prompt.empty()) prompt += "\n\n";
+        prompt += role + ": " + content;
+    }
+    if (prompt.empty()) {
+        result.error = "empty prompt";
+        return result;
+    }
+
+    rawrxd::StrataTextRunner runner(
+        modelPath,
+        [&tokenizer](const std::string& t) { return tokenizer.tokenize(t); },
+        [&tokenizer](const std::vector<int>& ids) {
+            return tokenizer.detokenize(ids);
+        });
+
+    rawrxd::StrataRunOptions opt;
+    opt.maxTokens = static_cast<size_t>((std::max)(1, maxTokens));
+    opt.cancelled = []() {
+        return InterlockedCompareExchange(&g_interrupted, 0, 0) != 0;
+    };
+    int deltas = 0;
+    if (!g_json) {
+        opt.onText = [&deltas](const std::string& piece) {
+            if (!piece.empty()) {
+                std::fwrite(piece.data(), 1, piece.size(), stderr);
+                ++deltas;
+            }
+        };
+    }
+
+    const rawrxd::StrataRunResult rr = runner.Run(prompt, opt);
+    if (!g_json && deltas > 0) std::fputc('\n', stderr);
+    const bool canceled =
+        opt.cancelled() || InterlockedCompareExchange(&g_interrupted, 0, 0) != 0;
+    std::fprintf(stderr, "STREAM_DELTAS=%d CANCELED=%d\n", deltas,
+                 canceled ? 1 : 0);
+
+    if (canceled) {
+        result.canceled = true;
+        result.content = rr.text;
+        result.ok = !rr.text.empty();
+        result.finishReason = "cancelled";
+        result.completionTokens = static_cast<int>(rr.text.size());
+        if (!result.ok) result.error = "cancelled before tokens";
+        return result;
+    }
+    if (!rr.ok) {
+        // Prefill/step/open failure: report the real reason, never substitute.
+        result.error = rr.error.empty() ? "strata inference failed" : rr.error;
+        result.content = rr.text;
+        result.completionTokens = static_cast<int>(rr.text.size());
+        return result;
+    }
+    if (rr.text.empty()) {
+        result.error = "empty generation";
+        return result;
+    }
+    result.ok = true;
+    result.content = rr.text;
+    result.finishReason = "stop";
+    // StrataRunResult does not surface a generated-token count; approximate from
+    // the produced text for telemetry only (the controller never gates on it).
+    result.completionTokens = static_cast<int>(rr.text.size());
+    result.promptTokens = static_cast<int>(prompt.size());
     return result;
 }
 
@@ -1231,12 +1336,15 @@ static int cmdRun(const std::vector<std::string>& args) {
     InterlockedExchange(&g_interrupted, 0);
     setToolCancelFlag(&g_interrupted);
     if (args.empty()) {
-        out("usage: rawr run <model> [--mode NAME] [--backend deep2|ollama] "
+        out("usage: rawr run <model> [--mode NAME] "
+            "[--backend deep2|strata|ollama] "
             "[--goal|--prompt|--task TEXT] [--max-tokens N] [--json]");
         out("");
         out("  <model>    GGUF filename (e.g. nemotron-bolt.gguf)");
         out("  --mode     Agent mode: code, ask, debug, audit, etc. (default: code)");
-        out("  --backend  deep2 = local Deep2 engine, ollama = Ollama HTTP port 11434");
+        out("  --backend  deep2 = local Deep2 engine, strata = expert-residency MoE "
+            "engine,");
+        out("             ollama = Ollama HTTP port 11434");
         out("  --goal/--prompt/--task  Natural-language task for the agent");
         out("  --max-tokens  Decode budget per turn (default 240; ask remasure: 32)");
         out("");
@@ -1311,22 +1419,17 @@ static int cmdRun(const std::vector<std::string>& args) {
     registerDefaultTools(reg, ws);
 
     std::string backend = resolveRunBackend(backendFlag);
-    if (backend != "deep2" && backend != "ollama") {
-        if (backend == "strata") {
-            out("ERROR: STRATA_NOT_ROUTABLE: expert residency is not activated on this "
-                "path; use --backend=deep2 or --backend=ollama");
-        } else {
-            out("ERROR: unsupported backend '" + backend +
-                "' (expected deep2, native, ollama, or auto)");
-        }
+    if (backend != "deep2" && backend != "ollama" && backend != "strata") {
+        out("ERROR: unsupported backend '" + backend +
+            "' (expected deep2, native, strata, ollama, or auto)");
         return EXIT_FAIL;
     }
 
-    // Deep2 consumes a workspace GGUF. Ollama consumes a registry/model tag
-    // (for example qwen3:8b); resolving the latter as a local file caused the
+    // Deep2 and Strata consume a workspace GGUF. Ollama consumes a registry/model
+    // tag (for example qwen3:8b); resolving the latter as a local file caused the
     // documented Ollama route to fail before inference was even attempted.
     std::string modelPath;
-    if (backend == "deep2") {
+    if (backend == "deep2" || backend == "strata") {
         modelPath = ws.resolve(model, true);
         if (modelPath.empty()) {
             out("ERROR: model not found inside workspace: " + model);
@@ -1335,7 +1438,28 @@ static int cmdRun(const std::vector<std::string>& args) {
         }
     }
 
-    // Choose the inference path: local Deep2 engine or HTTP backend.
+    // Track F: authoritative Strata readiness validation. Replaces the former
+    // hardcoded STRATA_NOT_ROUTABLE rejection. A GGUF existing on disk is never
+    // sufficient -- Strata requires a genuine MoE model (expert_count > 0), the
+    // single source of truth in StrataReadiness.hpp. Genuinely unsupported models
+    // still fail closed (no silent fallback to Deep2/Ollama).
+    const bool useStrata = (backend == "strata");
+    if (useStrata) {
+        const rawrxd::ResidencyReadiness rr =
+            rawrxd::ProbeStrataReadiness(modelPath);
+        if (!rr.ready) {
+            out("ERROR: STRATA_NOT_ROUTABLE: " + rr.detail);
+            out("Strata expert residency requires a genuine MoE model "
+                "(expert_count > 0); use --backend=deep2 or --backend=ollama for "
+                "dense models.");
+            if (g_json)
+                outJson({{"error", "strata_not_routable"}, {"detail", rr.detail}});
+            return EXIT_FAIL;
+        }
+    }
+
+    // Choose the inference path: local Deep2 engine, Strata expert-residency
+    // engine, or HTTP backend.
     bool useLocalDeep2 = (backend == "deep2");
 
     std::function<InferenceResult(const std::vector<json>&, int)> completeFn;
@@ -1343,6 +1467,9 @@ static int cmdRun(const std::vector<std::string>& args) {
     // Vulkan and emitted engine lifecycle traces on stdout, which corrupted
     // --json output for the ollama route.
     std::unique_ptr<Deep2Engine> localEngine;
+    // Track F: resident tokenizer for the Strata route. Kept alive for the whole
+    // session so the GGUF is loaded once and stays resident across agent turns.
+    std::unique_ptr<Deep2Engine> strataTokenizer;
     InferenceClient httpClient; // lives for whole cmdRun (HTTP/Ollama path)
     // NOTE: completeFn must not capture temporaries — both backends above stay
     // in function scope so agent-loop callbacks remain valid.
@@ -1371,7 +1498,40 @@ static int cmdRun(const std::vector<std::string>& args) {
         }
     }
 
-    if (!useLocalDeep2) {
+    if (useStrata) {
+        // Track F: production Strata completion dispatch. The tokenizer is
+        // model-identity matched to the GGUF the StrataChatSession executes, and
+        // is loaded once (resident). No fallback: a load failure is fatal here.
+        strataTokenizer = std::make_unique<Deep2Engine>();
+        if (!g_json) out("Loading Strata tokenizer: " + model);
+        if (!strataTokenizer->loadModel(modelPath)) {
+            out("ERROR: Strata tokenizer failed to load model: " + model);
+            out("AUDIT_STATUS=FAIL");
+            out("AUDIT_REASON=strata_tokenizer_load_failed");
+            return EXIT_NO_INFERENCE;
+        }
+        Deep2Engine* tokPtr = strataTokenizer.get();
+        completeFn = [tokPtr, modelPath](const std::vector<json>& msgs,
+                                         int maxTokens) {
+            return strataComplete(modelPath, *tokPtr, msgs, maxTokens);
+        };
+        if (!g_json) {
+            out("RawrXD Local Agent (Strata backend)");
+            out("Model:    " + model);
+            out("Backend:  strata (expert-residency in-process inference)");
+            out("Mode:     " + std::string(mode->name) + " - " +
+                std::string(mode->description));
+            out("Root:     " + ws.root());
+            out("Edits:    " + std::string(mode->sourceEditsAllowed ? "allowed by policy"
+                                                                    : "denied"));
+            out("Execute:  " + std::string(mode->executeByDefault ? "allowed by policy"
+                                                                  : "denied by default"));
+            out("Tools:    " + std::to_string(reg.size()) + " registered");
+            out("");
+        }
+    }
+
+    if (!useLocalDeep2 && !useStrata) {
         const int httpPort = backend == "ollama" ? 11434 : 8080;
         // Ollama OpenAI-compatible surface: http://127.0.0.1:11434/v1/...
         httpClient.setEndpoint(httpPort);
@@ -1436,7 +1596,7 @@ static int cmdRun(const std::vector<std::string>& args) {
             }
             return r;
         };
-    } else {
+    } else if (useLocalDeep2) {
         if (!g_json) {
             out("RawrXD Local Agent (Deep2 backend)");
             out("Model:    " + model);
