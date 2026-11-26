@@ -1,0 +1,11 @@
+A02/A03 independent full-logit parity — llama.cpp Vulkan vs Strata GPU
+reference: llama_logits.exe (built from wp01_reference llama.cpp, ggml-vulkan, R9700) linked against llama.lib/ggml*.lib
+harness: evidence/llama_logits.c (explicit token IDs -> full-vocab logits dump; 8-byte header + float32[n_vocab])
+workload: llama3.2-3b-Q2_K, token 15043 ("Hello"), pos 0, n_vocab=128256
+Strata GPU logits: evidence/lg_gpu.bin ; llama.cpp Vulkan logits: evidence/ll_gpu.bin
+n=128256
+max_abs_diff=0.6696744
+rms=0.1007633
+cosine=0.9982068
+argmax_strata=14924 argmax_llama=14924 (identical top-1)
+interpretation: independent llama.cpp Vulkan reference agrees with Strata GPU (cosine 0.998, same argmax). Larger max diff than CPU<->GPU (0.045) due to llama.cpp's own Q2_K dequant/accumulation order. Full-logit independent parity PASS (not bit-exact). Note: compare_logits.ps1 has a param-binding quirk; inline comparison used.
