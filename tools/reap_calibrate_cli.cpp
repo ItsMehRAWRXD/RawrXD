@@ -640,6 +640,19 @@ public:
     }
     
     bool initialize() {
+        // The MLA GPU implementation has an explicit feature gate separate
+        // from Vulkan admission.  Calibration must carry that gate forward
+        // or Kimi reaches the real Q projection and is rejected at the
+        // GPU-policy boundary.  Preserve the explicit CPU reference contract.
+        const char* cpuOnly = std::getenv("RAWR_REAP_CPU_ONLY");
+        const bool cpuReference = cpuOnly && cpuOnly[0] == '1' && cpuOnly[1] == '\0';
+        if (!cpuReference) {
+#ifdef _WIN32
+            _putenv_s("DEEP2_K2_GPU_MLA", "1");
+#else
+            setenv("DEEP2_K2_GPU_MLA", "1", 0);
+#endif
+        }
         phase("OUTPUT_DIRECTORY", "BEGIN");
         // Checkpoints and rank files are part of the calibration contract. Create
         // the destination before the first atomic temp-file write so a missing
@@ -750,18 +763,28 @@ public:
         if (!config_.saliencyDirect) installReapObserver();
         phase("REAP_OBSERVER_INSTALL", "END");
         
-        // Compute model SHA-256 for checkpoint validation
-        phase("SOURCE_SHA256", "BEGIN");
-        modelSha256_ = computeFileSha256(config_.modelPath);
-        if (modelSha256_.size() != 64) {
-            cerr << "Source checkpoint hash failed" << endl;
-            return false;
+        // Structural Beaconism must not scan the weight payload before
+        // calibration. Strict content identity remains explicitly available
+        // through RAWRXD_BEACONISM_STRICT=1.
+        const char* beaconEnv = std::getenv("RAWRXD_BEACONISM");
+        const char* strictEnv = std::getenv("RAWRXD_BEACONISM_STRICT");
+        const bool structuralBeacon = beaconEnv && beaconEnv[0] == '1' && beaconEnv[1] == '\0';
+        const bool strictContent = strictEnv && strictEnv[0] == '1' && strictEnv[1] == '\0';
+        phase(structuralBeacon && !strictContent ? "STRUCTURAL_BEACON" : "SOURCE_SHA256", "BEGIN");
+        if (!structuralBeacon || strictContent) {
+            modelSha256_ = computeFileSha256(config_.modelPath);
+            if (modelSha256_.size() != 64) {
+                cerr << "Source checkpoint hash failed" << endl;
+                return false;
+            }
+        } else {
+            modelSha256_.clear();
         }
         if (!config_.saliencyCapture && !buildCheckpointIdentity()) {
             cerr << "Cannot establish complete checkpoint identity" << endl;
             return false;
         }
-        phase("SOURCE_SHA256", "END");
+        phase(structuralBeacon && !strictContent ? "STRUCTURAL_BEACON" : "SOURCE_SHA256", "END");
         if (config_.verbose) {
             cout << "  Model SHA-256: " << modelSha256_ << endl;
         }
