@@ -1,0 +1,41 @@
+{
+  "schema": "RAWRXD_DEEP2_REMAINING_001",
+  "generated_utc": "2026-11-26T14:35:00Z",
+  "repo": "F:\\rawrxd",
+  "branch": "integration/combined-2026-11-25",
+  "head": "3a61aa475e",
+  "method": "manual source reverse-engineering (not synthetic); file:line evidence",
+  "reverse_engineered_q4k_decode_path": {
+    "primary_decode_owner": "src/vulkan_fwd_q4k_fused.cpp:83 DispatchGEMVFusedQ4KT",
+    "characteristics": [
+      "host-IO per op: vkMapMemory+memcpy input upload (lines 158-160), output readback",
+      "weight streaming to slot unless pinned (lines 166-194)",
+      "rowTile=4 for non-shared, non-KVA (lines 201-202)",
+      "records via BindGemvStoragePc / BindGemvStorage (line 208+)"
+    ],
+    "generic_path_tiled4x_selector": "src/deep2/vulkan_compute.cpp:2238 (dispatchQuant, gated RAWRXD_DEEP2_ENABLE_TILED4X)",
+    "tiled4x_kernel": "src/deep2/shaders/deep2_qgemv_tiled4x.comp (8038 B) + .spv (8132 B)",
+    "tiled4x_pipeline_created": "src/deep2/vulkan_compute.cpp:762-765",
+    "gap": "Q4_K decode uses DispatchGEMVFusedQ4KT (fused), which never calls dispatchQuant; tiled4x is unreachable from the decode path (REC-15 PASS, REC-18 OPEN)"
+  },
+  "remaining_packages": [
+    {"id":"REC-16","desc":"reconcile tiled4x descriptor layout + push constants with fused Q4K (QPush vs fused pc)","status":"OPEN","evidence":"vulkan_fwd_q4k_fused.cpp:207-212 vs vulkan_compute.cpp:2298-2310"},
+    {"id":"REC-17","desc":"preserve fused O_PROJ/residual/KVA semantics when adding tiled4x branch","status":"OPEN","evidence":"vulkan_fwd_q4k_fused.cpp:88-132"},
+    {"id":"REC-18","desc":"add tiled4x branch to DispatchGEMVFusedQ4KT for !isKva && !useSharedX && rows>=4","status":"OPEN","evidence":"vulkan_fwd_q4k_fused.cpp:201-204"},
+    {"id":"REC-19","desc":"require real [Q4K_TILED4X_DISPATCH] receipt on the decode path","status":"OPEN","evidence":"vulkan_compute.cpp:2302 trace exists but never fires"},
+    {"id":"REC-20","desc":"same-input parity: reference vs fused vs tiled4x on tinyllama Q4_K_M","status":"OPEN","evidence":"tinyllama.gguf present (0.62GB)"},
+    {"id":"REC-21","desc":"independent full-model logit parity at 8/32/128/512 tokens","status":"OPEN","evidence":"deep2_strata_chat --logits-out"},
+    {"id":"REC-22","desc":"hardware-aware kernel selection (RDNA3/4 auto, env override)","status":"OPEN","evidence":"info_.vendorId available (vulkan_compute.h:69,1638)"},
+    {"id":"REC-23","desc":"batched-prefill integration + persistent residency + consolidated submission","status":"OPEN","evidence":"159 dispatches/prefill-token reported; Deep2Engine_GpuForward per-layer fuse"},
+    {"id":"REC-24","desc":"historical throughput recovery (8,259 TPS Q4_K_M claim; receipt unrecovered)","status":"OPEN","evidence":"evidence/deep2_hist_recovery_tiled4x_20261126.txt"},
+    {"id":"REC-25","desc":"native autonomous acceptance + revision-bound receipts","status":"OPEN","evidence":"deep2_agentic_loop builds+runs"}
+  ],
+  "constraints": {
+    "preserve_fused_path": true,
+    "no_synthetic_parity": true,
+    "no_fabricated_tps": true,
+    "certified": 0,
+    "release": "HELD",
+    "promote": 0
+  }
+}
