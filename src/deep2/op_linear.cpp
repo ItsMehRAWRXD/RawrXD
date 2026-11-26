@@ -78,6 +78,15 @@ bool OpLinear(int gguf_type,
     // the closure, not a silent fallback: report it.
     const QuantDot::Receipt& r = QuantDot::LastReceipt();
     const char* why = r.fallback_reason ? r.fallback_reason : "CPU path executed";
+    // BP-05D: capture the FIRST per-op CPU fallback per session (fresh receipt)
+    // so the underlying GPU rejection is visible before downstream fallbacks.
+    { static bool s_first_fb_logged = false;
+      if (!s_first_fb_logged && std::getenv("RR_QD_TRACE")) {
+          s_first_fb_logged = true;
+          std::fprintf(stderr,
+              "[QD_FIRST_FALLBACK] op=Linear reason=%s gpu_rows=%zu cpu_rows=%zu\n",
+              why, r.gpu_rows, r.cpu_rows);
+      } }
     if (gpu_only) {
         SetLast(false, false, gguf_type, why);
         return false;
