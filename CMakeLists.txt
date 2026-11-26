@@ -117,7 +117,18 @@ option(RAWRXD_ENABLE_HARDENING "Enable production security hardening (compiler/l
 
 if(RAWRXD_ENABLE_HARDENING)
     message(STATUS "Security hardening ENABLED")
-    
+
+    # Detect whether the active linker is Microsoft link.exe.  link.exe does not
+    # understand GNU ld-style flags such as -z/--no-copy-dt-needed-entries and
+    # fails with "unsupported linker flags".  A tree can be configured with a
+    # MINGW/UNIX compiler (so the GNU branch below is selected) while still
+    # resolving CMAKE_LINKER to link.exe; in that case the GNU *link* options
+    # must be suppressed so the acceptance executables can link.
+    set(_rawrxd_linker_is_msvc FALSE)
+    if(CMAKE_LINKER MATCHES "link\\.exe$" OR CMAKE_LINKER MATCHES "link\\.exe\\b")
+        set(_rawrxd_linker_is_msvc TRUE)
+    endif()
+
     if(MSVC)
         # MSVC Security Hardening Flags
         # COMPILE-TIME options below. /DYNAMICBASE, /NXCOMPAT and /HIGHENTROPYVA
@@ -212,15 +223,19 @@ if(RAWRXD_ENABLE_HARDENING)
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wformat=2>
         )
         
-        add_link_options(
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-pie>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,relro>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,now>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,noexecstack>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,--no-copy-dt-needed-entries>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fno-plt>
-        )
+        # GNU ld-style link hardening.  Suppressed when the active linker is
+        # MSVC link.exe, which rejects -z / --no-copy-dt-needed-entries.
+        if(NOT _rawrxd_linker_is_msvc)
+            add_link_options(
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-pie>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,relro>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,now>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,noexecstack>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,--no-copy-dt-needed-entries>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fno-plt>
+            )
+        endif()
         
         add_compile_definitions(
             RAWRXD_HARDENING=1
@@ -2483,6 +2498,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
         # Logf_() is defined exactly once, in Deep2Log.cpp, for this target too.
         src/deep2/Deep2Log.cpp
         src/deep2/runtime_graph_executor.cpp
+        # Defines g_moe_router_ms/g_moe_expert_ms/g_moe_router_calls/g_moe_expert_calls
+        # referenced by runtime_graph_executor.cpp (LNK2001 if omitted).
+        src/deep2/moe_timing_graph.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp

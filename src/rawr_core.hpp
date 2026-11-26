@@ -483,9 +483,16 @@ public:
     ///        stopped Ollama. A 30 s default left almost no headroom.
     bool ping(int timeoutMs = 60000);
 
+    /// @brief Fast reachability probe (OpenAI `GET /v1/models`). Returns true
+    ///        when the backend HTTP surface answers 200, WITHOUT loading a model
+    ///        or generating tokens. Use this at session start so a cold model
+    ///        load does not masquerade as an unreachable backend.
+    bool reachable(int timeoutMs = 5000);
+
 private:
     std::string httpPost(const std::string& path, const std::string& body,
                          long* status, std::string& err);
+    std::string httpGet(const std::string& path, long* status, std::string& err);
 
     std::string model_ = "llama3.2-3b";
     std::wstring host_ = L"127.0.0.1";

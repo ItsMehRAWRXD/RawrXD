@@ -1038,6 +1038,75 @@ bool InferenceClient::ping(int timeoutMs) {
     return r.ok;
 }
 
+std::string InferenceClient::httpGet(const std::string& path, long* status,
+                                     std::string& err) {
+    std::string response;
+    HINTERNET session = WinHttpOpen(L"RawrXDCore/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                    WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!session) { err = "WinHttpOpen failed"; return {}; }
+    HINTERNET conn = WinHttpConnect(session, host_.c_str(),
+                                    static_cast<INTERNET_PORT>(port_), 0);
+    if (!conn) { err = "WinHttpConnect failed"; WinHttpCloseHandle(session); return {}; }
+    HINTERNET req = WinHttpOpenRequest(conn, L"GET", utf8ToWide(path).c_str(), nullptr,
+                                       WINHTTP_NO_REFERER,
+                                       WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (!req) {
+        err = "WinHttpOpenRequest failed";
+        WinHttpCloseHandle(conn);
+        WinHttpCloseHandle(session);
+        return {};
+    }
+    DWORD t = static_cast<DWORD>(timeoutMs_);
+    WinHttpSetTimeouts(req, t, t, t, t);
+    if (!WinHttpSendRequest(req, WINHTTP_NO_REQUEST_DATA, 0, nullptr, 0, 0, 0)) {
+        err = "WinHttpSendRequest failed (" + std::to_string(GetLastError()) + ")";
+        goto cleanup_get;
+    }
+    if (!WinHttpReceiveResponse(req, nullptr)) {
+        err = "WinHttpReceiveResponse failed (" + std::to_string(GetLastError()) + ")";
+        goto cleanup_get;
+    }
+    {
+        DWORD code = 0, sz = sizeof(code);
+        WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                            WINHTTP_HEADER_NAME_BY_INDEX, &code, &sz,
+                            WINHTTP_NO_HEADER_INDEX);
+        if (status) *status = static_cast<long>(code);
+        for (;;) {
+            DWORD have = 0;
+            if (!WinHttpQueryDataAvailable(req, &have)) break;
+            if (have == 0) break;
+            std::vector<char> buf(static_cast<size_t>(have) + 1, 0);
+            DWORD rd = 0;
+            if (!WinHttpReadData(req, buf.data(), have, &rd)) break;
+            if (rd == 0) break;
+            response.append(buf.data(), rd);
+        }
+    }
+cleanup_get:
+    WinHttpCloseHandle(req);
+    WinHttpCloseHandle(conn);
+    WinHttpCloseHandle(session);
+    return response;
+}
+
+bool InferenceClient::reachable(int timeoutMs) {
+    int saved = timeoutMs_;
+    timeoutMs_ = timeoutMs;
+    long status = 0;
+    std::string err;
+    // OpenAI-compatible surface: GET /v1/models returns 200 when the backend
+    // HTTP server is live, without loading a model or generating tokens.
+    std::string raw = httpGet("/v1/models", &status, err);
+    timeoutMs_ = saved;
+    if (status == 200) return true;
+    // Ollama-native fallback: GET /api/tags.
+    timeoutMs_ = timeoutMs;
+    raw = httpGet("/api/tags", &status, err);
+    timeoutMs_ = saved;
+    return status == 200;
+}
+
 InferenceResult InferenceClient::complete(const std::vector<json>& messages,
                                           int maxTokens, double temperature) {
     InferenceResult out;

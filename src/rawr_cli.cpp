@@ -1868,8 +1868,11 @@ static int cmdRun(const std::vector<std::string>& args) {
             out("");
         }
 
-        // Verify inference before reporting a live session.
-        if (!httpClient.ping()) {
+        // Verify inference before reporting a live session. Use the fast
+        // reachability probe (GET /v1/models) so a cold model load does not
+        // masquerade as an unreachable backend; ping() (full generation) is
+        // reserved for `rawr doctor`.
+        if (!httpClient.reachable(5000)) {
             out("ERROR: no " + backend + " inference backend reachable on 127.0.0.1:" +
                 std::to_string(httpPort));
             out("AUDIT_STATUS=FAIL");
