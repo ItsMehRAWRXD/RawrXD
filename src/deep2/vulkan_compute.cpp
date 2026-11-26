@@ -4036,14 +4036,19 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
     // published views can be invalidated and reclaimed here as well.
     ReclaimAllResidents();
     const size_t evictedBytes = beforeBytes - weightCacheBytes_;
-    std::fprintf(stderr,
-                 "[GPU_RESIDENCY] instance=%p block=%u pinned_weight_bytes=%zu "
-                 "cached_weight_bytes=%zu weight_budget_bytes=%zu "
-                 "live_allocation_count=%zu "
-                 "live_device_bytes=%zu live_device_allocations=%llu "
-                 "evicted_weight_bytes=%zu resident_reclaimed_bytes=%zu "
-                 "heap_headroom_bytes=%zu\n",
-                 static_cast<const void*>(this),
+    // NCRO: this per-block diagnostic fires ~27x per generated token; synchronous
+    // stderr logging in the hot path is a major non-compute overhead. Opt-in only.
+    static const bool profileResidency =
+        std::getenv("RAWRXD_PROFILE_RESIDENCY") != nullptr;
+    if (profileResidency)
+        std::fprintf(stderr,
+                     "[GPU_RESIDENCY] instance=%p block=%u pinned_weight_bytes=%zu "
+                     "cached_weight_bytes=%zu weight_budget_bytes=%zu "
+                     "live_allocation_count=%zu "
+                     "live_device_bytes=%zu live_device_allocations=%llu "
+                     "evicted_weight_bytes=%zu resident_reclaimed_bytes=%zu "
+                     "heap_headroom_bytes=%zu\n",
+                     static_cast<const void*>(this),
                  completedBlock, pinnedWeightBytes_, weightCacheBytes_,
                  weightBudgetBytes_,
                  static_cast<size_t>(liveDeviceAllocations_),
