@@ -215,12 +215,22 @@ if(RAWRXD_ENABLE_HARDENING)
         add_link_options(
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-pie>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,relro>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,now>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,noexecstack>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,--no-copy-dt-needed-entries>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fno-plt>
         )
+
+        # These are ELF-only linker options.  MinGW targets use the PE/COFF
+        # linker and reject them, which prevented the agentic backend and its
+        # acceptance executables from linking at all.  Keep the hardening on
+        # native Unix builds while leaving the Windows toolchain's supported
+        # PIE/stack protections active above.
+        if(UNIX AND NOT MINGW)
+            add_link_options(
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,relro>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,now>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,noexecstack>
+                $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,--no-copy-dt-needed-entries>
+            )
+        endif()
         
         add_compile_definitions(
             RAWRXD_HARDENING=1
