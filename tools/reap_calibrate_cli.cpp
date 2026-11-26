@@ -95,6 +95,10 @@ static inline uint32_t sigma1(uint32_t x) {
 }
 
 static string computeFileSha256(const string& path) {
+    const auto cancelled = []() {
+        const char* marker = std::getenv("RAWRXD_HASH_CANCEL_FILE");
+        return marker && *marker && fs::exists(fs::u8path(marker));
+    };
 #ifdef _WIN32
     ifstream in(path, ios::binary);
     if (!in) return "";
@@ -115,6 +119,11 @@ static string computeFileSha256(const string& path) {
     }
     vector<unsigned char> buffer(1u << 20);
     while (in) {
+        if (cancelled()) {
+            BCryptDestroyHash(hash);
+            BCryptCloseAlgorithmProvider(alg, 0);
+            return "";
+        }
         in.read(reinterpret_cast<char*>(buffer.data()),
                 static_cast<streamsize>(buffer.size()));
         const streamsize n = in.gcount();
@@ -173,7 +182,7 @@ static string computeFileSha256(const string& path) {
     array<unsigned char, 64> block;
     size_t bytes;
     
-    while ((bytes = fread(block.data(), 1, block.size(), f)) > 0) {
+    while (!cancelled() && (bytes = fread(block.data(), 1, block.size(), f)) > 0) {
         totalBytes += bytes;
         reportProgress(totalBytes);
         
@@ -282,6 +291,10 @@ static string computeFileSha256(const string& path) {
         }
     }
     
+    if (cancelled()) {
+        fclose(f);
+        return "";
+    }
     fclose(f);
     
     stringstream ss;
