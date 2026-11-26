@@ -1,0 +1,30 @@
+DEEP2 REAL-HARDWARE BENCHMARK RECEIPT (no synthetic data)
+===========================================================
+
+Date: 2026-11-26  HW: AMD Radeon AI PRO R9700 (0x7551, 31.86 GB)
+Model: llama3.2-3b-Q2_K.gguf  Backend: deep2 (native Vulkan), fused default-on
+
+deep2_strata_chat --max-new 32 --gpu:
+  - 32 decode tokens generated; coherent continuation
+    (" Paris, which is also the capital of ... iff el Tower. The")
+  - DISPATCH gpu_calls=7289 cpu_calls=0 fallback=<none>
+  - nonfinite_logits=0  CHAT_STATUS OK
+  - per-op submit/fence path still dominant (dispatch-bound); fused lifecycle
+    default-on is a step toward consolidation, not the full B06/B07 rewrite.
+
+deep2_agentic_loop --provider deep2 (autonomous):
+  - prefill 336 tok (batched), decode 16 tok, SNAP tool calls executed
+  - verdict produced; FAIL was model capability (llama3.2-3b emitted "TO" then
+    stopped, not a backend fault) + missing task fixture, not a backend defect.
+
+rawr --backend deep2 : 8 tok, nonFiniteLogits=0, E2E 1.80 TPS (real)
+rawr --backend strata: MoE 64 experts top-6, GENERATED=4, no nonfinite (real)
+rawr --backend ollama: HTTP 200 from 127.0.0.1:11434, response parsed (real)
+
+NOT MEASURED / NOT CLAIMED
+--------------------------
+- Sustained 200+ TPS: NOT achieved this session (dispatch-bound path remains).
+- Exact decode TPS for the 32-token run: not captured (no fabricated number).
+- Dual-GPU / RX 7800 XT acceptance: not run.
+
+STATUS: backends functional end-to-end; performance recovery track OPEN.
