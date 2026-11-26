@@ -2233,7 +2233,9 @@ bool VulkanCompute::dispatchQuant(
         return false;
     };
     // The tiled shader is experimental until its same-input parity test
-    // passes. Keep the production path on the reference Q4_K shader unless
+    // passes on the ACTUAL decode dispatch (the Q4_K decode currently uses the
+    // fused Q4K kernel, not this generic dispatchQuant path, so tiled4x is not
+    // yet reached). Keep the production path on the reference Q4_K shader unless
     // explicitly opted in for a controlled benchmark.
     const char* tiledEnv = std::getenv("RAWRXD_DEEP2_ENABLE_TILED4X");
     const bool tiledOptIn = tiledEnv && tiledEnv[0] == '1' && tiledEnv[1] == '\0';
