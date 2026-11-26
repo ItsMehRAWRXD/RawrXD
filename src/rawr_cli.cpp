@@ -2011,15 +2011,18 @@ static int runStrataAsk(const std::string& modelPath, const std::string& prompt,
     if (answer) *answer = tok.detokenize(outIds);
     const auto& s = session.Stats();
     // Observed expert placement -> STRATA_RESIDENCY_ACTIVE.
-    if (levelOut && s.expertObservations > 0)
+    if (levelOut && s.expertAccesses > 0)
         *levelOut = rawrxd::StrataLevel::ResidencyActive;
     std::fprintf(stderr,
-                 "STRATA_LEDGER observations=%llu hits=%llu misses=%llu "
-                 "evictions=%llu hit_rate=%.3f gpu_calls=%llu cpu_calls=%llu\n",
-                 (unsigned long long)s.expertObservations,
+                 "STRATA_LEDGER accesses=%llu hits=%llu misses=%llu "
+                 "admissions=%llu evictions=%llu transferred_bytes=%llu "
+                 "hit_rate=%.3f gpu_calls=%llu cpu_calls=%llu\n",
+                 (unsigned long long)s.expertAccesses,
                  (unsigned long long)s.expertHits,
                  (unsigned long long)s.expertMisses,
+                 (unsigned long long)s.expertAdmissions,
                  (unsigned long long)s.expertEvictions,
+                 (unsigned long long)s.expertTransferredBytes,
                  s.expertHitRate,
                  (unsigned long long)s.gpuCalls,
                  (unsigned long long)s.cpuCalls);

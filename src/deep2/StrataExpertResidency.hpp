@@ -111,8 +111,10 @@ public:
             records_.erase(records_.begin(), records_.begin() + (records_.size() - kMaxRecords));
         if (hit)
             ++hits_;
-        else
+        else {
             ++misses_;
+            transferred_bytes_ += bytes;   // an admission moves this slice's bytes
+        }
         // Hotness signal (S08): every routed expert touch ages the counters
         // and increments the touched (block, expert) frequency.
         AgeHotness();
@@ -189,9 +191,13 @@ public:
         uint64_t evictions = 0;
         uint64_t prefetch_submits = 0;
         uint64_t prefetch_hits = 0;
-        uint64_t observations = 0;
+        uint64_t observations = 0;     // trace records (accesses + eviction records)
         double hit_rate = 0.0;         // hits / (hits + misses)
         uint64_t distinct_experts = 0; // (block, expert) pairs the router used
+        // Reconciled cache decomposition (distinct from raw trace-record count):
+        uint64_t accesses = 0;         // logical expert accesses = hits + misses
+        uint64_t admissions = 0;       // physical placements = misses (each miss places)
+        uint64_t transferred_bytes = 0;// weight bytes moved on admissions (misses)
     };
 
     Summary Snapshot() const
@@ -206,6 +212,10 @@ public:
         const uint64_t total = hits_ + misses_;
         s.hit_rate = total ? (double)hits_ / (double)total : 0.0;
         s.distinct_experts = (uint64_t)hot_.size();
+        // Reconciled decomposition: logical accesses vs admissions vs evictions.
+        s.accesses = total;
+        s.admissions = misses_;
+        s.transferred_bytes = transferred_bytes_;
         return s;
     }
 
@@ -220,6 +230,7 @@ public:
         hot_.clear();
         resident_.clear();
         hits_ = misses_ = evictions_ = prefetch_submits_ = prefetch_hits_ = 0;
+        transferred_bytes_ = 0;
         seq_ = 0;
     }
 
@@ -285,6 +296,7 @@ private:
     std::map<Key3, bool> resident_;
     uint64_t hits_ = 0, misses_ = 0, evictions_ = 0;
     uint64_t prefetch_submits_ = 0, prefetch_hits_ = 0;
+    uint64_t transferred_bytes_ = 0;
     uint64_t seq_ = 0;
     uint32_t obs_since_age_ = 0;
 };

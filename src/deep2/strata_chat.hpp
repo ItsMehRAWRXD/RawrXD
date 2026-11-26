@@ -44,6 +44,9 @@ struct StrataChatStats {
     uint64_t expertMisses = 0;
     uint64_t expertEvictions = 0;
     double expertHitRate = 0.0;   // hits / (hits + misses)
+    uint64_t expertAccesses = 0;  // logical expert accesses = hits + misses
+    uint64_t expertAdmissions = 0;// physical placements = misses
+    uint64_t expertTransferredBytes = 0;  // weight bytes moved on admissions
     double bindMs = 0;
     double prefillMs = 0;
     double decodeMs = 0;
@@ -114,6 +117,9 @@ public:
         stats_.expertMisses = l.misses;
         stats_.expertEvictions = l.evictions;
         stats_.expertHitRate = l.hit_rate;
+        stats_.expertAccesses = l.accesses;
+        stats_.expertAdmissions = l.admissions;
+        stats_.expertTransferredBytes = l.transferred_bytes;
         stats_.ok = stats_.error.empty();
     }
 
