@@ -1620,7 +1620,7 @@ if(GLSLC_EXECUTABLE)
         "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv_tiled4x.spv")
     add_custom_command(
         OUTPUT "${_deep2_tiled4x_qgemv_output}"
-        COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.2
+        COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.3
             "${_deep2_tiled4x_qgemv_source}"
             -o "${_deep2_tiled4x_qgemv_output}"
         DEPENDS "${_deep2_tiled4x_qgemv_source}"
