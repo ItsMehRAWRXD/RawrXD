@@ -1037,6 +1037,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp" AND
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/deep2/lavapath/GpuDeviceLostReset.cpp
         src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
@@ -1172,6 +1173,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1221,6 +1223,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1271,6 +1274,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1296,6 +1300,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1367,6 +1372,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1414,6 +1420,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -2329,6 +2336,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2_benchmark.cpp" AND Vulkan_FOUND AND
         src/deep2/vulkan_compute.cpp
         # MoE timing counters (Deep2Bench_Moe* accessors) — standalone, no ggml.
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/utils/Diagnostics.cpp
@@ -4218,6 +4226,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             src/deep2/runtime_graph_executor.cpp
             src/deep2/modelgenie/universal_gguf.cpp
             src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
             src/deep2/moe_timing_graph.cpp)
         target_include_directories(RawrXD-Win32IDE-Native PRIVATE
             "${_chat_route_generated_dir}"
@@ -6065,6 +6074,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
         src/deep2/runtime_graph_executor.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/moe_timing_graph.cpp
         src/core/project_rag_lite.cpp
         src/core/vram_kv_controls.cpp
