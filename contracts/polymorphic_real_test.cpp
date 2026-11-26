@@ -1,6 +1,6 @@
 // Real inference through the integrated RNG-free polymorphic engine.
-// Drives PolymorphicBlackboard with the native Ollama executor (adapter) and
-// reports per-request wall time to localize the transport bottleneck.
+// Fail-closed acceptance: requires N successful inferences, zero transport
+// failures, and a repeatedly-validated best. Reports attempted vs current vs best.
 #include "PolymorphicBlackboard.hpp"
 #include "OllamaExecutor.hpp"
 #include <cstdio>
@@ -17,22 +17,29 @@ static bool OllamaAdapter(const rawrxd::poly::Cand& c, rawrxd::polybb::Measured&
 }
 
 int main(int argc, char** argv) {
-    int n = (argc > 1) ? std::atoi(argv[1]) : 5;
+    const int n = (argc > 1) ? std::atoi(argv[1]) : 20;
     setvbuf(stdout, nullptr, _IONBF, 0);
     rawrxd::polybb::Blackboard bb;   // ratio 50 50, zero RNG
-    std::printf("=== POLYMORPHIC ENGINE REAL INFERENCE (%d experiments, RNG-free) ===\n", n);
+    int successes = 0, transportFails = 0;
+    std::printf("=== POLYMORPHIC ENGINE REAL INFERENCE (%d, RNG-free, fail-closed) ===\n", n);
     for (int i = 0; i < n; ++i) {
+        const rawrxd::poly::Cand attempted = rawrxd::polybb::NextObs(bb); // attempted
+        const size_t prevObs = bb.obs.size();
         const auto t0 = std::chrono::steady_clock::now();
         rawrxd::polybb::Step(bb, &OllamaAdapter);
         const double ms = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - t0).count();
-        std::printf("IT %2d: batch=%4d thr=%2d | curDecode=%7.1f | BEST=%7.1f(rep=%d) | obs=%zu | %.0f ms\n",
-            i + 1, bb.current.batch, bb.current.threads, bb.st.curDecode,
-            bb.bestDecode, bb.bestRepeats, bb.obs.size(), ms);
+        const bool ok = bb.obs.size() > prevObs;   // a new observation = success
+        if (ok) ++successes; else ++transportFails;
+        std::printf("IT %2d: attempted=%4d/%2d ok=%d | cur=%4d/%2d dec=%6.1f | BEST=%6.1f(rep=%d) | %.0f ms\n",
+            i + 1, attempted.batch, attempted.threads, ok ? 1 : 0,
+            bb.current.batch, bb.current.threads, bb.st.curDecode,
+            bb.bestDecode, bb.bestRepeats, ms);
     }
-    std::printf("BEST=%.1f (batch=%d thr=%d rep=%d) alloc0=%llu alloc1=%llu fails=%llu\n",
-        bb.bestDecode, bb.best.batch, bb.best.threads, bb.bestRepeats,
-        (unsigned long long)bb.alloc0, (unsigned long long)bb.alloc1,
-        (unsigned long long)bb.failures);
-    return 0;
+    std::printf("SUCCESS=%d/%d TRANSPORT_FAILS=%d BEST=%.1f(batch=%d thr=%d rep=%d)\n",
+        successes, n, transportFails, bb.bestDecode, bb.best.batch, bb.best.threads, bb.bestRepeats);
+    const bool pass = (successes == n) && (transportFails == 0) &&
+                      bb.haveBest && (bb.bestRepeats >= 2);
+    std::printf("ACCEPTANCE=%s\n", pass ? "PASS" : "FAIL");
+    return pass ? 0 : 1;   // fail closed
 }
