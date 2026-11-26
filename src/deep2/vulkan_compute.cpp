@@ -1512,6 +1512,34 @@ void VulkanCompute::releaseOneShot(const OneShotHandles& h) noexcept {
     if (h.fence) vkDestroyFence(device_, h.fence, nullptr);
 }
 
+// RAWRXD_VULKAN_RESOURCE_LIFETIME_022 — bounded submission provenance (Track A).
+// Records the last N submissions (monotonic seq, work kind, bytes, submit/wait
+// VkResult) so the last successful and first failed submission can be identified
+// on device loss. Logging only; no resource-state changes.
+namespace {
+struct D2SubmitRec { unsigned long long seq; unsigned kind; unsigned long long bytes; int submitVk; int waitVk; };
+D2SubmitRec g_d2Ring[16];
+unsigned g_d2RingPos = 0;
+std::mutex g_d2RingMu;
+void D2SubmitRecord(unsigned long long seq, unsigned kind, unsigned long long bytes, int submitVk, int waitVk) {
+    std::lock_guard<std::mutex> lk(g_d2RingMu);
+    g_d2Ring[g_d2RingPos % 16] = D2SubmitRec{seq, kind, bytes, submitVk, waitVk};
+    ++g_d2RingPos;
+}
+void D2SubmitDump(const char* why) {
+    std::lock_guard<std::mutex> lk(g_d2RingMu);
+    const unsigned pos = g_d2RingPos;
+    std::fprintf(stderr, "[GPU] SUBMIT_RING_DUMP why=%s count=%u\n", why, pos);
+    for (unsigned i = 0; i < 16 && i < pos; ++i) {
+        const D2SubmitRec& e = g_d2Ring[(pos - 1 - i) % 16];
+        std::fprintf(stderr,
+            "[GPU] SUBMIT_RING seq=%llu kind=%u bytes=%llu submitVk=%d waitVk=%d\n",
+            e.seq, e.kind, e.bytes, e.submitVk, e.waitVk);
+    }
+    std::fflush(stderr);
+}
+} // namespace
+
 bool VulkanCompute::endSubmitWait(
     VkCommandBuffer cmd, VkQueryPool query,
     GpuWorkKind kind, uint64_t bytes, uint64_t epoch,
@@ -1604,6 +1632,10 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit quarantined vk=%d\n",
                      static_cast<int>(submit));
         std::fflush(stderr);
+        // Track A: record the first FAILED submission (seq is next to be assigned)
+        // and dump the ring so the last successful vs first failed is captured.
+        D2SubmitRecord(queueSubmitCount_ + 1, (unsigned)kind, bytes, (int)submit, -999);
+        D2SubmitDump("queue_submit_failed");
         (void)NoteVkResult(static_cast<int>(submit), "submit");
         if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
@@ -1622,6 +1654,7 @@ bool VulkanCompute::endSubmitWait(
     const uint64_t waitStartedNs = nowNs();
     VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, timeoutNs);
     const uint64_t completeNs = nowNs();
+    D2SubmitRecord(queueSubmitCount_, (unsigned)kind, bytes, (int)submit, (int)wait);
     if (globalSerial) {
         std::fprintf(stderr,
                      "GLOBAL_GPU_SERIAL WAIT_END seq=%llu result=%d\n",
@@ -1638,6 +1671,7 @@ bool VulkanCompute::endSubmitWait(
         if (interval) *interval = wi;
         (void)NoteVkResult(static_cast<int>(VK_SUCCESS), "ok");
     } else {
+        if (wait == VK_ERROR_DEVICE_LOST) D2SubmitDump("device_lost");
         std::fprintf(stderr,
                      "[GPU] endSubmitWait stage=fence_wait vk=%d timeout_ns=%llu kind=%u bytes=%llu\n",
                      static_cast<int>(wait),
