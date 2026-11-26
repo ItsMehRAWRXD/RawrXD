@@ -323,6 +323,7 @@ struct CalibrationConfig {
     bool saliencyCapture = false;
     bool saliencyDirect = false;
     bool checkpointIdentityOnly = false;
+    bool strictFullRehash = false;
     // Reference-observability outputs (optional; P1 CPU reference).
     // Empty paths disable the corresponding capture and leave calibration
     // behaviour byte-identical to the uninstrumented run.
@@ -1363,9 +1364,9 @@ private:
         vector<fs::path> paths;
         if (!ReapState::ShardPaths(config_.modelPath, paths)) return false;
         const fs::path cachePath = digestCachePath(paths.front());
-        loadDigestCache(cachePath);
+        if (!config_.strictFullRehash) loadDigestCache(cachePath);
         string cachedFirst;
-        if (cachedDigest(paths[0], cachedFirst)) modelSha256_ = cachedFirst;
+        if (!config_.strictFullRehash && cachedDigest(paths[0], cachedFirst)) modelSha256_ = cachedFirst;
         if (modelSha256_.size() != 64)
             modelSha256_ = computeFileSha256(paths[0].string());
         if (modelSha256_.size() != 64) return false;
@@ -1399,7 +1400,7 @@ private:
             digestCache_[canonicalPath(paths[0])] = {firstBytes, firstStamp, modelSha256_};
         vector<size_t> misses;
         for (size_t i = 1; i < paths.size(); ++i) {
-            if (!cachedDigest(paths[i], digests[i])) misses.push_back(i);
+            if (config_.strictFullRehash || !cachedDigest(paths[i], digests[i])) misses.push_back(i);
         }
         for (size_t first = 0; first < misses.size(); first += workers) {
             const size_t last = (std::min)(misses.size(), first + workers);
@@ -1424,7 +1425,7 @@ private:
             checkpointIdentity_ += ":" + digests[i];
         }
         checkpointShardDigests_ = std::move(digests);
-        persistDigestCache(cachePath);
+        if (!config_.strictFullRehash) persistDigestCache(cachePath);
         return true;
     }
 
@@ -1776,6 +1777,7 @@ static void printUsage(const char* progName) {
         "  --saliency-capture       Record paired routes and expert outputs in a new output directory\n"
         "  --saliency-direct        Aggregate actual expert outputs without binary dumps; supports --resume\n"
         "  --checkpoint-identity-only  Hash canonical GGUF shards without model initialization\n"
+        "  --strict-full-rehash     Bypass digest cache and rehash every shard\n"
         "  --resume                 Resume from checkpoint\n"
         "  --help                   Show this help\n"
         "\n"
@@ -1843,6 +1845,8 @@ int main(int argc, char** argv) {
             config.saliencyDirect = true;
         } else if (arg == "--checkpoint-identity-only") {
             config.checkpointIdentityOnly = true;
+        } else if (arg == "--strict-full-rehash") {
+            config.strictFullRehash = true;
         } else if (arg == "--saliency-capture") {
             config.saliencyCapture = true;
         } else if (arg == "--resume") {
