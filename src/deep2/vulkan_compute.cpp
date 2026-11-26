@@ -676,8 +676,12 @@ bool VulkanCompute::createPipelineFromFile(
     sm.codeSize = static_cast<size_t>(sz);
     sm.pCode = code.data();
     VkShaderModule module = VK_NULL_HANDLE;
-    if (vkCreateShaderModule(device_, &sm, nullptr, &module) != VK_SUCCESS)
+    const VkResult rSM = vkCreateShaderModule(device_, &sm, nullptr, &module);
+    if (rSM != VK_SUCCESS) {
+        std::fprintf(stderr, "[PIPELINE] %s vkCreateShaderModule=%d\n",
+                     file.c_str(), (int)rSM);
         return false;
+    }
 
     VkPushConstantRange pcr{};
     pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -691,8 +695,12 @@ bool VulkanCompute::createPipelineFromFile(
     li.pushConstantRangeCount = pushBytes ? 1u : 0u;
     li.pPushConstantRanges = pushBytes ? &pcr : nullptr;
 
-    bool ok = vkCreatePipelineLayout(device_, &li, nullptr, &pipelineLayout)
-              == VK_SUCCESS;
+    const VkResult rPL = vkCreatePipelineLayout(device_, &li, nullptr, &pipelineLayout);
+    bool ok = (rPL == VK_SUCCESS);
+    if (!ok)
+        std::fprintf(stderr,
+            "[PIPELINE] %s vkCreatePipelineLayout=%d setLayout=%p\n",
+            file.c_str(), (int)rPL, (void*)layout);
     if (ok) {
         VkPipelineShaderStageCreateInfo stage{};
         stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -704,9 +712,12 @@ bool VulkanCompute::createPipelineFromFile(
         ci.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
         ci.stage = stage;
         ci.layout = pipelineLayout;
-        ok = vkCreateComputePipelines(
-                 device_, VK_NULL_HANDLE, 1, &ci, nullptr, &pipeline)
-             == VK_SUCCESS;
+        const VkResult rCP = vkCreateComputePipelines(
+                 device_, VK_NULL_HANDLE, 1, &ci, nullptr, &pipeline);
+        ok = (rCP == VK_SUCCESS);
+        if (!ok)
+            std::fprintf(stderr, "[PIPELINE] %s vkCreateComputePipelines=%d\n",
+                         file.c_str(), (int)rCP);
     }
     vkDestroyShaderModule(device_, module, nullptr);
     return ok;
