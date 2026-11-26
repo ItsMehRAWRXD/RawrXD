@@ -783,10 +783,17 @@ bool VulkanCompute::createPipelines() {
         (void)createPipelineFromFile(
             sa,opsSetLayout_,sizeof(SpecAttnPush),
             specAttnPipelineLayout_,specAttnPipeline_);
-    if (!gd.empty())
-        (void)createPipelineFromFile(
-            gd, gdnSetLayout_, sizeof(GdnPush),
-            gdnPipelineLayout_, gdnPipeline_);
+    if (!gd.empty()) {
+        const bool okGdn = createPipelineFromFile(
+            gd, gdnSetLayout_, sizeof(GdnPush), gdnPipelineLayout_, gdnPipeline_);
+        // GDN-9..12: authoritative per-stage handles (not collapsed to
+        // pipeline_missing). setLayout null => descriptor layout failed;
+        // pipeline null with setLayout ok => compute-pipeline creation failed.
+        std::fprintf(stderr,
+            "[GDN] createPipeline ok=%d setLayout=%p pipelineLayout=%p pipeline=%p\n",
+            okGdn ? 1 : 0, (void*)gdnSetLayout_, (void*)gdnPipelineLayout_,
+            (void*)gdnPipeline_);
+    }
     if (!pp.empty())
         (void)createPipelineFromFile(
             pp, opsSetLayout_, sizeof(CspdPartialPush),
