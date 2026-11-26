@@ -1,0 +1,15 @@
+SOLO-09 multi-turn / KV-cache persistence acceptance (CPU, n4-tiny-oracle)
+command: deep2_strata_chat_multiturn.exe --model n4-tiny-oracle.gguf --turn1 "15043" --turn2 "15043" --max-new 4 --cpu
+TURN1_PROMPT 1
+[t1 0] 23650
+[t1 1] 292
+[t1 2] 29892
+[t1 3] 263
+TURN2_STARTPOS 5 (KV reused for 5 committed positions)
+[t2 0] 476
+[t2 1] 986
+[t2 2] 29891
+[t2 3] 29899
+MULTITURN_OK turn1_gen=4 turn2_gen=4 gpu_calls=0 cpu_calls=1550 nonfinite=0 cleanup_ok=1
+run_exit=0
+note: turn2 used StrataChatSession::PrefillFrom(committed=5) reusing committed KV (no full recompute). CPU-only; GPU untouched. Not a GPU/perf certification.
