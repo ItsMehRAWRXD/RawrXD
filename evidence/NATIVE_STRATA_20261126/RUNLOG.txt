@@ -1,0 +1,32 @@
+RAWRXD_POLYMORPHIC_NATIVE_EXECUTION_005 — Native (non-Ollama) Strata real inference
+====================================================================================
+Model   : F:\OllamaModels\n4-tiny-oracle.gguf (llama, 1.1B, Q4_0, 608 MB)
+Backend : build\cmake-preset-ninja-release\deep2_strata_chat.exe  (--cpu --strata)
+Command : deep2_strata_chat.exe --model <gguf> --prompt "Explain how computer memory works." --max-new 64 --cpu --strata
+
+Observed (authoritative receipt fields):
+  prompt_tokens      = 7
+  generate_tokens    = 64
+  bind_ms            = 2634.17
+  prefill_ms         = 1238.75
+  decode_ms          = 9958.24
+  total_ms           = 13831.2
+  decode_tps         = 6.42684
+  gpu_calls          = 0
+  cpu_calls          = 11005
+  fallback           = "legacy quant dot: force_cpu (weight=blk.0.attn_q.weight)"
+  nonfinite_logits   = 0
+  cleanup            = ok
+  CHAT_STATUS        = OK
+
+Receipt: evidence/NATIVE_STRATA_20261126/strata_chat_native_cpu.json
+
+Finding (P0 GPU-dispatch optimization target): the quantized Q4_0 dot path
+falls back to the CPU ("legacy quant dot: force_cpu") so gpu_calls=0 for this
+model/quant. Native execution is real and correct (nonfinite_logits=0), but the
+GPU dispatch path is not engaging for this quantized weight — a concrete native
+optimization target for the blackboard's GPU-dispatch/residency objective.
+
+This is genuine native Strata (RuntimeGraphExecutor) inference, NOT Ollama.
+Deep2Engine adapter (src/deep2/Deep2Executor.hpp) object-compiles against the
+production engine headers; link+run requires the deep2_engine_lib build.

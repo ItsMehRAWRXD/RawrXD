@@ -1,0 +1,21 @@
+{
+  "tag": "native_cpu",
+  "model": "F:\OllamaModels\n4-tiny-oracle.gguf",
+  "prompt_text": "Explain how computer memory works.",
+  "prompt_tokens": 7,
+  "prompt_ids": [12027, 7420, 920, 6601, 3370, 1736, 29889],
+  "generate_tokens": 64,
+  "generated_ids": [2, 29871, 13, 29966, 29989, 465, 22137, 29989, 29958, 13, 20606, 261, 3370, 338, 263, 8635, 4742, 393, 14422, 848, 322, 11994, 363, 278, 6601, 29915, 29879, 9068, 10340, 313, 6271, 15922, 467, 739, 338, 13931, 964, 1023, 1667, 4072, 29901, 4036, 2130, 3370, 313, 25058, 29897, 322, 7343, 4036, 2130, 3370, 313, 29928, 25058, 467, 13, 13, 25058, 338, 278, 5172, 342, 322],
+  "cancelled": false,
+  "bind_ms": 2634.17,
+  "prefill_ms": 1238.75,
+  "decode_ms": 9958.24,
+  "total_ms": 13831.2,
+  "decode_tps": 6.42684,
+  "gpu_calls": 0,
+  "cpu_calls": 11005,
+  "fallback": "legacy quant dot: force_cpu (weight=blk.0.attn_q.weight)",
+  "nonfinite_logits": 0,
+  "expert_ledger": {"observations": 0, "hits": 0, "misses": 0, "evictions": 0, "hit_rate": 0, "distinct_experts": 0},
+  "cleanup": "ok"
+}
