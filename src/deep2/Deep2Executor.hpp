@@ -65,6 +65,10 @@ public:
         std::snprintf(cfg.modelPath, sizeof(cfg.modelPath), "%s", ModelPath().c_str());
         if (!engine_.initialize(cfg)) return false;
         if (!engine_.loadModel(ModelPath())) return false;
+        // Set the thread count once at load. Reconfiguring the thread pool on every
+        // request rebuilds device/queue resources and was correlated with the
+        // VK_ERROR_DEVICE_LOST observed on the third request.
+        engine_.setNumThreads(cfg.numThreads);
         loaded_ = true;
         return true;
     }
@@ -74,9 +78,9 @@ public:
         if (CancelFlag().load()) return false;
         if (!EnsureLoaded()) return false;
 
-        engine_.setNumThreads((size_t)std::max(1, c.threads));
         // Controls.batch maps to the prefill batching capability where available;
         // Deep2Engine resolves its own prefill chunking from model metadata.
+        // (Thread count is fixed at load to avoid per-request device reconfiguration.)
 
         // Request-scoped GPU counters: reset before each call so forwardLayers is
         // per-request, not cumulative (a cumulative counter cannot detect a
