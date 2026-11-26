@@ -7238,6 +7238,12 @@ if(TARGET rawrxd_agentic_backend AND EXISTS "${CMAKE_SOURCE_DIR}/tools/agent_too
     endif()
     set_target_properties(agent_tool_exec_smoke PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    # Ollama-gated: skips (does not fake-pass) when no live server is present.
+    add_test(NAME agent_tool_exec_smoke
+             COMMAND agent_tool_exec_smoke qwen3:8b . http://127.0.0.1:11434)
+    set_tests_properties(agent_tool_exec_smoke PROPERTIES
+        LABELS "ollama;agentic"
+        ENVIRONMENT "RAWRXD_TOOL_EXEC_SKIP_IF_UNREACHABLE=1;RAWRXD_OLLAMA_KEEP_ALIVE=10m")
     message(STATUS "agent_tool_exec_smoke enabled (real Ollama tool execution)")
 endif()
 

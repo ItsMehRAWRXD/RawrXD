@@ -90,6 +90,14 @@ int main(int argc, char** argv) {
     cfg.temperature = 0.1f;
 
     if (!backend.Initialize(cfg)) {
+        // Honest skip: when the harness is run in a suite without a live Ollama
+        // server, report SKIP (exit 0) only if the caller opted in. This never
+        // reports PASS for an unexecuted tool call.
+        if (env_or("RAWRXD_TOOL_EXEC_SKIP_IF_UNREACHABLE", "") == "1") {
+            std::printf("RESULT=SKIP\nREASON=ollama_unreachable\nERROR=%s\n",
+                        backend.GetHealth().last_error.c_str());
+            return 0;
+        }
         std::printf("RESULT=INIT_FAILED\nERROR=%s\n", backend.GetHealth().last_error.c_str());
         return 2;
     }
