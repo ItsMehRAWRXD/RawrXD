@@ -415,15 +415,21 @@ public:
         }
         opened_ = true;
         const size_t totalPrompt = cur.size();
-        // P0 prefill instrumentation: authoritative prompt size, open vs prefill
-        // split, sustained prefill throughput and whether KV was reused.
-        const double prefillTps =
+        // P0 prefill instrumentation: authoritative prompt size, reused vs newly
+        // processed tokens, open vs prefill split, and BOTH effective (total
+        // context / time) and actual (new tokens / time) prefill throughput --
+        // so reused context is never mistaken for raw compute speed.
+        const size_t reusedTokens = prefixMatch ? prevTokens_.size() : 0;
+        const size_t newTokens = totalPrompt - reusedTokens;
+        const double effectiveTps =
             prefillMs > 0.0 ? (totalPrompt * 1000.0 / prefillMs) : 0.0;
+        const double actualTps =
+            prefillMs > 0.0 ? (newTokens * 1000.0 / prefillMs) : 0.0;
         std::fprintf(stderr,
-                     "PREFILL tokens=%zu open_ms=%.1f prefill_ms=%.1f tps=%.2f "
-                     "reuse=%d\n",
-                     totalPrompt, openMs, prefillMs, prefillTps,
-                     prefixMatch ? 1 : 0);
+                     "PREFILL tokens=%zu reused=%zu new=%zu open_ms=%.1f "
+                     "prefill_ms=%.1f effective_tps=%.2f actual_tps=%.2f reuse=%d\n",
+                     totalPrompt, reusedTokens, newTokens, openMs, prefillMs,
+                     effectiveTps, actualTps, prefixMatch ? 1 : 0);
 
         size_t generated = 0;
         std::vector<int> genIds;
