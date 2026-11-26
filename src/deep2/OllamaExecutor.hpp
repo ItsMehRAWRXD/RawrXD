@@ -81,17 +81,14 @@ inline std::string HttpDo(const wchar_t* method, const std::wstring& host, int p
                 WINHTTP_HEADER_NAME_BY_INDEX, &status, &slen, WINHTTP_NO_HEADER_INDEX))
             status = 0;
         if (status != 200) { ok = false; return out; }   // HTTP error, not success
-        DWORD avail = 0;
-        while (true) {
-            if (!WinHttpQueryDataAvailable(hr.get(), &avail)) { ok = false; return out; }
-            if (avail == 0) break;                        // complete
-            if (g_cancel.load()) { ok = false; return out; }
-            std::string chunk(avail, '\0');
-            DWORD read = 0;
-            if (!WinHttpReadData(hr.get(), &chunk[0], avail, &read)) { ok = false; return out; }
-            if (read == 0) { ok = false; return out; }    // partial/failed read
-            chunk.resize(read);
-            out += chunk;
+        // Direct bounded read (no WinHttpQueryDataAvailable loop, which can
+        // stall). Read until a zero-length chunk = complete body.
+        char buf[16384];
+        for (;;) {
+            DWORD received = 0;
+            if (!WinHttpReadData(hr.get(), buf, (DWORD)sizeof(buf), &received)) { ok = false; return out; }
+            if (received == 0) break;                     // complete
+            out.append(buf, received);
         }
         ok = !out.empty();                                // success only if full body
     }
