@@ -4015,27 +4015,37 @@ void VulkanCompute::UnpinAllWeights() {
 
 bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
     if (!device_) return false;
-    // All Deep2 quant-dot submissions are fence-waited before their outputs
-    // are consumed.  Waiting here makes destruction safe even when a caller
-    // used the recorded-group path immediately before the block boundary.
-    if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return false;
-    UnpinAllWeights();
+    // NCRO P0-B (budget-aware, lifetime-safe retention):
+    //   keepResident == retention && a positive weight budget is active.
+    // The destructive block-boundary reclaim (device-wide idle + clearWeightCache
+    // + ReclaimAllResidents) is the ONLY VRAM bound when no positive budget is
+    // set, so it must run in that case. When a budget IS active the unified LRU
+    // (EvictResidentObjectsFor, which counts weightCacheBytes_ + residentObjectBytes_
+    // against weightBudgetBytes_) enforces the envelope on demand, so resident
+    // buffers and quant slices are RETAINED across the block boundary instead of
+    // destroyed and reconstructed. Reclamation is never bypassed without an
+    // enforced budget (avoids unbounded resident growth / OOM).
+    const bool retention = ::RawrXD::Deep2::QuantDot::WeightCacheRetention();
+    const bool budgetEnforced = weightBudgetBytes_ > 0;
+    const bool keepResident = retention && budgetEnforced;
     const size_t beforeBytes = weightCacheBytes_;
     const size_t beforeEntries = weightCache_.size();
     const size_t beforeResidentBytes = residentObjectBytes_;
-    // RAWRXD_STRATA_RETAIN_WEIGHTS=1 keeps resident quant slices across block
-    // boundaries (Strata expert-residency mode). Non-Strata execution is
-    // unchanged: the unpinned flush still happens. The device-idle wait and
-    // UnpinAllWeights above are preserved either way, so destruction stays safe.
-        // RAWRXD_STRATA_P1B: the device-idle wait and UnpinAllWeights above are
-    // mandatory cleanup; only the discretionary content drop is policy-controlled.
-    if (!(::RawrXD::Deep2::QuantDot::WeightCacheRetention()))
+    if (keepResident) {
+        // Retain valid allocations: only unpin so the budgeted LRU can reclaim
+        // under pressure. No buffer destruction => no device-wide idle wait.
+        UnpinAllWeights();
+    } else {
+        // All Deep2 quant-dot submissions are fence-waited before their outputs
+        // are consumed. Waiting here makes destruction safe even when a caller
+        // used the recorded-group path immediately before the block boundary.
+        if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return false;
+        UnpinAllWeights();
+        // Non-retention, or retention without an enforced budget: drop unpinned
+        // quant slices and reclaim all direct-resident buffers as the VRAM bound.
         clearWeightCache();
-    // The direct-resident/RCU path is a second owner of streamed weights and
-    // is not represented by weightCache_.  In a block-serial graph no command
-    // from the completed block remains in flight after the wait above, so its
-    // published views can be invalidated and reclaimed here as well.
-    ReclaimAllResidents();
+        ReclaimAllResidents();
+    }
     const size_t evictedBytes = beforeBytes - weightCacheBytes_;
     // NCRO: this per-block diagnostic fires ~27x per generated token; synchronous
     // logging in the hot path is a major non-compute overhead. Routed through the
@@ -6113,8 +6123,8 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
     // matching EndMoePinHold. Refuse eviction during that interval; callers
     // then fail closed instead of invalidating a device-visible weight.
     if (weightBudgetBytes_ && MoePinHoldActive() &&
-        weightCacheBytes_ + residentObjectBytes_ + incomingBytes >
-            weightBudgetBytes_)
+        weightCacheBytes_ + residentObjectBytes_ + pendingRetireBytes_ +
+            incomingBytes > weightBudgetBytes_)
         return false;
 
     auto totalResidentBytes = [&]() -> size_t {
@@ -6122,8 +6132,8 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
     };
 
     while (weightBudgetBytes_ &&
-           weightCacheBytes_ + residentObjectBytes_ + incomingBytes >
-               weightBudgetBytes_) {
+           weightCacheBytes_ + residentObjectBytes_ + pendingRetireBytes_ +
+               incomingBytes > weightBudgetBytes_) {
         if (residentObjects_.empty())
             return false;
         // LRU: front of vector is oldest.
@@ -6140,6 +6150,9 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
                 std::memory_order_seq_cst, std::memory_order_seq_cst);
         }
         residentObjectBytes_ -= victim->bytes;
+        // P0-A: the detached buffer is not yet destroyed; account it as pending
+        // retirement so the budget covers live + deferred-destroy memory.
+        pendingRetireBytes_ += victim->bytes;
         // DETACH ONLY (liveness architecture): the grace spin + buffer
         // destroy happen in ProcessRetireQueue() OUTSIDE apiMu_. A hot-path
         // reader may hold the RCU reader count across a locked fallback
