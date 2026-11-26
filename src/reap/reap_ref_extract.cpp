@@ -197,6 +197,10 @@ int main(int argc, char** argv) {
         case 14: blockElems=256; blockBytes=210; break; // Q6_K
         case 0: blockElems=1; blockBytes=4; break; // F32
         case 1: blockElems=1; blockBytes=2; break; // F16
+        case 39: blockElems=32; blockBytes=17; break; // MXFP4 (gpt-oss experts)
+        case 40: blockElems=64; blockBytes=36; break; // NVFP4
+        case 41: blockElems=128; blockBytes=18; break; // Q1_0
+        case 42: blockElems=32; blockBytes=17; break; // Q2_0
         default:
             std::cerr << "unsupported type " << target.type << " for independent calc\n";
             std::fclose(f); return 2;
