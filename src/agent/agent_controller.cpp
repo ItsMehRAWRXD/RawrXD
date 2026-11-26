@@ -2,6 +2,7 @@
 #include "agent/agent_controller.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <cstdint>
 #include <filesystem>
@@ -170,6 +171,9 @@ AgentResult runAgentController(
     ToolRegistry& reg, const Workspace& ws, const AgentConfig& cfg,
     const AgentLogFn& log, const AgentCancelFn& cancel) {
     AgentResult res;
+    // V21: bind completion evidence to the originating session/agent.
+    static std::atomic<uint64_t> s_sessCounter{0};
+    const uint64_t sessionId = ++s_sessCounter;
     std::string modeName = cfg.modeName.empty() ? std::string("code") : cfg.modeName;
     std::string modeDesc = cfg.modeDescription;
     ModeProfile mode;
@@ -598,8 +602,10 @@ AgentResult runAgentController(
                 if (log) log("run: completion verification exhausted retries");
                 break;
             }
-            // Accepted: controller-owned authoritative completion receipt.
-            res.summary = proposed;
+            // Accepted: controller-owned authoritative completion receipt (V21:
+            // bound to session + agent identity).
+            res.summary = "[session=" + std::to_string(sessionId) +
+                          " agent=" + modeName + "] " + proposed;
             if (finalObj->contains("findings"))
                 res.findings = (*finalObj)["findings"].dump(2);
             if (finalObj->contains("next_actions"))

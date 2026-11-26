@@ -366,13 +366,19 @@ public:
         size_t generated = 0;
         std::vector<int> genIds;
         int deltas = 0;
+        const bool traceTokens =
+            std::getenv("RAWRXD_STRATA_TRACE_TOKENS") != nullptr;
         const size_t maxTok = static_cast<size_t>((std::max)(1, maxTokens));
         for (size_t i = 0; i < maxTok; ++i) {
             if (InterlockedCompareExchange(&g_interrupted, 0, 0) != 0) break;
+            // R06 decode diagnostic: log the absolute position about to be
+            // generated (flushed) so the last completed token is provable if the
+            // GPU decode stalls.
+            if (traceTokens) {
+                std::fprintf(stderr, "DECODE_POS=%zu\n", totalPrompt + generated);
+                std::fflush(stderr);
+            }
             uint32_t nt = 0;
-            // StrataChatSession::Step returns the raw token id; it does not
-            // populate tokenText. Detokenize the id sequence with the resident
-            // model-matched tokenizer at the end.
             if (!session_->Step(nt, nullptr)) break;  // step failure
             genIds.push_back(static_cast<int>(nt));
             ++generated;
