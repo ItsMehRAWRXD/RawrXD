@@ -204,6 +204,8 @@ inline bool OllamaExec(const blackboard_v5::Controls& c, blackboard_v5::Measured
     bool ok = false;
     const std::string resp = HttpPost(L"127.0.0.1", 11434, L"/api/generate", body, ok);
     if (!ok || resp.empty()) return false;
+    if (resp.find("\"done\":true") == std::string::npos &&
+        resp.find("\"done\": true") == std::string::npos) return false; // not complete
     const long long ec = JsonInt(resp, "\"eval_count\":");
     const long long ed = JsonInt(resp, "\"eval_duration\":");
     const long long pc = JsonInt(resp, "\"prompt_eval_count\":");
@@ -212,11 +214,13 @@ inline bool OllamaExec(const blackboard_v5::Controls& c, blackboard_v5::Measured
     m.decodeTps  = (double)ec * 1e9 / (double)ed;
     m.prefillTps = (pd > 0) ? (double)pc * 1e9 / (double)pd : 0.0;
     m.tokens     = (int)ec;
-    // DGL-F06: real output-consistency vs the first successful reference (no
-    // fabricated m.consistent=true). The reference is volatile (per process).
+    // DGL-F06: compare the DECODED generated text only — NOT the whole JSON
+    // (created_at/total_duration/eval_duration change every run). Volatile ref.
+    const std::string text = JsonStr(resp, "\"response\"");
+    if (text.empty()) return false;                       // no generated text
     static thread_local std::string ref;
-    if (ref.empty()) ref = resp;
-    m.consistent = (resp == ref);
+    if (ref.empty()) ref = text;
+    m.consistent = (text == ref);
     m.valid      = true;
     return true;
 }
