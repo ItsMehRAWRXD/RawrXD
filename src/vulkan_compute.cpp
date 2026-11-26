@@ -1937,20 +1937,45 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
     // prefetch's eviction pass could free the weight between the lookup here
     // and the submission in EndQuantDotBatch.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
-    if (!quant_batch_active_) return false;
-    if (quant_batch_entries_.size() >= kQuantBatchMaxSets) return false;
-    if (!packed || !q8_interleaved || !out) return false;
+    static std::atomic<bool> first_batch_reject_logged{false};
+    const bool batch_diag = [] {
+        const char* v = std::getenv("RAWRXD_QD_BATCH_DIAG");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    const auto reject = [&](const char* predicate, size_t block_bytes = 0,
+                            size_t need_packed = 0, size_t need_q8 = 0,
+                            size_t n_blocks = 0) {
+        bool expected = false;
+        if (batch_diag && first_batch_reject_logged.compare_exchange_strong(expected, true)) {
+            std::fprintf(stderr,
+                "[BATCH_REJECT] operation_index=%zu quant_type=%d rows=%zu cols=%zu "
+                "block_count=%zu block_size=%zu weight_bytes=%zu q8_bytes=%zu "
+                "out_bytes=%zu descriptor_used=%zu descriptor_capacity=%u "
+                "pipeline_available=%d rejection_predicate=%s\n",
+                quant_batch_entries_.size(), kind, n_out, n_in, n_blocks,
+                block_bytes, packed_bytes, q8_bytes, out_bytes,
+                quant_batch_entries_.size(), kQuantBatchMaxSets,
+                (shaders_.count("quantdot") && shaders_.at("quantdot").pipeline) ? 1 : 0,
+                predicate);
+            std::fflush(stderr);
+        }
+        return false;
+    };
+    if (!quant_batch_active_) return reject("batch_not_active");
+    if (quant_batch_entries_.size() >= kQuantBatchMaxSets)
+        return reject("descriptor_capacity");
+    if (!packed || !q8_interleaved || !out) return reject("null_buffer");
     const size_t n_blocks = n_in / 256u;
     size_t block_bytes = 0, need_packed = 0, need_q8 = 0, n_sb = 0;
     if (!QuantDotGeometry(kind, n_in, n_out, n_blocks, block_bytes, need_packed, need_q8, n_sb))
-        return false;
+        return reject("quant_geometry", block_bytes, need_packed, need_q8, n_blocks);
     if (packed_bytes < need_packed || q8_bytes < need_q8 || out_bytes < n_out * sizeof(float))
-        return false;
+        return reject("buffer_capacity", block_bytes, need_packed, need_q8, n_blocks);
 
     // Device-resident weight (uploads on its own submission + wait on a miss;
     // a cache hit costs nothing).
     QuantWeight* w = EnsureQuantWeight(packed, packed_bytes, kind);
-    if (!w) return false;
+    if (!w) return reject("weight_residency");
 
     // RAWRXD_G04: pin this in-flight weight's cache entry so a later Queue's
     // eviction pass (or a concurrent prefetch) cannot retire its buffer before
