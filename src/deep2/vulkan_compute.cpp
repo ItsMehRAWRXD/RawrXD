@@ -8,6 +8,7 @@
 #include "ReapTransferPreflight.hpp"
 #include "ReapRingOwnership.hpp"
 #include "ReapMlaGeometry.hpp"
+#include "core/log_toggle.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -4037,10 +4038,12 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
     ReclaimAllResidents();
     const size_t evictedBytes = beforeBytes - weightCacheBytes_;
     // NCRO: this per-block diagnostic fires ~27x per generated token; synchronous
-    // stderr logging in the hot path is a major non-compute overhead. Opt-in only.
-    static const bool profileResidency =
-        std::getenv("RAWRXD_PROFILE_RESIDENCY") != nullptr;
-    if (profileResidency)
+    // logging in the hot path is a major non-compute overhead. Routed through the
+    // unified, storage-agnostic toggle (rawr::VerboseLogEnabled) -- default OFF,
+    // on via env RAWRXD_VERBOSE_LOG or the runtime control file "rawr_verbose.on".
+    // The whole fprintf (including the deviceLocalHeapHeadroom() query) is gated
+    // before any formatting/collection/output.
+    if (rawr::VerboseLogEnabled())
         std::fprintf(stderr,
                      "[GPU_RESIDENCY] instance=%p block=%u pinned_weight_bytes=%zu "
                      "cached_weight_bytes=%zu weight_budget_bytes=%zu "
