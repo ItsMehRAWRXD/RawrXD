@@ -1,0 +1,21 @@
+{
+  "tag": "solo_gpu_3b",
+  "model": "F:\rawrxd\llama3.2-3b-Q2_K.gguf",
+  "prompt_text": "The capital of France is",
+  "prompt_tokens": 5,
+  "prompt_ids": [791, 6864, 315, 9822, 374],
+  "generate_tokens": 8,
+  "generated_ids": [12366, 11, 902, 374, 1101, 279, 6864, 315],
+  "cancelled": false,
+  "bind_ms": 4839.45,
+  "prefill_ms": 4731.36,
+  "decode_ms": 4504.89,
+  "total_ms": 14075.7,
+  "decode_tps": 1.77585,
+  "gpu_calls": 2561,
+  "cpu_calls": 0,
+  "fallback": "<none>",
+  "nonfinite_logits": 0,
+  "expert_ledger": {"observations": 0, "hits": 0, "misses": 0, "evictions": 0, "hit_rate": 0, "distinct_experts": 0},
+  "cleanup": "ok"
+}
