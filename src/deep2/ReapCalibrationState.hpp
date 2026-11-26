@@ -11,6 +11,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 namespace Deep2 { namespace ReapState {
 struct Identity {
@@ -23,6 +26,8 @@ struct Metric { uint32_t layer=0, expert=0; uint64_t count=0; double activation=
 struct State { uint64_t observations=0; uint64_t checkpointSequence=0; uint64_t beaconTokens=0; uint64_t beaconLayerObservations=0; uint64_t beaconExpertObservations=0; std::vector<uint64_t> completed; std::vector<Metric> metrics; };
 inline bool valid(const Identity& id,const State& s) {
     if(id.model.empty()||id.config.empty()||!id.layers||!id.experts||!id.topK||id.topK>id.experts||id.prompts.empty()||s.completed.size()!=id.prompts.size())return false;
+    if (s.beaconLayerObservations > s.beaconExpertObservations && s.beaconExpertObservations != 0) return false;
+    if (s.beaconTokens > s.observations && s.observations != 0) return false;
     uint64_t total=0;bool gap=false;
     for(auto n:s.completed){if(!n)gap=true;else if(gap||n>UINT64_MAX-total)return false;total+=n;}
     if(!total||total!=s.observations||s.observations>UINT64_MAX/id.topK)return false;
@@ -57,7 +62,12 @@ inline bool Save(const std::filesystem::path& path,const Identity& id,const Stat
     auto tmp=path;tmp+=".tmp";
     std::ofstream out(tmp,std::ios::binary|std::ios::trunc);if(!out)return false;
     const bool written=Write(out,id,s);out.close();if(!written||!out)return false;
+#if defined(_WIN32)
+    return MoveFileExW(tmp.wstring().c_str(), path.wstring().c_str(),
+                       MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+#else
     std::error_code ec;std::filesystem::rename(tmp,path,ec);return !ec;
+#endif
 }
 inline bool Load(const std::filesystem::path& path,const Identity& id,State& s){
     std::ifstream in(path,std::ios::binary);return in&&Read(in,id,s);
