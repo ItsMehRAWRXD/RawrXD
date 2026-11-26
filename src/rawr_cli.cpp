@@ -1634,6 +1634,37 @@ static int cmdRun(const std::vector<std::string>& args) {
             out("Tools:    " + std::to_string(reg.size()) + " registered");
             out("");
         }
+        // F03-B: env-gated persistent-session correctness self-test using SHORT
+        // real-model prompts (no simulated responses). Exercises exact prefix
+        // reuse (turn 1 -> reuse=1), changed-prefix invalidation (turn 2 ->
+        // reuse=0) and committed-token counts on ONE persistent session. Output
+        // goes to stderr so it survives with the PREFILL telemetry.
+        if (std::getenv("RAWRXD_STRATA_SELFTEST")) {
+            auto one = [](PersistentStrataRunner& r, const std::string& p) {
+                std::vector<json> m;
+                json j;
+                j["role"] = "user";
+                j["content"] = p;
+                m.push_back(j);
+                return r.Complete(m, 8);
+            };
+            const std::string p0 = "The capital of France is";
+            const std::string p1 = p0 + " Paris. The capital of Germany is";
+            const std::string p2 = "Completely unrelated: the weather today is";
+            const InferenceResult a0 = one(*strataRunner, p0);
+            const InferenceResult a1 = one(*strataRunner, p1);
+            const InferenceResult a2 = one(*strataRunner, p2);
+            std::fprintf(stderr,
+                         "SELFTEST turn0_ok=%d gen=%d (expect reuse=0)\n"
+                         "SELFTEST turn1_ok=%d gen=%d (expect reuse=1)\n"
+                         "SELFTEST turn2_ok=%d gen=%d (expect reuse=0 invalidation)\n"
+                         "SELFTEST turn1_text=[%s]\n"
+                         "SELFTEST done\n",
+                         a0.ok ? 1 : 0, a0.completionTokens, a1.ok ? 1 : 0,
+                         a1.completionTokens, a2.ok ? 1 : 0, a2.completionTokens,
+                         a1.content.c_str());
+            return EXIT_OK;
+        }
     }
 
     if (!useLocalDeep2 && !useStrata) {
