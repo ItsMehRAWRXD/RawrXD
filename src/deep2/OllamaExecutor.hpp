@@ -12,6 +12,9 @@
 // receive timeout, so cancellation cannot hang indefinitely.
 #pragma once
 #include "AdaptiveBlackboardIntelligenceV5.hpp"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #include <winhttp.h>
 #include <string>
@@ -71,16 +74,26 @@ inline std::string HttpDo(const wchar_t* method, const std::wstring& host, int p
                                   (LPVOID)body.data(), (DWORD)body.size(), (DWORD)body.size(), 0);
     if (sent) sent = WinHttpReceiveResponse(hr.get(), nullptr);
     if (sent) {
+        // Validate HTTP status (reject non-200).
+        DWORD status = 0, slen = sizeof(status);
+        if (!WinHttpQueryHeaders(hr.get(),
+                WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                WINHTTP_HEADER_NAME_BY_INDEX, &status, &slen, WINHTTP_NO_HEADER_INDEX))
+            status = 0;
+        if (status != 200) { ok = false; return out; }   // HTTP error, not success
         DWORD avail = 0;
-        while (WinHttpQueryDataAvailable(hr.get(), &avail) && avail > 0) {
-            if (g_cancel.load()) return out;           // cancellation between chunks
+        while (true) {
+            if (!WinHttpQueryDataAvailable(hr.get(), &avail)) { ok = false; return out; }
+            if (avail == 0) break;                        // complete
+            if (g_cancel.load()) { ok = false; return out; }
             std::string chunk(avail, '\0');
             DWORD read = 0;
-            if (!WinHttpReadData(hr.get(), &chunk[0], avail, &read)) break;
+            if (!WinHttpReadData(hr.get(), &chunk[0], avail, &read)) { ok = false; return out; }
+            if (read == 0) { ok = false; return out; }    // partial/failed read
             chunk.resize(read);
             out += chunk;
         }
-        ok = true;
+        ok = !out.empty();                                // success only if full body
     }
     return out;
 }
@@ -199,7 +212,11 @@ inline bool OllamaExec(const blackboard_v5::Controls& c, blackboard_v5::Measured
     m.decodeTps  = (double)ec * 1e9 / (double)ed;
     m.prefillTps = (pd > 0) ? (double)pc * 1e9 / (double)pd : 0.0;
     m.tokens     = (int)ec;
-    m.consistent = true; // single-shot consistency; V5 confirms via repeats
+    // DGL-F06: real output-consistency vs the first successful reference (no
+    // fabricated m.consistent=true). The reference is volatile (per process).
+    static thread_local std::string ref;
+    if (ref.empty()) ref = resp;
+    m.consistent = (resp == ref);
     m.valid      = true;
     return true;
 }
