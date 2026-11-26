@@ -7219,6 +7219,28 @@ add_test(NAME agent_acceptance_smoke_negative COMMAND agent_acceptance_smoke)
 add_test(NAME agent_acceptance_smoke_positive COMMAND agent_acceptance_smoke --positive)
 message(STATUS "agent_acceptance_smoke enabled (Qt-free native acceptance)")
 
+# Real Ollama tool-execution acceptance: drives the production OllamaBackend
+# against a live server, executes the model-emitted tool through the production
+# workspace registry, and resumes inference with the real observation.
+if(TARGET rawrxd_agentic_backend AND EXISTS "${CMAKE_SOURCE_DIR}/tools/agent_tool_exec_smoke.cpp")
+    add_executable(agent_tool_exec_smoke tools/agent_tool_exec_smoke.cpp)
+    target_link_libraries(agent_tool_exec_smoke PRIVATE rawrxd_agentic_backend)
+    target_include_directories(agent_tool_exec_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(agent_tool_exec_smoke PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(agent_tool_exec_smoke PRIVATE /EHsc /std:c++20 /utf-8)
+        target_compile_definitions(agent_tool_exec_smoke PRIVATE
+            NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    else()
+        target_compile_options(agent_tool_exec_smoke PRIVATE -std=c++20 -fexceptions)
+    endif()
+    set_target_properties(agent_tool_exec_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    message(STATUS "agent_tool_exec_smoke enabled (real Ollama tool execution)")
+endif()
+
 # Native full-vocabulary logit capture and fail-closed parity certification.
 # These targets are CPU/reference utilities and do not initialize Vulkan.
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/rawr_logit_certify.cpp")
