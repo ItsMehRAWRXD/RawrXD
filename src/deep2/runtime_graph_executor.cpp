@@ -4266,10 +4266,17 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                     return false;
                 }
                 for (size_t i = 0; i < y.size(); ++i) y[i] += bv[i];
-            } else if (pb.must_have) {
-                last_error_ = "prefill-batch: declared bias tensor missing: " + pb.biasName;
-                return false;
-            }
+                        } else {
+                            // TB-06 (batched): bias-free unless the bias tensor
+                            // is genuinely declared (present) but unresolved.
+                            bool declared = false;
+                            for (const auto& t : tensors_)
+                                if (t.name == pb.biasName) { declared = true; break; }
+                            if (declared) {
+                                last_error_ = "prefill-batch: declared bias tensor missing: " + pb.biasName;
+                                return false;
+                            }
+                        }
         }
         pending_bias.clear();
         return true;
