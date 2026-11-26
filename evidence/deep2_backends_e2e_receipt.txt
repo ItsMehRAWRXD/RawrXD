@@ -1,0 +1,43 @@
+DEEP2 BACKEND END-TO-END VERIFICATION RECEIPT
+==============================================
+
+Date: 2026-11-26
+Repo: F:\rawrxd  Branch: integration/combined-2026-11-25
+Hardware: AMD Radeon AI PRO R9700 (0x1002, 0x7551, 31.86 GB local)
+
+BACKENDS
+--------
+1. deep2 (local native engine)  -> WORKS
+   - rawr run <llama3.2-3b-Q2_K> ask --backend deep2
+     GENERATED 8 tokens, nonFiniteLogits=0, E2E 1.80 TPS (prefill 16.09 / decode 6.59)
+   - deep2_agentic_loop --provider deep2 (autonomous loop)
+     full loop: prefill 323 tok, decode 16 tok, SNAP tool calls executed
+     (TOOL read bug.cpp), verdict produced. Backend functional; task-fixture FAIL
+     was a missing calc.cpp, not a backend fault.
+
+2. strata (expert-residency MoE) -> WORKS
+   - rawr run <models/deepseek-coder-v2_16b.gguf> ask --backend strata
+     MoE detected: 64 experts, top-6, 2 shared; 27 layers x 64 experts telemetry
+     ResidencyManager registered 221 tensors (550,975,488 bytes, max 536,870,912)
+     PREFILL 45 tokens; GENERATED=4; STREAM_DELTAS=1; no errors; no nonfinite.
+   - dense model correctly fail-closed: STRATA_NOT_ROUTABLE (expert_count=0).
+
+3. ollama (external HTTP, OpenAI surface) -> WORKS (after fix)
+   - rawr run <model> ask --backend ollama -> reaches 127.0.0.1:11434
+     real HTTP 200; response parsed; content is model-dependent (some local
+     template models return empty content by their own behavior).
+   - FIX: added InferenceClient::reachable() fast GET /v1/models (fallback
+     /api/tags); session start no longer misreports a cold model as unreachable.
+
+FIXES LANDED
+------------
+- 679a7944a3  B06/B07 fused command-buffer lifecycle default-on + manifests
+- 7ffd2ad1ad  agentic loop MoE timing link + fast ollama reachability probe
+
+STATUS
+------
+BACKENDS_WORKING=deep2,strata,ollama
+AGENTIC_LOOP=deep2 provider verified end-to-end (tool calls execute)
+AUTONOMOUS=deep2_agentic_loop builds+links+runs
+PERFORMANCE_RECOVERY=PENDING (dispatch-bound; separate track)
+CERTIFIED=0 RELEASE=HELD PROMOTE=0
