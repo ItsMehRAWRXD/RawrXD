@@ -2941,6 +2941,17 @@ bool VulkanCompute::BeginFusedLayer() {
     if (fused_ || !initialized_ || !opsPipeline_) return false;
     if(!ensureReusableFusedSubmitObjects()) return false;
 
+    // RAWRXD_VULKAN_REVERSE_ENGINEER_PERMANENT_FIX_028 (Track C): enforce the
+    // invariant "never reset/reuse a command buffer while pending". EndFusedLayer
+    // waits synchronously on the success path, but any error/early-return path can
+    // leave reusableFusedFence_ pending. Guard the reset so a live command buffer
+    // is never recycled under the GPU.
+    if (reusableFusedFence_ != VK_NULL_HANDLE) {
+        const VkResult fs = vkGetFenceStatus(device_, reusableFusedFence_);
+        if (fs == VK_TIMEOUT)
+            (void)vkWaitForFences(device_, 1, &reusableFusedFence_, VK_TRUE, 30000000000ULL);
+    }
+
     // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: invalidate the stale
     // interval so a failed/aborted fused sequence can never leak an
     // older interval into the timing authority.
