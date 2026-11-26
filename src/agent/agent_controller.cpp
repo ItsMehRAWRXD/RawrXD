@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <set>
@@ -35,6 +36,17 @@ bool readFileStr(const std::string& path, std::string& out) {
     ss << f.rdbuf();
     out = ss.str();
     return true;
+}
+
+// Canonical operation identity (V22): equivalent structured arguments with
+// different key ordering identify the SAME operation. nlohmann objects are
+// key-sorted, so parsed equality is canonical; fall back to string equality.
+bool argsEqual(const std::string& a, const std::string& b) {
+    try {
+        return json::parse(a) == json::parse(b);
+    } catch (...) {
+        return a == b;
+    }
 }
 
 // Extract concatenated JSON objects from free text (models often wrap JSON in
@@ -212,6 +224,28 @@ AgentResult runAgentController(
     size_t lastCount = 0;
     int stall = 0;
 
+    // F04-V16/V17: initial workspace baseline + source fingerprint for stale
+    // build/test receipt invalidation. Bounded to avoid scanning huge trees.
+    auto sourceFingerprint = [&]() -> uint64_t {
+        uint64_t h = 1469598103934665603ULL;
+        std::error_code ec;
+        size_t scanned = 0;
+        for (auto it = std::filesystem::recursive_directory_iterator(ws.root(), ec);
+             it != std::filesystem::recursive_directory_iterator(); it.increment(ec)) {
+            if (ec) break;
+            if (++scanned > 20000) break;
+            if (!it->is_regular_file(ec)) continue;
+            const std::string ext = it->path().extension().string();
+            if (ext == ".cpp" || ext == ".cc" || ext == ".h" || ext == ".hpp") {
+                std::string c;
+                if (readFileStr(it->path().string(), c)) h ^= fnv1a(c);
+            }
+        }
+        return h;
+    };
+    uint64_t lastBuildSrcFp = 0;  // source fingerprint at last successful build/test
+    std::map<std::string, uint64_t> baselineHashes;  // preexisting files (V16)
+
     // F04-V completion integrity: per-session deliverable evidence. A model FINAL
     // is a completion REQUEST, not proof. The controller verifies real tool
     // evidence before issuing an authoritative receipt.
@@ -239,7 +273,7 @@ AgentResult runAgentController(
             bool superseded = false;
             for (size_t j = i + 1; j < res.results.size(); ++j) {
                 const AgentReceipt& s = res.results[j];
-                if (s.ok && s.tool == f.tool && s.args == f.args) {
+                if (s.ok && s.tool == f.tool && argsEqual(s.args, f.args)) {
                     superseded = true;
                     break;
                 }
@@ -273,7 +307,13 @@ AgentResult runAgentController(
             if (r.tool == "run_tests") hasTest = true;
             if (r.tool == "run_shell" && r.exitCode == 0) hasRun = true;
         }
-        const bool hasExecOk = hasBuild || hasTest || hasRun;
+        // F04-V17: a build/test receipt is stale if source changed after it.
+        if ((hasBuild || hasTest || hasRun) && lastBuildSrcFp != 0 &&
+            lastBuildSrcFp != sourceFingerprint()) {
+            reason = "source changed after the last successful build/test; rebuild "
+                     "and re-test before finishing";
+            return false;
+        }
 
         // Read-only tasks need no filesystem/exec deliverable.
         if (res.results.empty() && (wantsWrite || wantsExec)) {
@@ -297,6 +337,21 @@ AgentResult runAgentController(
         }
         return true;
     };
+
+    // Capture initial workspace artifact baseline (V16) before any tool runs.
+    {
+        std::error_code ec;
+        size_t scanned = 0;
+        for (auto it = std::filesystem::recursive_directory_iterator(ws.root(), ec);
+             it != std::filesystem::recursive_directory_iterator(); it.increment(ec)) {
+            if (ec) break;
+            if (++scanned > 20000) break;
+            if (!it->is_regular_file(ec)) continue;
+            std::string c;
+            if (readFileStr(it->path().string(), c))
+                baselineHashes[it->path().filename().string()] = fnv1a(c);
+        }
+    }
 
     for (int turn = 1; turn <= cfg.maxTurns; ++turn) {
         if (cancel && cancel()) {
@@ -407,6 +462,10 @@ AgentResult runAgentController(
                         writtenHashes[path] = fnv1a(content);
                     }
                 }
+                // F04-V17: bind build/test receipts to the source revision.
+                if (tr.ok && (pc.tool == "run_build" || pc.tool == "run_tests" ||
+                              (pc.tool == "run_shell" && tr.exitCode == 0)))
+                    lastBuildSrcFp = sourceFingerprint();
                 std::string fl = tr.output.substr(0, tr.output.find('\n'));
                 if (fl.size() > 140) fl = fl.substr(0, 140);
                 combined += "- " + tr.tool + " " + tr.argsJson + " -> " +
