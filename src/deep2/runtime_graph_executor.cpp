@@ -5083,7 +5083,9 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     // DEEP2_VULKAN_SUBMIT_OPT_001: open QuantDot BeginFusedLayer window for
     // this token so EndQuantDotBatch / ForceHostSync are classified under one
     // command-buffer lifecycle (same names as deep2 fused path).
-    const bool runtime_fuse_ = std::getenv("DEEP2_RUNTIME_FUSE") != nullptr;
+    // Default ON (B06/B07 performance recovery): fused command-buffer lifecycle
+    // is the verified production path; opt out with DEEP2_NO_RUNTIME_FUSE.
+    const bool runtime_fuse_ = !std::getenv("DEEP2_NO_RUNTIME_FUSE");
     bool fuse_opened_ = false;
     if (runtime_fuse_) {
         fuse_opened_ = QuantDot::BeginFusedLayer();

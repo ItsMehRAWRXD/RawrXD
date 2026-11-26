@@ -1,0 +1,59 @@
+DEEP2 B06/B07 PRODUCTION IMPLEMENTATION RECEIPT
+=================================================
+
+Task: Make the consolidated (fused) Vulkan command-buffer lifecycle the default
+      production path in Deep2 (B06 deferred command recording / B07 async sync),
+      preserving independent numerical parity.
+
+Repository: F:\rawrxd
+Branch: integration/combined-2026-11-25
+Baseline commit: f51af405a0
+
+CHANGE
+------
+File: src/deep2/runtime_graph_executor.cpp
+Before: const bool runtime_fuse_ = std::getenv("DEEP2_RUNTIME_FUSE") != nullptr;
+After:  const bool runtime_fuse_ = !std::getenv("DEEP2_NO_RUNTIME_FUSE");
+
+Effect: the QuantDot BeginFusedLayer/EndFusedLayer command-buffer lifecycle is
+now enabled by default for each token. Opt out with DEEP2_NO_RUNTIME_FUSE=1.
+
+BUILD
+-----
+- Regenerated stale Vulkan shader sources (build-dir *.comp.cpp + header + spv)
+  with vulkan-shaders-gen + glslangValidator (root cause of prior LNK2001
+  unresolved matmul_* symbols).
+- deep2_engine_lib.lib  -> built OK (edited TU compiles).
+- ggml-vulkan.lib       -> regenerated + built OK.
+- deep2_strata_chat.exe -> linked OK at F:\rawrxd\build\Release\deep2_strata_chat.exe
+
+RUNTIME (real hardware)
+-----------------------
+Device: AMD Radeon AI PRO R9700 (vendor 0x1002, vram 34208743424)
+Model:  F:\rawrxd\llama3.2-3b-Q2_K.gguf
+Prompt: "The capital of France is"  max-new=8  --gpu
+
+Fused default (runtime_fuse_=1):
+  tokens: 12366 ' Paris', 11 ',', 902 ' which', 374 ' is',
+          1101 ' also', 279 ' the', 6864 ' capital', 315 ' of'
+  DISPATCH gpu_calls=2561 cpu_calls=0 fallback=<none> nonfinite_logits=0
+  CHAT_STATUS OK
+
+A/B old path (DEEP2_NO_RUNTIME_FUSE=1):
+  tokens: identical (12366,11,902,374,1101,279,6864,315)
+  DISPATCH gpu_calls=2561 cpu_calls=0 fallback=<none> nonfinite_logits=0
+  CHAT_STATUS OK
+
+PARITY
+------
+Token-for-token identical between fused-default and old path; coherent output
+matches the previously verified baseline ("Paris, which is also the capital of").
+nonfinite_logits=0 in both runs.
+
+STATUS
+------
+IMPLEMENTED=1 COMPILED=1 LINKED=1 RUNTIME_REACHED=1 FUNCTIONALLY_VERIFIED=1
+NUMERICALLY_VERIFIED=1 (token-identical A/B)
+PERFORMANCE_VERIFIED=0 (TPS benchmark pending)
+COMMITTED=0 PUSHED=0
+CERTIFIED=0 RELEASE=HELD PROMOTE=0
