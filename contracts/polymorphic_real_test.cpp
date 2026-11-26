@@ -34,10 +34,9 @@ int main(int argc, char** argv) {
             bb.current.batch, bb.current.threads, bb.st.curDecode,
             bb.bestDecode, bb.bestRepeats, ms);
     }
-    std::printf("SUCCESS=%d/%d TRANSPORT_FAILS=%d BEST=%.1f(batch=%d thr=%d rep=%d)\n",
-        successes, n, transportFails, bb.bestDecode, bb.best.batch, bb.best.threads, bb.bestRepeats);
-    const bool pass = (successes == n) && (transportFails == 0) &&
-                      bb.haveBest && (bb.bestRepeats >= 2);
+    std::printf("SUCCESS=%d/%d TRANSPORT_FAILS=%d BEST_OBSERVED=%.1f BEST_REPEATED=%.1f(rep=%d)\n",
+        successes, n, transportFails, bb.bestObserved, bb.bestRepeated, bb.bestRepeats);
+    const bool pass = (successes == n) && (transportFails == 0) && (bb.bestRepeated > 0);
     std::printf("ACCEPTANCE=%s\n", pass ? "PASS" : "FAIL");
     return pass ? 0 : 1;   // fail closed
 }

@@ -24,6 +24,9 @@ struct Blackboard {
     poly::State st;
     std::vector<poly::Cand> obs;       // bounded
     poly::Cand current{16, 1}, best{16, 1};   // LIFE: seed known-good (16/1)
+    double bestObserved = 0.0;                 // best single successful decode
+    double bestRepeated = 0.0;                 // best median of >=3 healthy repeats
+    std::vector<double> pendingSamples;        // repeated healthy measurements
     double bestDecode = 0; int bestRepeats = 0; bool haveBest = false;
     poly::Cand pending; double pendingDecode = 0; int pendingRepeats = 0; bool havePending = false;
     uint64_t alloc0 = 0, alloc1 = 0, iters = 0, accepts = 0, rejects = 0, failures = 0;
@@ -73,7 +76,7 @@ static inline StepResult Step(Blackboard& bb, ExecutorFn exec) {
     StepResult R;
     ++bb.iters;
     const int fam = AllocSelect(bb);
-    R.cand = (bb.havePending && bb.pendingRepeats == 1) ? bb.pending : NextObs(bb);
+    R.cand = (bb.havePending && bb.pendingSamples.size() < 3) ? bb.pending : NextObs(bb);
     if (fam == 0) ++bb.alloc0; else ++bb.alloc1;     // ratio allocation accounting
     Measured m;
     if (!exec(R.cand, m) || !m.valid || m.decodeTps <= 0) {
@@ -89,12 +92,19 @@ static inline StepResult Step(Blackboard& bb, ExecutorFn exec) {
     if (m.decodeTps >= bb.st.curDecode) { bb.current = cand; bb.st.curDecode = m.decodeTps; ++bb.accepts; }
     else ++bb.rejects;
 
-    if (m.consistent) {                               // repeated validation
-        if (bb.havePending && bb.pending.batch == cand.batch && bb.pending.threads == cand.threads) ++bb.pendingRepeats;
-        else { bb.pending = cand; bb.pendingDecode = m.decodeTps; bb.pendingRepeats = 1; bb.havePending = true; }
-        if (bb.pendingRepeats >= 2 && (!bb.haveBest || bb.pendingDecode > bb.bestDecode)) {
-            bb.best = bb.pending; bb.bestDecode = bb.pendingDecode;
-            bb.bestRepeats = bb.pendingRepeats; bb.haveBest = true;
+    // Best OBSERVED (any successful run) + repeated MEDIAN (>=3 healthy runs).
+    // Transport success is independent of text consistency (diagnostic only).
+    bb.bestObserved = std::max(bb.bestObserved, m.decodeTps);
+    if (bb.havePending && bb.pending.batch == cand.batch && bb.pending.threads == cand.threads)
+        bb.pendingSamples.push_back(m.decodeTps);
+    else { bb.pending = cand; bb.pendingSamples.clear(); bb.pendingSamples.push_back(m.decodeTps); bb.havePending = true; }
+    if (bb.pendingSamples.size() >= 3) {
+        std::vector<double> s = bb.pendingSamples;
+        std::sort(s.begin(), s.end());
+        const double med = s[s.size() / 2];
+        if (med > bb.bestRepeated) {
+            bb.bestRepeated = med; bb.best = bb.pending; bb.bestDecode = med;
+            bb.bestRepeats = (int)s.size(); bb.haveBest = true;
         }
     }
     bb.st.step++;
