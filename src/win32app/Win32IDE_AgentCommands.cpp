@@ -3,6 +3,7 @@
 
 #include "Win32IDE.h"
 #include "backend_preferences.h"
+#include "agentic/StrataReadiness.hpp"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Deep2Bridge.h"
 #include "Win32IDE_AgenticLoopBridge.h"
@@ -2236,11 +2237,28 @@ void Win32IDE::onBackendSelectionChanged()
         SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", "deep2");
     } else if (pref == "strata") {
         SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", "strata");
-        MessageBoxA(m_hwndSecondarySidebar,
-                    "STRATA_NOT_ROUTABLE: expert residency is not activated on this "
-                    "path. The selection is stored, but chat inference is blocked "
-                    "until residency is available. Deep2 is not substituted.",
-                    "RawrXD backend", MB_ICONWARNING | MB_OK);
+        // Authoritative readiness (same source of truth as the CLI router):
+        // genuine MoE metadata, not file presence. Actionable message when not
+        // routable; Deep2 is never silently substituted.
+        const char* envModel = std::getenv("RAWRXD_DEEP2_MODEL");
+        const std::string modelRel =
+            (envModel && *envModel) ? envModel : "models/tinyllama.gguf";
+        const std::string root = m_currentExplorerPath;
+        const std::string modelPath = root.empty() ? modelRel : (root + "/" + modelRel);
+        const rawrxd::StrataReadiness sr = rawrxd::ClassifyStrataReadiness(modelPath);
+        if (sr.eligible) {
+            appendCopilotChatUtf8("\n[backend] strata (MODEL_MOE_ELIGIBLE: " +
+                                  sr.architecture + ", " +
+                                  std::to_string(sr.numExperts) + " experts)\n");
+        } else {
+            MessageBoxA(m_hwndSecondarySidebar,
+                        ("STRATA_NOT_ROUTABLE: " + sr.detail +
+                         ". The selection is stored, but chat inference is blocked "
+                         "until a MoE model is active. Deep2 is not substituted.")
+                            .c_str(),
+                        "RawrXD backend", MB_ICONWARNING | MB_OK);
+            appendCopilotChatUtf8("\n[backend] strata (unavailable: " + sr.detail + ")\n");
+        }
     } else {
         SetEnvironmentVariableA("RAWRXD_CHAT_BACKEND", nullptr);
     }
