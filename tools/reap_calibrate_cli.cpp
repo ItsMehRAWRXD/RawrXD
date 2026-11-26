@@ -1072,8 +1072,9 @@ public:
                  << " REWRITE_AUTHORIZED=0" << endl;
             return true;
         }
-        // Final output
-        return writeFinalOutput();
+        // Final output plus the execution receipt derived from real callbacks.
+        if (!writeFinalOutput()) return false;
+        return writeBeaconExecutionReceipt();
     }
     
 private:
@@ -1101,6 +1102,9 @@ private:
     string configHash_;
     fs::path checkpointPath_;
     fs::path outputDir_;
+    uint64_t beaconTokenCount_ = 0;
+    uint64_t beaconLayerObservations_ = 0;
+    uint64_t beaconExpertObservations_ = 0;
     
     bool runDirectSaliency(const vector<string>& prompts) {
         if (expectedSaliencyLayers_.size() != modelInfo_.numLayers ||
@@ -1210,6 +1214,8 @@ private:
         ReapRouteTracker::Instance().Install(
             [this](size_t layer, const vector<float>& probabilities,
                    const vector<int>& expertIds, const vector<float>& weights) {
+                ++beaconLayerObservations_;
+                beaconExpertObservations_ += expertIds.size();
                 accumulator_.Observe(layer, probabilities, expertIds, weights);
             }
         );
@@ -1459,6 +1465,7 @@ private:
                 emittedTokens.push_back(tokenId);
                 return true; // continue generation
             });
+        beaconTokenCount_ += emittedTokens.size();
         if (!config_.dumpTokensPath.empty()) {
             FILE* tf = std::fopen(config_.dumpTokensPath.c_str(), "ab");
             if (tf) {
@@ -1487,6 +1494,20 @@ private:
             return false;
         }
         return true;
+    }
+
+    bool writeBeaconExecutionReceipt() const {
+        const fs::path path = fs::path(config_.outputDir) / "beaconism_execution.receipt";
+        std::ofstream out(path, std::ios::trunc);
+        if (!out) return false;
+        out << "beaconism_schema=2\n"
+            << "execution_kind=reap_calibration\n"
+            << "tokens_observed=" << beaconTokenCount_ << '\n'
+            << "layer_observations=" << beaconLayerObservations_ << '\n'
+            << "expert_observations=" << beaconExpertObservations_ << '\n'
+            << "structural_identity=" << checkpointIdentity_ << '\n'
+            << "payload_identity_hash_required=0\n";
+        return static_cast<bool>(out);
     }
     
     bool writeFinalOutput() {
