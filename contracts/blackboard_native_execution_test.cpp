@@ -37,6 +37,8 @@ int main(int argc, char** argv) {
     // 3) Drive the deterministic blackboard with the native executor.
     V5Blackboard bb;
     bb.bounds.maxThreads = (int)std::thread::hardware_concurrency();
+    if (const char* e = std::getenv("RAWRXD_OBJECTIVE"))
+        bb.objective.requestedPercent = std::atof(e);
     std::array<bool, M_COUNT> used{};
     int distinct = 0;
     for (int i = 0; i < N; ++i) {
