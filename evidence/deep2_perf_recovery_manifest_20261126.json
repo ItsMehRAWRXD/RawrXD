@@ -20,7 +20,7 @@
     {"id": "REC-04A", "name": "Permanent Vulkan 1.3 shader build rule", "status": "PASS", "evidence": "commit eb9d75ffd1 (target env 1.2->1.3); build-tree output move + shaderPath discovery OPEN"},
     {"id": "REC-06", "name": "Tail-row barrier divergence", "status": "PASS", "evidence": "commit 01b375d9e1 (rowActive flag; no early return before barrier)"},
     {"id": "REC-05A", "name": "Production-connected GPU parity harness", "status": "OPEN", "next": "Reuse Deep2 device/buffer/pipeline/readback; select qPipeline_ vs qTiled4xPipeline_ on identical Q4_K tensors"},
-    {"id": "REC-05B", "name": "Independent CPU Q4_K oracle", "status": "OPEN", "next": "CPU dequant + GEMV reference (independent of GPU path)"},
+    {"id": "REC-05B", "name": "Independent CPU Q4_K oracle", "status": "PASS", "evidence": "commit ebe3f82be6; tools/deep2_q4k_cpu_oracle.cpp; selftest PASS; real MiniMax Q4_K nonfinite=0"},
     {"id": "REC-05C", "name": "R9700 parity matrix", "status": "OPEN", "blocked_by": ["REC-05A", "REC-05B"]},
     {"id": "REC-05D", "name": "RX 7800 XT parity matrix", "status": "OPEN", "blocked_by": ["REC-05A", "REC-05B"]},
     {"id": "REC-06A", "name": "Non-multiple-of-four rows", "status": "OPEN", "note": "shader fixed; needs runtime parity over rows {1,2,3,4,5,7,8,15,16,17,128,4096}"},
@@ -35,7 +35,7 @@
     {"id": "REC-13", "name": "Native autonomous backend E2E", "status": "OPEN"},
     {"id": "REC-14", "name": "Revision-bound receipts, commit, push", "status": "OPEN"}
   ],
-  "verified_commits": ["eb9d75ffd1", "01b375d9e1"],
+  "verified_commits": ["eb9d75ffd1", "01b375d9e1", "ebe3f82be6"],
   "gates": {
     "SHADER_SOURCE_PROVENANCE": "REQUIRED",
     "SHADER_BINARY_PROVENANCE": "REQUIRED",
