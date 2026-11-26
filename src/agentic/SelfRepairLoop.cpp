@@ -525,21 +525,46 @@ bool SelfRepairLoop::GenerateAndApplyChanges(
         std::chrono::system_clock::now().time_since_epoch()).count();
     m_currentTask.steps.push_back(step);
     m_currentTask.conversation_log = messages;
-    m_currentTask.conversation_log.push_back({
-        {"role", "assistant"},
-        {"content", result.response}
-    });
+    // For tool-call responses, the assistant envelope is inserted together
+    // with the tool observations below.  Storing a plain assistant message
+    // here would duplicate the turn and violate chat transcript ordering.
+    if (!result.has_tool_calls) {
+        m_currentTask.conversation_log.push_back({
+            {"role", "assistant"},
+            {"content", result.response}
+        });
+    }
     m_backlog.UpdateTask(m_currentTask);
 
     // Process tool calls if present
     if (result.has_tool_calls) {
+        // Preserve the provider's tool-call envelope in the conversation.  A
+        // tool result without the corresponding assistant tool call is not a
+        // valid chat transcript for either Deep2 or Ollama, and causes the
+        // next autonomous turn to lose the action it just requested.
+        json assistant_tool_calls = json::array();
         for (const auto& [name, args] : result.tool_calls) {
             ToolCall call;
             call.id = "call_" + std::to_string(m_currentTask.steps.size());
             call.name = name;
             call.arguments = args;
 
+            assistant_tool_calls.push_back({
+                {"id", call.id},
+                {"type", "function"},
+                {"function", {{"name", name}, {"arguments", args.dump()}}}
+            });
+
             ToolResultMessage tool_result_msg = m_toolBridge->ExecuteToolCall(call);
+
+            // Feed the observation back as a role=tool message so the next
+            // model request can continue the same plan with grounded state.
+            m_currentTask.conversation_log.push_back({
+                {"role", "tool"},
+                {"tool_call_id", call.id},
+                {"name", name},
+                {"content", tool_result_msg.content}
+            });
 
             ToolExecDetail detail;
             detail.tool_name = name;
@@ -559,6 +584,16 @@ bool SelfRepairLoop::GenerateAndApplyChanges(
             m_currentTask.steps.push_back(tool_step);
             m_backlog.UpdateTask(m_currentTask);
         }
+
+        // Insert the assistant envelope immediately before its observations;
+        // this is the ordering required by OpenAI-compatible chat APIs.
+        const auto first_tool = m_currentTask.conversation_log.end() - result.tool_calls.size();
+        m_currentTask.conversation_log.insert(first_tool, {
+            {"role", "assistant"},
+            {"content", result.response},
+            {"tool_calls", assistant_tool_calls}
+        });
+        m_backlog.UpdateTask(m_currentTask);
 
         if (progress) progress("apply", "Tool calls executed");
     }
