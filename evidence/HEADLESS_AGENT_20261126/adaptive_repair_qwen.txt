@@ -1,0 +1,4 @@
+RAWRXD_ADAPTIVE_REPAIR_INTELLIGENCE_042 — qwen3:8b + adaptive repair
+REQUESTS=24 TOOL_OK=19 CORRECTIONS=5 PREFILL_TPS=22045 DECODE_TPS=58.13 ELAPSED=394s
+Real source: sysmon.cpp 3706 bytes (all 4 Win32 APIs). Build run returns EMPTY (model build.cmd does not invoke cl), so no compiler diagnostics to repair; model loops rewriting source. functional=0 RESULT=INCOMPLETE
+Adaptive repair implemented: MSVC diagnostic extraction, source-context injection, targeted edit tool, error-count progress. Model still cannot produce a successful build.

@@ -158,6 +158,30 @@ static string PhaseDirective(int p) {
     }
 }
 
+// RAWRXD_ADAPTIVE_REPAIR_INTELLIGENCE_042: structured compiler diagnostics.
+static string FirstError(const string& out, string& file, int& line) {
+    size_t p = out.find("error C");
+    if (p == string::npos) p = out.find("error:");
+    if (p == string::npos) return {};
+    size_t ls = out.rfind('\n', p); ls = (ls == string::npos) ? 0 : ls + 1;
+    size_t le = out.find('\n', p); le = (le == string::npos) ? out.size() : le;
+    string ln = out.substr(ls, le - ls);
+    size_t lp = ln.find('('), rp = ln.find(')');
+    if (lp != string::npos && rp != string::npos) {
+        file = ln.substr(0, lp);
+        line = atoi(ln.substr(lp + 1, rp - lp - 1).c_str());
+    }
+    return ln;
+}
+static string SourceContext(const string& file, int line) {
+    ifstream f(std::filesystem::path(g_ws) / file);
+    vector<string> L; string s;
+    while (getline(f, s)) L.push_back(s);
+    string out; int a = max(1, line - 3), b = min((int)L.size(), line + 3);
+    for (int i = a; i <= b; ++i) out += to_string(i) + ": " + L[i-1] + "\n";
+    return out;
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -210,6 +234,7 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
+    int errCount = 0, repairProgress = 0; string repairNote;
     for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
         int phase = ComputePhase();
@@ -270,7 +295,21 @@ int main(int argc, char** argv) {
         } else if (tool == "run") {
             string cmd = ExtractJsonString(call, "cmd");
             result = RunCmd(cmd);
-            if (result.rfind("ERROR", 0) == 0) { g_tel.toolFail++; g_tel.corrections++; } else g_tel.toolOk++;
+            if (result.find("error C") != string::npos || result.find("error:") != string::npos) {
+                string f; int ln = 0; string e = FirstError(result, f, ln);
+                repairNote = "PRIMARY COMPILER ERROR: " + e + "\nRelevant source (" + f + "):\n" + SourceContext(f, ln) +
+                             "\nFix ONLY this error using the edit tool (targeted old->new replacement), then run build.cmd again.";
+                errCount++; g_tel.corrections++;
+            } else { if (errCount > 0) repairProgress++; errCount = 0; g_tel.toolOk++; }
+        } else if (tool == "edit") {
+            string path = ExtractJsonString(call, "path"), oldS = ExtractJsonString(call, "old"), newS = ExtractJsonString(call, "new"), full;
+            if (!PathInWs(path, full)) { result = "ERROR: path escapes workspace"; g_tel.toolFail++; }
+            else {
+                ifstream f(full); stringstream ss; ss << f.rdbuf(); string s = ss.str();
+                size_t p = s.find(oldS);
+                if (p == string::npos) { result = "ERROR: old text not found"; g_tel.toolFail++; }
+                else { s.replace(p, oldS.size(), newS); ofstream o(full, ios::binary); o << s; result = o.good() ? ("OK edited " + path) : "ERROR: write failed"; if (o.good()) g_tel.toolOk++; else g_tel.toolFail++; }
+            }
         } else if (tool == "read") {
             string path = ExtractJsonString(call, "path"), full;
             if (!PathInWs(path, full)) { result = "ERROR: path escapes workspace"; g_tel.toolFail++; }
@@ -283,6 +322,7 @@ int main(int argc, char** argv) {
         printf("  -> %s\n", result.substr(0, 160).c_str());
         msgs.push_back({"assistant", content});
         msgs.push_back({"user", "TOOL_RESULT: " + result});
+        if (!repairNote.empty()) { msgs.push_back({"user", repairNote}); repairNote.clear(); }
     }
 
     double el = NowS() - g_tel.start;
