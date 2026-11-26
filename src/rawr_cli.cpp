@@ -1629,11 +1629,13 @@ static int cmdRun(const std::vector<std::string>& args) {
         // otherwise the device resolves its default (0 = no cache) first. Driven
         // by RAWRXD_STRATA_WEIGHT_CACHE_MB (per-device memory admission still
         // applies inside the residency owner). This does not modify R06 source.
+        int64_t strataWeightBudgetBytes = 0;
         if (const char* mb = std::getenv("RAWRXD_STRATA_WEIGHT_CACHE_MB")) {
             const long long m = std::atoll(mb);
             if (m > 0) {
+                strataWeightBudgetBytes = static_cast<int64_t>(m) * 1024 * 1024;
                 ::RawrXD::Deep2::QuantDot::SetWeightCacheBudget(
-                    static_cast<int64_t>(m) * 1024 * 1024);
+                    strataWeightBudgetBytes);
                 ::RawrXD::Deep2::QuantDot::SetWeightCacheRetention(true);
                 if (!g_json)
                     out("Strata weight cache budget: " + std::to_string(m) + " MB");
@@ -1649,6 +1651,17 @@ static int cmdRun(const std::vector<std::string>& args) {
             out("AUDIT_STATUS=FAIL");
             out("AUDIT_REASON=strata_tokenizer_load_failed");
             return EXIT_NO_INFERENCE;
+        }
+        // R06: apply the budget to the ACTUAL executor device -- the Deep2
+        // VulkanCompute singleton used by the graph executor -- not just the
+        // CPUInference GpuFor/Gpu path. Set after loadModel so init cannot
+        // overwrite it; the cache honours weightBudgetBytes_ live.
+        if (strataWeightBudgetBytes > 0) {
+            ::Deep2::GetDeep2VulkanCompute().SetResidentBudgetForCertification(
+                static_cast<size_t>(strataWeightBudgetBytes));
+            if (!g_json)
+                out("Strata executor weight budget set: " +
+                    std::to_string(strataWeightBudgetBytes) + " bytes");
         }
         Deep2Engine* tokPtr = strataTokenizer.get();
         strataRunner = std::make_unique<PersistentStrataRunner>(modelPath, *tokPtr);
