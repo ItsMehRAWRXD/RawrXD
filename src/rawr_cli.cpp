@@ -24,8 +24,11 @@
 #include "backend_preferences.h"
 #include "rawr_reasoning.hpp"
 #include "Deep2Engine.h"
+#include "deep2/strata_chat.hpp"
 #include "ChatTemplate.hpp"
 #include "agentic/BackendRegistry.hpp"
+#include "agentic/InferenceRouter.hpp"
+#include "agentic/StrataReadiness.hpp"
 #include "agentic/tool_call_parser.h"
 #include "core/project_rag_lite.hpp"
 #include "core/vram_kv_controls.hpp"
@@ -64,6 +67,14 @@ static std::string ollamaModelFor(const std::string& model);
 static std::string loadBackendPref();
 static std::string resolveRunBackend(const std::string& flagOrEmpty);
 static std::string defaultDeep2ModelRel();
+// Authoritative routing (InferenceRouter) + real Strata residency readiness.
+static std::array<rawrxd::BackendInfo, 3> buildBackendRegistry();
+static rawrxd::ResidencyReadiness strataReadiness();
+static std::string routeBackend(const std::string& pref, std::string* error);
+static int runStrataAsk(const std::string& modelPath, const std::string& prompt,
+                        size_t maxTokens, const rawrxd::StrataOptions& opts,
+                        std::string* answer, std::string* error,
+                        rawrxd::StrataLevel* levelOut);
 
 // Ensure the Windows console emits UTF-8 (not CP1252) so detokenized model
 // output and all CLI text render correctly instead of mojibake.
@@ -1921,6 +1932,100 @@ static std::string resolveRunBackend(const std::string& flagOrEmpty) {
     if (!ws.resolve(defaultDeep2ModelRel(), true).empty()) return "deep2";
     return "ollama";
 }
+
+// Real Strata residency readiness for the configured Deep2 model. Ready iff the
+// model is genuinely MoE (expert_count > 0) -- GGUF presence alone is never
+// sufficient (see StrataReadiness.hpp). This is the single source of truth the
+// registry, status and routing all share.
+static rawrxd::ResidencyReadiness strataReadiness() {
+    Workspace ws;
+    ws.setRoot(g_workspace_root);
+    const std::string modelPath = ws.resolve(defaultDeep2ModelRel(), true);
+    return rawrxd::ProbeStrataReadiness(modelPath);
+}
+
+// Authoritative route resolution shared by status/ask/endpoint. Returns the
+// canonical route ("deep2"|"strata"|"ollama"), or "" with `error` filled
+// (e.g. STRATA_NOT_ROUTABLE) when the selection cannot be routed. Never
+// substitutes a different backend.
+static std::string routeBackend(const std::string& pref, std::string* error) {
+    const std::array<rawrxd::BackendInfo, 3> reg = buildBackendRegistry();
+    const rawrxd::RouteResult rr =
+        rawrxd::RouteBackend(pref, reg, strataReadiness(), /*allowFallback=*/false);
+    if (!rr.decision.has_value()) {
+        if (error) *error = rr.error.value_or("routing failed");
+        return "";
+    }
+    return std::string(rawrxd::ToString(rr.decision->selection.selected));
+}
+
+// Execute a real Strata (expert-residency) text request. Tokenization uses the
+// Deep2 GGUF tokenizer; execution runs through StrataChatSession with the
+// router's StrataOptions so every knob (expert tracking, cache policy, int8 KV,
+// prefetch) is applied to the RuntimeGraphExecutor.
+static int runStrataAsk(const std::string& modelPath, const std::string& prompt,
+                        size_t maxTokens, const rawrxd::StrataOptions& opts,
+                        std::string* answer, std::string* error,
+                        rawrxd::StrataLevel* levelOut) {
+    // Eligibility is established by the caller's routing decision; advance the
+    // reported level only as real session evidence accumulates.
+    if (levelOut) *levelOut = rawrxd::StrataLevel::ModelMoeEligible;
+    Deep2Engine tok;
+    if (!tok.loadModel(modelPath)) {
+        if (error) *error = "tokenizer/Deep2 load failed: " + modelPath;
+        return EXIT_NO_INFERENCE;
+    }
+    const std::vector<int> ids = tok.tokenize(prompt);
+    if (ids.empty()) {
+        if (error) *error = "empty prompt tokens";
+        return EXIT_NO_INFERENCE;
+    }
+
+    rawrxd::deep2::StrataChatOptions so;
+    so.gpu = true;
+    so.expertTracking = opts.expertTracking;
+    so.cachePolicy = opts.cachePolicy;
+    so.int8KV = opts.int8KV;
+    so.prefetch = opts.prefetch;
+
+    rawrxd::deep2::StrataChatSession session;
+    if (!session.Open(modelPath, so)) {
+        if (error) *error = session.Stats().error.empty() ? "strata open failed"
+                                                          : session.Stats().error;
+        return EXIT_NO_INFERENCE;
+    }
+    // Executor + residency manager initialized -> STRATA_RUNTIME_READY.
+    if (levelOut) *levelOut = rawrxd::StrataLevel::RuntimeReady;
+    std::vector<uint32_t> up(ids.begin(), ids.end());
+    if (!session.Prefill(up)) {
+        if (error) *error = "strata prefill failed";
+        return EXIT_NO_INFERENCE;
+    }
+    std::vector<int> outIds;
+    uint32_t next = 0;
+    for (size_t i = 0; i < maxTokens; ++i) {
+        if (!session.Step(next)) break;
+        outIds.push_back(static_cast<int>(next));
+    }
+    session.Finalise();
+    if (answer) *answer = tok.detokenize(outIds);
+    const auto& s = session.Stats();
+    // Observed expert placement -> STRATA_RESIDENCY_ACTIVE.
+    if (levelOut && s.expertObservations > 0)
+        *levelOut = rawrxd::StrataLevel::ResidencyActive;
+    std::fprintf(stderr,
+                 "STRATA_LEDGER observations=%llu hits=%llu misses=%llu "
+                 "evictions=%llu hit_rate=%.3f gpu_calls=%llu cpu_calls=%llu\n",
+                 (unsigned long long)s.expertObservations,
+                 (unsigned long long)s.expertHits,
+                 (unsigned long long)s.expertMisses,
+                 (unsigned long long)s.expertEvictions,
+                 s.expertHitRate,
+                 (unsigned long long)s.gpuCalls,
+                 (unsigned long long)s.cpuCalls);
+    return outIds.empty() ? EXIT_NO_INFERENCE : EXIT_OK;
+}
+
 // HTTP probe for ollama/auto only. deep2|native use in-process Deep2Engine
 // (see cmdAsk / cmdRun) — never pretend port 8080 is Deep2 native.
 static InferenceEndpoint resolvePreferredEndpoint() {
@@ -1931,8 +2036,9 @@ static InferenceEndpoint resolvePreferredEndpoint() {
         return InferenceEndpoint{11434, "ollama", false};
     }
     if (pref == "strata") {
-        // Explicit failure marker: never HTTP-probe and never fall back to Deep2.
-        return InferenceEndpoint{0, "strata", false};
+        // Routable only when real expert residency is ready (a genuine MoE
+        // model). Never HTTP-probe and never fall back to Deep2.
+        return InferenceEndpoint{0, "strata", strataReadiness().ready};
     }
     if (pref == "deep2" || pref == "native") {
         // Marker endpoint for status/json; callers must not HTTP-complete on it.
@@ -1961,9 +2067,16 @@ static int cmdAsk(const std::vector<std::string>& args) {
         }
         if (askBackend.empty()) askBackend = loadBackendPref();
         if (askBackend == "strata") {
-            out("ERROR: STRATA_NOT_ROUTABLE: expert residency is not activated on this "
-                "path; use --backend=deep2 or --backend=ollama");
-            return EXIT_FAIL;
+            // Fail fast only when Strata cannot be routed at all (dense/missing
+            // model). A MoE-eligible model proceeds to the Strata execution path
+            // below; runtime readiness is confirmed when the session opens.
+            std::string routeErr;
+            if (routeBackend("strata", &routeErr).empty()) {
+                out("ERROR: " + routeErr + "; use --backend=deep2 or --backend=ollama");
+                if (g_json)
+                    outJson({{"error", "strata_not_routable"}, {"detail", routeErr}});
+                return EXIT_FAIL;
+            }
         }
     }
     // The universal entry point. The same policy handles physics, code, maths,
@@ -1993,6 +2106,51 @@ static int cmdAsk(const std::vector<std::string>& args) {
     // here silently discarded an explicit --backend=ollama whenever deep2 was
     // stored, so the flag validated but never routed.
     const std::string pref = askBackend;
+    // Strata: real expert-residency execution when the model is MoE-eligible.
+    // Runtime readiness (STRATA_RUNTIME_READY) is confirmed by runStrataAsk when
+    // the StrataChatSession opens; the ledger line reports residency activity.
+    if (pref == "strata") {
+        const std::string modelPath = ws.resolve(defaultDeep2ModelRel(), true);
+        const std::array<rawrxd::BackendInfo, 3> breg = buildBackendRegistry();
+        const rawrxd::RouteResult rr =
+            rawrxd::RouteBackend("strata", breg, strataReadiness(), /*allowFallback=*/false);
+        if (!rr.decision.has_value() || modelPath.empty()) {
+            const std::string e =
+                rr.error.value_or(modelPath.empty() ? "strata model missing" : "routing failed");
+            out("ERROR: " + e + "; use --backend=deep2 or --backend=ollama");
+            if (g_json) outJson({{"error", "strata_not_routable"}, {"detail", e}});
+            return EXIT_FAIL;
+        }
+        std::string answer, runErr;
+        rawrxd::StrataLevel lvl = rawrxd::StrataLevel::ModelMoeEligible;
+        const int rc = runStrataAsk(modelPath, qtext, 64, rr.decision->strata, &answer,
+                                    &runErr, &lvl);
+        if (rc != EXIT_OK) {
+            out("ERROR: Strata inference failed: " + runErr);
+            if (g_json)
+                outJson({{"error", "strata_inference_failed"}, {"detail", runErr}});
+            return EXIT_NO_INFERENCE;
+        }
+        if (!noMemory) {
+            appendMemory("turn", "user", qtext, "", true);
+            appendMemory("turn", "assistant", answer, "", true);
+        }
+        if (g_json) {
+            outJson({{"question", qtext},
+                     {"answer", answer},
+                     {"backend", "strata"},
+                     {"selected", pref},
+                     {"route", "strata"},
+                     {"model", modelPath},
+                     {"ok", true},
+                     {"level", std::string(rawrxd::StrataLevelName(lvl))}});
+        } else {
+            out(answer);
+            out(std::string("[backend=strata selected=") + pref + " model=" +
+                defaultDeep2ModelRel() + " level=" + rawrxd::StrataLevelName(lvl) + "]");
+        }
+        return EXIT_OK;
+    }
     // C06/C08/C09: deep2|native → in-process Deep2Engine (not HTTP :8080).
     if (pref == "deep2" || pref == "native") {
         const std::string modelRel = defaultDeep2ModelRel();
@@ -3275,6 +3433,11 @@ static std::array<rawrxd::BackendInfo, 3> buildBackendRegistry() {
     Workspace ws;
     ws.setRoot(g_workspace_root);
     const bool deep2Ready = !ws.resolve(defaultDeep2ModelRel(), true).empty();
+    // Strata health reflects genuine MoE eligibility (MODEL_MOE_ELIGIBLE), not
+    // mere file presence and not runtime readiness. A dense model is Unavailable
+    // with the precise reason so the status table never overclaims.
+    const rawrxd::StrataReadiness sr = rawrxd::ClassifyStrataReadiness(
+        ws.resolve(defaultDeep2ModelRel(), true));
 
     std::array<rawrxd::BackendInfo, 3> r{};
     r[0] = rawrxd::BackendInfo{rawrxd::BackendId::Deep2, "deep2", rawrxd::EngineKind::Deep2,
@@ -3284,17 +3447,17 @@ static std::array<rawrxd::BackendInfo, 3> buildBackendRegistry() {
                                                     rawrxd::Support::Unverified},
                                deep2Ready ? "" : "default GGUF missing"};
     r[1] = rawrxd::BackendInfo{rawrxd::BackendId::Strata, "strata", rawrxd::EngineKind::Deep2,
-                               rawrxd::Health::Unavailable,
+                               sr.eligible ? rawrxd::Health::Available : rawrxd::Health::Unavailable,
                                rawrxd::Capabilities{rawrxd::Support::Unverified,
                                                     rawrxd::Support::Unverified,
                                                     rawrxd::Support::Unsupported,
                                                     rawrxd::Support::Unsupported},
-                               "STRATA_NOT_ROUTABLE: expert residency not activated"};
+                               sr.eligible ? "" : ("STRATA_NOT_ROUTABLE: " + sr.detail)};
     r[2] = rawrxd::BackendInfo{rawrxd::BackendId::Ollama, "ollama", rawrxd::EngineKind::Ollama,
                                rawrxd::Health::Unavailable,
                                // Health is not probed and no adapter-level test exists,
-                     // so no capability may be claimed. A reachable server is not
-                     // evidence that chat, streaming, tools or repair were exercised.
+                      // so no capability may be claimed. A reachable server is not
+                      // evidence that chat, streaming, tools or repair were exercised.
                                rawrxd::Capabilities{rawrxd::Support::Unverified,
                                                     rawrxd::Support::Unverified,
                                                     rawrxd::Support::Unverified,
@@ -3335,9 +3498,18 @@ static int cmdBackend(const std::vector<std::string>& args) {
             out("  route       : " + route);
             out("  persisted   : " + backendPrefPath());
             if (pref == "strata") {
-                out("WARNING: STRATA_NOT_ROUTABLE - expert residency is not activated on "
-                    "this path. Preference stored; inference fails explicitly and Deep2 is "
-                    "not substituted.");
+                Workspace ws; ws.setRoot(g_workspace_root);
+                const rawrxd::StrataReadiness sr = rawrxd::ClassifyStrataReadiness(
+                    ws.resolve(defaultDeep2ModelRel(), true));
+                if (!sr.eligible) {
+                    out("WARNING: STRATA_NOT_ROUTABLE - " + sr.detail +
+                        ". Preference stored; inference fails explicitly and Deep2 is "
+                        "not substituted.");
+                } else {
+                    out("Strata is MODEL_MOE_ELIGIBLE (" + sr.architecture + ", " +
+                        std::to_string(sr.numExperts) +
+                        " experts); runtime readiness is confirmed when the session opens.");
+                }
             }
             printBackendRegistryTable(pref);
         }
@@ -3392,15 +3564,20 @@ static int cmdBackend(const std::vector<std::string>& args) {
         endpoint = "in-process://Deep2Engine";
         port = 0;
     } else if (route == "strata") {
-        // Strata is not routable on this path: report none as active and
-        // never probe/substitute Ollama for inference.
-        activeLabel = "none";
-        active = "none";
-        endpoint = "none";
+        // Routable only when the configured model is genuinely MoE
+        // (MODEL_MOE_ELIGIBLE). Never probe/substitute Ollama for inference.
+        Workspace ws; ws.setRoot(g_workspace_root);
+        const std::string mp = ws.resolve(defaultDeep2ModelRel(), true);
+        const rawrxd::StrataReadiness sr = rawrxd::ClassifyStrataReadiness(mp);
+        routable = sr.eligible && !mp.empty();
+        live = routable;  // eligibility gates the attempt; runtime confirmed on open
+        activeLabel = routable ? "strata" : "none";
+        active = routable ? ("strata (MoE " + sr.architecture + ", " +
+                             std::to_string(sr.numExperts) + " experts)")
+                          : "none";
+        endpoint = routable ? "in-process://StrataChatSession" : "none";
         port = 0;
-        live = false;
-        routable = false;
-        routeError = "STRATA_NOT_ROUTABLE";
+        if (!routable) routeError = "STRATA_NOT_ROUTABLE: " + sr.detail;
     } else {
         InferenceClient probe;
         probe.setEndpoint(11434);

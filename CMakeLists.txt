@@ -5997,6 +5997,13 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
         src/collab/websocket_hub.cpp
         src/rawr_core.cpp
         src/agent/agent_controller.cpp
+        # Strata execution (StrataChatSession -> RuntimeGraphExecutor + Universal
+        # ingest). These TUs are not part of deep2_engine_lib, so the CLI compiles
+        # them directly, exactly as the deep2_strata_chat target does.
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/moe_timing.cpp
+        src/deep2/moe_timing_graph.cpp
         src/core/project_rag_lite.cpp
         src/core/vram_kv_controls.cpp
         src/core/crash_minidump.cpp
@@ -6029,6 +6036,11 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
         gdi32
         user32
     )
+    # Strata execution (deep2/strata_chat.hpp -> universal_gguf.hpp) lives under
+    # src/deep2/modelgenie; the CLI needs it on the include path to wire the
+    # authoritative router to StrataChatSession.
+    target_include_directories(RawrXD-CLI-V2 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie)
     if(TARGET rawrxd_computer_use)
         target_link_libraries(RawrXD-CLI-V2 PRIVATE rawrxd_computer_use)
         target_include_directories(RawrXD-CLI-V2 PRIVATE

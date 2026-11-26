@@ -28,6 +28,8 @@ struct StrataChatOptions {
     bool expertTracking = true;   // SetStrataExpertTracking
     int cachePolicy = 0;          // 0 = LRU
     int64_t weightCacheBudget = -1;  // bytes; <0 = runtime default
+    bool int8KV = false;          // SetStrataInt8KV (STRATA_S06 int8 KV tier)
+    bool prefetch = false;        // SetStrataExpertPrefetch (STRATA_S03)
 };
 
 struct StrataChatStats {
@@ -39,7 +41,9 @@ struct StrataChatStats {
     size_t nonFiniteLogits = 0;
     uint64_t expertObservations = 0;
     uint64_t expertHits = 0;
+    uint64_t expertMisses = 0;
     uint64_t expertEvictions = 0;
+    double expertHitRate = 0.0;   // hits / (hits + misses)
     double bindMs = 0;
     double prefillMs = 0;
     double decodeMs = 0;
@@ -60,6 +64,8 @@ public:
             executor_->SetStrataExpertTracking(true);
             executor_->SetStrataCachePolicy(opts_.cachePolicy);
         }
+        if (opts_.int8KV) executor_->SetStrataInt8KV(true);
+        if (opts_.prefetch) executor_->SetStrataExpertPrefetch(true);
         if (opts_.weightCacheBudget >= 0)
             ::RawrXD::Deep2::QuantDot::SetWeightCacheBudget(opts_.weightCacheBudget);
         if (!executor_->Bind(rep)) { stats_.error = "bind failed"; return false; }
@@ -105,7 +111,9 @@ public:
         const auto l = executor_->StrataExpertSummary();
         stats_.expertObservations = l.observations;
         stats_.expertHits = l.hits;
+        stats_.expertMisses = l.misses;
         stats_.expertEvictions = l.evictions;
+        stats_.expertHitRate = l.hit_rate;
         stats_.ok = stats_.error.empty();
     }
 
