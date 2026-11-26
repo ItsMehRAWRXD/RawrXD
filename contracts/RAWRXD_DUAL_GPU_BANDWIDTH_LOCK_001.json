@@ -1,0 +1,54 @@
+{
+  "schema": "RAWRXD_DUAL_GPU_BANDWIDTH_LOCK_001",
+  "execution_policy": "DUAL_LANE",
+  "minimum_active_physical_gpus": 2,
+  "require_concurrent_execution": true,
+  "single_gpu_fallback": false,
+  "hardware": {
+    "gpu0": { "name": "Radeon AI PRO R9700", "vram_gib": 32, "peak_bandwidth_gbps": 640 },
+    "gpu1": { "name": "Radeon RX 7800 XT", "vram_gib": 16, "peak_bandwidth_gbps": 624 }
+  },
+  "performance_lock": {
+    "combined_peak_bandwidth_gbps": 1264,
+    "combined_peak_note": "theoretical sum of independent device buses; not a unified bus and not measured application bandwidth",
+    "minimum_measured_bandwidth_gbps": 1000,
+    "target_bandwidth_gbps": 1100,
+    "required_bandwidth_efficiency": 0.791,
+    "minimum_weight_residency": 0.95,
+    "batch_size": 32,
+    "speculative_speedup_target": 3.0
+  },
+  "placement": {
+    "policy": "capacity_aware_storage_bandwidth_aware_execution",
+    "gpu0": "primary attention, persistent MLA weights, primary expert pool, larger KV, output projection",
+    "gpu1": "secondary expert pool, shared expert execution, batched expert work, predictive preparation",
+    "note": "static 50/50 expert count is insufficient; placement is bandwidth-aware for execution and capacity-aware for storage"
+  },
+  "validation": {
+    "require_independent_parity": true,
+    "require_per_device_memory_accounting": true,
+    "require_overlapping_gpu_execution": true,
+    "require_actual_memory_traffic": true,
+    "measured_bandwidth_gbps": null,
+    "measured_aggregate_tps": null,
+    "certified": false
+  },
+  "certification_state": {
+    "DUAL_GPU_REQUIRED": 1,
+    "SINGLE_GPU_LOCK_FALLBACK": 0,
+    "GPU0_PEAK_BANDWIDTH_GBPS": 640,
+    "GPU1_PEAK_BANDWIDTH_GBPS": 624,
+    "COMBINED_PEAK_BANDWIDTH_GBPS": 1264,
+    "MINIMUM_AGGREGATE_BANDWIDTH_GBPS": 1000,
+    "TARGET_AGGREGATE_BANDWIDTH_GBPS": 1100,
+    "MEASURED_AGGREGATE_BANDWIDTH": "UNVERIFIED",
+    "CONCURRENT_EXECUTION_OVERLAP": "UNVERIFIED",
+    "ACTIVE_WEIGHT_RESIDENCY_TARGET": 0.95,
+    "AGGREGATE_THROUGHPUT_TARGET_TPS": 1107.59,
+    "BANDWIDTH_LOCK_CERTIFIED": 0,
+    "THROUGHPUT_LOCK_CERTIFIED": 0,
+    "PROMOTE": 0,
+    "CERTIFIED": 0,
+    "RELEASE": "HELD"
+  }
+}

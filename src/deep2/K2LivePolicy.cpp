@@ -1,6 +1,7 @@
 // K2LivePolicy.cpp — estimates + DecideRaw + switches + ApplyMode
 #include "K2LivePolicy.hpp"
 #include "Deep2LivePath.hpp"
+#include "K2LivePathTensorCache.hpp"
 #include <cstdlib>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -42,6 +43,15 @@ void K2LivePolicy_NoteSwitch(K2LivePolicyMode m) {
 uint64_t K2LivePolicy_CacheBudgetBytes() {
     if (const char* e = std::getenv("DEEP2_LIVE_CACHE_BUDGET_MIB")) {
         long v = std::atol(e); if (v > 0) return (uint64_t)v << 20;
+    }
+    // RL-01/RL-16: once the live cache has been reconciled against the
+    // hardware-derived budget, report that actual budget instead of a stale
+    // hardcoded 12 GiB cap (which read 12.88 GB while the live budget was
+    // 28.99 GB). Cold (pre-arm) keeps the conservative default so cold-start
+    // planning behaviour is unchanged.
+    if (K2LiveCache_Armed()) {
+        const uint64_t live = K2LiveCache_Budget();
+        if (live > 0) return live;
     }
     return 12288ull << 20;
 }

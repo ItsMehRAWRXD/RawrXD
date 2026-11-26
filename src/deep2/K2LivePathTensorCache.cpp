@@ -1,6 +1,7 @@
 // K2LivePathTensorCache.cpp — LRU + ownership-split counters
 #include "K2LivePathTensorCache.hpp"
 #include "K2LivePathOwnership.hpp"
+#include "StreamTransferCounters.hpp"
 #include <cstdlib>
 #include <list>
 #include <mutex>
@@ -21,6 +22,25 @@ uint32_t g_entriesPeak = 0;
 uint64_t g_trampHits = 0, g_trampSaved = 0;
 uint64_t g_layerAcq = 0, g_layerHits = 0, g_elasticHits = 0;
 uint64_t g_dup = 0, g_dupBytes = 0, g_waitUs = 0;
+bool g_armed = false; // RL-17: budget has been reconciled at least once
+uint64_t g_physCap = 0; // RL-16: measured physical cap (0 = unknown)
+
+// RL-16: a single bounded overage lets one large sticky tensor (output.weight
+// ~0.96 GB, MLA attn twins) be admitted even when it exceeds the working
+// budget. It replaces the old unconditional 12 GiB floor that oversubscribed
+// small GPUs and made the policy cap read 12.88 GB regardless of hardware.
+constexpr uint64_t kStickyOverage = 2048ull << 20; // 2 GiB
+constexpr uint64_t kMinCacheFloor = 256ull << 20;  // 256 MiB absolute minimum
+
+// Pure reconciliation (no lock): clamp a requested budget to a measured
+// physical cap and a small floor. cap==0 means "unknown" -> no upper clamp.
+uint64_t ReconcileBudgetCalc(uint64_t requested, uint64_t cap) {
+    uint64_t v = requested;
+    if (cap) v = (v > cap) ? cap : v; // never exceed measured physical cap
+    if (v < kMinCacheFloor) v = kMinCacheFloor;
+    if (cap && v > cap) v = cap; // small GPU: honor cap even below the floor
+    return v;
+}
 
 bool IsMlaAttnSticky(const std::string& name) {
     // Keep host mirror of GPU-pinned MLA weights — kills SHARD_READ after warm.
@@ -106,7 +126,54 @@ void K2LiveCache_Reset(uint64_t budgetBytes) {
     g_warmBytes = g_outW = 0; g_entriesPeak = 0;
     g_trampHits = g_trampSaved = g_layerAcq = g_layerHits = g_elasticHits = 0;
     g_dup = g_dupBytes = g_waitUs = 0;
-    g_budget = budgetBytes ? budgetBytes : (256ull << 20);
+    g_budget = ReconcileBudgetCalc(budgetBytes, /*cap=*/0);
+    g_armed = true;
+    g_physCap = 0; // cold reset has no measured cap yet
+}
+
+uint64_t K2LiveCache_ReconcileBudget(uint64_t requestedBytes,
+                                     uint64_t physicalCapBytes) {
+    return ReconcileBudgetCalc(requestedBytes, physicalCapBytes);
+}
+
+uint64_t K2LiveCache_SetBudget(uint64_t budgetBytes, uint64_t physicalCapBytes) {
+    std::lock_guard<std::mutex> lock(g_mu);
+    g_budget = ReconcileBudgetCalc(budgetBytes, physicalCapBytes);
+    g_armed = true;
+    g_physCap = physicalCapBytes; // measured cap (0 = unknown)
+    // Shrink-to-fit: evict only non-sticky LRU entries. EvictOne() already
+    // skips output.weight and sticky MLA twins, so resident weights survive a
+    // budget change (RL-17: no destructive reset on a warm request).
+    while (g_bytes > g_budget) {
+        const size_t before = g_map.size();
+        EvictOne();
+        if (g_map.size() == before) break; // only sticky entries remain
+    }
+    TouchPeaks();
+    return g_budget;
+}
+
+double K2LiveCache_UtilizationFraction() {
+    std::lock_guard<std::mutex> lock(g_mu);
+    if (!g_budget) return 0.0;
+    const double f = static_cast<double>(g_bytes) / static_cast<double>(g_budget);
+    return f > 1.0 ? 1.0 : f;
+}
+
+double K2LiveCache_WeightResidencyFraction() {
+    // Active-weight residency = resident requested bytes / total requested bytes
+    // (byte-weighted, from StreamTransfer). NOT cache utilization.
+    return StreamTransfer_WeightResidencyFraction();
+}
+
+bool K2LiveCache_Armed() {
+    std::lock_guard<std::mutex> lock(g_mu);
+    return g_armed;
+}
+
+bool K2LiveCache_HasPhysicalCap() {
+    std::lock_guard<std::mutex> lock(g_mu);
+    return g_physCap != 0;
 }
 
 void K2LiveCache_Clear() {
@@ -146,14 +213,11 @@ bool K2LiveCache_Put(const std::string& name, const uint8_t* data, size_t n) {
     if (!sticky && !K2LiveCache_MayCache(name.c_str())) return false;
     if (!data || !n) return false;
     if (!sticky && n > g_budget) return false;
-    if (sticky && n > (g_budget ? g_budget : (12288ull << 20)) + (2048ull << 20))
-        return false;
+    if (sticky && n > g_budget + kStickyOverage) return false;
     if (!sticky && K2LiveCache_IsLayerName(name.c_str()) &&
         !K2LiveCache_LayerHostFillAllowed())
         return false;
     std::lock_guard<std::mutex> lock(g_mu);
-    if (g_budget < (4096ull << 20) && sticky)
-        g_budget = 12288ull << 20; // promote floor when first sticky arrives
     if (g_map.count(name)) {
         g_lru.splice(g_lru.begin(), g_lru, g_map[name]);
         g_pfSup++;
@@ -166,7 +230,11 @@ bool K2LiveCache_Put(const std::string& name, const uint8_t* data, size_t n) {
     }
     if (g_bytes + n > g_budget) {
         if (!sticky) return false;
-        if (g_bytes + n > g_budget + (2048ull << 20)) return false;
+        // Sticky overage is bounded by the measured physical cap when known, so
+        // a pinned tensor can never push allocation past the device limit.
+        uint64_t stickyLim = g_budget + kStickyOverage;
+        if (g_physCap && stickyLim > g_physCap) stickyLim = g_physCap;
+        if (g_bytes + n > stickyLim) return false;
     }
     g_lru.push_front(Entry{name, std::vector<uint8_t>(data, data + n)});
     g_map[name] = g_lru.begin();

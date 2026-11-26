@@ -1338,7 +1338,16 @@ Result Run(const fs::path& shardDir,
     Deep2::K2ShardIo_ResetCounters();
     if (Deep2::K2LiveCache_Entries() == 0) {
         Deep2::K2ShardIo_Reset(); // cold only
-        Deep2::K2LiveCache_Reset((std::max)(cfg.budgetBytes, 12288ull << 20));
+        // RL-16: reconcile the hardware-derived request (cfg.budgetBytes) into a
+        // safe budget instead of forcing an unconditional 12 GiB floor that
+        // oversubscribes small GPUs and misreports the policy cap.
+        const uint64_t reconciled =
+            Deep2::K2LiveCache_ReconcileBudget(cfg.budgetBytes, /*physicalCap=*/0);
+        Deep2::K2LiveCache_Reset(reconciled);
+    } else {
+        // RL-17: warm request — resize the live budget in place without wiping
+        // retained sticky MLA/output weights (no destructive reset).
+        Deep2::K2LiveCache_SetBudget(cfg.budgetBytes, /*physicalCap=*/0);
     }
 
     if (shards.empty()) {
