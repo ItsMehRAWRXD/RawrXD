@@ -1,0 +1,11 @@
+Track B / B01 — llama.cpp throughput baseline (llama-bench.exe build 583cb8341)
+model: llama3.2-3b-Q2_K.gguf (1.26 GiB, 3.21B params)
+backend: CPU, 16 threads (prebuilt llama.cpp is CPU-only; no Vulkan backend in this binary)
+pp512 (prefill) = 328.24 t/s
+tg128 (decode) = 28.89 t/s
+
+Strata comparison (same model):
+  Strata GPU (R9700) decode = 1.69 t/s
+  Strata CPU decode        = 0.58 t/s
+gap: llama.cpp CPU decode ~17x faster than Strata GPU, ~50x faster than Strata CPU.
+note: R9700 Vulkan llama.cpp baseline requires a Vulkan-enabled llama.cpp build (wp01_reference build is a 0-byte stub). CPU baseline is the available reference. This is a measured baseline, not a Strata optimization.
