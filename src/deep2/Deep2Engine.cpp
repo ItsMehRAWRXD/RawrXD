@@ -4440,7 +4440,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             if (modelWeights.moeIntermediateDim == 0)
                 modelWeights.moeIntermediateDim = modelWeights.intermediateDim;
 
-            printf("[Deep2Engine] MoE topology auto-detected: %u experts, top-%u, %u shared, intermediateDim=%zu\n",
+            printf("[Deep2Engine] MoE topology auto-detected: %zu experts, top-%zu, %zu shared, intermediateDim=%zu\n",
                    modelWeights.numExperts, modelWeights.numExpertsPerToken,
                    modelWeights.numSharedExperts, modelWeights.moeIntermediateDim);
         }
@@ -4485,7 +4485,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         // numExperts, numExpertsPerToken, numSharedExperts, moeIntermediateDim
         // already set from detection or metadata above
 
-        printf("[Deep2Engine] MoE model: %u experts, top-%u, %u shared\n",
+        printf("[Deep2Engine] MoE model: %zu experts, top-%zu, %zu shared\n",
                modelWeights.numExperts, modelWeights.numExpertsPerToken,
                modelWeights.numSharedExperts);
 
@@ -4542,7 +4542,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     moeConfig_.sharedExpertDim = sharedDim;
                 }
                 moeConfig_.hiddenDim = config.hiddenDim;
-                printf("[Deep2Engine] MoE dims: expertDim=%zu sharedExpertDim=%zu sharedCount=%u\n",
+                printf("[Deep2Engine] MoE dims: expertDim=%zu sharedExpertDim=%zu sharedCount=%zu\n",
                        moeConfig_.expertDim, moeConfig_.sharedExpertDim, modelWeights.numSharedExperts);
 
                 // ── Metadata-driven routing semantics (R01/R02/R06/R08/R09) ──
@@ -7745,7 +7745,7 @@ std::string Deep2Engine::kvGeometryReceipt() const
     std::snprintf(buf, sizeof(buf),
                   "KV_GEOMETRY valid=%d layers=%zu positions=%zu kvHeads=%zu "
                   "headDim=%zu weightHeads=%zu weightKVHeads=%zu weightHeadDim=%zu "
-                  "currentLen=%u detail=%s",
+                  "currentLen=%zu detail=%s",
                   ok ? 1 : 0,
                   kvCache ? kvCache->numLayers() : 0,
                   kvCache ? kvCache->maxSeqLen() : 0,
