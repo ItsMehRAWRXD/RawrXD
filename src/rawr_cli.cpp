@@ -216,6 +216,43 @@ static InferenceResult deep2Complete(Deep2Engine& engine,
     return result;
 }
 
+// Track E: true if `text` contains at least one COMPLETE, balanced JSON object
+// (a finished action). Used to end a decode turn early instead of generating the
+// full token budget once the model has emitted a complete tool call / final.
+static bool hasCompleteJsonObject(const std::string& text) {
+    const size_t n = text.size();
+    size_t i = 0;
+    while (i < n) {
+        if (text[i] != '{') { ++i; continue; }
+        int depth = 0;
+        bool inStr = false, esc = false;
+        size_t j = i;
+        for (; j < n; ++j) {
+            const char c = text[j];
+            if (inStr) {
+                if (esc) esc = false;
+                else if (c == '\\') esc = true;
+                else if (c == '"') inStr = false;
+                continue;
+            }
+            if (c == '"') { inStr = true; continue; }
+            if (c == '{') ++depth;
+            else if (c == '}') { --depth; if (depth == 0) { ++j; break; } }
+        }
+        if (depth == 0 && j <= n && j > i) {
+            try {
+                const json o = json::parse(text.substr(i, j - i));
+                if (o.is_object()) return true;
+            } catch (...) {
+            }
+            i = j;
+        } else {
+            ++i;
+        }
+    }
+    return false;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Persistent Strata session runner (Track F).
 //
@@ -368,6 +405,11 @@ public:
         int deltas = 0;
         const bool traceTokens =
             std::getenv("RAWRXD_STRATA_TRACE_TOKENS") != nullptr;
+        // Track E: end the turn early once a complete valid JSON action exists,
+        // instead of generating the full budget (major latency win at low TPS).
+        const bool earlyStop =
+            std::getenv("RAWRXD_STRATA_NO_EARLY_STOP") == nullptr;
+        bool earlyStopped = false;
         const size_t maxTok = static_cast<size_t>((std::max)(1, maxTokens));
         for (size_t i = 0; i < maxTok; ++i) {
             if (InterlockedCompareExchange(&g_interrupted, 0, 0) != 0) break;
@@ -391,8 +433,19 @@ public:
             if (!stepOk) break;  // step failure
             genIds.push_back(static_cast<int>(nt));
             ++generated;
+            // Track E early stop: a complete balanced JSON object is a finished
+            // action (tool call or final) -- stop generating immediately.
+            if (earlyStop) {
+                const std::string sofar = tokenizer_.detokenize(genIds);
+                if (hasCompleteJsonObject(sofar)) {
+                    earlyStopped = true;
+                    break;
+                }
+            }
         }
         session_->Finalise();
+        if (earlyStopped && !g_json)
+            std::fprintf(stderr, "EARLY_STOP generated=%zu\n", generated);
         const std::string text = tokenizer_.detokenize(genIds);
         if (!g_json && !text.empty()) {
             std::fwrite(text.data(), 1, text.size(), stderr);
