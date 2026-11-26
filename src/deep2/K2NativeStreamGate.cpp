@@ -17,6 +17,8 @@
 #include "K2TokenEmbedding.hpp"
 #include "Deep2LivePath.hpp"
 #include "K2LivePathTensorCache.hpp"
+#include "DualGpuAdmissionTelemetry.hpp"
+#include "HostHardwareProbe.hpp"
 #include "K2LivePathOwnership.hpp"
 #include "K2WeightResolve.hpp"
 #include "StreamTransferCounters.hpp"
@@ -1348,6 +1350,36 @@ Result Run(const fs::path& shardDir,
         // RL-17: warm request — resize the live budget in place without wiping
         // retained sticky MLA/output weights (no destructive reset).
         Deep2::K2LiveCache_SetBudget(cfg.budgetBytes, /*physicalCap=*/0);
+    }
+
+    // F07/PROD-04: locked dual-GPU admission. Active ONLY when the bandwidth
+    // lock is explicitly requested (RAWRXD_DUAL_GPU_BANDWIDTH_LOCK_001=1);
+    // compatibility mode is completely unchanged. Fails closed — single-GPU
+    // fallback is forbidden under the lock. PROD-02 must supply the Vulkan
+    // enumeration callback so HostHardwareProbe yields verified identities +
+    // measured budgets; until then a requested lock rejects (never a silent
+    // single-GPU run).
+    if (rawrxd::dualgpu::DualGpuLockRequested()) {
+        const rawrxd::HostHardwareSnapshot hw = rawrxd::HostHardwareProbe::Probe();
+        std::vector<rawrxd::dualgpu::DualGpuDevice> lockDevs;
+        lockDevs.reserve(hw.gpus.size());
+        for (const auto& g : hw.gpus) {
+            rawrxd::dualgpu::DualGpuDevice d;
+            d.stableId         = g.stableId;
+            d.name             = g.name;
+            d.vendorId         = g.vendorId;
+            d.deviceId         = g.deviceId;
+            d.measuredCapBytes = g.capacityBytes();
+            d.identityExact    = g.identityExact;
+            d.healthy          = true;
+            lockDevs.push_back(d);
+        }
+        const auto adm = rawrxd::dualgpu::AdmitLockedProfile(lockDevs);
+        if (!adm.admitted) {
+            result.error = std::string("DUAL_GPU_LOCK_REJECTED: ") + adm.reason +
+                           " (single-GPU fallback forbidden)";
+            return result;
+        }
     }
 
     if (shards.empty()) {

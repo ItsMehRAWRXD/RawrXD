@@ -26,6 +26,7 @@
 #include <utility>
 #include <algorithm>
 #include <mutex>
+#include <cstdlib>
 
 namespace rawrxd {
 namespace dualgpu {
@@ -299,6 +300,15 @@ inline bool ActiveWeightResidency(uint64_t residentReqBytes, uint64_t totalReqBy
     if (!totalReqBytes || residentReqBytes > totalReqBytes) return false;
     outFrac = static_cast<double>(residentReqBytes) / static_cast<double>(totalReqBytes);
     return true;
+}
+
+// True when the locked dual-GPU bandwidth profile is explicitly requested.
+// Default (unset) preserves compatibility mode — no admission enforcement.
+inline bool DualGpuLockRequested() {
+    const char* a = std::getenv("RAWRXD_DUAL_GPU_BANDWIDTH_LOCK_001");
+    if (a && a[0] == '1') return true;
+    const char* b = std::getenv("RAWRXD_DUAL_GPU_LOCK");
+    return b && b[0] == '1';
 }
 
 } // namespace dualgpu
