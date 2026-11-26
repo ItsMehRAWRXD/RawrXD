@@ -35,6 +35,7 @@ struct ExecutionDeviceRecord {
     VkQueue          queue     = VK_NULL_HANDLE;
     uint32_t         qfam      = 0;
     uint64_t         deviceLUID = 0;   // from vkGetPhysicalDeviceProperties2
+    uint64_t         measuredCapBytes = 0; // owner-provided current budget (preferred)
     bool             initialized = false; // logical device + compute queue ready
     bool             deviceLost  = false; // runtime device-loss state
 };
@@ -92,15 +93,15 @@ inline bool ReconcileForAdmission(const std::vector<ExecutionDeviceRecord>& exec
         d.name     = match ? match->name     : "";
         d.vendorId = match ? match->vendorId : 0;
         d.deviceId = match ? match->deviceId : 0;
-        // OWN-06/07: prefer the Vulkan current budget (provenance-gated); if the
-        // EXT budget is unavailable, fall back to the manager's measured free
-        // VRAM (also a current budget, never capacity). Unknown -> 0.
-        const vkbudget::DeviceMemoryBudget b = vkbudget::QueryDeviceMemoryBudget(e.phys);
-        if (b.provenanceIsBudget)
-            d.measuredCapBytes = b.availableHeadroomBytes;
-        else
-            d.measuredCapBytes = (match && match->availableVramKnown)
-                                     ? match->availableVram : 0;
+        // OWN-06/07: prefer the owner-provided current budget; else the Vulkan
+        // EXT budget; else the manager's measured free VRAM. Never capacity.
+        uint64_t budget = e.measuredCapBytes;
+        if (!budget) {
+            const vkbudget::DeviceMemoryBudget b = vkbudget::QueryDeviceMemoryBudget(e.phys);
+            if (b.provenanceIsBudget) budget = b.availableHeadroomBytes;
+            else if (match && match->availableVramKnown) budget = match->availableVram;
+        }
+        d.measuredCapBytes = budget;
         d.identityExact = (match != nullptr) && (e.deviceLUID != 0);
         // OWN-09: reconcile Vulkan runtime health with device-manager PnP health.
         d.healthy       = e.initialized && !e.deviceLost && (match && match->healthy);

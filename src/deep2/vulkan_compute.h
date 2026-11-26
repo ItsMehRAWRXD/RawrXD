@@ -900,6 +900,9 @@ public:
 
     // ========== Device / timeline ==========
     VkDevice DeviceHandle() const noexcept { return device_; }
+    // LIFE-02: lifetime-safe, non-owning physical-device handle for admission
+    // budget queries. Valid only while this VulkanCompute owns the device.
+    VkPhysicalDevice PhysicalHandle() const noexcept { return physical_; }
     bool TimelineSemaphoreEnabled() const noexcept {
         return timelineEnabled_ && timelineSemaphore_ != VK_NULL_HANDLE;
     }
