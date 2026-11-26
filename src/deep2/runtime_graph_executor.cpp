@@ -733,6 +733,9 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     }
     spec_ = report.spec;
     tensors_ = report.tensors;
+    // Slot numbers are report-local. Never retain dequantized weights across
+    // a model/session rebind, or a reused slot can resolve to the prior model.
+    dequant_cache_.clear();
     program_.clear();
     slot_by_name_.clear();
 
