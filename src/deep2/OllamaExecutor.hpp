@@ -51,7 +51,7 @@ inline std::string HttpDo(const wchar_t* method, const std::wstring& host, int p
     std::string out;
     if (g_cancel.load()) return out;
 
-    detail::Handle hs(WinHttpOpen(L"Deep2Blackboard/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+    detail::Handle hs(WinHttpOpen(L"Deep2Blackboard/1.0", WINHTTP_ACCESS_TYPE_NO_PROXY,
                                   WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0));
     if (!hs.ok()) return out;
     detail::Handle hc(WinHttpConnect(hs.get(), host.c_str(), (INTERNET_PORT)port, 0));
