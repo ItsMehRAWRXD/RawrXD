@@ -217,10 +217,27 @@ int main() {
     assert(cappedStore.addTensor("first", weights.data(), weights.size(), &error,
                                  GGML_TYPE_F16, false, 1024));
     assert(cappedStore.stats().compressed_bytes <= 4096);
-    assert(!cappedStore.addTensor("second", weights.data(), weights.size(), &budgetError,
-                                  GGML_TYPE_F16, false, 1024));
-    assert(!cappedStore.contains("second"));
-    assert(cappedStore.stats().compressed_bytes <= 32);
+    assert(cappedStore.addTensor("second", weights.data(), weights.size(), &budgetError,
+                                GGML_TYPE_F16, false, 1024));
+    assert(cappedStore.contains("second"));
+    const auto admittedBytes = cappedStore.stats().compressed_bytes;
+    assert(admittedBytes <= 4096);
+    std::vector<std::uint8_t> oversized(weights.size());
+    for (std::size_t i = 0; i < oversized.size(); ++i)
+        oversized[i] = static_cast<std::uint8_t>(i * 37u + 11u);
+    assert(!cappedStore.addTensor("oversized", oversized.data(), oversized.size(),
+                                 &budgetError, GGML_TYPE_F16, false, admittedBytes));
+    assert(!cappedStore.contains("oversized"));
+    const auto beforeCumulative = cappedStore.stats().compressed_bytes;
+    for (int i = 0; i < 16; ++i) {
+        const auto name = std::string("capacity_") + std::to_string(i);
+        if (!cappedStore.addTensor(name, weights.data(), weights.size(), &budgetError,
+                                   GGML_TYPE_F16, false, 1024)) {
+            break;
+        }
+    }
+    assert(cappedStore.stats().compressed_bytes <= 4096);
+    assert(cappedStore.stats().compressed_bytes >= beforeCumulative);
 
     const auto finalStats = store.stats();
     assert(finalStats.compressed_bytes < finalStats.raw_bytes);

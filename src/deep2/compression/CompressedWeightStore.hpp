@@ -87,7 +87,7 @@ public:
     void setDecodedCacheBudget(std::size_t bytes);
     void clearDecodedCache();
 private:
-    struct EncodedBlock { std::vector<std::uint8_t> payload; std::uint32_t checksum=0,raw_size=0; bool stored_raw=false; };
+    struct EncodedBlock { std::vector<std::uint8_t> payload,pattern,sparse; std::uint32_t checksum=0,raw_size=0; std::uint8_t fill=0; bool stored_raw=false,stored_fill=false,stored_pattern=false,stored_sparse=false; };
     struct Tensor { std::size_t raw_size=0; std::uint32_t ggml_type=GGML_TYPE_OPAQUE; std::vector<EncodedBlock> blocks; };
     struct CacheEntry { BlockLease data; std::size_t bytes=0; std::list<std::string>::iterator lru; };
     static std::vector<std::uint8_t> encode(const std::uint8_t*,std::size_t,bool&);
