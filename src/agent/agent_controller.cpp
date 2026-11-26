@@ -230,14 +230,23 @@ AgentResult runAgentController(
         const bool wantsExec = wantsBuild || wantsTest ||
                                goalLow.find("run") != std::string::npos;
 
-        // A failed attempt is SUPERSEDED by any later successful tool (corrective
-        // execution, F04-C). Only an unresolved TRAILING failure blocks completion.
-        if (!res.results.empty()) {
-            const AgentReceipt& last = res.results.back();
-            if (!last.ok && !last.denied) {
-                reason = "last tool " + last.tool + " failed (exit " +
-                         std::to_string(last.exitCode) +
-                         "); fix it and re-run before finishing";
+        // A failed operation is SUPERSEDED only by a later SUCCESS of the SAME
+        // tool+args (operation-specific correction, F04-C). An unrelated
+        // successful tool (e.g. a read after a failed compile) does NOT count.
+        for (size_t i = 0; i < res.results.size(); ++i) {
+            const AgentReceipt& f = res.results[i];
+            if (f.ok || f.denied) continue;
+            bool superseded = false;
+            for (size_t j = i + 1; j < res.results.size(); ++j) {
+                const AgentReceipt& s = res.results[j];
+                if (s.ok && s.tool == f.tool && s.args == f.args) {
+                    superseded = true;
+                    break;
+                }
+            }
+            if (!superseded) {
+                reason = "unresolved failure: " + f.tool + " " + f.args +
+                         " (fix and re-run the same operation before finishing)";
                 return false;
             }
         }
