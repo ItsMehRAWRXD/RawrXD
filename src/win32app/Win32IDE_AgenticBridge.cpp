@@ -4,6 +4,7 @@
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Deep2Bridge.h"
 #include "deep2/strata_chat.hpp"
+#include "agentic/StrataTextRunner.hpp"
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include "Win32IDE_AgentExecutionFSM.h"
@@ -425,69 +426,36 @@ AgentResponse AgenticBridge::ChatViaStrata(const std::string& prompt) {
             return response;
         }
     }
-    const std::vector<int> inIds = db->Tokenize(prompt);
-    if (inIds.empty()) {
-        response.type = AgentResponseType::AGENT_ERROR;
-        response.content = "Strata tokenizer produced no tokens (model vocab not ready).";
-        return response;
-    }
 
-    rawrxd::deep2::StrataChatOptions opt;
-    opt.gpu = true;
-    opt.expertTracking = true;  // R05 cross-token residency
-    rawrxd::deep2::StrataChatSession sess;
-    if (!sess.Open(std::string(mp), opt)) {
-        m_lastStrataTelemetry.ok = false;
-        m_lastStrataTelemetry.error = sess.Stats().error;
-        response.type = AgentResponseType::AGENT_ERROR;
-        response.content = "Strata backend unavailable: " + sess.Stats().error;
-        return response;
-    }
-    std::vector<uint32_t> up(inIds.begin(), inIds.end());
-    if (!sess.Prefill(up) || m_strataCancel.load(std::memory_order_relaxed)) {
-        sess.Finalise();
-        response.type = AgentResponseType::AGENT_ERROR;
-        response.content = "Strata prefill failed or was cancelled.";
-        return response;
-    }
-
-    const size_t maxTokens = 2048;  // context-capacity guard
-    std::vector<int> outIds;
-    std::string streamed;
-    uint32_t next = 0;
-    for (size_t i = 0; i < maxTokens; ++i) {
-        if (m_strataCancel.load(std::memory_order_relaxed)) break;
-        if (!sess.Step(next)) break;
-        outIds.push_back(static_cast<int>(next));
-        // Incremental UTF-8: detokenize the accumulated ids and emit only the
-        // newly completed suffix (never split a multibyte sequence mid-stream).
-        const std::string full = db->Detokenize(outIds);
-        if (full.size() > streamed.size()) {
-            const std::string piece = full.substr(streamed.size());
-            streamed = full;
-            if (m_outputCallback && !piece.empty())
-                m_outputCallback("stream", piece);
-        }
-    }
-    sess.Finalise();
+    // Shared production pipeline (same core the headless acceptance drives).
+    rawrxd::StrataTextRunner runner(
+        std::string(mp),
+        [db](const std::string& t) { return db->Tokenize(t); },
+        [db](const std::vector<int>& ids) { return db->Detokenize(ids); });
+    rawrxd::StrataRunOptions opt;
+    opt.maxTokens = 2048;  // context-capacity guard (model-derived refinement pending)
+    opt.cancelled = [this] { return m_strataCancel.load(std::memory_order_relaxed); };
+    opt.onText = [this](const std::string& piece) {
+        if (m_outputCallback) m_outputCallback("stream", piece);
+    };
+    const rawrxd::StrataRunResult rr = runner.Run(prompt, opt);
 
     // Populate structured telemetry from the authoritative in-process stats.
-    const auto& s = sess.Stats();
-    m_lastStrataTelemetry.expertAccesses = s.expertAccesses;
-    m_lastStrataTelemetry.expertHits = s.expertHits;
-    m_lastStrataTelemetry.expertMisses = s.expertMisses;
-    m_lastStrataTelemetry.expertEvictions = s.expertEvictions;
-    m_lastStrataTelemetry.transferredBytes = s.expertTransferredBytes;
-    m_lastStrataTelemetry.gpuCalls = s.gpuCalls;
-    m_lastStrataTelemetry.cpuCalls = s.cpuCalls;
-    m_lastStrataTelemetry.expertHitRate = s.expertHitRate;
-    m_lastStrataTelemetry.error = s.error;
-    m_lastStrataTelemetry.ok = s.error.empty() && s.gpuCalls > 0;
+    m_lastStrataTelemetry.expertAccesses = rr.expertAccesses;
+    m_lastStrataTelemetry.expertHits = rr.expertHits;
+    m_lastStrataTelemetry.expertMisses = rr.expertMisses;
+    m_lastStrataTelemetry.expertEvictions = rr.expertEvictions;
+    m_lastStrataTelemetry.transferredBytes = rr.transferredBytes;
+    m_lastStrataTelemetry.gpuCalls = rr.gpuCalls;
+    m_lastStrataTelemetry.cpuCalls = rr.cpuCalls;
+    m_lastStrataTelemetry.expertHitRate = rr.expertHitRate;
+    m_lastStrataTelemetry.error = rr.error;
+    m_lastStrataTelemetry.ok = rr.ok;
 
-    response.content = streamed;
-    if (response.content.empty() && !m_lastStrataTelemetry.ok) {
+    response.content = rr.text;
+    if (!rr.ok) {
         response.type = AgentResponseType::AGENT_ERROR;
-        response.content = "Strata inference produced no tokens: " + s.error;
+        response.content = rr.error.empty() ? "Strata inference failed." : rr.error;
     }
     return response;
 }
