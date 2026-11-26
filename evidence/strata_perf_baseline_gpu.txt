@@ -1,0 +1,10 @@
+B01 R9700 Vulkan reference baseline (llama.cpp, functionally built from wp01_reference)
+build: edec462 (1), ggml-vulkan, Vulkan SDK 1.4.357
+model: llama3.2-3b-Q2_K.gguf (1.26 GiB, 3.21B), -ngl 99 (R9700), -r 1
+pp512 (prefill) = 5170.35 t/s
+tg128 (decode) = 200.31 t/s
+
+Strata (same model, R9700): decode 1.69 t/s
+gap: llama.cpp Vulkan decode ~118x faster than Strata GPU; Strata ~1.2% of reference.
+CPU reference (llama.cpp 16 threads): pp512=328, tg128=28.89.
+note: this replaces the 0-byte reference with a functional Vulkan build (llama-bench.exe from evidence/_llama_build). llama-app (CLI) needs server-impl lib; llama-bench suffices for B01. Measured baseline, not a Strata optimization.
