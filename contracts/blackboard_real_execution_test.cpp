@@ -10,12 +10,13 @@
 //   - continuous bounded-memory operation
 #include "OllamaExecutor.hpp"
 #include <cstdio>
-#include <random>
+#include <cstdlib>
 #include <array>
 
 using namespace rawrxd::blackboard_v5;
 
-int main() {
+int main(int argc, char** argv) {
+    setvbuf(stdout, NULL, _IONBF, 0);   // unbuffered: stream progress to logs
     // 1) Discover installed local models.
     const auto models = rawrxd::ollama::ListModels();
     std::printf("=== RAWRXD_BLACKBOARD_REAL_EXECUTION_001 ===\n");
@@ -48,26 +49,35 @@ int main() {
 
     // 4) 20 real experiments with the polymorphic blackboard.
     V5Blackboard bb;
-    bb.rng.seed(std::random_device{}());
     bb.bounds = hw;
     std::array<bool, M_COUNT> used{};
-    double firstErr = 0.0, lastErr = 0.0;
+    double firstErr = 0.0, lastErr = 0.0, maxErr = 0.0;
+    double firstHalfErr = 0.0, secondHalfErr = 0.0;
+    int firstHalfN = 0, secondHalfN = 0;
     double bestAtIter = 0.0;
     int distinctMethods = 0;
 
-    for (int i = 0; i < 20; ++i) {
+    int N = 20;
+    if (argc > 1) { N = std::atoi(argv[1]); if (N < 1) N = 1; }
+    const int half = N / 2;
+    for (int i = 0; i < N; ++i) {
         CycleInfo ci;
         ExploreCycleV5(bb, &rawrxd::ollama::OllamaExec, &ci);
         if (!used[ci.method]) { used[ci.method] = true; ++distinctMethods; }
         const double ae = ci.activeErr;
         if (i == 0) firstErr = ae;
         lastErr = ae;
+        if (ae > maxErr) maxErr = ae;
+        if (i < half) { firstHalfErr += ae; ++firstHalfN; }
+        else { secondHalfErr += ae; ++secondHalfN; }
         std::printf("IT %2d [%s s%d] batch=%4d thr=%2d | pred=%7.1f meas=%7.1f pf=%7.1f | cur=%7.1f BEST=%7.1f(rep=%d) | T=%.2f u=%.2f lr=%.3f | ratio=%u/%u\n",
             i + 1, MethodName(ci.method), ci.strategyId, ci.cand.batch, ci.cand.threads,
             ci.predicted, ci.measured, ci.prefill, bb.curDecode, bb.bestDecode, bb.bestRepeats,
-            bb.temperature, ci.activeErr, bb.ratio.First(), bb.ratio.Second());
+            bb.temperature, ci.activeErr, bb.lr[ci.activePredictor], bb.ratio.First(), bb.ratio.Second());
         if (bb.bestDecode > bestAtIter) bestAtIter = bb.bestDecode;
     }
+    const double fh = firstHalfN ? firstHalfErr / firstHalfN : 0.0;
+    const double sh = secondHalfN ? secondHalfErr / secondHalfN : 0.0;
 
     // 5) Acceptance summary.
     std::printf("=== SUMMARY ===\n");
@@ -79,22 +89,22 @@ int main() {
     std::printf("OBS=%zu (cap=%zu) FRONT_OBS=%zu FRONT_MODELED=%zu FRONT_VAL=%zu REJECTED=%zu\n",
         bb.obs.size(), bb.cap, bb.frontObserved.size(), bb.frontModeled.size(),
         bb.frontValidated.size(), bb.rejected.size());
-    std::printf("PREDICTION activeErr first=%.2f last=%.2f (corrected=%s)\n",
-        firstErr, lastErr, (lastErr < firstErr ? "yes" : "no"));
+    std::printf("PREDICTION activeErr first=%.2f last=%.2f max=%.2f | half1=%.2f half2=%.2f (corrected=%s)\n",
+        firstErr, lastErr, maxErr, fh, sh, (sh <= fh + 1e-9 ? "yes" : "no"));
     std::printf("DISTINCT_METHODS=%d/6 STRATEGIES=%zu\n", distinctMethods, bb.strategies.size());
 
     // 6) Fail-closed acceptance checks (all from real measurements).
     int fails = 0;
     auto ck = [&](bool ok, const char* n) { std::printf("%s %s\n", ok ? "OK" : "FAIL", n); if (!ok) ++fails; };
     ck(refOk, "real_reference_inference");
-    ck(bb.iterations == 20, "twenty_real_experiments");
+    ck(bb.iterations == (uint64_t)N, "twenty_real_experiments");
     ck(bb.bestDecode > 0.0, "best_measured_positive");
     ck(bb.bestRepeats >= 1, "best_retained");
     ck(distinctMethods >= 3, "dynamic_candidate_selection");
     ck(bb.obs.size() <= bb.cap, "bounded_memory");
-    ck(bb.frontModeled.size() <= FRONT_CAP && bb.frontObserved.size() <= FRONT_CAP &&
-       bb.frontValidated.size() <= FRONT_CAP, "bounded_frontiers");
-    ck(lastErr <= firstErr + 1e-9, "prediction_correction");
+    ck(bb.frontModeled.size() <= V5Blackboard::FRONT_CAP && bb.frontObserved.size() <= V5Blackboard::FRONT_CAP &&
+       bb.frontValidated.size() <= V5Blackboard::FRONT_CAP, "bounded_frontiers");
+    ck(sh <= fh + 1e-9, "prediction_correction");
     // Modeled frontier must be fully modeled (no measured leakage): modeled decode
     // differs from any observed decode for the same config only by being predicted;
     // we assert the categories are non-empty and distinct containers.

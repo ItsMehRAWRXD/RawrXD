@@ -16,7 +16,7 @@ static bool TestExec(const Controls& c, Measured& m) {
 static bool FailExec(const Controls&, Measured&) { ++g_calls; return false; } // failure path
 
 int main() {
-    V5Blackboard bb; bb.rng.seed(12345);
+    V5Blackboard bb;
     double firstErr = 0, lastErr = 0;
     for (int i = 0; i < 400; ++i) {
         ExploreCycleV5(bb, TestExec);
@@ -24,7 +24,7 @@ int main() {
         lastErr = bb.residualVar;
     }
     // Failure accounting.
-    V5Blackboard fb; fb.rng.seed(7);
+    V5Blackboard fb;
     for (int i=0;i<10;++i) ExploreCycleV5(fb, FailExec);
 
     std::printf("ITERS=%llu OBS=%zu FRONT_OBS=%zu FRONT_VAL=%zu FAIL=%llu\n",

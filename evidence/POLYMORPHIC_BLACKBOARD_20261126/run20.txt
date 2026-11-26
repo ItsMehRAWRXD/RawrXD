@@ -1,0 +1,42 @@
+=== RAWRXD_BLACKBOARD_REAL_EXECUTION_001 ===
+DISCOVERED_MODELS=63
+MODEL family=llama param=3.2B quant=Q4_K_M ctx=131072
+HARDWARE cores=32 maxThreads=32 maxBatch=512 maxCtx=32768
+REFERENCE ran=1 decode=219.2 prefill=971.5 tokens=246
+IT  1 [EXPLORE s3] batch= 493 thr= 9 | pred=  200.0 meas=  222.9 pf=  992.0 | cur=    0.0 BEST=    0.0(rep=0) | T=0.38 u=1.00 lr=0.005 | ratio=50/50
+IT  2 [REVALIDATE s3] batch=  32 thr= 8 | pred=  222.9 meas=  219.4 pf= 1068.5 | cur=  219.4 BEST=    0.0(rep=0) | T=0.61 u=6.94 lr=0.005 | ratio=50/50
+IT  3 [EXPLORE s3] batch= 272 thr=32 | pred=  221.2 meas=  219.9 pf= 1146.0 | cur=  219.4 BEST=    0.0(rep=0) | T=0.52 u=6.68 lr=0.005 | ratio=50/50
+IT  4 [MUTATE s3] batch=  17 thr= 7 | pred=  219.4 meas=  218.6 pf=  861.8 | cur=  219.4 BEST=    0.0(rep=0) | T=0.54 u=6.35 lr=0.005 | ratio=50/50
+IT  5 [RECOMBINE s3] batch=  17 thr= 7 | pred=  218.6 meas=  219.4 pf=  809.7 | cur=  219.4 BEST=    0.0(rep=0) | T=0.54 u=6.03 lr=0.005 | ratio=52/48
+IT  6 [REVALIDATE s3] batch=  32 thr= 8 | pred=  219.4 meas=  228.1 pf= 1075.3 | cur=  228.1 BEST=  223.7(rep=2) | T=0.48 u=5.73 lr=0.005 | ratio=52/48
+IT  7 [EXPLORE s3] batch=  16 thr=28 | pred=  221.1 meas=  222.5 pf=  825.6 | cur=  222.5 BEST=  223.7(rep=2) | T=0.51 u=6.09 lr=0.005 | ratio=52/48
+IT  8 [REVALIDATE s3] batch=  32 thr= 8 | pred=  223.7 meas=  217.5 pf= 1032.6 | cur=  217.5 BEST=  223.7(rep=2) | T=0.56 u=5.80 lr=0.005 | ratio=52/48
+IT  9 [EXPLORE s3] batch= 172 thr=10 | pred=  220.9 meas=  221.6 pf= 1161.4 | cur=  217.5 BEST=  223.7(rep=2) | T=0.55 u=5.85 lr=0.005 | ratio=52/48
+IT 10 [REDISCOVER s3] batch= 133 thr=10 | pred=  221.3 meas=  224.6 pf= 1130.9 | cur=  217.5 BEST=  223.7(rep=2) | T=0.53 u=5.55 lr=0.005 | ratio=54/46
+IT 11 [RECOMBINE s3] batch= 255 thr= 7 | pred=  221.9 meas=  218.2 pf= 1185.1 | cur=  217.5 BEST=  223.7(rep=2) | T=0.61 u=5.37 lr=0.005 | ratio=54/46
+IT 12 [REVALIDATE s3] batch=  32 thr= 8 | pred=  221.6 meas=  227.7 pf= 1130.8 | cur=  227.7 BEST=  223.7(rep=2) | T=0.58 u=5.23 lr=0.005 | ratio=54/46
+IT 13 [RECOMBINE s3] batch= 143 thr= 8 | pred=  222.9 meas=  224.3 pf= 1135.6 | cur=  227.7 BEST=  223.7(rep=2) | T=0.53 u=5.32 lr=0.005 | ratio=54/46
+IT 14 [REDISCOVER s3] batch= 313 thr=31 | pred=  220.2 meas=  215.8 pf= 1019.0 | cur=  227.7 BEST=  223.7(rep=2) | T=0.54 u=5.06 lr=0.005 | ratio=54/46
+IT 15 [EXPLORE s3] batch= 211 thr=25 | pred=  220.4 meas=  219.1 pf= 1129.6 | cur=  227.7 BEST=  223.7(rep=2) | T=1.20 u=5.00 lr=0.005 | ratio=56/44
+IT 16 [REDISCOVER s0] batch= 291 thr=32 | pred=  218.6 meas=  217.5 pf= 1118.1 | cur=  227.7 BEST=  223.7(rep=2) | T=1.13 u=4.76 lr=0.005 | ratio=56/44
+IT 17 [EXPLORE s3] batch= 350 thr= 1 | pred=  221.1 meas=  219.2 pf= 1149.1 | cur=  227.7 BEST=  223.7(rep=2) | T=1.14 u=4.53 lr=0.005 | ratio=56/44
+IT 18 [REDISCOVER s3] batch=  17 thr=11 | pred=  222.2 meas=  220.9 pf=  836.5 | cur=  227.7 BEST=  223.7(rep=2) | T=1.17 u=4.34 lr=0.005 | ratio=56/44
+IT 19 [EXPLORE s2] batch= 182 thr= 4 | pred=  221.8 meas=  225.7 pf= 1184.6 | cur=  227.7 BEST=  223.7(rep=2) | T=1.22 u=4.13 lr=0.005 | ratio=56/44
+IT 20 [REDISCOVER s4] batch= 401 thr=10 | pred=  221.4 meas=  218.3 pf= 1054.3 | cur=  227.7 BEST=  223.7(rep=2) | T=1.13 u=4.11 lr=0.005 | ratio=58/42
+=== SUMMARY ===
+BEST_MEASURED_DECODE=223.7 prefill=1075.3 (batch=32 thr=8 repeats=2)
+ACCEPTED=5 REJECTED=15 FAILURES=0 ITERS=20
+OBS=20 (cap=256) FRONT_OBS=4 FRONT_MODELED=6 FRONT_VAL=1 REJECTED=15
+PREDICTION activeErr first=1.00 last=4.11 max=6.94 | half1=5.60 half2=4.78 (corrected=yes)
+DISTINCT_METHODS=5/6 STRATEGIES=5
+OK real_reference_inference
+OK twenty_real_experiments
+OK best_measured_positive
+OK best_retained
+OK dynamic_candidate_selection
+OK bounded_memory
+OK bounded_frontiers
+OK prediction_correction
+OK evidence_separated
+FAILS=0
+RESULT=PASS
