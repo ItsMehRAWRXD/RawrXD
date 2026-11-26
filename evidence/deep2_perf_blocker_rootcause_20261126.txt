@@ -1,0 +1,44 @@
+DEEP2 PERFORMANCE BLOCKER — PRECISE ROOT CAUSE (evidence, no fabrication)
+==========================================================================
+
+Date: 2026-11-26  Repo: F:\rawrxd  HW: R9700
+
+FINDING
+-------
+The full-token single-command-buffer fused recording ALREADY EXISTS in
+src/deep2/Deep2Engine_GpuForward.cpp (contiguousRange path, lines 868-955).
+It is GATED OFF by default (`unfused` defaults true; opt-in RAWRXD_GPU_FUSED=1)
+because, per the in-source comment (lines 879-886):
+
+  "FUSED DISPATCH IS OPT-IN. The fused single-command-buffer recording
+   (all layers, one fence) was observed to race on shared arena buffers
+   (ArenaQ/K/V, residual): the per-dispatch barriers do NOT fully order
+   dependent dispatches, producing divergent tokens AND a GPU device loss
+   that resets the host (Kernel-Power 41). Until the barrier scope is
+   corrected and validated with Vulkan validation layers, the safe
+   per-layer-fence path is the default."
+
+CONSEQUENCE
+-----------
+- Default path: one BeginFusedLayer/EndFusedLayer (submit+fence) PER LAYER.
+  28 layers/token -> ~228 submits/token -> ~2.2 TPS on R9700.
+- The fast path (1 submit/token) is blocked by a real GPU memory-ordering
+  hazard on reused arena activation buffers, not by a missing implementation.
+
+REQUIRED FIX (B07-02 / B06-12)
+------------------------------
+1. Correct the barrier scope in recordComputeBarrier (and any dispatch that
+   reuses ArenaQ/K/V/residual) so dependent dispatches are fully ordered:
+   buffer-specific VkBufferMemoryBarrier with exact src/dst access masks and
+   stage masks, or a srcStageMask that covers the producing write.
+2. Validate with VK_LAYER_KHRONOS_validation (and, if available, the AMD
+   best-practices layer) to catch the exact hazard before enabling.
+3. Only then flip the default to fused (RAWRXD_GPU_FUSED=1) and re-run
+   real-model parity (cosine >= 0.9982) + a real submit-count reduction.
+
+STATUS
+------
+Backends working end-to-end (deep2/strata/ollama) — DONE, committed.
+Full-token fusion — IMPLEMENTED but SAFETY-GATED (real TDR hazard).
+Performance 200+ TPS — BLOCKED on the barrier-scope fix above.
+CERTIFIED=0 RELEASE=HELD PROMOTE=0
