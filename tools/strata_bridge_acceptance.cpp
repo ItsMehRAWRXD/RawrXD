@@ -1,15 +1,15 @@
 // strata_bridge_acceptance.cpp -- headless Track E acceptance entry point.
 //
-// Exercises the SAME production in-process Strata runtime the native IDE bridge
-// uses (rawrxd::deep2::StrataChatSession) against a real GGUF model, then emits
-// STRUCTURED telemetry (from StrataChatStats, not human-readable stderr) and
-// checks the R05 residency invariants. This is the headless acceptance layer:
-// no interactive desktop, no external inference server, no subprocess.
+// Drives the SAME production text-inference core the native IDE bridge uses
+// (rawrxd::StrataTextRunner) with the REAL model tokenizer
+// (RawrXD::CPUInferenceEngine, model-identity matched) and a real prompt. Emits
+// STRUCTURED telemetry (from StrataChatStats, not stderr) and checks the R05
+// invariants. No GUI, no external server, no subprocess, no test-only pipeline.
 //
-// Exit 0 = PASS (tokens generated on GPU, expert residency active, bounded
-// evictions). Non-zero = a genuine failure (reported, never fabricated).
+// Exit 0 = PASS. Non-zero = a genuine failure (reported, never fabricated).
 
-#include "deep2/strata_chat.hpp"
+#include "cpu_inference_engine.h"
+#include "agentic/StrataTextRunner.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -19,69 +19,53 @@
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        std::fprintf(stderr,
-                     "usage: %s <gguf> [prefill=5] [decode=64]\n",
-                     argv[0]);
+        std::fprintf(stderr, "usage: %s <gguf> [prompt] [maxTokens=64]\n", argv[0]);
         return 2;
     }
     const std::string model = argv[1];
-    const int prefill = argc > 2 ? std::atoi(argv[2]) : 5;
-    const int decode = argc > 3 ? std::atoi(argv[3]) : 64;
+    const std::string prompt = argc > 2 ? argv[2] : "The capital of France is";
+    const size_t maxTokens = argc > 3 ? (size_t)std::atoi(argv[3]) : 64;
 
-    rawrxd::deep2::StrataChatOptions opt;
-    opt.gpu = true;            // GPU residency is the acceptance target
-    opt.expertTracking = true; // R05 retention is enabled by tracking
-    rawrxd::deep2::StrataChatSession sess;
-    if (!sess.Open(model, opt)) {
-        std::fprintf(stderr, "OPEN_FAIL %s\n", sess.Stats().error.c_str());
+    // Real tokenizer, model-identity matched (same engine the Deep2 bridge uses).
+    RawrXD::CPUInferenceEngine tok;
+    if (!tok.LoadModel(model)) {
+        std::fprintf(stderr, "TOKENIZER_LOAD_FAIL %s\n", model.c_str());
         return 3;
     }
 
-    std::vector<uint32_t> toks;
-    toks.reserve((size_t)prefill);
-    for (int i = 0; i < prefill; ++i)
-        toks.push_back((uint32_t)(1 + i));
-    if (!sess.Prefill(toks)) {
-        std::fprintf(stderr, "PREFILL_FAIL\n");
-        return 4;
-    }
+    rawrxd::StrataTextRunner runner(
+        model,
+        [&tok](const std::string& t) { return tok.Tokenize(t); },
+        [&tok](const std::vector<int>& ids) { return tok.Detokenize(ids); });
+    rawrxd::StrataRunOptions opt;
+    opt.maxTokens = maxTokens;
+    const rawrxd::StrataRunResult rr = runner.Run(prompt, opt);
 
-    uint32_t next = 0;
-    int gen = 0;
-    for (int i = 0; i < decode; ++i) {
-        if (!sess.Step(next)) break;
-        ++gen;
-    }
-    sess.Finalise();
-
-    const auto& s = sess.Stats();
-    // Structured runtime telemetry (authoritative in-process interface).
     std::printf(
-        "STRATA_IDE_TELEMETRY {\"model\":\"%s\",\"prefill\":%d,\"decode\":%d,"
+        "STRATA_IDE_TELEMETRY {\"prompt\":\"%s\",\"generated_chars\":%zu,"
         "\"expert_accesses\":%llu,\"expert_hits\":%llu,\"expert_misses\":%llu,"
         "\"expert_evictions\":%llu,\"expert_hit_rate\":%.4f,"
         "\"transferred_bytes\":%llu,\"gpu_calls\":%llu,\"cpu_calls\":%llu,"
-        "\"ok\":%s}\n",
-        model.c_str(), prefill, gen,
-        (unsigned long long)s.expertAccesses,
-        (unsigned long long)s.expertHits,
-        (unsigned long long)s.expertMisses,
-        (unsigned long long)s.expertEvictions,
-        s.expertHitRate,
-        (unsigned long long)s.expertTransferredBytes,
-        (unsigned long long)s.gpuCalls,
-        (unsigned long long)s.cpuCalls,
-        s.error.empty() ? "true" : "false");
+        "\"ok\":%s,\"error\":\"%s\"}\n",
+        prompt.c_str(), rr.text.size(),
+        (unsigned long long)rr.expertAccesses,
+        (unsigned long long)rr.expertHits,
+        (unsigned long long)rr.expertMisses,
+        (unsigned long long)rr.expertEvictions,
+        rr.expertHitRate,
+        (unsigned long long)rr.transferredBytes,
+        (unsigned long long)rr.gpuCalls,
+        (unsigned long long)rr.cpuCalls,
+        rr.ok ? "true" : "false", rr.error.c_str());
+    std::printf("STRATA_IDE_TEXT \"%s\"\n", rr.text.c_str());
 
     int fails = 0;
-    if (gen <= 0) { std::fprintf(stderr, "FAIL: no decode tokens\n"); ++fails; }
-    if (s.gpuCalls == 0) { std::fprintf(stderr, "FAIL: no GPU execution\n"); ++fails; }
-    if (s.expertAccesses == 0) { std::fprintf(stderr, "FAIL: no expert residency\n"); ++fails; }
+    if (!rr.ok) { std::fprintf(stderr, "FAIL: runner not ok: %s\n", rr.error.c_str()); ++fails; }
+    if (rr.gpuCalls == 0) { std::fprintf(stderr, "FAIL: no GPU execution\n"); ++fails; }
+    if (rr.expertAccesses == 0) { std::fprintf(stderr, "FAIL: no expert residency\n"); ++fails; }
+    if (rr.text.empty()) { std::fprintf(stderr, "FAIL: empty generation\n"); ++fails; }
 
-    if (fails) {
-        std::printf("STRATA_IDE_BRIDGE_ACCEPTANCE=FAIL\n");
-        return 1;
-    }
+    if (fails) { std::printf("STRATA_IDE_BRIDGE_ACCEPTANCE=FAIL\n"); return 1; }
     std::printf("STRATA_IDE_BRIDGE_ACCEPTANCE=PASS\n");
     return 0;
 }

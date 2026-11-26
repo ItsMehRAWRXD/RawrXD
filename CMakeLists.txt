@@ -1283,6 +1283,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
     # bridge uses, exercised without an interactive desktop.
     add_executable(strata_bridge_acceptance
         tools/strata_bridge_acceptance.cpp
+        src/cpu_inference_engine_impl.cpp
         src/deep2/op_gdn.cpp
         src/deep2/runtime_graph_executor.cpp
         src/deep2/moe_timing_graph.cpp
