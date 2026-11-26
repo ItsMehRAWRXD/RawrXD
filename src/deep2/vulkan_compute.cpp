@@ -4281,6 +4281,12 @@ bool VulkanCompute::ensureWeightQuant(
         return false;
     }
 
+    // P0-A: reserve `bytes` against the strict physical budget for the duration
+    // of the quantized allocation (mirrors ensureWeightF32). Released on every
+    // exit path (rollback on failure); on success weightCacheBytes_ += bytes
+    // commits before the guard releases, so no transient A+W double count.
+    AllocReservation reservation(allocReservedBytes_, bytes);
+
     WeightCacheEntry e{};
     size_t padded=(bytes+3u)&~size_t(3u);
     if(!createBuffer(padded,
@@ -4301,6 +4307,7 @@ bool VulkanCompute::ensureWeightQuant(
     e.bytes=bytes; e.type=type; e.lastUse=weightUseClock_++;
 
     auto ins=weightCache_.emplace(key,std::move(e)).first;
+    reservation.release();
     weightCacheBytes_+=bytes;
     ++weightUploads_;
     out=&ins->second.buffer;
