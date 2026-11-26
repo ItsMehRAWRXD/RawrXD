@@ -4203,10 +4203,19 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             "${_chat_route_generated_header}"
             $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
         )
+        # Track E Strata text path: StrataChatSession -> RuntimeGraphExecutor +
+        # Universal ingest (not part of deep2_engine_lib). Same TUs the CLI and
+        # strata_bridge_acceptance compile directly.
+        target_sources(RawrXD-Win32IDE-Native PRIVATE
+            src/deep2/runtime_graph_executor.cpp
+            src/deep2/modelgenie/universal_gguf.cpp
+            src/deep2/moe_timing.cpp
+            src/deep2/moe_timing_graph.cpp)
         target_include_directories(RawrXD-Win32IDE-Native PRIVATE
             "${_chat_route_generated_dir}"
             ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
             ${CMAKE_SOURCE_DIR}/src/win32app
             ${CMAKE_SOURCE_DIR}/src/utils
             ${CMAKE_SOURCE_DIR}/include

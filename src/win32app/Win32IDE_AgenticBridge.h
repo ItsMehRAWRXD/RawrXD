@@ -43,6 +43,22 @@ struct AgentResponse {
     std::string rawOutput;
 };
 
+// Structured Strata runtime telemetry (subset of deep2::StrataChatStats),
+// populated from the authoritative in-process stats after each Strata turn.
+// Never a placeholder or hardcoded benchmark value.
+struct StrataTelemetry {
+    uint64_t expertAccesses = 0;
+    uint64_t expertHits = 0;
+    uint64_t expertMisses = 0;
+    uint64_t expertEvictions = 0;
+    uint64_t transferredBytes = 0;
+    uint64_t gpuCalls = 0;
+    uint64_t cpuCalls = 0;
+    double expertHitRate = 0.0;
+    bool ok = false;
+    std::string error;
+};
+
 // Model turns → BackendRouter; tools → ToolCallBridge SSOT (SecurityGate).
 class AgenticBridge {
 public:
@@ -80,6 +96,13 @@ public:
     using OutputCallback = std::function<void(const std::string&, const std::string&)>;
     void SetOutputCallback(OutputCallback callback);
 
+    // Structured Strata runtime telemetry from the most recent Strata turn.
+    // Populated from StrataChatStats; ok=false until a Strata inference has run.
+    StrataTelemetry LastStrataTelemetry() const { return m_lastStrataTelemetry; }
+
+    // Request cancellation of an in-flight Strata turn (prefill or decode).
+    void CancelStrata() { m_strataCancel.store(true, std::memory_order_relaxed); }
+
     // Shared execution FSM (SSOT) — UI timeline observes, does not own.
     RawrXD::AgentExecutionFSM& ExecutionFSM() { return RawrXD::ProductAgentFSM(); }
 
@@ -97,6 +120,7 @@ private:
     bool IsToolCall(const std::string& line);
     bool IsAnswer(const std::string& line);
     AgentResponse ChatViaBackendRouter(const std::string& prompt);
+    AgentResponse ChatViaStrata(const std::string& prompt);
     AgentResponse DispatchToolLine(const std::string& line);
 
     std::string ResolveFrameworkPath();
@@ -119,4 +143,6 @@ private:
 
     OutputCallback m_outputCallback;
     std::thread m_agentThread;
+    StrataTelemetry m_lastStrataTelemetry;          // structured, in-process
+    std::atomic<bool> m_strataCancel{false};        // cooperative cancellation
 };
