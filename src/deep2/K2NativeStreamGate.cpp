@@ -1353,51 +1353,10 @@ Result Run(const fs::path& shardDir,
         Deep2::K2LiveCache_SetBudget(cfg.budgetBytes, /*physicalCap=*/0);
     }
 
-    // F07/PROD-04: locked dual-GPU admission. Active ONLY when the bandwidth
-    // lock is explicitly requested (RAWRXD_DUAL_GPU_BANDWIDTH_LOCK_001=1);
-    // compatibility mode is completely unchanged. Fails closed — single-GPU
-    // fallback is forbidden under the lock. PROD-02 must supply the Vulkan
-    // enumeration callback so HostHardwareProbe yields verified identities +
-    // measured budgets; until then a requested lock rejects (never a silent
-    // single-GPU run).
-    if (rawrxd::dualgpu::DualGpuLockRequested()) {
-        // MB-09A/C/D: use the authoritative Deep2 device manager (adapter
-        // inventory with MEASURED free-VRAM budget, LUID-based stable identity
-        // and runtime PnP health) instead of a bare host probe. This makes the
-        // locked profile capable of SUCCESSFUL admission of two healthy,
-        // budget-known GPUs, while still failing closed otherwise. The
-        // manager's availableVram is the DXGI current-budget (Budget-Current-
-        // Usage); the Vulkan VkPhysicalDevice QueryDeviceMemoryBudget path from
-        // the execution owner is the MB-09B/09D refinement.
-        Deep2::DeviceManagerSnapshot snap;
-        Deep2::Deep2Device_Enumerate(snap);
-        Deep2::Deep2Device_RefreshPnPHealth(snap);
-        std::vector<rawrxd::dualgpu::DualGpuDevice> lockDevs;
-        for (unsigned i = 0; i < snap.deviceCount && i < 8; ++i) {
-            const Deep2::DeviceIdentity& g = snap.devices[i];
-            if (g.duty == Deep2::DeviceDuty::Excluded ||
-                g.duty == Deep2::DeviceDuty::Display) continue;
-            rawrxd::dualgpu::DualGpuDevice d;
-            d.stableId = g.stableId;
-            d.name     = g.name;
-            d.vendorId = g.vendorId;
-            d.deviceId = g.deviceId;
-            // MB-09E: measured current budget, never heap capacity. Unknown -> 0
-            // -> fail closed.
-            d.measuredCapBytes = g.availableVramKnown ? g.availableVram : 0;
-            // MB-09C: stable LUID-based identity established by the manager.
-            d.identityExact = (g.luid != 0) && g.stableId[0] != '\0';
-            // MB-09F: runtime health from the device manager PnP refresh.
-            d.healthy = g.healthy;
-            lockDevs.push_back(d);
-        }
-        const auto adm = rawrxd::dualgpu::AdmitLockedProfile(lockDevs);
-        if (!adm.admitted) {
-            result.error = std::string("DUAL_GPU_LOCK_REJECTED: ") + adm.reason +
-                           " (single-GPU fallback forbidden)";
-            return result;
-        }
-    }
+    // LIFE-10B: locked dual-GPU admission is enforced by the engine
+    // (Deep2Engine::runK2NativeStreamPartial) against the actual execution
+    // owners (getVulkanComputeSlot 0/1) before this gate runs. The former
+    // inventory-only admission here is removed so a single authority governs.
 
     if (shards.empty()) {
         result.error = "No shards";

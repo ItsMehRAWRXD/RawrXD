@@ -20,6 +20,7 @@
 #include "CompressedKVCache.h"
 #include "CycloneScheduler.hpp"
 #include "Deep2DeviceManager.hpp"
+#include "VulkanComputeExtract.hpp" // LIFE-10A dual-GPU admission (RecordFromCpuSlot)
 #include "Deep2LivePath.hpp"
 #include "Deep2LivePath_Internal.hpp"
 #include "Deep2Telemetry.hpp"
@@ -16476,6 +16477,26 @@ K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(const K2NativeS
             }
         }
         // #endregion
+        // LIFE-10A: locked dual-GPU admission against the ACTUAL execution
+        // owners (slots 0/1) before model execution. Fail closed — no single-GPU
+        // fallback under the lock. Owners are held alive by Deep2Engine (LIFE-07).
+        if (rawrxd::dualgpu::DualGpuLockRequested()) {
+            Deep2::DeviceManagerSnapshot admSnap;
+            Deep2::Deep2Device_Enumerate(admSnap);
+            Deep2::Deep2Device_RefreshPnPHealth(admSnap);
+            std::vector<rawrxd::dualgpu::ExecutionDeviceRecord> admRecs;
+            if (auto* admS0 = getVulkanComputeSlot(0))
+                admRecs.push_back(rawrxd::dualgpu::RecordFromCpuSlot(admS0));
+            if (auto* admS1 = getVulkanComputeSlot(1))
+                admRecs.push_back(rawrxd::dualgpu::RecordFromCpuSlot(admS1));
+            std::vector<rawrxd::dualgpu::DualGpuDevice> admDevs;
+            if (!rawrxd::dualgpu::ReconcileForAdmission(admRecs, admSnap, admDevs) ||
+                !rawrxd::dualgpu::AdmitLockedProfile(admDevs).admitted) {
+                result.ok = false;
+                result.error = "DUAL_GPU_LOCK_REJECTED: execution devices not dual-verified (single-GPU fallback forbidden)";
+                return result;
+            }
+        }
         result = K2NativeStreamGate::Run(modelDir_, *globalIndex_, k2ShardConfig_, shards, cfg);
     }
     catch (const std::exception& ex)

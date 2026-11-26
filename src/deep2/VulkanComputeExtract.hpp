@@ -39,25 +39,13 @@ inline ExecutionDeviceRecord RecordFromVulkanSlot(const SlotT* s) {
 // as returned by Deep2Engine::getVulkanComputeSlot). Delegates to the underlying
 // Deep2::VulkanCompute backend for the real device handles.
 inline ExecutionDeviceRecord RecordFromCpuSlot(const CPUInference::VulkanCompute* s) {
-    ExecutionDeviceRecord r;
-    if (!s) return r;
-    r.initialized = s->initialized();
-    r.deviceLost  = s->DeviceIsLost(); // real synchronized device-loss state
-    if (Deep2::VulkanCompute* b = s->Backend()) {
-        r.phys  = b->PhysicalHandle();
-        r.dev   = b->DeviceHandle();
-        r.queue = b->ComputeQueue();
-        r.qfam  = b->ComputeQueueFamily();
-        const auto& pi = b->physicalInfo();
-        r.deviceLUID = pi.luidValid ? pi.luid : 0;
-        if (r.phys) {
-            const vkbudget::DeviceMemoryBudget bb = vkbudget::QueryDeviceMemoryBudget(r.phys);
-            if (bb.provenanceIsBudget) {
-                r.measuredCapBytes = bb.availableHeadroomBytes;
-                r.budgetKnown = true;
-            }
-        }
-    }
+    if (!s) return ExecutionDeviceRecord{};
+    // Delegate device-field extraction (phys/dev/queue/qfam/LUID/budget AND
+    // backend initialized+computeReady) to the single implementation.
+    ExecutionDeviceRecord r = RecordFromVulkanSlot(s->Backend());
+    // Layer wrapper health on top: the slot must be initialized and not lost.
+    r.initialized = s->initialized() && r.initialized;
+    r.deviceLost  = s->DeviceIsLost();
     return r;
 }
 
