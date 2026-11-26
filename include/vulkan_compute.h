@@ -214,6 +214,13 @@ public:
     // 0 = LRU (default, the historical policy), 1 = hotness (STRATA_S08).
     void SetWeightCachePolicy(int policy) { weight_cache_policy_ = policy; }
     int WeightCachePolicy() const { return weight_cache_policy_; }
+    // RET (STRATA_G01_BOUNDARY): process-scoped retention bridge for the CPU
+    // reference class. The authoritative retention policy lives on the Deep2
+    // backend; the dispatcher sets this flag and the trim consults it via the
+    // getter so both classes share one retention decision (no second authority).
+    void SetWeightCacheRetention(bool enabled) { weight_cache_retention_ = enabled; }
+    bool WeightCacheRetention() const { return weight_cache_retention_; }
+    bool weight_cache_retention_ = false;
     // D1: the batch descriptor-ring capacity (kQuantBatchMaxSets).
     static constexpr uint32_t QuantDotBatchCapacity() { return kQuantBatchMaxSets; }
 
