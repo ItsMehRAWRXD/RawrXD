@@ -265,6 +265,21 @@ AgentResult runAgentController(
     // is a completion REQUEST, not proof. The controller verifies real tool
     // evidence before issuing an authoritative receipt.
     std::map<std::string, uint64_t> writtenHashes;  // path -> content hash at write
+    // V20: canonical, component-level workspace containment (resolves symlinks /
+    // Windows junctions via weakly_canonical, then checks each component).
+    auto pathWithinRoot = [&](const std::string& rel) -> bool {
+        std::error_code ec;
+        const auto root = std::filesystem::weakly_canonical(ws.root(), ec);
+        if (ec) return false;
+        const auto abs = std::filesystem::weakly_canonical(ws.root() + "/" + rel, ec);
+        if (ec) return false;
+        auto rit = root.begin();
+        auto ait = abs.begin();
+        for (; rit != root.end(); ++rit, ++ait) {
+            if (ait == abs.end() || *rit != *ait) return false;
+        }
+        return true;
+    };
     auto verifyCompletion = [&](const std::string& summary,
                                 std::string& reason) -> bool {
         const std::string goalLow = lc(cfg.goal);
@@ -303,6 +318,10 @@ AgentResult runAgentController(
 
         // Session-written files must still exist with the content we recorded.
         for (const auto& kv : writtenHashes) {
+            if (!pathWithinRoot(kv.first)) {
+                reason = "deliverable path escapes the workspace: " + kv.first;
+                return false;
+            }
             std::string content;
             const std::string abs = ws.root() + "/" + kv.first;
             if (!readFileStr(abs, content)) {
