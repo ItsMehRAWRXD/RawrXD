@@ -241,12 +241,18 @@ int main(int argc, char **argv)
     {
         parityStage("BEGIN", "referenceStep", "step=" + std::to_string(step) +
                     " prefix=" + std::to_string(referencePrefix.size()));
+        parityStage("BEGIN", "referenceReset", "step=" + std::to_string(step));
         engine.resetInferenceState();
+        parityStage("END", "referenceReset", "step=" + std::to_string(step));
+        parityStage("BEGIN", "referenceBufferAllocation", "step=" + std::to_string(step));
         std::vector<float> hidden(referencePrefix.size() * hiddenDim, 0.0f);
         std::vector<float> logits(vocab, 0.0f);
+        parityStage("END", "referenceBufferAllocation", "step=" + std::to_string(step) +
+                    " bytes=" + std::to_string(hidden.size() * sizeof(float)));
+        parityStage("BEGIN", "referencePrefill", "step=" + std::to_string(step));
         const size_t done = engine.prefillSerial(
             referencePrefix.data(), referencePrefix.size(), hidden.data());
-        parityStage("END", "referenceStepPrefill", "step=" + std::to_string(step) +
+        parityStage("END", "referencePrefill", "step=" + std::to_string(step) +
                     " processed=" + std::to_string(done));
         check(done == referencePrefix.size(),
               "reference prefillSerial did not process full prefix");
