@@ -4042,7 +4042,11 @@ bool VulkanCompute::PinWeightView(const GpuWeightView& view) {
         if (!ensureWeightF32((const float*)view.data, key, view.bytes, b))
             return false;
     } else {
-        if (!ensureWeightQuant(view.type, view.data, view.bytes, b))
+        // Preserve the caller's stable tensor identity for streamed weights.
+        // Using the mapped pointer here makes cache ownership depend on the
+        // current shard window and defeats cross-token residency when the
+        // window is remapped at a different address.
+        if (!ensureWeightQuant(view.type, view.data, view.bytes, b, view.key))
             return false;
     }
     const uint64_t key = view.key
