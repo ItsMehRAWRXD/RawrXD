@@ -1850,16 +1850,22 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 // ---------------------------------------------------------------------------
 bool VulkanCompute::BeginQuantDotBatch() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
-    if (quant_batch_active_) return false;   // batches do not nest
+    auto reject = [](const char* why) {
+        if (std::getenv("RR_QD_TRACE"))
+            std::cerr << "[QUANT_DOT] BeginBatch reject: " << why << std::endl;
+        return false;
+    };
+    if (quant_batch_active_) return reject("nesting:active");   // batches do not nest
     // A failed fence wait means submitted work may still reference every
     // pinned weight and batch buffer. Do not recycle or unpin them here;
     // Cleanup() is the only recovery boundary after device-idle teardown.
     if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
-            quant_submission_failed_, cleanup_quarantined_)) return false;
-    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return false;
+            quant_submission_failed_, cleanup_quarantined_))
+        return reject("MayReuseQuant:inflight_or_failed");
+    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return reject("pipeline:create");
     auto it = shaders_.find("quantdot");
-    if (it == shaders_.end() || !it->second.pipeline) return false;
-    if (!EnsureQuantFastPath()) return false;
+    if (it == shaders_.end() || !it->second.pipeline) return reject("shader:missing");
+    if (!EnsureQuantFastPath()) return reject("fastpath:create");
 
     // RAWRXD_G04: release any pins left over from a PREVIOUS batch that ended
     // abnormally. A leaked pin would make its entry permanently un-evictable
