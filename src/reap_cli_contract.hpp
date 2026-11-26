@@ -58,11 +58,16 @@ struct AdmissionEvidence {
     std::string tokenizerHash;
     std::string calibrationHash;
     std::string selectionMaskHash;
+    // Canonical GGUF architecture identity.  The default preserves the
+    // historical MLA contract for older callers that predate architecture-
+    // aware receipts; new receipts must populate this from model metadata.
+    std::string architecture = "mla";
     uint64_t generatedWindows = 0;
     uint64_t requiredWindows = 256;
     uint64_t observedLayers = 0;
     uint64_t requiredLayers = 0;
     bool mlaCert001 = false;
+    bool architectureCert001 = false;
     bool calibrationComplete = false;
     bool routeMetricsComplete = false;
     bool referenceParity = false;

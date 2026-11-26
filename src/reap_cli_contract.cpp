@@ -417,8 +417,20 @@ Admission EvaluateAdmission(const CliRequest& request,
         admission.reason = "REAP_ROUTING_TOPOLOGY_INCOMPLETE";
         return admission;
     }
-    if (!evidence.mlaCert001) {
-        admission.reason = "REAP_MLA_CERT_REQUIRED";
+    const std::string architecture = Upper(evidence.architecture);
+    const bool knownArchitecture = architecture == "MLA" ||
+                                   architecture == "GQA" ||
+                                   architecture == "MHA" ||
+                                   architecture == "HYBRID" ||
+                                   architecture == "SLIDING_WINDOW";
+    if (!knownArchitecture) {
+        admission.reason = "REAP_ARCHITECTURE_CERT_AUTHORITY_UNAVAILABLE";
+        return admission;
+    }
+    const bool architectureSeal = evidence.architectureCert001 ||
+                                   (architecture == "MLA" && evidence.mlaCert001);
+    if (!architectureSeal) {
+        admission.reason = "REAP_ARCHITECTURE_CERT_REQUIRED:" + architecture;
         return admission;
     }
     if (!evidence.calibrationComplete || !evidence.routeMetricsComplete) {
@@ -445,7 +457,7 @@ Admission EvaluateAdmission(const CliRequest& request,
         admission.reason = "REAP_REDUCED_RELOAD_REQUIRED";
         return admission;
     }
-    admission.mlaCert001 = true;
+    admission.mlaCert001 = architecture == "MLA";
     admission.calibrationComplete = true;
     admission.selectionComplete = true;
     admission.rewriterCertified = true;
@@ -465,6 +477,7 @@ std::string BlockedReceipt(const CliRequest& request, const Admission& admission
         << "\"target_size\":" << request.targetSizeBytes << ","
         << "\"expert_budget\":" << request.expertBudgetBytes << ","
         << "\"active_experts\":" << request.activeExperts << ","
+        << "\"architecture_certification_authority\":\"explicit\","
         << "\"quality_floor\":" << std::setprecision(17) << request.qualityFloor << ","
         << "\"gates\":{"
         << "\"mla_cert_001\":" << (admission.mlaCert001 ? "true" : "false") << ","
