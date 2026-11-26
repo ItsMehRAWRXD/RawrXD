@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstdio>
 #include <filesystem>
 #include <limits>
@@ -28,6 +29,15 @@
 using namespace Deep2;
 
 static int g_failures = 0;
+static const auto g_parityStart = std::chrono::steady_clock::now();
+static void parityStage(const char *phase, const char *stage, const std::string &detail = {})
+{
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - g_parityStart).count();
+    std::printf("[PARITY_STAGE] %s stage=%s elapsed_ms=%lld%s%s\n", phase, stage,
+        static_cast<long long>(ms), detail.empty() ? "" : " ", detail.c_str());
+    std::fflush(stdout);
+}
 
 static void check(bool condition, const char *message)
 {
@@ -62,6 +72,7 @@ static int argmaxTop2(const std::vector<float> &logits, float &top1, float &top2
 
 int main(int argc, char **argv)
 {
+    parityStage("BEGIN", "startup");
     const char *modelPath = argc > 1
                                 ? argv[1]
                                 : "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
@@ -84,22 +95,28 @@ int main(int argc, char **argv)
     cfg.numThreads = 1;
     cfg.maxSeqLen = 1024;
 
+    parityStage("BEGIN", "initialize");
     if (!engine.initialize(cfg))
     {
         std::printf("FAIL: engine initialize\n");
         return 20;
     }
+    parityStage("END", "initialize");
+    parityStage("BEGIN", "loadModel");
     if (!engine.loadModel(modelPath))
     {
         std::printf("FAIL: engine loadModel %s\n", modelPath);
         return 21;
     }
+    parityStage("END", "loadModel");
 
     // Use the authoritative FP32 KV for both prefill legs.
     engine.enableCompressedKV(false);
 
     const std::string promptText = "The capital of France is";
+    parityStage("BEGIN", "tokenize");
     std::vector<int> prompt = engine.tokenize(promptText);
+    parityStage("END", "tokenize", "tokens=" + std::to_string(prompt.size()));
     check(!prompt.empty(), "prompt tokenization empty");
     if (prompt.empty())
         return 22;
@@ -118,12 +135,14 @@ int main(int argc, char **argv)
     std::vector<float> batchedLogits(vocab, 0.0f);
 
     engine.resetInferenceState();
+    parityStage("BEGIN", "prefillSerial");
     const size_t serialDone = engine.prefillSerial(
         prompt.data(), prompt.size(), serialHidden.data());
     check(serialDone == prompt.size(), "prefillSerial did not process full prompt");
     check(engine.getKVCache() && engine.getKVCache()->currentLength() == prompt.size(),
           "prefillSerial KV length mismatch");
     check(serialDone > 0, "prefillSerial produced no hidden state");
+    parityStage("END", "prefillSerial", "processed=" + std::to_string(serialDone));
     if (g_failures != 0) {
         std::printf("S03_ABORT stage=serial_prefill processed=%zu expected=%zu decode=NOT_RUN\n",
                     serialDone, prompt.size());
@@ -133,10 +152,12 @@ int main(int argc, char **argv)
                          serialLogits.data());
 
     engine.resetInferenceState();
+    parityStage("BEGIN", "prefillBatched");
     const size_t batchedDone = engine.prefillBatched(
         prompt.data(), prompt.size(), batchedHidden.data());
     check(batchedDone == prompt.size(), "prefillBatched did not process full prompt");
     check(batchedDone > 0, "prefillBatched produced no hidden state");
+    parityStage("END", "prefillBatched", "processed=" + std::to_string(batchedDone));
     if (g_failures != 0) {
         std::printf("S03_ABORT stage=batched_prefill processed=%zu expected=%zu decode=NOT_RUN\n",
                     batchedDone, prompt.size());
@@ -208,6 +229,7 @@ int main(int argc, char **argv)
     // ---- Reference: full-context recomputation at every step ----
     const size_t steps = 8;
     std::vector<int> reference;
+    parityStage("BEGIN", "referenceGeneration");
     std::vector<int> referencePrefix = prompt;
     std::vector<float> margins;
     std::vector<std::vector<float>> referenceLogits;
@@ -217,11 +239,15 @@ int main(int argc, char **argv)
 
     for (size_t step = 0; step < steps; ++step)
     {
+        parityStage("BEGIN", "referenceStep", "step=" + std::to_string(step) +
+                    " prefix=" + std::to_string(referencePrefix.size()));
         engine.resetInferenceState();
         std::vector<float> hidden(referencePrefix.size() * hiddenDim, 0.0f);
         std::vector<float> logits(vocab, 0.0f);
         const size_t done = engine.prefillSerial(
             referencePrefix.data(), referencePrefix.size(), hidden.data());
+        parityStage("END", "referenceStepPrefill", "step=" + std::to_string(step) +
+                    " processed=" + std::to_string(done));
         check(done == referencePrefix.size(),
               "reference prefillSerial did not process full prefix");
         if (done != referencePrefix.size())
@@ -239,10 +265,13 @@ int main(int argc, char **argv)
         margins.push_back(top1 - top2);
         referenceLogits.push_back(logits);
         referencePrefix.push_back(nextToken);
+        parityStage("END", "referenceStep", "step=" + std::to_string(step) +
+                    " token=" + std::to_string(nextToken));
         std::printf("S03_REF_STEP step=%zu prefixLen=%zu nextToken=%d margin=%.9e\n",
                     step, referencePrefix.size() - 1, nextToken, top1 - top2);
     }
 
+    parityStage("END", "referenceGeneration", "steps=" + std::to_string(steps));
     // ---- Actual: incremental decode through generate() ----
     GenerationOptions opts;
     opts.maxTokens = steps;
@@ -254,9 +283,11 @@ int main(int argc, char **argv)
 
     std::vector<int> out(prompt.size() + steps + 8, 0);
     InferenceStats actualStats{};
+    parityStage("BEGIN", "incrementalGenerate");
     const size_t generated = engine.generate(
         prompt.data(), prompt.size(), out.data(), steps, &actualStats, nullptr);
     std::vector<int> actual(out.begin(), out.begin() + generated);
+    parityStage("END", "incrementalGenerate", "generated=" + std::to_string(generated));
 
     check(generated == steps, "generate did not produce the requested token count");
     check(actual.size() == reference.size(), "actual/reference token count mismatch");
@@ -338,5 +369,8 @@ int main(int argc, char **argv)
                 (maxDecodeAbs <= 1e-3 && decodeNonFinite == 0) ? "PASS" : "FAIL",
                 g_failures);
 
-    return g_failures == 0 ? 0 : 1;
+    parityStage("BEGIN", "shutdown");
+    const int exitCode = g_failures == 0 ? 0 : 1;
+    parityStage("END", "shutdown");
+    return exitCode;
 }
