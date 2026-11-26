@@ -42,6 +42,7 @@
 #include "deep2_resource_governor.hpp"
 #include "StrataExpertResidency.hpp"
 #include "StrataInt8KVCache.hpp"
+#include "quant_dot_dispatch.hpp"
 #include "modelgenie/universal_gguf.hpp"
 
 // Short alias for the governor's move-only lease handle. The resource
@@ -264,7 +265,16 @@ public:
     // routed expert slices into the same fingerprint-validated cache ahead of
     // their dependent dispatch. Default OFF so every previously certified
     // harness runs bit-identically until it opts in.
-    void SetStrataExpertTracking(bool enable) { strata_experts_ = enable; }
+    // R05: enabling Strata expert tracking also enables the base quant-weight
+    // cache's cross-token retention (TrimUnpinnedQuantWeights retains instead of
+    // clearing every block). This is the existing, byte-budgeted, pin-protected
+    // cache -- no new cache system or env control. Disabling restores the legacy
+    // clear-per-block behavior. Bounded by the device weight budget; the
+    // admission LRU still evicts under VRAM pressure.
+    void SetStrataExpertTracking(bool enable) {
+        strata_experts_ = enable;
+        ::RawrXD::Deep2::QuantDot::SetWeightCacheRetention(enable);
+    }
     bool StrataExpertTracking() const { return strata_experts_; }
     // Prefetch routed expert slices at MoE block entry (STRATA_S03). Implies
     // SetStrataExpertTracking(true).
