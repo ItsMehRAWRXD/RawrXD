@@ -5006,13 +5006,24 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
                                 uint64_t stateKey, std::vector<float>& output) {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
     output.clear();
-    if (OneShotBlocked() || gdnPendingSet_ || !initialized_ ||
-        !gdnPipeline_ || !gdnSetLayout_ || !device_ || fused_ ||
-        !mixed || !beta || !alpha || !aLog || !dtBias || !norm || !z ||
-        !keyHeads || !valueHeads || !headDim || valueHeads % keyHeads != 0 ||
-        headDim > 256 || !(epsilon > 0.0f) || !std::isfinite(epsilon) ||
-        !(scale > 0.0f) || !std::isfinite(scale))
+    auto gd_reject = [](const char* why) {
+        if (std::getenv("RR_QD_TRACE"))
+            std::fprintf(stderr, "[GDN_DISPATCH_REJECT] reason=%s\n", why);
         return false;
+    };
+    if (OneShotBlocked()) return gd_reject("oneshot_blocked");
+    if (gdnPendingSet_) return gd_reject("pending");
+    if (!initialized_ || !device_) return gd_reject("not_initialized");
+    if (!gdnPipeline_) return gd_reject("pipeline_missing");
+    if (!gdnSetLayout_) return gd_reject("setlayout_missing");
+    if (fused_) return gd_reject("fused");
+    if (!mixed || !beta || !alpha || !aLog || !dtBias || !norm || !z)
+        return gd_reject("null_tensor");
+    if (!keyHeads || !valueHeads || !headDim || valueHeads % keyHeads != 0)
+        return gd_reject("bad_heads");
+    if (headDim > 256) return gd_reject("head_dim_too_large");
+    if (!(epsilon > 0.0f) || !std::isfinite(epsilon)) return gd_reject("bad_epsilon");
+    if (!(scale > 0.0f) || !std::isfinite(scale)) return gd_reject("bad_scale");
 
     const size_t qkvWidth =
         (static_cast<size_t>(2) * keyHeads + valueHeads) * headDim;
@@ -5022,8 +5033,15 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
         alphaSize != valueHeads || aLogSize != valueHeads ||
         dtBiasSize != valueHeads || normSize != headDim ||
         zSize != valueWidth || stateElements == 0 ||
-        stateElements > std::numeric_limits<size_t>::max() / sizeof(float))
+        stateElements > std::numeric_limits<size_t>::max() / sizeof(float)) {
+        if (std::getenv("RR_QD_TRACE"))
+            std::fprintf(stderr,
+                "[GDN_DISPATCH_REJECT] reason=geometry mixed=%zu/%zu beta=%zu/%u "
+                "norm=%zu/%u z=%zu/%zu\n",
+                mixedSize, qkvWidth, betaSize, valueHeads, normSize, headDim,
+                zSize, valueWidth);
         return false;
+    }
 
     const size_t floatBytes = sizeof(float);
     const VkBufferUsageFlags usage =
