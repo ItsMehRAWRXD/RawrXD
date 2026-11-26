@@ -646,7 +646,8 @@ public:
         // GPU-policy boundary.  Preserve the explicit CPU reference contract.
         const char* cpuOnly = std::getenv("RAWR_REAP_CPU_ONLY");
         const bool cpuReference = cpuOnly && cpuOnly[0] == '1' && cpuOnly[1] == '\0';
-        if (!cpuReference) {
+        if (!cpuReference && (!std::getenv("DEEP2_K2_GPU_MLA") ||
+                              !*std::getenv("DEEP2_K2_GPU_MLA"))) {
 #ifdef _WIN32
             _putenv_s("DEEP2_K2_GPU_MLA", "1");
 #else
@@ -1298,7 +1299,10 @@ private:
         vector<fs::path> paths;
         if (!ReapState::ShardPaths(config_.modelPath, paths)) return false;
         const char* beacon = std::getenv("RAWRXD_BEACONISM");
-        if (beacon && beacon[0] == '1' && beacon[1] == '\0') {
+        const char* strict = std::getenv("RAWRXD_BEACONISM_STRICT");
+        const bool structural = beacon && beacon[0] == '1' && beacon[1] == '\0';
+        const bool strictContent = strict && strict[0] == '1' && strict[1] == '\0';
+        if (structural && !strictContent) {
             ModelIdentity identity;
             if (!ModelIdentity::BuildStructural(paths, modelArchitecture_,
                     static_cast<uint32_t>(modelInfo_.numLayers), 0,
