@@ -12,14 +12,24 @@ template <typename SlotT>
 inline ExecutionDeviceRecord RecordFromVulkanSlot(const SlotT* s) {
     ExecutionDeviceRecord r;
     if (!s) return r;
+    // LIFE-06A/06B: populate physical-device, logical-device, queue and family.
+    r.phys        = s->PhysicalHandle();
     r.dev         = s->DeviceHandle();
-    r.initialized = s->initialized() && s->computeReady();
+    r.queue       = s->ComputeQueue();
+    r.qfam        = s->ComputeQueueFamily();
+    r.initialized = s->initialized() && s->computeReady() && r.queue != VK_NULL_HANDLE;
     const auto& pi = s->physicalInfo();
     r.deviceLUID  = pi.luidValid ? pi.luid : 0;
-    r.deviceLost  = !r.initialized; // conservative: uninitialized == unusable
-    if (auto pd = s->PhysicalHandle()) {
-        const vkbudget::DeviceMemoryBudget b = vkbudget::QueryDeviceMemoryBudget(pd);
-        if (b.provenanceIsBudget) r.measuredCapBytes = b.availableHeadroomBytes;
+    // LIFE-11A/11B: real synchronized runtime device-loss state.
+    r.deviceLost  = s->DeviceLost();
+    // LIFE-06C: preserve explicit budget provenance; a valid 0 is distinct
+    // from an unavailable measurement (budgetKnown).
+    if (r.phys) {
+        const vkbudget::DeviceMemoryBudget b = vkbudget::QueryDeviceMemoryBudget(r.phys);
+        if (b.provenanceIsBudget) {
+            r.measuredCapBytes = b.availableHeadroomBytes;
+            r.budgetKnown = true;
+        }
     }
     return r;
 }

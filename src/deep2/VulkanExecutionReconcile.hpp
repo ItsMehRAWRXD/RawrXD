@@ -35,7 +35,8 @@ struct ExecutionDeviceRecord {
     VkQueue          queue     = VK_NULL_HANDLE;
     uint32_t         qfam      = 0;
     uint64_t         deviceLUID = 0;   // from vkGetPhysicalDeviceProperties2
-    uint64_t         measuredCapBytes = 0; // owner-provided current budget (preferred)
+    uint64_t         measuredCapBytes = 0; // owner-provided current budget
+    bool             budgetKnown = false;  // true => measuredCapBytes is authoritative (incl. valid 0)
     bool             initialized = false; // logical device + compute queue ready
     bool             deviceLost  = false; // runtime device-loss state
 };
@@ -93,10 +94,13 @@ inline bool ReconcileForAdmission(const std::vector<ExecutionDeviceRecord>& exec
         d.name     = match ? match->name     : "";
         d.vendorId = match ? match->vendorId : 0;
         d.deviceId = match ? match->deviceId : 0;
-        // OWN-06/07: prefer the owner-provided current budget; else the Vulkan
-        // EXT budget; else the manager's measured free VRAM. Never capacity.
-        uint64_t budget = e.measuredCapBytes;
-        if (!budget) {
+        // OWN-06/07: prefer the owner-provided current budget (authoritative,
+        // incl. a valid 0); else the Vulkan EXT budget; else the manager's
+        // measured free VRAM. Never capacity. Unknown -> 0 -> fail closed.
+        uint64_t budget = 0;
+        if (e.budgetKnown) {
+            budget = e.measuredCapBytes;
+        } else {
             const vkbudget::DeviceMemoryBudget b = vkbudget::QueryDeviceMemoryBudget(e.phys);
             if (b.provenanceIsBudget) budget = b.availableHeadroomBytes;
             else if (match && match->availableVramKnown) budget = match->availableVram;

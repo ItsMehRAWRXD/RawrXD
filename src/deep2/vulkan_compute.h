@@ -903,6 +903,10 @@ public:
     // LIFE-02: lifetime-safe, non-owning physical-device handle for admission
     // budget queries. Valid only while this VulkanCompute owns the device.
     VkPhysicalDevice PhysicalHandle() const noexcept { return physical_; }
+    // LIFE-02A/06B: expose the existing compute queue + family (non-owning).
+    VkQueue ComputeQueue() const noexcept { return queue_; }
+    // LIFE-11B: synchronized runtime device-loss state (set on VK_ERROR_DEVICE_LOST).
+    bool DeviceLost() const noexcept { return device_lost_.load(std::memory_order_acquire); }
     bool TimelineSemaphoreEnabled() const noexcept {
         return timelineEnabled_ && timelineSemaphore_ != VK_NULL_HANDLE;
     }
