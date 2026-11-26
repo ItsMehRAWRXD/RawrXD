@@ -1,0 +1,45 @@
+BOS absent (id=1)
+PROMPT_TOKENS 1
+  in[0]=15043 ' Hello'
+arch=llama blocks=22 embd=2048 experts=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 0
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+bound ops=311 (2599.7 ms)
+Quant-dot pipeline and permanent descriptor system initialized successfully
+LOGITS prefill pos=0 n=32000 sum=-15506.557146 sumsq=39265.450177 nonfinite=0 top=23650:3.855325,20358:3.762762,31426:3.649073,31873:3.625633,12979:3.496354
+prefill_done 1726.2 ms
+LOGITS prefill_last pos=0 n=32000 sum=-15506.557146 sumsq=39265.450177 nonfinite=0 top=23650:3.855325,20358:3.762762,31426:3.649073,31873:3.625633,12979:3.496354
+LOGITS decode pos=1 n=32000 sum=-15506.557146 sumsq=39265.450177 nonfinite=0 top=23650:3.855325,20358:3.762762,31426:3.649073,31873:3.625633,12979:3.496354
+[tok 0] id=23650 ' Vier'
+LOGITS decode pos=2 n=32000 sum=-76252.854226 sumsq=389511.740982 nonfinite=0 top=479:11.994639,292:11.829982,484:10.378419,4151:9.997252,1847:9.980320
+[tok 1] id=479 'ge'
+LOGITS decode pos=3 n=32000 sum=-97619.912626 sumsq=520003.843150 nonfinite=0 top=29892:10.405743,13:9.521906,29889:9.315061,313:8.979656,2552:8.618108
+[tok 2] id=29892 ','
+LOGITS decode pos=4 n=32000 sum=-103086.670689 sumsq=604049.512479 nonfinite=0 top=263:9.134965,278:8.618444,1058:8.510947,29871:8.178515,322:7.923180
+[tok 3] id=263 ' a'
+LOGITS decode pos=5 n=32000 sum=-121996.926539 sumsq=839342.989164 nonfinite=0 top=14872:9.183035,29871:8.819303,9923:8.366495,1887:8.267206,4642:8.224472
+[tok 4] id=14872 ' Dutch'
+LOGITS decode pos=6 n=32000 sum=-127094.423314 sumsq=859889.496631 nonfinite=0 top=7664:10.206432,23187:9.194878,29899:8.980875,5001:8.720562,14982:8.636071
+[tok 5] id=7664 ' artist'
+LOGITS decode pos=7 n=32000 sum=-121636.482484 sumsq=777681.671842 nonfinite=0 top=1058:13.822293,2998:13.033383,29892:12.515948,5069:12.483990,322:11.892808
+[tok 6] id=1058 ' who'
+LOGITS decode pos=8 n=32000 sum=-127507.010122 sumsq=890104.378520 nonfinite=0 top=2825:12.270544,471:12.004686,756:11.838276,338:11.775481,10017:11.617306
+[tok 7] id=2825 ' created'
+DISPATCH gpu_calls=1395 cpu_calls=0 fallback=<none> nonfinite_logits=0
+S01_EXPERT_LEDGER observations=0 hits=0 misses=0 evictions=0 hit_rate=0.0000 distinct_experts=0
+CHAT_STATUS OK
+RECEIPT evidence\strata_chat_dual_r9700.json
+Released; exiting
+Released all tensors
+Vulkan resources cleaned up successfully

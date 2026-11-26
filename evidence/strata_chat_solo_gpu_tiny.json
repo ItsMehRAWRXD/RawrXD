@@ -1,0 +1,21 @@
+{
+  "tag": "solo_gpu_tiny",
+  "model": "F:\ollamamodels\n4-tiny-oracle.gguf",
+  "prompt_text": "Hello",
+  "prompt_tokens": 1,
+  "prompt_ids": [15043],
+  "generate_tokens": 8,
+  "generated_ids": [23650, 479, 29892, 263, 14872, 7664, 1058, 2825],
+  "cancelled": false,
+  "bind_ms": 2541.36,
+  "prefill_ms": 2082.99,
+  "decode_ms": 1663.78,
+  "total_ms": 6288.13,
+  "decode_tps": 4.80834,
+  "gpu_calls": 1395,
+  "cpu_calls": 0,
+  "fallback": "<none>",
+  "nonfinite_logits": 0,
+  "expert_ledger": {"observations": 0, "hits": 0, "misses": 0, "evictions": 0, "hit_rate": 0, "distinct_experts": 0},
+  "cleanup": "ok"
+}
