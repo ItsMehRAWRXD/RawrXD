@@ -1629,6 +1629,18 @@ if(GLSLC_EXECUTABLE)
     add_custom_target(deep2_tiled4x_qgemv_shader
         DEPENDS "${_deep2_tiled4x_qgemv_output}")
 
+    # REC-05B: independent CPU Q4_K numerical oracle (no GPU deps).
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_q4k_cpu_oracle.cpp")
+        add_executable(deep2_q4k_cpu_oracle tools/deep2_q4k_cpu_oracle.cpp)
+        if(MSVC)
+            target_compile_options(deep2_q4k_cpu_oracle PRIVATE /std:c++20 /utf-8)
+        else()
+            target_compile_options(deep2_q4k_cpu_oracle PRIVATE -std=c++20)
+        endif()
+        set_target_properties(deep2_q4k_cpu_oracle PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    endif()
+
     # The fused MoE accumulator uses the checked-in spec-ops shader for its
     # scaled-add operation.  Keep this binary tied to the GLSL source just as
     # the resident GEMV shader is, otherwise a host-side fix can run against a
