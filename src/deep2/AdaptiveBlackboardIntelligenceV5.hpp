@@ -43,6 +43,8 @@ struct Measured {
     int    tokens = 0;
     bool   consistent = false, valid = false;
     bool   hardwareFailure = false;   // device-lost / forced CPU fallback: NOT a valid perf sample
+    // Categorized failure (0=none,1=transport,2=cancelled,3=numerical,4=resource,5=device).
+    int    failure = 0;
 };
 using ExecutorFn = bool (*)(const Controls&, Measured&);
 
@@ -106,6 +108,7 @@ struct V5Blackboard {
     std::vector<Scored> frontValidated;  // measured, repeat-validated best
     std::vector<Scored> rejected;        // measured-but-rejected (learning evidence)
     std::vector<Scored> hwFailures;      // hardware-failure observations (diagnostic only, never learned)
+    uint64_t failKind[6] = {0,0,0,0,0,0}; // per-category failure counters (transport/cancel/num/resource/device)
 
     Bounds bounds;
 
@@ -300,9 +303,11 @@ static inline void ParetoAdd(std::vector<Scored>& f, const Scored& s) {
 }
 
 static inline int ClampBatch(const V5Blackboard& bb, int b) {
+    if (!bb.caps.batch) b = 32;                       // backend does not support batch control
     return std::max(1, std::min(bb.bounds.maxBatch, b));
 }
 static inline int ClampThreads(const V5Blackboard& bb, int t) {
+    if (!bb.caps.threads) t = 1;                      // backend does not support thread control
     return std::max(1, std::min(bb.bounds.maxThreads, t));
 }
 
@@ -353,14 +358,22 @@ static inline Controls Recombine(V5Blackboard& bb) {
     return c;
 }
 
-// Predictive selection: sample several candidates and pick the best PREDICTED score.
+// Predictive selection: sample candidates and pick the best by the active
+// predictor, biased toward the requested peak-percentage objective. The target is
+// requestedPercent% of the best known peak (observed or validated). Candidates
+// predicted to reach the target are preferred; if none reach it, the highest
+// predicted candidate is chosen (approach the objective). Never fabricates.
 static inline Controls PredictiveSelect(V5Blackboard& bb, int activeP) {
-    Controls bestC = bb.current; double bestP = -1e18;
+    const double basePeak = std::max({bb.objective.observedPeak, bb.objective.validatedPeak, 1.0});
+    const double target = (bb.objective.requestedPercent / 100.0) * basePeak;
+    Controls bestC = bb.current; double bestScore = -1e30;
     const int K = 8;
     for (int i = 0; i < K; ++i) {
         Controls c = (i % 2 == 0) ? Mutate(bb, bb.current, 0.3) : RandomConfig(bb);
         const double p = PredictId(bb, activeP, c);
-        if (p > bestP) { bestP = p; bestC = c; }
+        double score = -std::fabs(p - target);
+        if (p >= target) score += 1000.0;          // prefer reaching the objective
+        if (score > bestScore) { bestScore = score; bestC = c; }
     }
     return bestC;
 }
@@ -533,13 +546,19 @@ static inline void ExploreCycleV5(V5Blackboard& bb, ExecutorFn exec, CycleInfo* 
         info->wasRepeat = wasRepeat;
     }
     if (!ran || !m.valid || m.decodeTps <= 0 || m.hardwareFailure) {
-        // Hardware failure (device-lost / forced CPU fallback) or transport failure:
-        // account it, preserve for diagnostics, but NEVER let it contaminate the
-        // throughput predictors, observation matrix or acceptance. The last
-        // validated healthy best is left intact.
+        // Classify the failure so the engine can respond per category. Transport,
+        // cancellation, numerical, resource and device failures are counted
+        // separately; device/numerical/resource samples are preserved for
+        // diagnostics. NONE of them reach the predictors, obs or acceptance.
+        int kind = m.failure;
+        if (kind == 0) kind = m.hardwareFailure ? 5 : (!ran ? 1 : 3);
+        if (kind < 0 || kind > 5) kind = 3;
+        ++bb.failKind[kind];
         ++bb.failures; ++bb.rejects;
-        if (bb.hwFailures.size() >= V5Blackboard::HW_FAIL_CAP) bb.hwFailures.erase(bb.hwFailures.begin());
-        bb.hwFailures.push_back(Scored{cand, m.prefillTps, m.decodeTps, true});
+        if (kind == 3 || kind == 4 || kind == 5) {
+            if (bb.hwFailures.size() >= V5Blackboard::HW_FAIL_CAP) bb.hwFailures.erase(bb.hwFailures.begin());
+            bb.hwFailures.push_back(Scored{cand, m.prefillTps, m.decodeTps, true});
+        }
         strat.reward = 0.9 * strat.reward + 0.1 * (-0.5);
         strat.useCount += 1.0;
         return;

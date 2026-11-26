@@ -78,6 +78,12 @@ public:
         // Controls.batch maps to the prefill batching capability where available;
         // Deep2Engine resolves its own prefill chunking from model metadata.
 
+        // Request-scoped GPU counters: reset before each call so forwardLayers is
+        // per-request, not cumulative (a cumulative counter cannot detect a
+        // device-lost call that executed zero GPU layers).
+        engine_.resetGpuForwardCounters();
+        engine_.resetDispatchAccount();
+
         const std::vector<int> toks = engine_.tokenize(prompt_);
         if (toks.empty()) return false;
         std::vector<int> out(std::max<size_t>(1, numPredict_));
@@ -100,10 +106,11 @@ public:
             da.cmdDispatchCount, da.queueSubmitCount, da.gpuExecutionNs,
             Deep2::Deep2GpuForward_Resident(gf)
         };
-        // If no GPU forward layers executed, the GPU path did not engage
-        // (device-lost or forced CPU fallback). Flag it so the blackboard treats
-        // this as a hardware failure, not a valid low-performance sample.
+        // If no GPU forward layers executed THIS request, the GPU path did not
+        // engage (device-lost or forced CPU fallback). Flag it as a device failure
+        // so the blackboard isolates it from valid performance samples.
         m.hardwareFailure = (gf.forwardLayers == 0);
+        m.failure = m.hardwareFailure ? 5 : 0;
         return true;
     }
 

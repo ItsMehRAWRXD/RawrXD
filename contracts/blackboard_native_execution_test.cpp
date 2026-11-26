@@ -61,6 +61,10 @@ int main(int argc, char** argv) {
     std::printf("OBJECTIVE requested=%.0f%% observed=%.2f validated=%.2f parity=%d\n",
         bb.objective.requestedPercent, bb.objective.observedPeak,
         bb.objective.validatedPeak, (int)bb.objective.parityCertified);
+    std::printf("FAILKINDS transport=%llu cancel=%llu num=%llu resource=%llu device=%llu\n",
+        (unsigned long long)bb.failKind[1], (unsigned long long)bb.failKind[2],
+        (unsigned long long)bb.failKind[3], (unsigned long long)bb.failKind[4],
+        (unsigned long long)bb.failKind[5]);
 
     int fails = 0;
     auto ck = [&](bool ok, const char* n) { std::printf("%s %s\n", ok ? "OK" : "FAIL", n); if (!ok) ++fails; };
