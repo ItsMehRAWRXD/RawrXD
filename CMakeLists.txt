@@ -1171,6 +1171,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/moe_timing.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1219,6 +1220,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/moe_timing.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1268,6 +1270,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/moe_timing.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1292,6 +1295,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/moe_timing.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1362,6 +1366,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/moe_timing.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
@@ -1408,6 +1413,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dualgpu_forward.cpp" AND
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/moe_timing.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/asm_stubs.cpp
