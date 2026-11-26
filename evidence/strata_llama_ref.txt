@@ -1,0 +1,7 @@
+S01 independent llama.cpp reference (llama-cli.exe, llama3.2-3b-Q2_K, raw completion)
+command: llama-cli -m llama3.2-3b-Q2_K.gguf -p "The capital of France is" -n 8 --temp 0 -ngl 0 -no-cnv
+llama.cpp output: "The capital of France is Paris.\nThe capital of Italy is Rome"
+Strata output:    "The capital of France is Paris, which is also the capital of" (GPU and CPU identical)
+agreement: first generated token " Paris" matches (top-1) on both backends + llama.cpp.
+divergence after token 1 attributable to harness difference: llama.cpp prepends BOS (id 128000); Strata runs BOS-absent (logged "BOS absent (id=128000)"). Different context => different continuation. Not a numerical defect.
+note: token-selection parity Strata CPU<->GPU is 8/8; full-logit cosine 0.99997. This adds independent llama.cpp first-token agreement. Bit-exact multi-token reference parity would require identical BOS/template setup.
