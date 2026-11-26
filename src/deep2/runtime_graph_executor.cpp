@@ -1460,6 +1460,16 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             // become host-valid) and fall through to the single-call path so
             // this op still gets real math on the GPU.
             FlushDotBatch();
+            // Certification must not turn a failed batch admission into an
+            // apparently successful single-dot execution. Keep the supported
+            // production fallback for ordinary runs, but make the contract
+            // fail closed when explicitly requested by acceptance tooling.
+            static const bool strictBatchAdmission =
+                std::getenv("RAWRXD_STRICT_BATCH_ADMISSION") != nullptr;
+            if (strictBatchAdmission) {
+                err = "linear: quantized batch admission rejected for weight=" + w.name;
+                return false;
+            }
         }
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                               x.data(), n_in, y.data(), n_out, cpu,
