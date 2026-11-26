@@ -1,0 +1,41 @@
+HISTORICAL PERFORMANCE RECOVERY — Q4_K_M / tiled4x FINDING (evidence)
+======================================================================
+
+Date: 2026-11-26  Repo: F:\rawrxd  HW: R9700
+
+HISTORICAL LEAD (recovered)
+---------------------------
+- d2fda6be2c  tiled Q4_K GEMV kernel (deep2_qgemv_tiled4x.comp): 4 output rows
+  per workgroup, shared-memory tile reuse, cohort 64-lane processing.
+- 78c0423121 / 3af396fe7f  native Q4_K Vulkan matvec (Stage 6I), parity PASS.
+- 2f8d060f67  TinyLlama Q4_K_M 18-position reference parity.
+- Historical model present: evidence/.../models/tinyllama.gguf (0.62 GB, Q4_K_M).
+
+CURRENT STATE (verified this session)
+-------------------------------------
+- deep2_qgemv_tiled4x.comp (8038 B) and .spv (8132 B) exist; pipeline created
+  (vulkan_compute.cpp:762-765).
+- Gated by RAWRXD_DEEP2_ENABLE_TILED4X=1 (vulkan_compute.cpp:2238).
+- With the env var ON, tinyllama Q4_K_M decode produced BIT-IDENTICAL logits to
+  the reference path (8 tokens, nonfinite=0) — but the [Q4K_TILED4X_DISPATCH]
+  trace NEVER fired.
+- Root cause: the current Q4_K decode uses the FUSED Q4K kernel
+  (gemv_q4k_fused.spv / DispatchGEMVFusedQ4KT), which bypasses the generic
+  dispatchQuant() path where the tiled4x selection lives (useTiled4x requires
+  push.type==12 in dispatchQuant). So tiled4x is present but NOT on the primary
+  decode path.
+
+RECOVERY GAP (precise)
+----------------------
+To recover the historical high-throughput Q4_K path, the tiled4x kernel must be
+reconnected to the fused Q4_K decode (or the fused Q4_K dispatch must route
+through tiled4x), then re-validated for real-model parity and benchmarked on
+R9700 + RX 7800 XT. The historical 8,259 TPS receipt (model/hash/batch) is still
+unrecovered, so the exact historical configuration is not yet a controlled
+comparison.
+
+STATUS
+------
+HISTORICAL_SOURCE_LOCATED=1  TILED4X_PRESENT=1  TILED4X_ON_DECODE_PATH=0
+PARITY_TILED4X=NOT_EXERCISED (kernel not reached)
+CERTIFIED=0 RELEASE=HELD PROMOTE=0
