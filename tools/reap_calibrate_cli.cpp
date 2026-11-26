@@ -31,6 +31,7 @@
 #include <future>
 #include <thread>
 #include <tuple>
+#include <unordered_map>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -1099,6 +1100,76 @@ private:
         return (std::max)(size_t(1), (std::min)(workers, shardCount > 1 ? shardCount - 1 : size_t(1)));
     }
 
+    struct DigestCacheRecord {
+        uintmax_t bytes = 0;
+        int64_t stamp = 0;
+        string digest;
+    };
+
+    fs::path digestCachePath(const fs::path& model) const {
+        if (const char* env = std::getenv("RAWRXD_DIGEST_CACHE_PATH"))
+            if (*env) return fs::u8path(env);
+        return model.parent_path() / ".rawrxd-sha256-cache-v1";
+    }
+
+    static string canonicalPath(const fs::path& p) {
+        error_code ec;
+        const fs::path absolute = fs::weakly_canonical(p, ec);
+        return (ec ? fs::absolute(p, ec) : absolute).string();
+    }
+
+    static bool fileIdentity(const fs::path& path, uintmax_t& bytes, int64_t& stamp) {
+        error_code ec;
+        bytes = fs::file_size(path, ec);
+        if (ec) return false;
+        const auto time = fs::last_write_time(path, ec);
+        if (ec) return false;
+        stamp = static_cast<int64_t>(time.time_since_epoch().count());
+        return true;
+    }
+
+    void loadDigestCache(const fs::path& cachePath) {
+        digestCache_.clear();
+        ifstream in(cachePath);
+        string version;
+        if (!in || !std::getline(in, version) || version != "RAWRXD_DIGEST_CACHE_V1") return;
+        string path, bytesText, stampText, digest;
+        while (std::getline(in, path, '\t') && std::getline(in, bytesText, '\t') &&
+               std::getline(in, stampText, '\t') && std::getline(in, digest)) {
+            try {
+                if (digest.size() != 64) continue;
+                digestCache_[path] = DigestCacheRecord{
+                    static_cast<uintmax_t>(std::stoull(bytesText)),
+                    static_cast<int64_t>(std::stoll(stampText)), digest};
+            } catch (...) { /* corrupt records are ignored */ }
+        }
+    }
+
+    bool cachedDigest(const fs::path& path, string& digest) const {
+        uintmax_t bytes = 0; int64_t stamp = 0;
+        if (!fileIdentity(path, bytes, stamp)) return false;
+        const auto it = digestCache_.find(canonicalPath(path));
+        if (it == digestCache_.end() || it->second.bytes != bytes ||
+            it->second.stamp != stamp || it->second.digest.size() != 64) return false;
+        digest = it->second.digest;
+        return true;
+    }
+
+    void persistDigestCache(const fs::path& cachePath) const {
+        const auto nonce = chrono::steady_clock::now().time_since_epoch().count();
+        const fs::path temp = cachePath.string() + ".tmp-" + std::to_string(nonce);
+        ofstream out(temp, ios::trunc);
+        if (!out) return;
+        out << "RAWRXD_DIGEST_CACHE_V1\n";
+        for (const auto& item : digestCache_)
+            out << item.first << '\t' << item.second.bytes << '\t'
+                << item.second.stamp << '\t' << item.second.digest << '\n';
+        out.close();
+        error_code ec;
+        fs::rename(temp, cachePath, ec);
+        if (ec) fs::remove(temp, ec);
+    }
+
     CalibrationConfig config_;
     unique_ptr<Deep2Engine> engine_;
     chrono::steady_clock::time_point phaseStart_ = chrono::steady_clock::now();
@@ -1120,6 +1191,7 @@ private:
     string modelSha256_;
     string checkpointIdentity_;
     vector<string> checkpointShardDigests_;
+    unordered_map<string, DigestCacheRecord> digestCache_;
     string configHash_;
     fs::path checkpointPath_;
     fs::path outputDir_;
@@ -1310,19 +1382,33 @@ private:
         }
         workers = (std::max)(size_t(1), (std::min)(workers, paths.size() - 1));
 
+        const fs::path cachePath = digestCachePath(paths.front());
+        loadDigestCache(cachePath);
         vector<string> digests(paths.size());
         digests[0] = modelSha256_;
-        for (size_t first = 1; first < paths.size(); first += workers) {
-            const size_t last = (std::min)(paths.size(), first + workers);
+        uintmax_t firstBytes = 0; int64_t firstStamp = 0;
+        if (fileIdentity(paths[0], firstBytes, firstStamp))
+            digestCache_[canonicalPath(paths[0])] = {firstBytes, firstStamp, modelSha256_};
+        vector<size_t> misses;
+        for (size_t i = 1; i < paths.size(); ++i) {
+            if (!cachedDigest(paths[i], digests[i])) misses.push_back(i);
+        }
+        for (size_t first = 0; first < misses.size(); first += workers) {
+            const size_t last = (std::min)(misses.size(), first + workers);
             vector<future<string>> pending;
             pending.reserve(last - first);
-            for (size_t i = first; i < last; ++i) {
+            for (size_t j = first; j < last; ++j) {
+                const size_t i = misses[j];
                 pending.emplace_back(std::async(std::launch::async,
                     [path = paths[i].string()] { return computeFileSha256(path); }));
             }
-            for (size_t i = first; i < last; ++i) {
-                digests[i] = pending[i - first].get();
+            for (size_t j = first; j < last; ++j) {
+                const size_t i = misses[j];
+                digests[i] = pending[j - first].get();
                 if (digests[i].size() != 64) return false;
+                uintmax_t bytes = 0; int64_t stamp = 0;
+                if (!fileIdentity(paths[i], bytes, stamp)) return false;
+                digestCache_[canonicalPath(paths[i])] = {bytes, stamp, digests[i]};
             }
         }
         for (size_t i = 1; i < digests.size(); ++i) {
@@ -1330,6 +1416,7 @@ private:
             checkpointIdentity_ += ":" + digests[i];
         }
         checkpointShardDigests_ = std::move(digests);
+        persistDigestCache(cachePath);
         return true;
     }
 
