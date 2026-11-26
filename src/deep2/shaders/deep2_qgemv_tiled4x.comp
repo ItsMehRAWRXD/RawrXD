@@ -125,27 +125,26 @@ void main() {
     // Primary row for this cohort
     uint r = baseRow + cohort;
 
-    if (r >= pc.rows) {
-        // This cohort has no row to process
-        if (cohort == 0u) y[row] = 0.0f;
-        return;
-    }
-
     // Compute row byte offset
     // Q4_K: 144 bytes per 256-column block
     uint blocksPerRow = (pc.cols + 255u) / 256u;
     uint rowBytes = blocksPerRow * 144u;
 
-    // Check row byte offset bounds
-    if (rowBytes == 0u || rowBytes > pc.weightBytes ||
-        row >= pc.weightBytes / rowBytes) {
-        if (cohort == 0u) y[row] = uintBitsToFloat(0x7fc00000u); // NaN
-        return;
-    }
-    uint rb = row * rowBytes;
-    if (rb > pc.weightBytes - rowBytes) {
-        if (cohort == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
-        return;
+    // Determine whether this cohort owns a valid row. Out-of-range cohorts must
+    // NOT return early: every invocation in the workgroup must reach the shared
+    // barrier() calls below, otherwise tail workgroups (rows not a multiple of
+    // four) deadlock or corrupt memory. Inactive cohorts contribute acc=0 and
+    // skip only the weight-dependent accumulation and the final write.
+    bool rowActive = true;
+    uint rb = 0u;
+    if (r >= pc.rows) {
+        rowActive = false;
+    } else if (rowBytes == 0u || rowBytes > pc.weightBytes ||
+               row >= pc.weightBytes / rowBytes) {
+        rowActive = false;
+    } else {
+        rb = row * rowBytes;
+        if (rb > pc.weightBytes - rowBytes) rowActive = false;
     }
 
     // Accumulator for this cohort's row
@@ -198,7 +197,7 @@ void main() {
             barrier();
 
             // Each cohort accumulates for its respective row
-            if (col < pc.cols) {
+            if (rowActive && col < pc.cols) {
                 acc += q8D * float(q8) * q4k_weight(rb, col);
             }
             barrier();
@@ -217,10 +216,16 @@ void main() {
 
     // Cross-subgroup reduction: one elected invocation per cohort reads
     // subgroupSums for its 4 rows and combines them
-    if (lane == 0u && cohort < 4u && r < pc.rows) {
-        float total = 0.0f;
-        for (uint i = 0u; i < gl_NumSubgroups; ++i)
-            total += subgroupSums[cohort * gl_NumSubgroups + i];
-        y[r] = total;
+    if (lane == 0u && cohort < 4u) {
+        if (rowActive) {
+            float total = 0.0f;
+            for (uint i = 0u; i < gl_NumSubgroups; ++i)
+                total += subgroupSums[cohort * gl_NumSubgroups + i];
+            y[r] = total;
+        } else if (cohort == 0u) {
+            // Primary row of an inactive cohort: publish 0 for a tail row that
+            // does not exist, or NaN for a bounds-invalid row.
+            y[row] = (r >= pc.rows) ? 0.0f : uintBitsToFloat(0x7fc00000u);
+        }
     }
 }
