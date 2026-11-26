@@ -2585,6 +2585,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
     set_target_properties(deep2_agentic_loop PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
+    if(TARGET deep2_tiled4x_qgemv_shader)
+        add_dependencies(deep2_agentic_loop deep2_tiled4x_qgemv_shader)
+    endif()
     message(STATUS "deep2_agentic_loop enabled (Gate 9 agentic E2E harness)")
 endif()
 
