@@ -2079,6 +2079,12 @@ bool VulkanCompute::downloadFromBuffer(
 
     if (!src || !dst || !bytes || bytes > src.size) return false;
 
+    // RAWRXD_VULKAN_RESOURCE_LIFETIME_022: small transfers (the 8 KB D2H class
+    // that preceded the device-lost submission) use a DEDICATED per-call staging
+    // with completion-backed retention, eliminating the shared downloadStaging_
+    // reuse race. Large weight transfers keep the shared path for throughput.
+    if (bytes <= 64u * 1024u) return DownloadBufIsolated(src, dst, bytes);
+
     DeviceBuf* staging = nullptr;
     void* mapped = nullptr;
     if (!ensureMappedStaging(false, bytes, staging, mapped)) return false;
