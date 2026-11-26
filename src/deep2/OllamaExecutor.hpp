@@ -29,6 +29,7 @@ namespace ollama {
 static std::atomic<bool> g_cancel{false};
 inline void RequestCancel() { g_cancel.store(true); }
 inline void ClearCancel()   { g_cancel.store(false); }
+inline int& RecvTimeoutMs() { static int t = 120000; return t; }
 
 // RAII wrapper for a WinHTTP handle so cleanup is exception/early-return safe.
 namespace detail {
@@ -63,7 +64,7 @@ inline std::string HttpDo(const wchar_t* method, const std::wstring& host, int p
     if (!hr.ok()) return out;
 
     // Bounded timeouts (ms): resolve, connect, send, receive.
-    WinHttpSetTimeouts(hr.get(), 5000, 5000, 30000, 120000);
+    WinHttpSetTimeouts(hr.get(), 5000, 5000, 30000, (DWORD)RecvTimeoutMs());
 
     const std::wstring hdr = L"Content-Type: application/json\r\n";
     BOOL sent;

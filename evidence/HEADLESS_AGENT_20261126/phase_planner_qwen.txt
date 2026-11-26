@@ -1,0 +1,6 @@
+RAWRXD_POLYMORPHIC_AUTONOMOUS_INTELLIGENCE_039 — phase-planner acceptance (qwen3:8b)
+REQUESTS=24 PROMPT_TOKENS=67421 EVAL_TOKENS=21761 PREFILL_TPS=19354.68 DECODE_TPS=76.26
+TOOL_CALLS=24 TOOL_OK=19 CORRECTIONS=5 (repeated-action recovery)
+Real source produced: sysmon.cpp (3438 bytes, uses GetSystemTimes/GlobalMemoryStatusEx/GetDiskFreeSpaceExW/EnumDisplayDevicesW)
+Stuck at phase 3 (build errors not fixed within 24 turns). EVIDENCE functional=0 RESULT=INCOMPLETE
+Controller improvements verified: deterministic phase planner, functional launch gate, no-progress + repeated-action recovery, compiler discovery, 300s timeout.

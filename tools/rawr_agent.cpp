@@ -135,6 +135,29 @@ static bool VerifyFunctional() {
     return alive || code == 0;   // launched and did not immediately crash
 }
 
+// Deterministic phase planner: derive the next generic development step from the
+// OBSERVED workspace state (not hardcoded to the solution). Advances the objective.
+static int ComputePhase() {
+    namespace fs = std::filesystem;
+    bool src = fs::exists(fs::path(g_ws) / "sysmon.cpp");
+    bool build = fs::exists(fs::path(g_ws) / "build.cmd");
+    bool exe = fs::exists(fs::path(g_ws) / "sysmon.exe");
+    if (!src) return 1;
+    if (!build) return 2;
+    if (!exe) return 3;
+    return 5;
+}
+static string PhaseDirective(int p) {
+    switch (p) {
+        case 1: return "Write the file sysmon.cpp NOW using the write tool. It MUST use GetSystemTimes (CPU), GlobalMemoryStatusEx (memory), GetDiskFreeSpaceExW (disk), EnumDisplayDevicesW (GPU) and a Win32 GUI window with a 1s timer. Do NOT list again.";
+        case 2: return "Write build.cmd that calls vcvars64.bat then cl /std:c++17 /EHsc sysmon.cpp /Fe:sysmon.exe /link user32.lib gdi32.lib. Do NOT list.";
+        case 3: return "Run build.cmd with the run tool and READ the compiler output.";
+        case 4: return "Fix the compiler errors in sysmon.cpp/build.cmd, then run build.cmd again.";
+        case 5: return "sysmon.exe exists. Verify it launches, then call finish.";
+        default: return "Inspect the workspace with list.";
+    }
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -157,6 +180,7 @@ int main(int argc, char** argv) {
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
     g_tel.start = NowS();
+    rawrxd::ollama::RecvTimeoutMs() = 300000;   // long agentic calls
     SetConsoleCtrlHandler(CtrlHandler, TRUE);
     // Compiler discovery: tell the model the real build environment.
     string envNote;
@@ -187,6 +211,9 @@ int main(int argc, char** argv) {
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
     for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
+        // Deterministic polymorphic planning: inject the current objective step.
+        int phase = ComputePhase();
+        msgs.push_back({"user", "CURRENT_STEP: " + PhaseDirective(phase)});
         // Build /api/chat body.
         string body = "{\"model\":\"" + model + "\",\"stream\":false,\"keep_alive\":\"10m\",\"options\":{\"temperature\":0,\"seed\":42},\"messages\":[";
         for (size_t i = 0; i < msgs.size(); ++i) {
@@ -205,8 +232,15 @@ int main(int argc, char** argv) {
         string content = ExtractJsonString(resp, "content");
         string call = FirstJsonObject(content);
         string tool = ExtractJsonString(call, "tool");
-        printf("[turn %d] model_tool=%s\n", turn, tool.empty() ? "(none)" : tool.c_str());
+        printf("[turn %d] model_tool=%s (phase=%d)\n", turn, tool.empty() ? "(none)" : tool.c_str(), phase);
         if (tool.empty()) { msgs.push_back({"user", "You must output exactly one JSON tool call."}); continue; }
+        // No-progress recovery: reject repeated inspection once source is required.
+        if (tool == "list" && phase >= 1 && ComputePhase() >= 1) {
+            msgs.push_back({"assistant", content});
+            msgs.push_back({"user", "Inspection is complete. CURRENT_STEP: " + PhaseDirective(ComputePhase())});
+            g_tel.corrections++; repeatCount = 0;
+            continue;
+        }
         ++g_tel.toolCalls;
         // Repeated-action detection: identical tool call 3x => corrective feedback.
         if (!call.empty() && call == lastCall) {
