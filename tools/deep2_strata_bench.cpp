@@ -554,6 +554,17 @@ int main(int argc, char* argv[])
         std::printf("S04_TRANSFER h2d_gbps=%.2f d2h_gbps=%.2f bytes_moved=%.0f\n",
                     pcie.h2d_gbps, pcie.d2h_gbps, pcie.bytes_moved);
 
+    const char* legacyRetentionEnv = std::getenv("RAWRXD_STRATA_RETAIN_WEIGHTS");
+    std::printf("STRATA_RETENTION_POLICY effective=%s source=%s\n",
+                strata_retain_weights ? "ON" : "OFF",
+                strata_retain_weights ? "--strata-retain-weights" : "default");
+    if (legacyRetentionEnv && *legacyRetentionEnv) {
+        std::fprintf(stderr,
+                     "STRATA_RETENTION_CONFIG_IGNORED env=RAWRXD_STRATA_RETAIN_WEIGHTS "
+                     "use --strata-retain-weights\n");
+    }
+    std::fflush(stdout);
+
     const auto bind_t0 = std::chrono::steady_clock::now();
     std::printf("ingesting %s ...\n", model.c_str());
     const Universal::IngestReport& rep = Universal::Ingest(model, false);
