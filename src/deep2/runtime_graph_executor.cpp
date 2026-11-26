@@ -5413,12 +5413,6 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                         biasName += ".bias";
                     }
                     auto bit = slot_by_name_.find(biasName);
-                    // Fail closed when the model declares this projection must
-                    // carry a bias (the attn_q/k/v family the loader keyed off)
-                    // but the tensor is missing or unresolved.
-                    const bool mustHave = biasName.find(".attn_q.") != std::string::npos ||
-                                          biasName.find(".attn_k.") != std::string::npos ||
-                                          biasName.find(".attn_v.") != std::string::npos;
                     if (bit != slot_by_name_.end()) {
                         const TensorRec& bt = tensors_[(size_t)bit->second];
                         std::vector<float> bv;
@@ -5431,9 +5425,20 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                             return false;
                         }
                         for (size_t i = 0; i < y.size(); ++i) y[i] += bv[i];
-                    } else if (mustHave) {
-                        last_error_ = "linear: declared bias tensor missing: " + biasName;
-                        return false;
+                    } else {
+                        // TB-06C: per-weight bias resolution. A projection is
+                        // bias-free unless the bias tensor is genuinely declared
+                        // (present in the directory) but unresolved. The old
+                        // name-pattern mustHave forced a bias for every attn_q/k/v
+                        // even when the language weight has no bias twin (the
+                        // vision v.* namespace carries the only biases).
+                        bool declared = false;
+                        for (const auto& t : tensors_)
+                            if (t.name == biasName) { declared = true; break; }
+                        if (declared) {
+                            last_error_ = "linear: declared bias tensor missing: " + biasName;
+                            return false;
+                        }
                     }
                     // no sibling and no declaration -> bias-free, unchanged
                 }

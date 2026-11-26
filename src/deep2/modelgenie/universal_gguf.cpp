@@ -558,9 +558,12 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".ssm_conv1d.bias") != std::string::npos) return Role::SsmConv1dB;
     // Architecture-safe: match .ssm_dt as a whole name component
     // (.ssm_dt.weight / .ssm_dt.bias / exact .ssm_dt), not a bare substring, so
-    // .ssm_d and unrelated names are unaffected.
+    // .ssm_d and unrelated names are unaffected. Length via sizeof (no hardcode).
+    static constexpr char kSsmDtSuffix[] = ".ssm_dt";
+    constexpr size_t kSsmDtLen = sizeof(kSsmDtSuffix) - 1; // 7
     if (n.find(".ssm_dt.") != std::string::npos ||
-        (n.size() >= 8 && n.compare(n.size() - 8, 8, ".ssm_dt") == 0))
+        (n.size() >= kSsmDtLen &&
+         n.compare(n.size() - kSsmDtLen, kSsmDtLen, kSsmDtSuffix) == 0))
         return Role::SsmDtB;
     if (n.find(".ssm_d") != std::string::npos) return Role::SsmD;
     if (n.find(".ssm_in.weight") != std::string::npos) return Role::SsmIn;
