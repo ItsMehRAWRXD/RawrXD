@@ -85,11 +85,25 @@ public:
     {
         if (!executor_) return false;
         const auto t0 = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < tokens.size(); ++i) {
-            if (!executor_->ExecuteToken(tokens[i], i)) return false;
-        }
+        if (!PrefillChunked(tokens, 0)) return false;
         stats_.prefillMs = ElapsedMs(t0);
         stats_.promptTokens = tokens.size();
+        return true;
+    }
+
+    // Append `tokens` starting at absolute position `startPos`, reusing the KV
+    // cache already committed for positions < startPos (persistent-session
+    // incremental prefill). The caller MUST guarantee `tokens` continues the
+    // committed prefix exactly; on any mismatch the caller must reopen and use
+    // Prefill() instead so stale KV is never reused.
+    bool PrefillFrom(size_t startPos, const std::vector<uint32_t>& tokens)
+    {
+        if (!executor_) return false;
+        const auto t0 = std::chrono::steady_clock::now();
+        if (!PrefillChunked(tokens, startPos)) return false;
+        stats_.prefillMs = ElapsedMs(t0);
+        stats_.promptTokens = startPos + tokens.size();
+        stats_.generatedTokens = 0;
         return true;
     }
 
@@ -135,6 +149,31 @@ public:
     }
 
 private:
+    // Batched prompt prefill: process tokens in chunks through the executor's
+    // production PrefillBatch (batched projections, per-token attention/MoE in
+    // causal order, KV committed per position). If a chunk's batched pass is
+    // unavailable or fails, fall back to the serial ExecuteToken reference for
+    // the remainder so correctness is always preserved (KV writes are
+    // idempotent per position, so re-processing is safe).
+    bool PrefillChunked(const std::vector<uint32_t>& tokens, size_t startPos)
+    {
+        constexpr size_t kChunk = 64;
+        for (size_t i = 0; i < tokens.size(); i += kChunk) {
+            const size_t n = (kChunk < tokens.size() - i) ? kChunk
+                                                          : (tokens.size() - i);
+            std::vector<uint32_t> chunk(tokens.begin() + i,
+                                        tokens.begin() + i + n);
+            if (executor_->PrefillBatch(chunk, startPos + i, nullptr)) continue;
+            // Serial reference fallback for the remainder.
+            for (size_t j = i; j < tokens.size(); ++j) {
+                if (!executor_->ExecuteToken(tokens[j], startPos + j))
+                    return false;
+            }
+            return true;
+        }
+        return true;
+    }
+
     static double ElapsedMs(std::chrono::steady_clock::time_point t0)
     {
         return std::chrono::duration<double, std::milli>(

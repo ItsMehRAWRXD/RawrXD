@@ -217,108 +217,194 @@ static InferenceResult deep2Complete(Deep2Engine& engine,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Strata production completion adapter (Track F).
+// Persistent Strata session runner (Track F).
 //
-// Routes agent-loop turns through the SAME production text-inference core the
-// native IDE bridge uses (rawrxd::StrataTextRunner) with a model-identity
-// matched tokenizer. This is the missing connection between Strata inference
-// and the production autonomous controller (rawr::runAgentController): the
-// controller owns orchestration, permissions, the structured tool-call parser
-// and the execution feedback loop; this adapter only supplies real, model
-// generated content for each reasoning turn.
+// Holds ONE rawrxd::deep2::StrataChatSession (and its KV cache + expert
+// residency) alive across agent turns. Each turn extends the prior prompt; when
+// the new prompt's token vector is a prefix-stable extension of the previous
+// one, only the new suffix is prefilled (PrefillFrom) so the KV already
+// committed for earlier positions is reused -- no model reload and no full
+// re-prefill. When the prefix changes (controller digest truncation, recent-
+// message eviction, or a tokenization boundary merge), the session is reopened
+// and fully re-prefilled so stale KV is never reused. The resident Deep2Engine
+// tokenizer supplies model-identity-matched tokens.
 //
-// Residency: the caller keeps `tokenizer` (a Deep2Engine holding the GGUF) alive
-// for the whole session, so the model is loaded once and stays resident across
-// iterations. Conversation context is carried by the controller's message list
-// (it rebuilds the full prompt each turn). Expert-cache residency is per-session
-// inside StrataTextRunner (a fresh StrataChatSession per Run); that is the
-// established production behaviour of the shared core and is not weakened here.
+// This is the production connection between Strata inference and the autonomous
+// controller (rawr::runAgentController): the controller owns orchestration,
+// permissions, the structured tool-call parser and the execution feedback loop;
+// this runner only supplies real, model-generated content per reasoning turn.
 //
-// Fail-closed: Open/Prefill/Step failures, cancellation and empty generation are
-// reported as !ok / canceled rather than silently falling back to another
-// backend or fabricating content.
+// Fail-closed: open/prefill/step failures, cancellation and empty generation are
+// reported as !ok / canceled, never silently substituted or fabricated.
 // ─────────────────────────────────────────────────────────────────────────
-static InferenceResult strataComplete(const std::string& modelPath,
-                                      Deep2Engine& tokenizer,
-                                      const std::vector<json>& messages,
-                                      int maxTokens) {
-    InferenceResult result;
-    result.ok = false;
+class PersistentStrataRunner {
+public:
+    PersistentStrataRunner(const std::string& modelPath, Deep2Engine& tokenizer)
+        : modelPath_(modelPath), tokenizer_(tokenizer) {}
 
-    // Flatten the controller's message list into a single prompt using the same
-    // general "role: content" layout deep2Complete uses, so the model's
-    // structured JSON tool calls remain parseable by runAgentController.
-    std::string prompt;
-    for (const auto& m : messages) {
-        const std::string role = m.value("role", std::string("user"));
-        const std::string content = m.value("content", std::string());
-        if (content.empty()) continue;
-        if (!prompt.empty()) prompt += "\n\n";
-        prompt += role + ": " + content;
-    }
-    if (prompt.empty()) {
-        result.error = "empty prompt";
-        return result;
-    }
+    InferenceResult Complete(const std::vector<json>& messages, int maxTokens) {
+        InferenceResult result;
+        result.ok = false;
 
-    rawrxd::StrataTextRunner runner(
-        modelPath,
-        [&tokenizer](const std::string& t) { return tokenizer.tokenize(t); },
-        [&tokenizer](const std::vector<int>& ids) {
-            return tokenizer.detokenize(ids);
-        });
+        // Flatten the controller's message list into a single prompt using the
+        // same general "role: content" layout deep2Complete uses, so the model's
+        // structured JSON tool calls remain parseable by runAgentController.
+        std::string prompt;
+        for (const auto& m : messages) {
+            const std::string role = m.value("role", std::string("user"));
+            const std::string content = m.value("content", std::string());
+            if (content.empty()) continue;
+            if (!prompt.empty()) prompt += "\n\n";
+            prompt += role + ": " + content;
+        }
+        if (prompt.empty()) {
+            result.error = "empty prompt";
+            return result;
+        }
 
-    rawrxd::StrataRunOptions opt;
-    opt.maxTokens = static_cast<size_t>((std::max)(1, maxTokens));
-    opt.cancelled = []() {
-        return InterlockedCompareExchange(&g_interrupted, 0, 0) != 0;
-    };
-    int deltas = 0;
-    if (!g_json) {
-        opt.onText = [&deltas](const std::string& piece) {
-            if (!piece.empty()) {
-                std::fwrite(piece.data(), 1, piece.size(), stderr);
-                ++deltas;
+        const std::vector<int> tokInt = tokenizer_.tokenize(prompt);
+        const std::vector<uint32_t> cur(tokInt.begin(), tokInt.end());
+        if (cur.empty()) {
+            result.error = "empty tokenization";
+            return result;
+        }
+
+        // Reuse only when the previous prompt tokens are an EXACT prefix of the
+        // current ones (prefix-stable extension). Any mismatch falls back to a
+        // clean full reset so stale KV is never reused.
+        bool prefixMatch = opened_ && prevTokens_.size() <= cur.size();
+        if (prefixMatch) {
+            for (size_t i = 0; i < prevTokens_.size(); ++i) {
+                if (prevTokens_[i] != cur[i]) { prefixMatch = false; break; }
             }
-        };
+        }
+
+        double openMs = 0.0;
+        double prefillMs = 0.0;
+        if (!prefixMatch) {
+            // First turn or prefix changed: (re)open and fully prefill.
+            session_ = std::make_unique<rawrxd::deep2::StrataChatSession>();
+            rawrxd::deep2::StrataChatOptions so;
+            so.gpu = true;
+            so.expertTracking = true;
+            const auto openT0 = std::chrono::steady_clock::now();
+            const bool openedOk = session_->Open(modelPath_, so);
+            openMs = std::chrono::duration<double, std::milli>(
+                         std::chrono::steady_clock::now() - openT0)
+                         .count();
+            if (!openedOk) {
+                result.error = session_->Stats().error.empty()
+                                   ? "strata session open failed"
+                                   : session_->Stats().error;
+                opened_ = false;
+                prevTokens_.clear();
+                return result;
+            }
+            const auto preT0 = std::chrono::steady_clock::now();
+            const bool preOk = session_->Prefill(cur);
+            prefillMs = std::chrono::duration<double, std::milli>(
+                            std::chrono::steady_clock::now() - preT0)
+                            .count();
+            if (!preOk) {
+                result.error = session_->Stats().error.empty()
+                                   ? "strata prefill failed"
+                                   : session_->Stats().error;
+                opened_ = false;
+                prevTokens_.clear();
+                return result;
+            }
+        } else {
+            // Incremental: prefill only the new suffix from the committed prefix.
+            std::vector<uint32_t> suffix(cur.begin() + prevTokens_.size(), cur.end());
+            const auto preT0 = std::chrono::steady_clock::now();
+            const bool preOk = session_->PrefillFrom(prevTokens_.size(), suffix);
+            prefillMs = std::chrono::duration<double, std::milli>(
+                            std::chrono::steady_clock::now() - preT0)
+                            .count();
+            if (!preOk) {
+                result.error = session_->Stats().error.empty()
+                                   ? "strata incremental prefill failed"
+                                   : session_->Stats().error;
+                opened_ = false;  // force a clean reset next turn
+                prevTokens_.clear();
+                return result;
+            }
+        }
+        opened_ = true;
+        const size_t totalPrompt = cur.size();
+        // P0 prefill instrumentation: authoritative prompt size, open vs prefill
+        // split, sustained prefill throughput and whether KV was reused.
+        const double prefillTps =
+            prefillMs > 0.0 ? (totalPrompt * 1000.0 / prefillMs) : 0.0;
+        std::fprintf(stderr,
+                     "PREFILL tokens=%zu open_ms=%.1f prefill_ms=%.1f tps=%.2f "
+                     "reuse=%d\n",
+                     totalPrompt, openMs, prefillMs, prefillTps,
+                     prefixMatch ? 1 : 0);
+
+        size_t generated = 0;
+        std::vector<int> genIds;
+        int deltas = 0;
+        const size_t maxTok = static_cast<size_t>((std::max)(1, maxTokens));
+        for (size_t i = 0; i < maxTok; ++i) {
+            if (InterlockedCompareExchange(&g_interrupted, 0, 0) != 0) break;
+            uint32_t nt = 0;
+            // StrataChatSession::Step returns the raw token id; it does not
+            // populate tokenText. Detokenize the id sequence with the resident
+            // model-matched tokenizer at the end.
+            if (!session_->Step(nt, nullptr)) break;  // step failure
+            genIds.push_back(static_cast<int>(nt));
+            ++generated;
+        }
+        session_->Finalise();
+        const std::string text = tokenizer_.detokenize(genIds);
+        if (!g_json && !text.empty()) {
+            std::fwrite(text.data(), 1, text.size(), stderr);
+            deltas = 1;
+        }
+        const bool canceled =
+            InterlockedCompareExchange(&g_interrupted, 0, 0) != 0;
+        if (!g_json && deltas > 0) std::fputc('\n', stderr);
+        std::fprintf(stderr,
+                     "STREAM_DELTAS=%d CANCELED=%d GENERATED=%zu PROMPT_TOKENS=%zu\n",
+                     deltas, canceled ? 1 : 0, generated, totalPrompt);
+        prevTokens_ = cur;  // next turn may extend this prompt
+
+        if (canceled) {
+            result.canceled = true;
+            result.content = text;
+            result.ok = !text.empty();
+            result.finishReason = "cancelled";
+            result.completionTokens = static_cast<int>(generated);
+            if (!result.ok) result.error = "cancelled before tokens";
+            return result;
+        }
+        if (text.empty()) {
+            result.error = "empty generation";
+            result.completionTokens = 0;
+            return result;
+        }
+        result.ok = true;
+        result.content = text;
+        result.finishReason = "stop";
+        result.completionTokens = static_cast<int>(generated);
+        result.promptTokens = static_cast<int>(totalPrompt);
+        return result;
     }
 
-    const rawrxd::StrataRunResult rr = runner.Run(prompt, opt);
-    if (!g_json && deltas > 0) std::fputc('\n', stderr);
-    const bool canceled =
-        opt.cancelled() || InterlockedCompareExchange(&g_interrupted, 0, 0) != 0;
-    std::fprintf(stderr, "STREAM_DELTAS=%d CANCELED=%d\n", deltas,
-                 canceled ? 1 : 0);
+    void Reset() {
+        session_.reset();
+        opened_ = false;
+        prevTokens_.clear();
+    }
 
-    if (canceled) {
-        result.canceled = true;
-        result.content = rr.text;
-        result.ok = !rr.text.empty();
-        result.finishReason = "cancelled";
-        result.completionTokens = static_cast<int>(rr.text.size());
-        if (!result.ok) result.error = "cancelled before tokens";
-        return result;
-    }
-    if (!rr.ok) {
-        // Prefill/step/open failure: report the real reason, never substitute.
-        result.error = rr.error.empty() ? "strata inference failed" : rr.error;
-        result.content = rr.text;
-        result.completionTokens = static_cast<int>(rr.text.size());
-        return result;
-    }
-    if (rr.text.empty()) {
-        result.error = "empty generation";
-        return result;
-    }
-    result.ok = true;
-    result.content = rr.text;
-    result.finishReason = "stop";
-    // StrataRunResult does not surface a generated-token count; approximate from
-    // the produced text for telemetry only (the controller never gates on it).
-    result.completionTokens = static_cast<int>(rr.text.size());
-    result.promptTokens = static_cast<int>(prompt.size());
-    return result;
-}
+private:
+    const std::string& modelPath_;
+    Deep2Engine& tokenizer_;
+    std::unique_ptr<rawrxd::deep2::StrataChatSession> session_;
+    std::vector<uint32_t> prevTokens_;
+    bool opened_ = false;
+};
 
 enum ExitCode {
     EXIT_OK = 0,
@@ -1470,6 +1556,9 @@ static int cmdRun(const std::vector<std::string>& args) {
     // Track F: resident tokenizer for the Strata route. Kept alive for the whole
     // session so the GGUF is loaded once and stays resident across agent turns.
     std::unique_ptr<Deep2Engine> strataTokenizer;
+    // Track F: persistent Strata session (KV + expert residency reused across
+    // turns; full reset only when the prompt prefix changes).
+    std::unique_ptr<PersistentStrataRunner> strataRunner;
     InferenceClient httpClient; // lives for whole cmdRun (HTTP/Ollama path)
     // NOTE: completeFn must not capture temporaries — both backends above stay
     // in function scope so agent-loop callbacks remain valid.
@@ -1511,14 +1600,15 @@ static int cmdRun(const std::vector<std::string>& args) {
             return EXIT_NO_INFERENCE;
         }
         Deep2Engine* tokPtr = strataTokenizer.get();
-        completeFn = [tokPtr, modelPath](const std::vector<json>& msgs,
-                                         int maxTokens) {
-            return strataComplete(modelPath, *tokPtr, msgs, maxTokens);
+        strataRunner = std::make_unique<PersistentStrataRunner>(modelPath, *tokPtr);
+        PersistentStrataRunner* runnerPtr = strataRunner.get();
+        completeFn = [runnerPtr](const std::vector<json>& msgs, int maxTokens) {
+            return runnerPtr->Complete(msgs, maxTokens);
         };
         if (!g_json) {
             out("RawrXD Local Agent (Strata backend)");
             out("Model:    " + model);
-            out("Backend:  strata (expert-residency in-process inference)");
+            out("Backend:  strata (expert-residency in-process inference, persistent session)");
             out("Mode:     " + std::string(mode->name) + " - " +
                 std::string(mode->description));
             out("Root:     " + ws.root());
