@@ -1041,7 +1041,7 @@ public:
         }
 
         if (config_.saliencyCapture) {
-            if (g_refRouting.failed || g_refExpertOut.failed || modelSha256_.empty() ||
+            if (g_refRouting.failed || g_refExpertOut.failed || checkpointIdentity_.empty() ||
                 !ReapCapture::CompleteCounts(g_refRouting.captures, g_refExpertOut.shared,
                     g_refExpertOut.routed, g_refExpertOut.records, modelInfo_.numActiveExperts)) {
                 cerr << "Incomplete paired saliency capture; no completion receipt emitted" << endl;
@@ -1058,7 +1058,8 @@ public:
                     << "\nrouted_records\t" << g_refExpertOut.routed
                     << "\nexpert_count\t" << modelInfo_.numExperts
                     << "\ntop_k\t" << modelInfo_.numActiveExperts
-                    << "\nfirst_shard_sha256\t" << modelSha256_
+                    << "\nidentity_kind\t" << (modelSha256_.empty() ? "metadata_structural" : "sha256_content")
+                    << "\ncheckpoint_identity\t" << checkpointIdentity_
                     << "\nlayer_filter\t" << config_.dumpRoutingLayer
                     << "\nrewrite_authorized\t0\n";
             for (size_t layer = 0; layer < expectedSaliencyLayers_.size(); ++layer)
@@ -1198,7 +1199,8 @@ private:
                 << "\nrouted_records\t" << finalState.observations*identity.topK
                 << "\nexpert_count\t" << identity.experts
                 << "\ntop_k\t" << identity.topK
-                << "\nfirst_shard_sha256\t" << modelSha256_
+                << "\nidentity_kind\t" << (modelSha256_.empty() ? "metadata_structural" : "sha256_content")
+                << "\ncheckpoint_identity\t" << checkpointIdentity_
                 << "\nlayer_filter\t-1\nrewrite_authorized\t0\n";
         for (size_t layer=0;layer<expectedSaliencyLayers_.size();++layer)
             if (expectedSaliencyLayers_[layer]) receipt<<"expected_layer\t"<<layer<<'\n';
@@ -1498,7 +1500,9 @@ private:
 
     bool writeBeaconExecutionReceipt() const {
         const fs::path path = fs::path(config_.outputDir) / "beaconism_execution.receipt";
-        std::ofstream out(path, std::ios::trunc);
+        fs::path tmp = path;
+        tmp += ".tmp";
+        std::ofstream out(tmp, std::ios::trunc);
         if (!out) return false;
         out << "beaconism_schema=2\n"
             << "execution_kind=reap_calibration\n"
@@ -1507,7 +1511,11 @@ private:
             << "expert_observations=" << beaconExpertObservations_ << '\n'
             << "structural_identity=" << checkpointIdentity_ << '\n'
             << "payload_identity_hash_required=0\n";
-        return static_cast<bool>(out);
+        out.close();
+        if (!out) return false;
+        std::error_code ec;
+        fs::rename(tmp, path, ec);
+        return !ec;
     }
     
     bool writeFinalOutput() {
