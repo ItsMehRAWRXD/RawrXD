@@ -4038,11 +4038,13 @@ bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
     const size_t evictedBytes = beforeBytes - weightCacheBytes_;
     std::fprintf(stderr,
                  "[GPU_RESIDENCY] block=%u pinned_weight_bytes=%zu "
-                 "cached_weight_bytes=%zu live_allocation_count=%zu "
+                 "cached_weight_bytes=%zu weight_budget_bytes=%zu "
+                 "live_allocation_count=%zu "
                  "live_device_bytes=%zu live_device_allocations=%llu "
                  "evicted_weight_bytes=%zu resident_reclaimed_bytes=%zu "
                  "heap_headroom_bytes=%zu\n",
                  completedBlock, pinnedWeightBytes_, weightCacheBytes_,
+                 weightBudgetBytes_,
                  static_cast<size_t>(liveDeviceAllocations_),
                  liveDeviceBytes_,
                  static_cast<unsigned long long>(liveDeviceAllocations_),

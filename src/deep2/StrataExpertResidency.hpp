@@ -119,6 +119,20 @@ public:
         // and increments the touched (block, expert) frequency.
         AgeHotness();
         hot_[Key{block, expert}] += 1;
+        // R04 reuse-distance: accesses since the previous touch of this slice.
+        {
+            auto it = last_access_.find(k3);
+            if (it != last_access_.end()) {
+                const uint64_t d = access_seq_ - it->second;
+                ++reuse_samples_;
+                reuse_sum_ += d;
+                if (d > reuse_max_) reuse_max_ = d;
+                if (d <= 1024) ++reuse_win1k_;
+                if (d <= 16384) ++reuse_win16k_;
+            }
+            last_access_[k3] = access_seq_;
+            ++access_seq_;
+        }
     }
 
     // Record a prefetch outcome (S03).
@@ -198,6 +212,12 @@ public:
         uint64_t accesses = 0;         // logical expert accesses = hits + misses
         uint64_t admissions = 0;       // physical placements = misses (each miss places)
         uint64_t transferred_bytes = 0;// weight bytes moved on admissions (misses)
+        // R04 reuse-distance summary (mean/max and locality windows).
+        uint64_t reuse_samples = 0;
+        double   reuse_mean_distance = 0.0;
+        uint64_t reuse_max_distance = 0;
+        uint64_t reuse_within_1k = 0;
+        uint64_t reuse_within_16k = 0;
     };
 
     Summary Snapshot() const
@@ -216,6 +236,11 @@ public:
         s.accesses = total;
         s.admissions = misses_;
         s.transferred_bytes = transferred_bytes_;
+        s.reuse_samples = reuse_samples_;
+        s.reuse_mean_distance = reuse_samples_ ? (double)reuse_sum_ / (double)reuse_samples_ : 0.0;
+        s.reuse_max_distance = reuse_max_;
+        s.reuse_within_1k = reuse_win1k_;
+        s.reuse_within_16k = reuse_win16k_;
         return s;
     }
 
@@ -231,6 +256,10 @@ public:
         resident_.clear();
         hits_ = misses_ = evictions_ = prefetch_submits_ = prefetch_hits_ = 0;
         transferred_bytes_ = 0;
+        access_seq_ = 0;
+        reuse_samples_ = reuse_sum_ = reuse_max_ = 0;
+        reuse_win1k_ = reuse_win16k_ = 0;
+        last_access_.clear();
         seq_ = 0;
     }
 
@@ -299,6 +328,14 @@ private:
     uint64_t transferred_bytes_ = 0;
     uint64_t seq_ = 0;
     uint32_t obs_since_age_ = 0;
+    // R04: expert reuse-distance measurement. For each (block,expert,bank)
+    // access, the number of intervening accesses since the previous access of
+    // the SAME slice. A small distance means locality a bounded lease could
+    // exploit; a large distance means retention cannot help. Pure accounting.
+    std::map<Key3, uint64_t> last_access_;
+    uint64_t access_seq_ = 0;
+    uint64_t reuse_samples_ = 0, reuse_sum_ = 0, reuse_max_ = 0;
+    uint64_t reuse_win1k_ = 0, reuse_win16k_ = 0;
 };
 
 }   // namespace Strata

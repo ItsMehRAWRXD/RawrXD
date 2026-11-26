@@ -2016,7 +2016,9 @@ static int runStrataAsk(const std::string& modelPath, const std::string& prompt,
     std::fprintf(stderr,
                  "STRATA_LEDGER accesses=%llu hits=%llu misses=%llu "
                  "admissions=%llu evictions=%llu transferred_bytes=%llu "
-                 "hit_rate=%.3f gpu_calls=%llu cpu_calls=%llu\n",
+                 "hit_rate=%.3f reuse_samples=%llu reuse_mean_dist=%.1f "
+                 "reuse_max_dist=%llu reuse_within_1k=%llu reuse_within_16k=%llu "
+                 "gpu_calls=%llu cpu_calls=%llu\n",
                  (unsigned long long)s.expertAccesses,
                  (unsigned long long)s.expertHits,
                  (unsigned long long)s.expertMisses,
@@ -2024,6 +2026,11 @@ static int runStrataAsk(const std::string& modelPath, const std::string& prompt,
                  (unsigned long long)s.expertEvictions,
                  (unsigned long long)s.expertTransferredBytes,
                  s.expertHitRate,
+                 (unsigned long long)s.expertReuseSamples,
+                 s.expertReuseMeanDistance,
+                 (unsigned long long)s.expertReuseMaxDistance,
+                 (unsigned long long)s.expertReuseWithin1k,
+                 (unsigned long long)s.expertReuseWithin16k,
                  (unsigned long long)s.gpuCalls,
                  (unsigned long long)s.cpuCalls);
     return outIds.empty() ? EXIT_NO_INFERENCE : EXIT_OK;

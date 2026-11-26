@@ -47,6 +47,12 @@ struct StrataChatStats {
     uint64_t expertAccesses = 0;  // logical expert accesses = hits + misses
     uint64_t expertAdmissions = 0;// physical placements = misses
     uint64_t expertTransferredBytes = 0;  // weight bytes moved on admissions
+    // R04 reuse-distance (locality a bounded lease could exploit).
+    uint64_t expertReuseSamples = 0;
+    double expertReuseMeanDistance = 0.0;
+    uint64_t expertReuseMaxDistance = 0;
+    uint64_t expertReuseWithin1k = 0;
+    uint64_t expertReuseWithin16k = 0;
     double bindMs = 0;
     double prefillMs = 0;
     double decodeMs = 0;
@@ -120,6 +126,11 @@ public:
         stats_.expertAccesses = l.accesses;
         stats_.expertAdmissions = l.admissions;
         stats_.expertTransferredBytes = l.transferred_bytes;
+        stats_.expertReuseSamples = l.reuse_samples;
+        stats_.expertReuseMeanDistance = l.reuse_mean_distance;
+        stats_.expertReuseMaxDistance = l.reuse_max_distance;
+        stats_.expertReuseWithin1k = l.reuse_within_1k;
+        stats_.expertReuseWithin16k = l.reuse_within_16k;
         stats_.ok = stats_.error.empty();
     }
 
