@@ -1,0 +1,21 @@
+{
+  "tag": "solo_cpu_3b",
+  "model": "F:\rawrxd\llama3.2-3b-Q2_K.gguf",
+  "prompt_text": "The capital of France is",
+  "prompt_tokens": 5,
+  "prompt_ids": [791, 6864, 315, 9822, 374],
+  "generate_tokens": 8,
+  "generated_ids": [12366, 11, 902, 374, 1101, 279, 6864, 315],
+  "cancelled": false,
+  "bind_ms": 4640.65,
+  "prefill_ms": 9109.39,
+  "decode_ms": 13875.4,
+  "total_ms": 27625.5,
+  "decode_tps": 0.576559,
+  "gpu_calls": 0,
+  "cpu_calls": 2561,
+  "fallback": "k-quant dot: force_cpu (weight=blk.0.attn_q.weight)",
+  "nonfinite_logits": 0,
+  "expert_ledger": {"observations": 0, "hits": 0, "misses": 0, "evictions": 0, "hit_rate": 0, "distinct_experts": 0},
+  "cleanup": "ok"
+}
