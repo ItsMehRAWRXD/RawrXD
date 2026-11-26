@@ -610,8 +610,8 @@ public:
 
     bool verifyCheckpointIdentityOnly() {
         const auto begin = chrono::steady_clock::now();
-        modelSha256_ = computeFileSha256(config_.modelPath);
-        if (modelSha256_.size() != 64 || !buildCheckpointIdentity()) return false;
+        modelSha256_.clear();
+        if (!buildCheckpointIdentity()) return false;
         uint64_t totalBytes = 0;
         vector<fs::path> paths;
         if (!ReapState::ShardPaths(config_.modelPath, paths) ||
@@ -757,14 +757,17 @@ public:
         
         // Compute model SHA-256 for checkpoint validation
         phase("SOURCE_SHA256", "BEGIN");
-        modelSha256_ = computeFileSha256(config_.modelPath);
-        if (modelSha256_.size() != 64) {
-            cerr << "Source checkpoint hash failed" << endl;
-            return false;
-        }
+        modelSha256_.clear();
         if (!config_.saliencyCapture && !buildCheckpointIdentity()) {
             cerr << "Cannot establish complete checkpoint identity" << endl;
             return false;
+        }
+        if (config_.saliencyCapture) {
+            modelSha256_ = computeFileSha256(config_.modelPath);
+            if (modelSha256_.size() != 64) {
+                cerr << "Source checkpoint hash failed" << endl;
+                return false;
+            }
         }
         phase("SOURCE_SHA256", "END");
         if (config_.verbose) {
@@ -1359,6 +1362,13 @@ private:
     bool buildCheckpointIdentity() {
         vector<fs::path> paths;
         if (!ReapState::ShardPaths(config_.modelPath, paths)) return false;
+        const fs::path cachePath = digestCachePath(paths.front());
+        loadDigestCache(cachePath);
+        string cachedFirst;
+        if (cachedDigest(paths[0], cachedFirst)) modelSha256_ = cachedFirst;
+        if (modelSha256_.size() != 64)
+            modelSha256_ = computeFileSha256(paths[0].string());
+        if (modelSha256_.size() != 64) return false;
         checkpointIdentity_ = modelSha256_;
         checkpointShardDigests_.clear();
         checkpointShardDigests_.resize(paths.size());
@@ -1382,8 +1392,6 @@ private:
         }
         workers = (std::max)(size_t(1), (std::min)(workers, paths.size() - 1));
 
-        const fs::path cachePath = digestCachePath(paths.front());
-        loadDigestCache(cachePath);
         vector<string> digests(paths.size());
         digests[0] = modelSha256_;
         uintmax_t firstBytes = 0; int64_t firstStamp = 0;
