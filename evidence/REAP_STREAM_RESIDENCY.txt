@@ -1,0 +1,28 @@
+RAWRXD REAP (Streaming) — bounded expert residency — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU test. Disk ~6 GB. Independent track.
+
+PACKAGE (Streaming residency): bounded demand-driven expert residency with a hard byte
+budget, LRU eviction, pinning and explicit completion. Never holds the full bank
+(resident bytes <= budget). Consumes ReapExpertSlice (V02) sizes; pairs with the
+demand-driven ReapExpertProvider (previous commit).
+
+IMPLEMENTED:
+- src/deep2/ReapStreamResidency.hpp (NEW): StreamResidency(budget). Admit(id,bytes)
+  (fail-closed if expert>budget or all-pinned full; LRU-evicts unpinned), SetPinned,
+  Complete (fence), Resident/ResidentBytes/Count. Storage-independent.
+- tools/reap_stream_residency_test.cpp: budget 250 fits 2x100; admit 3 -> LRU 0 evicted,
+  resident stays 200, count 2 (never full bank); expert>budget rejected; all-pinned full
+  rejected -> ALL PASS.
+
+VERIFICATION (actual): CPU regression -> ALL PASS (exit 0). Artifacts removed.
+
+DISPOSITION: Streaming residency contract COMPLETE (component + CPU). Foundation for
+residency admission/prefetch/eviction/completion engine integration (later, engine track).
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+
+BLOCKER (V06 Virtual ingestion, source-confirmed): the runtime injection path
+(RuntimeInjection) carries only expertCount, NOT a per-expert selection; Deep2Engine::
+loadModel therefore cannot know WHICH experts to transform. V06 requires plumbing a
+Selection into RuntimeInjection/loadModel + applying TransformExpertTensor per expert
+tensor + GPU inference-consumption verification. Not done (no fabricated Virtual claim).
+NEXT=V06 selection plumbing; engine ingestion; V05 fixture; V07 metadata/identity.
