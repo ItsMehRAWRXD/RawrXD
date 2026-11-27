@@ -73,17 +73,35 @@ static string JsonEscape(const string& s) {
     return o;
 }
 
-// First balanced {...} object in text (the model's tool call).
-static string FirstJsonObject(const string& t) {
-    size_t s = t.find('{');
-    if (s == string::npos) return {};
-    int depth = 0; bool inStr = false; char esc = 0;
-    for (size_t i = s; i < t.size(); ++i) {
-        char c = t[i];
-        if (inStr) { if (esc) esc = 0; else if (c=='\\') esc = 1; else if (c=='"') inStr = false; continue; }
-        if (c == '"') inStr = true;
-        else if (c == '{') ++depth;
-        else if (c == '}') { if (--depth == 0) return t.substr(s, i - s + 1); }
+// Text-channel tool-call extraction (RAWRXD text-channel robustness).
+// Models routinely wrap the tool call in prose or emit a reasoning/example object
+// before the real one. Taking the FIRST {...} is fragile; instead scan every
+// balanced object and return the first whose "tool" is a KNOWN tool. Reasoning /
+// example objects (no known "tool") are skipped.
+static bool IsKnownTool(const string& name) {
+    static const std::set<string> known = {
+        "write", "build", "edit", "read", "list", "run", "finish"};
+    return !name.empty() && known.count(name) != 0;
+}
+static string ExtractToolObject(const string& text) {
+    const size_t n = text.size();
+    size_t i = 0;
+    while (i < n) {
+        const size_t s = text.find('{', i);
+        if (s == string::npos) break;
+        int depth = 0; bool inStr = false; char esc = 0; bool closed = false;
+        size_t e = s;
+        for (; e < n; ++e) {
+            const char c = text[e];
+            if (inStr) { if (esc) esc = 0; else if (c=='\\') esc = 1; else if (c=='"') inStr = false; continue; }
+            if (c == '"') inStr = true;
+            else if (c == '{') ++depth;
+            else if (c == '}') { if (--depth == 0) { ++e; closed = true; break; } }
+        }
+        if (!closed) break;
+        const string obj = text.substr(s, e - s);
+        if (IsKnownTool(ExtractJsonString(obj, "tool"))) return obj;
+        i = e;
     }
     return {};
 }
@@ -354,11 +372,37 @@ static int SelfTestChannel() {
     return fail == 0 ? 0 : 1;
 }
 
+// Deterministic verification of the text-channel tool extractor (model-free).
+static int SelfTestParse() {
+    struct P { const char* in; const char* expect; };
+    const P cases[] = {
+        {"{\"tool\":\"write\",\"path\":\"a\"}", "write"},
+        {"Sure, here you go:\n{\"tool\":\"build\",\"sources\":\"x\"}", "build"},
+        {"Reasoning {\"note\":\"an example\"} then {\"tool\":\"edit\",\"path\":\"p\",\"old\":\"a\",\"new\":\"b\"}", "edit"},
+        {"I will now call a tool: {\"tool\":\"list\"}", "list"},
+        {"{\"thinking\":\"hmm, not a tool\"}", ""},
+        {"no json here at all", ""},
+        {"prefix {\"a\":1} suffix {\"tool\":\"finish\",\"summary\":\"done\"}", "finish"},
+    };
+    int fail = 0;
+    for (const auto& c : cases) {
+        const string obj = ExtractToolObject(c.in);
+        const string got = obj.empty() ? "" : ExtractJsonString(obj, "tool");
+        const bool ok = (got == c.expect);
+        std::printf("[selftest-parse] expect=%-7s got=%-7s %s\n",
+                    c.expect, got.c_str(), ok ? "OK" : "FAIL");
+        if (!ok) ++fail;
+    }
+    std::printf("SELFTEST_PARSE=%s (%d fail)\n", fail == 0 ? "PASS" : "FAIL", fail);
+    return fail == 0 ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     string model = "qwen3:8b", objective, ws = "F:\\rawrxd_acceptance_sysmon_native";
     int maxTurns = 30;
     bool selfTestChannel = false;
+    bool selfTestParse = false;
     for (int i = 1; i < argc; ++i) {
         string a = argv[i];
         auto next = [&]() -> string { return (i + 1 < argc) ? argv[++i] : ""; };
@@ -367,8 +411,10 @@ int main(int argc, char** argv) {
         else if (a == "--objective") objective = next();
         else if (a == "--max-turns") maxTurns = atoi(next().c_str());
         else if (a == "--self-test-channel") selfTestChannel = true;
+        else if (a == "--self-test-parse") selfTestParse = true;
     }
     if (selfTestChannel) return SelfTestChannel();
+    if (selfTestParse) return SelfTestParse();
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
     // A02: derive expected deliverables from the objective (no hardcoded names).
@@ -454,7 +500,7 @@ int main(int argc, char** argv) {
         g_tel.evalNs        += (double)rawrxd::ollama::JsonInt(resp, "\"eval_duration\":");
         string content = ExtractJsonString(resp, "content");
         string call = NativeToolCall(resp);          // native message.tool_calls first
-        if (call.empty()) call = FirstJsonObject(content);   // text-channel fallback
+        if (call.empty()) call = ExtractToolObject(content);   // text-channel: first KNOWN tool object
         string tool = ExtractJsonString(call, "tool");
         printf("[turn %d] model_tool=%s (phase=%d)\n", turn, tool.empty() ? "(none)" : tool.c_str(), phase);
         if (tool.empty()) {
