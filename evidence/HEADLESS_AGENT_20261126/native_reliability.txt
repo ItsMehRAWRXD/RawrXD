@@ -1,0 +1,4 @@
+RAWRXD native-channel reliability (description-free schema, frozen controller) — 12 runs
+gpt-oss 2/3, deepseek 1/3, qwen3 0/3, nemotron 0/3 => 3 PASS / 12 = 25%.
+vs text-fallback 2/12 (17%): native channel +8pp. Still LOW. Dominant failure: model empty-content/non-convergence despite native tools.
+Historical 4/4 = single-run. Reliability NOT established; model/template compliance is the gap.
