@@ -466,6 +466,7 @@ CacheStats GetCacheStats() {
     s.wait_ms = c.wait_ms;
     s.initial_uploads = c.weight_initial_uploads;
     s.reuploads = c.weight_reuploads;
+    s.revision_invalidations = c.weight_revision_invalidations;
     // RAWRXD_G04: residency-safety observability (primary device).
     s.pinned = QuantDot_DevicePinned();
     s.leases = QuantDot_DeviceLeases();
@@ -504,6 +505,7 @@ CacheStats GetCacheStatsOn(int32_t device) {
     s.wait_ms = c.wait_ms;
     s.initial_uploads = c.weight_initial_uploads;
     s.reuploads = c.weight_reuploads;
+    s.revision_invalidations = c.weight_revision_invalidations;
     // RAWRXD_G04: the SECONDARY device's residency-safety counters. The accessor
     // resolves the requested device, not the active per-op override, so a split
     // run can certify each GPU independently.
@@ -550,6 +552,7 @@ const BackendStats& BackendCounters() {
     g_backend.weight_cache_misses = c.weight_cache_misses;
     g_backend.weight_initial_uploads = c.weight_initial_uploads;
     g_backend.weight_reuploads = c.weight_reuploads;
+    g_backend.weight_revision_invalidations = c.weight_revision_invalidations;
     g_backend.device_bytes_live = c.device_bytes_live;
     g_backend.device_bytes_peak = c.device_bytes_peak;
     g_backend.kernel_ms = c.kernel_ms;

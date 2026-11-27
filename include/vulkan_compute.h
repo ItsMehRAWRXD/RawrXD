@@ -72,6 +72,11 @@ struct GpuCounters {
     // weight_cache_misses; the split makes repeated-transfer cost visible.
     uint64_t weight_initial_uploads = 0; // first-ever upload of a weight key
     uint64_t weight_reuploads = 0;       // re-upload after eviction of a seen key
+    // NP-05A: a resident entry whose content fingerprint no longer matches the
+    // source (same key, modified/reused memory) is a REVISION invalidation, not
+    // an eviction re-upload. Counted separately so identity/revision handling is
+    // observable and stale resident handles are provably rejected.
+    uint64_t weight_revision_invalidations = 0;
     uint64_t weight_cache_evictions = 0; // LRU/hotness budget evictions (RAWRXD_STRATA_S01)
     // Attribution split for the SAME total above: a block-boundary trim and a
     // capacity/LRU eviction have identical symptoms in the aggregate counter,

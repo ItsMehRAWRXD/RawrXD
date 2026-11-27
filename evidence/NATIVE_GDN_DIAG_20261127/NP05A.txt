@@ -1,0 +1,52 @@
+RAWRXD NP-05A — stable resident-weight identity (reconciliation + revision invalidation) — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used (held). Build: full MSBuild compile+link.
+
+PART 1 — SUBSTANTIATED EXISTING IDENTITY (do not reimplement):
+The residency cache key is the weight's host pointer `packed`, but the HIT validation in
+src/vulkan_compute.cpp EnsureQuantWeight already proves the resident allocation still
+represents the requested weight before reuse:
+  - tensor geometry / byte layout : e.bytes == bytes            (vulkan_compute.cpp:3049)
+  - quantization format           : e.kind  == kind             (:3049)
+  - weight revision (content)     : e.fingerprint == fp         (:3049)
+      where fp = first min(8,bytes) bytes of the source (:3032-3033)
+  - device identity               : cache is per-VulkanCompute instance (no cross-device reuse)
+  - allocation generation / stale : epoch + lease + pin + retire/reap
+      (quant_epoch_, quant_leases_, pin_count, RetireQuantWeight/ReapRetiredWeights)
+So geometry, format, revision, device and generation are ALREADY enforced; a stale or
+mismatched resident handle is rejected and re-uploaded.
+
+PART 2 — IMPLEMENTED THIS PACKAGE (NP-05A, missing observable behavior):
+Revision invalidation was invisible (a same-key/changed-content retire looked identical to
+an eviction re-upload). Added a distinct counter:
+  - include/vulkan_compute.h GpuCounters += weight_revision_invalidations.
+  - src/vulkan_compute.cpp stale-entry branch (pin_count==0): ++weight_revision_invalidations
+    immediately before RetireQuantWeight — i.e. the fingerprint mismatch that rejects a
+    stale resident handle is now attributed to REVISION, separate from eviction re-upload.
+  - quant_dot_dispatch.hpp/.cpp: BackendStats + CacheStats carry it; BackendCounters()/
+    GetCacheStats()/GetCacheStatsOn() copy it.
+Cold path only (stale-entry branch); no hot-path or lock-order change.
+
+PART 3 — DEFERRED (concurrency-critical, needs runtime verification):
+The cache key is still the host pointer. A full composite stable identity
+{model_id, tensor_id, format, geometry, device, generation, revision} that does NOT depend
+on the host pointer is a residency-hot-path redesign. Per the NP-06D safety rule (no
+concurrency-critical change without runtime verification) and the fail-closed policy, the
+key-type change is DEFERRED until an authorized R9700 run can verify numerical parity and
+residency behavior. The existing (bytes,kind,fingerprint)+instance+epoch validation already
+prevents cross-format/geometry/revision/device reuse; the residual gap is explicit
+model_id/tensor_id tagging, tracked here as the remaining NP-05A work.
+
+VERIFICATION (actual):
+- MSVC /Zs: src/vulkan_compute.cpp EXIT 0; src/deep2/quant_dot_dispatch.cpp EXIT 0.
+- Full production build (MSBuild deep2_strata_chat.vcxproj, Release): EXIT 0
+    -> build\Release\deep2_strata_chat.exe  SHA256
+       F8FE0003DF632823E3AAC89761BCBC979E4A73876987E685A3CBC8624411E5E6
+- OBJECT_COMPILATION=PASS, LINKED=PASS. Runtime revision/residency behavior: PENDING (held).
+
+DISPOSITION:
+NP05A=PARTIAL  (existing identity substantiated; revision invalidation implemented+published;
+                 composite host-pointer-free key deferred pending runtime verification)
+NP05A Compile=YES  ObjectCompilation=PASS  Linked=PASS  Runtime=NO  Hardware=NOT_RUN(held)
+NP04D=CORRECTNESS SOURCE_VERIFIED (485f838e59)
+PROMOTE=0  CERTIFIED=0  RELEASE=HELD
+NEXT=NP-05B persistent compressed allocation reuse; NP-06D bounded vkb_indirect retry.

@@ -3056,6 +3056,9 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
         // (not immediate destruction) keeps the rule uniform - the objects are
         // destroyed by the fence reap, never inline.
         if (e.pin_count == 0) {
+            // NP-05A: same key, changed content (fingerprint mismatch) — a weight
+            // revision invalidation, distinct from an eviction re-upload.
+            ++gpu_counters_.weight_revision_invalidations;
             RetireQuantWeight(e);
         } else {
             // Extremely rare: a stale pointer reused while the old entry is
