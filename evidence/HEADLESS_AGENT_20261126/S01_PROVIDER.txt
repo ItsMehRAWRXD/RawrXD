@@ -1,0 +1,4 @@
+RAWRXD S01 — demand-driven expert provider (Streaming foundation)
+ReapExpertProvider.hpp: Acquire() copies ONE expert slice per call via ReapTensorSlice (no full expert-bank materialization).
+Standalone MSVC build PASS (6.1 GB). CPU test s01_provider_test 6/6 OK (expert2 offset bytes, acquire count/bytes, reject OOB, reject missing layer). S01_PROVIDER=PASS.
+Reusable by Streaming residency/paging (S02). Storage-independent.
