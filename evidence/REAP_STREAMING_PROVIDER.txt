@@ -1,0 +1,24 @@
+RAWRXD REAP (Streaming track) — demand-driven expert provider — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU test. Disk ~6 GB. Independent of engine.
+
+PACKAGE (Streaming, independent track): demand-driven expert acquisition using the shared
+ReapExpertSlice (V02). Reads ONLY requested expert ranges into a bounded window; never
+materializes the full transformed expert bank.
+
+IMPLEMENTED:
+- src/deep2/ReapExpertProvider.hpp (NEW): ForEachRetainedExpert(dims, tensorBytes,
+  retained, maxWindowBytes, readFn, sinkFn, error). Per retained expert (original order):
+  compute slice via ComputeExpertSliceLayout, read only [offset,length) into a one-expert
+  window (cap = maxWindowBytes, fail-closed if exceeded), invoke sink. Memory = one expert.
+- tools/reap_expert_provider_test.cpp: synthetic 4x100 bank, retain {1,3}; verifies only
+  200 bytes read (NOT full 400), order 1,3, per-expert content, window-budget rejection ->
+  ALL PASS.
+
+VERIFICATION (actual): CPU regression -> ALL PASS (exit 0). Artifacts removed.
+
+DISPOSITION: Streaming provider COMPLETE (component + CPU verified). Foundation for
+residency admission/prefetch/eviction/completion integration (engine track, later).
+Does not yet wire into Deep2/Strata residency (that is the engine Streaming integration).
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=V05 executed physical regression (needs fixture); V06 Virtual ingestion; Streaming
+residency integration; V07 metadata/identity.
