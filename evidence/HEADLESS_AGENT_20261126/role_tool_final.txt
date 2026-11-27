@@ -1,0 +1,5 @@
+RAWRXD-144 validation — role:tool campaign FINAL (467f7a511a, 12/12)
+gpt-oss 2/3, deepseek 1/3, qwen3 0/3, nemotron 0/3 => 3 PASS / 12 = 25.0%.
+Comparison: baseline 42.86%(3/7), improved 41.67%(5/12), schema-corrected 25%(3/12), role:tool 25%(3/12).
+=> Two protocol defects FIXED (schema serialization, tool-result role) = engineering correctness good. MEASURED RELIABILITY NOT IMPROVED (25%). Residual = model empty-content behavior despite correct protocol.
+Conclusion: controller protocol is now correct; reliability lever is model/template compliance, not controller. No fabricated improvement.
