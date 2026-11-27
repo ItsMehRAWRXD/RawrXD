@@ -772,6 +772,9 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     stats_ = BindStats{};
     bound_ = false;
     last_error_.clear();
+    // NP-05A: a new bind is a new model identity. Stamp a fresh id so resident
+    // compressed weights from a previous model are never reused across models.
+    QuantDot::SetModelId(QuantDot::NextModelId());
 
     if (!report.ok) {
         stats_.error = "ingest report invalid";

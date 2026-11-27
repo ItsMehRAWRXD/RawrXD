@@ -260,6 +260,12 @@ void SetWeightCacheBudget(int64_t bytes);
 void SetWeightCacheRetention(bool enabled);
 bool WeightCacheRetention();
 
+// NP-05A: model identity for the residency cache. A model bind calls NextModelId
+// for a fresh id and SetModelId to stamp it, so a resident weight is reused only
+// within the same model and never across a reload (host-pointer-independent).
+uint64_t NextModelId();
+void SetModelId(uint64_t id);
+
 // RAWRXD_MULTI_GPU: per-device counters for a secondary device (via GpuFor).
 // Lets a split-model run prove the content GPU dispatched. device<0 or == the
 // primary pin returns the primary device's counters.

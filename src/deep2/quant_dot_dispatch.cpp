@@ -533,6 +533,14 @@ size_t BatchCapacity() {
 
 const Receipt& LastReceipt() { return g_receipt; }
 
+// NP-05A: model identity. Bind calls NextModelId for a fresh id and SetModelId to
+// stamp the active model on the canonical residency cache.
+uint64_t NextModelId() {
+    static uint64_t gen = 0;
+    return ++gen;
+}
+void SetModelId(uint64_t id) { Gpu().SetQuantModelId(id); }
+
 const BackendStats& BackendCounters() {
     const GpuCounters& c = Gpu().GetGpuCounters();
     g_backend.buffer_allocations = c.buffer_allocations;

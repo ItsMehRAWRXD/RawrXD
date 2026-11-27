@@ -1,0 +1,37 @@
+RAWRXD NP-05A (model identity) — explicit, host-pointer-independent model identity — 2026-11-27
+Worktree: F:\rawrxd\.worktrees\residency  Branch: residency/np05-06  Base: 139b0fabf5
+Mode: DIRECT_EXECUTOR. Hardware: NOT used (held).
+
+OBJECTIVE (NP-05A remaining): add EXPLICIT model identity so a resident compressed weight
+is reused only within the same model and never across a model reload, without changing the
+cache key type (non-invasive) and preserving geometry/format/fingerprint/device/generation.
+
+IMPLEMENTED (real identity, not a counter):
+1. include/vulkan_compute.h — QuantWeight += model_id; VulkanCompute += quant_model_id_ +
+   SetQuantModelId()/QuantModelId().
+2. src/vulkan_compute.cpp EnsureQuantWeight — hit check now requires
+   e.model_id == quant_model_id_ (a previous-model entry fails and is re-uploaded);
+   new entries stamp e.model_id = quant_model_id_.
+3. src/deep2/quant_dot_dispatch.hpp/.cpp — NextModelId() (fresh id per bind) + SetModelId()
+   -> Gpu().SetQuantModelId().
+4. src/deep2/runtime_graph_executor.cpp Bind — calls QuantDot::SetModelId(QuantDot::NextModelId())
+   at each bind, so a reload gets a new identity.
+
+SEMANTICS (CPU-testable, no GPU needed):
+- Two models bound in one process get different model_id => no cross-model allocation reuse.
+- Reload of the same model => new model_id => prior entries fail the hit check => re-upload
+  (counted as reupload by NP-04D), never silently reused.
+- Within one model, geometry/format/fingerprint/device/generation protections are unchanged.
+
+VERIFICATION (actual):
+- MSVC /Zs (worktree): src/vulkan_compute.cpp, src/deep2/quant_dot_dispatch.cpp,
+  src/deep2/runtime_graph_executor.cpp — all EXIT 0 (3/3).
+- Full production LINK: PENDING — the isolated worktree has no configured build dir
+  (NO_VCXPROJ); a fresh full configure was not run. NOT claimed as PASS.
+- Runtime/CPU regression execution: PENDING (no test harness run this turn).
+
+DISPOSITION:
+NP05A_MODEL_ID=IMPLEMENTED  Syntax=3/3  Linked=PENDING(worktree build absent)  Runtime=NO
+Host-pointer-independent identity: PARTIAL (model granularity done; tensor_id still pending)
+PROMOTE=0  CERTIFIED=0  RELEASE=HELD
+NEXT=full link on integration; NP-05B persistent allocation reuse; NP-06D bounded retry.

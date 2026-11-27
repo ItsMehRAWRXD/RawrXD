@@ -3046,7 +3046,8 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     auto it = quant_weight_cache_.find(packed);
     if (it != quant_weight_cache_.end()) {
         QuantWeight& e = it->second;
-        if (e.bytes == bytes && e.kind == kind && e.fingerprint == fp) {
+        if (e.bytes == bytes && e.kind == kind && e.fingerprint == fp &&
+            e.model_id == quant_model_id_) {
             e.last_used = ++quant_lru_seq_;
             ++e.use_count;   // hotness signal: dispatches served while resident
             ++gpu_counters_.weight_cache_hits;
@@ -3117,6 +3118,7 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     e.bytes = bytes;
     e.kind = kind;
     e.fingerprint = fp;
+    e.model_id = quant_model_id_;   // NP-05A: stamp the active model identity
     e.last_used = ++quant_lru_seq_;
     // The upload is a one-time staging copy on its own submission; it completes
     // before this function returns, so later dispatches need no barrier for it.

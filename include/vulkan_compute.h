@@ -235,6 +235,11 @@ public:
     // SetWeightCacheRetention(), so dispatch behaviour is unchanged.
     void SetWeightCacheRetention(bool enabled) { weight_cache_retention_ = enabled; }
     bool WeightCacheRetention() const { return weight_cache_retention_; }
+    // NP-05A: set the active model identity for the residency cache. A model bind
+    // assigns a fresh id; entries from a previous model fail the hit check and are
+    // re-uploaded rather than reused across models.
+    void SetQuantModelId(uint64_t id) { quant_model_id_ = id; }
+    uint64_t QuantModelId() const { return quant_model_id_; }
     // D1: the batch descriptor-ring capacity (kQuantBatchMaxSets).
     static constexpr uint32_t QuantDotBatchCapacity() { return kQuantBatchMaxSets; }
 
@@ -392,6 +397,11 @@ private:
         size_t bytes = 0;
         int kind = -1;
         uint64_t fingerprint = 0;   // first 8 packed bytes, cheap staleness guard
+        // NP-05A: explicit model identity. A resident entry is only reused when its
+        // model_id matches the active model, so a reloaded model (new id) can never
+        // reuse another model's allocation even at the same host pointer. This is
+        // the host-pointer-independent component of the resident-weight identity.
+        uint64_t model_id = 0;
         uint64_t last_used = 0;     // LRU stamp for the residency budget
         uint64_t use_count = 0;     // hotness counter (RAWRXD_STRATA_S08): dispatches served
         // RAWRXD_G04: in-flight references held against this entry. Non-zero
@@ -411,6 +421,8 @@ private:
     // policy-controlled (false = LRU/hotness eviction, true = keep resident).
     // Owned per-device; quant_dot_dispatch propagates the process-wide policy.
     bool weight_cache_retention_ = false;
+    // NP-05A: active model identity stamped on resident weights.
+    uint64_t quant_model_id_ = 0;
     int weight_cache_policy_ = -1;
 
     // ---- RAWRXD_G04: concurrent-safe residency --------------------------------
