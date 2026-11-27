@@ -103,14 +103,25 @@ static bool SrcHasRealApi() {
 }
 
 static string RunCmd(const string& cmd) {
-    string full = "cd /d \"" + g_ws + "\" && " + cmd + " 2>&1";
-    string out;
-    FILE* p = _popen(full.c_str(), "r");
-    if (!p) return "ERROR: popen failed";
-    char buf[4096]; size_t n;
-    while ((n = fread(buf, 1, sizeof(buf), p)) > 0) { out.append(buf, n); if (out.size() > 8000) { out += "\n[truncated]"; break; } }
-    _pclose(p);
-    return out;
+    // Bounded execution (SR-17): never block on a GUI/blocking child. Output is
+    // captured to a temp file; the process is terminated after 20s.
+    const string outf = (std::filesystem::path(g_ws) / "_agent_out.txt").string();
+    string full = "cmd /c (cd /d \"" + g_ws + "\" && " + cmd + ") > \"" + outf + "\" 2>&1";
+    vector<wchar_t> w(full.begin(), full.end()); w.push_back(0);
+    STARTUPINFOW si{}; si.cb = sizeof(si); PROCESS_INFORMATION pi{};
+    si.dwFlags = STARTF_USESHOWWINDOW; si.wShowWindow = SW_HIDE;
+    if (!CreateProcessW(nullptr, w.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, g_ws.c_str(), &si, &pi))
+        return "ERROR: spawn failed";
+    const DWORD r = WaitForSingleObject(pi.hProcess, 20000);
+    if (r == WAIT_TIMEOUT) {
+        TerminateProcess(pi.hProcess, 1);
+        WaitForSingleObject(pi.hProcess, 2000);
+        CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+        return "ERROR: command timed out after 20s (blocking/GUI app). Do NOT run GUI executables via the run tool; the build tool already verifies launch.";
+    }
+    CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+    ifstream f(outf); stringstream ss; ss << f.rdbuf();
+    return ss.str();
 }
 
 static BOOL WINAPI CtrlHandler(DWORD t) { if (t == CTRL_C_EVENT || t == CTRL_BREAK_EVENT) g_cancel.store(true); return TRUE; }

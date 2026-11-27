@@ -1,0 +1,4 @@
+RAWRXD_AUTONOMOUS_FULL_CERTIFICATION_085 — Nemotron 3.5 Lightning 30B
+Wrote sysmon.cpp 4326B -> C2039 dwHighPart -> SDK decl -> 4190B -> BUILD_OK sysmon.exe produced. Independent launch verified (alive). functional PASS.
+Controller hang at turn4 (model ran GUI sysmon.exe via blocking run tool) -> fixed: RunCmd now bounded 20s with terminate + cleanup.
+Cross-model: 4/4 (gpt-oss, deepseek, qwen3, nemotron all produced working sysmon.exe).

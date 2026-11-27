@@ -1,0 +1,12 @@
+[turn 0] model_tool=write (phase=1)
+  -> OK wrote F:\rawrxd\_acceptance_sysmon_native\sysmon.cpp (4326 bytes)
+[turn 1] model_tool=build (phase=2)
+  -> COMPILE_FAILURE:
+sysmon.cpp
+sysmon.cpp(23): error C2039: 'dwHighPart': is not a member of '_FILETIME'
+C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100
+[turn 2] model_tool=write (phase=2)
+  -> OK wrote F:\rawrxd\_acceptance_sysmon_native\sysmon.cpp (4190 bytes)
+[turn 3] model_tool=build (phase=2)
+  -> BUILD_OK: sysmon.exe produced
+[turn 4] model_tool=run (phase=5)
