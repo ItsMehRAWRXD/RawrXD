@@ -1,0 +1,4 @@
+RAWRXD identity-keyed production cache (consumes PR-06) — standalone
+ReapIdentityCache.hpp: bounded LRU keyed by CacheIdentity; Lookup never matches a different selection/checkpoint/mode; evicts LRU beyond budget.
+Standalone MSVC build PASS. CPU test idcache_test 5/5 OK (hit, cross-selection miss, eviction, retention, bounded). IDCACHE=PASS.
+Production-cache consumption primitive for engine residency. Storage-independent.
