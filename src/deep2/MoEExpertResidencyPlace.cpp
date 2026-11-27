@@ -137,13 +137,22 @@ bool MoEExpertResidencyPlace::AcquireTransformed(uint64_t identity, uint64_t byt
                                                  void* handle, uint64_t* outGeneration) {
     int i = FindOwn(identity);
     if (i >= 0) { own_[i].lastUse = ++ownClock_; if (outGeneration) *outGeneration = own_[i].gen; return true; }
-    if (bytes > ownBudget_) return false;     // fail closed: single expert over budget
-    while (ownBytes_ + bytes > ownBudget_ && ownN_ > 0) {
+    // S03.4: authoritative combined cap. Transformed buffers must not let aggregate
+    // residency (hot device + transformed) exceed the single hardware-aware budget_.
+    // ownBudget_ is a sub-limit; budget_ is the authoritative combined limit.
+    const uint64_t authBudget = budget_;
+    if (bytes > ownBudget_) return false;                       // sub-limit (host pool)
+    if (authBudget && bytes > authBudget) return false;         // exceeds authoritative
+    while (ownN_ > 0 &&
+           (ownBytes_ + bytes > ownBudget_ ||
+            (authBudget && hotBytes_ + ownBytes_ + bytes > authBudget))) {
         const uint32_t before = ownN_;
         EvictOwnOne();
-        if (ownN_ == before) break;           // nothing evictable (all pinned)
+        if (ownN_ == before) break;                             // nothing evictable (pinned)
     }
-    if (ownBytes_ + bytes > ownBudget_) return false;  // still fits nowhere
+    if (ownBytes_ + bytes > ownBudget_) return false;           // host sub-limit still exceeded
+    if (authBudget && hotBytes_ + ownBytes_ + bytes > authBudget)
+        return false;                                           // authoritative cap (hot pinned)
     if (ownN_ >= MOE_PLACE_HOT_CAP) return false;
     OwnedEnt& e = own_[ownN_++];
     e.identity = identity;

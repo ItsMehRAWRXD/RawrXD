@@ -1,0 +1,25 @@
+RAWRXD REAP S03.4 — unified residency accounting — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+
+PACKAGE S03.4: transformed-buffer residency must NOT create an independent budget that
+lets aggregate residency exceed the hardware-aware limit. Now the owned transformed
+registry shares the AUTHORITATIVE budget_ (hot device + transformed combined).
+
+CHANGE (1 file):
+- MoEExpertResidencyPlace.cpp AcquireTransformed: enforces (a) host sub-limit ownBudget_,
+  and (b) authoritative combined cap budget_ on (hotBytes_ + ownBytes_ + bytes). Evicts
+  UNPINNED transformed to fit; fail-closed if the authoritative cap is still exceeded
+  (e.g., hot pinned). Pinned/in-flight never evicted. Release/Reset unchanged.
+
+ACCOUNTING: mapped/hot (device) + owned transformed (host) counted under one authoritative
+budget_; no double counting (separate byte pools, combined cap). Allocation-failure
+fail-closed. Completion-aware reclamation via ReleaseTransformed; Reset clears on unload.
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) MoEExpertResidencyPlace.cpp -> EXIT 0. NOT
+linked/run (storage/GPU). Physical (identity 0) unchanged.
+
+DISPOSITION: S03.4 COMPLETE (single authoritative budget; no independent over-residency;
+pin/fail-closed preserved). Host/device sub-limits under one planner cap.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.5 completion (checkpoint CONTENT identity all shards; NP-05A.2 tensor id; quant
+type; geometry dims); S03.6 inference binding (GPU); S03.7 completion/cancel.
