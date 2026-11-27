@@ -74,7 +74,7 @@
 #include "../src/project_wizard/agent_esp.hpp"
 #include "../src/project_wizard/esp_runtime.hpp"
 #include "../src/project_wizard/esp_metrics.hpp"
-// #include "esp_cli.hpp" // RET-135: removed legacy (pulled legacy agent_esp; C2011)
+#include "../src/project_wizard/esp_cli.hpp"
 #include "../src/agentic/MotdAuthorization.h"
 #include "../src/agentic/tool_security.hpp"
 
@@ -5175,7 +5175,7 @@ int main(int argc, char* argv[])
         // Commit only the tokens that actually reached ExecuteToken.  The
         // prefill request is a planned batch and may be cut short by the
         // host deadline or cancellation.
-        esp_rt.prefill_end(fed.size() - start);
+        esp_rt.prefill_end();
         esp_rt.set_context(fed.size());
         { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
         esp_rt.tick();
@@ -5627,7 +5627,7 @@ int main(int argc, char* argv[])
             // Do not report the requested batch as completed when the
             // deadline/cancellation gate stopped the serial fallback early.
             const size_t completed_prefill = fed.size() - prefill_start_context;
-            esp_rt.prefill_end(completed_prefill);
+            esp_rt.prefill_end();
             esp_rt.set_context(fed.size());
             const char* prefill_mode = prefill_ok
                 ? "batched"
