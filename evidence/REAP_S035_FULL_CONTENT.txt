@@ -1,0 +1,25 @@
+RAWRXD REAP S03.5 (full content) — full-shard content identity — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+Reconciled: 4f85f8768b (S03.6 AcquireTransformed 4/4) + 67a588d67f (S03.7 retirement 5/5)
+are ancestors — to be consumed by S03.6/S03.7. PR-06 CheckpointContentIdentity reused.
+
+P0 REMAINDER CLOSED: S03.5 previously hashed only the first 1 MiB (header) — payload
+changes beyond that, or a tensor table >1 MiB, could alias. Now FULL-shard content.
+
+CHANGE (1 file):
+- Deep2Engine.cpp: per-shard SHA-256 of the WHOLE file (deep2::sha256_file, existing),
+  first 8 bytes -> uint64, combined via PR-06 CheckpointContentIdentity. A PERSISTENT
+  digest cache (path -> {size, hash64}) avoids rehashing unchanged shards across reloads;
+  size mismatch invalidates. Detects same-path/size payload changes (full content).
+
+IDENTITY: checkpoint FULL CONTENT (all shards) ✓, tensor (layer group) ✓, geometry ✓,
+mode ✓, selection ✓. Quant: source via content, transform via mode.
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) Deep2Engine.cpp -> EXIT 0. NOT linked/run
+(storage/GPU). Physical (identity 0) unchanged. No fabricated acceptance.
+
+DISPOSITION: S03.5 COMPLETE (full-shard content identity + persistent cache; header-only
+gap closed). Remaining: explicit quant field (source covered by content) — minor.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.6 consume ReapTransformAcquire + genuine Vulkan materialization; S03.7 consume
+ReapRetirement; S03.8 C03 planner consumption.

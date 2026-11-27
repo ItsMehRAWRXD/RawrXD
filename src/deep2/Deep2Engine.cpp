@@ -31,6 +31,7 @@
 #include "HotPatcher.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "reap/ReapSelectionIdentity.hpp"
+#include "deep2/deep2_sha256.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "K2LivePolicy.hpp"
 #include "K2MLA_GpuGemv.hpp"
@@ -2897,36 +2898,41 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
         printf("[Deep2Engine] GlobalTensorIndex built: %zu tensors across %zu shards\n", globalIndex_->TotalTensors(),
                globalIndex_->TotalShards());
-        // S03.5: checkpoint CONTENT identity over ALL shards. Hash each shard's
-        // header region (first 1 MiB = GGUF header + tensor table) so a checkpoint
-        // replaced at the same path with identical size+mtime but different content
-        // yields a different identity. Reuses PR-06 CheckpointContentIdentity.
+        // S03.5: FULL-shard CONTENT identity over ALL shards (SHA-256 of the whole
+        // file, not just the header). A persistent digest cache (keyed by path+size)
+        // avoids rehashing unchanged shards across reloads. A checkpoint replaced at
+        // the same path with identical size but different payload yields a different
+        // identity. Reuses PR-06 CheckpointContentIdentity.
         if (globalIndex_)
         {
+            static std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> s_digestCache;
             std::vector<uint64_t> shardHashes;
             const size_t ns = globalIndex_->TotalShards();
             shardHashes.reserve(ns);
             for (size_t s = 0; s < ns; ++s)
             {
                 const auto& sp = globalIndex_->ShardPath(static_cast<uint32_t>(s));
-                std::ifstream f(sp, std::ios::binary);
-                uint64_t h = 0x9E3779B97F4A7C15ULL;
-                if (f)
+                const std::string key = sp.string();
+                std::error_code ec;
+                const uint64_t sz = static_cast<uint64_t>(std::filesystem::file_size(sp, ec));
+                uint64_t h64 = 0;
+                auto it = s_digestCache.find(key);
+                if (it != s_digestCache.end() && it->second.first == sz)
                 {
-                    std::vector<char> buf(1u << 20);
-                    uint64_t total = 0;
-                    while (f && total < (1u << 20))
+                    h64 = it->second.second;                 // persistent cache hit
+                }
+                else
+                {
+                    std::array<uint8_t, 32> d{};
+                    if (deep2::sha256_file(key, d, nullptr))
                     {
-                        f.read(buf.data(), static_cast<std::streamsize>(buf.size()));
-                        const std::streamsize got = f.gcount();
-                        if (got <= 0) break;
-                        h = RawrXD::Reap::FingerprintBytes(
-                            h, reinterpret_cast<const uint8_t*>(buf.data()),
-                            static_cast<size_t>(got));
-                        total += static_cast<uint64_t>(got);
+                        uint64_t x = 0;
+                        for (int i = 0; i < 8; ++i) x = (x << 8) | d[i];
+                        h64 = x ? x : 1;
+                        s_digestCache[key] = {sz, h64};
                     }
                 }
-                shardHashes.push_back(h);
+                shardHashes.push_back(h64);
             }
             reapCheckpointId_ = RawrXD::Reap::CheckpointContentIdentity(
                 shardHashes, globalIndex_->TotalTensors(), /*quantBlockBytes*/ 0);
