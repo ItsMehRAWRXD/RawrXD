@@ -7,6 +7,7 @@
 #include "deep2/ReapPhysicalBank.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -108,20 +109,26 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
         return result;
     }
 
-    // A01: authoritative transformation-mode dispatch. PHYSICAL materializes a
-    // reduced expert bank (offline writer path); VIRTUAL transforms in memory at
-    // load (no materialized GGUF); STREAMING keeps the full bank but demand-pages
-    // experts through the residency working set. Each selects a distinct path.
-    std::string mode = "PHYSICAL";
-    if (!ParseRuntimeMode(request.mode, mode, error)) {
-        result.receipt = "{\"status\":\"INVALID_MODE\",\"reason\":" + quote(error) +
-                         ",\"writer_invoked\":false,\"source_immutable\":true}\n";
-        return result;
+    // A01/A07: authoritative transformation-mode dispatch via the single
+    // TransformMode contract. PHYSICAL materializes a reduced expert bank;
+    // VIRTUAL transforms in memory at load (no materialized GGUF); STREAMING
+    // keeps the full bank and demand-pages experts through the residency working
+    // set. Each selects a distinct path; unknown mode is rejected (no fallback).
+    TransformMode mode = TransformMode::Physical;
+    {
+        std::string raw = request.mode;
+        for (char& c : raw) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        if (raw.empty()) raw = "PHYSICAL";
+        if (!ParseTransformMode(raw, mode)) {
+            result.receipt = "{\"status\":\"INVALID_MODE\",\"reason\":\"INVALID_RUNTIME_MODE:" +
+                             raw + "\",\"writer_invoked\":false,\"source_immutable\":true}\n";
+            return result;
+        }
     }
-    plan.mode = mode;
+    plan.transformMode = mode;
 
     PhysicalReducePlan physical{};
-    if (mode == "PHYSICAL") {
+    if (mode == TransformMode::Physical) {
         if (!BuildPhysicalReducePlan(plan, physical, error)) {
             result.receipt = "{\"status\":\"PHYSICAL_PLAN_FAILED\",\"reason\":" +
                              quote(error) +
@@ -134,13 +141,13 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
             plan.streamerPath = "ReapPhysicalBank+MoEWeightProxy";
             plan.reason = physical.reason;
         }
-    } else if (mode == "VIRTUAL") {
+    } else if (mode == TransformMode::Virtual) {
         // Virtual: in-memory expert selection + top-k at load; source GGUF is
         // never rewritten (no materialized compressed checkpoint).
         plan.injectionMode = "VIRTUAL_INMEMORY_TRANSFORM";
         plan.streamerPath = "MoEWeightProxy+ResidencyCache";
         plan.reason = "IN_MEMORY_EXPERT_TRANSFORM_NO_GGUF_REWRITE";
-    } else {  // STREAMING
+    } else {  // Streaming
         // Streaming: full bank resident, experts demand-paged via the working set.
         plan.injectionMode = "STREAMING_DEMAND_PAGE";
         plan.streamerPath = "MoEWeightProxy+VulkanPrefetch";

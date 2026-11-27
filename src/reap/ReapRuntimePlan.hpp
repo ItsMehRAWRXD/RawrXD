@@ -57,13 +57,13 @@ struct RuntimePlan {
     std::string direction = "UNKNOWN";
     std::string injectionMode = "STREAMER_HOTPATCH";
     std::string streamerPath = "MoEWeightProxy+VulkanPrefetch";
-    // A01: authoritative transformation-mode selector (PHYSICAL|VIRTUAL|STREAMING).
-    std::string mode = "PHYSICAL";
     std::string status = "NOT_ADMITTED";
     std::string reason;
     bool sourceImmutable = true;
     bool writerInvoked = false;
-    TransformMode transformMode = TransformMode::Physical;   // RP01: authoritative mode
+    // Authoritative transformation mode (RP01). Single source of truth; the
+    // former duplicate string `mode` field was removed (A07 consolidation).
+    TransformMode transformMode = TransformMode::Physical;
 };
 
 struct RuntimeInjection {
@@ -92,11 +92,6 @@ struct RuntimeInjectionReceipt {
 // and uint64 overflow; physical topology admission is a separate runtime gate.
 bool ParseRuntimeTarget(std::string_view text, RuntimeTarget& out,
                         std::string& error);
-
-// A01: parse the transformation-mode selector. Accepts (case-insensitive)
-// "physical", "virtual", "streaming"; empty defaults to "physical". Rejects any
-// other value so an unknown mode cannot silently fall back to a backend.
-bool ParseRuntimeMode(std::string_view text, std::string& out, std::string& error);
 
 // Read model geometry without modifying or rewriting the source model.
 bool InspectRuntimeModel(const std::string& firstShard,

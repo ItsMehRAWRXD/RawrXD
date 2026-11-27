@@ -1,0 +1,28 @@
+RAWRXD REAP A07 — selector consolidation — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs + CPU test.
+
+FINDING (confirmed in source): ReapRuntimePlan.hpp contained TWO mode contracts from
+concurrent tracks — RP01 `enum class TransformMode` + `ParseTransformMode` +
+`RuntimePlan.transformMode` (commit 45d7dc6837) AND my `ParseRuntimeMode` +
+`RuntimePlan.mode` string (commit 6cc818a4b4). Duplicated mode state + conflicting
+defaults risk.
+
+CONSOLIDATION (single authoritative contract = RP01 TransformMode):
+- Removed `RuntimePlan.mode` (string) and `ParseRuntimeMode` decl+def.
+- `RuntimePlan.transformMode` (TransformMode) is the sole mode state; `RuntimePlanJson`
+  emits mode via `TransformModeName(transformMode)`.
+- `RunRuntime` parses the raw `--mode` string (uppercased, empty->PHYSICAL) via the
+  single `ParseTransformMode`; dispatches on `TransformMode::{Physical,Virtual,Streaming}`.
+- `RuntimeRequest.mode` remains the raw CLI input string (parsed to the enum at entry).
+- CPU test rewritten to exercise `ParseTransformMode`/`TransformModeName` (the one contract).
+
+RESULT: exactly one transformation-mode contract (TransformMode) across REAP; no duplicate
+selector, no conflicting defaults, no duplicated mode state.
+
+VERIFICATION (actual):
+- /Zs ReapRuntimePlan.cpp, ReapRuntime.cpp, reap_cli.cpp -> EXIT 0 (3/3).
+- CPU selector regression (ParseTransformMode) -> ALL PASS (exit 0). Artifacts removed.
+
+DISPOSITION: A07 COMPLETE (single contract). A01/A02/A03 remain CONNECTED_UNVERIFIED.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=A04 backend integration trace (Deep2/Strata reach selected mode); A05 auto-plan; A06 runtime correctness.
