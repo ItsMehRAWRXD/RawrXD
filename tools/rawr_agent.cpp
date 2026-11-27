@@ -365,6 +365,15 @@ int main(int argc, char** argv) {
             ++emptyStreak;
             const bool reasoningOnly = (resp.find("\"thinking\"") != string::npos || resp.find("reasoning_content") != string::npos);
             printf("  [empty %d] reasoning_only=%d content[0:160]=%.160s\n", emptyStreak, (int)reasoningOnly, content.c_str());
+            // Track C: bounded context reconstruction — break an unproductive
+            // conversation pattern by rebuilding a compact objective context.
+            if (emptyStreak == 4 || emptyStreak == 8) {
+                msgs.clear();
+                msgs.push_back({"system", sys});
+                msgs.push_back({"user", "OBJECTIVE: " + objective + "\nWorkspace: " + g_ws + envNote +
+                    "\nOutput exactly ONE JSON tool call now (no prose). Current step: " + PhaseDirective(ComputePhase())});
+                printf("  [recovery] context reconstructed at empty=%d\n", emptyStreak);
+            }
             if (emptyStreak >= 12) { printf("[abort] model produced 12 consecutive empty turns (no tool call) — fail-closed.\n"); break; }
             msgs.push_back({"user", "You MUST output exactly one JSON tool call NOW, with no prose. Current step: " + PhaseDirective(ComputePhase()) +
                 (emptyStreak >= 3 ? " Example: {\"tool\":\"write\",\"path\":\"sysmon.cpp\",\"content\":\"...\"}" : "")});

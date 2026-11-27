@@ -1,0 +1,4 @@
+RAWRXD_NATIVE_ADAPTIVE_RELIABILITY_118 — frozen baseline (b14601ff09) + recovery
+Campaign died at 7/12 (process reaped): gpt-oss 1/3, deepseek 1/3, qwen3 1/1 => 3 PASS / 7 = 43% observed reliability. Confirms LOW reliability; 4/4 historical = single-run.
+Track C recovery implemented: bounded context reconstruction on repeated empty turns (rebuild compact objective context at empty=4/8) to break unproductive patterns without RNG/model switch.
+Reliability corrections developed on this branch; frozen baseline preserved for comparison.
