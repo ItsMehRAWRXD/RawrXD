@@ -1,0 +1,4 @@
+RAWRXD S03.6I — inference dispatch request source (standalone)
+ReapDispatch.hpp: MakeDispatch(bound descriptor, router mapping, selection valid) -> validated dispatch request; fail-closed on invalid selection/binding/no-routing. Engine executes using this; Virtual/Streaming never substitute original weights.
+Standalone MSVC build PASS. CPU test s036i_disp_test 5/5 OK (dispatch, mapping/identity, invalid/no-routing/invalid-binding fail-closed). S036I_DISP=PASS.
+Completes S03.6 D-I source chain (6/7). J (engine link + real-model acceptance) storage-limited.
