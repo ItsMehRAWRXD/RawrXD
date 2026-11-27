@@ -1,0 +1,5 @@
+RAWRXD per-model native tool-schema compliance — 2026-11-27
+gpt-oss:20b: native schema ACCEPTED (3/3 PASS, fallbacks=0).
+deepseek-coder-v2:16b: native schema REJECTED (fallback=1) -> text -> INCOMPLETE.
+=> Tool-schema acceptance is PROVIDER-SPECIFIC. gpt-oss accepts description-free; deepseek rejects it (needs provider-specific serialization, R02.5).
+Fix: per-provider schema adaptation (not one schema for all). gpt-oss native reliable; deepseek needs its own accepted schema.
