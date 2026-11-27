@@ -137,6 +137,15 @@ static string ApplyEdit(const string& path, const string& oldS, const string& ne
     return ok ? ("OK edited " + path) : "ERROR: write failed";
 }
 
+// GUI-run short-circuit (RAWRXD run-waste elimination): a GUI-subsystem exe never
+// exits, so `run` on it blocks the full 20s timeout every time. The build tool
+// already verified launch, so detect `run <builtGuiExe>` and skip the spawn.
+static bool IsGuiRunToShortCircuit(const string& cmd, const string& builtOut,
+                                   const string& builtSubsys) {
+    return builtSubsys == "windows" && !builtOut.empty() &&
+           cmd.find(builtOut) != string::npos;
+}
+
 static bool SrcHasRealApi() {
     ifstream f(std::filesystem::path(g_ws) / g_expSrc);
     stringstream ss; ss << f.rdbuf(); string s = ss.str();
@@ -446,6 +455,22 @@ static int SelfTestEdit() {
     return fail == 0 ? 0 : 1;
 }
 
+// Deterministic verification of the GUI-run short-circuit predicate (model-free).
+static int SelfTestGuiRun() {
+    int fail = 0;
+    auto check = [&](bool cond, const char* name) {
+        std::printf("[selftest-guirun] %-34s %s\n", name, cond ? "OK" : "FAIL");
+        if (!cond) ++fail;
+    };
+    check(IsGuiRunToShortCircuit("sysmon.exe", "sysmon.exe", "windows"), "gui exe run -> short-circuit");
+    check(IsGuiRunToShortCircuit("start sysmon.exe", "sysmon.exe", "windows"), "cmd contains gui exe -> short-circuit");
+    check(!IsGuiRunToShortCircuit("sysmon.exe", "sysmon.exe", "console"), "console exe -> no short-circuit");
+    check(!IsGuiRunToShortCircuit("build.cmd", "sysmon.exe", "windows"), "other cmd -> no short-circuit");
+    check(!IsGuiRunToShortCircuit("sysmon.exe", "", "windows"), "no built exe -> no short-circuit");
+    std::printf("SELFTEST_GUIRUN=%s (%d fail)\n", fail == 0 ? "PASS" : "FAIL", fail);
+    return fail == 0 ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     string model = "qwen3:8b", objective, ws = "F:\\rawrxd_acceptance_sysmon_native";
@@ -453,6 +478,7 @@ int main(int argc, char** argv) {
     bool selfTestChannel = false;
     bool selfTestParse = false;
     bool selfTestEdit = false;
+    bool selfTestGuiRun = false;
     for (int i = 1; i < argc; ++i) {
         string a = argv[i];
         auto next = [&]() -> string { return (i + 1 < argc) ? argv[++i] : ""; };
@@ -463,10 +489,12 @@ int main(int argc, char** argv) {
         else if (a == "--self-test-channel") selfTestChannel = true;
         else if (a == "--self-test-parse") selfTestParse = true;
         else if (a == "--self-test-edit") selfTestEdit = true;
+        else if (a == "--self-test-guirun") selfTestGuiRun = true;
     }
     if (selfTestChannel) return SelfTestChannel();
     if (selfTestParse) return SelfTestParse();
     if (selfTestEdit) return SelfTestEdit();
+    if (selfTestGuiRun) return SelfTestGuiRun();
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
     // A02: derive expected deliverables from the objective (no hardcoded names).
@@ -520,6 +548,7 @@ int main(int argc, char** argv) {
     std::printf("[channel] model=%s native_tools=%d text_channel=%d\n",
                 model.c_str(), (int)useTools, (int)!useTools);
     int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false; int prevErrCount = -1;
+    string builtOut, builtSubsys;  // last successful build output + subsystem (GUI-run short-circuit)
     for (int turn = 0; turn < maxTurns * 3 && productive < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
         int phase = ComputePhase();
@@ -625,6 +654,12 @@ int main(int argc, char** argv) {
             else { ofstream f(full, ios::binary); f << content2; result = f.good() ? ("OK wrote " + path + " (" + to_string(content2.size()) + " bytes)") : "ERROR: write failed"; if (f.good()) g_tel.toolOk++; else g_tel.toolFail++; }
         } else if (tool == "run") {
             string cmd = ExtractJsonString(call, "cmd");
+            if (IsGuiRunToShortCircuit(cmd, builtOut, builtSubsys)) {
+                result = "GUI_APP_LAUNCH_ALREADY_VERIFIED: " + builtOut +
+                         " is a GUI executable; the build tool already verified it launches. "
+                         "Do NOT run GUI exes via run (it blocks 20s). Call finish now.";
+                g_tel.corrections++;
+            } else {
             result = RunCmd(cmd);
             if (result.find("error C") != string::npos || result.find("error:") != string::npos) {
                 string f; int ln = 0; string e = FirstError(result, f, ln);
@@ -632,6 +667,7 @@ int main(int argc, char** argv) {
                              "\nFix ONLY this error using the edit tool (targeted old->new replacement), then run build.cmd again.";
                 errCount++; g_tel.corrections++;
             } else { if (errCount > 0) repairProgress++; errCount = 0; g_tel.toolOk++; }
+            }
         } else if (tool == "edit") {
             string path = ExtractJsonString(call, "path"), oldS = ExtractJsonString(call, "old"), newS = ExtractJsonString(call, "new");
             bool eok = false, eesc = false;
@@ -716,7 +752,7 @@ int main(int argc, char** argv) {
                     repairNote = "PRIMARY COMPILER ERROR: " + e + prog + "\nSource (" + f + "):\n" + SourceContext(f, ln) + decl + hint + "\nFix with a targeted edit, then build again.";
                     g_tel.toolFail++; errCount++; lastFailHash = h;
                 }
-                else if (art) { if (result.rfind("BUILD_OK", 0) != 0) result = "BUILD_OK: " + output + " produced"; buildOk = true; g_tel.toolOk++; }
+                else if (art) { if (result.rfind("BUILD_OK", 0) != 0) result = "BUILD_OK: " + output + " produced"; buildOk = true; builtOut = output; builtSubsys = subsys; g_tel.toolOk++; }
                 else { result = "BUILD_NO_ARTIFACT:\n" + result; g_tel.toolFail++; lastFailHash = h; }
             }
         } else if (tool == "read") {
