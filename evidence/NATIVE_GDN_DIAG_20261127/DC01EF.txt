@@ -1,0 +1,4 @@
+RAWRXD DC-01E/F — request-local submission snapshots + deltas (deep2_strata_chat)
+Implemented: SubmissionSnapshots{s0,s1,s2,c0,c1,c2,Valid()} request-local (no static state). S0 before prefill, S1 after prefill, S2 after decode. Receipt: prefill_submits/decode_submits/total_submits, submits_valid (requires nonzero delta), submits_scope=device, telemetry_valid=false (timing pending).
+FINDING: QueueSubmitCount() returns 0 for the Strata path (total_submits=0, submits_valid=false) — it does NOT count Strata submissions (Strata uses a different submit path than VulkanCompute::endSubmitWait). Truthful validity (zero => unmeasured).
+Build GREEN (deep2_strata_chat links). Next: instrument the actual Strata submit site (not QueueSubmitCount) for submits/waits/timing.

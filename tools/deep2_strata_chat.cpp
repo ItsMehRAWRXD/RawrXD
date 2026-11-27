@@ -28,6 +28,13 @@
 #include <string>
 #include <vector>
 
+// DC-01E: request-local submission snapshots (no static state; concurrency-safe).
+struct SubmissionSnapshots {
+    uint64_t s0 = 0, s1 = 0, s2 = 0;
+    bool c0 = false, c1 = false, c2 = false;
+    bool Valid() const noexcept { return c0 && c1 && c2 && s1 >= s0 && s2 >= s1; }
+};
+
 #include "CanonicalTokenizer.hpp"
 #include "StrataExpertResidency.hpp"
 #include "quant_dot_dispatch.hpp"
@@ -65,7 +72,8 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
                   const std::vector<uint32_t>& generated, bool cancelled,
                   double bindMs, double prefillMs, double decodeMs,
                   const RuntimeGraph::Executor& ex,
-                  const Strata::ExpertResidencyLedger::Summary& ledger)
+                  const Strata::ExpertResidencyLedger::Summary& ledger,
+                  const SubmissionSnapshots& snaps)
 {
     std::error_code ec;
     std::filesystem::create_directories(dir, ec);
@@ -76,6 +84,11 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
         return false;
 
     const auto& b = ex.Stats();
+    // DC-01E/F: validated request-scoped submission deltas (device scope).
+    const bool submitsValid = snaps.Valid() && (snaps.s2 > snaps.s0);
+    const uint64_t prefillSubmits = submitsValid ? (snaps.s1 - snaps.s0) : 0;
+    const uint64_t decodeSubmits  = submitsValid ? (snaps.s2 - snaps.s1) : 0;
+    const uint64_t totalSubmits   = submitsValid ? (snaps.s2 - snaps.s0) : 0;
     const size_t nonfinite = ex.NonFiniteLogits();
     const double totalS = (bindMs + prefillMs + decodeMs) / 1000.0;
     const double tps = decodeMs > 0 ? (generated.size() * 1000.0 / decodeMs) : 0.0;
@@ -102,6 +115,12 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
     out << "  \"decode_tps\": " << tps << ",\n";
     out << "  \"gpu_calls\": " << b.gpu_calls << ",\n";
     out << "  \"cpu_calls\": " << b.cpu_calls << ",\n";
+    out << "  \"prefill_submits\": " << prefillSubmits << ",\n";
+    out << "  \"decode_submits\": " << decodeSubmits << ",\n";
+    out << "  \"total_submits\": " << totalSubmits << ",\n";
+    out << "  \"submits_valid\": " << (submitsValid ? "true" : "false") << ",\n";
+    out << "  \"submits_scope\": \"device\",\n";
+    out << "  \"telemetry_valid\": false,\n";
     out << "  \"submits\": " << b.submits << ",\n";
     out << "  \"waits\": " << b.waits << ",\n";
     out << "  \"submit_ms\": " << b.submit_ms << ",\n";
@@ -280,7 +299,10 @@ int main(int argc, char** argv)
         }
         dumpLogits("prefill", pos);
     }
+    SubmissionSnapshots snaps;
+    snaps.s0 = ex.SubmitCount(); snaps.c0 = true;   // DC-01E: before prefill
     const double prefillMs = MsSince(preT0);
+    snaps.s1 = ex.SubmitCount(); snaps.c1 = true;   // after prefill
     std::printf("prefill_done %.1f ms\n", prefillMs);
     std::fflush(stdout);
 
@@ -341,6 +363,7 @@ int main(int argc, char** argv)
         }
     }
     const double decodeMs = MsSince(decT0);
+    snaps.s2 = ex.SubmitCount(); snaps.c2 = true;   // after decode
 
     auto ledger = ex.StrataExpertSummary();
     const auto& b = ex.Stats();
@@ -361,7 +384,7 @@ int main(int argc, char** argv)
     std::printf("CHAT_STATUS %s\n", cancelled ? "CANCELLED"
                                                : (generated.empty() ? "EMPTY" : "OK"));
     WriteReceipt(outdir, tag, model, promptText, prompt, generated, cancelled,
-                 bindMs, prefillMs, decodeMs, ex, ledger);
+                 bindMs, prefillMs, decodeMs, ex, ledger, snaps);
     std::printf("Released; exiting\n");
     return 0;
 }
