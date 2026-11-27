@@ -8,7 +8,9 @@
 // and the transformed tensor size. The expert axis is dims.back() (== original
 // physical expert count); stride = tensorBytes / originalExperts.
 #include <cstdint>
+#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace RawrXD {
@@ -53,6 +55,44 @@ inline bool ComputeExpertSliceLayout(const std::vector<uint64_t>& dims,
     }
     out.totalBytes = total;
     return true;
+}
+
+// SC01: superset compatibility layer (formerly src/reap/ReapTensorSlice.hpp).
+// One authoritative slicing algorithm; the layer+selection lookup and name/layer
+// error context are preserved here so existing consumers/tests are unchanged.
+struct SliceTensorDesc {
+    std::string name;
+    std::vector<uint64_t> dims;   // logical dims; expert dim = last
+    uint64_t bytes = 0;           // total tensor bytes
+};
+
+using ExpertSelection = std::map<uint32_t, std::vector<uint32_t>>;  // layer -> retained
+
+struct SliceResult {
+    bool ok = false;
+    std::string error;
+    uint64_t stride = 0;
+    std::vector<std::pair<uint64_t, uint64_t>> ranges;  // (offset, bytes) per selected
+};
+
+inline SliceResult SliceExperts(const SliceTensorDesc& t, uint32_t layer,
+                                const ExpertSelection& sel) {
+    SliceResult r;
+    auto it = sel.find(layer);
+    if (it == sel.end() || it->second.empty()) {
+        r.error = "selection missing layer " + std::to_string(layer) + " for " + t.name;
+        return r;
+    }
+    ExpertSliceLayout layout;
+    if (!ComputeExpertSliceLayout(t.dims, t.bytes, it->second, layout, r.error)) {
+        if (!r.error.empty()) r.error += " for " + t.name;
+        return r;
+    }
+    r.ok = true;
+    r.stride = layout.stride;
+    r.ranges.reserve(layout.slices.size());
+    for (const ExpertSlice& s : layout.slices) r.ranges.push_back({s.offset, s.length});
+    return r;
 }
 
 }  // namespace Reap

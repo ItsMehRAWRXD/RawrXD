@@ -1,0 +1,28 @@
+RAWRXD REAP SC01 — consolidate expert slicing — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU contract tests. Disk ~6 GB.
+
+PACKAGE SC01 (consolidation): unify the two slicing algorithms into ONE authoritative
+implementation, preserving all capabilities and all regression coverage.
+
+COMPARISON: src/reap/ReapTensorSlice.hpp (SliceExperts: layer+selection lookup, name/layer
+error context) vs src/deep2/ReapExpertSlice.hpp (ComputeExpertSliceLayout: stride/ranges +
+overflow/alignment guards). Mathematically equivalent (stride = bytes/expert-axis; per-expert
+ranges; same validations). deep2 version chosen authoritative (V04 physical writer depends on it).
+
+CHANGE:
+- deep2/ReapExpertSlice.hpp: made a SUPERSET — added SliceTensorDesc, ExpertSelection,
+  SliceResult, SliceExperts(desc, layer, selection) that resolves the layer and delegates to
+  ComputeExpertSliceLayout, preserving name/layer error context. One algorithm.
+- src/reap/ReapTensorSlice.hpp: now a FORWARDING header (#include deep2/ReapExpertSlice.hpp).
+  No duplicate algorithm; existing includes unchanged.
+- Contract tests MIGRATED (not removed): s01_provider_test, s02_residency_test,
+  s02p_pipeline_test include the forwarding header -> build+run against the authoritative core.
+
+VERIFICATION (actual): s01 PASS, s02 PASS, s02P PASS (FAILS=0), V02 ALL PASS. No regression
+coverage lost. Artifacts removed.
+
+DISPOSITION: SC01 COMPLETE (one slicing core; tests migrated+passing). Provider/residency
+duplication remains (SC02/SC03). No test removed.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=SC02 consolidate providers (migrate s01 test); SC03 residency (migrate s02); SC04 unified
+pipeline (s02p); V06.2 selection fingerprint.
