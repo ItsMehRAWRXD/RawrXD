@@ -1,0 +1,28 @@
+RAWRXD REAP S03.3 — owned transformed-buffer residency — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+
+PACKAGE S03.3: add owned transformed-buffer residency to the EXISTING authoritative
+MoEPlaceGlobal (no second manager). Enables Virtual transformed buffers to live alongside
+mapped checkpoint ranges, keyed by the S03.2 immutable transformation identity.
+
+CHANGE (2 files):
+- MoEExpertResidencyPlace.hpp: OwnedEnt{identity,bytes,gen,pin,lastUse,handle} registry;
+  SetTransformedBudget, AcquireTransformed(identity,bytes,handle,outGen),
+  ReleaseTransformed(identity), SetTransformedPinned(identity,pin), TransformedBytes/Count.
+- MoEExpertResidencyPlace.cpp: FindOwn/EvictOwnOne; AcquireTransformed (fail-closed if
+  bytes>budget; LRU-evicts UNPINNED transformed; reuses same identity; bumps generation);
+  Release; SetPinned; Reset clears owned registry (model unload). Physical (identity 0)
+  does not use this path; mapped/hot-set path unchanged.
+
+SEMANTICS: per-identity reuse (same identity -> same buffer/generation); cross-identity
+isolation; pinned/in-flight never evicted; budget enforced; allocation-failure fail-closed;
+cleanup on Reset. Buffer handle is caller-owned (actual GPU buffer bound at S03.6).
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) MoEExpertResidencyPlace.cpp -> EXIT 0. NOT
+linked/run (engine build storage-limited; GPU buffer binding S03.6). No fabricated acceptance.
+
+DISPOSITION: S03.3 COMPLETE (owned-buffer residency mechanism; Physical unchanged; budget/
+pin/LRU/generation/cleanup). Buffers are opaque handles pending S03.6 binding.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.4 accounting (mapped+transformed+pending-retirement); S03.5 geometry/router; S03.6
+bind TransformExpertTensor output to AcquireTransformed + inference (GPU).

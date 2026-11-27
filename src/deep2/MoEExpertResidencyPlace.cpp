@@ -14,6 +14,9 @@ void MoEExpertResidencyPlace::Reset() {
     hotN_ = 0;
     clock_ = 0;
     hotBytes_ = 0;
+    ownN_ = 0;
+    ownClock_ = 0;
+    ownBytes_ = 0;
     std::memset(&ctr_, 0, sizeof(ctr_));
 }
 
@@ -107,6 +110,65 @@ void MoEExpertResidencyPlace::MarkHot(int layer, int expert, uint32_t stick,
     e.lastUse = ++clock_;
     e.identity = identity;
     hotBytes_ += e.bytes;
+}
+
+void MoEExpertResidencyPlace::SetTransformedBudget(uint64_t b) { ownBudget_ = b; }
+
+int MoEExpertResidencyPlace::FindOwn(uint64_t identity) const {
+    for (uint32_t i = 0; i < ownN_; ++i)
+        if (own_[i].identity == identity) return (int)i;
+    return -1;
+}
+
+void MoEExpertResidencyPlace::EvictOwnOne() {
+    int victim = -1;
+    uint64_t oldest = ~0ull;
+    for (uint32_t i = 0; i < ownN_; ++i) {
+        if (own_[i].pin) continue;            // never evict pinned/in-flight
+        if (own_[i].lastUse < oldest) { oldest = own_[i].lastUse; victim = (int)i; }
+    }
+    if (victim < 0) return;
+    ownBytes_ -= own_[victim].bytes;
+    own_[victim] = own_[ownN_ - 1];
+    --ownN_;
+}
+
+bool MoEExpertResidencyPlace::AcquireTransformed(uint64_t identity, uint64_t bytes,
+                                                 void* handle, uint64_t* outGeneration) {
+    int i = FindOwn(identity);
+    if (i >= 0) { own_[i].lastUse = ++ownClock_; if (outGeneration) *outGeneration = own_[i].gen; return true; }
+    if (bytes > ownBudget_) return false;     // fail closed: single expert over budget
+    while (ownBytes_ + bytes > ownBudget_ && ownN_ > 0) {
+        const uint32_t before = ownN_;
+        EvictOwnOne();
+        if (ownN_ == before) break;           // nothing evictable (all pinned)
+    }
+    if (ownBytes_ + bytes > ownBudget_) return false;  // still fits nowhere
+    if (ownN_ >= MOE_PLACE_HOT_CAP) return false;
+    OwnedEnt& e = own_[ownN_++];
+    e.identity = identity;
+    e.bytes = bytes;
+    e.gen = ++ownClock_;
+    e.pin = 0;
+    e.lastUse = ownClock_;
+    e.handle = handle;
+    ownBytes_ += bytes;
+    if (outGeneration) *outGeneration = e.gen;
+    return true;
+}
+
+void MoEExpertResidencyPlace::ReleaseTransformed(uint64_t identity) {
+    int i = FindOwn(identity);
+    if (i < 0) return;
+    ownBytes_ -= own_[i].bytes;
+    own_[i] = own_[ownN_ - 1];
+    --ownN_;
+}
+
+void MoEExpertResidencyPlace::SetTransformedPinned(uint64_t identity, bool pinned) {
+    int i = FindOwn(identity);
+    if (i < 0) return;
+    own_[i].pin = pinned ? 1u : 0u;
 }
 
 void MoEExpertResidencyPlace::EmitTrace(FILE* f) const {
