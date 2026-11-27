@@ -282,8 +282,9 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
+    int productive = 0, emptyStreak = 0;
     int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false; int prevErrCount = -1;
-    for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
+    for (int turn = 0; turn < maxTurns * 3 && productive < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
         int phase = ComputePhase();
         string dir = PhaseDirective(phase);
@@ -311,7 +312,14 @@ int main(int argc, char** argv) {
         string call = FirstJsonObject(content);
         string tool = ExtractJsonString(call, "tool");
         printf("[turn %d] model_tool=%s (phase=%d)\n", turn, tool.empty() ? "(none)" : tool.c_str(), phase);
-        if (tool.empty()) { msgs.push_back({"user", "You must output exactly one JSON tool call."}); continue; }
+        if (tool.empty()) {
+            ++emptyStreak;
+            if (emptyStreak >= 12) { printf("[abort] model produced 12 consecutive empty turns (no tool call) — fail-closed.\n"); break; }
+            msgs.push_back({"user", "You MUST output exactly one JSON tool call NOW, with no prose. Current step: " + PhaseDirective(ComputePhase()) +
+                (emptyStreak >= 3 ? " Example: {\"tool\":\"write\",\"path\":\"sysmon.cpp\",\"content\":\"...\"}" : "")});
+            continue;
+        }
+        emptyStreak = 0;
         // No-progress recovery: reject repeated inspection once source is required.
         if (tool == "list" && phase >= 1 && ComputePhase() >= 1) {
             msgs.push_back({"assistant", content});
@@ -319,7 +327,7 @@ int main(int argc, char** argv) {
             g_tel.corrections++; repeatCount = 0;
             continue;
         }
-        ++g_tel.toolCalls;
+        ++g_tel.toolCalls; ++productive;
         // Repeated-action detection: identical tool call 3x => corrective feedback.
         if (!call.empty() && call == lastCall) {
             if (++repeatCount >= 3) {

@@ -1,0 +1,4 @@
+RAWRXD_AUTONOMOUS_RELIABILITY_CLOSURE_098 — root cause + fix
+Root cause (gpt-oss INCOMPLETE): model emitted 10+ consecutive EMPTY turns (no tool call), exhausting the turn budget before building. Not a build failure.
+Fix: (1) budget bounded by PRODUCTIVE actions (empty turns don't consume max-turns; hard cap maxTurns*3); (2) forceful re-prompt on empty; (3) fail-fast after 12 consecutive empty turns (no resource waste).
+gpt-oss still exhibits a degenerate (none) loop (model behavior); controller now fails fast instead of spinning. Reliability limited by model compliance, not budget.
