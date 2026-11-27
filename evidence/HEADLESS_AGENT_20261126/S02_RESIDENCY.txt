@@ -1,0 +1,4 @@
+RAWRXD S02 — bounded expert residency/paging (Streaming foundation)
+ReapExpertResidency.hpp: LRU + hard byte budget; evicts until fit; rejects oversize (fail-closed). No RNG.
+Standalone MSVC build PASS (6.1 GB). CPU test s02_residency_test 7/7 OK (admit, LRU evict, budget, oversize reject). S02_RESIDENCY=PASS.
+Streaming now has demand provider (S01) + bounded residency (S02). Next: S02 residency<->provider integration (engine, disk-blocked) + V04 writer migration.
