@@ -178,6 +178,14 @@ static string SourceContext(const string& file, int line) {
     return out;
 }
 
+static string FileHash(const string& path) {
+    ifstream f(path, ios::binary);
+    string s((istreambuf_iterator<char>(f)), istreambuf_iterator<char>());
+    uint64_t h = 1469598103934665603ULL;
+    for (unsigned char c : s) { h ^= c; h *= 1099511628211ULL; }
+    return to_string(h);
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -231,7 +239,7 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
-    int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false;
+    int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash;
     for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
         int phase = ComputePhase();
@@ -316,22 +324,34 @@ int main(int argc, char** argv) {
             string stdv = ExtractJsonString(call, "standard"); if (stdv.empty()) stdv = "c++17";
             string subsys = ExtractJsonString(call, "subsystem");
             string libs = ExtractJsonString(call, "libraries");
-            const string vcvars = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat";
-            string cmd = "call \"" + vcvars + "\" >nul 2>&1 && cl /nologo /std:" + stdv + " /EHsc " + sources + " /Fe:" + output + " /link";
-            if (subsys == "windows") cmd += " /SUBSYSTEM:WINDOWS";
-            if (!libs.empty()) cmd += " " + libs;
-            result = RunCmd(cmd);
-            bool art = std::filesystem::exists(std::filesystem::path(g_ws) / output);
-            if (result.find("not recognized") != string::npos) { result = "COMPILER_NOT_INVOKED:\n" + result; g_tel.toolFail++; }
-            else if (result.find("error LNK") != string::npos) { result = "LINK_FAILURE:\n" + result; repairNote = "LINK FAILURE:\n" + result; g_tel.toolFail++; }
-            else if (result.find("error C") != string::npos) {
-                string f; int ln = 0; string e = FirstError(result, f, ln);
-                result = "COMPILE_FAILURE:\n" + result;
-                repairNote = "PRIMARY COMPILER ERROR: " + e + "\nSource (" + f + "):\n" + SourceContext(f, ln) + "\nFix with a targeted edit, then build again.";
-                g_tel.toolFail++; errCount++;
+            string srcFile = sources; size_t sp = srcFile.find(' '); if (sp != string::npos) srcFile = srcFile.substr(0, sp);
+            string h = FileHash((std::filesystem::path(g_ws) / srcFile).string());
+            if (h == lastFailHash) {
+                result = "SOURCE_UNCHANGED: rebuild rejected. The source has not changed since the last failed build.";
+                repairNote = "Apply a targeted edit that fixes the PRIMARY error, then call build again. Rebuilding identical input is not allowed.";
+                g_tel.toolFail++; g_tel.corrections++;
+            } else {
+                const string vcvars = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat";
+                auto mk = [&](const string& sf) { string c = "call \"" + vcvars + "\" >nul 2>&1 && cl /nologo /std:" + stdv + " /EHsc " + sources + " /Fe:" + output + " /link " + sf; if (!libs.empty()) c += " " + libs; return c; };
+                result = RunCmd(mk(subsys == "windows" ? "/SUBSYSTEM:WINDOWS" : "/SUBSYSTEM:CONSOLE"));
+                bool art = std::filesystem::exists(std::filesystem::path(g_ws) / output);
+                // Deterministic entry-point reconciliation (AR-10/11): unresolved WinMain under WINDOWS -> retry CONSOLE.
+                if (!art && result.find("LNK2019") != string::npos && result.find("WinMain") != string::npos && subsys == "windows") {
+                    result = RunCmd(mk("/SUBSYSTEM:CONSOLE"));
+                    art = std::filesystem::exists(std::filesystem::path(g_ws) / output);
+                    if (art) result = "BUILD_OK (entry-point reconciled to CONSOLE): " + output + " produced";
+                }
+                if (result.find("not recognized") != string::npos) { result = "COMPILER_NOT_INVOKED:\n" + result; g_tel.toolFail++; lastFailHash = h; }
+                else if (result.find("error LNK") != string::npos) { result = "LINK_FAILURE:\n" + result; repairNote = "LINK FAILURE:\n" + result; g_tel.toolFail++; lastFailHash = h; }
+                else if (result.find("error C") != string::npos) {
+                    string f; int ln = 0; string e = FirstError(result, f, ln);
+                    result = "COMPILE_FAILURE:\n" + result;
+                    repairNote = "PRIMARY COMPILER ERROR: " + e + "\nSource (" + f + "):\n" + SourceContext(f, ln) + "\nFix with a targeted edit, then build again.";
+                    g_tel.toolFail++; errCount++; lastFailHash = h;
+                }
+                else if (art) { if (result.rfind("BUILD_OK", 0) != 0) result = "BUILD_OK: " + output + " produced"; buildOk = true; g_tel.toolOk++; }
+                else { result = "BUILD_NO_ARTIFACT:\n" + result; g_tel.toolFail++; lastFailHash = h; }
             }
-            else if (art) { result = "BUILD_OK: " + output + " produced"; buildOk = true; g_tel.toolOk++; }
-            else { result = "BUILD_NO_ARTIFACT:\n" + result; g_tel.toolFail++; }
         } else if (tool == "read") {
             string path = ExtractJsonString(call, "path"), full;
             if (!PathInWs(path, full)) { result = "ERROR: path escapes workspace"; g_tel.toolFail++; }

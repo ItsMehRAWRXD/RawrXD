@@ -1,0 +1,4 @@
+RAWRXD_DETERMINISTIC_ADAPTIVE_REPAIR_055 — deterministic repair (deepseek-coder-v2:16b)
+Implemented: AR-04/05 build-input revision tracking + SOURCE_UNCHANGED rejection (verified firing); AR-10/11 deterministic WinMain->CONSOLE entry-point reconciliation.
+Result: model writes BYTE-IDENTICAL 1884B source each turn (hash unchanged -> rebuild rejected); cannot fix C2039 dwLowPart. Controller correct; model cannot iterate. INCOMPLETE.
+Deterministic repairs verified working; model repair capability remains the blocker.
