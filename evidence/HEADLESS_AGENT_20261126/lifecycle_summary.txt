@@ -1,0 +1,5 @@
+RAWRXD_AUTONOMOUS_PRODUCTION_CERTIFICATION_087 — bounded RunCmd verified + Nemotron full lifecycle
+Bounded RunCmd: run sysmon.exe -> 20s timeout (no hang), descendant cleanup. Model then finish -> FINISHED=yes functional=1 RESULT=PASS (172s, decode 154 TPS, 8 req).
+Full autonomous lifecycle (build->repair->verify->finish) now demonstrated for all 4 models.
+Cross-model full-lifecycle: gpt-oss PASS, deepseek PASS, qwen3 PASS, nemotron PASS = 4/4.
+Repeat reliability (3x each) and concurrent agents remain pending.
