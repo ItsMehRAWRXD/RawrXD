@@ -1,0 +1,5 @@
+RAWRXD_NATIVE_AUTONOMOUS_RELIABILITY_CERTIFICATION_113 — repeat campaign (partial, frozen b14601ff09)
+gpt-oss:20b: PASS, INCOMPLETE, INCOMPLETE => 1/3
+deepseek-coder-v2:16b: PASS, INCOMPLETE so far => 1/2
+=> Repeat reliability is LOW (~30-40%). 4/4 historical was single-run, NOT reliable. Campaign continues in background (pid 12452) for remaining runs (qwen3, nemotron, deepseek run3).
+Controller recovery (text fallback) works when model cooperates, but empty-content noncompliance still causes frequent INCOMPLETE.
