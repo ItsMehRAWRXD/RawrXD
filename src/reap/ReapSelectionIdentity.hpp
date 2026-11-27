@@ -47,4 +47,15 @@ static inline uint64_t CacheIdentity(uint64_t weightKey, uint64_t selectionFinge
     return h;
 }
 
+// S03.5: checkpoint-content identity across all shards (content + geometry).
+static inline uint64_t CheckpointContentIdentity(const std::vector<uint64_t>& shardContentHashes,
+                                                 uint64_t tensorCount, uint32_t quantBlockBytes) {
+    uint64_t h = 0x9E3779B97F4A7C15ULL;
+    auto mix = [&](uint64_t v) { h ^= v; h *= 1099511628211ULL; h ^= h >> 29; };
+    mix((uint64_t)shardContentHashes.size());
+    for (uint64_t s : shardContentHashes) mix(s);
+    mix(tensorCount); mix(quantBlockBytes);
+    return h;
+}
+
 } // namespace RawrXD::Reap

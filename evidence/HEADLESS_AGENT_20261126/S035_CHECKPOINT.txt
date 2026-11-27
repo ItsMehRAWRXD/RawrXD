@@ -1,0 +1,4 @@
+RAWRXD S03.5 — checkpoint-content identity across shards (standalone)
+ReapSelectionIdentity::CheckpointContentIdentity hashes all shard content hashes + tensor count + quant block. Deterministic; shard/tensor/quant changes alter identity.
+Standalone MSVC build PASS. CPU test s035_checkpoint_test 4/4 OK (deterministic, shard/tensor/quant differ). S035_CHECKPOINT=PASS.
+Completes P0 transformation identity (checkpoint-content + selection + geometry + mode). Storage-independent.
