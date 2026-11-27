@@ -112,6 +112,9 @@ struct BindStats {
     std::string failure_receipt_json;
     // Kernel receipts
     uint64_t gpu_calls = 0, cpu_calls = 0, gpu_rows = 0, cpu_rows = 0;
+    // Sprint 02: authoritative backend GpuCounters (thread-safe snapshot).
+    uint64_t submits = 0, waits = 0;
+    double submit_ms = 0.0, fence_wait_ms = 0.0;
     std::string fallback_reason;
     std::string gpu_device;
     double cold_start_ms = 0, steady_kernel_ms = 0, dispatch_ms = 0, total_ms = 0;
