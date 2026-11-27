@@ -1,0 +1,5 @@
+RAWRXD repeat reliability (corrected objective-derived gate, frozen controller) — 12 runs
+gpt-oss 1/3, deepseek 1/3, qwen3 0/3, nemotron 0/3 => 2 PASS / 12 = 16.7%.
+The 4/4 historical was single-run (old hardcoded gate). With the corrected gate, repeat reliability is LOW (~17%).
+Dominant failure: model non-completion (empty-content / non-convergence) under the honest gate. Reliability is the genuine gap, not the gate.
+12/12 target far off; reliability engineering (not more single runs) is the priority.
