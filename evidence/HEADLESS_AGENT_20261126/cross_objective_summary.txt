@@ -1,0 +1,4 @@
+RAWRXD cross-objective generalization (calc) — frozen controller, gpt-oss:20b
+Objective: Win32 calculator calc.cpp -> calc.exe. Result: INCOMPLETE (looped edit/read/list, no calc.exe, functional=0, 103s, 16 turns).
+=> The sysmon 4/4 does NOT yet generalize to a different objective; model repair capability on a new objective is insufficient. Cross-objective generalization remains PENDING.
+Controller loop/mode/build tool are objective-agnostic; the gap is model code-repair on unfamiliar objectives.
