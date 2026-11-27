@@ -1,0 +1,27 @@
+RAWRXD REAP S03.1 — transformation-aware production cache identity — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+
+PACKAGE S03.1: make the authoritative production residency (MoEPlaceGlobal /
+MoEExpertResidencyPlace) transformation-aware WITHOUT a second manager and WITHOUT
+changing Physical behavior. Identity is immutable and request/model-scoped (passed
+through Place/MarkHot/FindHot), never a synchronized mutable global.
+
+CHANGE (3 files):
+- MoEExpertResidencyPlace.hpp: HotEnt += uint64_t identity; Place/MarkHot/MarkCold/IsHot/
+  HotStick/FindHot take `uint64_t identity = 0` (0 = legacy/Physical domain, unchanged).
+- MoEExpertResidencyPlace.cpp: FindHot matches identity; MarkHot stores identity; MarkCold/
+  IsHot/HotStick thread identity.
+- MoEExpertResidencyPlace_Place.cpp: Place(...,identity) uses identity in FindHot/MarkCold.
+Reuses PR-06 CacheIdentity concept (src/reap/ReapSelectionIdentity.hpp) — the identity VALUE
+is computed by the caller (S03.2); S03.1 provides the identity-aware key mechanism. Existing
+callers (no identity) default to 0 => Physical path byte-identical.
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) MoEExpertResidencyPlace.cpp +
+MoEExpertResidencyPlace_Place.cpp + K2NativeMoEFfn_Place.cpp (caller) -> EXIT 0. NOT
+linked/run (engine build storage-limited; inference GPU-gated).
+
+DISPOSITION: S03.1 COMPLETE (identity mechanism; Physical unchanged). Cache entries with
+different identity never alias; same identity reuses. Budget/LRU/eviction/telemetry intact.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.2 propagate validated selection -> CacheIdentity into Place (caller); S03.3 owned
+transformed buffers; S03.4 accounting; S03.6 inference binding (GPU).

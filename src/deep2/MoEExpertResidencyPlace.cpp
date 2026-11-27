@@ -31,9 +31,10 @@ void MoEExpertResidencyPlace::SetProbe(MoEPlaceProbeFn fn, void* ctx) {
     probeCtx_ = ctx;
 }
 
-int MoEExpertResidencyPlace::FindHot(int layer, int expert) const {
+int MoEExpertResidencyPlace::FindHot(int layer, int expert, uint64_t identity) const {
     for (uint32_t i = 0; i < hotN_; ++i)
-        if (hot_[i].layer == layer && hot_[i].expert == expert)
+        if (hot_[i].layer == layer && hot_[i].expert == expert &&
+            hot_[i].identity == identity)
             return (int)i;
     return -1;
 }
@@ -60,17 +61,17 @@ void MoEExpertResidencyPlace::EvictOne() {
     --hotN_;
 }
 
-int MoEExpertResidencyPlace::IsHot(int layer, int expert) const {
-    return FindHot(layer, expert) >= 0 ? 1 : 0;
+int MoEExpertResidencyPlace::IsHot(int layer, int expert, uint64_t identity) const {
+    return FindHot(layer, expert, identity) >= 0 ? 1 : 0;
 }
 
-int MoEExpertResidencyPlace::HotStick(int layer, int expert) const {
-    int i = FindHot(layer, expert);
+int MoEExpertResidencyPlace::HotStick(int layer, int expert, uint64_t identity) const {
+    int i = FindHot(layer, expert, identity);
     return i >= 0 ? (int)hot_[(uint32_t)i].stick : -1;
 }
 
-void MoEExpertResidencyPlace::MarkCold(int layer, int expert) {
-    int i = FindHot(layer, expert);
+void MoEExpertResidencyPlace::MarkCold(int layer, int expert, uint64_t identity) {
+    int i = FindHot(layer, expert, identity);
     if (i < 0) return;
     if (hotBytes_ >= hot_[(uint32_t)i].bytes)
         hotBytes_ -= hot_[(uint32_t)i].bytes;
@@ -81,9 +82,9 @@ void MoEExpertResidencyPlace::MarkCold(int layer, int expert) {
 }
 
 void MoEExpertResidencyPlace::MarkHot(int layer, int expert, uint32_t stick,
-                                      uint64_t bytes) {
+                                      uint64_t bytes, uint64_t identity) {
     std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
-    int i = FindHot(layer, expert);
+    int i = FindHot(layer, expert, identity);
     if (i >= 0) {
         HotEnt& e = hot_[(uint32_t)i];
         e.stick = stick & 1u;
@@ -104,6 +105,7 @@ void MoEExpertResidencyPlace::MarkHot(int layer, int expert, uint32_t stick,
     e.stick = stick & 1u;
     e.bytes = bytes ? bytes : expertBytes_;
     e.lastUse = ++clock_;
+    e.identity = identity;
     hotBytes_ += e.bytes;
 }
 
