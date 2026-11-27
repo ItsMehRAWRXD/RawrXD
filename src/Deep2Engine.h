@@ -1051,6 +1051,9 @@ namespace Deep2
 
         RawrXD::Reap::RuntimeInjection reapRuntimeInjection_{};
         RawrXD::Reap::RuntimeInjectionReceipt reapRuntimeReceipt_{};
+        // S03.5: checkpoint identity (P0). Set at load from the shard index so
+        // transformed-cache identity is checkpoint-scoped, not selection-only.
+        uint64_t reapCheckpointId_ = 0;
 
         // BP16 streaming support (zero-copy mapped weight access)
         std::unique_ptr<BP16Streamer> bp16Streamer_;

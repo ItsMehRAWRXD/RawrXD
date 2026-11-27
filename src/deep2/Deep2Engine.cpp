@@ -2897,6 +2897,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
         printf("[Deep2Engine] GlobalTensorIndex built: %zu tensors across %zu shards\n", globalIndex_->TotalTensors(),
                globalIndex_->TotalShards());
+        // S03.5: checkpoint identity from the authoritative shard index (P0).
+        if (globalIndex_)
+        {
+            const std::string sp0 = globalIndex_->ShardPath(0).string();
+            reapCheckpointId_ = RawrXD::Reap::FingerprintBytes(
+                0x9E3779B97F4A7C15ULL,
+                reinterpret_cast<const uint8_t*>(sp0.data()), sp0.size());
+        }
 
         // Initialize residency cache for streaming tensor access
         // The standard multi-shard path pins per-layer attention, norm,
@@ -12430,8 +12438,13 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             if (sit != reapRuntimeInjection_.selection.end() && !sit->second.empty())
             {
                 RawrXD::Reap::ExpertSelection one{{lyr, sit->second}};
+                // S03.5: full identity — checkpoint + logical tensor (layer) +
+                // geometry + mode + selection. (quant type pending; see evidence.)
+                const uint64_t expertBytes =
+                    static_cast<uint64_t>(moeConfig.moeIntermediateSize) *
+                    static_cast<uint64_t>(moeConfig.hiddenDim);
                 const uint64_t fp = RawrXD::Reap::SelectionFingerprint(
-                    one, /*checkpointId*/ 0, /*tensorBytes*/ 0,
+                    one, reapCheckpointId_, expertBytes,
                     static_cast<uint32_t>(reapRuntimeInjection_.mode));
                 transformIdentity = RawrXD::Reap::CacheIdentity(
                     (static_cast<uint64_t>(lyr) << 32), fp, /*selectionValid*/ true);

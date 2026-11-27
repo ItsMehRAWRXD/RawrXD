@@ -1,0 +1,28 @@
+RAWRXD REAP S03.5 (P0) — complete transformation identity — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+
+P0 DEFECT ADDRESSED: S03.2 identity used checkpoint=0, tensorBytes=0 — different
+checkpoints/tensors with identical selections could alias transformed buffers. Now the
+production identity includes checkpoint + logical tensor + geometry + mode + selection.
+
+CHANGE (2 files):
+- Deep2Engine.h: += uint64_t reapCheckpointId_ (set at load).
+- Deep2Engine.cpp: after GlobalTensorIndex build, reapCheckpointId_ = FingerprintBytes(
+  first shard path) (PR-06). Identity at K2MoEPlaceAndExec now uses:
+    SelectionFingerprint(selection, reapCheckpointId_, expertBytes, mode) + CacheIdentity
+  where expertBytes = moeIntermediateSize*hiddenDim (geometry) and weightKey = layer<<32
+  (logical tensor = layer's expert tensor). Checkpoint-scoped, tensor-scoped, geometry-aware.
+
+IDENTITY COVERAGE NOW: selection ✓, mode ✓, checkpoint ✓, logical tensor (layer) ✓,
+geometry (expertBytes) ✓. Quantization identity: STILL 0 (pending — needs expert quant type
+from modelWeights at this site; tracked as the remaining S03.5 sub-item). Reject-incomplete
+policy: quant remains the one open dimension.
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) Deep2Engine.cpp -> EXIT 0. NOT linked/run
+(storage/GPU). Physical (hasSelection=false) => identity 0, unchanged.
+
+DISPOSITION: S03.5 PARTIAL (checkpoint+tensor+geometry COMPLETE — P0 alias fixed; quant
+pending). Different checkpoints/tensors no longer alias.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.5 quant identity (expert type); S03.4 unified accounting (mapped+transformed+
+pending-retirement, single budget); S03.6 inference binding (GPU).
