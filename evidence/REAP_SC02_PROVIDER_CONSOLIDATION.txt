@@ -1,0 +1,23 @@
+RAWRXD REAP SC02 — consolidate expert provider — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU tests. Disk ~6 GB.
+
+PACKAGE SC02: one authoritative expert provider, all capabilities retained, tests migrated.
+
+AUTHORITATIVE: src/reap/ExpertProvider (used by StreamingPipeline). Merged the deep2
+provider's ForEachRetainedExpert capability in as ForEachRetained(layer, retained,
+maxWindow, sink): demand-driven, original order, bounded window (cap), no full-bank
+materialization; consumes the unified slice core (SliceExperts -> deep2/ReapExpertSlice).
+
+CHANGE:
+- src/reap/ReapExpertProvider.hpp: added ForEachRetained (template sink).
+- tools/reap_expert_provider_test.cpp: MIGRATED to the authoritative provider (Register +
+  ForEachRetained); verifies order 1,3 / content / window-budget / invalid-layer.
+- src/deep2/ReapExpertProvider.hpp: REMOVED (duplicate) after migration.
+
+VERIFICATION (actual): s01_provider PASS, migrated provider test ALL PASS, s02p_pipeline
+PASS (provider consumer unaffected). No capability lost, no test removed. Artifacts removed.
+
+DISPOSITION: SC02 COMPLETE (one provider; tests migrated+passing). Providers: 2 -> 1.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=SC03 consolidate residency (merge capabilities; migrate s02 + deep2 residency test);
+SC04 unified pipeline; SC05 acceptance.
