@@ -1,0 +1,8 @@
+RAWRXD bounded single-R9700 native diagnostic (authorized) — 2026-11-27
+Model: n4-tiny-oracle.gguf (llama 1.1B Q4_0) ; backend deep2_strata_chat --gpu --strata ; single R9700, max-new 16.
+Result: CHAT_STATUS OK, cleanup=ok, nonfinite_logits=0. NO device loss (no TDR before/after; GPUs Status OK).
+Dispatch: gpu_calls=3100 cpu_calls=0 fallback=<none>  (GPU engaged, NO CPU fallback).
+Perf: prompt_tokens=4 generate_tokens=16 prefill_ms=3610.95 decode_ms=8289.25 decode_tps=1.93 total_ms=14743.
+Memory: live_device_bytes=134217728 (128MB), live_allocation_count=1, evicted_weight_bytes=0, heap_headroom=32GB.
+BOTTLENECK: ~194 GPU dispatches/token (3100/16) => dispatch-bound 1.93 TPS, not compute-bound. Native perf target (30 TPS) requires dispatch consolidation (reduce per-token submissions), not more dispatches.
+No dual-GPU, no sustained stress, no retries. Receipt: strata_chat_gdn_diag.json.
