@@ -295,6 +295,15 @@ static bool JsonWellFormed(const string& s) {
     return depth == 0 && !inStr;
 }
 
+static string WorkspaceHash() {
+    uint64_t h = 0x9E3779B97F4A7C15ULL;
+    for (auto& e : std::filesystem::directory_iterator(g_ws)) {
+        h ^= (uint64_t)e.file_size() + (uint64_t)e.path().filename().string().size();
+        h *= 1099511628211ULL;
+    }
+    return std::to_string(h);
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -362,7 +371,7 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
-    int productive = 0, emptyStreak = 0; bool useTools = true;
+    int productive = 0, emptyStreak = 0; string lastWsHash; int unchangedCount = 0; bool useTools = true;
     int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false; int prevErrCount = -1;
     for (int turn = 0; turn < maxTurns * 3 && productive < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
@@ -431,6 +440,15 @@ int main(int argc, char** argv) {
             msgs.push_back({"user", "Stop re-reading. The build failed. Apply a targeted EDIT to fix the PRIMARY compiler error now, then build."});
             g_tel.corrections++; repeatCount = 0;
             continue;
+        }
+        // R02.8 convergence: detect unchanged workspace (no file progress).
+        {
+            string wh = WorkspaceHash();
+            if (wh == lastWsHash) ++unchangedCount; else { lastWsHash = wh; unchangedCount = 0; }
+            if (unchangedCount >= 3) {
+                msgs.push_back({"user", "No workspace progress for 3 turns. Replan: take a DIFFERENT concrete action (write the source, then build). Do not repeat."});
+                unchangedCount = 0; g_tel.corrections++;
+            }
         }
         ++g_tel.toolCalls; ++productive;
         // Repeated-action detection: identical tool call 3x => corrective feedback.
