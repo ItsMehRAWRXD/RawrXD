@@ -148,6 +148,19 @@ public:
 
     const BindStats& Stats() const { return stats_; }
 
+    // Sprint 02 (RAWRXD_LIVE_STATS_INTEGRATION_072): refresh GPU counters from
+    // the authoritative backend DURING execution (not only at bind), so the
+    // heartbeat reports live submits/waits/durations. Thread-safe snapshot;
+    // does not touch gpu_calls/cpu_calls (mirrored elsewhere).
+    void RefreshGpuCounters() {
+        std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+        const auto gc = Gpu().counters();
+        stats_.submits       = gc.submits;
+        stats_.waits         = gc.waits;
+        stats_.submit_ms     = gc.submit_ms;
+        stats_.fence_wait_ms = gc.fence_wait_ms;
+    }
+
     // Stable JSON receipt for callers and certification tooling. An empty
     // string means Bind has not failed in this executor instance.
     const std::string& FailureReceiptJson() const {
