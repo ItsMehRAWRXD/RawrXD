@@ -1,0 +1,26 @@
+RAWRXD REAP S03.5 (production integration) — content identity consumption — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk 6.08 GB.
+Reconciled HEAD=4c8b347ca6 (PR-06 CheckpointContentIdentity, 4/4) — consumed, not duplicated.
+
+PACKAGE S03.5 integration: production checkpoint identity now uses VERIFIED CONTENT, not
+metadata. Reuses PR-06 CheckpointContentIdentity + FingerprintBytes (no new algorithm).
+
+CHANGE (1 file):
+- Deep2Engine.cpp: reapCheckpointId_ = CheckpointContentIdentity(perShardContentHashes,
+  TotalTensors, quantBlockBytes). Each shard's HEADER REGION (first 1 MiB = GGUF header +
+  tensor table) is content-hashed (FingerprintBytes). A checkpoint replaced at the same path
+  with identical size+mtime but different content now yields a DIFFERENT identity (metadata
+  proxy fixed). Covers all shards.
+
+IDENTITY: checkpoint CONTENT ✓ (header+table, all shards), tensor (layer group) ✓, geometry
+(expertBytes) ✓, mode ✓, selection ✓. Quant: source via content, transform via mode.
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) Deep2Engine.cpp -> EXIT 0. NOT linked/run
+(storage/GPU). Physical (identity 0) unchanged. PR-06 test 4/4 (ancestor).
+
+DISPOSITION: S03.5 production integration COMPLETE (content identity consumed; metadata
+proxy removed). Remaining S03.5: full-file content hash (header-region is the practical
+verified identity) + explicit quant field — tracked.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.6 genuine GPU materialization (Vulkan alloc/upload/descriptor/dispatch — source
+implementable, GPU verify held); S03.7 completion/cancel/retirement; S03.8 planner.
