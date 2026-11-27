@@ -1,0 +1,3 @@
+RAWRXD corrected transport reliability (isolated exe, partial) — 2026-11-27
+gpt-oss 0/3 this run (INCOMPLETE x3) — high variance (earlier: 2/3, 3/3). deepseek run6 slow.
+Transport fully implemented (native accepted, gpt-oss E2E PASS 38.5s). Reliability LOW + VARIABLE (~25-42%), model/variance-limited, not transport.
