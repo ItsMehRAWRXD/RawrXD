@@ -1,0 +1,4 @@
+RAWRXD storage unblock + resume — 2026-11-27
+Removed F:\rawrxd\.worktrees\residency (git worktree remove --force) AFTER preserving uncommitted diff (6220 B -> residency_uncommitted.patch). F: 6.08 -> 10.6 GB (>=10 GB incremental-link condition MET).
+Engine incremental link VERIFIED: deep2_strata_chat.exe build=0 with 10.6 GB.
+Resume: S03.6D-H production materialization/dispatch via TransformContext. Uncommitted StableKey work preserved in patch (not lost).
