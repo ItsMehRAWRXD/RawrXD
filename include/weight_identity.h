@@ -57,6 +57,21 @@ inline bool Matches(const Key& a, const Key& b) {
            a.bytes == b.bytes && a.kind == b.kind && a.tensor_id == b.tensor_id;
 }
 
+// Hash for Key (collision-safe equality is Matches/operator==; the hash only
+// buckets). Distinct keys hash independently; collisions are resolved by equality.
+struct KeyHash {
+    size_t operator()(const Key& k) const {
+        uint64_t h = k.fingerprint;
+        h ^= k.model_id + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        h ^= (uint64_t)k.bytes + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        h ^= (uint64_t)(uint32_t)k.kind + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        h ^= k.tensor_id + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        return (size_t)h;
+    }
+};
+
+inline bool operator==(const Key& a, const Key& b) { return Matches(a, b); }
+
 }  // namespace WeightIdentity
 }  // namespace Deep2
 }  // namespace RawrXD

@@ -1,0 +1,35 @@
+RAWRXD NP-05B/05D — device-independent stable cache table — 2026-11-27
+Branch: residency/np05-06  Base: a146b8f6e0
+Mode: DIRECT_EXECUTOR. Hardware: NOT used (held). Disk: 6.08 GB.
+
+OBJECTIVE: a stable, collision-safe, host-pointer-independent cache lookup with explicit
+ownership (pin/lease/retire/generation), as the component production adopts to replace the
+pointer-keyed map. Vulkan-free so CPU tests exercise the SAME code (actual reuse + ownership).
+
+IMPLEMENTED (real, not a counter):
+1. include/weight_identity.h: KeyHash (bucket hash; equality via Matches/operator==) +
+   operator==. tensor_id already present.
+2. include/weight_cache_table.h (NEW): Table maps WeightIdentity::Key -> Entry with
+   generation (physical, SEPARATE from logical id), pin_count, lease_count, retired/reap.
+   Find (stable O(1) lookup), Insert (new physical generation), Pin/Unpin, AcquireLease/
+   ReleaseLease, Evict (blocked while pinned/leased), Reap(completed_generation).
+3. tools/weight_identity_test.cpp: table cases — relocated buffer reuses entry (host-pointer-
+   independent), pin blocks eviction, unpin+evict+reap, revision -> distinct entry, lease hold,
+   cross-model isolation. => ALL PASS (exit 0).
+
+WHY NOT YET WIRED INTO PRODUCTION:
+Pin/lease/batch_pinned_ in src/vulkan_compute.cpp are keyed by the host pointer (~15 sites).
+Swapping to the content Key requires reworking that ownership to the resolved resident key;
+doing so without runtime verification (GPU held) risks use-after-free (the G04 protection).
+The table is the production-intended replacement; the swap is the next step under runtime.
+
+VERIFICATION (actual):
+- CPU regression (production component): ALL PASS (exit 0). Artifacts removed.
+- Production /Zs: unchanged this turn (no production edit); baseline a146b8f6e0 syntax PASS.
+- Link/runtime: PENDING/HELD.
+
+DISPOSITION:
+NP05B_CACHE_TABLE=IMPLEMENTED(component+CPU reuse/ownership regression PASS)
+STABLE_CACHE_LOOKUP=component ready; production swap PENDING(runtime-gated)
+PROMOTE=0  CERTIFIED=0  RELEASE=HELD
+NEXT=wire Table into VulkanCompute (rework pin/lease to Key) under runtime; NP-05C; NP-06A-F.

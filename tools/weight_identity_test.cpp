@@ -2,11 +2,13 @@
 // Exercises the SAME component production uses (include/weight_identity.h). No Vulkan,
 // no GPU: build with cl and run. Exit 0 = all pass, 1 = failure.
 #include "weight_identity.h"
+#include "weight_cache_table.h"
 #include <cstdio>
 #include <cstring>
 #include <vector>
 
 using namespace RawrXD::Deep2::WeightIdentity;
+using namespace RawrXD::Deep2::WeightCache;
 
 static int g_fail = 0;
 #define CHECK(cond, msg) do { if (!(cond)) { std::printf("FAIL: %s\n", msg); ++g_fail; } } while (0)
@@ -56,6 +58,48 @@ int main() {
     // 8. Same logical tensor id -> matches.
     Key kt2 = Make(1, a, sizeof(a), 0, /*tensor_id=*/7);
     CHECK(Matches(kt, kt2), "tensor_id: same logical tensor matches");
+
+    // ---- Stable cache table: ACTUAL reuse + ownership (production component) ----
+    std::memcpy(b, a, sizeof(a));  // reset b to identical content
+    {
+        Table t;
+        Key k1 = Make(1, a, sizeof(a), 0);
+        Entry* e1 = t.Insert(k1);
+        // 9. Relocated host buffer (different pointer, identical content) -> SAME entry.
+        CHECK(t.Find(Make(1, b, sizeof(b), 0)) == e1, "table: relocated buffer reuses entry");
+        // 10. Pin blocks eviction; unpin allows it; reap after generation.
+        CHECK(t.Pin(k1), "table: pin ok");
+        CHECK(!t.Evict(k1), "table: pinned entry NOT evicted");
+        t.Unpin(k1);
+        CHECK(t.Evict(k1), "table: unpinned entry evicted");
+        CHECK(t.Reap(e1->generation) == 1, "table: reaped after generation");
+    }
+    {
+        // 11. Revision change -> distinct entry (no false reuse).
+        Table t2;
+        unsigned char c[16]; std::memcpy(c, a, sizeof(a)); c[0] ^= 0xFF;
+        Entry* r1 = t2.Insert(Make(1, a, sizeof(a), 0));
+        CHECK(t2.Find(Make(1, c, sizeof(c), 0)) == nullptr, "table: revision -> miss");
+        Entry* r2 = t2.Insert(Make(1, c, sizeof(c), 0));
+        CHECK(r2 != r1, "table: revision -> distinct entry");
+    }
+    {
+        // 12. Lease holds the entry; release then evicts.
+        Table t3;
+        t3.Insert(Make(1, a, sizeof(a), 0));
+        uint64_t lease = t3.AcquireLease(Make(1, a, sizeof(a), 0));
+        CHECK(lease != 0, "table: lease acquired");
+        CHECK(!t3.Evict(Make(1, a, sizeof(a), 0)), "table: leased entry NOT evicted");
+        t3.ReleaseLease(lease);
+        CHECK(t3.Evict(Make(1, a, sizeof(a), 0)), "table: evicted after lease release");
+    }
+    {
+        // 13. Cross-model isolation in the table.
+        Table t4;
+        Entry* m1 = t4.Insert(Make(1, a, sizeof(a), 0));
+        CHECK(t4.Find(Make(2, a, sizeof(a), 0)) == nullptr, "table: cross-model miss");
+        CHECK(t4.Find(Make(1, a, sizeof(a), 0)) == m1, "table: same-model hit");
+    }
 
     if (g_fail == 0) { std::printf("ALL PASS\n"); return 0; }
     std::printf("%d FAILURE(S)\n", g_fail);
