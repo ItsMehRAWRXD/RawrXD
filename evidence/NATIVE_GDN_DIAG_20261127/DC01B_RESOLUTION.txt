@@ -1,0 +1,6 @@
+RAWRXD DC-01B interface resolution (preprocessed-TU evidence) — 2026-11-27
+Method: cl /P on tools\deep2_strata_chat.cpp with real CMake include flags -> _bb_build\strata_pre.txt.
+Finding: in the Strata TU, GetGpuCounters and GetDeep2VulkanCompute have NO declaration; only 'class VulkanCompute;' (forward) at preprocessed line 316911.
+Authoritative declarations (src/deep2/vulkan_compute.h): GetGpuCounters() line 262; GetDeep2VulkanCompute() line 1964.
+=> Root cause: runtime_graph_executor.hpp forward-declares VulkanCompute but does NOT include vulkan_compute.h; deep2_strata_chat.cpp therefore sees an incomplete type (accessor unusable).
+Fix (per preferred architecture): collect submits/waits/submit_ms/wait_ms INSIDE RuntimeGraphExecutor (runtime_graph_executor.cpp has the full def) into BindStats, expose via Stats(); receipt reads Stats (no VulkanCompute dep in CLI). DC-01B3 done; DC-01B5/E/F/G next.
