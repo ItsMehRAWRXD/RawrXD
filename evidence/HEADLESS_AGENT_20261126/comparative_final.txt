@@ -1,0 +1,4 @@
+RAWRXD ADAPTIVE RECOVERY COMPARATIVE — improved (context reconstruction) vs baseline
+Baseline b14601ff09: 3 PASS / 7 = 42.86% (interrupted).
+Improved 1befd9e7cf: 5 PASS / 12 = 41.67% (gpt-oss 2/3, deepseek 1/3, qwen3 2/3, nemotron 0/3).
+=> Context reconstruction did NOT improve aggregate reliability (delta -1.2pp, within noise). Reliability ~42%, NOT established. Recovery mechanism is not the lever; model compliance is.
