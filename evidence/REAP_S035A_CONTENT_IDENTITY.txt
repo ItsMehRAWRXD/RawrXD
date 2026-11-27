@@ -1,0 +1,27 @@
+RAWRXD REAP S03.5A — checkpoint content identity — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+
+P0 (same-path replacement): S03.5 used a first-shard PATH fingerprint — a checkpoint
+replaced at the same path kept the same identity. Now the checkpoint identity is a CONTENT
+proxy over ALL shards.
+
+CHANGE (1 file):
+- Deep2Engine.cpp: reapCheckpointId_ = FingerprintBytes over every shard's
+  (path + file_size + last_write_time). A replaced checkpoint (different size/mtime) or a
+  different shard set yields a different identity. Reuses PR-06 FingerprintBytes (no new
+  algorithm). Covers all shards (not just the first).
+
+IDENTITY COVERAGE: checkpoint CONTENT (all shards) ✓, logical tensor (layer group) ✓,
+geometry (expertBytes) ✓, mode ✓, selection ✓. Source quantization differences change the
+shard file => different content id; transform-quant (e.g. Q4_K->Q2_K) is the mode. So
+quantization is covered via content-id + mode (no separate zero field aliasing).
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) Deep2Engine.cpp -> EXIT 0. NOT linked/run
+(storage/GPU). Physical (identity 0) unchanged.
+
+DISPOSITION: S03.5A COMPLETE (content identity; same-path replacement detected). S03.5B
+(per-projection tensor id) N/A for the per-expert bundled MoEPlaceGlobal cache (layer is the
+tensor-group); S03.5C quant covered via content+mode. S03.5 substantially complete.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.6 bind TransformExpertTensor output -> AcquireTransformed + inference (GPU);
+S03.7 completion/cancel/pending-retirement; S03.8 planner RAM/VRAM.

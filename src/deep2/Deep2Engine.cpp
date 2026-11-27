@@ -2897,13 +2897,29 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
         printf("[Deep2Engine] GlobalTensorIndex built: %zu tensors across %zu shards\n", globalIndex_->TotalTensors(),
                globalIndex_->TotalShards());
-        // S03.5: checkpoint identity from the authoritative shard index (P0).
+        // S03.5A: checkpoint CONTENT identity over ALL shards (path + size + mtime),
+        // so a checkpoint replaced at the same path yields a different identity.
         if (globalIndex_)
         {
-            const std::string sp0 = globalIndex_->ShardPath(0).string();
-            reapCheckpointId_ = RawrXD::Reap::FingerprintBytes(
-                0x9E3779B97F4A7C15ULL,
-                reinterpret_cast<const uint8_t*>(sp0.data()), sp0.size());
+            uint64_t h = 0x9E3779B97F4A7C15ULL;
+            const size_t ns = globalIndex_->TotalShards();
+            for (size_t s = 0; s < ns; ++s)
+            {
+                const auto& sp = globalIndex_->ShardPath(static_cast<uint32_t>(s));
+                std::error_code ec;
+                const uint64_t sz = static_cast<uint64_t>(std::filesystem::file_size(sp, ec));
+                const uint64_t mt = ec ? 0u
+                    : static_cast<uint64_t>(std::filesystem::last_write_time(sp, ec)
+                                                .time_since_epoch().count());
+                const std::string p = sp.string();
+                h = RawrXD::Reap::FingerprintBytes(
+                    h, reinterpret_cast<const uint8_t*>(p.data()), p.size());
+                h = RawrXD::Reap::FingerprintBytes(
+                    h, reinterpret_cast<const uint8_t*>(&sz), sizeof(sz));
+                h = RawrXD::Reap::FingerprintBytes(
+                    h, reinterpret_cast<const uint8_t*>(&mt), sizeof(mt));
+            }
+            reapCheckpointId_ = h;
         }
 
         // Initialize residency cache for streaming tensor access
