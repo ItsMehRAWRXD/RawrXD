@@ -1198,6 +1198,7 @@ public:
     }
     void ResetVerifiedHidden();
     uint64_t QueueSubmitCount() const noexcept { return queueSubmitCount_; }
+    static unsigned long long VkSubmitCount();   // DC-01D3: coverage-complete low-level submits
     uint64_t hiddenTimelineSubmits_ = 0;
 
     // ========== Layer timeline ==========

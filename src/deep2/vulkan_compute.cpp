@@ -1551,6 +1551,10 @@ void D2SubmitDump(const char* why) {
 }
 } // namespace
 
+// DC-01D3: single authoritative low-level queue-submission counter (coverage-complete).
+std::atomic<unsigned long long> g_vkSubmitCount{0};
+unsigned long long VulkanCompute::VkSubmitCount() { return g_vkSubmitCount.load(); }
+
 bool VulkanCompute::endSubmitWait(
     VkCommandBuffer cmd, VkQueryPool query,
     GpuWorkKind kind, uint64_t bytes, uint64_t epoch,
@@ -1638,6 +1642,7 @@ bool VulkanCompute::endSubmitWait(
         std::fflush(stderr);
     }
     VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
+    if (submit == VK_SUCCESS) g_vkSubmitCount.fetch_add(1);
     if (submit != VK_SUCCESS) {
         // Submission outcome is unresolved. Keep the owned slot intact.
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit quarantined vk=%d\n",
@@ -1730,6 +1735,7 @@ VkResult VulkanCompute::gatedSubmit(
         std::fflush(stderr);
     }
     VkResult result = vkQueueSubmit(queue, 1, si, fence);
+    if (result == VK_SUCCESS) g_vkSubmitCount.fetch_add(1);
     if (result != VK_SUCCESS) {
         std::fprintf(stderr, "[GPU] gatedSubmit stage=queue_submit vk=%d\n",
                      static_cast<int>(result));
@@ -3065,6 +3071,7 @@ bool VulkanCompute::EndFusedLayer() {
         std::fflush(stderr);
     }
     const VkResult submitRes = vkQueueSubmit(queue_,1,&si,reusableFusedFence_);
+    if (submitRes == VK_SUCCESS) g_vkSubmitCount.fetch_add(1);
     if (moeTrace) {
         std::fprintf(stderr,
                      "LIVE_K2_GPU_END queue_submit_done vk=%d cmd=%p "
