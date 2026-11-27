@@ -1,0 +1,5 @@
+RAWRXD_POLYMORPHIC_REPAIR_INTELLIGENCE_057 — FIRST AUTONOMOUS COMPLETION (gpt-oss:20b)
+Model gpt-oss:20b wrote sysmon.cpp (4741 B), native build tool produced sysmon.exe (272896 B), functional gate PASS, independent launch verified (alive, exit 0).
+Telemetry: 18 requests, prefill 15934 TPS, decode 108.67 TPS, 126s, 3 tool calls.
+SDK-aware declaration retrieval + unchanged-rebuild rejection + no silent subsystem switch in controller.
+Cross-model: gpt-oss:20b PASS (1/4). qwen3/nemotron/deepseek INCOMPLETE.

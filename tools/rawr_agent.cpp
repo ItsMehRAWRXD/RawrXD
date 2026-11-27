@@ -186,6 +186,31 @@ static string FileHash(const string& path) {
     return to_string(h);
 }
 
+// PR-05/06: retrieve an authoritative declaration from installed SDK headers.
+static string RetrieveDecl(const string& token) {
+    if (token.empty()) return {};
+    const char* roots[] = {
+        "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.26100.0\\um",
+        "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.26100.0\\shared"
+    };
+    for (const char* r : roots) {
+        if (!std::filesystem::exists(r)) continue;
+        for (auto& e : std::filesystem::recursive_directory_iterator(r)) {
+            if (e.path().extension() != ".h") continue;
+            ifstream f(e.path()); string line; vector<string> L;
+            while (getline(f, line)) L.push_back(line);
+            for (size_t i = 0; i < L.size(); ++i) {
+                if (L[i].find(token) != string::npos) {
+                    string out;
+                    for (size_t j = i; j < L.size() && j < i + 6; ++j) out += L[j] + "\n";
+                    return out;
+                }
+            }
+        }
+    }
+    return {};
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -335,18 +360,23 @@ int main(int argc, char** argv) {
                 auto mk = [&](const string& sf) { string c = "call \"" + vcvars + "\" >nul 2>&1 && cl /nologo /std:" + stdv + " /EHsc " + sources + " /Fe:" + output + " /link " + sf; if (!libs.empty()) c += " " + libs; return c; };
                 result = RunCmd(mk(subsys == "windows" ? "/SUBSYSTEM:WINDOWS" : "/SUBSYSTEM:CONSOLE"));
                 bool art = std::filesystem::exists(std::filesystem::path(g_ws) / output);
-                // Deterministic entry-point reconciliation (AR-10/11): unresolved WinMain under WINDOWS -> retry CONSOLE.
+                // PR-10: do NOT silently change subsystem. Report the entry-point mismatch.
                 if (!art && result.find("LNK2019") != string::npos && result.find("WinMain") != string::npos && subsys == "windows") {
-                    result = RunCmd(mk("/SUBSYSTEM:CONSOLE"));
-                    art = std::filesystem::exists(std::filesystem::path(g_ws) / output);
-                    if (art) result = "BUILD_OK (entry-point reconciled to CONSOLE): " + output + " produced";
+                    repairNote = "LINKER: unresolved WinMain under /SUBSYSTEM:WINDOWS. Your source must define WinMain (GUI) OR you must explicitly request subsystem=console in the build tool. Do not change requirements silently.";
                 }
                 if (result.find("not recognized") != string::npos) { result = "COMPILER_NOT_INVOKED:\n" + result; g_tel.toolFail++; lastFailHash = h; }
                 else if (result.find("error LNK") != string::npos) { result = "LINK_FAILURE:\n" + result; repairNote = "LINK FAILURE:\n" + result; g_tel.toolFail++; lastFailHash = h; }
                 else if (result.find("error C") != string::npos) {
                     string f; int ln = 0; string e = FirstError(result, f, ln);
                     result = "COMPILE_FAILURE:\n" + result;
-                    repairNote = "PRIMARY COMPILER ERROR: " + e + "\nSource (" + f + "):\n" + SourceContext(f, ln) + "\nFix with a targeted edit, then build again.";
+                    string decl;
+                    size_t mp = e.find("is not a member of '");
+                    if (mp != string::npos) {
+                        string ty = e.substr(mp + 20); ty = ty.substr(0, ty.find('\''));
+                        decl = RetrieveDecl(ty);
+                        if (!decl.empty()) decl = "\nAUTHORITATIVE DECLARATION of " + ty + ":\n" + decl + "Use ONLY these members.";
+                    }
+                    repairNote = "PRIMARY COMPILER ERROR: " + e + "\nSource (" + f + "):\n" + SourceContext(f, ln) + decl + "\nFix with a targeted edit, then build again.";
                     g_tel.toolFail++; errCount++; lastFailHash = h;
                 }
                 else if (art) { if (result.rfind("BUILD_OK", 0) != 0) result = "BUILD_OK: " + output + " produced"; buildOk = true; g_tel.toolOk++; }
