@@ -1,0 +1,4 @@
+RAWRXD P01-P05 request-scoped transform context (standalone)
+ReapTransformContext.hpp: composes PlacementRequest identity + Admit (before allocation, retirement pressure) + RetirementLedger + AcquireTransformed. Cancellation blocks acquire. No global mutable state.
+Standalone MSVC build PASS. CPU test pctx_test 4/4 OK (admitted, acquire, expert bytes, cancel blocks). PCTX=PASS.
+Production-integration scaffold for the engine (P01-P05). Storage-independent.
