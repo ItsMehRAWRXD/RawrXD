@@ -1,0 +1,24 @@
+RAWRXD REAP SC03 — consolidate residency — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU tests. Disk ~6 GB.
+
+PACKAGE SC03: one authoritative residency, all capabilities retained, tests migrated.
+
+AUTHORITATIVE: src/reap/ExpertResidency (used by StreamingPipeline). Merged the deep2
+residency capabilities in: pinning (SetPinned — pinned/in-flight never evicted), completion
+(Complete — fence touch), fail-closed when budget full of pinned. LRU eviction now skips
+pinned and evicts the least-recently-used UNPINNED; byte budget + oversize rejection
+preserved. Pending-retirement accounting remains the engine's responsibility (unchanged).
+
+CHANGE:
+- src/reap/ReapExpertResidency.hpp: added pinned_ set, SetPinned, Complete, Pinned;
+  EvictOne (skip pinned, fail-closed if none evictable).
+- tools/reap_stream_residency_test.cpp: MIGRATED to ExpertResidency (layer/expert key);
+  budget/LRU/pinning/completion/oversize/all-pinned cases -> ALL PASS.
+- src/deep2/ReapStreamResidency.hpp: REMOVED (duplicate) after migration.
+
+VERIFICATION (actual): s02_residency PASS, migrated residency test ALL PASS, s02p_pipeline
+PASS. No capability lost, no test removed. Artifacts removed.
+
+DISPOSITION: SC03 COMPLETE (one residency; tests migrated+passing). Residency: 2 -> 1.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=SC04 unified pipeline (verify cache-aware + identity-keyed lookup); SC05 acceptance.
