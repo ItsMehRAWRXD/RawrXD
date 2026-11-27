@@ -7,11 +7,19 @@
 #include <vector>
 
 static const char* Schema() {
-    return "[{\"type\":\"function\",\"function\":{\"name\":\"list\",\"description\":\"list workspace\",\"parameters\":{\"type\":\"object\",\"properties\":{}}}}]";
+    return "["
+        "{\"type\":\"function\",\"function\":{\"name\":\"write\",\"description\":\"write a file\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"}},\"required\":[\"path\",\"content\"]}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"build\",\"description\":\"compile\",\"parameters\":{\"type\":\"object\",\"properties\":{\"sources\":{\"type\":\"string\"},\"output\":{\"type\":\"string\"},\"subsystem\":{\"type\":\"string\"},\"libraries\":{\"type\":\"string\"},\"standard\":{\"type\":\"string\"}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"edit\",\"description\":\"replace\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\"]}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"read\",\"description\":\"read\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"list\",\"description\":\"list\",\"parameters\":{\"type\":\"object\",\"properties\":{}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"finish\",\"description\":\"finish\",\"parameters\":{\"type\":\"object\",\"properties\":{\"summary\":{\"type\":\"string\"}}}}"
+        "]";
 }
 
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
+    rawrxd::ollama::RecvTimeoutMs() = 300000;   // cold-load deadline; not a schema signal
     std::vector<std::string> models;
     for (int i = 1; i < argc; ++i) models.push_back(argv[i]);
     if (models.empty()) models = {"gpt-oss:20b","deepseek-coder-v2:16b","qwen3:8b","nemotron-3.5-lightning:30b"};

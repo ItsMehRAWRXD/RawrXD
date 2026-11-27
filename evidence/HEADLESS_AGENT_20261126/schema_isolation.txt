@@ -1,0 +1,6 @@
+RAWRXD_NATIVE_TOOL_TRANSPORT_RELIABILITY_130 — schema isolation
+Minimal 1-tool schema (probe earlier): gpt-oss/qwen3/nemotron => TOOL_CALLS=1 (works).
+Full 6-tool production schema (probe now, cold-load deadline 300s): ALL models => TRANSPORT_FAIL.
+=> The production 6-tool schema is rejected (connection drop) independent of model and cold-load. Schema complexity/serialization is the culprit, NOT model capability.
+Next: bisect the 6-tool schema (which tool/definition breaks Ollama) and fix serialization; then native tool_calls path will be used and empty-content loop disappears.
+Evidence: tools/proto_probe.cpp (full schema), protocol_probe.txt.
