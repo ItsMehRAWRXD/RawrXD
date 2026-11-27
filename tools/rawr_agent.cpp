@@ -140,19 +140,15 @@ static bool VerifyFunctional() {
 static int ComputePhase() {
     namespace fs = std::filesystem;
     bool src = fs::exists(fs::path(g_ws) / "sysmon.cpp");
-    bool build = fs::exists(fs::path(g_ws) / "build.cmd");
     bool exe = fs::exists(fs::path(g_ws) / "sysmon.exe");
     if (!src) return 1;
-    if (!build) return 2;
-    if (!exe) return 3;
+    if (!exe) return 2;
     return 5;
 }
 static string PhaseDirective(int p) {
     switch (p) {
-        case 1: return "Write the file sysmon.cpp NOW using the write tool. It MUST use GetSystemTimes (CPU), GlobalMemoryStatusEx (memory), GetDiskFreeSpaceExW (disk), EnumDisplayDevicesW (GPU) and a Win32 GUI window with a 1s timer. Do NOT list again.";
-        case 2: return "Write build.cmd is NOT needed. Instead call the build tool: {\"tool\":\"build\",\"sources\":\"sysmon.cpp\",\"output\":\"sysmon.exe\",\"subsystem\":\"windows\",\"libraries\":\"user32.lib gdi32.lib\"}.";
-        case 3: return "Call the build tool with sources=sysmon.cpp, output=sysmon.exe, subsystem=windows, libraries=\"user32.lib gdi32.lib\". Read the structured diagnostics.";
-        case 4: return "Fix the reported compiler error with a targeted edit tool call, then call the build tool again.";
+        case 1: return "Write the file sysmon.cpp NOW using the write tool. It MUST use GetSystemTimes (CPU), GlobalMemoryStatusEx (memory), GetDiskFreeSpaceExW (disk), EnumDisplayDevicesW (GPU) and a Win32 GUI window with a 1s timer.";
+        case 2: return "Call the build tool: {\"tool\":\"build\",\"sources\":\"sysmon.cpp\",\"output\":\"sysmon.exe\",\"subsystem\":\"windows\",\"libraries\":\"user32.lib gdi32.lib\"}. If COMPILE_FAILURE, fix the PRIMARY error with a targeted edit tool call, then call build again.";
         case 5: return "sysmon.exe exists. Verify it launches, then call finish.";
         default: return "Inspect the workspace with list.";
     }

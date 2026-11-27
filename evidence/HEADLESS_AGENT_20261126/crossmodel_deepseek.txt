@@ -1,0 +1,67 @@
+[turn 0] model_tool=write (phase=1)
+  -> OK wrote F:\rawrxd\_acceptance_sysmon_native\sysmon.cpp (1203 bytes)
+[turn 1] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 2] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 3] model_tool=build (phase=2)
+[turn 4] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 5] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 6] model_tool=build (phase=2)
+[turn 7] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 8] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 9] model_tool=build (phase=2)
+[turn 10] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 11] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 12] model_tool=build (phase=2)
+[turn 13] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 14] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 15] model_tool=build (phase=2)
+[turn 16] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 17] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+[turn 18] model_tool=build (phase=2)
+[turn 19] model_tool=build (phase=2)
+  -> LINK_FAILURE:
+sysmon.cpp
+LIBCMT.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol WinMain referenced in function "int __cdecl __scrt_common_main_
+=== TELEMETRY ===
+MODEL=deepseek-coder-v2:16b BACKEND=Ollama REQUESTS=20
+PROMPT_TOKENS=67424 EVAL_TOKENS=1318 PREFILL_TPS=4548.56 DECODE_TPS=31.90
+TOOL_CALLS=20 TOOL_OK=1 TOOL_FAIL=13 CORRECTIONS=6
+ELAPSED_S=76.7 FINISHED=no
+EVIDENCE functional=0
+RESULT=INCOMPLETE

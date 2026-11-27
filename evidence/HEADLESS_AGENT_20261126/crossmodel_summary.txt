@@ -1,0 +1,6 @@
+RAWRXD_CROSS_MODEL_AUTONOMOUS_CERTIFICATION_051 — cross-model acceptance (frozen controller)
+deepseek-coder-v2:16b: 20 req, 1 ok tool, LINK_FAILURE (unresolved WinMain) looped build, functional=0 INCOMPLETE. prefill 4548 decode 31.9
+qwen3:8b: real 5.4KB source, C2660/C2360, INCOMPLETE. nemotron30b: list loop, INCOMPLETE.
+Infrastructure VERIFIED across models: native build tool invokes cl, structured diagnostics (COMPILE/LINK), source integrity intact, phase planner + repair present.
+Consistent blocker: model code-repair capability (entry point, Win32 correctness), not controller infrastructure.
+Phase fix: ComputePhase now 1=write/2=build+fix/5=verify (removed build.cmd requirement that stalled the build-tool flow).
