@@ -1,0 +1,3 @@
+RAWRXD transport fully implemented + end-to-end verified (gpt-oss native)
+write->build->[read loop]->edit->BUILD_OK->finish->functional=1 RESULT=PASS (104s, fallbacks=0, native tool_calls).
+Transport (description-free schema + fallback + convergence + objective gate) fully implemented. gpt-oss native reliable end-to-end.
