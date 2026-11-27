@@ -1,0 +1,4 @@
+RAWRXD S02-integration — Streaming end-to-end core (standalone)
+ReapStreamingPipeline.hpp: cache-aware Acquire (residency hit -> resident buf; miss -> provider.Acquire one expert + LRU admit). Never materializes full bank. No RNG.
+Standalone MSVC build PASS (6.1 GB). CPU test s02p_pipeline_test 6/6 OK (acquire, cache hit same ptr, hit/miss, residency16). S02P_PIPELINE=PASS.
+Streaming core complete at component level (S01 provider + S02 residency + pipeline). Engine wiring (S02 runtime) disk-blocked.
