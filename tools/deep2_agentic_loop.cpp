@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include "../src/deep2/quant_dot_dispatch.hpp"
 #include <cstring>
 #include <fstream>
 #include <filesystem>
@@ -70,10 +71,10 @@
 #include "snap_process_guard.hpp"
 #include "../deep2_debugger/deep2_flight_recorder.hpp"
 #include "../deep2/Deep2Log.hpp"   // single shared definition of Logf_()
-#include "agent_esp.hpp"
-#include "esp_runtime.hpp"
-#include "esp_metrics.hpp"
-#include "esp_cli.hpp"
+#include "../src/project_wizard/agent_esp.hpp"
+#include "../src/project_wizard/esp_runtime.hpp"
+#include "../src/project_wizard/esp_metrics.hpp"
+#include "../src/project_wizard/esp_cli.hpp"
 #include "../src/agentic/MotdAuthorization.h"
 #include "../src/agentic/tool_security.hpp"
 
@@ -5167,16 +5168,16 @@ int main(int argc, char* argv[])
             // prefill, so a long prefill reports ctx/gpu counters as it
             // advances instead of ctx=0 for the entire pass.
             esp_rt.set_context(fed.size());
-            esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+            { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
             if ((i % 8) == 0) esp_rt.tick();
         }
         profiler.end_phase();
         // Commit only the tokens that actually reached ExecuteToken.  The
         // prefill request is a planned batch and may be cut short by the
         // host deadline or cancellation.
-        esp_rt.prefill_end(fed.size() - start);
+        esp_rt.prefill_end();
         esp_rt.set_context(fed.size());
-        esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+        { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
         esp_rt.tick();
         Logf_("[diag] prefilled %zu tokens (%zu new; ctx=%zu)\n", prompt_tokens.size(),
               prompt_tokens.size() - start, fed.size());
@@ -5257,7 +5258,7 @@ int main(int argc, char* argv[])
             // RAWRXD_DEEP2_GPU_TELEMETRY_001: publish the engine's real dispatch
             // counters so ESP gpu_dispatches/cpu_fallbacks are host-derived
             // facts, not always-zero placeholders.
-            esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+            { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
             if (t % 5 == 0) esp_rt.tick();
             if (!args.quiet)
                 Logf_("[diag] tok %3d/%d: %s\n", t, args.max_new, Trim(gen).c_str());
@@ -5576,7 +5577,7 @@ int main(int argc, char* argv[])
                         incremental_stream.push_back(rendered[i]);
                     fed.resize(batch_end);
                     esp_rt.set_context(fed.size());
-                    esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+                    { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
                     esp_rt.tick();
                     std::fflush(stdout);
                     std::fflush(stderr);
@@ -5618,7 +5619,7 @@ int main(int argc, char* argv[])
                     // from a deadlock, and both the flight recorder watchdog and ESP
                     // report global_no_progress while the engine is actually working.
                     esp_rt.set_context(fed.size());
-                    esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+                    { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
                     if ((i % 8) == 0) esp_rt.tick();
                 }
             }
@@ -5626,7 +5627,7 @@ int main(int argc, char* argv[])
             // Do not report the requested batch as completed when the
             // deadline/cancellation gate stopped the serial fallback early.
             const size_t completed_prefill = fed.size() - prefill_start_context;
-            esp_rt.prefill_end(completed_prefill);
+            esp_rt.prefill_end();
             esp_rt.set_context(fed.size());
             const char* prefill_mode = prefill_ok
                 ? "batched"
@@ -5636,7 +5637,7 @@ int main(int argc, char* argv[])
                   fed.size(),
                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_step).count(),
                   prefill_mode);
-            esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+            { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
             esp_rt.tick();
             if (pref_cancelled)
                 break;
@@ -5902,7 +5903,7 @@ int main(int argc, char* argv[])
             // RAWRXD_DEEP2_GPU_TELEMETRY_001: mirror the engine's real kernel
             // counters into ESP each token so the heartbeat reports what the
             // backend actually dispatched instead of always-zero.
-            esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+            { const auto gc = ::rawrxd::deep2::GpuCountersSnapshot(); esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls, gc.submits, gc.waits, gc.submit_ms, gc.fence_wait_ms); }
             if (t % 5 == 0) esp_rt.tick();
             if (!ex.ExecuteToken(next, fed.size()))
             {

@@ -11,6 +11,7 @@
 // cpu-run, not as a silent pretend-success.
 
 #include "quant_dot_dispatch.hpp"
+#include "dispatch_counter_snapshot.hpp"
 
 #include <map>
 #include <mutex>
@@ -94,6 +95,16 @@ VulkanCompute& GpuFor(int32_t device_index)
     registry.emplace(key, std::move(vk));
     return ref;
 }
+
+// RET/120: private bridge beside GpuFor (same global scope). Reads the
+// authoritative ::VulkanCompute::GetGpuCounters() snapshot.
+static ::rawrxd::deep2::DispatchCounterSnapshot ReadBackendCounters() {
+    const auto gc = GpuFor(-1).GetGpuCounters();
+    return { gc.submits, gc.waits, gc.submit_ms, gc.wait_ms };
+}
+
+// RET/122: canonical accessor is defined at global scope (end of file), outside
+// the anonymous namespace that holds ReadBackendCounters.
 
 
 // Packed row stride per kind (same geometry the shader and ExecuteQuantDot
@@ -197,11 +208,24 @@ void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
 bool EndBatchImpl()
 {
     if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
-    if (!g_batch_active) return false;
+    if (!g_batch_active) {
+        // BP-03C: (Inactive dispatcher, Active backend) -> reconcile by
+        // completing the matching GPU batch so ownership releases across all
+        // three layers. Never finalizes an unrelated or nonexistent batch.
+        if (Gpu().QuantBatchActive()) return Gpu().EndQuantDotBatch();
+        return false;
+    }
     g_batch_active = false;
     std::vector<QueuedDot> qs;
     qs.swap(g_queued);
-    if (qs.empty()) return true;
+    if (qs.empty()) {
+        // BP-03C: the executor queues dots DIRECTLY to the backend, so the
+        // dispatcher's g_queued is empty even though a GPU batch is open.
+        // Release the backend batch here (reconcile) so ownership does not
+        // stay active and reject the next BeginBatch as "nesting:active".
+        if (Gpu().QuantBatchActive()) return Gpu().EndQuantDotBatch();
+        return true;
+    }
     QDTRACE_DISPATCH("EndBatch queued=" << qs.size());
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     // RAWRXD_DEEP2_MOE_BATCH_CHUNK_001. One device batch holds BatchCapacity()
@@ -990,3 +1014,10 @@ bool DispatchLmHeadBatchQ4K(
 }
 
 } } }
+
+// RET/121: canonical accessor is defined adjacent to ReadBackendCounters above.
+
+// RET/122: canonical public accessor at global scope (outside the anonymous namespace).
+::rawrxd::deep2::DispatchCounterSnapshot rawrxd::deep2::GpuCountersSnapshot() {
+    return ::RawrXD::Deep2::QuantDot::ReadBackendCounters();
+}

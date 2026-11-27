@@ -40,15 +40,30 @@ public:
   // cumulative gpu_calls/cpu_calls; ESP keeps cumulative counters too, so the
   // delta since the last sync is added. This is what makes gpu_dispatches and
   // cpu_fallbacks mean something: they come from real dispatch decisions.
-  void sync_kernel_counters(uint64_t gpu_calls,uint64_t cpu_calls){
-    if(gpu_calls>last_gpu_){metrics_.gpu_dispatch_batch(gpu_calls-last_gpu_);last_gpu_=gpu_calls;}
-    if(cpu_calls>last_cpu_){metrics_.cpu_fallback_batch(cpu_calls-last_cpu_);last_cpu_=cpu_calls;}
+  void sync_kernel_counters(uint64_t gpu_calls,uint64_t cpu_calls,
+                            uint64_t submits=0, uint64_t waits=0,
+                            double submit_ms=0.0, double fence_wait_ms=0.0){
+    if(gpu_calls>last_gpu_){metrics_.gpu_dispatch_batch(gpu_calls-last_gpu_);}
+    if(cpu_calls>last_cpu_){metrics_.cpu_fallback_batch(cpu_calls-last_cpu_);}
+    // T07-04: pass DELTAS (not cumulative) so repeated heartbeats never double-count.
+    const uint64_t dSub  = submits > last_submits_ ? submits - last_submits_ : 0;
+    const uint64_t dWait = waits   > last_waits_   ? waits   - last_waits_   : 0;
+    const double   dSubMs  = submit_ms      > last_submit_ms_      ? submit_ms      - last_submit_ms_      : 0.0;
+    const double   dFenceMs= fence_wait_ms  > last_fence_wait_ms_  ? fence_wait_ms  - last_fence_wait_ms_  : 0.0;
+    if (dSub || dWait || dSubMs > 0.0 || dFenceMs > 0.0)
+        metrics_.gpu_counter_batch(dSub, dWait, dSubMs, dFenceMs);
+    // T07-06: ALWAYS advance baselines (reset-safe: current<last -> delta 0,
+    // baseline follows down so new activity after a reset is counted).
+    last_gpu_=gpu_calls; last_cpu_=cpu_calls;
+    last_submits_=submits; last_waits_=waits;
+    last_submit_ms_=submit_ms; last_fence_wait_ms_=fence_wait_ms;
   }
   uint64_t last_gpu_calls() const {return last_gpu_;}
   uint64_t last_cpu_calls() const {return last_cpu_;}
  void tick(){publish_metrics(bus_,metrics_,request_,agent_);}
  void finish(bool ok){metrics_.finish(ok);tick();bus_.publish(Kind::Finished,ok?"PASS":"FAIL",request_,agent_,ok?0:1);}
- private:Bus& bus_;uint64_t request_,agent_;Metrics metrics_;
+  private:Bus& bus_;uint64_t request_,agent_;Metrics metrics_;
   uint64_t last_gpu_=0,last_cpu_=0;
+  uint64_t last_submits_=0,last_waits_=0; double last_submit_ms_=0,last_fence_wait_ms_=0;
 };
 } // namespace rawrxd::esp

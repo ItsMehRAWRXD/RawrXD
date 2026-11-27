@@ -19,6 +19,8 @@ public:
  struct Snapshot {
   uint64_t request_id=0, agent_id=0, generated=0, prefill_tokens=0, context_tokens=0;
   uint64_t gpu_dispatches=0, cpu_fallbacks=0, tool_calls=0, failures=0;
+  uint64_t submits=0, waits=0;            // Sprint 02: GpuCounters bridge
+  double submit_ms=0, fence_wait_ms=0;    // host submission / fence-wait durations
   double rolling_tps=0, decode_tps=0, prefill_tps=0, task_tps=0;
   double ttft_ms=0, prefill_ms=0, decode_ms=0, task_ms=0, idle_ms=0;
    double last_progress_ms=0;
@@ -68,7 +70,19 @@ public:
   // Batch variants used by sync_kernel_counters(): each engine receipt is a
   // completed kernel dispatch, not an event that may be counted twice.
   void gpu_dispatch_batch(uint64_t n) { std::lock_guard lk(mu_);gpu_dispatches_+=n;last_dispatch_=Clock::now();progress_=Clock::now(); }
-  void cpu_fallback_batch(uint64_t n) { std::lock_guard lk(mu_);cpu_fallbacks_+=n;last_dispatch_=Clock::now(); }
+   void cpu_fallback_batch(uint64_t n) { std::lock_guard lk(mu_);cpu_fallbacks_+=n;last_dispatch_=Clock::now(); }
+   // Sprint 02: authoritative GpuCounters bridge (submits/waits/durations),
+   // called from sync_kernel_counters(). Cumulative; reset per request.
+   void gpu_counter_batch(uint64_t submits, uint64_t waits, double submit_ms, double fence_wait_ms) {
+       std::lock_guard lk(mu_);
+       gpu_submits_+=submits; gpu_waits_+=waits;
+       gpu_submit_ms_+=submit_ms; gpu_fence_wait_ms_+=fence_wait_ms;
+       // T07-07: a zero-delta heartbeat must NOT refresh progress timestamps
+       // (submission/wait activity alone is not completed kernel progress).
+       if (submits || waits || submit_ms > 0.0 || fence_wait_ms > 0.0) {
+           last_dispatch_=Clock::now(); // submission activity only; NOT completed-dispatch progress
+       }
+   }
  void failure(Clock::time_point now=Clock::now()) { std::lock_guard lk(mu_);++failures_;progress_=now; }
  void set_context(uint64_t tokens) { std::lock_guard lk(mu_);context_=tokens; }
  void finish(bool success,Clock::time_point now=Clock::now()) {
@@ -78,7 +92,8 @@ public:
   std::lock_guard lk(mu_);prune_locked(now);
   Snapshot s;s.request_id=request_;s.agent_id=agent_;s.generated=generated_;
   s.prefill_tokens=prefill_tokens_;s.context_tokens=context_;s.phase=phase_;
-  s.gpu_dispatches=gpu_dispatches_;s.cpu_fallbacks=cpu_fallbacks_;
+   s.gpu_dispatches=gpu_dispatches_;s.cpu_fallbacks=cpu_fallbacks_;
+   s.submits=gpu_submits_;s.waits=gpu_waits_;s.submit_ms=gpu_submit_ms_;s.fence_wait_ms=gpu_fence_wait_ms_;
   s.tool_calls=tool_calls_;s.failures=failures_;
   if(!started_)return s;
   auto end=finished_.value_or(now);
@@ -122,7 +137,8 @@ private:
  void reset_locked(Clock::time_point now){
    started_=now;finished_.reset();first_token_.reset();prefill_start_.reset();decode_segment_.reset();last_dispatch_.reset();
   phase_=Phase::Idle;progress_=now;phase_since_=now;recent_.clear();generated_=prefill_tokens_=0;
-  context_=gpu_dispatches_=cpu_fallbacks_=tool_calls_=failures_=prefill_pending_=0;
+   context_=gpu_dispatches_=cpu_fallbacks_=tool_calls_=failures_=prefill_pending_=0;
+   gpu_submits_=gpu_waits_=0; gpu_submit_ms_=gpu_fence_wait_ms_=0;
   prefill_elapsed_=decode_elapsed_=0;
  }
  void transition_locked(Phase next,Clock::time_point now){
@@ -135,6 +151,7 @@ private:
  void prune_locked(Clock::time_point now){while(!recent_.empty() && now-recent_.front()>window_)recent_.pop_front();}
   std::mutex mu_;uint64_t request_,agent_,generated_=0,prefill_tokens_=0,prefill_pending_=0,context_=0;
   uint64_t gpu_dispatches_=0,cpu_fallbacks_=0,tool_calls_=0,failures_=0;
+  uint64_t gpu_submits_=0,gpu_waits_=0; double gpu_submit_ms_=0,gpu_fence_wait_ms_=0;
   std::chrono::milliseconds window_,stall_;
   Phase phase_=Phase::Idle;Clock::time_point progress_{},phase_since_{};
   std::optional<Clock::time_point> started_,finished_,first_token_,prefill_start_,decode_segment_,last_dispatch_;
@@ -151,7 +168,9 @@ inline std::string snapshot_json(const Metrics::Snapshot& s){
   <<",\"ttft_ms\":"<<(s.ttft_valid?s.ttft_ms:-1.0)
   <<",\"prefill_ms\":"<<s.prefill_ms<<",\"decode_ms\":"<<s.decode_ms
   <<",\"task_ms\":"<<s.task_ms<<",\"gpu_dispatches\":"<<s.gpu_dispatches
-  <<",\"cpu_fallbacks\":"<<s.cpu_fallbacks<<",\"tool_calls\":"<<s.tool_calls
+   <<",\"cpu_fallbacks\":"<<s.cpu_fallbacks<<",\"tool_calls\":"<<s.tool_calls
+   <<",\"submits\":"<<s.submits<<",\"waits\":"<<s.waits
+   <<",\"submit_ms\":"<<s.submit_ms<<",\"fence_wait_ms\":"<<s.fence_wait_ms
    <<",\"failures\":"<<s.failures<<",\"stalled\":"<<(s.stalled?"true":"false")
    <<",\"active\":"<<(s.active?"true":"false")<<",\"slow\":"<<(s.slow?"true":"false")<<"}";
  return o.str();
