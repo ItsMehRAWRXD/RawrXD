@@ -1,0 +1,24 @@
+[turn 0] model_tool=(none) (phase=1)
+[turn 1] model_tool=(none) (phase=1)
+[turn 2] model_tool=(none) (phase=1)
+[turn 3] model_tool=(none) (phase=1)
+[turn 4] model_tool=(none) (phase=1)
+[turn 5] model_tool=(none) (phase=1)
+[turn 6] model_tool=(none) (phase=1)
+[turn 7] model_tool=(none) (phase=1)
+[turn 8] model_tool=(none) (phase=1)
+[turn 9] model_tool=(none) (phase=1)
+[turn 10] model_tool=write (phase=1)
+  -> OK wrote sysmon.cpp (4352 bytes)
+[turn 11] model_tool=(none) (phase=2)
+[turn 12] model_tool=(none) (phase=2)
+[turn 13] model_tool=(none) (phase=2)
+[turn 14] model_tool=(none) (phase=2)
+[turn 15] model_tool=(none) (phase=2)
+=== TELEMETRY ===
+MODEL=gpt-oss:20b BACKEND=Ollama REQUESTS=16
+PROMPT_TOKENS=23356 EVAL_TOKENS=18791 PREFILL_TPS=10116.94 DECODE_TPS=108.55
+TOOL_CALLS=1 TOOL_OK=1 TOOL_FAIL=0 CORRECTIONS=0
+ELAPSED_S=197.3 FINISHED=no
+EVIDENCE functional=0
+RESULT=INCOMPLETE

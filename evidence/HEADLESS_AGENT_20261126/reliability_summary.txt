@@ -1,0 +1,4 @@
+RAWRXD_AUTONOMOUS_RELIABILITY_CONCURRENCY_089 — repeat reliability (partial)
+gpt-oss:20b clean repeat run (fresh workspace, frozen controller): INCOMPLETE (FINISHED=no, functional=0, 197s).
+=> Repeat reliability NOT established: gpt-oss 1 PASS (historical) + 1 INCOMPLETE (repeat). 4/4 historical lifecycle stands, but reliability < 100%.
+Full 12-run matrix (3x4) and concurrent-agent tracks remain pending. Shell batch loop blocked by quoting; runs must be issued individually.
