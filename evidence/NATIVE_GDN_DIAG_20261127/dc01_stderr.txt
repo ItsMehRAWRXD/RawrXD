@@ -1,0 +1,1469 @@
+﻿BOS absent (id=1)
+PROMPT_TOKENS 4
+  in[0]=12027 ' Exp'
+  in[1]=7420 'lain'
+  in[2]=3370 ' memory'
+  in[3]=29889 '.'
+arch=llama blocks=22 embd=2048 experts=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 0
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+bound ops=311 (2497.6 ms)
+deep2_strata_chat.exe : [REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] 
+vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] 
+apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] 
+apply_merges_ok\n[SHADER_PATH] ops=F:\rawrxd\src\deep2\shaders\deep2_ops.spv 
+q=F:\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv qt4=F:\rawrxd\src\deep2\shaders\deep2_qgemv_tiled4x.spv 
+q8r=F:\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv qn=F:\rawrxd\src\deep2\shaders\deep2_qgemv_nvfp4.spv 
+am=F:\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\rawrxd\src\deep2\shaders\deep2_spec_ops.spv 
+sa=F:\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\rawrxd\src\deep2\shaders\deep2_spec_accept.spv 
+gd=F:\rawrxd\src\deep2\shaders\deep2_qwen4exp_gdn.spv
+At line:5 char:1
++ & $exe --model "F:\OllamaModels\n4-tiny-oracle.gguf" --prompt "Explai ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([REAP_TOKENIZER...wen4exp_gdn.spv:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1 pp=1 rr=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 
+qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32991236096
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894431232
+LOGITS prefill pos=0 n=32000 sum=-12198.766186 sumsq=36027.360119 nonfinite=0 top=6048:3.469561,5168:3.461640,4620:3.458966,27685:3.438594,5890:3.413707
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS prefill pos=1 n=32000 sum=-107570.072880 sumsq=612921.291477 nonfinite=0 top=920:12.450009,278:12.274780,2020:10.791231,297:10.662410,304:10.047987
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS prefill pos=2 n=32000 sum=-146635.910422 sumsq=999222.799394 nonfinite=0 top=10643:10.633812,24082:9.881208,29899:9.371732,322:9.032785,8744:8.944524
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS prefill pos=3 n=32000 sum=-105627.988993 sumsq=597226.940338 nonfinite=0 top=2:12.150012,13:11.338441,1724:10.461735,1128:10.365284,12027:10.349343
+prefill_done 3189.5 ms
+LOGITS prefill_last pos=3 n=32000 sum=-105627.988993 sumsq=597226.940338 nonfinite=0 top=2:12.150012,13:11.338441,1724:10.461735,1128:10.365284,12027:10.349343
+LOGITS decode pos=4 n=32000 sum=-105627.988993 sumsq=597226.940338 nonfinite=0 top=2:12.150012,13:11.338441,1724:10.461735,1128:10.365284,12027:10.349343
+[tok 0] id=2 '</s>'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=5 n=32000 sum=-69469.942723 sumsq=303321.942856 nonfinite=0 top=29871:22.665585,259:11.782867,268:10.800035,539:10.068275,6756:9.942718
+[tok 1] id=29871 ' '
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=6 n=32000 sum=-31731.641527 sumsq=150367.790094 nonfinite=0 top=13:28.358248,2:16.671808,529:13.972150,12:12.692452,6756:11.826864
+[tok 2] id=13 '
+'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=7 n=32000 sum=-15126.142535 sumsq=54998.284741 nonfinite=0 top=29966:9.566716,2:7.020576,8169:5.327911,14136:5.132139,829:5.099610
+[tok 3] id=29966 '<'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=8 n=32000 sum=-59280.563531 sumsq=274599.948128 nonfinite=0 top=29989:25.801003,4295:15.905902,25183:13.881062,891:12.744270,8876:12.137678
+[tok 4] id=29989 '|'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=9 n=32000 sum=-11936.554091 sumsq=209423.510181 nonfinite=0 top=465:25.922544,1792:19.506927,20348:13.855117,29893:13.717937,29879:13.274494
+[tok 5] id=465 'ass'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=10 n=32000 sum=-47086.005767 sumsq=238967.843005 nonfinite=0 top=22137:16.642511,29989:11.632496,4600:11.156284,6329:10.621856,542:10.350252
+[tok 6] id=22137 'istant'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=11 n=32000 sum=-82111.425478 sumsq=387760.311068 nonfinite=0 top=29989:30.068604,29958:17.008007,891:13.687204,25183:13.640506,29632:12.256439
+[tok 7] id=29989 '|'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=12 n=32000 sum=-91647.484934 sumsq=441045.498915 nonfinite=0 top=29958:24.946457,13:15.395369,1405:14.320272,10202:13.513524,15513:12.712938
+[tok 8] id=29958 '>'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=13 n=32000 sum=-78909.485896 sumsq=376368.192925 nonfinite=0 top=13:24.275082,29871:14.853623,2:13.282719,18585:12.587972,18914:12.143621
+[tok 9] id=13 '
+'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=14 n=32000 sum=-57913.092976 sumsq=325525.479884 nonfinite=0 top=16015:17.976515,11442:15.883024,1576:15.798002,797:15.011646,29909:14.788353
+[tok 10] id=16015 'Memory'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=15 n=32000 sum=-140690.471336 sumsq=874182.043004 nonfinite=0 top=338:17.789736,14637:15.436600,29892:14.613618,313:13.140847,13582:13.107013
+[tok 11] id=338 ' is'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=16 n=32000 sum=-105681.055563 sumsq=559640.298082 nonfinite=0 top=278:16.266146,263:16.238598,385:14.452081,3342:12.500128,697:11.549122
+[tok 12] id=278 ' the'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=17 n=32000 sum=-105534.417612 sumsq=577607.295959 nonfinite=0 top=11509:13.961876,13284:12.229074,1889:12.085917,982:11.842559,8635:11.815203
+[tok 13] id=11509 ' ability'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=18 n=32000 sum=-111256.141111 sumsq=595496.928759 nonfinite=0 top=310:18.622959,304:17.893280,363:14.714445,393:12.923607,470:12.794620
+[tok 14] id=310 ' of'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+LOGITS decode pos=19 n=32000 sum=-104406.242917 sumsq=558354.091611 nonfinite=0 top=385:16.347878,263:15.401781,278:14.746542,1749:13.984090,1554:12.971648
+[tok 15] id=385 ' an'
+[GPU_RESIDENCY] block=4294967295 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32865583104
+[GPU_RESIDENCY] block=0 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=1 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=2 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=3 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=4 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=5 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=6 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=7 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=8 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=9 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=10 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=11 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=12 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=13 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=14 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=15 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=16 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=17 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=18 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=19 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=20 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+[GPU_RESIDENCY] block=21 pinned_weight_bytes=0 cached_weight_bytes=0 live_allocation_count=1 
+live_device_bytes=134217728 live_device_allocations=1 evicted_weight_bytes=0 resident_reclaimed_bytes=0 
+heap_headroom_bytes=32894156800
+DISPATCH gpu_calls=3100 cpu_calls=0 fallback=<none> nonfinite_logits=0
+S01_EXPERT_LEDGER observations=0 hits=0 misses=0 evictions=0 hit_rate=0.0000 distinct_experts=0
+CHAT_STATUS OK
+RECEIPT F:\rawrxd\evidence\NATIVE_GDN_DIAG_20261127\strata_chat_dc01.json
+Released; exiting
+Released all tensors
+Vulkan resources cleaned up successfully

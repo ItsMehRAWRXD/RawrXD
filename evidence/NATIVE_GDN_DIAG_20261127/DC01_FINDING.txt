@@ -1,0 +1,5 @@
+DC-01 profiling (bounded single-R9700, max-new 16, --gpu --strata) — 2026-11-27
+DISPATCH gpu_calls=3100 cpu_calls=0 fallback=<none> nonfinite_logits=0 (CHAT_STATUS OK, exit 0, no TDR).
+FINDING: exe exposes OPERATION calls (gpu_calls=3100) only; it does NOT print queue submissions (GpuCounters.submits) or fence waits separately.
+=> 3100 is op-call volume, NOT 3100 vkQueueSubmit. DC-01 separation (op-calls vs vkCmdDispatch vs vkQueueSubmit vs fence waits) requires exposing GpuCounters.submits/waits in the receipt (small source change) — next step.
+No CPU fallback, GPU-only, clean teardown. Receipt: strata_chat_dc01.json ; stderr: dc01_stderr.txt.

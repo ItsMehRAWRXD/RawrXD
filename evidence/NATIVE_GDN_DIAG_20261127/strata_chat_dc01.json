@@ -1,0 +1,21 @@
+{
+  "tag": "dc01",
+  "model": "F:\OllamaModels\n4-tiny-oracle.gguf",
+  "prompt_text": "Explain memory.",
+  "prompt_tokens": 4,
+  "prompt_ids": [12027, 7420, 3370, 29889],
+  "generate_tokens": 16,
+  "generated_ids": [2, 29871, 13, 29966, 29989, 465, 22137, 29989, 29958, 13, 16015, 338, 278, 11509, 310, 385],
+  "cancelled": false,
+  "bind_ms": 2497.61,
+  "prefill_ms": 3189.49,
+  "decode_ms": 8145.97,
+  "total_ms": 13833.1,
+  "decode_tps": 1.96416,
+  "gpu_calls": 3100,
+  "cpu_calls": 0,
+  "fallback": "<none>",
+  "nonfinite_logits": 0,
+  "expert_ledger": {"observations": 0, "hits": 0, "misses": 0, "evictions": 0, "hit_rate": 0, "distinct_experts": 0},
+  "cleanup": "ok"
+}
