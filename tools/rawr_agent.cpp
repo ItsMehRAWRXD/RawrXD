@@ -391,8 +391,8 @@ int main(int argc, char** argv) {
                         if (!decl.empty()) decl = "\nAUTHORITATIVE DECLARATION of " + ty + ":\n" + decl + "Use ONLY these members.";
                     }
                     if (e.find("C2440") != string::npos && (e.find("wchar_t") != string::npos || e.find("LPCSTR") != string::npos)) {
-                        hint = "\nANSI/UNICODE: reconcile string-literal prefixes (use L\"...\" consistently) with the API's expected type; do not mix char* and wchar_t*.";
-                        // NS-04/06/07/08: deterministic candidate — drop the L prefix on the offending line.
+                        hint = "\nANSI/UNICODE: reconcile string-literal prefixes with the API's expected type; do not mix char* and wchar_t*.";
+                        // SO-07: deterministic candidate — drop L prefix ONLY if the literal is pure ASCII (encoding-safe).
                         if (ln >= 1) {
                             ifstream sf((std::filesystem::path(g_ws) / f).string());
                             vector<string> L; string s;
@@ -400,16 +400,33 @@ int main(int argc, char** argv) {
                             if (ln <= (int)L.size()) {
                                 size_t lp = L[ln-1].find("L\"");
                                 if (lp != string::npos) {
-                                    L[ln-1].replace(lp, 1, "");
-                                    ofstream o((std::filesystem::path(g_ws) / f).string());
-                                    for (auto& x : L) o << x << "\n";
-                                    hint += "\nCONTROLLER_DETERMINISTIC_REPAIR: removed L prefix on line " + to_string(ln) + "; rebuild to verify (rollback if it regresses).";
+                                    size_t q2 = L[ln-1].find('"', lp + 2);
+                                    bool ascii = true;
+                                    for (size_t k = lp + 2; k < q2 && k < L[ln-1].size(); ++k)
+                                        if ((unsigned char)L[ln-1][k] >= 128) ascii = false;
+                                    if (ascii && q2 != string::npos) {
+                                        L[ln-1].replace(lp, 1, "");
+                                        ofstream o((std::filesystem::path(g_ws) / f).string());
+                                        for (auto& x : L) o << x << "\n";
+                                        hint += "\nCONTROLLER_DETERMINISTIC_REPAIR: removed L prefix on line " + to_string(ln) + " (ASCII-safe); rebuild to verify.";
+                                    } else
+                                        hint += "\nSKIP auto-fix: non-ASCII literal (encoding-sensitive) — manual fix required.";
                                 }
                             }
                         }
                     }
-                    else if (e.find("C4477") != string::npos || e.find("C4473") != string::npos)
-                        hint = "\nFORMAT STRING: the printf/wprintf specifier does not match the argument type; fix the specifier or cast the argument to the expected type.";
+                    else if (e.find("C2664") != string::npos) {
+                        size_t a = e.find("from '"), b = e.find("' to '", a);
+                        string actual = (a != string::npos && b != string::npos) ? e.substr(a + 6, b - (a + 6)) : "";
+                        size_t c = b + 6, d = e.find("'", c);
+                        string expected = (b != string::npos && d != string::npos) ? e.substr(c, d - c) : "";
+                        hint = "\nARGUMENT TYPE MISMATCH: actual='" + actual + "' expected='" + expected + "'. Change the argument expression or the variable's declared type to match; do NOT force-cast.";
+                    }
+                    else if (e.find("C4477") != string::npos || e.find("C4473") != string::npos) {
+                        size_t a = e.find("type '"), b = e.find("'", a + 6);
+                        string argType = (a != string::npos && b != string::npos) ? e.substr(a + 6, b - (a + 6)) : "";
+                        hint = "\nFORMAT STRING: expected argument type='" + argType + "'. Adjust the specifier to match the argument (or the argument to match the specifier).";
+                    }
                     repairNote = "PRIMARY COMPILER ERROR: " + e + prog + "\nSource (" + f + "):\n" + SourceContext(f, ln) + decl + hint + "\nFix with a targeted edit, then build again.";
                     g_tel.toolFail++; errCount++; lastFailHash = h;
                 }
