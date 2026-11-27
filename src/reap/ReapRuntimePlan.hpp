@@ -11,6 +11,24 @@
 
 namespace RawrXD::Reap {
 
+// RP01: authoritative transformation mode (controls actual execution, not a flag).
+enum class TransformMode : uint8_t { Physical = 0, Virtual = 1, Streaming = 2 };
+
+static inline bool ParseTransformMode(std::string_view s, TransformMode& out) {
+    if (s == "PHYSICAL")  { out = TransformMode::Physical;  return true; }
+    if (s == "VIRTUAL")   { out = TransformMode::Virtual;   return true; }
+    if (s == "STREAMING") { out = TransformMode::Streaming; return true; }
+    return false;   // reject invalid/unsupported mode explicitly
+}
+static inline const char* TransformModeName(TransformMode m) noexcept {
+    switch (m) {
+        case TransformMode::Physical:  return "PHYSICAL";
+        case TransformMode::Virtual:   return "VIRTUAL";
+        case TransformMode::Streaming: return "STREAMING";
+    }
+    return "INVALID";
+}
+
 struct RuntimeTarget {
     uint64_t parameterCount = 0;
     uint64_t expertCount = 0;
@@ -43,6 +61,7 @@ struct RuntimePlan {
     std::string reason;
     bool sourceImmutable = true;
     bool writerInvoked = false;
+    TransformMode transformMode = TransformMode::Physical;   // RP01: authoritative mode
 };
 
 struct RuntimeInjection {
