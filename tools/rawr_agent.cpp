@@ -194,7 +194,17 @@ static bool VerifyFunctional() {
     vector<wchar_t> w(cmd.begin(), cmd.end()); w.push_back(0);
     std::wstring wdir(g_ws.begin(), g_ws.end());
     STARTUPINFOW si{}; si.cb = sizeof(si); PROCESS_INFORMATION pi{};
-    if (!CreateProcessW(nullptr, w.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, wdir.c_str(), &si, &pi))
+    // A freshly-linked exe can be momentarily locked (AV scan / handle release),
+    // which made CreateProcessW fail intermittently right after a build. Retry
+    // briefly instead of failing the functional gate on a transient lock.
+    BOOL started = FALSE;
+    for (int a = 0; a < 6 && !started; ++a) {
+        ZeroMemory(&pi, sizeof(pi));
+        started = CreateProcessW(nullptr, w.data(), nullptr, nullptr, FALSE,
+                                 CREATE_NO_WINDOW, nullptr, wdir.c_str(), &si, &pi);
+        if (!started) Sleep(150);
+    }
+    if (!started)
         return false;
     WaitForSingleObject(pi.hProcess, 2000);
     DWORD code = 0; GetExitCodeProcess(pi.hProcess, &code);
@@ -487,7 +497,7 @@ static int SelfTestPipeline() {
         "static void probe(){ FILETIME a,b,c; GetSystemTimes(&a,&b,&c); "
         "MEMORYSTATUSEX m; m.dwLength=sizeof(m); GlobalMemoryStatusEx(&m); "
         "ULARGE_INTEGER f; GetDiskFreeSpaceExW(L\"C:\\\\\",&f,0,0); "
-        "DISPLAY_DEVICEW d; EnumDisplayDevicesW(0,0,&d,0); }\n"
+        "DISPLAY_DEVICEW d{}; d.cb = sizeof(d); EnumDisplayDevicesW(0,0,&d,0); }\n"
         "BOOL WINAPI WinMain(HINSTANCE h,HINSTANCE p,LPSTR c,int s){ probe(); return 0; }\n";
     { ofstream o((fs::path(dir) / "sysmon.cpp").string(), ios::binary); o << src; }
     int fail = 0;
