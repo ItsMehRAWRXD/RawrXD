@@ -31,4 +31,20 @@ static inline uint64_t SelectionFingerprint(const ExpertSelection& sel, uint64_t
     return h;
 }
 
+// PR-06: production cache identity = weight key + selection fingerprint.
+// Prevents cross-selection / cross-checkpoint / cross-mode cache reuse. A zero
+// fingerprint must NOT collapse to the bare weight key (Virtual/Streaming safety).
+static inline uint64_t CacheIdentity(uint64_t weightKey, uint64_t selectionFingerprint,
+                                     bool selectionValid) {
+    uint64_t h = weightKey;
+    if (!selectionValid) {
+        // No validated selection: use a distinct sentinel domain (never the bare key).
+        h ^= 0xD1B54A32D192ED03ULL;
+    } else {
+        h ^= selectionFingerprint;
+    }
+    h *= 1099511628211ULL; h ^= h >> 29; h *= 0x9E3779B97F4A7C15ULL; h ^= h >> 31;
+    return h;
+}
+
 } // namespace RawrXD::Reap

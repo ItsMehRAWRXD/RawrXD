@@ -1,0 +1,4 @@
+RAWRXD PR-06 — production cache identity (standalone)
+ReapSelectionIdentity::CacheIdentity combines weight key + selection fingerprint; invalid/absent selection uses a distinct sentinel domain (never bare key) => prevents cross-selection/checkpoint/mode cache contamination. Zero fingerprint != bare key (Virtual/Streaming safety).
+Standalone MSVC build PASS. CPU test c02b_cacheid_test 4/4 OK (deterministic, cross-selection differs, valid-vs-invalid domain, invalid!=bare key). CACHEID=PASS.
+Production-integration primitive for GlobalTensorIndex/residency cache. Storage-independent.
