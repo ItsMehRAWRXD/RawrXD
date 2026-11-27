@@ -11,6 +11,7 @@
 // cpu-run, not as a silent pretend-success.
 
 #include "quant_dot_dispatch.hpp"
+#include "dispatch_counter_snapshot.hpp"
 
 #include <map>
 #include <mutex>
@@ -94,6 +95,16 @@ VulkanCompute& GpuFor(int32_t device_index)
     registry.emplace(key, std::move(vk));
     return ref;
 }
+
+// RET/120: private bridge beside GpuFor (same global scope). Reads the
+// authoritative ::VulkanCompute::GetGpuCounters() snapshot.
+static ::rawrxd::deep2::DispatchCounterSnapshot ReadBackendCounters() {
+    const auto gc = GpuFor(-1).GetGpuCounters();
+    return { gc.submits, gc.waits, gc.submit_ms, gc.wait_ms };
+}
+
+// RET/122: canonical accessor is defined at global scope (end of file), outside
+// the anonymous namespace that holds ReadBackendCounters.
 
 
 // Packed row stride per kind (same geometry the shader and ExecuteQuantDot
@@ -1003,3 +1014,10 @@ bool DispatchLmHeadBatchQ4K(
 }
 
 } } }
+
+// RET/121: canonical accessor is defined adjacent to ReadBackendCounters above.
+
+// RET/122: canonical public accessor at global scope (outside the anonymous namespace).
+::rawrxd::deep2::DispatchCounterSnapshot rawrxd::deep2::GpuCountersSnapshot() {
+    return ::RawrXD::Deep2::QuantDot::ReadBackendCounters();
+}

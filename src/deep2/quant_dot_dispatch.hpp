@@ -1,4 +1,6 @@
 #pragma once
+#include "dispatch_counter_snapshot.hpp"
+#include <cstdint>
 // RAWRXD_DEEP2_GPU_QUANT_DOT_001
 //
 // Quantised dot-product dispatch: GPU-first, CPU fallback, fail-closed.
@@ -258,6 +260,10 @@ bool WeightCacheRetention();
 // Lets a split-model run prove the content GPU dispatched. device<0 or == the
 // primary pin returns the primary device's counters.
 CacheStats GetCacheStatsOn(int32_t device);
+// RET/079: by-value authoritative backend GpuCounters snapshot (submits/waits/
+// submit_ms/fence_wait_ms) at the Gpu() boundary, for Executor BindStats population.
+// RET/112: GpuCountersSnapshot() is declared canonically in
+// dispatch_counter_snapshot.hpp (rawrxd::deep2) — no duplicate declaration here.
 
 // RAWRXD_G04: the device context that serves this process's dispatch. Gates
 // that must exercise device-level residency primitives directly - the
