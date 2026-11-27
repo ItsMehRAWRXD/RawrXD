@@ -1,0 +1,4 @@
+RAWRXD acceptance-gate hardcoding defect (found via cross-objective)
+Calc objective run built SYS_MON (sysmon.cpp/sysmon.exe) and PASSED — because rawr_agent's completion gate checks sysmon.cpp/sysmon.exe specifically (hardcoded), not the objective's required output.
+=> Cross-objective generalization is NOT validly testable until the gate is objective-derived (parse required output filename from the objective). The 4/4 sysmon pass + this hardcoded-gate finding.
+Fix needed: derive expected artifact name from the objective (e.g., 'calc.cpp'->'calc.exe'), not hardcode sysmon.
