@@ -774,7 +774,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     last_error_.clear();
     // NP-05A: a new bind is a new model identity. Stamp a fresh id so resident
     // compressed weights from a previous model are never reused across models.
-    QuantDot::SetModelId(QuantDot::NextModelId());
+    model_id_ = QuantDot::NextModelId();
+    QuantDot::SetModelId(model_id_);
 
     if (!report.ok) {
         stats_.error = "ingest report invalid";
@@ -4976,6 +4977,10 @@ case OpKind::LmHead: {
 
 bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (!bound_) { last_error_ = "not bound"; return false; }
+    // NP-05A: request-scoped identity — re-assert this executor's model id on the
+    // thread that runs this token, so the residency cache attributes weight requests
+    // to the correct model even under thread migration or concurrent executors.
+    QuantDot::SetModelId(model_id_);
     last_error_.clear();
     if (execution_context_ && execution_context_->device_admission &&
         !execution_context_->device_admission(execution_context_->device_index)) {

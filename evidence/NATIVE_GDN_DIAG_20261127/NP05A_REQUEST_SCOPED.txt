@@ -1,0 +1,29 @@
+RAWRXD NP-05A (request-scoped identity) — 2026-11-27
+Branch: residency/np05-06  Base: 442aaaf63d
+Mode: DIRECT_EXECUTOR. Hardware: NOT used (held). Disk: 4.06 GB (light /Zs only).
+
+OBJECTIVE: make model identity REQUEST-SCOPED, not bind-scoped thread-local only, so the
+active id is correct on whichever thread executes a token (thread migration / pool reuse).
+
+CHANGE (real, low-risk):
+- runtime_graph_executor.hpp: Executor += model_id_ (assigned at Bind).
+- Bind: model_id_ = QuantDot::NextModelId(); QuantDot::SetModelId(model_id_).
+- ExecuteToken: QuantDot::SetModelId(model_id_) at the request boundary, so every token
+  re-asserts its executor's model id on the running thread before any weight dispatch.
+Effect: concurrent executors each stamp their own id per token; a token that migrates
+threads still carries the correct id; the thread-local g_quant_model_id is always the
+request's model during that token's EnsureQuantWeight calls.
+
+PRESERVED: generated src/deep2/shaders/deep2_qgemv.spv modification (another worker) left
+untouched. No new worktrees, no cleanup.
+
+VERIFICATION (actual):
+- MSVC /Zs (worktree): src/deep2/runtime_graph_executor.cpp EXIT 0.
+- Full link: PENDING (disk 4.06 GB < 10 GB build headroom; not run this turn).
+- Runtime/concurrency regression: PENDING.
+
+DISPOSITION:
+NP05A_REQUEST_SCOPED=IMPLEMENTED  Syntax=PASS  Linked=PENDING  Runtime=NO
+Tensor identity + CPU regression tests still PENDING.
+PROMOTE=0  CERTIFIED=0  RELEASE=HELD
+NEXT=tensor identity; CPU regression; NP-05B/C/D; NP-06A-F.

@@ -562,6 +562,10 @@ private:
     // submission can carry many kernel invocations; both are recorded so a
     // receipt cannot claim "0 dispatches" for a pass that submitted work.
     uint64_t gpu_batch_submissions_ = 0, gpu_batch_dots_ = 0;
+    // NP-05A: this executor's model identity, assigned at Bind and RE-ASSERTED at
+    // each ExecuteToken (request boundary) so the active id is correct on whichever
+    // thread runs the token (thread migration / pool reuse safe).
+    uint64_t model_id_ = 0;
     // Per-executor CPU pin. It MUST stay per-executor: the parity harness binds a
     // second "reference" executor with this set, and the earlier implementation
     // forwarded it to the PROCESS-WIDE QuantDot switch, which the harness then
