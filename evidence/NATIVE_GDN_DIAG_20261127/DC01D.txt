@@ -1,0 +1,58 @@
+RAWRXD DC-01D — truthful submission/wait/timing telemetry via the CORRECT backend — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used (held). Build: full MSBuild (VS2022) compile+link.
+
+ROOT CAUSE (source-confirmed, supersedes the fused/gated and GDN-branch hypotheses):
+- There are TWO distinct VulkanCompute implementations:
+    (a) CANONICAL  — include/vulkan_compute.h (class VulkanCompute), impl src/vulkan_compute.cpp.
+        Used by the standard (non-GDN) path via QuantDot::Gpu() (a function-local static).
+    (b) Deep2::VulkanCompute — src/deep2/vulkan_compute.h, impl src/deep2/vulkan_compute.cpp.
+        Returned by GetDeep2VulkanCompute(); used only by the GDN path (DispatchGdn).
+- The canonical GpuCounters already tracks submits/waits/submit_ms/wait_ms and increments them
+  at EVERY real vkQueueSubmit/vkWaitForFences (src/vulkan_compute.cpp:276/287, 1568/1577,
+  1787/1807, 2307/2331, 2706/2716, 2762/2767, 2804/2809, 2949/2955). Accessor GetGpuCounters()
+  at include/vulkan_compute.h:262. QuantDot::BackendCounters() mirrors it (quant_dot_dispatch.cpp:530).
+- The receipt read GetDeep2VulkanCompute().QueueSubmitCount() — the WRONG class/instance (b) —
+  which the standard path never uses => 0. That is the persistent zero-counter anomaly.
+
+FIX (3 source files, additive/corrective, no control-flow change):
+1. src/deep2/runtime_graph_executor.hpp/.cpp — Executor accessors now read the CANONICAL device:
+     SubmitCount()  = QuantDot::BackendCounters().submits   (canonical vkQueueSubmit, cumulative)
+     WaitCount()    = QuantDot::BackendCounters().waits      (canonical fence waits)
+     SubmitMsTotal()/WaitMsTotal() = canonical host submit/wait ms
+     BatchSubmitCount() = gpu_batch_submissions_  (executor QuantDot batch completions — SEPARATE unit)
+     GdnSubmitCount()   = GetDeep2VulkanCompute().QueueSubmitCount()  (SEPARATE Deep2 instance, GDN path)
+   The earlier summed SubmitCount() (batch + singleton) was REVERTED: a batch completion is not one
+   queue submission (one EndBatch chunks into N EndQuantDotBatch submits); different units, never summed.
+2. tools/deep2_strata_chat.cpp — SubmissionSnapshots now captures a TelemetrySample
+   {submits,waits,batch,gdn,submit_ms,wait_ms} at s0/s1/s2; s0 moved to BEFORE prefill (was after).
+   Receipt emits per-request deltas, each key exactly once:
+     queue_submits, gdn_queue_submits, batch_completions, waits, submit_ms, wait_ms,
+     submits_scope, submits_valid, waits_valid, timing_valid, telemetry_valid.
+   Validity is independent; telemetry_valid = submits_valid && waits_valid && timing_valid
+   (the exact required contract). The duplicate hardcoded "telemetry_valid" key was removed.
+   GDN activity is reported on its own gdn_queue_submits field (never omitted, never combined).
+
+COVERAGE:
+- Standard Strata (llama, non-GDN): canonical queue_submits/waits/timing (instance a).
+- GDN / mixed: gdn_queue_submits on instance (b), reported separately.
+- batch_completions: executor batch count, separate unit.
+- No counter is summed across instances or across units.
+
+VERIFICATION (actual results):
+- MSVC /Zs syntax: runtime_graph_executor.cpp EXIT 0; deep2_strata_chat.cpp EXIT 0 (2/2 PASS).
+- Full production build (MSBuild deep2_strata_chat.vcxproj, Release): EXIT 0.
+    -> F:\rawrxd\build\Release\deep2_strata_chat.exe
+    SHA256 17363A9D609E8FB59B97BD80F944CF26DDD1D10E82412AD7592B65BF68198E2C, 33488896 bytes.
+- OBJECT_COMPILATION=PASS, LINKED=PASS. Only pre-existing warnings (C4996/C4100/C4267); no errors.
+- JSON structure: validated by inspection — each key emitted exactly once, single telemetry_valid,
+  correct comma/newline framing. Runtime JSON parse + counter arithmetic on a real GPU run: PENDING
+  (hardware held; requires authorized exclusive R9700/RX 7800 XT access).
+
+DISPOSITION:
+DC01D_ROOT_CAUSE=SOURCE_CONFIRMED (two VulkanCompute implementations; wrong instance read)
+DC01D_SUBMIT_TELEMETRY=IMPLEMENTED (canonical instance; separate batch/gdn units)
+DC01D_WAITS_TIMING=IMPLEMENTED (canonical GpuCounters already tracked; now surfaced)
+DC01D Compile=YES (/Zs 2/2)  ObjectCompilation=PASS  Linked=PASS (exe built)
+DC01D Runtime=NO  Hardware=NOT_RUN (held)  JSON_RUNTIME_PARSE=PENDING
+PROMOTE=0  CERTIFIED=0  RELEASE=HELD
+NEXT_EXECUTABLE_ACTION=authorized bounded R9700 run to validate JSON + arithmetic; then NP-04/05/06.

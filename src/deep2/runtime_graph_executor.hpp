@@ -148,7 +148,24 @@ public:
     bool Bind(const Universal::IngestReport& report);
 
     const BindStats& Stats() const { return stats_; }
-    uint64_t SubmitCount() const;   // DC-01: request-scoped submission counter accessor
+    // DC-01/01D: authoritative, request-scoped device telemetry accessors. All
+    // read the CANONICAL QuantDot device (QuantDot::BackendCounters ->
+    // Gpu().GetGpuCounters()), which is the instance the standard path actually
+    // submits on. SubmitCount is the actual vkQueueSubmit count; BatchSubmitCount
+    // is the executor's QuantDot batch-completion count (a DIFFERENT unit — one
+    // EndBatch may chunk into several queue submissions, so the two are exposed
+    // separately and never summed). All values are process-cumulative; callers
+    // take per-request deltas across snapshots.
+    uint64_t SubmitCount() const;       // canonical queue submissions (cumulative)
+    uint64_t WaitCount() const;         // canonical fence waits (cumulative)
+    double   SubmitMsTotal() const;     // cumulative host submit ms
+    double   WaitMsTotal() const;       // cumulative host fence-wait ms
+    uint64_t BatchSubmitCount() const;  // executor QuantDot batch completions (cumulative)
+    // DC-01D: GDN-path queue submissions on the SEPARATE Deep2::VulkanCompute
+    // singleton (GetDeep2VulkanCompute), used only by DispatchGdn. Reported on
+    // its own receipt field so GDN activity is never silently omitted and is
+    // never combined with the canonical queue_submits counter.
+    uint64_t GdnSubmitCount() const;
 
     // Stable JSON receipt for callers and certification tooling. An empty
     // string means Bind has not failed in this executor instance.

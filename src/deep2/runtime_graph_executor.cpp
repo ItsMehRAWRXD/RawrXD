@@ -6,6 +6,46 @@
 #include "deep2/vulkan_compute.h"   // DC-01: GetDeep2VulkanCompute / QueueSubmitCount
 
 uint64_t RawrXD::Deep2::RuntimeGraph::Executor::SubmitCount() const {
+    // DC-01D: authoritative CANONICAL queue submissions. The standard (non-GDN)
+    // path submits through QuantDot::Gpu() — the canonical VulkanCompute defined
+    // in src/vulkan_compute.cpp — whose GpuCounters.submits is incremented at
+    // every real vkQueueSubmit (vulkan_compute.cpp:276/1568/1787/2307/2706/2762/
+    // 2804/2949). GetDeep2VulkanCompute() returns a DIFFERENT class/instance
+    // (Deep2::VulkanCompute, used only by the GDN path); reading it returned 0
+    // for the standard llama path — the DC-01D defect.
+    // Do NOT add gpu_batch_submissions_: an executor batch completion is not one
+    // queue submission (one EndBatch can chunk into N EndQuantDotBatch submits),
+    // so the two counters have different units and non-overlapping coverage and
+    // are exposed separately (see BatchSubmitCount) rather than summed.
+    return QuantDot::BackendCounters().submits;
+}
+
+uint64_t RawrXD::Deep2::RuntimeGraph::Executor::WaitCount() const {
+    // DC-01D: canonical fence waits (incremented beside every submit on the
+    // canonical device). Same instance as SubmitCount.
+    return QuantDot::BackendCounters().waits;
+}
+
+double RawrXD::Deep2::RuntimeGraph::Executor::SubmitMsTotal() const {
+    // DC-01D: cumulative host command-recording/submission milliseconds.
+    return QuantDot::BackendCounters().submit_ms;
+}
+
+double RawrXD::Deep2::RuntimeGraph::Executor::WaitMsTotal() const {
+    // DC-01D: cumulative host time blocked on the fence.
+    return QuantDot::BackendCounters().wait_ms;
+}
+
+uint64_t RawrXD::Deep2::RuntimeGraph::Executor::BatchSubmitCount() const {
+    // DC-01D: executor QuantDot batch completions (flushGroup -> EndBatch). A
+    // separate unit from queue submissions; reported on its own receipt field.
+    return gpu_batch_submissions_;
+}
+
+uint64_t RawrXD::Deep2::RuntimeGraph::Executor::GdnSubmitCount() const {
+    // DC-01D: GDN path submits on the Deep2::VulkanCompute singleton, a DIFFERENT
+    // instance/class from the canonical QuantDot device. Exposed separately so
+    // GDN activity is attributable and never summed with canonical queue submits.
     return ::Deep2::GetDeep2VulkanCompute().QueueSubmitCount();
 }
 #include "MoERoutingCore.hpp"

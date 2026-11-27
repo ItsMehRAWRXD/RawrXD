@@ -28,11 +28,26 @@
 #include <string>
 #include <vector>
 
-// DC-01E: request-local submission snapshots (no static state; concurrency-safe).
+// DC-01E/F/D: request-local telemetry snapshots (no static state; concurrency-safe).
+// Each checkpoint captures the canonical device counters (submits, waits) and
+// host timing (submit_ms, wait_ms) plus the executor batch-completion counter.
+// Captures are process-cumulative; the receipt takes per-request deltas.
+struct TelemetrySample {
+    uint64_t submits = 0, waits = 0, batch = 0, gdn = 0;
+    double submit_ms = 0.0, wait_ms = 0.0;
+};
 struct SubmissionSnapshots {
-    uint64_t s0 = 0, s1 = 0, s2 = 0;
+    TelemetrySample s0, s1, s2;
     bool c0 = false, c1 = false, c2 = false;
-    bool Valid() const noexcept { return c0 && c1 && c2 && s1 >= s0 && s2 >= s1; }
+    bool Valid() const noexcept {
+        return c0 && c1 && c2
+            && s1.submits >= s0.submits && s2.submits >= s1.submits
+            && s1.waits   >= s0.waits   && s2.waits   >= s1.waits
+            && s1.batch   >= s0.batch   && s2.batch   >= s1.batch
+            && s1.gdn     >= s0.gdn     && s2.gdn     >= s1.gdn
+            && s1.submit_ms >= s0.submit_ms && s2.submit_ms >= s1.submit_ms
+            && s1.wait_ms   >= s0.wait_ms   && s2.wait_ms   >= s1.wait_ms;
+    }
 };
 
 #include "CanonicalTokenizer.hpp"
@@ -66,6 +81,21 @@ uint64_t ArgMax(const std::vector<float>& logits)
     return best;
 }
 
+// DC-01D: capture the canonical device telemetry + executor batch completions at
+// one checkpoint. All accessors read the same canonical QuantDot device the
+// standard path submits on.
+TelemetrySample CaptureTelemetry(const RuntimeGraph::Executor& ex)
+{
+    TelemetrySample t;
+    t.submits   = ex.SubmitCount();
+    t.waits     = ex.WaitCount();
+    t.batch     = ex.BatchSubmitCount();
+    t.gdn       = ex.GdnSubmitCount();
+    t.submit_ms = ex.SubmitMsTotal();
+    t.wait_ms   = ex.WaitMsTotal();
+    return t;
+}
+
 bool WriteReceipt(const std::string& dir, const std::string& tag,
                   const std::string& model, const std::string& promptText,
                   const std::vector<uint32_t>& prompt,
@@ -84,11 +114,25 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
         return false;
 
     const auto& b = ex.Stats();
-    // DC-01E/F: validated request-scoped submission deltas (device scope).
-    const bool submitsValid = snaps.Valid() && (snaps.s2 > snaps.s0);
-    const uint64_t prefillSubmits = submitsValid ? (snaps.s1 - snaps.s0) : 0;
-    const uint64_t decodeSubmits  = submitsValid ? (snaps.s2 - snaps.s1) : 0;
-    const uint64_t totalSubmits   = submitsValid ? (snaps.s2 - snaps.s0) : 0;
+    // DC-01D: per-request deltas from canonical device telemetry snapshots.
+    // submits/waits/timing are distinct measurements with INDEPENDENT validity;
+    // telemetry_valid is the conjunction (true only when all required telemetry
+    // is valid). batch_completions is a separate unit (executor batch count) and
+    // is never summed with queue_submits.
+    const bool snapsOk = snaps.Valid();
+    const bool submitsValid = snapsOk && (snaps.s2.submits > snaps.s0.submits);
+    const bool waitsValid   = snapsOk && (snaps.s2.waits   > snaps.s0.waits);
+    const bool timingValid  = snapsOk && (snaps.s2.submit_ms > snaps.s0.submit_ms ||
+                                          snaps.s2.wait_ms   > snaps.s0.wait_ms);
+    const bool telemetryValid = submitsValid && waitsValid && timingValid;
+    const uint64_t prefillSubmits = snapsOk ? (snaps.s1.submits - snaps.s0.submits) : 0;
+    const uint64_t decodeSubmits  = snapsOk ? (snaps.s2.submits - snaps.s1.submits) : 0;
+    const uint64_t totalSubmits   = snapsOk ? (snaps.s2.submits - snaps.s0.submits) : 0;
+    const uint64_t totalWaits     = snapsOk ? (snaps.s2.waits   - snaps.s0.waits)   : 0;
+    const uint64_t batchCompletions = snapsOk ? (snaps.s2.batch - snaps.s0.batch) : 0;
+    const uint64_t gdnSubmits     = snapsOk ? (snaps.s2.gdn   - snaps.s0.gdn)   : 0;
+    const double   submitMsDelta  = snapsOk ? (snaps.s2.submit_ms - snaps.s0.submit_ms) : 0.0;
+    const double   waitMsDelta    = snapsOk ? (snaps.s2.wait_ms   - snaps.s0.wait_ms)   : 0.0;
     const size_t nonfinite = ex.NonFiniteLogits();
     const double totalS = (bindMs + prefillMs + decodeMs) / 1000.0;
     const double tps = decodeMs > 0 ? (generated.size() * 1000.0 / decodeMs) : 0.0;
@@ -117,15 +161,24 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
     out << "  \"cpu_calls\": " << b.cpu_calls << ",\n";
     out << "  \"prefill_submits\": " << prefillSubmits << ",\n";
     out << "  \"decode_submits\": " << decodeSubmits << ",\n";
-    out << "  \"total_submits\": " << totalSubmits << ",\n";
-    out << "  \"submits_valid\": " << (submitsValid ? "true" : "false") << ",\n";
+    // DC-01D: authoritative per-request telemetry, each key emitted exactly once.
+    // queue_submits = canonical (standard-path) vkQueueSubmit delta; gdn_queue_submits
+    // = the SEPARATE Deep2::VulkanCompute (GDN-path) delta, reported on its own so
+    // neither backend is silently omitted; batch_completions = executor QuantDot
+    // batch count (a different unit, never summed with queue submits); waits and
+    // submit_ms/wait_ms are canonical host fence-wait and timing deltas. The three
+    // validity flags are independent; telemetry_valid is their conjunction.
+    out << "  \"queue_submits\": " << totalSubmits << ",\n";
+    out << "  \"gdn_queue_submits\": " << gdnSubmits << ",\n";
+    out << "  \"batch_completions\": " << batchCompletions << ",\n";
+    out << "  \"waits\": " << totalWaits << ",\n";
+    out << "  \"submit_ms\": " << submitMsDelta << ",\n";
+    out << "  \"wait_ms\": " << waitMsDelta << ",\n";
     out << "  \"submits_scope\": \"device\",\n";
-    out << "  \"telemetry_valid\": false,\n";
-    out << "  \"submits\": " << b.submits << ",\n";
-    out << "  \"waits\": " << b.waits << ",\n";
-    out << "  \"submit_ms\": " << b.submit_ms << ",\n";
-    out << "  \"wait_ms\": " << b.wait_ms << ",\n";
-    out << "  \"telemetry_valid\": " << (b.telemetry_valid ? "true" : "false") << ",\n";
+    out << "  \"submits_valid\": " << (submitsValid ? "true" : "false") << ",\n";
+    out << "  \"waits_valid\": " << (waitsValid ? "true" : "false") << ",\n";
+    out << "  \"timing_valid\": " << (timingValid ? "true" : "false") << ",\n";
+    out << "  \"telemetry_valid\": " << (telemetryValid ? "true" : "false") << ",\n";
     out << "  \"fallback\": \""
         << (b.fallback_reason.empty() ? "<none>" : b.fallback_reason) << "\",\n";
     out << "  \"nonfinite_logits\": " << nonfinite << ",\n";
@@ -291,6 +344,8 @@ int main(int argc, char** argv)
     };
 
     // ---- prefill ----------------------------------------------------------
+    SubmissionSnapshots snaps;
+    snaps.s0 = CaptureTelemetry(ex); snaps.c0 = true;   // DC-01D: before prefill
     const auto preT0 = std::chrono::steady_clock::now();
     for (size_t pos = 0; pos < prompt.size(); ++pos) {
         if (!ex.ExecuteToken(prompt[pos], pos)) {
@@ -299,10 +354,8 @@ int main(int argc, char** argv)
         }
         dumpLogits("prefill", pos);
     }
-    SubmissionSnapshots snaps;
-    snaps.s0 = ex.SubmitCount(); snaps.c0 = true;   // DC-01E: before prefill
     const double prefillMs = MsSince(preT0);
-    snaps.s1 = ex.SubmitCount(); snaps.c1 = true;   // after prefill
+    snaps.s1 = CaptureTelemetry(ex); snaps.c1 = true;   // after prefill
     std::printf("prefill_done %.1f ms\n", prefillMs);
     std::fflush(stdout);
 
@@ -363,7 +416,7 @@ int main(int argc, char** argv)
         }
     }
     const double decodeMs = MsSince(decT0);
-    snaps.s2 = ex.SubmitCount(); snaps.c2 = true;   // after decode
+    snaps.s2 = CaptureTelemetry(ex); snaps.c2 = true;   // after decode
 
     auto ledger = ex.StrataExpertSummary();
     const auto& b = ex.Stats();
