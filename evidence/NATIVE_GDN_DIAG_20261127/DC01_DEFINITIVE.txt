@@ -1,0 +1,5 @@
+RAWRXD DC-01 definitive interface finding + B5/G increment — 2026-11-27
+DEFINITIVE: Deep2::VulkanCompute (returned by GetDeep2VulkanCompute) has NO counter accessor — GetGpuCounters/dispatchAccount/gpuForwardCounters are NOT members (C2039 in runtime_graph_executor.cpp). Those counters live on Deep2Engine (a different class that OWNS a VulkanCompute), not the low-level VulkanCompute the Strata path uses.
+=> DC-01 requires instrumenting VulkanCompute::gatedSubmit/endSubmitWait directly (add submits/waits/submit_ms/wait_ms at the vkQueueSubmit/vkWaitForFences sites in vulkan_compute.cpp).
+Increment (green): BindStats extended with submits/waits/submit_ms/wait_ms (default 0); deep2_strata_chat receipt emits them. Population pending VulkanCompute instrumentation.
+Tree GREEN (deep2_strata_chat builds, exit 0). Baseline bf90e2eeba preserved.

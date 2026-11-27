@@ -102,6 +102,10 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
     out << "  \"decode_tps\": " << tps << ",\n";
     out << "  \"gpu_calls\": " << b.gpu_calls << ",\n";
     out << "  \"cpu_calls\": " << b.cpu_calls << ",\n";
+    out << "  \"submits\": " << b.submits << ",\n";
+    out << "  \"waits\": " << b.waits << ",\n";
+    out << "  \"submit_ms\": " << b.submit_ms << ",\n";
+    out << "  \"wait_ms\": " << b.wait_ms << ",\n";
     out << "  \"fallback\": \""
         << (b.fallback_reason.empty() ? "<none>" : b.fallback_reason) << "\",\n";
     out << "  \"nonfinite_logits\": " << nonfinite << ",\n";
@@ -172,9 +176,11 @@ int main(int argc, char** argv)
     // continuation degenerates. The id comes from metadata, never hardcoded.
     const auto& special = tok.GetSpecialTokens();
     std::vector<uint32_t> prompt;
-    // Duplicate-safe: never prepend when the encoded prompt already starts with
-    // the model's own BOS, and only when the GGUF declares one.
-    if (special.bosId >= 0 && (ids.empty() || ids.front() != special.bosId))
+    // Duplicate-safe and metadata-driven: prepend only when the GGUF explicitly
+    // sets tokenizer.ggml.add_bos_token, and never when the encoded prompt
+    // already starts with the model's own BOS.
+    if (special.addBosToken && special.bosId >= 0 &&
+        (ids.empty() || ids.front() != static_cast<uint32_t>(special.bosId)))
         prompt.push_back(static_cast<uint32_t>(special.bosId));
     prompt.insert(prompt.end(), ids.begin(), ids.end());
     std::printf("BOS %s (id=%d)\n",
@@ -197,6 +203,28 @@ int main(int argc, char** argv)
                 (unsigned long long)rep.spec.block_count,
                 (unsigned long long)rep.spec.embd,
                 (unsigned long long)rep.spec.expert_count);
+    // FAIL CLOSED ON UNSUPPORTED ARCHITECTURE.
+    // RuntimeGraph::Executor has no SSM op kind, so a state-space model runs a
+    // graph that omits its required layers and yields all-zero logits while
+    // reporting success (observed: nemotron-bolt.gguf, 131072/131072 zero
+    // logits on both GPU and CPU). The authoritative predicate is
+    // RawrXDGgufReader::hasSsm(); until the ingest report exposes it, match the
+    // known state-space architecture identifiers and refuse before Bind().
+    {
+        std::string archLower = rep.spec.architecture;
+        for (char& c : archLower)
+            if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+        static const char* kSsmArchs[] = {"mamba", "mamba2", "nemotron", "ssm"};
+        for (const char* a : kSsmArchs) {
+            if (archLower.find(a) != std::string::npos) {
+                std::fprintf(stderr,
+                    "UNSUPPORTED_ARCHITECTURE: arch=%s requires SSM execution "
+                    "(BoltExecutor); RuntimeGraph::Executor has no SSM ops\n",
+                    rep.spec.architecture.c_str());
+                return 4;
+            }
+        }
+    }
     std::fflush(stdout);
 
     RuntimeGraph::Executor ex;
@@ -212,18 +240,6 @@ int main(int argc, char** argv)
     }
     const double bindMs = MsSince(bindT0);
     std::printf("bound ops=%zu (%.1f ms)\n", ex.Stats().ops_total, bindMs);
-    std::fflush(stdout);
-
-    // ---- prefill ----------------------------------------------------------
-    const auto preT0 = std::chrono::steady_clock::now();
-    for (size_t pos = 0; pos < prompt.size(); ++pos) {
-        if (!ex.ExecuteToken(prompt[pos], pos)) {
-            std::printf("PREFILL_FAIL at pos=%zu\n", pos);
-            return 1;
-        }
-    }
-    const double prefillMs = MsSince(preT0);
-    std::printf("prefill_done %.1f ms\n", prefillMs);
     std::fflush(stdout);
 
     // ---- logit instrumentation -------------------------------------------
@@ -253,6 +269,20 @@ int main(int argc, char** argv)
         std::printf("\n");
         std::fflush(stdout);
     };
+
+    // ---- prefill ----------------------------------------------------------
+    const auto preT0 = std::chrono::steady_clock::now();
+    for (size_t pos = 0; pos < prompt.size(); ++pos) {
+        if (!ex.ExecuteToken(prompt[pos], pos)) {
+            std::printf("PREFILL_FAIL at pos=%zu err=%s\n", pos, ex.LastError().c_str());
+            return 1;
+        }
+        dumpLogits("prefill", pos);
+    }
+    const double prefillMs = MsSince(preT0);
+    std::printf("prefill_done %.1f ms\n", prefillMs);
+    std::fflush(stdout);
+
     dumpLogits("prefill_last", prompt.size() - 1);
 
     // ---- decode: stream every token as it is produced ---------------------
@@ -270,7 +300,20 @@ int main(int argc, char** argv)
             cancelled = true;
             break;
         }
-        const uint64_t pick = ArgMax(ex.Logits());
+        // FAIL CLOSED ON INVALID LOGITS. An all-zero distribution is not a
+        // generation: ArgMax would pick an arbitrary id and the next step would
+        // hit EOS, reporting CHAT_STATUS OK for a run that produced nothing.
+        // Observed with nemotron-bolt.gguf (SSM arch): 131072/131072 logits 0.0.
+        {
+            const std::vector<float>& guardLogits = ex.Logits();
+            double guardSqs = 0.0;
+            for (float v : guardLogits) guardSqs += static_cast<double>(v) * v;
+            if (guardLogits.empty() || guardSqs == 0.0) {
+                std::printf("NO_LOGITS: %zu logits, sumsq=%.6f (all zero or empty)\n",
+                            guardLogits.size(), guardSqs);
+                return 3;
+            }
+        }        const uint64_t pick = ArgMax(ex.Logits());
         dumpLogits("decode", prompt.size() + static_cast<size_t>(step));
         if (logitsFile) {
             const std::vector<float>& lg = ex.Logits();
