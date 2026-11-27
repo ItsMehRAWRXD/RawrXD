@@ -1,0 +1,4 @@
+RAWRXD S03.8 — hardware-aware allocation admission (standalone)
+ReapAdmission.hpp: Admit(capacity, geometry, target, mode, pendingRetirement) consumes C03 PlanReap + S03.7 retirement; adds pending-retirement to required base; rejects infeasible/over-capacity explicitly (no silent fallback). 16GB target supported.
+Standalone MSVC build PASS. CPU test s038_admission_test 3/3 OK (admit stream, reject retirement pressure, reject infeasible). S038_ADMISSION=PASS.
+Production allocation-admission primitive. Storage-independent.
