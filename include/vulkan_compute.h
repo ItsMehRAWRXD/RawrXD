@@ -65,7 +65,13 @@ struct GpuCounters {
     uint64_t upload_bytes = 0;          // host -> device bytes transferred
     uint64_t download_bytes = 0;        // device -> host bytes transferred
     uint64_t weight_cache_hits = 0;     // re-dispatched an already-resident weight
-    uint64_t weight_cache_misses = 0;  // first upload of a weight tensor
+    uint64_t weight_cache_misses = 0;  // upload of a weight not currently resident
+    // NP-04D: attribution split of weight_cache_misses. A miss is either the
+    // first-ever device upload of a weight key (initial) or a re-upload of a key
+    // that was resident before but evicted (reupload). Together they sum to
+    // weight_cache_misses; the split makes repeated-transfer cost visible.
+    uint64_t weight_initial_uploads = 0; // first-ever upload of a weight key
+    uint64_t weight_reuploads = 0;       // re-upload after eviction of a seen key
     uint64_t weight_cache_evictions = 0; // LRU/hotness budget evictions (RAWRXD_STRATA_S01)
     // Attribution split for the SAME total above: a block-boundary trim and a
     // capacity/LRU eviction have identical symptoms in the aggregate counter,
@@ -214,6 +220,16 @@ public:
     // 0 = LRU (default, the historical policy), 1 = hotness (STRATA_S08).
     void SetWeightCachePolicy(int policy) { weight_cache_policy_ = policy; }
     int WeightCachePolicy() const { return weight_cache_policy_; }
+    // RAWRXD_STRATA_RETENTION: when true, TrimUnpinnedQuantWeights() keeps
+    // discretionary (unpinned) weight entries resident and only performs the
+    // mandatory fence-safe reap. Retention is owned by the device context, not
+    // by the Deep2 dispatcher: a small tool binary that links only
+    // src/vulkan_compute.cpp must not have to drag in all of Deep2
+    // (quant_dot_dispatch.cpp) to resolve this policy query. quant_dot_dispatch
+    // mirrors the process-wide Deep2 policy onto every context it owns via
+    // SetWeightCacheRetention(), so dispatch behaviour is unchanged.
+    void SetWeightCacheRetention(bool enabled) { weight_cache_retention_ = enabled; }
+    bool WeightCacheRetention() const { return weight_cache_retention_; }
     // D1: the batch descriptor-ring capacity (kQuantBatchMaxSets).
     static constexpr uint32_t QuantDotBatchCapacity() { return kQuantBatchMaxSets; }
 
@@ -379,9 +395,17 @@ private:
         uint64_t pin_count = 0;
     };
     std::unordered_map<const void*, QuantWeight> quant_weight_cache_;;
+    // NP-04D: weight keys ever uploaded. Persists across evictions so a cache
+    // miss can be attributed to a first-ever upload vs a re-upload after
+    // eviction. Cleared with the cache on Cleanup.
+    std::unordered_set<const void*> quant_seen_weights_;
     // 0 = LRU, 1 = hotness (STRATA_S08). Seeded from RR_WEIGHT_CACHE_POLICY at
     // first use so an existing deployment keeps the historical behaviour
     // unless the operator opts in.
+    // RAWRXD_STRATA_RETENTION: discretionary weight-cache eviction is
+    // policy-controlled (false = LRU/hotness eviction, true = keep resident).
+    // Owned per-device; quant_dot_dispatch propagates the process-wide policy.
+    bool weight_cache_retention_ = false;
     int weight_cache_policy_ = -1;
 
     // ---- RAWRXD_G04: concurrent-safe residency --------------------------------

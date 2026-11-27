@@ -1,0 +1,42 @@
+RAWRXD NP-04D — separate initial uploads from re-uploads — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used (held). Build: full MSBuild compile+link.
+
+OBJECTIVE (NP-04D): distinguish a first-ever device upload of a compressed weight
+from a re-upload after eviction. Previously both were counted only as
+weight_cache_misses, so repeated-transfer cost was invisible.
+
+INSPECTION (no duplication): existing residency accounting in
+src/vulkan_compute.cpp EnsureQuantWeight already provides weight_cache_hits (:3052),
+weight_cache_misses (:3146), evictions budget/trim (:3108/:3203), upload_bytes,
+device_bytes_live/peak, pin/lease/retire/reap. NP-04D adds ONLY the missing
+initial-vs-reupload attribution; it does not duplicate hits/misses/evictions.
+
+CHANGE (4 files, additive, cold path only — miss branch of EnsureQuantWeight):
+1. include/vulkan_compute.h — GpuCounters: + weight_initial_uploads, weight_reuploads
+   (documented to sum to weight_cache_misses). VulkanCompute: + quant_seen_weights_
+   (unordered_set<const void*>), cleared with the cache on Cleanup.
+2. src/vulkan_compute.cpp — EnsureQuantWeight miss branch: after ++weight_cache_misses,
+   insert(packed) into quant_seen_weights_; first insert => ++weight_initial_uploads,
+   else ++weight_reuploads. Cleanup clears quant_seen_weights_ beside the cache.
+3. src/deep2/quant_dot_dispatch.hpp — BackendStats + CacheStats: + weight_initial_uploads/
+   weight_reuploads (BackendStats) and initial_uploads/reuploads (CacheStats).
+4. src/deep2/quant_dot_dispatch.cpp — BackendCounters() and GetCacheStats()/
+   GetCacheStatsOn() copy the two counters.
+
+No control-flow change to the hot dispatch path; only the cache-miss branch (cold)
+gains two set operations. No new dependencies, stubs, or backend substitution.
+
+VERIFICATION (actual):
+- MSVC /Zs: src/vulkan_compute.cpp EXIT 0; src/deep2/quant_dot_dispatch.cpp EXIT 0.
+- Full production build (MSBuild deep2_strata_chat.vcxproj, Release): EXIT 0.
+    -> build\Release\deep2_strata_chat.exe  SHA256
+       279C7B4428FA0961C450C261D2AA2E5770F71BF0B4439331265FABF398320950
+- OBJECT_COMPILATION=PASS, LINKED=PASS. Runtime counter split: PENDING (hardware held).
+
+DISPOSITION:
+NP04D=IMPLEMENTED  Compile=YES  ObjectCompilation=PASS  Linked=PASS
+NP04D Runtime=NO  Hardware=NOT_RUN(held)
+NP04A/B/C=EXISTING (upload paths / upload_bytes / hits-misses-evictions already present)
+NP05/NP06=PENDING
+PROMOTE=0  CERTIFIED=0  RELEASE=HELD
+NEXT=NP-05A/B stable resident-weight identity + reuse; NP-06D bounded vkb_indirect retry.

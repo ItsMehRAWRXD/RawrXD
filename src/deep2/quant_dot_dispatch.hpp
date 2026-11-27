@@ -173,6 +173,8 @@ struct BackendStats {
     uint64_t download_bytes = 0;
     uint64_t weight_cache_hits = 0;
     uint64_t weight_cache_misses = 0;
+    uint64_t weight_initial_uploads = 0;  // NP-04D: first-ever upload of a key
+    uint64_t weight_reuploads = 0;        // NP-04D: re-upload after eviction
     uint64_t device_bytes_live = 0;
     uint64_t device_bytes_peak = 0;
     double kernel_ms = 0;
@@ -223,6 +225,8 @@ struct CacheStats {
     double kernel_ms = 0;
     double submit_ms = 0;
     double wait_ms = 0;
+    uint64_t initial_uploads = 0;   // NP-04D: first-ever upload of a key
+    uint64_t reuploads = 0;         // NP-04D: re-upload after eviction
     // ---- RAWRXD_G04: concurrent-safe residency -----------------------------
     uint64_t pinned = 0;            // cache entries currently pinned (in flight)
     uint64_t leases = 0;            // generation leases outstanding

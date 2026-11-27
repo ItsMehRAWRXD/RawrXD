@@ -1850,16 +1850,22 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 // ---------------------------------------------------------------------------
 bool VulkanCompute::BeginQuantDotBatch() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
-    if (quant_batch_active_) return false;   // batches do not nest
+    auto reject = [](const char* why) {
+        if (std::getenv("RR_QD_TRACE"))
+            std::cerr << "[QUANT_DOT] BeginBatch reject: " << why << std::endl;
+        return false;
+    };
+    if (quant_batch_active_) return reject("nesting:active");   // batches do not nest
     // A failed fence wait means submitted work may still reference every
     // pinned weight and batch buffer. Do not recycle or unpin them here;
     // Cleanup() is the only recovery boundary after device-idle teardown.
     if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
-            quant_submission_failed_, cleanup_quarantined_)) return false;
-    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return false;
+            quant_submission_failed_, cleanup_quarantined_))
+        return reject("MayReuseQuant:inflight_or_failed");
+    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return reject("pipeline:create");
     auto it = shaders_.find("quantdot");
-    if (it == shaders_.end() || !it->second.pipeline) return false;
-    if (!EnsureQuantFastPath()) return false;
+    if (it == shaders_.end() || !it->second.pipeline) return reject("shader:missing");
+    if (!EnsureQuantFastPath()) return reject("fastpath:create");
 
     // RAWRXD_G04: release any pins left over from a PREVIOUS batch that ended
     // abnormally. A leaked pin would make its entry permanently un-evictable
@@ -2072,9 +2078,13 @@ bool VulkanCompute::EndQuantDotBatch() {
     // epoch's fence is waited on before the lock (and the pins) are released.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!quant_batch_active_) return false;
+    // BP-02F: clear batch ownership on EVERY End path (even when a prior
+    // submission is still in flight and MayReuseQuant fails below) so the next
+    // BeginBatch is not rejected as "nesting:active". Pins stay guarded by
+    // pin_guard / Cleanup; the caller replays on CPU when this returns false.
+    quant_batch_active_ = false;
     if (!Deep2::Submit::MayReuseQuant(quant_submission_in_flight_,
             quant_submission_failed_, cleanup_quarantined_)) return false;
-    quant_batch_active_ = false;
     // RAWRXD_G04: pre-submit failures release pins, and successful completion
     // releases them after the fence. A failed post-submit wait deliberately
     // preserves pins and quarantines the batch until Cleanup() has established
@@ -3134,6 +3144,14 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     }
     QDTRACE("ensure upload done");
     ++gpu_counters_.weight_cache_misses;
+    // NP-04D: split the miss into first-ever upload vs re-upload after eviction.
+    // quant_seen_weights_ persists across evictions, so a key that was resident
+    // before and evicted is counted as a re-upload (repeated transfer), while a
+    // never-seen key is an initial upload. Together they equal weight_cache_misses.
+    if (quant_seen_weights_.insert(packed).second)
+        ++gpu_counters_.weight_initial_uploads;
+    else
+        ++gpu_counters_.weight_reuploads;
     auto res = quant_weight_cache_.emplace(packed, e);
     return &res.first->second;
 }
@@ -3163,10 +3181,6 @@ void VulkanCompute::RetireQuantWeight(const QuantWeight& w) {
         gpu_counters_.device_bytes_live = 0;
 }
 
-namespace RawrXD { namespace Deep2 { namespace QuantDot {
-bool WeightCacheRetention();  // RAWRXD_STRATA (quant_dot_dispatch.cpp)
-} } }
-
 size_t VulkanCompute::TrimUnpinnedQuantWeights() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!device_ || !quant_fence_) return 0;
@@ -3174,7 +3188,13 @@ size_t VulkanCompute::TrimUnpinnedQuantWeights() {
     // RAWRXD_STRATA_RETENTION: the device-idle wait and the reaper below are
     // mandatory cleanup; only the discretionary eviction of unpinned entries is
     // policy-controlled. Retention keeps resident expert slices alive.
-    if (::RawrXD::Deep2::QuantDot::WeightCacheRetention()) {
+    //
+    // The policy is owned by this device context (see
+    // VulkanCompute::SetWeightCacheRetention) so a small tool binary that links
+    // only this translation unit can resolve it without pulling in all of
+    // Deep2. quant_dot_dispatch mirrors the process-wide policy onto every
+    // context it owns at init, so dispatch behaviour is unchanged.
+    if (weight_cache_retention_) {
         ReapRetiredWeights();
         return 0;
     }
@@ -3503,6 +3523,7 @@ void VulkanCompute::ReleaseQuantFastPath() {
         if (kv.second.memory) vkFreeMemory(device_, kv.second.memory, nullptr);
     }
     quant_weight_cache_.clear();
+    quant_seen_weights_.clear();
     // RAWRXD_G04: outstanding leases are meaningless once the device objects
     // are gone; drop them so a later release cannot unpin a dead entry.
     quant_leases_.clear();
