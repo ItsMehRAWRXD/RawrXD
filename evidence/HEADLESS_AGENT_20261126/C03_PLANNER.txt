@@ -1,0 +1,4 @@
+RAWRXD C03 — hardware-aware transformation planner (standalone)
+ReapPlanner.hpp: PlanReap(capacity, geometry, target, mode) -> feasible retained-expert count / working set / peak. Overflow-safe (AddOverflow); rejects insufficient/infeasible explicitly. Never exceeds budget.
+Standalone MSVC build PASS (6.1 GB). CPU test c03_planner_test 5/5 OK (stream feasible, retain range, peak<=capacity, reject insufficient, overflow rejected). C03_PLANNER=PASS.
+C01 (06e8507733) confirmed ancestor. Component total now 40/40 standalone PASS.
