@@ -1,0 +1,26 @@
+RAWRXD REAP V02 — storage-independent expert slicing — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU test only. Disk 6.08 GB.
+
+PACKAGE V02 (of V01-V10): extract quantization-aware tensor slicing into a reusable,
+storage-independent component. NO engine/transformImpl change yet (that is V04).
+
+IMPLEMENTED:
+- src/deep2/ReapExpertSlice.hpp (NEW): ComputeExpertSliceLayout(dims, tensorBytes,
+  retained, out, error) -> ExpertSliceLayout{stride, totalBytes, slices[]}. Expert axis =
+  dims.back() (original physical count); stride = tensorBytes / originalExperts; one slice
+  per retained expert in ORIGINAL order; fail-closed on empty dims / zero axis /
+  non-divisible bytes / out-of-range retained / offset overflow. No file I/O.
+  This is the exact algorithm from ReapMoETransformer.cpp (stride = bytes/dims.back();
+  srcOffset = base + stride*expert; copy stride bytes), extracted for reuse by
+  Physical (current writer), Virtual (in-memory) and Streaming (demand slices).
+- tools/reap_expert_slice_test.cpp: CPU regression (offsets 0/200/300 for retain {0,2,3}
+  of 4x100; non-divisible/out-of-range/empty rejected) -> ALL PASS.
+
+VERIFICATION (actual):
+- CPU regression -> ALL PASS (exit 0). Artifacts removed.
+- Production /Zs: unchanged this package (no engine edit); baseline ed77e09875 green.
+
+DISPOSITION: V02 COMPLETE (component + CPU verified). V01 (selection extraction) next;
+V04 migrate writer to shared transform; V06 wire Virtual to ingestion.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=V01 retained-expert selection extraction; then V04 shared-transform migration.
