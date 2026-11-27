@@ -1,0 +1,20 @@
+RAWRXD REAP S03.5 (hardening) — digest-cache invalidation — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+
+P0 CAVEAT CLOSED: the persistent digest cache keyed by path+size could reuse a stale
+digest on a same-size checkpoint replacement. Now the cache entry is {size, mtime, hash}
+and is reused only if BOTH size AND mtime match; a same-size replacement with a new mtime
+rehashes. REAP_STRICT_REHASH=1 forces a full SHA-256 rehash always (authoritative identity),
+closing the same-size/same-mtime ABA window.
+
+CHANGE (1 file): Deep2Engine.cpp digest cache -> std::array<uint64_t,3>{size,mtime,hash};
+strict-rehash env; full-file SHA-256 (deep2::sha256_file) unchanged.
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) Deep2Engine.cpp -> EXIT 0. NOT linked/run.
+Physical unchanged.
+
+DISPOSITION: S03.5 COMPLETE + HARDENED (full-shard content identity; size+mtime cache
+invalidation; strict-rehash mode). Quant source covered by content; transform-quant by mode.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.6 consume ReapTransformAcquire + real Vulkan materialization (alloc/upload/descriptor/
+dispatch; GPU verify held; no stub); S03.7 consume ReapRetirement; S03.8 C03 planner.

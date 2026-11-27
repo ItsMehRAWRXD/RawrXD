@@ -2905,7 +2905,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         // identity. Reuses PR-06 CheckpointContentIdentity.
         if (globalIndex_)
         {
-            static std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> s_digestCache;
+            // Persistent digest cache: path -> {size, mtime, hash64}. A cache entry
+            // is reused only if size AND mtime match (same-size replacement with a
+            // new mtime rehashes). REAP_STRICT_REHASH=1 forces a full rehash always
+            // (authoritative identity), closing the same-size/same-mtime ABA window.
+            static std::unordered_map<std::string, std::array<uint64_t, 3>> s_digestCache;
+            const bool strictRehash = [] {
+                const char* v = std::getenv("REAP_STRICT_REHASH");
+                return v && v[0] == '1' && v[1] == '\0';
+            }();
             std::vector<uint64_t> shardHashes;
             const size_t ns = globalIndex_->TotalShards();
             shardHashes.reserve(ns);
@@ -2915,11 +2923,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 const std::string key = sp.string();
                 std::error_code ec;
                 const uint64_t sz = static_cast<uint64_t>(std::filesystem::file_size(sp, ec));
+                const uint64_t mt = ec ? 0u
+                    : static_cast<uint64_t>(std::filesystem::last_write_time(sp, ec)
+                                                .time_since_epoch().count());
                 uint64_t h64 = 0;
                 auto it = s_digestCache.find(key);
-                if (it != s_digestCache.end() && it->second.first == sz)
+                if (!strictRehash && it != s_digestCache.end() &&
+                    it->second[0] == sz && it->second[1] == mt)
                 {
-                    h64 = it->second.second;                 // persistent cache hit
+                    h64 = it->second[2];                 // persistent cache hit (size+mtime)
                 }
                 else
                 {
@@ -2929,7 +2941,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                         uint64_t x = 0;
                         for (int i = 0; i < 8; ++i) x = (x << 8) | d[i];
                         h64 = x ? x : 1;
-                        s_digestCache[key] = {sz, h64};
+                        s_digestCache[key] = {sz, mt, h64};
                     }
                 }
                 shardHashes.push_back(h64);
