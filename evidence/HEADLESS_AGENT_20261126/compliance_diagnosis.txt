@@ -1,0 +1,5 @@
+RAWRXD_AUTONOMOUS_MODEL_COMPLIANCE_RECOVERY_104 — response integrity diagnosis
+Track A: captured full responses. gpt-oss returns EMPTY content (content[0:200]= blank) on every turn -> genuine empty generation, NOT truncation (num_predict=2048 added, no change), NOT parser rejection (no JSON to reject).
+=> Root cause: gpt-oss chat-template/model produces no actionable content via /api/chat text channel. Controller fails fast (12 empties) correctly.
+Fixes kept: num_predict=2048 (truncation guard for other models), empty-content logging (diagnosis), productive budget, fail-fast.
+Recovery requires native tool_calls channel or template fix (gpt-oss compatibility) — not budget/retry.

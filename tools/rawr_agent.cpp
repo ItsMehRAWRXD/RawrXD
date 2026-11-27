@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
         if (forceEdit) { dir = "The source is UNCHANGED and the build failed. STOP rewriting the whole file. Use the edit tool with a MINIMAL old->new change that fixes the PRIMARY error line only."; forceEdit = false; }
         msgs.push_back({"user", "CURRENT_STEP: " + dir});
         // Build /api/chat body.
-        string body = "{\"model\":\"" + model + "\",\"stream\":false,\"keep_alive\":\"10m\",\"options\":{\"temperature\":0,\"seed\":42},\"messages\":[";
+        string body = "{\"model\":\"" + model + "\",\"stream\":false,\"keep_alive\":\"10m\",\"options\":{\"temperature\":0,\"seed\":42,\"num_predict\":2048},\"messages\":[";
         for (size_t i = 0; i < msgs.size(); ++i) {
             if (i) body += ",";
             body += "{\"role\":\"" + msgs[i].first + "\",\"content\":\"" + JsonEscape(msgs[i].second) + "\"}";
@@ -314,6 +314,7 @@ int main(int argc, char** argv) {
         printf("[turn %d] model_tool=%s (phase=%d)\n", turn, tool.empty() ? "(none)" : tool.c_str(), phase);
         if (tool.empty()) {
             ++emptyStreak;
+            printf("  [empty %d] content[0:200]=%.200s\n", emptyStreak, content.c_str());
             if (emptyStreak >= 12) { printf("[abort] model produced 12 consecutive empty turns (no tool call) — fail-closed.\n"); break; }
             msgs.push_back({"user", "You MUST output exactly one JSON tool call NOW, with no prose. Current step: " + PhaseDirective(ComputePhase()) +
                 (emptyStreak >= 3 ? " Example: {\"tool\":\"write\",\"path\":\"sysmon.cpp\",\"content\":\"...\"}" : "")});

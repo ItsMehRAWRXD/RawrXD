@@ -1,0 +1,32 @@
+[turn 0] model_tool=(none) (phase=1)
+  [empty 1] content[0:200]=
+[turn 1] model_tool=(none) (phase=1)
+  [empty 2] content[0:200]=
+[turn 2] model_tool=(none) (phase=1)
+  [empty 3] content[0:200]=
+[turn 3] model_tool=(none) (phase=1)
+  [empty 4] content[0:200]=
+[turn 4] model_tool=(none) (phase=1)
+  [empty 5] content[0:200]=
+[turn 5] model_tool=(none) (phase=1)
+  [empty 6] content[0:200]=
+[turn 6] model_tool=(none) (phase=1)
+  [empty 7] content[0:200]=
+[turn 7] model_tool=(none) (phase=1)
+  [empty 8] content[0:200]=
+[turn 8] model_tool=(none) (phase=1)
+  [empty 9] content[0:200]=
+[turn 9] model_tool=(none) (phase=1)
+  [empty 10] content[0:200]=
+[turn 10] model_tool=(none) (phase=1)
+  [empty 11] content[0:200]=
+[turn 11] model_tool=(none) (phase=1)
+  [empty 12] content[0:200]=
+[abort] model produced 12 consecutive empty turns (no tool call) — fail-closed.
+=== TELEMETRY ===
+MODEL=gpt-oss:20b BACKEND=Ollama REQUESTS=12
+PROMPT_TOKENS=15549 EVAL_TOKENS=19957 PREFILL_TPS=17097.45 DECODE_TPS=133.84
+TOOL_CALLS=0 TOOL_OK=0 TOOL_FAIL=0 CORRECTIONS=0
+ELAPSED_S=150.4 FINISHED=no
+EVIDENCE functional=0
+RESULT=INCOMPLETE
