@@ -115,6 +115,28 @@ static bool PathInWs(const string& rel, string& full) {
     full = fs2; return true;
 }
 
+// Edit tool with convergence feedback (RAWRXD edit-failure loop reduction).
+// On "old text not found" the result includes the CURRENT file content so the
+// model can copy the EXACT text instead of guessing and looping (wasted turns).
+static string ApplyEdit(const string& path, const string& oldS, const string& newS,
+                        bool& ok, bool& esc) {
+    esc = false;
+    string full;
+    if (!PathInWs(path, full)) { esc = true; ok = false; return "ERROR: path escapes workspace"; }
+    ifstream f(full); stringstream ss; ss << f.rdbuf(); string s = ss.str();
+    const size_t p = s.find(oldS);
+    if (p == string::npos) {
+        ok = false;
+        return "ERROR: old text not found. 'old' must match the CURRENT file EXACTLY "
+               "(copy it verbatim). Current file (first 600 chars):\n" +
+               s.substr(0, 600) + (s.size() > 600 ? "\n[truncated]" : "");
+    }
+    s.replace(p, oldS.size(), newS);
+    ofstream o(full, ios::binary); o << s;
+    ok = o.good();
+    return ok ? ("OK edited " + path) : "ERROR: write failed";
+}
+
 static bool SrcHasRealApi() {
     ifstream f(std::filesystem::path(g_ws) / g_expSrc);
     stringstream ss; ss << f.rdbuf(); string s = ss.str();
@@ -397,12 +419,40 @@ static int SelfTestParse() {
     return fail == 0 ? 0 : 1;
 }
 
+// Deterministic verification of the edit tool + convergence feedback (model-free).
+static int SelfTestEdit() {
+    namespace fs = std::filesystem;
+    const string dir = (fs::temp_directory_path() / "rawr_edittest").string();
+    fs::create_directories(dir);
+    g_ws = dir;  // PathInWs resolves against g_ws
+    const string file = (fs::path(dir) / "t.txt").string();
+    { ofstream o(file, ios::binary); o << "line1\nTARGET line3\n"; }
+    int fail = 0;
+    auto check = [&](bool cond, const char* name) {
+        std::printf("[selftest-edit] %-30s %s\n", name, cond ? "OK" : "FAIL");
+        if (!cond) ++fail;
+    };
+    bool ok = false, esc = false;
+    string r = ApplyEdit("t.txt", "TARGET", "REPLACED", ok, esc);
+    check(ok && !esc && r.rfind("OK edited", 0) == 0, "match -> edited");
+    { ifstream f(file); stringstream ss; ss << f.rdbuf(); const string c = ss.str();
+      check(c.find("REPLACED") != string::npos && c.find("TARGET") == string::npos, "content replaced"); }
+    r = ApplyEdit("t.txt", "NO_SUCH_TEXT", "x", ok, esc);
+    check(!ok && !esc && r.find("old text not found") != string::npos, "miss -> not found");
+    check(r.find("REPLACED") != string::npos, "miss -> includes current content");
+    r = ApplyEdit("../escape.txt", "a", "b", ok, esc);
+    check(!ok && esc && r.find("escapes workspace") != string::npos, "path escape rejected");
+    std::printf("SELFTEST_EDIT=%s (%d fail)\n", fail == 0 ? "PASS" : "FAIL", fail);
+    return fail == 0 ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     string model = "qwen3:8b", objective, ws = "F:\\rawrxd_acceptance_sysmon_native";
     int maxTurns = 30;
     bool selfTestChannel = false;
     bool selfTestParse = false;
+    bool selfTestEdit = false;
     for (int i = 1; i < argc; ++i) {
         string a = argv[i];
         auto next = [&]() -> string { return (i + 1 < argc) ? argv[++i] : ""; };
@@ -412,9 +462,11 @@ int main(int argc, char** argv) {
         else if (a == "--max-turns") maxTurns = atoi(next().c_str());
         else if (a == "--self-test-channel") selfTestChannel = true;
         else if (a == "--self-test-parse") selfTestParse = true;
+        else if (a == "--self-test-edit") selfTestEdit = true;
     }
     if (selfTestChannel) return SelfTestChannel();
     if (selfTestParse) return SelfTestParse();
+    if (selfTestEdit) return SelfTestEdit();
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
     // A02: derive expected deliverables from the objective (no hardcoded names).
@@ -581,14 +633,10 @@ int main(int argc, char** argv) {
                 errCount++; g_tel.corrections++;
             } else { if (errCount > 0) repairProgress++; errCount = 0; g_tel.toolOk++; }
         } else if (tool == "edit") {
-            string path = ExtractJsonString(call, "path"), oldS = ExtractJsonString(call, "old"), newS = ExtractJsonString(call, "new"), full;
-            if (!PathInWs(path, full)) { result = "ERROR: path escapes workspace"; g_tel.toolFail++; }
-            else {
-                ifstream f(full); stringstream ss; ss << f.rdbuf(); string s = ss.str();
-                size_t p = s.find(oldS);
-                if (p == string::npos) { result = "ERROR: old text not found"; g_tel.toolFail++; }
-                else { s.replace(p, oldS.size(), newS); ofstream o(full, ios::binary); o << s; result = o.good() ? ("OK edited " + path) : "ERROR: write failed"; if (o.good()) g_tel.toolOk++; else g_tel.toolFail++; }
-            }
+            string path = ExtractJsonString(call, "path"), oldS = ExtractJsonString(call, "old"), newS = ExtractJsonString(call, "new");
+            bool eok = false, eesc = false;
+            result = ApplyEdit(path, oldS, newS, eok, eesc);
+            if (eok) g_tel.toolOk++; else g_tel.toolFail++;
         } else if (tool == "build") {
             string sources = ExtractJsonString(call, "sources");
             string output = ExtractJsonString(call, "output"); if (output.empty()) output = "a.exe";
