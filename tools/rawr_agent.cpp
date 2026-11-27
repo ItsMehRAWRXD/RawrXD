@@ -264,11 +264,13 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
-    int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash;
+    int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false;
     for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
         int phase = ComputePhase();
-        msgs.push_back({"user", "CURRENT_STEP: " + PhaseDirective(phase)});
+        string dir = PhaseDirective(phase);
+        if (forceEdit) { dir = "The source is UNCHANGED and the build failed. STOP rewriting the whole file. Use the edit tool with a MINIMAL old->new change that fixes the PRIMARY error line only."; forceEdit = false; }
+        msgs.push_back({"user", "CURRENT_STEP: " + dir});
         // Build /api/chat body.
         string body = "{\"model\":\"" + model + "\",\"stream\":false,\"keep_alive\":\"10m\",\"options\":{\"temperature\":0,\"seed\":42},\"messages\":[";
         for (size_t i = 0; i < msgs.size(); ++i) {
@@ -354,6 +356,7 @@ int main(int argc, char** argv) {
             if (h == lastFailHash) {
                 result = "SOURCE_UNCHANGED: rebuild rejected. The source has not changed since the last failed build.";
                 repairNote = "Apply a targeted edit that fixes the PRIMARY error, then call build again. Rebuilding identical input is not allowed.";
+                forceEdit = true;   // switch strategy: force a minimal edit next turn
                 g_tel.toolFail++; g_tel.corrections++;
             } else {
                 const string vcvars = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat";
