@@ -1,0 +1,7 @@
+RAWRXD_NATIVE_MODEL_PROTOCOL_COMPLIANCE_129 — protocol probe (one structured exchange per model)
+gpt-oss:20b   TOOL_CALLS=1 CONTENT_LEN=0 THINKING=1 done_reason=stop
+qwen3:8b      TOOL_CALLS=1 CONTENT_LEN=0 THINKING=1 done_reason=stop
+nemotron:30b  TOOL_CALLS=1 CONTENT_LEN=2 THINKING=1 done_reason=stop
+deepseek-coder-v2:16b TRANSPORT_FAIL (probe single-request timeout; 8.9GB load)
+KEY FINDING: models emit NATIVE message.tool_calls with EMPTY content + thinking channel BY DESIGN. Empty content != noncompliance. Actionable output is in tool_calls (NativeToolCall decodes it).
+=> Campaign reliability failures were caused by the controller FALLING BACK TO TEXT (its tools request failed at turn 0), not model noncompliance. Fix = make the tools request reliable (reduce schema/prompt or raise first-call timeout); then native tool_calls path is used.
