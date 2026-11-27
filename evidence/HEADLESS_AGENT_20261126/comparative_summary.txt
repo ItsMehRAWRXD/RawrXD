@@ -1,0 +1,7 @@
+RAWRXD_ADAPTIVE_RECOVERY_COMPARATIVE_ACCEPTANCE_119 — comparative reliability
+Baseline b14601ff09: 3 PASS / 7 = 42.86% (interrupted).
+Improved 1befd9e7cf (context reconstruction at empty 4/8): 5 PASS / 12 = 41.67%.
+  gpt-oss 2/3, deepseek 1/3, qwen3 2/3, nemotron 0/3.
+Delta = -1.2pp => context reconstruction did NOT materially improve reliability.
+Dominant failure = model noncompliance (empty content / non-convergence; nemotron 0/3). Recovery mechanism is not the lever; model/template compliance is.
+No RNG, no model substitution, all receipts preserved.
