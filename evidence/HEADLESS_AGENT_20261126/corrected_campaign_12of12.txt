@@ -1,0 +1,12 @@
+RUN 1 model=gpt-oss:20b run=1 => RESULT=INCOMPLETE
+RUN 2 model=gpt-oss:20b run=2 => RESULT=INCOMPLETE
+RUN 3 model=gpt-oss:20b run=3 => RESULT=PASS
+RUN 4 model=deepseek-coder-v2:16b run=1 => RESULT=PASS
+RUN 5 model=deepseek-coder-v2:16b run=2 => RESULT=INCOMPLETE
+RUN 6 model=deepseek-coder-v2:16b run=3 => RESULT=INCOMPLETE
+RUN 7 model=qwen3:8b run=1 => RESULT=INCOMPLETE
+RUN 8 model=qwen3:8b run=2 => RESULT=INCOMPLETE
+RUN 9 model=qwen3:8b run=3 => RESULT=INCOMPLETE
+RUN 10 model=nemotron-3.5-lightning:30b run=1 => RESULT=INCOMPLETE
+RUN 11 model=nemotron-3.5-lightning:30b run=2 => RESULT=PASS
+RUN 12 model=nemotron-3.5-lightning:30b run=3 => RESULT=INCOMPLETE

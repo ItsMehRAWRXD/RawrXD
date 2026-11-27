@@ -1,0 +1,6 @@
+RAWRXD_PRODUCTION_SCHEMA_RECONCILIATION_132 — corrected campaign FINAL (ef6c068073, 12/12)
+gpt-oss 1/3, deepseek 1/3, qwen3 0/3, nemotron 1/3 => 3 PASS / 12 = 25.0%.
+Matched comparison: baseline 42.86% (3/7, incomplete), improved 41.67% (5/12), corrected 25.0% (3/12).
+=> Schema/serialization correctness improved (valid JSON, native channel accepted, gpt-oss PASS 38.5s) but MEASURED RELIABILITY NOT IMPROVED (25%, within small-sample variance, not better).
+Residual: with native tools enabled, tool-result feedback uses a user message (not a role=tool message); model frequently returns empty content/thinking-only => likely conversation-state/tool-result-format issue, not serialization.
+Next: proper role=tool result messages + conversation-state handling; do not change ef6c068073 mid-comparison (comparison now complete).
