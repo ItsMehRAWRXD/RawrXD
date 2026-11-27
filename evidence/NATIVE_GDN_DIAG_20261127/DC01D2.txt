@@ -1,0 +1,7 @@
+RAWRXD DC-01D trace + coverage re-test — 2026-11-27
+Executor::SubmitCount now = gpu_batch_submissions_ + GetDeep2VulkanCompute().QueueSubmitCount() (concurrent-worker edit, line 20).
+Bounded run (n4-tiny-oracle, --gpu, 8 tok): gpu_calls=1860 cpu_calls=0 fallback=<none> CHAT_STATUS OK, NO TDR.
+BUT total_submits=0, submits_valid=false => BOTH gpu_batch_submissions_ and queueSubmitCount_ are 0 for this serial path.
+=> Counter-coverage gap PERSISTS: the actual op-submit site (where 1860 gpu_calls are submitted) is not captured by either counter. gpu_batch_submissions_ likely counts batched-prefill submissions only (this small prompt uses serial decode).
+NEXT: instrument the op-submit path (dispatchOps/dispatchQuant -> endSubmitWait is used, but queueSubmitCount_ stays 0 => ops may use a fused/alternate submit not incrementing it). Locate the fused submit (fusedCmd_/gatedSubmit) counter.
+Tree GREEN; no TDR; telemetry truthful (0 => unmeasured).
