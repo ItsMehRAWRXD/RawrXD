@@ -5,6 +5,7 @@
 // with real feedback, and emits inference + tool telemetry. No simulated tools.
 #include "OllamaExecutor.hpp"
 #include <windows.h>
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -311,10 +312,53 @@ struct Telemetry {
     double start = 0;
 } g_tel;
 
+// RAWRXD_PROVIDER_TOOL_CHANNEL_PROFILE (provider_compliance 2026-11-27):
+// Tool-schema acceptance is a PROVIDER property, not a per-request discovery.
+//   deepseek-coder-v2 : server REJECTS the tools schema (HTTP 400) => text channel.
+//   gpt-oss / qwen3 / nemotron / others : accept native message.tool_calls => native.
+// Selecting the channel up front avoids wasting 3 HTTP round-trips + 2x2s sleeps on
+// a guaranteed 400 for deepseek, and prevents a transient failure from silently
+// downgrading a capable model to text for the rest of the session.
+static bool ProviderSupportsNativeTools(const std::string& model) {
+    std::string m = model;
+    std::transform(m.begin(), m.end(), m.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    if (m.find("deepseek") != std::string::npos) return false;  // schema rejected
+    return true;                                                 // native by default
+}
+
+// Deterministic, model-free verification of the channel profile. Compiled into the
+// real controller binary so the mapping is exercised by the shipped code path.
+static int SelfTestChannel() {
+    struct Case { const char* model; bool native; };
+    const Case cases[] = {
+        {"deepseek-coder-v2:16b", false},
+        {"deepseek-r1:32b",       false},
+        {"DeepSeek-V2-Lite",      false},  // case-insensitive
+        {"gpt-oss:20b",           true},
+        {"gpt-oss:120b",          true},
+        {"qwen3:8b",              true},
+        {"nemotron-3-nano:4b",    true},
+        {"llama3.2:3b",           true},
+        {"unknown-model:latest",  true},   // safe default = native
+    };
+    int fail = 0;
+    for (const auto& c : cases) {
+        const bool got = ProviderSupportsNativeTools(c.model);
+        const bool ok = (got == c.native);
+        std::printf("[selftest] %-24s native=%d expected=%d %s\n",
+                    c.model, (int)got, (int)c.native, ok ? "OK" : "FAIL");
+        if (!ok) ++fail;
+    }
+    std::printf("SELFTEST_CHANNEL=%s (%d fail)\n", fail == 0 ? "PASS" : "FAIL", fail);
+    return fail == 0 ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     string model = "qwen3:8b", objective, ws = "F:\\rawrxd_acceptance_sysmon_native";
     int maxTurns = 30;
+    bool selfTestChannel = false;
     for (int i = 1; i < argc; ++i) {
         string a = argv[i];
         auto next = [&]() -> string { return (i + 1 < argc) ? argv[++i] : ""; };
@@ -322,7 +366,9 @@ int main(int argc, char** argv) {
         else if (a == "--workspace") ws = next();
         else if (a == "--objective") objective = next();
         else if (a == "--max-turns") maxTurns = atoi(next().c_str());
+        else if (a == "--self-test-channel") selfTestChannel = true;
     }
+    if (selfTestChannel) return SelfTestChannel();
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
     // A02: derive expected deliverables from the objective (no hardcoded names).
@@ -371,7 +417,10 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
-    int productive = 0, emptyStreak = 0; string lastWsHash; int unchangedCount = 0; bool useTools = true;
+    int productive = 0, emptyStreak = 0; string lastWsHash; int unchangedCount = 0; bool useTools = ProviderSupportsNativeTools(model);
+    // Provider-aware channel selection (RAWRXD provider_compliance 2026-11-27).
+    std::printf("[channel] model=%s native_tools=%d text_channel=%d\n",
+                model.c_str(), (int)useTools, (int)!useTools);
     int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false; int prevErrCount = -1;
     for (int turn = 0; turn < maxTurns * 3 && productive < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
@@ -395,8 +444,8 @@ int main(int argc, char** argv) {
             if (!ok || resp.empty()) { Sleep(2000); ok = false; }
         }
         if (!ok || resp.empty()) {
-            if (useTools) { useTools = false; printf("[turn %d] tools rejected; falling back to text channel\n", turn); continue; }
-            printf("[turn %d] transport failure (3 attempts)\n", turn); g_tel.toolFail++; break;
+            if (useTools) { useTools = false; std::printf("[turn %d] native tool channel rejected by provider '%s' (3 attempts); switching to text channel for the remainder of this session\n", turn, model.c_str()); continue; }
+            std::printf("[turn %d] transport failure (3 attempts)\n", turn); g_tel.toolFail++; break;
         }
         ++g_tel.requests;
         g_tel.promptTokens += (int)rawrxd::ollama::JsonInt(resp, "\"prompt_eval_count\":");
