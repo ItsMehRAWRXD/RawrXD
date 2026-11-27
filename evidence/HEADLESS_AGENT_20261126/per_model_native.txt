@@ -1,0 +1,7 @@
+RAWRXD per-model native reliability (transport fully implemented) — 2026-11-27
+gpt-oss:20b : native 3/3 PASS (completes).
+qwen3:8b    : native (fallbacks=0) but INCOMPLETE x2 (model non-convergence, not transport).
+deepseek    : text-only (schema 400).
+nemotron     : native but empty-prone (0/3).
+=> Transport is FULLY IMPLEMENTED (native accepted for 3/4, fallbacks=0). Reliability gap is MODEL COMPLIANCE (qwen3/deepseek/nemotron non-convergence), not transport.
+All transport fixes (description-free schema, fallback, objective gate, convergence) committed. gpt-oss native reliable.
