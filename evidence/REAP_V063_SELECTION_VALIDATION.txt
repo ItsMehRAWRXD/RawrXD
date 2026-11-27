@@ -1,0 +1,29 @@
+RAWRXD REAP V06.3 (partial) — ingestion selection validation — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs. Disk ~6 GB.
+
+PACKAGE V06.3 (Virtual ingestion) — bounded CPU-side increment: fail-closed selection
+validation at model ingestion. The full in-memory transform + inference binding remains
+GPU/loader-coupled (see blocker).
+
+IMPLEMENTED:
+- src/reap/ReapRuntimePlan.hpp: RuntimeInjectionReceipt += bool selectionValidated.
+- src/deep2/Deep2Engine.cpp loadModel (reap injection block): when hasSelection, call
+  RawrXD::Reap::ValidateRuntimeSelection(selection, expertCount). On failure, set
+  status=SELECTION_REJECTED + reason and return false (no silent fallback); on success,
+  receipt.selectionValidated=true. Rejects missing/duplicate/out-of-range/incompatible
+  selections explicitly, before any weight work.
+- Reuses V06.1 selection + V01 ValidateSelection (no new algorithm).
+
+VERIFICATION (actual): MSVC /Zs src/reap/ReapRuntimePlan.cpp + src/deep2/Deep2Engine.cpp
+-> EXIT 0. NOT linked/run (engine build storage-limited; inference GPU-gated).
+
+BLOCKER (V06.3 remainder, source-confirmed): Deep2Engine loads MoE expert weights via
+GlobalTensorIndex + residency cache (GPU), not a transformable host buffer at load.
+Applying TransformExpertTensor and binding transformed buffers to inference requires
+loader/residency surgery + GPU inference-consumption verification. Not done (no fabricated
+Virtual execution). Zero intermediate GGUF writes preserved (no writer invoked).
+
+DISPOSITION: V06.3 PARTIAL (ingestion selection validation COMPLETE; transform+inference
+binding BLOCKED on loader/GPU). Physical path unchanged (hasSelection=false).
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=loader/residency in-memory transform + GPU verify; S03/S04; V05 fixture; V07/V08.

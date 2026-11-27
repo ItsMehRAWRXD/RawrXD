@@ -4477,6 +4477,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             return false;
         }
         reapRuntimeReceipt_.effectiveExperts = requestedExperts;
+        // V06.3: fail-closed selection validation at ingestion. When a per-layer
+        // selection is provided (Virtual/Streaming), it must be valid (no missing/
+        // duplicate/out-of-range experts) and its per-layer count must equal
+        // expertCount; reject incompatible selections explicitly (no silent fallback).
+        if (reapRuntimeInjection_.hasSelection)
+        {
+            std::string selErr;
+            if (!RawrXD::Reap::ValidateRuntimeSelection(
+                    reapRuntimeInjection_.selection,
+                    reapRuntimeInjection_.expertCount, selErr))
+            {
+                fitRejectReason_ = std::string("runtime selection invalid: ") + selErr;
+                reapRuntimeReceipt_.status = "SELECTION_REJECTED";
+                reapRuntimeReceipt_.reason = selErr;
+                return false;
+            }
+            reapRuntimeReceipt_.selectionValidated = true;
+        }
     }
 
     // Wire MoE streaming loader

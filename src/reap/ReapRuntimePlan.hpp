@@ -95,6 +95,7 @@ struct RuntimeInjectionReceipt {
     uint64_t requestedExperts = 0;
     uint64_t effectiveExperts = 0;
     uint64_t workingSetBytes = 0;
+    bool selectionValidated = false;  // V06.3: per-layer selection validated at ingestion
     std::string status = "NOT_CONFIGURED";
     std::string reason;
 };
