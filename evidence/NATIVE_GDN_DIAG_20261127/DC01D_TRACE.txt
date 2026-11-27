@@ -1,0 +1,7 @@
+RAWRXD DC-01D submission-path trace — 2026-11-27
+Instrumented VulkanCompute submit sites (vulkan_compute.cpp): endSubmitWait vkQueueSubmit:1640, gatedSubmit:1732, EndFusedLayer:3067 -> increment queueSubmitCount_.
+Strata QueueSubmitCount()=0 => Strata does NOT submit through those sites.
+vkQueueSubmit in runtime_graph_executor.cpp: NONE. => Strata GPU submission is in a different backend/header (not yet located).
+Executor uses ::Deep2::GetDeep2VulkanCompute() for GDN/residency but general ops submit elsewhere.
+NEXT: broader trace (headers/other backends) to find the actual Strata vkQueueSubmit, then instrument submits/waits/timing there.
+Tree GREEN; accessor+snapshots+truthful validity published (b835202f02).
