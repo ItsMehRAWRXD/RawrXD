@@ -30,6 +30,7 @@
 #include "GGUFTokenizerLoad.hpp"
 #include "HotPatcher.hpp"
 #include "K2GlobalTensorIndex.hpp"
+#include "reap/ReapSelectionIdentity.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "K2LivePolicy.hpp"
 #include "K2MLA_GpuGemv.hpp"
@@ -12419,8 +12420,25 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         std::string error;
         std::fill(output, output + hiddenDim, 0.0f);
         const bool decodePhase = kvCache && kvCache->currentLength() > 0;
+        // S03.2: build the immutable, request-scoped transformation identity from
+        // the validated selection (per layer). Physical/legacy => 0 (unchanged).
+        uint64_t transformIdentity = 0;
+        if (reapRuntimeInjection_.hasSelection)
+        {
+            const uint32_t lyr = static_cast<uint32_t>(layer);
+            auto sit = reapRuntimeInjection_.selection.find(lyr);
+            if (sit != reapRuntimeInjection_.selection.end() && !sit->second.empty())
+            {
+                RawrXD::Reap::ExpertSelection one{{lyr, sit->second}};
+                const uint64_t fp = RawrXD::Reap::SelectionFingerprint(
+                    one, /*checkpointId*/ 0, /*tensorBytes*/ 0,
+                    static_cast<uint32_t>(reapRuntimeInjection_.mode));
+                transformIdentity = RawrXD::Reap::CacheIdentity(
+                    (static_cast<uint64_t>(lyr) << 32), fp, /*selectionValid*/ true);
+            }
+        }
         if (!K2MoEPlaceAndExec(*globalIndex_, moeConfig, static_cast<uint32_t>(layer),
-                               decodePhase, input, output, error))
+                               decodePhase, input, output, error, transformIdentity))
         {
             std::fprintf(stderr, "[FORWARD_LAYER_FATAL] layer=%zu standard multi-shard MoE failed: %s\n",
                          layer, error.c_str());

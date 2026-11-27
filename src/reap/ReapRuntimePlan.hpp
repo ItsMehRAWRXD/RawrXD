@@ -83,6 +83,7 @@ struct RuntimeInjection {
     // exact retained experts in original order.
     bool hasSelection = false;
     Selection selection;
+    uint64_t mode = 0;  // V06.3/S03.2: TransformMode for transformation identity
 };
 
 struct RuntimeInjectionReceipt {

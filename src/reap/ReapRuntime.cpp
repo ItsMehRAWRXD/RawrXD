@@ -160,6 +160,7 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
     injection.expertCount = target.expertCount;
     injection.workingSetBytes = plan.targetWorkingSetBytes;
     injection.enabled = true;
+    injection.mode = static_cast<uint64_t>(plan.transformMode);
     if (!engine.configureReapRuntimeInjection(injection)) {
         const auto& receipt = engine.reapRuntimeReceipt();
         result.receipt = "{\"status\":\"CONFIGURATION_FAILED\",\"reason\":" +

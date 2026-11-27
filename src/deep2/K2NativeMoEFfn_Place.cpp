@@ -148,7 +148,7 @@ bool ExecStickWorklist(const GlobalTensorIndex& index, const KimiK2Config& cfg,
 
 bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                        uint32_t layer, bool decodePhase, const float* normed,
-                       float* accum, std::string& error) {
+                       float* accum, std::string& error, uint64_t transformIdentity) {
     MoERoutingResult route{};
     if (!LoadAndRoute(index, cfg, layer, normed, route, error)) return false;
     for (uint32_t i = 0; i < route.count; ++i)
@@ -208,10 +208,12 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     struct PinProbeCtx {
         size_t H;
         size_t I;
+        uint64_t identity;   // S03.2: request-scoped transformation identity
     };
     static thread_local PinProbeCtx s_pp{};
     s_pp.H = cfg.hiddenDim;
     s_pp.I = cfg.moeIntermediateSize ? cfg.moeIntermediateSize : 2048u;
+    s_pp.identity = transformIdentity;
     place.SetProbe(
         [](void* ctx, int ly, int ex) -> int {
             auto* p = static_cast<PinProbeCtx*>(ctx);
@@ -220,7 +222,7 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             if (!DualStickBundlePinsReady((unsigned)st, ly, ex, p->H, p->I))
                 return 0;
             MoEPlaceGlobal().MarkHot(ly, ex, (uint32_t)st,
-                                    DualStickExpertBytesOf(ly, ex));
+                                    DualStickExpertBytesOf(ly, ex), p->identity);
             return 1;
         },
         &s_pp);
@@ -244,7 +246,7 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         place.SetBudget(bud, eb ? eb : (1ull << 20));
     }
     MoEPlaceLive().experts_selected += pn;
-    MoEPlacePlan plan = place.Place((int)layer, pin, pn);
+    MoEPlacePlan plan = place.Place((int)layer, pin, pn, transformIdentity);
     MoEPlaceLive().moe_place_calls++;
     MoEPlaceLive().expert_cache_hits += plan.hits;
     MoEPlaceLive().expert_cache_misses += plan.misses;

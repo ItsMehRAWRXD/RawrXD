@@ -1,0 +1,30 @@
+RAWRXD REAP S03.2 — production identity propagation — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs (NOMINMAX). Disk ~6 GB.
+
+PACKAGE S03.2: propagate the validated selection as an immutable, request-scoped
+transformation identity through the ACTUAL production placement call chain. No mutable
+global selection; no second residency manager.
+
+CHANGE (5 files):
+- ReapRuntimePlan.hpp: RuntimeInjection += uint64_t mode (TransformMode for identity).
+- ReapRuntime.cpp: RunRuntime sets injection.mode = plan.transformMode.
+- K2NativeMoEFfn.hpp: K2MoEPlaceAndExec += uint64_t transformIdentity = 0.
+- K2NativeMoEFfn_Place.cpp: signature; probe ctx carries identity; MarkHot(...,identity);
+  place.Place(layer, pin, pn, identity).
+- Deep2Engine.cpp: before K2MoEPlaceAndExec, build identity from reapRuntimeInjection_
+  .selection (per layer) via PR-06 SelectionFingerprint + CacheIdentity (checkpoint=0,
+  tensorBytes=0, mode, selectionValid=true); pass it. Physical (hasSelection=false) => 0.
+
+EFFECT: Virtual/Streaming requests are keyed by selection/mode (never alias Physical or
+each other); concurrent sessions with different selections get isolated hot-set entries.
+Invalid selections already rejected at ingestion (V06.3). Physical path byte-identical.
+
+VERIFICATION (actual): MSVC /Zs (NOMINMAX) K2NativeMoEFfn_Place.cpp + K2NativeMoEFfn.cpp +
+ReapRuntimePlan.cpp + ReapRuntime.cpp + Deep2Engine.cpp -> EXIT 0. NOT linked/run (engine
+build storage-limited; inference GPU-gated). No fabricated acceptance.
+
+DISPOSITION: S03.2 COMPLETE (production identity propagation; Physical unchanged). Identity
+now flows Deep2Engine(selection) -> K2MoEPlaceAndExec -> Place/MarkHot.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=S03.3 owned transformed buffers; S03.4 accounting; S03.5 geometry/router; S03.6 inference
+binding (GPU); S03.7 completion/cancel; S03.8 planner; S03.9 Physical regression; S03.10 real-model.
