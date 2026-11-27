@@ -1,0 +1,3 @@
+RAWRXD native transport — FINAL end-to-end acceptance (current source)
+gpt-oss:20b native tool channel (no fallback): write->BUILD_OK->run->finish->functional=1 RESULT=PASS (37.3s, 4 turns).
+Transport fully implemented: description-free schema (native accepted), text fallback, objective-derived gate, bounded execution, convergence, serialization guard. Verified end-to-end.
