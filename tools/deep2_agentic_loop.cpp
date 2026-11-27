@@ -74,7 +74,7 @@
 #include "../src/project_wizard/agent_esp.hpp"
 #include "../src/project_wizard/esp_runtime.hpp"
 #include "../src/project_wizard/esp_metrics.hpp"
-#include "esp_cli.hpp" // legacy-only; pulls legacy agent_esp (C2011 source) — reconcile next
+// #include "esp_cli.hpp" // RET-135: removed legacy (pulled legacy agent_esp; C2011)
 #include "../src/agentic/MotdAuthorization.h"
 #include "../src/agentic/tool_security.hpp"
 
