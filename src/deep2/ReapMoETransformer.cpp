@@ -4,6 +4,7 @@
 #include "deep2/ReapShardIdentity.hpp"
 #include "deep2/ReapQuantRange.hpp"
 #include "deep2/ReapTensorBounds.hpp"
+#include "deep2/ReapExpertSlice.hpp"
 #include "deep2/QuantTypeTable.hpp"
 
 #include "deep2/GGUFLoader.hpp"
@@ -999,25 +1000,34 @@ static ReapMoETransformResult transformImpl(ReapMoETransformRequest request,
             uint32_t layer = 0;
             if ((projection || router) && (!layerFromName(tensor.name, layer) || selection.find(layer) == selection.end())) { result.error = "selection lookup failed"; return result; }
             if (projection || router) {
-                const uint64_t stride = original->bytes / original->dims.back();
+                // V04: drive the per-expert copy from the shared, storage-independent
+                // slice layout (ReapExpertSlice) instead of an inline stride loop.
+                // Offsets/lengths are identical (offset = expert*stride, length =
+                // stride = bytes/expert-axis), so output is byte-for-byte preserved;
+                // block-geometry validation above (ReapBounds::SliceStride) is
+                // unchanged, and the streaming/quant-convert path is preserved.
                 const auto it = selection.find(layer);
+                RawrXD::Reap::ExpertSliceLayout layout;
+                if (!RawrXD::Reap::ComputeExpertSliceLayout(
+                        original->dims, original->bytes, it->second, layout, result.error))
+                    return result;
                 ReapQuant::RangeStats quantStats;
                 const bool convert=projection && original->type==12 && tensor.type==10 &&
                     request.requantizeQ4KToQ2K;
-                for (uint32_t expert : it->second) {
+                for (const RawrXD::Reap::ExpertSlice& sl : layout.slices) {
                     // Overflow guard already checked in validateExpertTensorGeometry.
                     // Tensor offsets are relative to the source shard's data
                     // section.  Using the output data base here silently
                     // corrupts every selected expert whenever the rebuilt
                     // header has a different length from the source header.
-                    const uint64_t srcOffset = shard.dataStart + original->offset + stride * expert;
+                    const uint64_t srcOffset = shard.dataStart + original->offset + sl.offset;
                     if (convert) {
                         if (!in.seekg(static_cast<std::streamoff>(srcOffset),std::ios::beg) ||
-                            !ReapQuant::ConvertRange(in,out,stride,quantStats)) {
+                            !ReapQuant::ConvertRange(in,out,sl.length,quantStats)) {
                             result.error="native expert requantization failed: "+tensor.name;return result;
                         }
-                    } else if (!copyRange(in, out, srcOffset, stride)) {
-                        result.error = "expert slice copy failed"; return result;
+                    } else if (!copyRange(in, out, srcOffset, sl.length)) {
+                        result.error = "expert slice copy failed: "+tensor.name; return result;
                     }
                 }
                 if (convert) {

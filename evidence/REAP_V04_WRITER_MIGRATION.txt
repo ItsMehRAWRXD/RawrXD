@@ -1,0 +1,30 @@
+RAWRXD REAP V04 — physical writer migration to shared transform — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs. Disk ~6 GB.
+
+PACKAGE V04: replace the duplicated inline expert-slicing loop in
+ReapMoETransformer.cpp::transformImpl with the shared ReapExpertSlice (V02), so the
+physical writer consumes the SAME authoritative slicing algorithm as Virtual/Streaming.
+
+CHANGE (single site, streaming/quant path preserved):
+- Added #include "deep2/ReapExpertSlice.hpp".
+- In the projection/router copy branch, replaced `stride = bytes/dims.back()` + per-expert
+  loop with ComputeExpertSliceLayout(original->dims, original->bytes, retained, layout)
+  and iterate layout.slices. srcOffset = dataStart + original->offset + sl.offset;
+  copy/convert length = sl.length. Offsets/lengths are IDENTICAL to the prior
+  (offset = expert*stride, length = stride), so output is byte-for-byte preserved.
+- Block-geometry validation (ReapBounds::SliceStride) and the Q4_K->Q2_K convert path
+  (ReapQuant::ConvertRange) are unchanged. Streaming (no whole-tensor load) preserved.
+- No change to GGUF serialization, transaction/lease, manifest authorization, metadata
+  patch, alignment, or multi-shard behavior.
+
+VERIFICATION (actual):
+- MSVC /Zs src/deep2/ReapMoETransformer.cpp -> EXIT 0.
+- Byte-for-byte equivalence: preserved by construction (identical per-expert offsets and
+  lengths; same copy/convert calls). Full runtime byte regression (V05) requires a real
+  MoE GGUF fixture run -> PENDING (CPU fixture / authorized run).
+- V01/V02/V03 CPU tests remain green (independent).
+
+DISPOSITION: V04 COMPLETE (migration + /Zs). Physical regression (V05) PENDING runtime.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=V05 physical regression (retained order/router/quant/metadata/multi-shard; 5/5 + G09);
+V06 Virtual ingestion; Streaming provider track.
