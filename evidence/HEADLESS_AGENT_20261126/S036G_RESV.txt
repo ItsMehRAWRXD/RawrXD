@@ -1,0 +1,4 @@
+RAWRXD S03.6G — device reservation (reserve-before-allocate + rollback) — standalone
+ReapDeviceReservation.hpp: Reserve(bytes) gated by budget; Commit on alloc success; Rollback on failure. Bounded; no RNG.
+Standalone MSVC build PASS (disk unchanged 10.6 GB). CPU test s036g_resv_test 6/6 OK (reserve, over-budget reject, rollback, commit). S036G_RESV=PASS.
+Gates Vulkan buffer allocation (S03.6G) before device allocation. Storage-independent.
