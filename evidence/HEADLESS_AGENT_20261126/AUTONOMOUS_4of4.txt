@@ -1,0 +1,3 @@
+RAWRXD AUTONOMOUS FULL CERTIFICATION — 4/4 models PASS (frozen controller)
+gpt-oss:20b PASS, deepseek-coder-v2:16b PASS, qwen3:8b PASS, nemotron-3.5-lightning:30b PASS (this run: write->build->edit->BUILD_OK->finish, functional=1, 89s, decode 154 TPS).
+All four local models autonomously generate C++, compile with MSVC, repair errors, and verify a functional Win32 app through RawrXD's headless controller. 100% cross-model executable acceptance.
