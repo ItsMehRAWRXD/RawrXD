@@ -15,10 +15,13 @@
 #include <atomic>
 #include <chrono>
 #include <filesystem>
+#include <set>
 
 using namespace std;
 static atomic<bool> g_cancel{false};
 static string g_ws;
+static string g_expSrc = "sysmon.cpp", g_expExe = "sysmon.exe";
+static std::set<std::string> g_startFiles;
 
 static string NowMs() {
     using namespace std::chrono;
@@ -94,7 +97,7 @@ static bool PathInWs(const string& rel, string& full) {
 }
 
 static bool SrcHasRealApi() {
-    ifstream f(std::filesystem::path(g_ws) / "sysmon.cpp");
+    ifstream f(std::filesystem::path(g_ws) / g_expSrc);
     stringstream ss; ss << f.rdbuf(); string s = ss.str();
     return s.find("GetSystemTimes") != string::npos ||
            s.find("GlobalMemoryStatusEx") != string::npos ||
@@ -128,12 +131,13 @@ static string RunCmd(const string& cmd) {
 static BOOL WINAPI CtrlHandler(DWORD t) { if (t == CTRL_C_EVENT || t == CTRL_BREAK_EVENT) g_cancel.store(true); return TRUE; }
 
 // Functional completion: real APIs in source + exe exists + exe launches (bounded).
+static bool CreatedThisSession(const std::string& name);
 static bool VerifyFunctional() {
     namespace fs = std::filesystem;
-    if (!fs::exists(fs::path(g_ws) / "sysmon.cpp")) return false;
+    if (!CreatedThisSession(g_expSrc)) return false;      // A03: created this request
     if (!SrcHasRealApi()) return false;
-    if (!fs::exists(fs::path(g_ws) / "sysmon.exe")) return false;
-    string cmd = "\"" + g_ws + "\\sysmon.exe\"";
+    if (!CreatedThisSession(g_expExe)) return false;
+    string cmd = "\"" + g_ws + "\\" + g_expExe + "\"";
     vector<wchar_t> w(cmd.begin(), cmd.end()); w.push_back(0);
     std::wstring wdir(g_ws.begin(), g_ws.end());
     STARTUPINFOW si{}; si.cb = sizeof(si); PROCESS_INFORMATION pi{};
@@ -310,6 +314,20 @@ int main(int argc, char** argv) {
     }
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
+    // A02: derive expected deliverables from the objective (no hardcoded names).
+    {
+        auto findExt = [&](const string& ext) -> string {
+            size_t p = objective.find(ext);
+            if (p == string::npos) return {};
+            size_t s = objective.rfind(' ', p);
+            s = (s == string::npos) ? 0 : s + 1;
+            return objective.substr(s, p - s + ext.size());
+        };
+        string s = findExt(".cpp"); if (!s.empty()) g_expSrc = s;
+        string e = findExt(".exe"); if (!e.empty()) g_expExe = e;
+    }
+    // A03: snapshot pre-existing files (reject stale artifacts).
+    for (auto& e : std::filesystem::directory_iterator(g_ws)) g_startFiles.insert(e.path().filename().string());
     g_tel.start = NowS();
     rawrxd::ollama::RecvTimeoutMs() = 300000;   // long agentic calls
     SetConsoleCtrlHandler(CtrlHandler, TRUE);
@@ -402,6 +420,13 @@ int main(int argc, char** argv) {
         if (tool == "list" && phase >= 1 && ComputePhase() >= 1) {
             msgs.push_back({"assistant", content});
             msgs.push_back({"user", "Inspection is complete. CURRENT_STEP: " + PhaseDirective(ComputePhase())});
+            g_tel.corrections++; repeatCount = 0;
+            continue;
+        }
+        // A02: reject no-progress read loops in build/fix (phase 2) — force an edit.
+        if (tool == "read" && phase >= 2 && ComputePhase() >= 2) {
+            msgs.push_back({"assistant", content});
+            msgs.push_back({"user", "Stop re-reading. The build failed. Apply a targeted EDIT to fix the PRIMARY compiler error now, then build."});
             g_tel.corrections++; repeatCount = 0;
             continue;
         }
