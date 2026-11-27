@@ -11,6 +11,8 @@ struct RuntimeRequest {
     std::string prompt;
     uint32_t maxTokens = 1;
     std::string receiptPath;
+    // A01: transformation-mode selector (PHYSICAL|VIRTUAL|STREAMING). Empty = PHYSICAL.
+    std::string mode;
 };
 
 struct RuntimeResult {

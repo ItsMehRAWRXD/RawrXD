@@ -1,0 +1,36 @@
+RAWRXD REAP A01 — transformation-mode selector — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. Disk-aware /Zs + CPU test only.
+
+RECONCILIATION: prior Track A found Virtual/Streaming DISCONNECTED and no mode selector.
+Source trace of RunRuntime (src/reap/ReapRuntime.cpp) confirmed: it ALWAYS ran
+BuildPhysicalReducePlan+ApplyPhysicalReducePlan then a single configureReapRuntimeInjection
+path — no Physical/Virtual/Streaming selector existed. A01 = ABSENT (now implemented).
+
+IMPLEMENTED (A01 selector + A02/A03 distinct dispatch):
+- ReapRuntimePlan.hpp: RuntimePlan += mode; ParseRuntimeMode() declared.
+- ReapRuntimePlan.cpp: ParseRuntimeMode (physical|virtual|streaming, case-insensitive,
+  empty=physical, unknown rejected — no silent fallback); RuntimePlanJson emits "mode".
+- ReapRuntime.hpp: RuntimeRequest += mode.
+- ReapRuntime.cpp RunRuntime: parse mode -> plan.mode; dispatch:
+    PHYSICAL  -> BuildPhysicalReducePlan + ApplyPhysicalReducePlan (materialized reduce).
+    VIRTUAL   -> no physical reduce; injectionMode=VIRTUAL_INMEMORY_TRANSFORM (in-memory,
+                 source GGUF never rewritten; no materialized compressed checkpoint).
+    STREAMING -> no physical reduce; injectionMode=STREAMING_DEMAND_PAGE (full bank,
+                 demand-paged via residency working set).
+  Each mode reaches a DISTINCT downstream path; receipt carries mode + injection_mode.
+- reap_cli.cpp: `rawr-reap runtime ... [--mode physical|virtual|streaming]`; usage updated.
+- tools/reap_mode_selector_test.cpp: CPU regression (same ParseRuntimeMode) -> ALL PASS.
+
+CLASSIFICATION (source-level, this change):
+A01 Transformation selection: ABSENT -> CONNECTED_UNVERIFIED (selector wired CLI->RunRuntime->distinct path).
+A02 Virtual: IMPLEMENTED_DISCONNECTED -> CONNECTED_UNVERIFIED (VIRTUAL branch, no GGUF rewrite).
+A03 Streaming: IMPLEMENTED_DISCONNECTED -> CONNECTED_UNVERIFIED (STREAMING branch, demand-page).
+Runtime GPU execution (loadModel/generate) = NOT_RUN (held); CPU selector verified.
+
+VERIFICATION (actual):
+- /Zs ReapRuntimePlan.cpp, ReapRuntime.cpp, reap_cli.cpp -> EXIT 0 (3/3).
+- CPU mode-selector regression -> ALL PASS (exit 0). Artifacts removed.
+
+DISPOSITION: A01 IMPLEMENTED+CONNECTED; A02/A03 CONNECTED (unverified). No stubs, no fallback.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=GPU run to substantiate VIRTUAL/STREAMING execution; A04-A06 trace.

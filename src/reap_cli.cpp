@@ -35,7 +35,7 @@ static void usage() {
                  "rawr-reap capabilities <model-file-or-directory>\n"
                  "rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]\n"
                  "rawr-reap runtime <model-or-alias> --target <parameters>/<experts> "
-                 "[--prompt <text>] [--max-tokens <N>] [--receipt <receipt.json>]\n"
+                 "[--mode physical|virtual|streaming] [--prompt <text>] [--max-tokens <N>] [--receipt <receipt.json>]\n"
                  "rawr-reap reap <first-shard.gguf> --target-size|--size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
@@ -1072,6 +1072,7 @@ static int runtimeInjection(int argc, char** argv) {
             request.maxTokens = static_cast<uint32_t>(parsed);
         }
         else if (option == "--receipt") request.receiptPath = value;
+        else if (option == "--mode") request.mode = value;  // A01: physical|virtual|streaming
         else { std::cerr << "REAP_RUNTIME_UNKNOWN_OPTION: " << option << "\n"; return 2; }
     }
     if (request.target.empty()) {

@@ -108,18 +108,43 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
         return result;
     }
 
-    PhysicalReducePlan physical{};
-    if (!BuildPhysicalReducePlan(plan, physical, error)) {
-        result.receipt = "{\"status\":\"PHYSICAL_PLAN_FAILED\",\"reason\":" +
-                         quote(error) +
+    // A01: authoritative transformation-mode dispatch. PHYSICAL materializes a
+    // reduced expert bank (offline writer path); VIRTUAL transforms in memory at
+    // load (no materialized GGUF); STREAMING keeps the full bank but demand-pages
+    // experts through the residency working set. Each selects a distinct path.
+    std::string mode = "PHYSICAL";
+    if (!ParseRuntimeMode(request.mode, mode, error)) {
+        result.receipt = "{\"status\":\"INVALID_MODE\",\"reason\":" + quote(error) +
                          ",\"writer_invoked\":false,\"source_immutable\":true}\n";
         return result;
     }
-    ApplyPhysicalReducePlan(physical);
-    if (physical.physicalRepresentation) {
-        plan.injectionMode = "PHYSICAL_STREAM_EXPERT_REDUCE";
-        plan.streamerPath = "ReapPhysicalBank+MoEWeightProxy";
-        plan.reason = physical.reason;
+    plan.mode = mode;
+
+    PhysicalReducePlan physical{};
+    if (mode == "PHYSICAL") {
+        if (!BuildPhysicalReducePlan(plan, physical, error)) {
+            result.receipt = "{\"status\":\"PHYSICAL_PLAN_FAILED\",\"reason\":" +
+                             quote(error) +
+                             ",\"writer_invoked\":false,\"source_immutable\":true}\n";
+            return result;
+        }
+        ApplyPhysicalReducePlan(physical);
+        if (physical.physicalRepresentation) {
+            plan.injectionMode = "PHYSICAL_STREAM_EXPERT_REDUCE";
+            plan.streamerPath = "ReapPhysicalBank+MoEWeightProxy";
+            plan.reason = physical.reason;
+        }
+    } else if (mode == "VIRTUAL") {
+        // Virtual: in-memory expert selection + top-k at load; source GGUF is
+        // never rewritten (no materialized compressed checkpoint).
+        plan.injectionMode = "VIRTUAL_INMEMORY_TRANSFORM";
+        plan.streamerPath = "MoEWeightProxy+ResidencyCache";
+        plan.reason = "IN_MEMORY_EXPERT_TRANSFORM_NO_GGUF_REWRITE";
+    } else {  // STREAMING
+        // Streaming: full bank resident, experts demand-paged via the working set.
+        plan.injectionMode = "STREAMING_DEMAND_PAGE";
+        plan.streamerPath = "MoEWeightProxy+VulkanPrefetch";
+        plan.reason = "DEMAND_PAGED_EXPERT_RESIDENCY";
     }
 
     Deep2::Deep2Engine engine;

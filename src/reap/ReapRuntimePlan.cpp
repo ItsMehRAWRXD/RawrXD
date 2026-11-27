@@ -175,6 +175,17 @@ bool ParseRuntimeTarget(std::string_view text, RuntimeTarget& out,
     return true;
 }
 
+bool ParseRuntimeMode(std::string_view text, std::string& out, std::string& error) {
+    out = "PHYSICAL";
+    error.clear();
+    const std::string s = upper(trim(text));
+    if (s.empty() || s == "PHYSICAL") { out = "PHYSICAL"; return true; }
+    if (s == "VIRTUAL") { out = "VIRTUAL"; return true; }
+    if (s == "STREAMING") { out = "STREAMING"; return true; }
+    error = "INVALID_RUNTIME_MODE:" + s;
+    return false;
+}
+
 bool InspectRuntimeModel(const std::string& firstShard,
                          RuntimeModelFacts& out, std::string& error) {
     out = {};
@@ -290,6 +301,7 @@ std::string RuntimePlanJson(const RuntimePlan& plan) {
         << ",\"model\":" << jsonQuote(plan.actual.model)
         << ",\"architecture\":" << jsonQuote(plan.actual.architecture)
         << ",\"injection_mode\":" << jsonQuote(plan.injectionMode)
+        << ",\"mode\":" << jsonQuote(plan.mode)
         << ",\"streamer_path\":" << jsonQuote(plan.streamerPath)
         << ",\"requested_parameters\":" << plan.requested.parameterCount
         << ",\"requested_experts\":" << plan.requested.expertCount
