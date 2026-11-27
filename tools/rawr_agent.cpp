@@ -471,6 +471,43 @@ static int SelfTestGuiRun() {
     return fail == 0 ? 0 : 1;
 }
 
+// Deterministic, model-free END-TO-END test of the real tool pipeline:
+// write a GUI source -> build with the actual MSVC command -> GUI-run short-circuit
+// -> independent functional gate. Proves BUILD_PASS => E2E_PASS without a model.
+static int SelfTestPipeline() {
+    namespace fs = std::filesystem;
+    static std::atomic<int> s_pipe{0};
+    // Unique dir per invocation: avoids remove_all/link racing a just-launched exe.
+    const string dir = (fs::temp_directory_path() /
+        ("rawr_pipetest_" + std::to_string(GetCurrentProcessId()) + "_" + std::to_string(++s_pipe))).string();
+    fs::create_directories(dir);
+    g_ws = dir; g_expSrc = "sysmon.cpp"; g_expExe = "sysmon.exe"; g_startFiles.clear();
+    const string src =
+        "#include <windows.h>\n"
+        "static void probe(){ FILETIME a,b,c; GetSystemTimes(&a,&b,&c); "
+        "MEMORYSTATUSEX m; m.dwLength=sizeof(m); GlobalMemoryStatusEx(&m); "
+        "ULARGE_INTEGER f; GetDiskFreeSpaceExW(L\"C:\\\\\",&f,0,0); "
+        "DISPLAY_DEVICEW d; EnumDisplayDevicesW(0,0,&d,0); }\n"
+        "BOOL WINAPI WinMain(HINSTANCE h,HINSTANCE p,LPSTR c,int s){ probe(); return 0; }\n";
+    { ofstream o((fs::path(dir) / "sysmon.cpp").string(), ios::binary); o << src; }
+    int fail = 0;
+    auto check = [&](bool cond, const char* name) {
+        std::printf("[selftest-pipeline] %-30s %s\n", name, cond ? "OK" : "FAIL");
+        if (!cond) ++fail;
+    };
+    const string vcvars = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat";
+    const string build = "call \"" + vcvars + "\" >nul 2>&1 && cl /nologo /std:c++17 /EHsc "
+                         "sysmon.cpp /Fe:sysmon.exe /link /SUBSYSTEM:WINDOWS user32.lib gdi32.lib";
+    const string out = RunCmd(build);
+    const bool art = fs::exists(fs::path(dir) / "sysmon.exe");
+    check(art, "gui exe built (real MSVC)");
+    if (!art) std::printf("  build first line: %.160s\n", out.c_str());
+    check(IsGuiRunToShortCircuit("sysmon.exe", "sysmon.exe", "windows"), "run short-circuits (no 20s block)");
+    check(VerifyFunctional(), "functional gate PASS (src+APIs+launch)");
+    std::printf("SELFTEST_PIPELINE=%s (%d fail)\n", fail == 0 ? "PASS" : "FAIL", fail);
+    return fail == 0 ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     string model = "qwen3:8b", objective, ws = "F:\\rawrxd_acceptance_sysmon_native";
@@ -479,6 +516,7 @@ int main(int argc, char** argv) {
     bool selfTestParse = false;
     bool selfTestEdit = false;
     bool selfTestGuiRun = false;
+    bool selfTestPipeline = false;
     for (int i = 1; i < argc; ++i) {
         string a = argv[i];
         auto next = [&]() -> string { return (i + 1 < argc) ? argv[++i] : ""; };
@@ -490,11 +528,13 @@ int main(int argc, char** argv) {
         else if (a == "--self-test-parse") selfTestParse = true;
         else if (a == "--self-test-edit") selfTestEdit = true;
         else if (a == "--self-test-guirun") selfTestGuiRun = true;
+        else if (a == "--self-test-pipeline") selfTestPipeline = true;
     }
     if (selfTestChannel) return SelfTestChannel();
     if (selfTestParse) return SelfTestParse();
     if (selfTestEdit) return SelfTestEdit();
     if (selfTestGuiRun) return SelfTestGuiRun();
+    if (selfTestPipeline) return SelfTestPipeline();
     g_ws = ws;
     std::filesystem::create_directories(g_ws);
     // A02: derive expected deliverables from the objective (no hardcoded names).
