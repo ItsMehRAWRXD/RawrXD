@@ -1,0 +1,7 @@
+RAWRXD provider tool-schema compliance (isolated probe) — 2026-11-27
+gpt-oss:20b   : native tool_calls ACCEPTED (3/3 lifecycle PASS).
+qwen3:8b      : native tool_calls ACCEPTED.
+nemotron:30b  : native tool_calls ACCEPTED.
+deepseek-coder-v2:16b: tools schema REJECTED (HTTP 400, even 3-tool description-free) => text-channel-only.
+=> Provider-specific: deepseek cannot use native tools (server rejects schema); its INCOMPLETE is text-channel model compliance, not a schema-fixable defect. gpt-oss/qwen3/nemotron accept native.
+Controller fallback to text is correct for deepseek. Per-provider profiles: deepseek=text, others=native.
