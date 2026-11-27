@@ -131,7 +131,10 @@ static string RunCmd(const string& cmd) {
 static BOOL WINAPI CtrlHandler(DWORD t) { if (t == CTRL_C_EVENT || t == CTRL_BREAK_EVENT) g_cancel.store(true); return TRUE; }
 
 // Functional completion: real APIs in source + exe exists + exe launches (bounded).
-static bool CreatedThisSession(const std::string& name);
+static bool CreatedThisSession(const std::string& name) {
+    return std::filesystem::exists(std::filesystem::path(g_ws) / name) &&
+           g_startFiles.find(name) == g_startFiles.end();
+}
 static bool VerifyFunctional() {
     namespace fs = std::filesystem;
     if (!CreatedThisSession(g_expSrc)) return false;      // A03: created this request
