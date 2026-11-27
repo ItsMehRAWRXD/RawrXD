@@ -1,0 +1,4 @@
+RAWRXD native tool channel reliability (description-free schema) — gpt-oss 3/3
+gpt-oss:20b native channel: PASS, PASS, PASS (fallbacks=0 each). 100% (3/3) vs text-fallback 1/3.
+=> The description-free schema (native tool_calls accepted) FIXED gpt-oss reliability. Aggregate 5/12 limited by deepseek/qwen/nemotron (model-specific), not transport.
+Native channel is the correct path; per-model compliance varies.
