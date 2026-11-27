@@ -1,0 +1,4 @@
+RAWRXD S03.7 — completion/cancellation + pending-retirement ledger (standalone)
+ReapRetirement.hpp: Retire/Complete (pending-retirement bytes, freed only after confirmed completion; over-complete clamps), Cancel/Cancelled (cooperative). Thread-safe atomics.
+Standalone MSVC build PASS. CPU test s037_retire_test 5/5 OK (pending, complete, clamp, cancel). S037_RETIRE=PASS.
+For completion-aware ownership + cancellation in the engine. Storage-independent.
