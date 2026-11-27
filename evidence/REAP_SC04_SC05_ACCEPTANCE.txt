@@ -1,0 +1,25 @@
+RAWRXD REAP SC04 + SC05 — unified pipeline + consolidation acceptance — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU suites. Disk ~6 GB.
+
+SC04 (unified pipeline): src/reap/StreamingPipeline now binds the V06.2 selection
+fingerprint (SetSelection) into its cache key (key = fp*phi ^ (layer<<32|expert)), so
+different selections never reuse each other's cached experts; fp=0 preserves prior
+behavior. Cache-aware acquire / hits / misses / eviction / budget unchanged.
+
+SC05 (consolidation acceptance): one authoritative implementation per component:
+  slicing = deep2/ReapExpertSlice (reap/ReapTensorSlice forwards)
+  provider = src/reap/ExpertProvider (Acquire + ForEachRetained)
+  residency = src/reap/ExpertResidency (budget + LRU + pinning + completion)
+  pipeline = src/reap/StreamingPipeline (selection-keyed, cache-aware)
+Removed duplicates: deep2/ReapExpertProvider.hpp, deep2/ReapStreamResidency.hpp.
+No test removed; both suites migrated to the authoritative components.
+
+EXECUTED (actual, this run): s01_provider PASS, s02_residency PASS, s02p_pipeline PASS,
+provider test ALL PASS, residency test ALL PASS, v02 slice ALL PASS, v01 selection ALL PASS,
+v03 transform ALL PASS, transform identity ALL PASS, selection propagation ALL PASS.
+EXIT 0. No orphaned includes/targets observed in the standalone set.
+
+DISPOSITION: SC04+SC05 COMPLETE (consolidation 4/4 components; all standalone suites green).
+Components: 7 -> 4. Physical writer (V04) compatibility preserved (slice core unchanged API).
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=V06.3 Virtual ingestion (engine, GPU-gated); S03/S04 production Streaming/Strata; V05 fixture.

@@ -18,10 +18,14 @@ public:
     void Register(uint32_t layer, const SliceTensorDesc& t, const uint8_t* src) {
         provider_.Register(layer, t, src);
     }
+    // SC04: bind the active selection fingerprint (V06.2) so different selections
+    // never reuse each other's cached experts. Default 0 preserves prior behavior.
+    void SetSelection(uint64_t selectionFingerprint) { fp_ = selectionFingerprint; }
     // Cache-aware acquire: returns pointer to a resident buffer (valid until the
     // next Acquire may evict). False on invalid/over-budget.
     bool Acquire(uint32_t layer, uint32_t expert, const uint8_t** out) {
-        const uint64_t key = ((uint64_t)layer << 32) | expert;
+        const uint64_t key = (fp_ * 0x9e3779b97f4a7c15ULL) ^
+                             (((uint64_t)layer << 32) | expert);
         auto it = cache_.find(key);
         if (it != cache_.end()) { hits_++; *out = it->second.data(); return true; }
         if (expertBytes_ > budget_) return false;
@@ -35,7 +39,7 @@ public:
     uint64_t Misses() const noexcept { return misses_; }
     uint64_t ResidencyUsed() const noexcept { return res_.Used(); }
 private:
-    uint64_t budget_, expertBytes_, hits_ = 0, misses_ = 0;
+    uint64_t budget_, expertBytes_, hits_ = 0, misses_ = 0, fp_ = 0;
     ExpertProvider provider_;
     ExpertResidency res_;
     std::unordered_map<uint64_t, std::vector<uint8_t>> cache_;
