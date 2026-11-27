@@ -170,6 +170,29 @@ bool TestCompletionRejected() {
     return !res.completed;
 }
 
+// Scenario 4: source changed AFTER a successful build => completion REJECTED
+// (F04-V17 staleness gate: a build/test receipt is invalid if sources changed).
+bool TestStalenessRejected() {
+    const std::string dir = (std::filesystem::temp_directory_path() /
+        "rawr_ctrl_stale").string();
+    std::filesystem::create_directories(dir);
+    rawr::Workspace ws = MakeWs(dir);
+    rawr::ToolRegistry reg; RegisterFakeTools(reg);
+    Script s;
+    s.turns = {
+        {true, false, "{\"action\":\"tool\",\"tool\":\"write_file\",\"args\":{\"path\":\"a.cpp\",\"content\":\"int x=1;\"}}"},
+        {true, false, "{\"action\":\"tool\",\"tool\":\"run_build\",\"args\":{}}"},
+        {true, false, "{\"action\":\"tool\",\"tool\":\"write_file\",\"args\":{\"path\":\"a.cpp\",\"content\":\"int x=2;\"}}"},
+        {true, false, "{\"action\":\"final\",\"summary\":\"created a.cpp and built it\"}"},
+    };
+    rawr::AgentConfig cfg; cfg.goal = "create a.cpp and build it"; cfg.modeName = "code";
+    cfg.maxTurns = 8;
+    rawr::AgentResult res = rawr::runAgentController(s.fn(), reg, ws, cfg, nullptr, nullptr);
+    Expect("stale: not completed (source changed after build)", !res.completed);
+    std::filesystem::remove_all(dir);
+    return !res.completed;
+}
+
 }  // namespace
 
 int main() {
@@ -177,6 +200,7 @@ int main() {
     TestHappyPath();
     TestNoProgress();
     TestCompletionRejected();
+    TestStalenessRejected();
     std::printf("AGENT_CONTROLLER_SELFTEST=%s (%d fail)\n", g_fail == 0 ? "PASS" : "FAIL", g_fail);
     return g_fail == 0 ? 0 : 1;
 }

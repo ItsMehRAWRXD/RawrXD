@@ -25,6 +25,7 @@ dispatch, capability gating, no-progress termination, and completion verificatio
 [OK] noprogress: no tool results
 [OK] reject: not completed       (bare final with no real work => completion REJECTED)
 [OK] reject: no write happened
+[OK] stale: not completed        (source changed AFTER build => F04-V17 staleness REJECTED)
 AGENT_CONTROLLER_SELFTEST=PASS (0 fail)
 ```
 
