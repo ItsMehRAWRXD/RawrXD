@@ -1,0 +1,5 @@
+RAWRXD_PRODUCTION_SCHEMA_RECONCILIATION_132 — corrected campaign (partial) + serialization regression guard
+Fix: valid tool schema (native tool_calls accepted, gpt-oss PASS 38.5s verified) + JsonWellFormed guard (explicit error, no silent fallback).
+Corrected campaign (4fe6bf48bb+guard), partial 5/12: gpt-oss 1/3, deepseek 1/2 => 2/5 = 40%.
+Schema fix enables native channel but aggregate reliability still limited by residual model empty-content behavior. Full 12-run revalidation pending (campaign slow, run6 in progress).
+Baseline 41.67% vs corrected partial 40% — not yet an established improvement; more runs required.

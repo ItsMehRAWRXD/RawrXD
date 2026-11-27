@@ -275,6 +275,20 @@ static string NativeToolCall(const string& resp) {
     return call;
 }
 
+// RAWRXD_PRODUCTION_SCHEMA_RECONCILIATION_132 regression: validate request JSON
+// before transmission so a malformed body is an explicit error, never a silent
+// text-channel downgrade.
+static bool JsonWellFormed(const string& s) {
+    int depth = 0; bool inStr = false; char esc = 0;
+    for (char c : s) {
+        if (inStr) { if (esc) esc = 0; else if (c == '\\') esc = 1; else if (c == '"') inStr = false; continue; }
+        if (c == '"') inStr = true;
+        else if (c == '{' || c == '[') ++depth;
+        else if (c == '}' || c == ']') { if (--depth < 0) return false; }
+    }
+    return depth == 0 && !inStr;
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -345,6 +359,7 @@ int main(int argc, char** argv) {
             body += "{\"role\":\"" + msgs[i].first + "\",\"content\":\"" + JsonEscape(msgs[i].second) + "\"}";
         }
         body += "]}";
+        if (!JsonWellFormed(body)) { printf("[serialization] malformed request JSON — explicit error, no fallback\n"); g_tel.toolFail++; break; }
         bool ok = false; string resp;
         for (int a = 0; a < 3 && !ok; ++a) {
             resp = rawrxd::ollama::HttpPost(L"127.0.0.1", 11434, L"/api/chat", body, ok);
