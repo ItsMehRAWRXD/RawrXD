@@ -1,0 +1,4 @@
+RAWRXD_AUTONOMOUS_SEMANTIC_REPAIR_071 — semantic repair (qwen3:8b)
+Implemented: SR-01/02/05/06/09 error-count convergence ([errors X->Y IMPROVING/REGRESSION]), SDK decl retrieval (C2039/C2664), ANSI/UNICODE + format hints, edit-strategy switching, no-op-edit rejection via unchanged hash.
+Result: qwen3 uses edit tool + gets GetSystemTimes decl (C2664) but edits are NO-OPS (SOURCE_UNCHANGED rejected repeatedly). Cannot produce a real change. INCOMPLETE. Cross-model stays 2/4 (gpt-oss+deepseek PASS).
+Semantic repair infra verified; qwen3 model-repair capability remains the blocker.

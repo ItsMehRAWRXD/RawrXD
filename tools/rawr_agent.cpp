@@ -211,6 +211,12 @@ static string RetrieveDecl(const string& token) {
     return {};
 }
 
+static int CountErrors(const string& out) {
+    int n = 0; size_t p = 0;
+    while ((p = out.find("error C", p)) != string::npos) { ++n; p += 7; }
+    return n;
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -264,7 +270,7 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
-    int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false;
+    int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false; int prevErrCount = -1;
     for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
         int phase = ComputePhase();
@@ -372,14 +378,23 @@ int main(int argc, char** argv) {
                 else if (result.find("error C") != string::npos) {
                     string f; int ln = 0; string e = FirstError(result, f, ln);
                     result = "COMPILE_FAILURE:\n" + result;
-                    string decl;
+                    int ec = CountErrors(result);
+                    string prog = (prevErrCount >= 0) ? (" [errors " + to_string(prevErrCount) + "->" + to_string(ec) +
+                        (ec < prevErrCount ? " IMPROVING]" : ec > prevErrCount ? " REGRESSION]" : " NO CHANGE]")) : "";
+                    if (prevErrCount >= 0 && ec >= prevErrCount) forceEdit = true;   // repair did not converge -> change strategy
+                    prevErrCount = ec;
+                    string decl, hint;
                     size_t mp = e.find("is not a member of '");
                     if (mp != string::npos) {
                         string ty = e.substr(mp + 20); ty = ty.substr(0, ty.find('\''));
                         decl = RetrieveDecl(ty);
                         if (!decl.empty()) decl = "\nAUTHORITATIVE DECLARATION of " + ty + ":\n" + decl + "Use ONLY these members.";
                     }
-                    repairNote = "PRIMARY COMPILER ERROR: " + e + "\nSource (" + f + "):\n" + SourceContext(f, ln) + decl + "\nFix with a targeted edit, then build again.";
+                    if (e.find("C2440") != string::npos && (e.find("wchar_t") != string::npos || e.find("LPCSTR") != string::npos))
+                        hint = "\nANSI/UNICODE: reconcile string-literal prefixes (use L\"...\" consistently) with the API's expected type; do not mix char* and wchar_t*.";
+                    else if (e.find("C4477") != string::npos || e.find("C4473") != string::npos)
+                        hint = "\nFORMAT STRING: the printf/wprintf specifier does not match the argument type; fix the specifier or cast the argument to the expected type.";
+                    repairNote = "PRIMARY COMPILER ERROR: " + e + prog + "\nSource (" + f + "):\n" + SourceContext(f, ln) + decl + hint + "\nFix with a targeted edit, then build again.";
                     g_tel.toolFail++; errCount++; lastFailHash = h;
                 }
                 else if (art) { if (result.rfind("BUILD_OK", 0) != 0) result = "BUILD_OK: " + output + " produced"; buildOk = true; g_tel.toolOk++; }
