@@ -106,6 +106,7 @@ bool WriteReceipt(const std::string& dir, const std::string& tag,
     out << "  \"waits\": " << b.waits << ",\n";
     out << "  \"submit_ms\": " << b.submit_ms << ",\n";
     out << "  \"wait_ms\": " << b.wait_ms << ",\n";
+    out << "  \"telemetry_valid\": " << (b.telemetry_valid ? "true" : "false") << ",\n";
     out << "  \"fallback\": \""
         << (b.fallback_reason.empty() ? "<none>" : b.fallback_reason) << "\",\n";
     out << "  \"nonfinite_logits\": " << nonfinite << ",\n";

@@ -6315,6 +6315,14 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
         const uint64_t stateKey = GdnStateKey(this, in.block);
         std::vector<float> gpuOutput;
         auto& gpu = ::Deep2::GetDeep2VulkanCompute();
+        {
+            // DC-01C: authoritative request-scoped submission count (queueSubmitCount_
+            // is reset per request by the engine; cumulative otherwise).
+            stats_.submits = gpu.QueueSubmitCount();
+            stats_.waits = 0;            // wait counter not yet instrumented
+            stats_.submit_ms = 0.0; stats_.wait_ms = 0.0;
+            stats_.telemetry_valid = (stats_.submits > 0);
+        }
         if (gpu.DispatchGdn(
                 mixed.data(), mixed.size(),
                 beta.data(), beta.size(),
