@@ -80,7 +80,7 @@ public:
        // T07-07: a zero-delta heartbeat must NOT refresh progress timestamps
        // (submission/wait activity alone is not completed kernel progress).
        if (submits || waits || submit_ms > 0.0 || fence_wait_ms > 0.0) {
-           last_dispatch_=Clock::now(); progress_=Clock::now();
+           last_dispatch_=Clock::now(); // submission activity only; NOT completed-dispatch progress
        }
    }
  void failure(Clock::time_point now=Clock::now()) { std::lock_guard lk(mu_);++failures_;progress_=now; }
