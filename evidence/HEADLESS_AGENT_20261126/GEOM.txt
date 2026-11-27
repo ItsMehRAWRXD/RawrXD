@@ -1,0 +1,4 @@
+RAWRXD geometry validation (V02 extension) — standalone
+ReapExpertGeometry.hpp: ValidateExpertGeometry checks expert-axis (last dim), bytes%expertDim, and stride % quantBlock alignment. Rejects unsupported layouts explicitly.
+Standalone MSVC build PASS (6.1 GB). CPU test geom_test 4/4 OK (aligned, stride/block, reject misaligned). GEOM=PASS.
+Addresses SI item 3 (expert-axis + quantization-block geometry). Storage-independent.
