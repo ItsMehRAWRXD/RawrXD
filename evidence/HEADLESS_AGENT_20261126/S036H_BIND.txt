@@ -1,0 +1,4 @@
+RAWRXD S03.6H — descriptor binding source (standalone)
+ReapDescriptorBind.hpp: BindTransformed(identity, binding, offset, expertBytes, valid, bufferSize) validates range/geometry; rejects invalid selection, out-of-range, zero-size (fail-closed). Engine applies to a real descriptor.
+Standalone MSVC build PASS. CPU test s036h_bind_test 5/5 OK (bind, range, invalid/out-of-range/zero fail-closed). S036H_BIND=PASS.
+Production descriptor-binding source for S03.6I dispatch. Storage-independent.
