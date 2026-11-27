@@ -1,0 +1,4 @@
+RAWRXD C02 — deterministic transformation identity (standalone)
+ReapSelectionIdentity.hpp: SelectionFingerprint binds selection + checkpointId + tensorBytes + mode (FNV-based, ordered map => deterministic). Prevents incorrect cache reuse between different retained-expert selections.
+Standalone MSVC build PASS (6.1 GB). CPU test c02_identity_test 5/5 OK (deterministic, different-selection/checkpoint/geometry/mode differ). C02_IDENTITY=PASS.
+Addresses C02 + NP-05A.2 cache consistency. Storage-independent.
