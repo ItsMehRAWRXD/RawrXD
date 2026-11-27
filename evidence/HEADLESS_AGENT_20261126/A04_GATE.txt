@@ -1,0 +1,4 @@
+RAWRXD A02/A04 — objective-derived acceptance gate + negative tests (standalone)
+AcceptanceGate.hpp: DeriveExpected(objective) -> src/exe; CreatedThisSession rejects stale; VerifyAcceptance requires src created + real API + exe created + compiled.
+CPU test a04_gate_test 5/5 OK (derive calc, calc pass, stale-exe fail, compile fail, missing fail). A04_GATE=PASS.
+Generalizes acceptance beyond hardcoded sysmon; enables valid cross-objective. Storage-independent.
