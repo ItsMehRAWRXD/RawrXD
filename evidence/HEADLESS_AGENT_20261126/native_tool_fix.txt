@@ -1,0 +1,4 @@
+RAWRXD R02.2 native tool-schema fix — gpt-oss native tool_calls PASS
+Root cause: full schema WITH descriptions -> HTTP 400 (opaque). Description-free schema -> HTTP 200 (1..6 tools verified). Removed descriptions from ToolsSchema.
+Result: gpt-oss:20b native tool channel ACCEPTED (no fallback): write->BUILD_OK->finish->functional=1 RESULT=PASS (62.5s).
+Native message.tool_calls path now used (not text fallback). Reliability should improve (native channel reliable when accepted).

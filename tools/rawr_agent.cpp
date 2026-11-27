@@ -240,16 +240,15 @@ static int CountErrors(const string& out) {
 // message.tool_calls independently of message.content. Reasoning/thinking never
 // becomes an executable action.
 static const char* ToolsSchema() {
-    // Each tool object is individually verified valid (HTTP 200); join with commas.
-    // (A prior hand-written combined literal dropped a closing brace per tool and
-//  caused Ollama to reject the whole request with HTTP 400.)
+    // R02.2: description-free schema (verified HTTP 200 for 1..6 tools; the full
+    // schema with descriptions triggered an opaque HTTP 400 from Ollama).
     return "["
-        "{\"type\":\"function\",\"function\":{\"name\":\"write\",\"description\":\"write a file\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"}},\"required\":[\"path\",\"content\"]}}},"
-        "{\"type\":\"function\",\"function\":{\"name\":\"build\",\"description\":\"compile sources with MSVC\",\"parameters\":{\"type\":\"object\",\"properties\":{\"sources\":{\"type\":\"string\"},\"output\":{\"type\":\"string\"},\"subsystem\":{\"type\":\"string\"},\"libraries\":{\"type\":\"string\"},\"standard\":{\"type\":\"string\"}}}}},"
-        "{\"type\":\"function\",\"function\":{\"name\":\"edit\",\"description\":\"replace text in a file\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\"]}}},"
-        "{\"type\":\"function\",\"function\":{\"name\":\"read\",\"description\":\"read a file\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"}}}}},"
-        "{\"type\":\"function\",\"function\":{\"name\":\"list\",\"description\":\"list workspace\",\"parameters\":{\"type\":\"object\",\"properties\":{}}}},"
-        "{\"type\":\"function\",\"function\":{\"name\":\"finish\",\"description\":\"declare completion\",\"parameters\":{\"type\":\"object\",\"properties\":{\"summary\":{\"type\":\"string\"}}}}}"
+        "{\"type\":\"function\",\"function\":{\"name\":\"write\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"}},\"required\":[\"path\",\"content\"]}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"build\",\"parameters\":{\"type\":\"object\",\"properties\":{\"sources\":{\"type\":\"string\"},\"output\":{\"type\":\"string\"},\"subsystem\":{\"type\":\"string\"},\"libraries\":{\"type\":\"string\"},\"standard\":{\"type\":\"string\"}}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"edit\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\"]}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"read\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"}}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"list\",\"parameters\":{\"type\":\"object\",\"properties\":{}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"finish\",\"parameters\":{\"type\":\"object\",\"properties\":{\"summary\":{\"type\":\"string\"}}}}}"
         "]";
 }
 
