@@ -5,6 +5,7 @@
 // that silently shadows the device-level ::VulkanCompute implemented here.
 // Qualifying the path pins the header to include/vulkan_compute.h.
 #include "include/vulkan_compute.h"
+#include "weight_identity.h"
 #include "deep2/ReapSubmissionCompletion.hpp"
 #include <vulkan/vulkan.h>
 #include <iostream>
@@ -3037,8 +3038,11 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     // mutate the cache while an eviction is mid-flight.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
 
-    uint64_t fp = 0;
-    std::memcpy(&fp, packed, sizeof(fp) < bytes ? sizeof(fp) : bytes);
+    // NP-05A: host-pointer-independent identity (content + geometry + format + model
+    // + logical tensor id), shared with the CPU regression component.
+    const RawrXD::Deep2::WeightIdentity::Key wkey =
+        RawrXD::Deep2::WeightIdentity::Make(g_quant_model_id, packed, bytes, kind);
+    const uint64_t fp = wkey.fingerprint;
     QDTRACE("ensure enter bytes=" << bytes << " kind=" << kind
                                   << " live=" << gpu_counters_.device_bytes_live
                                   << " budget=" << quant_weight_budget_bytes_
@@ -3054,8 +3058,9 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     auto it = quant_weight_cache_.find(packed);
     if (it != quant_weight_cache_.end()) {
         QuantWeight& e = it->second;
-        if (e.bytes == bytes && e.kind == kind && e.fingerprint == fp &&
-            e.model_id == g_quant_model_id) {
+        if (RawrXD::Deep2::WeightIdentity::Matches(
+                RawrXD::Deep2::WeightIdentity::Key{e.model_id, e.fingerprint, e.bytes,
+                                                    e.kind, e.tensor_id}, wkey)) {
             e.last_used = ++quant_lru_seq_;
             ++e.use_count;   // hotness signal: dispatches served while resident
             ++gpu_counters_.weight_cache_hits;
@@ -3127,6 +3132,7 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     e.kind = kind;
     e.fingerprint = fp;
     e.model_id = g_quant_model_id;   // NP-05A: stamp the active model identity
+    e.tensor_id = 0;                 // NP-05A: logical tensor id (0 = content-dedup)
     e.last_used = ++quant_lru_seq_;
     // The upload is a one-time staging copy on its own submission; it completes
     // before this function returns, so later dispatches need no barrier for it.

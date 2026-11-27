@@ -33,8 +33,16 @@ NOTES / REMAINING:
 - Verify propagation through prefill/decode/batched/async/nested (model_id reasserted at
   ExecuteToken covers sync prefill/decode; async/nested paths still to audit).
 
+RECONCILIATION (2026-11-27, sole-owner recovery):
+The published 3d0e2733d9 captured vulkan_compute.cpp WITHOUT the WeightIdentity integration
+(a concurrent worker reverted the working file before that commit). Recovered: production
+EnsureQuantWeight now actually uses WeightIdentity::Make/Matches (host-pointer-independent,
+content-based) with the logical tensor_id; QuantWeight.tensor_id added; CPU test extended with
+tensor_id distinctness cases. Exclusive residency ownership enforced; Deep2Engine.cpp (other
+worker) left untouched.
+
 DISPOSITION:
-NP05A_TENSOR_ID=IMPLEMENTED(component+validation)  CPU_REGRESSION=PASS  Syntax=PASS
+NP05A_TENSOR_ID=IMPLEMENTED(component+validation+production-integration)  CPU_REGRESSION=PASS  Syntax=PASS
 Linked=PENDING  Runtime=NO  Hardware=HELD
 PROMOTE=0  CERTIFIED=0  RELEASE=HELD
 NEXT=key-type migration (reuse across relocation); async/nested audit; NP-05B/C/D; NP-06A-F.

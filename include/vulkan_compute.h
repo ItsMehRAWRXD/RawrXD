@@ -404,6 +404,8 @@ private:
         // reuse another model's allocation even at the same host pointer. This is
         // the host-pointer-independent component of the resident-weight identity.
         uint64_t model_id = 0;
+        // NP-05A: explicit logical tensor identity (0 = content-dedup default).
+        uint64_t tensor_id = 0;
         uint64_t last_used = 0;     // LRU stamp for the residency budget
         uint64_t use_count = 0;     // hotness counter (RAWRXD_STRATA_S08): dispatches served
         // RAWRXD_G04: in-flight references held against this entry. Non-zero

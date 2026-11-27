@@ -23,6 +23,10 @@ struct Key {
     uint64_t fingerprint = 0;  // first min(8,bytes) source bytes
     size_t   bytes = 0;        // tensor geometry (byte count)
     int      kind = -1;        // quantization format
+    // NP-05A: explicit LOGICAL tensor identity. Two tensors with identical content,
+    // geometry and format in the same model are distinct; a non-zero tensor_id
+    // disambiguates (0 = content-dedup default). Independent of the host pointer.
+    uint64_t tensor_id = 0;
 };
 
 // Content fingerprint: first min(8,bytes) bytes of the packed weight.
@@ -34,12 +38,14 @@ inline uint64_t Fingerprint(const void* packed, size_t bytes) {
 
 // Build the identity for a weight request. `model_id` is the request-scoped model
 // identity (0 when unknown); the rest is content/geometry/format.
-inline Key Make(uint64_t model_id, const void* packed, size_t bytes, int kind) {
+inline Key Make(uint64_t model_id, const void* packed, size_t bytes, int kind,
+                uint64_t tensor_id = 0) {
     Key k;
     k.model_id = model_id;
     k.fingerprint = Fingerprint(packed, bytes);
     k.bytes = bytes;
     k.kind = kind;
+    k.tensor_id = tensor_id;
     return k;
 }
 
@@ -48,7 +54,7 @@ inline Key Make(uint64_t model_id, const void* packed, size_t bytes, int kind) {
 // (different fingerprint), a different model, or different geometry/format does not.
 inline bool Matches(const Key& a, const Key& b) {
     return a.model_id == b.model_id && a.fingerprint == b.fingerprint &&
-           a.bytes == b.bytes && a.kind == b.kind;
+           a.bytes == b.bytes && a.kind == b.kind && a.tensor_id == b.tensor_id;
 }
 
 }  // namespace WeightIdentity

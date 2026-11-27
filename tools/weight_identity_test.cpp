@@ -47,6 +47,16 @@ int main() {
     Key ka2 = Make(1, a, sizeof(a), 0);
     CHECK(Matches(ka, ka2), "identical: identity matches");
 
+    // 7. Same content/model/geometry/format but DIFFERENT logical tensor id ->
+    //    distinct tensors (no content-dedup collision).
+    Key kt = Make(1, a, sizeof(a), 0, /*tensor_id=*/7);
+    CHECK(kt.fingerprint == ka.fingerprint, "tensor_id: content fingerprint equal");
+    CHECK(!Matches(ka, kt), "tensor_id: distinct logical tensors do NOT match");
+
+    // 8. Same logical tensor id -> matches.
+    Key kt2 = Make(1, a, sizeof(a), 0, /*tensor_id=*/7);
+    CHECK(Matches(kt, kt2), "tensor_id: same logical tensor matches");
+
     if (g_fail == 0) { std::printf("ALL PASS\n"); return 0; }
     std::printf("%d FAILURE(S)\n", g_fail);
     return 1;
