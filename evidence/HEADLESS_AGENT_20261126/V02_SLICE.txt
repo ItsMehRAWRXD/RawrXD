@@ -1,0 +1,5 @@
+RAWRXD V02 — storage-independent quantization-aware expert slicing
+ReapTensorSlice.hpp: SliceExperts() extracted from the GGUF writer geometry logic. No GGUF/engine deps.
+Standalone MSVC build PASS (6.1 GB sufficient — full-engine 50 GB not required for the component).
+CPU test v02_slice_test: 7/7 OK (stride, offsets expert1/5, range count, reject OOB expert, reject missing layer). V02_SLICE=PASS.
+Reusable by Physical/Virtual/Streaming. Next: V03 transformExpertsInMemory (consume SliceExperts -> in-memory buffers).
