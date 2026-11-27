@@ -1,0 +1,23 @@
+RAWRXD REAP V06.2 — selection fingerprint + transformation identity — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU test. Disk ~6 GB.
+
+PACKAGE V06.2: deterministic transformation identity binding a transformed-weight cache
+entry to source checkpoint + logical tensor + selection fingerprint (order-sensitive) +
+mode + quant geometry, so different selections/ordering/mode/quant/source never reuse
+stale transformed weights. Reuses Selection (V01). No RNG.
+
+IMPLEMENTED:
+- src/deep2/ReapTransformIdentity.hpp (NEW): SelectionFingerprint(selection) (FNV-1a,
+  order-sensitive over layer+retained experts); TransformIdentity{sourceId,tensorId,
+  selectionFp,mode,quantLayout} + TransformIdentityHash (deterministic).
+- tools/reap_transform_identity_test.cpp: identical selections same fp; reordered experts /
+  different selection -> distinct fp; identity hash distinct on selection/mode/source/quant
+  change -> ALL PASS.
+
+VERIFICATION (actual): CPU regression -> ALL PASS (exit 0). Artifacts removed.
+
+DISPOSITION: V06.2 COMPLETE (fingerprint + identity + CPU). Enables stale-cache prevention
+when selections differ; preserves NP-05A.2 tensor identity (tensorId field). Not yet wired
+into a transformed-weight cache (V06.3 engine).
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+NEXT=SC02 consolidate providers; SC03 residency; SC04 unified pipeline; V06.3 Virtual ingestion.
