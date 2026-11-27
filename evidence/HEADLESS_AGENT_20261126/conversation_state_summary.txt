@@ -1,0 +1,5 @@
+RAWRXD_CONVERSATION_STATE_FIX (RAWRXD-141) — tool-result message framing
+Defect hypothesis: tool results sent as role:user => conversation-state break => empty/thinking-only responses.
+Fix: tool results now sent as role:tool (documented Ollama protocol). Assistant message preserved before it.
+Verification (gpt-oss:20b): write->BUILD_OK->run->finish->functional=1 RESULT=PASS (61s, 4 turns, no empty loop, no text fallback).
+Schema correction + JsonWellFormed guard retained. Full 12-run revalidation pending (single-run verified).

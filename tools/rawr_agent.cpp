@@ -542,7 +542,7 @@ int main(int argc, char** argv) {
         } else { result = "ERROR: unknown tool " + tool; g_tel.toolFail++; g_tel.corrections++; }
         printf("  -> %s\n", result.substr(0, 160).c_str());
         msgs.push_back({"assistant", content});
-        msgs.push_back({"user", "TOOL_RESULT: " + result});
+        msgs.push_back({"tool", result});   // role:"tool" result message (documented Ollama protocol)
         if (!repairNote.empty()) { msgs.push_back({"user", repairNote}); repairNote.clear(); }
     }
 
