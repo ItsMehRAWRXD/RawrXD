@@ -1,0 +1,6 @@
+RAWRXD_PRODUCTION_SCHEMA_RECONCILIATION_132 — root cause FIXED
+Defect: hand-written ToolsSchema() dropped one closing brace per tool => Ollama HTTP 400 => controller text-fallback => empty-content loop.
+Fix: each tool object individually valid (HTTP 200 verified); joined with commas. Rebuilt.
+Verification (gpt-oss:20b): NO text fallback; native tool_calls used. write->BUILD_OK->finish->functional=1 RESULT=PASS (38.5s, 3 turns).
+This resolves the empty-content noncompliance (models were tool-capable; schema was malformed).
+Next: re-run 12-campaign to measure corrected reliability.

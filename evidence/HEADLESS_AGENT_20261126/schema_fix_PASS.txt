@@ -1,0 +1,13 @@
+[turn 0] model_tool=write (phase=1)
+  -> OK wrote sysmon.cpp (3713 bytes)
+[turn 1] model_tool=build (phase=2)
+  -> BUILD_OK: sysmon.exe produced
+[turn 2] model_tool=finish (phase=5)
+FINISH: sysmon.exe built and ready.
+=== TELEMETRY ===
+MODEL=gpt-oss:20b BACKEND=Ollama REQUESTS=3
+PROMPT_TOKENS=2181 EVAL_TOKENS=1477 PREFILL_TPS=4561.02 DECODE_TPS=108.14
+TOOL_CALLS=3 TOOL_OK=2 TOOL_FAIL=0 CORRECTIONS=0
+ELAPSED_S=38.5 FINISHED=yes
+EVIDENCE functional=1
+RESULT=PASS
