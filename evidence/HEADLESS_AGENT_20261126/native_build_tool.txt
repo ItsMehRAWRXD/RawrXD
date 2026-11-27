@@ -1,0 +1,4 @@
+RAWRXD_NATIVE_BUILD_INTELLIGENCE_043 — native build tool (qwen3:8b)
+Native build tool VERIFIED: invoked cl via vcvars, returned structured COMPILE_FAILURE (C2001/C2146) and artifact checks. Transport retry added.
+Model produced real sysmon.cpp 5378 bytes (all 4 Win32 APIs). No exe within 500s window (20 turns). functional=0 RESULT=INCOMPLETE
+Build-tool status categories implemented: COMPILER_NOT_INVOKED / COMPILE_FAILURE / LINK_FAILURE / BUILD_OK / BUILD_NO_ARTIFACT.

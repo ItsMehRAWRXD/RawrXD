@@ -150,9 +150,9 @@ static int ComputePhase() {
 static string PhaseDirective(int p) {
     switch (p) {
         case 1: return "Write the file sysmon.cpp NOW using the write tool. It MUST use GetSystemTimes (CPU), GlobalMemoryStatusEx (memory), GetDiskFreeSpaceExW (disk), EnumDisplayDevicesW (GPU) and a Win32 GUI window with a 1s timer. Do NOT list again.";
-        case 2: return "Write build.cmd that calls vcvars64.bat then cl /std:c++17 /EHsc sysmon.cpp /Fe:sysmon.exe /link user32.lib gdi32.lib. Do NOT list.";
-        case 3: return "Run build.cmd with the run tool and READ the compiler output.";
-        case 4: return "Fix the compiler errors in sysmon.cpp/build.cmd, then run build.cmd again.";
+        case 2: return "Write build.cmd is NOT needed. Instead call the build tool: {\"tool\":\"build\",\"sources\":\"sysmon.cpp\",\"output\":\"sysmon.exe\",\"subsystem\":\"windows\",\"libraries\":\"user32.lib gdi32.lib\"}.";
+        case 3: return "Call the build tool with sources=sysmon.cpp, output=sysmon.exe, subsystem=windows, libraries=\"user32.lib gdi32.lib\". Read the structured diagnostics.";
+        case 4: return "Fix the reported compiler error with a targeted edit tool call, then call the build tool again.";
         case 5: return "sysmon.exe exists. Verify it launches, then call finish.";
         default: return "Inspect the workspace with list.";
     }
@@ -223,6 +223,7 @@ int main(int argc, char** argv) {
         "Tools: {\"tool\":\"write\",\"path\":\"FILE\",\"content\":\"TEXT\"} writes a file; "
         "{\"tool\":\"run\",\"cmd\":\"COMMAND\"} runs a shell command in the workspace and returns its output; "
         "{\"tool\":\"read\",\"path\":\"FILE\"} reads a file; {\"tool\":\"list\"} lists the workspace; "
+        "{\"tool\":\"build\",\"sources\":\"sysmon.cpp\",\"output\":\"sysmon.exe\",\"subsystem\":\"windows\",\"libraries\":\"user32.lib gdi32.lib\"} compiles with the discovered MSVC compiler and returns structured diagnostics (use this instead of writing build.cmd); "
         "{\"tool\":\"finish\",\"summary\":\"...\"} declares completion (ONLY allowed once sysmon.cpp AND sysmon.exe exist). "
         "DELIVERABLE: a file named sysmon.cpp and a build.cmd that compiles it to sysmon.exe. Do not finish until sysmon.exe exists. "
         "Inspect first, then create source, build, read compiler output, fix errors, test, and finish. Be efficient.";
@@ -234,7 +235,7 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
-    int errCount = 0, repairProgress = 0; string repairNote;
+    int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false;
     for (int turn = 0; turn < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
         int phase = ComputePhase();
@@ -246,9 +247,12 @@ int main(int argc, char** argv) {
             body += "{\"role\":\"" + msgs[i].first + "\",\"content\":\"" + JsonEscape(msgs[i].second) + "\"}";
         }
         body += "]}";
-        bool ok = false;
-        string resp = rawrxd::ollama::HttpPost(L"127.0.0.1", 11434, L"/api/chat", body, ok);
-        if (!ok || resp.empty()) { printf("[turn %d] transport failure\n", turn); g_tel.toolFail++; break; }
+        bool ok = false; string resp;
+        for (int a = 0; a < 3 && !ok; ++a) {
+            resp = rawrxd::ollama::HttpPost(L"127.0.0.1", 11434, L"/api/chat", body, ok);
+            if (!ok || resp.empty()) { Sleep(2000); ok = false; }
+        }
+        if (!ok || resp.empty()) { printf("[turn %d] transport failure (3 attempts)\n", turn); g_tel.toolFail++; break; }
         ++g_tel.requests;
         g_tel.promptTokens += (int)rawrxd::ollama::JsonInt(resp, "\"prompt_eval_count\":");
         g_tel.evalTokens    += (int)rawrxd::ollama::JsonInt(resp, "\"eval_count\":");
@@ -310,6 +314,28 @@ int main(int argc, char** argv) {
                 if (p == string::npos) { result = "ERROR: old text not found"; g_tel.toolFail++; }
                 else { s.replace(p, oldS.size(), newS); ofstream o(full, ios::binary); o << s; result = o.good() ? ("OK edited " + path) : "ERROR: write failed"; if (o.good()) g_tel.toolOk++; else g_tel.toolFail++; }
             }
+        } else if (tool == "build") {
+            string sources = ExtractJsonString(call, "sources");
+            string output = ExtractJsonString(call, "output"); if (output.empty()) output = "a.exe";
+            string stdv = ExtractJsonString(call, "standard"); if (stdv.empty()) stdv = "c++17";
+            string subsys = ExtractJsonString(call, "subsystem");
+            string libs = ExtractJsonString(call, "libraries");
+            const string vcvars = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat";
+            string cmd = "call \"" + vcvars + "\" >nul 2>&1 && cl /nologo /std:" + stdv + " /EHsc " + sources + " /Fe:" + output + " /link";
+            if (subsys == "windows") cmd += " /SUBSYSTEM:WINDOWS";
+            if (!libs.empty()) cmd += " " + libs;
+            result = RunCmd(cmd);
+            bool art = std::filesystem::exists(std::filesystem::path(g_ws) / output);
+            if (result.find("not recognized") != string::npos) { result = "COMPILER_NOT_INVOKED:\n" + result; g_tel.toolFail++; }
+            else if (result.find("error LNK") != string::npos) { result = "LINK_FAILURE:\n" + result; repairNote = "LINK FAILURE:\n" + result; g_tel.toolFail++; }
+            else if (result.find("error C") != string::npos) {
+                string f; int ln = 0; string e = FirstError(result, f, ln);
+                result = "COMPILE_FAILURE:\n" + result;
+                repairNote = "PRIMARY COMPILER ERROR: " + e + "\nSource (" + f + "):\n" + SourceContext(f, ln) + "\nFix with a targeted edit, then build again.";
+                g_tel.toolFail++; errCount++;
+            }
+            else if (art) { result = "BUILD_OK: " + output + " produced"; buildOk = true; g_tel.toolOk++; }
+            else { result = "BUILD_NO_ARTIFACT:\n" + result; g_tel.toolFail++; }
         } else if (tool == "read") {
             string path = ExtractJsonString(call, "path"), full;
             if (!PathInWs(path, full)) { result = "ERROR: path escapes workspace"; g_tel.toolFail++; }
