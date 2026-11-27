@@ -3021,6 +3021,14 @@ bool VulkanCompute::EnsureHostVisible(size_t bytes, VkBuffer& buf,
     return true;
 }
 
+// NP-05A: thread-local active model identity (see header). Per-thread so concurrent
+// executors cannot clobber each other's model id. Set at Bind on the executor's thread
+// and read by EnsureQuantWeight on the same thread's weight requests.
+namespace { thread_local uint64_t g_quant_model_id = 0; }
+
+void VulkanCompute::SetQuantModelId(uint64_t id) { g_quant_model_id = id; }
+uint64_t VulkanCompute::QuantModelId() const { return g_quant_model_id; }
+
 VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed, size_t bytes,
                                                int kind) {
     // RAWRXD_G04: the residency cache is shared device state. Every mutation
@@ -3047,7 +3055,7 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     if (it != quant_weight_cache_.end()) {
         QuantWeight& e = it->second;
         if (e.bytes == bytes && e.kind == kind && e.fingerprint == fp &&
-            e.model_id == quant_model_id_) {
+            e.model_id == g_quant_model_id) {
             e.last_used = ++quant_lru_seq_;
             ++e.use_count;   // hotness signal: dispatches served while resident
             ++gpu_counters_.weight_cache_hits;
@@ -3118,7 +3126,7 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     e.bytes = bytes;
     e.kind = kind;
     e.fingerprint = fp;
-    e.model_id = quant_model_id_;   // NP-05A: stamp the active model identity
+    e.model_id = g_quant_model_id;   // NP-05A: stamp the active model identity
     e.last_used = ++quant_lru_seq_;
     // The upload is a one-time staging copy on its own submission; it completes
     // before this function returns, so later dispatches need no barrier for it.

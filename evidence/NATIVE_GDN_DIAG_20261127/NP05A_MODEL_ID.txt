@@ -23,9 +23,25 @@ SEMANTICS (CPU-testable, no GPU needed):
   (counted as reupload by NP-04D), never silently reused.
 - Within one model, geometry/format/fingerprint/device/generation protections are unchanged.
 
+CONCURRENCY FIX (supersedes the shared-member design):
+The first model-id cut stored quant_model_id_ as a per-instance member on the process-wide
+canonical device. That is a real defect: two executors (sessions) on different threads share
+the one canonical VulkanCompute, so one Bind would overwrite the active id while another is
+inferring => cross-session cache misattribution. Fixed by making the active model id
+THREAD-LOCAL:
+  - include/vulkan_compute.h: SetQuantModelId()/QuantModelId() are now declarations; the
+    per-instance member is removed.
+  - src/vulkan_compute.cpp: file-scope `thread_local uint64_t g_quant_model_id`; the two
+    methods and EnsureQuantWeight read/write it. Each thread's weight requests carry their
+    own model identity; concurrent executors cannot clobber one another.
+Same-model rebind: Bind assigns a fresh id (NextModelId), so rebinding even an unchanged
+model re-uploads its weights. This is INTENTIONAL and conservative (never reuse across a
+rebind); it is a correctness-first choice, not a silent reuse. Tensor identity and a fully
+pointer-independent key remain pending.
+
 VERIFICATION (actual):
 - MSVC /Zs (worktree): src/vulkan_compute.cpp, src/deep2/quant_dot_dispatch.cpp,
-  src/deep2/runtime_graph_executor.cpp — all EXIT 0 (3/3).
+  src/deep2/runtime_graph_executor.cpp — all EXIT 0 (3/3) after the thread-local fix.
 - Full production LINK: PENDING — the isolated worktree has no configured build dir
   (NO_VCXPROJ); a fresh full configure was not run. NOT claimed as PASS.
 - Runtime/CPU regression execution: PENDING (no test harness run this turn).

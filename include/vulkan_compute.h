@@ -237,9 +237,11 @@ public:
     bool WeightCacheRetention() const { return weight_cache_retention_; }
     // NP-05A: set the active model identity for the residency cache. A model bind
     // assigns a fresh id; entries from a previous model fail the hit check and are
-    // re-uploaded rather than reused across models.
-    void SetQuantModelId(uint64_t id) { quant_model_id_ = id; }
-    uint64_t QuantModelId() const { return quant_model_id_; }
+    // re-uploaded rather than reused across models. The id is THREAD-LOCAL (defined
+    // in vulkan_compute.cpp) so concurrent executors on different threads cannot
+    // overwrite a shared active id while another is inferring.
+    void SetQuantModelId(uint64_t id);
+    uint64_t QuantModelId() const;
     // D1: the batch descriptor-ring capacity (kQuantBatchMaxSets).
     static constexpr uint32_t QuantDotBatchCapacity() { return kQuantBatchMaxSets; }
 
@@ -421,8 +423,6 @@ private:
     // policy-controlled (false = LRU/hotness eviction, true = keep resident).
     // Owned per-device; quant_dot_dispatch propagates the process-wide policy.
     bool weight_cache_retention_ = false;
-    // NP-05A: active model identity stamped on resident weights.
-    uint64_t quant_model_id_ = 0;
     int weight_cache_policy_ = -1;
 
     // ---- RAWRXD_G04: concurrent-safe residency --------------------------------
