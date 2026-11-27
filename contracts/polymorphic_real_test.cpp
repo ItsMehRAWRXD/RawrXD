@@ -33,6 +33,7 @@ int main(int argc, char** argv) {
             i + 1, R.cand.batch, R.cand.threads, ok ? 1 : 0,
             bb.current.batch, bb.current.threads, bb.st.curDecode,
             bb.bestDecode, bb.bestRepeats, ms);
+        std::fflush(stdout);
     }
     std::printf("SUCCESS=%d/%d TRANSPORT_FAILS=%d BEST_OBSERVED=%.1f BEST_REPEATED=%.1f(rep=%d)\n",
         successes, n, transportFails, bb.bestObserved, bb.bestRepeated, bb.bestRepeats);
