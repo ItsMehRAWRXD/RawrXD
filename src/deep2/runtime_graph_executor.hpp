@@ -148,6 +148,13 @@ public:
 
     const BindStats& Stats() const { return stats_; }
 
+    // BP-03F: thread-safe by-value snapshot (lock held during copy) so callers
+    // get a consistent copy even if RefreshGpuCounters/Stats run concurrently.
+    BindStats StatsSnapshot() {
+        std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+        return stats_;
+    }
+
     // Sprint 02 (RAWRXD_LIVE_STATS_INTEGRATION_072): refresh GPU counters from
     // the authoritative backend DURING execution (not only at bind), so the
     // heartbeat reports live submits/waits/durations. Thread-safe snapshot;
