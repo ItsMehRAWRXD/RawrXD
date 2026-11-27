@@ -148,6 +148,7 @@ public:
     bool Bind(const Universal::IngestReport& report);
 
     const BindStats& Stats() const { return stats_; }
+    uint64_t SubmitCount() const;   // DC-01: request-scoped submission counter accessor
 
     // Stable JSON receipt for callers and certification tooling. An empty
     // string means Bind has not failed in this executor instance.

@@ -3,6 +3,11 @@
 // ============================================================================
 #include <fstream>
 #include "runtime_graph_executor.hpp"
+#include "deep2/vulkan_compute.h"   // DC-01: GetDeep2VulkanCompute / QueueSubmitCount
+
+uint64_t RawrXD::Deep2::RuntimeGraph::Executor::SubmitCount() const {
+    return ::Deep2::GetDeep2VulkanCompute().QueueSubmitCount();
+}
 #include "MoERoutingCore.hpp"
 #include <limits>
 
