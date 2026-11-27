@@ -1,0 +1,7 @@
+RAWRXD_SOURCE_INTEGRITY_AND_AUTONOMOUS_CLOSURE_049 — source integrity verification
+Compiled the exact model-produced sysmon.cpp (5378 B) directly with cl:
+  Real errors: C2660 DrawTextW (wrong arg count), C2360 initialization skipped by case label.
+  No unterminated string literals (odd-quote scan = 0). JSON decode + binary write preserve content exactly.
+CONCLUSION: SI-01..SI-07 PASS — source integrity intact; C2001/C2146/C2660/C2360 are MODEL-GENERATED C++ errors, not controller serialization defects.
+Adaptive repair already prioritizes the first (primary) diagnostic via FirstError().
+Remaining gap: model Win32/C++ correctness (qwen3:8b), not infrastructure.
