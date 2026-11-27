@@ -1,0 +1,5 @@
+RAWRXD_NATIVE_TOOL_CHANNEL_INTEGRATION_106 — gpt-oss recovery PASS
+Native tools schema sent; gpt-oss rejected tools -> automatic fallback to text channel (no transport fail). Then write->BUILD_OK->bounded run->finish->functional=1 RESULT=PASS (45.5s).
+Reasoning-only detection: turn5 (none) reasoning_only=1 logged (thinking channel not executed).
+Native tool-call decoder (message.tool_calls) + tools schema + fallback + reasoning classification implemented at transport boundary.
+Cross-model: 4/4 lifecycle; gpt-oss repeat now PASS.

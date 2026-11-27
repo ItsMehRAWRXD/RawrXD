@@ -229,6 +229,49 @@ static int CountErrors(const string& out) {
     return n;
 }
 
+// Native tool-calling (RAWRXD_NATIVE_TOOL_CHANNEL_INTEGRATION_106): decode
+// message.tool_calls independently of message.content. Reasoning/thinking never
+// becomes an executable action.
+static const char* ToolsSchema() {
+    return "["
+        "{\"type\":\"function\",\"function\":{\"name\":\"write\",\"description\":\"write a file\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"}},\"required\":[\"path\",\"content\"]}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"build\",\"description\":\"compile sources with MSVC\",\"parameters\":{\"type\":\"object\",\"properties\":{\"sources\":{\"type\":\"string\"},\"output\":{\"type\":\"string\"},\"subsystem\":{\"type\":\"string\"},\"libraries\":{\"type\":\"string\"},\"standard\":{\"type\":\"string\"}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"edit\",\"description\":\"replace text in a file\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\"]}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"read\",\"description\":\"read a file\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"list\",\"description\":\"list workspace\",\"parameters\":{\"type\":\"object\",\"properties\":{}}}},"
+        "{\"type\":\"function\",\"function\":{\"name\":\"finish\",\"description\":\"declare completion\",\"parameters\":{\"type\":\"object\",\"properties\":{\"summary\":{\"type\":\"string\"}}}}"
+        "]";
+}
+
+static string NativeToolCall(const string& resp) {
+    size_t tc = resp.find("\"tool_calls\"");
+    if (tc == string::npos) return {};
+    size_t np = resp.find("\"name\":\"", tc);
+    if (np == string::npos) return {};
+    np += 8; size_t ne = resp.find('"', np);
+    if (ne == string::npos) return {};
+    string name = resp.substr(np, ne - np);
+    size_t ap = resp.find("\"arguments\":", ne);
+    if (ap == string::npos) return {};
+    size_t ab = resp.find('{', ap);
+    if (ab == string::npos) return {};
+    int depth = 0; size_t ae = ab; bool inStr = false; char esc = 0;
+    for (; ae < resp.size(); ++ae) {
+        char c = resp[ae];
+        if (inStr) { if (esc) esc = 0; else if (c == '\\') esc = 1; else if (c == '"') inStr = false; continue; }
+        if (c == '"') inStr = true;
+        else if (c == '{') ++depth;
+        else if (c == '}') { if (--depth == 0) { ++ae; break; } }
+    }
+    string args = resp.substr(ab, ae - ab);
+    string call = "{\"tool\":\"" + name + "\"";
+    auto add = [&](const char* k) { string v = ExtractJsonString(args, k); if (!v.empty()) call += ",\"" + string(k) + "\":\"" + JsonEscape(v) + "\""; };
+    add("path"); add("content"); add("cmd"); add("old"); add("new");
+    add("output"); add("sources"); add("subsystem"); add("libraries"); add("standard"); add("summary");
+    call += "}";
+    return call;
+}
+
 struct Telemetry {
     int requests = 0, promptTokens = 0, evalTokens = 0;
     double promptNs = 0, evalNs = 0;
@@ -282,7 +325,7 @@ int main(int argc, char** argv) {
     string finalSummary;
     int finishRejects = 0;
     string lastCall; int repeatCount = 0;
-    int productive = 0, emptyStreak = 0;
+    int productive = 0, emptyStreak = 0; bool useTools = true;
     int errCount = 0, repairProgress = 0; string repairNote; bool buildOk = false; string lastFailHash; bool forceEdit = false; int prevErrCount = -1;
     for (int turn = 0; turn < maxTurns * 3 && productive < maxTurns && !g_cancel.load(); ++turn) {
         // Deterministic polymorphic planning: inject the current objective step.
@@ -291,7 +334,9 @@ int main(int argc, char** argv) {
         if (forceEdit) { dir = "The source is UNCHANGED and the build failed. STOP rewriting the whole file. Use the edit tool with a MINIMAL old->new change that fixes the PRIMARY error line only."; forceEdit = false; }
         msgs.push_back({"user", "CURRENT_STEP: " + dir});
         // Build /api/chat body.
-        string body = "{\"model\":\"" + model + "\",\"stream\":false,\"keep_alive\":\"10m\",\"options\":{\"temperature\":0,\"seed\":42,\"num_predict\":2048},\"messages\":[";
+        string body = "{\"model\":\"" + model + "\",\"stream\":false,\"keep_alive\":\"10m\",\"options\":{\"temperature\":0,\"seed\":42,\"num_predict\":2048}";
+        if (useTools) { body += ",\"tools\":"; body += ToolsSchema(); }
+        body += ",\"messages\":[";
         for (size_t i = 0; i < msgs.size(); ++i) {
             if (i) body += ",";
             body += "{\"role\":\"" + msgs[i].first + "\",\"content\":\"" + JsonEscape(msgs[i].second) + "\"}";
@@ -302,19 +347,24 @@ int main(int argc, char** argv) {
             resp = rawrxd::ollama::HttpPost(L"127.0.0.1", 11434, L"/api/chat", body, ok);
             if (!ok || resp.empty()) { Sleep(2000); ok = false; }
         }
-        if (!ok || resp.empty()) { printf("[turn %d] transport failure (3 attempts)\n", turn); g_tel.toolFail++; break; }
+        if (!ok || resp.empty()) {
+            if (useTools) { useTools = false; printf("[turn %d] tools rejected; falling back to text channel\n", turn); continue; }
+            printf("[turn %d] transport failure (3 attempts)\n", turn); g_tel.toolFail++; break;
+        }
         ++g_tel.requests;
         g_tel.promptTokens += (int)rawrxd::ollama::JsonInt(resp, "\"prompt_eval_count\":");
         g_tel.evalTokens    += (int)rawrxd::ollama::JsonInt(resp, "\"eval_count\":");
         g_tel.promptNs      += (double)rawrxd::ollama::JsonInt(resp, "\"prompt_eval_duration\":");
         g_tel.evalNs        += (double)rawrxd::ollama::JsonInt(resp, "\"eval_duration\":");
         string content = ExtractJsonString(resp, "content");
-        string call = FirstJsonObject(content);
+        string call = NativeToolCall(resp);          // native message.tool_calls first
+        if (call.empty()) call = FirstJsonObject(content);   // text-channel fallback
         string tool = ExtractJsonString(call, "tool");
         printf("[turn %d] model_tool=%s (phase=%d)\n", turn, tool.empty() ? "(none)" : tool.c_str(), phase);
         if (tool.empty()) {
             ++emptyStreak;
-            printf("  [empty %d] content[0:200]=%.200s\n", emptyStreak, content.c_str());
+            const bool reasoningOnly = (resp.find("\"thinking\"") != string::npos || resp.find("reasoning_content") != string::npos);
+            printf("  [empty %d] reasoning_only=%d content[0:160]=%.160s\n", emptyStreak, (int)reasoningOnly, content.c_str());
             if (emptyStreak >= 12) { printf("[abort] model produced 12 consecutive empty turns (no tool call) — fail-closed.\n"); break; }
             msgs.push_back({"user", "You MUST output exactly one JSON tool call NOW, with no prose. Current step: " + PhaseDirective(ComputePhase()) +
                 (emptyStreak >= 3 ? " Example: {\"tool\":\"write\",\"path\":\"sysmon.cpp\",\"content\":\"...\"}" : "")});
