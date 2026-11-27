@@ -1,0 +1,24 @@
+RAWRXD REAP V01 — storage-independent retained-expert selection — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU test. Disk ~6 GB.
+
+PACKAGE V01 (of V01-V10): extract the retained-expert selection contract so Physical,
+Virtual and Streaming share one authoritative selection type + validator. NO engine
+change yet (V04 migrates the writer).
+
+IMPLEMENTED:
+- src/deep2/ReapExpertSelection.hpp (NEW): `using Selection = map<layer, vector<expert>>`
+  (original order) + ValidateSelection(selection, activeExperts, error): non-empty,
+  no duplicate expert ids per layer, exact activeExperts count when >0. Fail-closed.
+  Extracted from ReapMoETransformer.cpp loadSelection post-parse checks (lines 397-413).
+  The JSON manifest parse remains file-coupled in the offline writer; an in-memory
+  producer (Virtual/Streaming) builds a Selection and validates with the SAME predicate.
+- tools/reap_expert_selection_test.cpp: valid / duplicate / wrong-count / empty /
+  activeExperts=0 cases -> ALL PASS.
+
+VERIFICATION (actual): CPU regression -> ALL PASS (exit 0). Artifacts removed.
+Production /Zs unchanged (no engine edit); baseline 0786361dfe green.
+
+DISPOSITION: V01 COMPLETE (component + CPU verified). V02 COMPLETE (slice layout).
+NEXT=V03 reusable in-memory transform (compose V01 selection + V02 slicing, no file I/O);
+V04 migrate writer to shared transform; V06 wire Virtual to ingestion.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
