@@ -1,0 +1,40 @@
+RAWRXD NP-05A (tensor identity + CPU regression) — 2026-11-27
+Branch: residency/np05-06  Base: 62786d8b66
+Mode: DIRECT_EXECUTOR. Hardware: NOT used (held). Disk: 4.06 GB (light /Zs + CPU test only).
+
+OBJECTIVE: extract a DEVICE-INDEPENDENT identity-validation component used by production
+AND CPU regression tests (no duplicated test-only logic); make identity host-pointer-
+independent (content-based).
+
+IMPLEMENTED:
+1. include/weight_identity.h (NEW, Vulkan-free, header-only):
+   Key{model_id,fingerprint,bytes,kind}; Fingerprint(); Make(); Matches().
+   Identity is content+geometry+format+model — host-pointer-independent: identical content
+   at a different address => same Key; changed revision / different model / geometry /
+   format => different Key.
+2. src/vulkan_compute.cpp EnsureQuantWeight now builds the Key via WeightIdentity::Make and
+   validates the resident entry via WeightIdentity::Matches (replaces the inline
+   pointer/fp/model check). Production and test share the SAME rule.
+3. tools/weight_identity_test.cpp (NEW, CPU-only): asserts relocated-memory match,
+   changed-revision mismatch, cross-model mismatch, geometry mismatch, format mismatch,
+   identical match. Build+run => "ALL PASS" (exit 0).
+
+VERIFICATION (actual):
+- CPU regression: tools/weight_identity_test.exe => ALL PASS (exit 0). Artifacts removed.
+- MSVC /Zs src/vulkan_compute.cpp => EXIT 0 (production compiles with the component).
+- Full link: PENDING (disk 4.06 GB; incremental link not run this turn).
+- GPU/runtime: held.
+
+NOTES / REMAINING:
+- The residency cache MAP KEY is still the host pointer; identity VALIDATION is now
+  content-based and shared with tests. Migrating the key type to the content Key (so a
+  relocated buffer is reused, not re-uploaded) is the remaining host-pointer-independent
+  step (touches batch_pinned_ and all find/erase sites) — deferred to a build-capable window.
+- Verify propagation through prefill/decode/batched/async/nested (model_id reasserted at
+  ExecuteToken covers sync prefill/decode; async/nested paths still to audit).
+
+DISPOSITION:
+NP05A_TENSOR_ID=IMPLEMENTED(component+validation)  CPU_REGRESSION=PASS  Syntax=PASS
+Linked=PENDING  Runtime=NO  Hardware=HELD
+PROMOTE=0  CERTIFIED=0  RELEASE=HELD
+NEXT=key-type migration (reuse across relocation); async/nested audit; NP-05B/C/D; NP-06A-F.
