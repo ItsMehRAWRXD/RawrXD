@@ -175,6 +175,31 @@ bool ParseRuntimeTarget(std::string_view text, RuntimeTarget& out,
     return true;
 }
 
+uint64_t SelectionExpertCount(const Selection& selection, bool& uniform) {
+    uniform = false;
+    if (selection.empty()) return 0;
+    const size_t n = selection.begin()->second.size();
+    uniform = true;
+    for (const auto& entry : selection) {
+        if (entry.second.size() != n) { uniform = false; return 0; }
+    }
+    return static_cast<uint64_t>(n);
+}
+
+bool ValidateRuntimeSelection(const Selection& selection, uint64_t activeExperts,
+                              std::string& error) {
+    if (activeExperts > 0xffffffffull) { error = "ACTIVE_EXPERTS_OVERFLOW"; return false; }
+    if (!ValidateSelection(selection, static_cast<uint32_t>(activeExperts), error)) return false;
+    bool uniform = false;
+    const uint64_t n = SelectionExpertCount(selection, uniform);
+    if (!uniform) { error = "selection layers have inconsistent expert counts"; return false; }
+    if (activeExperts && n != activeExperts) {
+        error = "selection expert count does not match activeExperts";
+        return false;
+    }
+    return true;
+}
+
 bool InspectRuntimeModel(const std::string& firstShard,
                          RuntimeModelFacts& out, std::string& error) {
     out = {};
@@ -286,11 +311,15 @@ bool BuildRuntimePlan(const std::string& firstShard,
 
 std::string RuntimePlanJson(const RuntimePlan& plan) {
     std::ostringstream out;
+    bool selUniform = false;
+    const uint64_t selExperts = SelectionExpertCount(plan.selection, selUniform);
     out << "{\"schema\":" << jsonQuote(RuntimePlan::kSchema)
         << ",\"model\":" << jsonQuote(plan.actual.model)
         << ",\"architecture\":" << jsonQuote(plan.actual.architecture)
         << ",\"injection_mode\":" << jsonQuote(plan.injectionMode)
         << ",\"mode\":" << jsonQuote(TransformModeName(plan.transformMode))
+        << ",\"selection_layers\":" << plan.selection.size()
+        << ",\"selection_experts\":" << selExperts
         << ",\"streamer_path\":" << jsonQuote(plan.streamerPath)
         << ",\"requested_parameters\":" << plan.requested.parameterCount
         << ",\"requested_experts\":" << plan.requested.expertCount

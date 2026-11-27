@@ -9,6 +9,8 @@
 #include <string>
 #include <string_view>
 
+#include "deep2/ReapExpertSelection.hpp"
+
 namespace RawrXD::Reap {
 
 // RP01: authoritative transformation mode (controls actual execution, not a flag).
@@ -64,6 +66,10 @@ struct RuntimePlan {
     // Authoritative transformation mode (RP01). Single source of truth; the
     // former duplicate string `mode` field was removed (A07 consolidation).
     TransformMode transformMode = TransformMode::Physical;
+    // V06.1: authoritative per-layer retained-expert selection (original order).
+    // Empty = no selection (Physical may derive from activeExperts; Virtual/Streaming
+    // require it). Expert counts derive from this, not a duplicate scalar.
+    Selection selection;
 };
 
 struct RuntimeInjection {
@@ -71,6 +77,12 @@ struct RuntimeInjection {
     uint64_t expertCount = 0;
     uint64_t workingSetBytes = 0;
     bool enabled = false;
+    // V06.1: authoritative per-layer selection propagated to ingestion. When
+    // hasSelection is true, expertCount must equal the per-layer selection size
+    // (validated); Virtual/Streaming consume `selection` to transform/acquire the
+    // exact retained experts in original order.
+    bool hasSelection = false;
+    Selection selection;
 };
 
 struct RuntimeInjectionReceipt {
@@ -92,6 +104,16 @@ struct RuntimeInjectionReceipt {
 // and uint64 overflow; physical topology admission is a separate runtime gate.
 bool ParseRuntimeTarget(std::string_view text, RuntimeTarget& out,
                         std::string& error);
+
+// V06.1: derive the per-layer retained expert count from the authoritative
+// selection. Returns 0 and sets uniform=false when layers disagree or empty.
+uint64_t SelectionExpertCount(const Selection& selection, bool& uniform);
+
+// V06.1: validate the selection (reuse ValidateSelection) and, when activeExperts>0,
+// that its uniform per-layer count matches. Fail-closed on missing/duplicate/
+// out-of-range/incompatible selections.
+bool ValidateRuntimeSelection(const Selection& selection, uint64_t activeExperts,
+                              std::string& error);
 
 // Read model geometry without modifying or rewriting the source model.
 bool InspectRuntimeModel(const std::string& firstShard,

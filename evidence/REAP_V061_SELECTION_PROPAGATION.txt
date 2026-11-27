@@ -1,0 +1,32 @@
+RAWRXD REAP V06.1 — authoritative selection propagation — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. /Zs + CPU test. Disk ~6 GB.
+
+PACKAGE V06.1: carry the validated per-layer Selection (which experts, original order)
+through RuntimePlan and RuntimeInjection so Virtual/Streaming can transform/acquire the
+EXACT retained experts (Physical parity). Reuses ReapExpertSelection.hpp (V01).
+
+IMPLEMENTED:
+- ReapRuntimePlan.hpp: RuntimePlan += Selection selection; RuntimeInjection +=
+  {bool hasSelection; Selection selection;}. Includes ReapExpertSelection.hpp.
+- ReapRuntimePlan.cpp: SelectionExpertCount(selection, uniform) (derive per-layer count,
+  0 + uniform=false if inconsistent/empty); ValidateRuntimeSelection(selection,
+  activeExperts, error) (reuse ValidateSelection + uniform-count + activeExperts match,
+  fail-closed); RuntimePlanJson emits selection_layers + selection_experts.
+- tools/reap_selection_prop_test.cpp: count derivation, valid/mismatch/duplicate/
+  inconsistent/empty rejection, RuntimeInjection carries selection+derived count ->
+  ALL PASS.
+
+VERIFICATION (actual): /Zs ReapRuntimePlan.cpp EXIT 0; CPU regression ALL PASS. Artifacts
+removed. Physical path unchanged (selection empty => prior behavior).
+
+DISPOSITION: V06.1 COMPLETE (propagation + CPU). Expert count now DERIVED from the
+authoritative selection (no duplicate scalar).
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+
+CONCURRENT-TRACK RECONCILIATION (reported, pending consolidation): duplicate Streaming
+implementations exist — src/reap/ReapExpertProvider.hpp (S01 de93b51716),
+ReapExpertResidency.hpp (S02 96503000fe), ReapStreamingPipeline.hpp (S02P 038ee05d8f)
+OVERLAP src/deep2/ReapExpertProvider.hpp (d21edc432c) + ReapStreamResidency.hpp
+(2261c86ee6). All ancestors of HEAD. Consolidate to one provider + one residency before
+engine integration (next).
+NEXT=consolidate Streaming duplicates; V06.2 selection identity; V06.3 Virtual ingestion.
