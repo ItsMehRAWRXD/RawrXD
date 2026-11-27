@@ -1,0 +1,23 @@
+RAWRXD REAP V03 — reusable in-memory expert transformation — 2026-11-27
+Mode: DIRECT_EXECUTOR. Hardware: NOT used. CPU test. Disk ~6 GB.
+
+PACKAGE V03 (of V01-V10): shared, storage-independent in-memory expert transform
+composing V01 (Selection) + V02 (ExpertSliceLayout). Buffers in / buffers out, no
+file I/O. This is the single authoritative transform Physical/Virtual/Streaming consume.
+
+IMPLEMENTED:
+- src/deep2/ReapExpertTransform.hpp (NEW): TransformExpertTensor(dims, tensorBytes,
+  src, retained, dst, error) -> dst = retained experts concatenated in ORIGINAL order.
+  Uses ComputeExpertSliceLayout (V02); fail-closed on layout error / null source.
+- tools/reap_expert_transform_test.cpp: synthetic 4x100 tensor (each expert byte = id),
+  retain {0,2,3} -> dst 300 bytes with content 0,2,3 in order (CONTENT EQUIVALENCE);
+  out-of-range rejected -> ALL PASS.
+
+VERIFICATION (actual): CPU regression -> ALL PASS (exit 0). Artifacts removed.
+Production /Zs unchanged (no engine edit); baseline 526aebdf3e green.
+
+DISPOSITION: V03 COMPLETE (shared transform + CPU content-equivalence verified).
+V01/V02/V03 form the reusable, storage-independent transformation core.
+NEXT=V04 migrate ReapMoETransformer writer to consume the shared transform (preserve
+physical regression); V06 wire Virtual to ingestion; V05 preserve physical results.
+PROMOTE=0 CERTIFIED=0 RELEASE=HELD
