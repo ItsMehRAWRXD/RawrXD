@@ -33,8 +33,24 @@ VERIFICATION (actual):
        279C7B4428FA0961C450C261D2AA2E5770F71BF0B4439331265FABF398320950
 - OBJECT_COMPILATION=PASS, LINKED=PASS. Runtime counter split: PENDING (hardware held).
 
+CORRECTNESS VERIFICATION (source-confirmed, NP-04D edge cases):
+- Failed uploads NOT counted: AllocateBuffer failure returns at vulkan_compute.cpp:3127-3131
+  and CopyHostToBuffer failure returns at :3137-3144, BOTH before the seen-insert and
+  before ++weight_cache_misses (:3146). So a failed attempt is never classified as an
+  initial upload or a successful miss.
+- Concurrent misses serialized: the whole lookup/upload/evict path runs under
+  std::lock_guard quant_mu_ (:3030), so first-upload attribution cannot race.
+- Model unload/reload: Cleanup clears quant_seen_weights_ beside quant_weight_cache_
+  (:3517-3518), so a reload starts fresh (first uploads counted initial again).
+- Bounded growth: the set holds distinct weight keys for the model lifetime (bounded by
+  tensor count) and is cleared on Cleanup; no unbounded cross-model growth.
+- Reconciliation invariant: weight_initial_uploads and weight_reuploads each increment
+  exactly once per SUCCESSFUL miss, immediately after ++weight_cache_misses, so
+  initial_uploads + reuploads == weight_cache_misses (successful-miss population) by
+  construction. weight_cache_misses excludes failed attempts (see above).
+
 DISPOSITION:
-NP04D=IMPLEMENTED  Compile=YES  ObjectCompilation=PASS  Linked=PASS
+NP04D=IMPLEMENTED  Compile=YES  ObjectCompilation=PASS  Linked=PASS  Correctness=SOURCE_VERIFIED
 NP04D Runtime=NO  Hardware=NOT_RUN(held)
 NP04A/B/C=EXISTING (upload paths / upload_bytes / hits-misses-evictions already present)
 NP05/NP06=PENDING
