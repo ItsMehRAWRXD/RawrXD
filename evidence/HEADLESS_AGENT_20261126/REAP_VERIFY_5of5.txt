@@ -1,0 +1,6 @@
+RAWRXD REAP verify-suite completion — 2026-11-27
+Built + ran execution_receipt_test (was missing exe): EXECUTION_RECEIPT_ACCEPTANCE PASS (exit 0).
+Full REAP CPU verify suite now 5/5 PASS:
+  adapter_identity_test PASS, execution_receipt_test PASS, reservation_ledger_test PASS, residency_budget_test PASS, vram_contention_test PASS (contended_admit=1 released_admit=1).
+Physical disposition (G09): runtime reached, tokens committed, route_ok=960, exit 0.
+Remaining gap: QUALITY_PARITY=NOT_RUN (needs GPU/model — held), certification held.
