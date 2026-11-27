@@ -1,0 +1,3 @@
+RAWRXD corrected campaign (partial, exe contention) — 2026-11-27
+gpt-oss 2/3 (INCOMPLETE, PASS, PASS); deepseek/qwen/nemotron runs returned empty (rawr_agent.exe rebuilt/locked by concurrent worker mid-campaign).
+Transport fully implemented (gpt-oss native E2E PASS 37.3s). Corrected aggregate reliability not cleanly measured (concurrent exe contention).
