@@ -108,9 +108,10 @@ static string RunCmd(const string& cmd) {
     const string outf = (std::filesystem::path(g_ws) / "_agent_out.txt").string();
     string full = "cmd /c (cd /d \"" + g_ws + "\" && " + cmd + ") > \"" + outf + "\" 2>&1";
     vector<wchar_t> w(full.begin(), full.end()); w.push_back(0);
+    std::wstring wdir(g_ws.begin(), g_ws.end());
     STARTUPINFOW si{}; si.cb = sizeof(si); PROCESS_INFORMATION pi{};
     si.dwFlags = STARTF_USESHOWWINDOW; si.wShowWindow = SW_HIDE;
-    if (!CreateProcessW(nullptr, w.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, g_ws.c_str(), &si, &pi))
+    if (!CreateProcessW(nullptr, w.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, wdir.c_str(), &si, &pi))
         return "ERROR: spawn failed";
     const DWORD r = WaitForSingleObject(pi.hProcess, 20000);
     if (r == WAIT_TIMEOUT) {
