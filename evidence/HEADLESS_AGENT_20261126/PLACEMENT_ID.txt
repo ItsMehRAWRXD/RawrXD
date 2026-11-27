@@ -1,0 +1,4 @@
+RAWRXD immutable placement identity (PR-06 consumer) — standalone
+ReapPlacementRequest.hpp: request-scoped immutable {checkpointId, selectionFingerprint, mode, valid} -> Identity() via PR-06 CacheIdentity. No mutable global selection state.
+Standalone MSVC build PASS. CPU test pr_test 4/4 OK (identical same, cross-selection differs, invalid distinct, immutable repeat). PLACEMENT_ID=PASS.
+For MoEPlaceGlobal/K2MoEPlaceAndExec consumption. Storage-independent.
