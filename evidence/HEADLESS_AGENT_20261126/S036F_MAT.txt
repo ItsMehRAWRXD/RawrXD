@@ -1,0 +1,4 @@
+RAWRXD S03.6F — transformed-expert materialization (standalone, lightweight)
+ReapMaterialize.hpp: Materialize(provider, req, layer, expert, bytes) -> transformed expert payload bound to PR-06 identity; invalid selection fails closed (no bytes). Engine allocates/uploads the returned buffer.
+Standalone MSVC build PASS (no engine build; disk unchanged 10.6 GB). CPU test s036f_mat_test 3/3 OK (materialized, expert bytes, invalid fail-closed). S036F_MAT=PASS.
+Production materialization source for S03.6G/H engine upload. Storage-independent.
