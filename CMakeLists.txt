@@ -487,22 +487,30 @@ elseif(TARGET zlib)
         "${CMAKE_BINARY_DIR}/_deps/zlib-src"
         "${CMAKE_BINARY_DIR}/_deps/zlib-build")
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
-    elseif(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h" OR
-           EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zconf.h")
-        # Local zlib-src fallback. zconf.h is generated beside zlib.h, so a tree
-        # holding zlib.h without zconf.h cannot compile; requiring BOTH stops the
-        # branch from claiming a zlib provider it cannot build. One resolved
-        # directory then feeds the include path, the sources and the headers.
-        if(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h")
+    elseif((EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zlib.h" AND
+             EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h") OR
+           (EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zlib.h" AND
+             EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src/zconf.h"))
+        # Local zlib-src fallback. zconf.h is generated beside zlib.h; require
+        # both in the same source tree before advertising a usable provider.
+        if(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zlib.h" AND
+           EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src/zconf.h")
             set(_rawrxd_zlib_src "${CMAKE_BINARY_DIR}/_deps/zlib-src")
         else()
             set(_rawrxd_zlib_src "${CMAKE_SOURCE_DIR}/_deps/zlib-src")
         endif()
         target_include_directories(rawrxd_compression_core PUBLIC "${_rawrxd_zlib_src}")
         file(GLOB ZLIB_SOURCES "${_rawrxd_zlib_src}/*.c")
+        if(NOT ZLIB_SOURCES)
+            message(FATAL_ERROR "Local zlib tree found but contains no C sources: ${_rawrxd_zlib_src}")
+        endif()
         target_sources(rawrxd_compression_core PUBLIC ${ZLIB_SOURCES})
         file(GLOB ZLIB_HDRS "${_rawrxd_zlib_src}/*.h")
         target_sources(rawrxd_compression_core PUBLIC ${ZLIB_HDRS})
+        target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+        set(HAVE_ZLIB 1)
+        set(HAVE_COMPRESSION 1)
+        message(STATUS "rawrxd_compression_core: using local zlib source tree ${_rawrxd_zlib_src}")
         target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
 else()
     # No zlib provider. compression_core.cpp compiles to an explicit Unsupported
@@ -4430,10 +4438,53 @@ if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm
     endif()
 endif()
 
+# Cross-platform portable stored-gzip contract test. This target deliberately
+# does not link rawrxd_brutal_gzip, so it exercises the C++ fallback even on
+# Windows hosts where the production MASM provider is also available.
+if(BUILD_TESTING AND ZLIB_FOUND)
+    add_executable(brutal_gzip_portable_contract_test
+        tests/brutal_gzip_portable_contract_test.cpp)
+    target_include_directories(brutal_gzip_portable_contract_test PRIVATE
+        "${CMAKE_SOURCE_DIR}/include")
+    target_compile_features(brutal_gzip_portable_contract_test PRIVATE cxx_std_17)
+    if(TARGET ZLIB::ZLIB)
+        target_link_libraries(brutal_gzip_portable_contract_test PRIVATE ZLIB::ZLIB)
+    else()
+        target_include_directories(brutal_gzip_portable_contract_test PRIVATE ${ZLIB_INCLUDE_DIRS})
+        target_link_libraries(brutal_gzip_portable_contract_test PRIVATE ${ZLIB_LIBRARIES})
+    endif()
+    add_test(NAME brutal_gzip_portable_contract COMMAND brutal_gzip_portable_contract_test)
+    if(TARGET ZLIB::ZLIB)
+        get_target_property(_portable_zlib_kind ZLIB::ZLIB TYPE)
+        if(_portable_zlib_kind STREQUAL "SHARED_LIBRARY")
+            add_custom_command(TARGET brutal_gzip_portable_contract_test POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:ZLIB::ZLIB>"
+                    "$<TARGET_FILE_DIR:brutal_gzip_portable_contract_test>"
+                VERBATIM)
+        endif()
+    endif()
+endif()
+
 # MASM God-Mode deflate benchmark
 if(MSVC)
     enable_language(ASM_MASM)
-    
+
+    # The MASM stored-block gzip encoder is a real product library, not merely
+    # an assembly source compiled by the benchmark executable.
+    add_library(rawrxd_brutal_gzip STATIC
+        kernels/deflate_brutal_masm.asm)
+    target_include_directories(rawrxd_brutal_gzip PUBLIC
+        "${CMAKE_SOURCE_DIR}/include")
+    target_compile_definitions(rawrxd_brutal_gzip PUBLIC
+        RAWRXD_HAVE_BRUTAL_GZIP_MASM=1)
+    if(TARGET deep2_engine_lib)
+        target_link_libraries(deep2_engine_lib PUBLIC rawrxd_brutal_gzip)
+    endif()
+    if(TARGET RawrXD-Win32IDE-Native)
+        target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_brutal_gzip)
+    endif()
+
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_masm.cpp")
         # Disabled: deflate_godmode_masm.asm has broken syntax - bench only, not required for IDE
         # add_executable(bench_deflate_godmode tests/bench_deflate_masm.cpp kernels/deflate_godmode_masm.asm)
@@ -4443,8 +4494,39 @@ if(MSVC)
 
     # Brutal MASM benchmark
     if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
-        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp)
+        target_link_libraries(bench_deflate_brutal PRIVATE rawrxd_brutal_gzip)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    endif()
+
+    # Production contract test: validate the MASM output with zlib's gzip
+    # decoder, including header flags, CRC32, ISIZE, empty and multi-block data.
+    if(BUILD_TESTING AND ZLIB_FOUND)
+        add_executable(brutal_masm_gzip_contract_test
+            tests/brutal_masm_gzip_contract_test.cpp)
+        target_link_libraries(brutal_masm_gzip_contract_test PRIVATE rawrxd_brutal_gzip)
+        target_include_directories(brutal_masm_gzip_contract_test PRIVATE
+            "${CMAKE_SOURCE_DIR}/include")
+        target_compile_features(brutal_masm_gzip_contract_test PRIVATE cxx_std_17)
+        if(TARGET ZLIB::ZLIB)
+            target_link_libraries(brutal_masm_gzip_contract_test PRIVATE ZLIB::ZLIB)
+        else()
+            target_include_directories(brutal_masm_gzip_contract_test PRIVATE ${ZLIB_INCLUDE_DIRS})
+            target_link_libraries(brutal_masm_gzip_contract_test PRIVATE ${ZLIB_LIBRARIES})
+        endif()
+        add_test(NAME brutal_masm_gzip_contract COMMAND brutal_masm_gzip_contract_test)
+        foreach(_zlib_target ZLIB::ZLIB)
+            if(TARGET ${_zlib_target})
+                get_target_property(_zlib_kind ${_zlib_target} TYPE)
+                if(_zlib_kind STREQUAL "SHARED_LIBRARY")
+                    add_custom_command(TARGET brutal_masm_gzip_contract_test POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                            "$<TARGET_FILE:${_zlib_target}>"
+                            "$<TARGET_FILE_DIR:brutal_masm_gzip_contract_test>"
+                        VERBATIM)
+                endif()
+            endif()
+        endforeach()
     endif()
 
 endif()

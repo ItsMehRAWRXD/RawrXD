@@ -47,8 +47,11 @@ public:
 
     bool grow() {
         if (buf_.size() >= cap_) return false;
-        std::size_t next = buf_.empty() ? 4096 : buf_.size() * 2;
-        next = std::min(next, cap_);
+        // Saturating growth avoids size_t overflow for caller-provided caps.
+        const std::size_t current = buf_.size();
+        const std::size_t next = current == 0
+            ? std::min<std::size_t>(4096, cap_)
+            : (current > cap_ / 2 ? cap_ : current * 2);
         try {
             buf_.resize(next);
         } catch (...) {
@@ -125,15 +128,22 @@ Result decompress(const std::uint8_t* data,
         return {Status::InvalidInput, {}};
     }
 
+    // The one-shot zlib API reports output lengths in uLongf. On targets
+    // where uLongf is narrower than size_t, never allocate a buffer that
+    // zlib cannot represent or write into safely.
+    maxOutputBytes = std::min(maxOutputBytes,
+        static_cast<std::size_t>(std::numeric_limits<uLongf>::max()));
+
     if (maxOutputBytes == 0) {
         return {Status::OutputLimitExceeded, {}};
     }
 
     // Start at 4x the compressed size (the legacy adapter's first guess) and
     // grow under the caller's ceiling.
-    std::size_t initial = size * 4;
-    if (initial == 0) initial = 4096;
-    initial = std::min(initial, maxOutputBytes);
+    // Clamp before multiplication: untrusted compressed input must not wrap
+    // size_t and accidentally bypass the caller's allocation ceiling.
+    const std::size_t initial =
+        size > maxOutputBytes / 4 ? maxOutputBytes : size * 4;
 
     GrowBuf buf(maxOutputBytes);
     try {

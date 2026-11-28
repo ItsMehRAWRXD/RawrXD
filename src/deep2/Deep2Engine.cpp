@@ -10,6 +10,7 @@
 
 #include "deep2/ReapCapturePolicy.hpp"
 #include "Deep2Engine.h"
+#include "deep2/compression/CompressedGpuTilePlan.hpp"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
 #include "../sampling/advanced_sampler.hpp"
@@ -544,14 +545,14 @@ static bool deriveAttentionGeometry(const ModelWeights &mw, AttentionGeometry &g
         // SSM-only and Qwen3.5 gated attn_qkv hybrids do not expose classic
         // Q/K/V geometry. Treating gated wqkv as fused QKV invents bogus
         // kvHeads (e.g. 24) and fails GQA against metadata heads.
-        if (lw.hasSSM && !lw.wq.data)
+        if (lw.hasSSM && !lw.wq.hasBacking())
             continue;
 
-        size_t qRows = lw.wq.data ? lw.wq.rows : 0;
-        size_t kRows = lw.wk.data ? lw.wk.rows : 0;
-        size_t vRows = lw.wv.data ? lw.wv.rows : 0;
+        size_t qRows = lw.wq.hasBacking() ? lw.wq.rows : 0;
+        size_t kRows = lw.wk.hasBacking() ? lw.wk.rows : 0;
+        size_t vRows = lw.wv.hasBacking() ? lw.wv.rows : 0;
 
-        if (lw.wqkv.data && !lw.hasSSM)
+        if (lw.wqkv.hasBacking() && !lw.hasSSM)
         {
             // Fused QKV: rows = hiddenDim + 2*kvDim.
             if (lw.wqkv.rows <= mw.hiddenDim ||
@@ -728,9 +729,9 @@ static bool configureKVCacheFor(ModelWeights &mw, EngineConfig &cfg,
     {
         if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
             continue; // Qwen GDN recurrence — no KV slots
-        if (lw.hasSSM && !lw.wq.data)
+        if (lw.hasSSM && !lw.wq.hasBacking())
             continue; // gated SSM hybrid is not a KV-cache attention layer
-        if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
+        if (lw.wq.hasBacking() || lw.wk.hasBacking() || lw.wv.hasBacking() || lw.wqkv.hasBacking())
             ++attnLayers;
     }
     if (attnLayers == 0)
@@ -804,9 +805,9 @@ static bool validateKVCacheGeometryFor(const ModelWeights &mw,
     {
         if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
             continue; // Qwen GDN recurrence — no KV slots
-        if (lw.hasSSM && !lw.wq.data)
+        if (lw.hasSSM && !lw.wq.hasBacking())
             continue; // gated SSM hybrid is not a KV-cache attention layer
-        if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
+        if (lw.wq.hasBacking() || lw.wk.hasBacking() || lw.wv.hasBacking() || lw.wqkv.hasBacking())
             ++attnLayers;
     }
     if (attnLayers == 0)
@@ -3417,10 +3418,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = name;
-            // Owned by ggufResult's mapped GGUF loader. Keep vectors/norms
-            // mapped because legacy scalar consumers still read their data
-            // pointer directly. Matrix projections that use LinearW can instead
-            // retain native GGML bytes in bounded compressed blocks.
+            // Owned by ggufResult's mapped GGUF loader. Eligible LinearW
+            // matrices, RMSNorm vectors, and migrated Mamba-2 vectors may move
+            // to compressed backing only after their consumers support ranges.
+            // Unsupported direct-pointer tensors remain mapped.
             wt.mapped = true;
             wt.hasFileBacking = true;
             wt.fileOffset = t.dataOffset;
@@ -3428,9 +3429,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
             const bool compressedModeEnabled =
                 compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
+            // Router and per-expert tensors still have direct-pointer
+            // consumers; do not detach them until those consumers use ranges.
+            const bool moeRouterOrExpertName =
+                name.find("ffn_gate_inp") != std::string::npos ||
+                name.find("_exps") != std::string::npos ||
+                name.find("expert") != std::string::npos;
             const bool linearProjectionName =
                 ((name == "output.weight" || name == "lm_head.weight") ||
-                 (layerIdx >= 0 &&
+                 (layerIdx >= 0 && !moeRouterOrExpertName &&
                   name.find("norm") == std::string::npos &&
                   name.find("bias") == std::string::npos &&
                   (name.find("attn_") != std::string::npos ||
@@ -3445,7 +3452,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                    name.find(".wq.") != std::string::npos ||
                    name.find(".wk.") != std::string::npos ||
                    name.find(".wv.") != std::string::npos ||
-                   name.find(".wo.") != std::string::npos)));
+                   name.find(".wo.") != std::string::npos ||
+                   name.find("ssm_in.") != std::string::npos ||
+                   name.find("ssm_out.") != std::string::npos ||
+                   name.find("ssm_conv1d.") != std::string::npos)));
             const std::size_t packedRowBytes = LinearW_RowBytes(wt.type, wt.cols);
             const bool embeddingMatrixName =
                 name == "token_embd.weight" || name == "token_embeddings.weight";
@@ -3456,7 +3466,69 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / wt.rows &&
                 packedRowBytes * wt.rows == wt.sizeBytes;
 
-            if (eligibleCompressedMatrix && t.data)
+            // RMSNorm weights are small one-dimensional F32/F16 vectors. Their
+            // consumer is range-aware below, so they can remain compressed too.
+            // Do not admit biases or unrelated vectors through this route.
+            const auto hasSuffix = [&name](const char* suffix) {
+                const std::size_t suffixLength = std::strlen(suffix);
+                return name.size() >= suffixLength &&
+                    name.compare(name.size() - suffixLength, suffixLength, suffix) == 0;
+            };
+            // Only vectors consumed by RMSNormW may be detached from the
+            // mapping. Q/K head norms and SSM channel norms still have direct
+            // pointer consumers and must remain mapped.
+            const bool rmsNormVectorName =
+                hasSuffix("attn_norm.weight") ||
+                hasSuffix("attn_q_norm.weight") ||
+                hasSuffix("attn_k_norm.weight") ||
+                hasSuffix("attn_q_a_norm.weight") ||
+                hasSuffix("attn_kv_a_norm.weight") ||
+                hasSuffix("input_layernorm.weight") ||
+                hasSuffix("ffn_norm.weight") ||
+                hasSuffix("post_attention_layernorm.weight") ||
+                hasSuffix("post_attn_norm.weight") ||
+                hasSuffix("post_attention_norm.weight") ||
+                hasSuffix("post_ffw_norm.weight") ||
+                name == "output_norm.weight" ||
+                name == "norm.weight" ||
+                name == "final_norm.weight";
+            const std::size_t normElementBytes =
+                wt.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+                wt.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+            const bool eligibleCompressedNorm =
+                compressedModeEnabled && rmsNormVectorName &&
+                t.dimensions.size() == 1 && normElementBytes != 0 &&
+                wt.cols > 0 &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+                wt.cols * normElementBytes == wt.sizeBytes;
+            const bool ssmVectorName =
+                (name.find("ssm_a") != std::string::npos &&
+                 name.find("ssm_alpha") == std::string::npos) ||
+                name.find("ssm_d") != std::string::npos ||
+                name.find("ssm_dt_bias") != std::string::npos ||
+                name.find("ssm_dt.bias") != std::string::npos ||
+                name.find("ssm_conv1d_bias") != std::string::npos ||
+                name.find("ssm_conv1d.bias") != std::string::npos ||
+                name.find("ssm_norm") != std::string::npos;
+            const bool eligibleCompressedSsmVector =
+                compressedModeEnabled && ssmVectorName &&
+                wt.type == (int)GGMLType::GGML_TYPE_F32 &&
+                t.dimensions.size() == 1 &&
+                wt.cols > 0 &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() / sizeof(float) &&
+                wt.cols * sizeof(float) == wt.sizeBytes;
+            const bool attentionBiasName =
+                hasSuffix("attn_q.bias") || hasSuffix("attn_k.bias") ||
+                hasSuffix("attn_v.bias");
+            const bool eligibleCompressedBias =
+                compressedModeEnabled && attentionBiasName &&
+                normElementBytes != 0 && t.dimensions.size() == 1 &&
+                wt.cols > 0 &&
+                wt.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+                wt.cols * normElementBytes == wt.sizeBytes;
+
+            if ((eligibleCompressedMatrix || eligibleCompressedNorm ||
+                 eligibleCompressedSsmVector || eligibleCompressedBias) && t.data)
             {
                 constexpr std::size_t kDefaultCompressedModelBudget =
                     4ull * 1024ull * 1024ull * 1024ull;
@@ -5234,7 +5306,7 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path)
     if (config.numLayers > 0)
     {
         const auto& lw0 = modelWeights.layers[0];
-        if (lw0.wq.data && lw0.wk.data && lw0.wq.rows != lw0.wk.rows)
+        if (lw0.wq.hasBacking() && lw0.wk.hasBacking() && lw0.wq.rows != lw0.wk.rows)
         {
             size_t inferredKVHeads = lw0.wk.rows / config.headDim;
             if (inferredKVHeads > 0 && inferredKVHeads != config.numKVHeads)
@@ -6238,8 +6310,8 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         dst.hasFileBacking = true;
         dst.fileOffset = ref->fileOffset;
 
-        // Opt-in native compressed residency for matrix weights. Keep norms
-        // and vectors mapped because their current consumers read direct pointers.
+        // Opt-in native compressed residency for LinearW matrices and the
+        // explicitly range-enabled final/attention/FFN RMSNorm vectors.
         const char* compressedMode = std::getenv("RAWRXD_COMPRESSED_WEIGHT_RESIDENCY");
         const bool compressedModeEnabled =
             compressedMode && compressedMode[0] == '1' && compressedMode[1] == '\0';
@@ -6248,12 +6320,34 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
         const bool bindingIsNormOrBias =
             bindingLabel.find("norm") != std::string::npos ||
             bindingLabel.find("bias") != std::string::npos;
+        const std::size_t normElementBytes =
+            dst.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+            dst.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+        const bool rmsNormBinding =
+            bindingLabel == "final norm" ||
+            bindingLabel == "attention norm" ||
+            bindingLabel == "FFN norm" ||
+            bindingLabel == "attention Q norm" ||
+            bindingLabel == "attention K norm";
+        const bool compressNormVector = compressedModeEnabled && rmsNormBinding &&
+            ref->shape.size() == 1 && normElementBytes != 0 && dst.cols > 0 &&
+            dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+            dst.cols * normElementBytes == dst.sizeBytes;
+        const bool attentionBiasBinding =
+            bindingLabel == "attention Q bias" ||
+            bindingLabel == "attention K bias" ||
+            bindingLabel == "attention V bias";
+        const bool compressAttentionBias = compressedModeEnabled && attentionBiasBinding &&
+            ref->shape.size() == 1 && normElementBytes != 0 && dst.cols > 0 &&
+            dst.cols <= (std::numeric_limits<std::size_t>::max)() / normElementBytes &&
+            dst.cols * normElementBytes == dst.sizeBytes;
         const bool compressMatrix = compressedModeEnabled && !bindingIsNormOrBias &&
+            bindingLabel != "MoE router" &&
             ref->shape.size() == 2 && dst.rows > 1 && dst.cols > 1 &&
             packedRowBytes > 0 &&
             packedRowBytes <= (std::numeric_limits<std::size_t>::max)() / dst.rows &&
             packedRowBytes * dst.rows == dst.sizeBytes;
-        if (compressMatrix)
+        if (compressMatrix || compressNormVector || compressAttentionBias)
         {
             constexpr std::size_t kDefaultCompressedModelBudget =
                 4ull * 1024ull * 1024ull * 1024ull;
@@ -6518,19 +6612,48 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     if (dim == 0)
         return;
 
-    // Refuse short F32/F16 norm views before the SIMD loop can read past the
-    // mapped tensor. Q/K norms may be stored as either one shared head or a
-    // complete [headCount * headDim] table.
-    if (normWeight.data &&
-        (normWeight.type == (int)GGMLType::GGML_TYPE_F32 ||
-         normWeight.type == (int)GGMLType::GGML_TYPE_F16))
+    // RMSNorm supports F32/F16 vectors. Compressed-backed norm vectors are
+    // decoded into one request-local activation-sized buffer; the full model
+    // tensor remains compressed in the resident store.
+    const bool compressedNorm = normWeight.hasCompressedBacking();
+    std::vector<std::uint8_t> compressedNormBytes;
+    const void* normDataPtr = normWeight.data;
+    if (compressedNorm && normDataPtr)
+        throw std::runtime_error("RMSNormW: ambiguous raw and compressed weight backing: " +
+                                 normWeight.name);
+    if (normWeight.data || compressedNorm)
     {
-        const size_t elementBytes =
-            normWeight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t);
-        if (dim > normWeight.sizeBytes / elementBytes)
+        const bool supportedNormType =
+            normWeight.type == (int)GGMLType::GGML_TYPE_F32 ||
+            normWeight.type == (int)GGMLType::GGML_TYPE_F16;
+        if (!supportedNormType)
         {
-            throw std::runtime_error("RMSNormW: weight tensor is smaller than requested dimension: " +
-                                     normWeight.name);
+            if (compressedNorm)
+                throw std::runtime_error("RMSNormW: unsupported compressed norm type: " +
+                                         normWeight.name);
+            // Preserve the pre-residency behavior for legacy raw quantized
+            // norm tensors: only F32/F16 have a direct decoder in this path.
+            normDataPtr = nullptr;
+        }
+        else
+        {
+            const size_t elementBytes =
+                normWeight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t);
+            if (dim > normWeight.sizeBytes / elementBytes)
+                throw std::runtime_error("RMSNormW: weight tensor is smaller than requested dimension: " +
+                                         normWeight.name);
+            if (compressedNorm)
+            {
+                if (dim > (std::numeric_limits<size_t>::max)() / elementBytes)
+                    throw std::overflow_error("RMSNormW: compressed norm byte count overflow");
+                compressedNormBytes.resize(dim * elementBytes);
+                std::string decodeError;
+                if (!normWeight.readBytes(0, compressedNormBytes.data(),
+                                          compressedNormBytes.size(), &decodeError))
+                    throw std::runtime_error("RMSNormW: compressed norm read failed for " +
+                                             normWeight.name + ": " + decodeError);
+                normDataPtr = compressedNormBytes.data();
+            }
         }
     }
 
@@ -6569,11 +6692,11 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     }
 
     // Apply normalization + weight with AVX2
-    if (normWeight.data)
+    if (normDataPtr)
     {
         if (normWeight.type == (int)GGMLType::GGML_TYPE_F32)
         {
-            const float* w = (const float*)normWeight.data;
+            const float* w = (const float*)normDataPtr;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
@@ -6594,7 +6717,7 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
         }
         else if (normWeight.type == (int)GGMLType::GGML_TYPE_F16)
         {
-            const uint16_t* w = (const uint16_t*)normWeight.data;
+            const uint16_t* w = (const uint16_t*)normDataPtr;
             i = 0;
             for (; i + 8 <= dim; i += 8)
             {
@@ -7132,7 +7255,11 @@ static bool ValidateQ6KAsm(const block_q6_K* blocks, const float* input, float* 
 static size_t LinearW_RowBytes(int type, size_t cols)
 {
     const auto packed = [cols](size_t blockElements, size_t blockBytes) -> size_t {
-        const size_t blocks = cols / blockElements + (cols % blockElements != 0 ? 1u : 0u);
+        // GGML quantized rows are block-aligned. Reject malformed geometry
+        // rather than admitting a padded byte stride that a kernel may read
+        // past the declared logical row.
+        if (blockElements == 0 || cols % blockElements != 0) return 0;
+        const size_t blocks = cols / blockElements;
         if (blocks > (std::numeric_limits<size_t>::max)() / blockBytes) return 0;
         return blocks * blockBytes;
     };
@@ -7635,25 +7762,102 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     const char* compressedGpuEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_STAGING");
     const bool allowFullCompressedGpuStaging =
         compressedGpuEnv && compressedGpuEnv[0] == '1' && compressedGpuEnv[1] == '\0';
-    // Default to bounded CPU row slices for compressed weights. The existing
-    // Vulkan upload ABI requires a full contiguous tensor; opt into that
-    // temporary expansion explicitly rather than silently defeating residency.
-    if ((!wtEffective.hasCompressedBacking() || allowFullCompressedGpuStaging) &&
+    const char* compressedGpuTileEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_TILED");
+    const bool allowCompressedGpuTiles =
+        compressedGpuTileEnv && compressedGpuTileEnv[0] == '1' && compressedGpuTileEnv[1] == '\0';
+    std::size_t compressedGpuTileBudget = 16u * 1024u * 1024u;
+    if (const char* tileBudgetEnv = std::getenv("RAWRXD_COMPRESSED_WEIGHT_GPU_TILE_BYTES"))
+    {
+        char* end = nullptr;
+        const unsigned long long parsed = std::strtoull(tileBudgetEnv, &end, 10);
+        if (end != tileBudgetEnv && *end == '\0' && parsed > 0 &&
+            parsed <= (std::numeric_limits<std::size_t>::max)())
+            compressedGpuTileBudget = static_cast<std::size_t>(parsed);
+    }
+    // Compressed weights default to bounded CPU row slices. The opt-in tiled
+    // path expands row-aligned slices only, bounded by the configured staging
+    // budget. Full-tensor staging remains a separate diagnostic override.
+    if ((!wtEffective.hasCompressedBacking() || allowFullCompressedGpuStaging ||
+         allowCompressedGpuTiles) &&
         !plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         WeightTensor gpuWeight = wtEffective;
-        if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+        bool gpuDispatched = false;
+        // DispatchGEMVQuant/DispatchGEMV complete their fence wait before return;
+        // one reusable buffer therefore bounds host staging to one tile.
+        std::vector<std::uint8_t> compressedGpuTileBuffer;
+        if (!gpuWeight.data && gpuWeight.hasCompressedBacking() &&
+            allowCompressedGpuTiles && !allowFullCompressedGpuStaging)
         {
-            compressedGpuBytes.resize(gpuWeight.sizeBytes);
-            std::string decodeError;
-            if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
-                                     compressedGpuBytes.size(), &decodeError))
-                throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
-                                         wt.name + ": " + decodeError);
-            gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            const std::size_t packedRowBytes = LinearW_RowBytes(gpuWeight.type, cols);
+            if (packedRowBytes != 0 &&
+                wt.fileOffset <= (std::numeric_limits<std::uint64_t>::max)() - wt.sizeBytes)
+            {
+                try
+                {
+                    const auto tiles = rawrxd::compression::PlanCompressedGpuTiles(
+                        gpuWeight.rows, outDim, packedRowBytes, compressedGpuTileBudget);
+                    gpuDispatched = true;
+                    for (const auto& tile : tiles)
+                    {
+                        compressedGpuTileBuffer.resize(tile.byte_count);
+                        auto& tileBytes = compressedGpuTileBuffer;
+                        std::string decodeError;
+                        if (!gpuWeight.readBytes(tile.byte_offset, tileBytes.data(),
+                                                 tileBytes.size(), &decodeError))
+                        {
+                            gpuDispatched = false;
+                            std::fprintf(stderr, "[COMPRESSED_GPU_TILE] read failed tensor=%s row=%zu: %s\n",
+                                wt.name.c_str(), tile.first_row, decodeError.c_str());
+                            break;
+                        }
+                        WeightTensor gpuTile = gpuWeight;
+                        gpuTile.data = tileBytes.data();
+                        gpuTile.rows = tile.row_count;
+                        gpuTile.sizeBytes = tile.byte_count;
+                        gpuTile.fileOffset = wt.fileOffset + tile.byte_offset;
+                        if (!tryVulkanGEMV(gpuTile, input, output + tile.first_row, tile.row_count))
+                        {
+                            gpuDispatched = false;
+                            std::fprintf(stderr, "[COMPRESSED_GPU_TILE] dispatch failed tensor=%s row=%zu count=%zu\n",
+                                wt.name.c_str(), tile.first_row, tile.row_count);
+                            break;
+                        }
+                    }
+                    if (gpuDispatched)
+                        std::fprintf(stderr, "[COMPRESSED_GPU_TILE] tensor=%s rows=%zu row_bytes=%zu tiles=%zu budget=%zu\n",
+                            wt.name.c_str(), outDim, packedRowBytes, tiles.size(), compressedGpuTileBudget);
+                }
+                catch (const std::exception& ex)
+                {
+                    gpuDispatched = false;
+                    std::fprintf(stderr, "[COMPRESSED_GPU_TILE] planner rejected tensor=%s: %s\n",
+                        wt.name.c_str(), ex.what());
+                }
+            }
         }
-        if (tryVulkanGEMV(gpuWeight, input, output, outDim))
+        else
+        {
+            if (!gpuWeight.data && gpuWeight.hasCompressedBacking())
+            {
+                compressedGpuBytes.resize(gpuWeight.sizeBytes);
+                std::string decodeError;
+                if (!gpuWeight.readBytes(0, compressedGpuBytes.data(),
+                                         compressedGpuBytes.size(), &decodeError))
+                    throw std::runtime_error("LinearW: Vulkan compressed staging failed for " +
+                                             wt.name + ": " + decodeError);
+                gpuWeight.data = compressedGpuBytes.empty() ? nullptr : compressedGpuBytes.data();
+            }
+            gpuDispatched = tryVulkanGEMV(gpuWeight, input, output, outDim);
+        }
+        // A later tile may fail after earlier tiles have written output.
+        // Restore the original zeroed accumulator before the CPU fallback so
+        // accumulate-style CPU kernels cannot double-count partial GPU results.
+        if (!gpuDispatched && wtEffective.hasCompressedBacking() &&
+            allowCompressedGpuTiles && !allowFullCompressedGpuStaging)
+            std::memset(output, 0, outDim * sizeof(float));
+        if (gpuDispatched)
         {
             ++plannedGpuGemvOps_;
 if (bias)
@@ -9015,7 +9219,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         }
 
         // Final norm before logits (if not done in last layer)
-        if (modelWeights.finalNorm.data)
+        if (modelWeights.finalNorm.hasBacking())
         {
             RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
         }
@@ -9189,7 +9393,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 }
             }
 
-            if (modelWeights.finalNorm.data)
+            if (modelWeights.finalNorm.hasBacking())
             {
                 RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
             }
@@ -10051,13 +10255,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     const bool isNemotronSsm = IsNemotronSsmLayer(lw);
     const bool hasAttention =
         (isGdn || !lw.hasSSM) &&
-        (lw.wq.data || lw.wqkv.data ||
-         (modelWeights.useMLA && lw.attnQ_a.data && lw.attnQ_b.data) ||
-         (modelWeights.useMLA && lw.wq.data && lw.attnKV_a_mqa.data && lw.attnK_b.data));
+        (lw.wq.hasBacking() || lw.wqkv.hasBacking() ||
+         (modelWeights.useMLA && lw.attnQ_a.hasBacking() && lw.attnQ_b.hasBacking()) ||
+         (modelWeights.useMLA && lw.wq.hasBacking() && lw.attnKV_a_mqa.hasBacking() && lw.attnK_b.hasBacking());
     const bool hasMoEFFN = lw.moeRouter.data && lw.moeRouter.sizeBytes > 0;
-    const bool hasDenseFFN = lw.wGate.data || lw.wUp.data || lw.wDown.data;
+    const bool hasDenseFFN = lw.wGate.hasBacking() || lw.wUp.hasBacking() || lw.wDown.hasBacking();
     const bool hasMixer = isNemotronSsm || hasMoEFFN || hasDenseFFN;
-    const bool hasDedicatedMixerNorm = lw.ffnNorm.data != nullptr;
+    const bool hasDedicatedMixerNorm = lw.ffnNorm.hasBacking();
     if (Deep2DebugEnabled()) {
         fprintf(stderr, "[DBG-FWD] enter layer=%zu seqLen=%zu liveSeq=%zu\n", layer, seqLen, liveSeq);
         fflush(stderr);
@@ -10210,7 +10414,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // post_attention_norm as the MoE input norm AFTER residual (no ffn_norm) —
     // do not apply pre-residual sandwich there (GDN or full-attn).
     if (hasAttention && !isGdn && hasDedicatedMixerNorm &&
-        lw.attnPostNorm.data && lw.attnPostNorm.sizeBytes > 0)
+        lw.attnPostNorm.hasBacking() && lw.attnPostNorm.sizeBytes > 0)
     {
         static bool s_sandwichAttnLogged = false;
         if (!s_sandwichAttnLogged)
@@ -10318,7 +10522,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         {
             RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
         }
-        else if (lw.attnPostNorm.data && lw.attnPostNorm.sizeBytes > 0)
+        else if (lw.attnPostNorm.hasBacking() && lw.attnPostNorm.sizeBytes > 0)
         {
             RMSNormW(lw.attnPostNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
         }
@@ -10430,7 +10634,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     Deep2ValidateVector("FFN_OUTPUT", layer, ffnOutput, hiddenDim);
 
     // Gemma sandwich: post_ffw_norm on FFN out BEFORE residual add.
-    if (hasMixer && lw.ffnPostNorm.data && lw.ffnPostNorm.sizeBytes > 0)
+    if (hasMixer && lw.ffnPostNorm.hasBacking() && lw.ffnPostNorm.sizeBytes > 0)
     {
         static bool s_sandwichFfnLogged = false;
         if (!s_sandwichFfnLogged)
@@ -10603,11 +10807,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // Gate on modelWeights.useMLA + real tensors: per-layer lw.useMLA was
     // historically never propagated from modelWeights, which skipped MLA.
     const bool mlaFull =
-        modelWeights.useMLA && lw.attnQ_a.data && lw.attnQ_b.data && lw.attnKV_a_mqa.data &&
-        lw.attnK_b.data;
+        modelWeights.useMLA && lw.attnQ_a.hasBacking() && lw.attnQ_b.hasBacking() && lw.attnKV_a_mqa.hasBacking() &&
+        lw.attnK_b.hasBacking();
     const bool mlaLite =
-        modelWeights.useMLA && !lw.attnQ_a.data && lw.wq.data && lw.attnKV_a_mqa.data &&
-        lw.attnK_b.data;
+        modelWeights.useMLA && !lw.attnQ_a.hasBacking() && lw.wq.hasBacking() && lw.attnKV_a_mqa.hasBacking() &&
+        lw.attnK_b.hasBacking();
     if (mlaFull || mlaLite)
     {
         const size_t pos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
@@ -10626,7 +10830,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         const size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
         const size_t headDim = modelWeights.headDim;
         const size_t numHeads = config.numHeads;
-        const bool fusedKvB = lw.attnK_b.data && !lw.attnV_b.data;
+        const bool fusedKvB = lw.attnK_b.hasBacking() && !lw.attnV_b.hasBacking();
 
         // ── Q path ─────────────────────────────────────────────────────────
         if (mlaFull)
@@ -10842,7 +11046,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             }
             LinearW(*attnOutWeight, attnOutPadded.data(), nullptr, output, hiddenDim);
         }
-        else if (lw.wo.data)
+        else if (lw.wo.hasBacking())
         {
             // Fallback to wo [hiddenDim, hiddenDim] = [2048, 2048]
             // Use attention output directly (no padding needed)
@@ -10876,7 +11080,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
 
     // ── Fused QKV path (Phi-3, etc.) ────────────────────────────────────
-    if (lw.wqkv.data && !lw.hasSSM)
+    if (lw.wqkv.hasBacking() && !lw.hasSSM)
     {
         // For fused QKV (Phi-3 etc.), lw.wqkv is set but lw.wk/lw.wv are null.
         // Use hiddenDim as kvDim so qkvDim = 3*hiddenDim covers Q+K+V.
@@ -10901,7 +11105,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // No K/V projections → no standard attention. The 8192 output is split into
     // two 4096 halves: first half is the projection, second half is the gate.
     // Output = projection * silu(gate), then attn_gate projects to hiddenDim.
-    else if (lw.wqkv.data && lw.hasSSM)
+    else if (lw.wqkv.hasBacking() && lw.hasSSM)
     {
         // Project input to 8192 via attn_qkv
         size_t qDim = numHeads * headDim;  // 8192 = 32 × 256
@@ -10924,7 +11128,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // Output projection via attn_gate (mapped to attnO): [4096] -> [4096]
-        if (lw.attnO.data)
+        if (lw.attnO.hasBacking())
         {
             memset(output, 0, hiddenDim * sizeof(float));
             LinearW(lw.attnO, proj, nullptr, output, hiddenDim);
@@ -10942,12 +11146,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         return;
     }
     // ── Standard MHA / GQA path ────────────────────────────────────────
-    else if (lw.wq.data)
+    else if (lw.wq.hasBacking())
     {
         // Guard: weight matrix rows must not exceed projection buffer sizes
         // (kProj/vProj are sized hiddenDim in allocateBuffers()).  A mismatch
         // between model metadata and engine config would overflow the heap.
-        if (!lw.wk.data || !lw.wv.data || lw.wq.rows == 0 || lw.wk.rows == 0 || lw.wv.rows == 0 ||
+        if (!lw.wk.hasBacking() || !lw.wv.hasBacking() || lw.wq.rows == 0 || lw.wk.rows == 0 || lw.wv.rows == 0 ||
             numHeads == 0)
         {
             fprintf(stderr,
@@ -10964,7 +11168,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             modelWeights.keyLength > 0 ? modelWeights.keyLength : headDim;
         qwenGatedAttn =
             keyLen > 0 && lw.wq.rows == 2 * numHeads * keyLen &&
-            lw.attnQNorm.data != nullptr;
+            lw.attnQNorm.hasBacking();
         if (!qwenGatedAttn && (lw.wq.rows % numHeads) != 0)
         {
             fprintf(stderr,
@@ -11047,16 +11251,57 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 std::fflush(stderr);
             }
         }
+        // Q/K/V biases are small vectors but participate in every
+        // projection. Resolve raw or compressed backing into request-local
+        // FP32 only when the current projection needs it.
+        std::vector<float> qBiasScratch, kBiasScratch, vBiasScratch;
+        const auto resolveProjectionBias = [](const WeightTensor& bias,
+                                              std::size_t elements,
+                                              std::vector<float>& scratch,
+                                              const char* role) -> const float* {
+            if (!bias.hasBacking() || elements == 0)
+                return nullptr;
+            const std::size_t elementBytes =
+                bias.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+                bias.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+            if (elementBytes == 0)
+                return nullptr;
+            if (elements > bias.sizeBytes / elementBytes)
+                throw std::runtime_error(std::string("attention ") + role +
+                                         " bias is smaller than projection output");
+            if (bias.type == (int)GGMLType::GGML_TYPE_F32 && !bias.hasCompressedBacking())
+                return static_cast<const float*>(bias.data);
+            if (bias.type == (int)GGMLType::GGML_TYPE_F32) {
+                scratch.resize(elements);
+                std::string readError;
+                if (!bias.readBytes(0, scratch.data(), elements * sizeof(float), &readError))
+                    throw std::runtime_error(std::string("compressed attention ") + role +
+                                             " bias read failed: " + readError);
+                return scratch.data();
+            }
+            std::vector<std::uint16_t> encoded(elements);
+            if (bias.hasCompressedBacking()) {
+                std::string readError;
+                if (!bias.readBytes(0, encoded.data(), elements * sizeof(std::uint16_t), &readError))
+                    throw std::runtime_error(std::string("compressed attention ") + role +
+                                             " bias read failed: " + readError);
+            } else {
+                std::memcpy(encoded.data(), bias.data, elements * sizeof(std::uint16_t));
+            }
+            scratch.resize(elements);
+            for (std::size_t i = 0; i < elements; ++i)
+                scratch[i] = fp16ToFloat(encoded[i]);
+            return scratch.data();
+        };
+
         // Q projection: input -> the actual tensor row count.  This may be
         // wider than the residual stream for GQA models. Qwen gated attn_q is
         // 2*H*D (query+gate interleaved per head) then compacted to H*D.
         const size_t qLinearOut =
             qwenGatedAttn ? (2 * numHeads * headDim) : projectedQDim;
-        LinearW(lw.wq, input,
-                (lw.bq.data && lw.bq.type == (int)GGMLType::GGML_TYPE_F32)
-                    ? static_cast<const float*>(lw.bq.data)
-                    : nullptr,
-                qProj, qLinearOut);
+        const float* qBias = resolveProjectionBias(lw.bq, qLinearOut,
+                                                       qBiasScratch, "Q");
+        LinearW(lw.wq, input, qBias, qProj, qLinearOut);
         if (qwenGatedAttn)
         {
             std::vector<float> qOnly(numHeads * headDim, 0.0f);
@@ -11099,11 +11344,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // K projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wk, input,
-                (lw.bk.data && lw.bk.type == (int)GGMLType::GGML_TYPE_F32)
-                    ? static_cast<const float*>(lw.bk.data)
-                    : nullptr,
-                kProj, kvDim);
+        const float* kBias = resolveProjectionBias(lw.bk, kvDim,
+                                                       kBiasScratch, "K");
+        LinearW(lw.wk, input, kBias, kProj, kvDim);
         B3_TraceState("ATTN_K", layer, kProj, kvDim);
 
         // ── Layer 12 diagnostic: K norm (opt-in) ──
@@ -11118,11 +11361,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // V projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wv, input,
-                (lw.bv.data && lw.bv.type == (int)GGMLType::GGML_TYPE_F32)
-                    ? static_cast<const float*>(lw.bv.data)
-                    : nullptr,
-                vProj, vDim);
+        const float* vBias = resolveProjectionBias(lw.bv, vDim,
+                                                       vBiasScratch, "V");
+        LinearW(lw.wv, input, vBias, vProj, vDim);
 
         // S07 diagnostic: dump Q/K/V projection first 6 values (layer 0, first call).
         {
@@ -11169,13 +11410,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // ── Qwen3.5: Apply per-head QK norm (RMSNorm) before RoPE ──
-        if (lw.attnQNorm.data && lw.attnQNorm.sizeBytes > 0)
+        if (lw.attnQNorm.hasBacking() && lw.attnQNorm.sizeBytes > 0)
         {
             const size_t qNormElementBytes =
                 lw.attnQNorm.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
                 (lw.attnQNorm.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(uint16_t) : 0);
-            if (qNormElementBytes == 0)
-                throw std::runtime_error("unsupported Q norm tensor type");
+            if (qNormElementBytes == 0 ||
+                lw.attnQNorm.sizeBytes % qNormElementBytes != 0)
+                throw std::runtime_error("unsupported or mis-sized Q norm tensor");
             const size_t qNormElements = lw.attnQNorm.sizeBytes / qNormElementBytes;
             const bool qNormIsPerHead = qNormElements >= numHeads * headDim;
             if (qNormElements < headDim)
@@ -11191,7 +11433,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                              static_cast<unsigned long long>(lw.attnQNorm.fileOffset));
                 if (lw.attnQNorm.type == (int)GGMLType::GGML_TYPE_F32)
                 {
+                    std::vector<float> qNormDiagnosticScratch;
                     const float* qNormValues = static_cast<const float*>(lw.attnQNorm.data);
+                    if (lw.attnQNorm.hasCompressedBacking())
+                    {
+                        qNormDiagnosticScratch.resize(qNormElements);
+                        std::string readError;
+                        if (!lw.attnQNorm.readBytes(0, qNormDiagnosticScratch.data(),
+                                                    lw.attnQNorm.sizeBytes, &readError))
+                            throw std::runtime_error("compressed Q norm diagnostic read failed: " +
+                                                     readError);
+                        qNormValues = qNormDiagnosticScratch.data();
+                    }
                     size_t badNorm = 0;
                     float normMin = qNormValues[0];
                     float normMax = qNormValues[0];
@@ -11209,11 +11462,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                         normMin = (std::min)(normMin, value);
                         normMax = (std::max)(normMax, value);
                     }
+                    const float head1Value = qNormElements > headDim
+                        ? qNormValues[headDim] : qNormValues[0];
                     std::fprintf(stderr,
                                  "[MINIMAX_Q_DIAG] q_norm_values bad=%zu first_bad=%zu "
                                  "min=%.9e max=%.9e first=%.9e head1=%.9e last=%.9e\n",
                                  badNorm, firstBadNorm, normMin, normMax, qNormValues[0],
-                                 qNormValues[headDim], qNormValues[qNormElements - 1]);
+                                 head1Value, qNormValues[qNormElements - 1]);
                 }
                 std::fflush(stderr);
             }
@@ -11222,8 +11477,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 WeightTensor headNorm = lw.attnQNorm;
                 if (qNormIsPerHead)
                 {
-                    headNorm.data = static_cast<char*>(lw.attnQNorm.data) +
-                                    h * headDim * qNormElementBytes;
+                    const std::size_t headByteOffset = h * headDim * qNormElementBytes;
+                    if (lw.attnQNorm.hasCompressedBacking())
+                    {
+                        if (headNorm.compressedByteOffset >
+                            (std::numeric_limits<std::size_t>::max)() - headByteOffset)
+                            throw std::overflow_error("Q norm compressed head offset overflow");
+                        headNorm.compressedByteOffset += headByteOffset;
+                        headNorm.data = nullptr;
+                    }
+                    else
+                        headNorm.data = static_cast<std::uint8_t*>(lw.attnQNorm.data) +
+                                        headByteOffset;
                     headNorm.sizeBytes = headDim * qNormElementBytes;
                     headNorm.rows = 1;
                     headNorm.cols = headDim;
@@ -11232,13 +11497,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                          modelWeights.normEps);
             }
         }
-        if (lw.attnKNorm.data && lw.attnKNorm.sizeBytes > 0)
+        if (lw.attnKNorm.hasBacking() && lw.attnKNorm.sizeBytes > 0)
         {
             const size_t kNormElementBytes =
                 lw.attnKNorm.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
                 (lw.attnKNorm.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(uint16_t) : 0);
-            if (kNormElementBytes == 0)
-                throw std::runtime_error("unsupported K norm tensor type");
+            if (kNormElementBytes == 0 ||
+                lw.attnKNorm.sizeBytes % kNormElementBytes != 0)
+                throw std::runtime_error("unsupported or mis-sized K norm tensor");
             const size_t kNormElements = lw.attnKNorm.sizeBytes / kNormElementBytes;
             const bool kNormIsPerHead = kNormElements >= numKVHeads * headDim;
             if (kNormElements < headDim)
@@ -11248,8 +11514,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 WeightTensor headNorm = lw.attnKNorm;
                 if (kNormIsPerHead)
                 {
-                    headNorm.data = static_cast<char*>(lw.attnKNorm.data) +
-                                    h * headDim * kNormElementBytes;
+                    const std::size_t headByteOffset = h * headDim * kNormElementBytes;
+                    if (lw.attnKNorm.hasCompressedBacking())
+                    {
+                        if (headNorm.compressedByteOffset >
+                            (std::numeric_limits<std::size_t>::max)() - headByteOffset)
+                            throw std::overflow_error("K norm compressed head offset overflow");
+                        headNorm.compressedByteOffset += headByteOffset;
+                        headNorm.data = nullptr;
+                    }
+                    else
+                        headNorm.data = static_cast<std::uint8_t*>(lw.attnKNorm.data) +
+                                        headByteOffset;
                     headNorm.sizeBytes = headDim * kNormElementBytes;
                     headNorm.rows = 1;
                     headNorm.cols = headDim;
@@ -11889,11 +12165,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     const size_t preOWorkspace =
         (attnConcat > hiddenDim) ? attnConcat : hiddenDim;
     size_t preOCount = (attnConcat > 0) ? attnConcat : hiddenDim;
-    if (lw.useMLA && lw.attnO.data != nullptr && lw.attnO.cols > 0)
+    if (lw.useMLA && lw.attnO.hasBacking() && lw.attnO.cols > 0)
         preOCount = lw.attnO.cols;
-    else if (lw.wo.data != nullptr && lw.wo.cols > 0)
+    else if (lw.wo.hasBacking() && lw.wo.cols > 0)
         preOCount = lw.wo.cols;
-    else if (lw.attnO.data != nullptr && lw.attnO.cols > 0)
+    else if (lw.attnO.hasBacking() && lw.attnO.cols > 0)
         preOCount = lw.attnO.cols;
     if (preOCount == 0 || preOCount > preOWorkspace)
         preOCount = (attnConcat > 0 && attnConcat <= preOWorkspace)
@@ -11922,11 +12198,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         std::snprintf(key, sizeof(key), "ATTN_PRE_O_%zu", layer);
         B3_StageDigest(key, tokPos, output, preOCount);
     }
-    const auto* attnOutWeight = (lw.useMLA && lw.attnO.data != nullptr) ? &lw.attnO
-                                : (lw.wo.data != nullptr)               ? &lw.wo
-                                : (lw.attnO.data != nullptr)            ? &lw.attnO
+    const auto* attnOutWeight = (lw.useMLA && lw.attnO.hasBacking()) ? &lw.attnO
+                                : (lw.wo.hasBacking())               ? &lw.wo
+                                : (lw.attnO.hasBacking())            ? &lw.attnO
                                                                         : nullptr;
-    if (attnOutWeight == nullptr || attnOutWeight->data == nullptr)
+    if (attnOutWeight == nullptr || !attnOutWeight->hasBacking())
     {
         // No output projection: pass through unchanged (already correct size)
         if (layer == 0)
@@ -12028,18 +12304,18 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     // ── Phi-3 / self-gating SwiGLU: no separate gate tensor ──────────────
     // Some models (e.g. Phi-3) store only ffn_up and ffn_down, using the up
     // projection as both gate and up in SwiGLU: silu(up) * up.
-    bool hasGate = (lw.wGate.data != nullptr && lw.wGate.sizeBytes > 0);
+    bool hasGate = (lw.wGate.hasBacking() && lw.wGate.sizeBytes > 0);
 
     // FFN requires both up and down projections. If up is missing but gate
     // exists, use gate as up (self-gating SwiGLU: silu(gate) * gate).
-    bool hasUp   = (lw.wUp.data   != nullptr && lw.wUp.sizeBytes   > 0);
+    bool hasUp   = (lw.wUp.hasBacking()   && lw.wUp.sizeBytes   > 0);
     const WeightTensor* upWt = &lw.wUp;
-    if (!hasUp && hasGate && lw.wGate.data)
+    if (!hasUp && hasGate && lw.wGate.hasBacking())
     {
         upWt = &lw.wGate;
         hasUp = true;
     }
-    bool hasDown = (lw.wDown.data != nullptr && lw.wDown.sizeBytes > 0);
+    bool hasDown = (lw.wDown.hasBacking() && lw.wDown.sizeBytes > 0);
 
     // Nemotron-H stores mixer and MLP blocks as separate GGUF blocks.  An
     // attention-only block has a valid Q/K/V/O path but intentionally has no
@@ -12048,8 +12324,8 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     // The FFN contribution for such a block is exactly zero; the attention
     // residual has already been produced by forwardLayer().
     const bool hasAttentionMixer = !lw.hasSSM &&
-                                   (lw.wq.data || lw.wqkv.data || lw.attnQ_a.data ||
-                                    lw.attnQ_b.data || lw.attnO.data || lw.wo.data);
+                                   (lw.wq.hasBacking() || lw.wqkv.hasBacking() || lw.attnQ_a.hasBacking() ||
+                                    lw.attnQ_b.hasBacking() || lw.attnO.hasBacking() || lw.wo.hasBacking());
     const bool hasMoERouter = lw.moeRouter.data != nullptr && lw.moeRouter.sizeBytes > 0;
     if (!hasUp && !hasDown && !hasGate && !hasMoERouter && hasAttentionMixer)
     {
@@ -12106,8 +12382,9 @@ if (hasGate)
     // DIAGNOSTIC: Compare Q6_K FFN projections with FP32 reference at layer 21
     if (layer == 21 && B3_ProbeEnabled())
     {
-        // Compare gate projection if hasGate
-        if (hasGate)
+        // This reference-only diagnostic still requires a raw pointer. The
+        // production projection above is compressed-range aware via LinearW.
+        if (hasGate && lw.wGate.data)
         {
             std::vector<float> gateRef(intermediateDim, 0.0f);
             auto cpuKernel = QuantKernelRegistry::Instance().GetGEMV(lw.wGate.type);
@@ -12127,7 +12404,10 @@ if (hasGate)
             }
         }
         
-        // Compare up projection
+        // Compare up projection only when the reference source is still
+        // mapped. The production projection above accepts compressed backing.
+        if (upWt->data)
+        {
         std::vector<float> upRef(intermediateDim, 0.0f);
         auto cpuKernel = QuantKernelRegistry::Instance().GetGEMV(upWt->type);
         if (cpuKernel)
@@ -12143,6 +12423,7 @@ if (hasGate)
             }
             fprintf(stderr, "[L21_DIAG] FFN_UP Q6K vs FP32: maxDiff=%.9e avgDiff=%.9e\n", maxDiff, sumDiff/intermediateDim);
             fflush(stderr);
+        }
         }
     }
 
@@ -12219,9 +12500,10 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
 
-    if (!lw.hasSSM || !lw.ssmIn.data || !lw.ssmOut.data || !lw.ssmA.data ||
-        !lw.ssmD.data || !lw.ssmConv1d.data || !lw.ssmConv1dBias.data ||
-        !lw.ssmNorm.data)
+    if (!lw.hasSSM || !lw.ssmIn.hasBacking() || !lw.ssmOut.hasBacking() ||
+        !lw.ssmA.hasBacking() || !lw.ssmD.hasBacking() ||
+        !lw.ssmConv1d.hasBacking() || !lw.ssmConv1dBias.hasBacking() ||
+        !lw.ssmNorm.hasBacking())
     {
         fprintf(stderr,
                 "[SSM_FATAL] layer=%zu missing required Mamba-2 SSM tensors "
@@ -12368,8 +12650,58 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // ── Step 2: Causal conv1d on xBC (in-place) ──
     float* convStatePtr = ssmMambaConvState + layer * dConv * dConvDim;
 
-    const float* convW = (const float*)lw.ssmConv1d.data;
-    const float* convBias = (const float*)lw.ssmConv1dBias.data;
+    // SSM's custom scalar/vector consumers also support compressed backing.
+    // The store keeps the authoritative tensors compressed; only the vectors
+    // and convolution kernel needed by this selective-scan invocation are
+    // materialized in request-local scratch. LinearW handles ssm_in/ssm_out
+    // through its normal compressed row-range path.
+    std::vector<float> compressedConvWeights;
+    std::vector<float> compressedConvBias;
+    std::vector<float> compressedA;
+    std::vector<float> compressedD;
+    std::vector<float> compressedDtBias;
+    std::vector<float> compressedNorm;
+    const auto getF32 = [](const WeightTensor& weight, std::vector<float>& scratch,
+                           const char* role, bool required) -> const float* {
+        if (!weight.hasBacking()) {
+            if (required)
+                throw std::runtime_error(std::string("SSM missing ") + role);
+            return nullptr;
+        }
+        if (weight.type == (int)GGMLType::GGML_TYPE_F32) {
+            if (weight.sizeBytes % sizeof(float) != 0)
+                throw std::runtime_error(std::string("SSM ") + role + " has invalid F32 byte size");
+            if (weight.hasCompressedBacking()) {
+                scratch.resize(weight.sizeBytes / sizeof(float));
+                std::string readError;
+                if (!weight.readBytes(0, scratch.data(), weight.sizeBytes, &readError))
+                    throw std::runtime_error(std::string("SSM compressed ") + role +
+                                             " read failed: " + readError);
+                return scratch.data();
+            }
+            return static_cast<const float*>(weight.data);
+        }
+        if (weight.type == (int)GGMLType::GGML_TYPE_F16) {
+            if (weight.sizeBytes % sizeof(std::uint16_t) != 0)
+                throw std::runtime_error(std::string("SSM ") + role + " has invalid F16 byte size");
+            std::vector<std::uint16_t> encoded(weight.sizeBytes / sizeof(std::uint16_t));
+            if (weight.hasCompressedBacking()) {
+                std::string readError;
+                if (!weight.readBytes(0, encoded.data(), weight.sizeBytes, &readError))
+                    throw std::runtime_error(std::string("SSM compressed ") + role +
+                                             " read failed: " + readError);
+            } else {
+                std::memcpy(encoded.data(), weight.data, weight.sizeBytes);
+            }
+            scratch.resize(encoded.size());
+            for (std::size_t i = 0; i < encoded.size(); ++i)
+                scratch[i] = fp16ToFloat(encoded[i]);
+            return scratch.data();
+        }
+        throw std::runtime_error(std::string("SSM ") + role + " must be F32 or F16");
+    };
+    const float* convW = getF32(lw.ssmConv1d, compressedConvWeights, "conv1d weights", true);
+    const float* convBias = getF32(lw.ssmConv1dBias, compressedConvBias, "conv1d bias", true);
     // Shift conv state: state[k] = state[k-1] for k=d_conv-1..1
     // Use memmove because source and destination ranges overlap.
     for (size_t k = dConv - 1; k > 0; --k)
@@ -12405,9 +12737,9 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float* C = convOut + dInner + groups * groupState;           // [groups * groupState]
 
     // ── Step 4: Selective scan (Mamba-2) ──
-    const float* aParam = (const float*)lw.ssmA.data;
-    const float* dParam = (const float*)lw.ssmD.data;
-    const float* dtBias = (const float*)lw.ssmDtBias.data;
+    const float* aParam = getF32(lw.ssmA, compressedA, "A vector", true);
+    const float* dParam = getF32(lw.ssmD, compressedD, "D vector", true);
+    const float* dtBias = getF32(lw.ssmDtBias, compressedDtBias, "dt bias", false);
     float* statePtr = ssmMambaState + layer * ssmMambaDInner * ssmMambaDState;      // [d_inner, d_state]
     float* yInner = ssmTemp;                                   // [d_inner]
 
@@ -12471,7 +12803,22 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // one RMS over all inner channels.  This mirrors the production reference
     // in runtime_graph_executor.cpp and avoids the previous double-gating /
     // per-group scale error that inflated the residual stream.
-    const float* normW = (const float*)lw.ssmNorm.data;
+    const float* normW = getF32(lw.ssmNorm, compressedNorm, "norm vector", true);
+    const auto hasFloatElements = [](const WeightTensor& weight, std::size_t count) {
+        const std::size_t elementBytes =
+            weight.type == (int)GGMLType::GGML_TYPE_F32 ? sizeof(float) :
+            weight.type == (int)GGMLType::GGML_TYPE_F16 ? sizeof(std::uint16_t) : 0;
+        return elementBytes != 0 && count <= weight.sizeBytes / elementBytes;
+    };
+    if (dConv != 0 && dConvDim > (std::numeric_limits<std::size_t>::max)() / dConv)
+        throw std::overflow_error("SSM convolution element count overflow");
+    if (!hasFloatElements(lw.ssmConv1d, dConvDim * dConv) ||
+        !hasFloatElements(lw.ssmConv1dBias, dConvDim) ||
+        !hasFloatElements(lw.ssmNorm, dInner) ||
+        !hasFloatElements(lw.ssmA, heads) ||
+        !hasFloatElements(lw.ssmD, heads) ||
+        (lw.ssmDtBias.hasBacking() && !hasFloatElements(lw.ssmDtBias, heads)))
+        throw std::runtime_error("SSM vector or convolution tensor is smaller than its consumer geometry");
     double gatedSumSq = 0.0;
     for (size_t i = 0; i < dInner; ++i)
     {
@@ -13481,7 +13828,7 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input, float
 // ============================================================================
 void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
 {
-    if (!modelWeights.loaded || !modelWeights.lmHead.data)
+    if (!modelWeights.loaded || !modelWeights.lmHead.hasBacking())
     {
         // No model loaded - error
         memset(logits, 0, config.vocabSize * sizeof(float));
@@ -14878,6 +15225,8 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
             cacheKey *= 1099511628211ull;
         }
         cacheKey ^= ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols ^ (uint64_t)(uint32_t)wt.type;
+        // Distinguish row tiles that share a tensor name and shape.
+        cacheKey ^= (uint64_t)wt.fileOffset * 0x9E3779B185EBCA87ull;
     }
     else
     {

@@ -1,0 +1,76 @@
+name: Compressed Residency Smoke
+
+on:
+  push:
+    branches:
+      - codex/gpt6-compressed-residency-followthrough-20261123
+  pull_request:
+    paths:
+      - 'src/deep2/compression/**'
+      - 'src/codec/compression_core.cpp'
+      - 'include/compression_core.hpp'
+      - 'tests/compression_core_test.cpp'
+      - 'tests/brutal_gzip*'
+      - 'kernels/deflate_brutal_masm.asm'
+      - 'tests/compressed_weight_store/smoke/**'
+      - 'src/deep2/Deep2Engine.cpp'
+      - 'src/Deep2Engine.h'
+      - 'src/deep2/GGUFLoader.hpp'
+      - 'include/native_resident_matvec.hpp'
+      - 'tests/compressed_weight_store/**'
+      - '.github/workflows/compressed-residency-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compressed-residency-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: ${{ matrix.os }} compressed-residency tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install zlib (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: vcpkg install zlib:x64-windows
+
+      - name: Install zlib (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zlib1g-dev
+
+      - name: Configure isolated native smoke suite
+        shell: pwsh
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DRAWRXD_SMOKE_REQUIRE_ZLIB=ON
+
+      - name: Configure isolated native smoke suite
+        if: runner.os != 'Windows'
+        run: cmake -S tests/compressed_weight_store/smoke -B build/compressed-smoke -DCMAKE_BUILD_TYPE=Release -DRAWRXD_SMOKE_REQUIRE_ZLIB=ON
+
+      - name: Build all compressed-residency smoke targets
+        run: cmake --build build/compressed-smoke --config Release --parallel 2
+
+      - name: Run codec-store, quantized-kernel, GGUF and GPU-tile tests
+        run: ctest --test-dir build/compressed-smoke -C Release --output-on-failure
+
+      - name: Upload CTest results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compressed-residency-ctest-${{ matrix.os }}
+          path: build/compressed-smoke/Testing/
+          if-no-files-found: warn

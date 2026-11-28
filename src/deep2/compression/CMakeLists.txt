@@ -27,3 +27,35 @@ if(BUILD_TESTING)
  target_compile_features(test_gguf_compressed_residency PRIVATE cxx_std_20)
  add_test(NAME gguf_streamed_compressed_residency COMMAND test_gguf_compressed_residency)
 endif()
+
+if(BUILD_TESTING)
+ add_executable(test_stored_q4_0_matvec ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_stored_q4_0_matvec.cpp)
+ target_link_libraries(test_stored_q4_0_matvec PRIVATE rawrxd_compressed_weight_store)
+ target_compile_features(test_stored_q4_0_matvec PRIVATE cxx_std_20)
+ add_test(NAME compressed_resident_q4_0_matvec COMMAND test_stored_q4_0_matvec)
+endif()
+
+if(BUILD_TESTING)
+ add_executable(test_compressed_gpu_tile_plan ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_compressed_gpu_tile_plan.cpp)
+ target_compile_features(test_compressed_gpu_tile_plan PRIVATE cxx_std_17)
+ add_test(NAME compressed_gpu_tile_plan COMMAND test_compressed_gpu_tile_plan)
+endif()
+
+if(BUILD_TESTING)
+ add_executable(test_stored_q4_q5_matvec ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_stored_q4_q5_matvec.cpp)
+ target_link_libraries(test_stored_q4_q5_matvec PRIVATE rawrxd_compressed_weight_store)
+ target_compile_features(test_stored_q4_q5_matvec PRIVATE cxx_std_20)
+ add_test(NAME compressed_resident_q4_q5_matvec COMMAND test_stored_q4_q5_matvec)
+endif()
+
+if(BUILD_TESTING)
+ add_executable(test_synthetic_gguf_model_e2e
+     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/compressed_weight_store/test_synthetic_gguf_model_e2e.cpp)
+ target_include_directories(test_synthetic_gguf_model_e2e PRIVATE
+     ${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_SOURCE_DIR}/../../../include)
+ target_link_libraries(test_synthetic_gguf_model_e2e PRIVATE
+     rawrxd_compressed_weight_store)
+ target_compile_features(test_synthetic_gguf_model_e2e PRIVATE cxx_std_20)
+ add_test(NAME synthetic_gguf_compressed_model_e2e
+          COMMAND test_synthetic_gguf_model_e2e)
+endif()

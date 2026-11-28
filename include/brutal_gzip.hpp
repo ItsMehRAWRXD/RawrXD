@@ -1,17 +1,15 @@
 #pragma once
-#include <cstdint>
-#include <cstdlib>
 
-#ifdef _WIN64
-#  define HAS_BRUTAL_GZIP_MASM
-extern "C" std::uint8_t* __fastcall deflate_brutal_masm(const std::uint8_t* src,
-                                                         std::uint64_t       len,
-                                                         std::uint64_t*      out_len);
+// Keep one canonical C ABI declaration for both architecture backends.
+// Backend feature macros are exported by the CMake target that actually links
+// the corresponding implementation; CPU architecture alone does not prove
+// that the symbol is present in the final link.
+#include "brutal_gzip.h"
+
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_MASM)
+#  define HAS_BRUTAL_GZIP_MASM 1
 #endif
 
-#ifdef __ARM_NEON
-#  define HAS_BRUTAL_GZIP_NEON
-extern "C" std::uint8_t* deflate_brutal_neon(const std::uint8_t* src,
-                                              size_t              len,
-                                              size_t*             out_len);
+#if defined(RAWRXD_HAVE_BRUTAL_GZIP_NEON)
+#  define HAS_BRUTAL_GZIP_NEON 1
 #endif

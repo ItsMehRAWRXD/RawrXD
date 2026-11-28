@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
@@ -13,6 +14,19 @@
 #include <utility>
 
 namespace rawrxd::compression {
+
+inline std::uint32_t ResidentGGMLTypeForKernel(ResidentWeightType type) {
+    switch (type) {
+        case ResidentWeightType::F32: return GGML_TYPE_F32;
+        case ResidentWeightType::F16: return GGML_TYPE_F16;
+        case ResidentWeightType::Q4_0: return 2u;
+        case ResidentWeightType::Q4_1: return 3u;
+        case ResidentWeightType::Q5_0: return 6u;
+        case ResidentWeightType::Q5_1: return 7u;
+        case ResidentWeightType::Q8_0: return 8u;
+    }
+    throw std::invalid_argument("unsupported resident weight kernel type");
+}
 class StoredTensorReader {
 public:
     StoredTensorReader(CompressedWeightStore& store, std::string name)
@@ -67,11 +81,111 @@ inline void StoredTensorMatvec(CompressedWeightStore& store,
                                std::size_t stagingBytes = 64 * 1024) {
     // Never reinterpret compressed GGML bytes using a different kernel type.
     // F32 and F16 are GGML scalar IDs 0 and 1; Q8_0 is GGML ID 8.
-    const std::uint32_t expected = type == ResidentWeightType::F32 ? GGML_TYPE_F32 :
-                                   type == ResidentWeightType::F16 ? GGML_TYPE_F16 : 8u;
+    const std::uint32_t expected = ResidentGGMLTypeForKernel(type);
     if (store.tensorType(tensorName) != expected)
         throw std::invalid_argument("resident tensor GGML type does not match kernel");
     StoredTensorReader reader(store, tensorName);
     ResidentMatvec(reader, type, x, y, rows, cols, stagingBytes);
 }
+
+inline void StoredTensorReadRow(CompressedWeightStore& store,
+                                const std::string& tensorName,
+                                ResidentWeightType type,
+                                std::size_t row,
+                                float* output,
+                                std::size_t cols) {
+    if (!output || cols == 0)
+        throw std::invalid_argument("invalid resident row arguments");
+    const std::uint32_t expected = ResidentGGMLTypeForKernel(type);
+    if (store.tensorType(tensorName) != expected)
+        throw std::invalid_argument("resident row GGML type does not match decoder");
+    const std::size_t rowBytes = ResidentRowBytes(type, cols);
+    const std::size_t totalBytes = store.tensorBytes(tensorName);
+    if (totalBytes % rowBytes != 0 || row >= totalBytes / rowBytes)
+        throw std::out_of_range("resident row outside tensor geometry");
+    if (row > (std::numeric_limits<std::size_t>::max)() / rowBytes)
+        throw std::overflow_error("resident row offset overflow");
+
+    std::vector<std::uint8_t> packed(rowBytes);
+    std::string error;
+    if (!store.readRange(tensorName, row * rowBytes,
+                         packed.data(), packed.size(), &error))
+        throw std::runtime_error("compressed resident row read failed: " + error);
+
+    if (type == ResidentWeightType::F32) {
+        for (std::size_t i = 0; i < cols; ++i) {
+            std::memcpy(&output[i], packed.data() + i * sizeof(float), sizeof(float));
+            if (!std::isfinite(output[i]))
+                throw std::domain_error("nonfinite F32 resident row value");
+        }
+        return;
+    }
+    if (type == ResidentWeightType::F16) {
+        for (std::size_t i = 0; i < cols; ++i) {
+            output[i] = DecodeHalfLE(packed.data() + i * 2);
+            if (!std::isfinite(output[i]))
+                throw std::domain_error("nonfinite F16 resident row value");
+        }
+        return;
+    }
+
+    const std::size_t blocks = cols / 32;
+    const std::size_t blockBytes =
+        type == ResidentWeightType::Q4_0 ? 18 :
+        type == ResidentWeightType::Q4_1 ? 20 :
+        type == ResidentWeightType::Q5_0 ? 22 :
+        type == ResidentWeightType::Q5_1 ? 24 : 34;
+    for (std::size_t block = 0; block < blocks; ++block) {
+        const std::uint8_t* p = packed.data() + block * blockBytes;
+        const float scale = DecodeHalfLE(p);
+        const bool affine = type == ResidentWeightType::Q4_1 ||
+                            type == ResidentWeightType::Q5_1;
+        const float minimum = affine ? DecodeHalfLE(p + 2) : 0.0f;
+        if (!std::isfinite(scale) || !std::isfinite(minimum))
+            throw std::domain_error("nonfinite resident quantization scale/minimum");
+        float* dst = output + block * 32;
+        if (type == ResidentWeightType::Q8_0) {
+            for (std::size_t i = 0; i < 32; ++i) {
+                const int q = p[2 + i] < 128 ? int(p[2 + i]) : int(p[2 + i]) - 256;
+                dst[i] = scale * static_cast<float>(q);
+            }
+        } else if (type == ResidentWeightType::Q4_0 ||
+                   type == ResidentWeightType::Q4_1) {
+            const std::size_t qOffset = type == ResidentWeightType::Q4_0 ? 2 : 4;
+            for (std::size_t i = 0; i < 16; ++i) {
+                const unsigned q = p[qOffset + i];
+                const int q0 = int(q & 0x0fu);
+                const int q1 = int(q >> 4);
+                dst[i] = type == ResidentWeightType::Q4_0
+                    ? scale * static_cast<float>(q0 - 8)
+                    : scale * static_cast<float>(q0) + minimum;
+                dst[16 + i] = type == ResidentWeightType::Q4_0
+                    ? scale * static_cast<float>(q1 - 8)
+                    : scale * static_cast<float>(q1) + minimum;
+            }
+        } else {
+            const bool q5Affine = type == ResidentWeightType::Q5_1;
+            const std::size_t highOffset = q5Affine ? 4 : 2;
+            const std::size_t qOffset = q5Affine ? 8 : 6;
+            for (std::size_t i = 0; i < 16; ++i) {
+                const unsigned packedQ = p[qOffset + i];
+                const unsigned loHigh = (p[highOffset + i / 8] >> (i % 8)) & 1u;
+                const std::size_t upper = i + 16;
+                const unsigned hiHigh = (p[highOffset + upper / 8] >> (upper % 8)) & 1u;
+                const int q0 = int(packedQ & 0x0fu) | (int(loHigh) << 4);
+                const int q1 = int(packedQ >> 4) | (int(hiHigh) << 4);
+                dst[i] = q5Affine
+                    ? scale * static_cast<float>(q0) + minimum
+                    : scale * static_cast<float>(q0 - 16);
+                dst[16 + i] = q5Affine
+                    ? scale * static_cast<float>(q1) + minimum
+                    : scale * static_cast<float>(q1 - 16);
+            }
+        }
+        for (std::size_t i = 0; i < 32; ++i)
+            if (!std::isfinite(dst[i]))
+                throw std::domain_error("nonfinite decoded resident row value");
+    }
+}
+
 } // namespace rawrxd::compression
