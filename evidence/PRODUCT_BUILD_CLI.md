@@ -47,6 +47,16 @@ rawr modes         -> 11 agent modes with permissions (code/ask/debug/...)   exi
 The primary product is not merely built but FUNCTIONALLY OPERATIVE (real subcommands produce
 real output). `[StreamEngine] Shutdown` is a clean shutdown message (stderr), not an error.
 
+## Real inference (end-to-end, Ollama backend)
+```
+rawr backend select ollama      -> Backend selected: ollama (persisted)
+rawr ask "What is 2+2? ..."     -> [answer] 2   (no tools; not evidence-backed)   exit 0
+```
+A real model inference completed through the CLI -> backend -> model -> answer path (exit 0).
+The answer content is model-quality-dependent (small model); the PIPELINE is proven. The Deep2
+`benchmark` path requires a running inference server (deep2_openai_server on :8080 or Ollama on
+:11434 with the model loaded) — it does not load a GGUF standalone (exit 2 = no inference).
+
 ## State
 IMPLEMENTED=1 CONFIGURED=1 BUILT=1 LINKED=1 RUNTIME_REACHED=1 FUNCTIONALLY_VERIFIED=1
-COMMITTED=1 PUSHED=0
+(commands + real inference) COMMITTED=1 PUSHED=0
