@@ -360,6 +360,11 @@ void Win32IDE::tickChatSmoke() {
             IsWindow(m_hwndCopilotChatOutput))
             ? getWindowTextUtf8(m_hwndCopilotChatOutput).size() : 0;
         ChatSmokeMark("CHAT_07 copilot send");
+        // Clear any startup/warmup inference so the smoke send is not rejected
+        // by the busy gate (observed as SEND_ROUTE_BUSY_GATE with no tokens).
+        HandleCopilotStop();
+        for (int i = 0; i < 100 && m_inferenceRunning.load(std::memory_order_acquire); ++i)
+            Sleep(20);
         stageCopilotChatInputUtf8("Reply with exactly: PONG_GUI_SMOKE_1");
         HandleCopilotSend();
         ChatSmokeMark("CHAT_08 sent");
