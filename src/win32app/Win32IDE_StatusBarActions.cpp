@@ -13,8 +13,11 @@ void Win32IDE::initStatusBar() {
 
 void Win32IDE::updateStatusBar() {
     if (!m_hwndStatusBar) return;
+    std::string model = getModelInfo();
+    if (model.empty()) model = m_selectedChatModel.identifier;
+    const std::string left = "RawrXD | " + (model.empty() ? "no model" : model);
     SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
-                 reinterpret_cast<LPARAM>("RawrXD | main"));
+                 reinterpret_cast<LPARAM>(left.c_str()));
     SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 1,
                  reinterpret_cast<LPARAM>("Ln 1, Col 1"));
     SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 2,

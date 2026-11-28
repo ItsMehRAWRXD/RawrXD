@@ -12,7 +12,8 @@ public:
     bool Connect(const std::string& endpoint);
     void Disconnect();
     bool IsConnected() const;
-    void SendControlCommand(const std::string& command);
+    bool SendControlCommand(const std::string& command, std::string& response,
+                            std::string& error);
 
 private:
     ModelHub() = default;

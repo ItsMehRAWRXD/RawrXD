@@ -25,8 +25,14 @@ bool ModelHub::IsConnected() const {
     return m_connected;
 }
 
-void ModelHub::SendControlCommand(const std::string& command) {
-    if (!m_connected || m_endpoint.empty() || command.empty()) return;
+bool ModelHub::SendControlCommand(const std::string& command, std::string& response,
+                                  std::string& error) {
+    response.clear();
+    error.clear();
+    if (!m_connected || m_endpoint.empty() || command.empty()) {
+        error = "not connected";
+        return false;
+    }
 
     std::string body = "{\"command\":\"";
     for (char c : command) {
@@ -45,32 +51,49 @@ void ModelHub::SendControlCommand(const std::string& command) {
     uc.dwUrlPathLength = 1023;
     if (!WinHttpCrackUrl(std::wstring(m_endpoint.begin(), m_endpoint.end()).c_str(),
                          static_cast<DWORD>(m_endpoint.size()), 0, &uc)) {
-        return;
+        error = "invalid endpoint";
+        return false;
     }
 
     HINTERNET session = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                     WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!session) return;
+    if (!session) { error = "WinHttpOpen failed"; return false; }
     HINTERNET connect = WinHttpConnect(session, host, uc.nPort, 0);
-    if (!connect) { WinHttpCloseHandle(session); return; }
+    if (!connect) { error = "WinHttpConnect failed"; WinHttpCloseHandle(session); return false; }
     HINTERNET request = WinHttpOpenRequest(connect, L"POST", path, nullptr,
                                            WINHTTP_NO_REFERER,
                                            WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
     if (!request) {
+        error = "WinHttpOpenRequest failed";
         WinHttpCloseHandle(connect);
         WinHttpCloseHandle(session);
-        return;
+        return false;
     }
 
     const wchar_t* headers = L"Content-Type: application/json\r\n";
-    WinHttpSendRequest(request, headers, static_cast<DWORD>(wcslen(headers)),
-                       const_cast<char*>(body.data()), static_cast<DWORD>(body.size()),
-                       static_cast<DWORD>(body.size()), 0);
-    WinHttpReceiveResponse(request, nullptr);
+    if (!WinHttpSendRequest(request, headers, static_cast<DWORD>(wcslen(headers)),
+                            const_cast<char*>(body.data()), static_cast<DWORD>(body.size()),
+                            static_cast<DWORD>(body.size()), 0) ||
+        !WinHttpReceiveResponse(request, nullptr)) {
+        error = "request failed";
+        WinHttpCloseHandle(request);
+        WinHttpCloseHandle(connect);
+        WinHttpCloseHandle(session);
+        return false;
+    }
+
+    char buffer[4096];
+    DWORD bytes = 0;
+    do {
+        bytes = 4096;
+        if (!WinHttpReadData(request, buffer, bytes, &bytes) || bytes == 0) break;
+        response.append(buffer, bytes);
+    } while (bytes == 4096);
 
     WinHttpCloseHandle(request);
     WinHttpCloseHandle(connect);
     WinHttpCloseHandle(session);
+    return true;
 }
 
 } // namespace ScreenPilot
