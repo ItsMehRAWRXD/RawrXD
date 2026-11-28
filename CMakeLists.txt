@@ -3485,6 +3485,11 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     option(RAWRXD_BUILD_DEEP2_ENGINE
         "Build the experimental Deep2 engine and link it into dependent targets"
         ON)
+    # Build-integrity (WORKPACKAGES Package 6): the IDE/CLI REQUIRE the Deep2 engine.
+    # Default ON makes a product built without deep2_engine_lib a hard configure error
+    # instead of a silent omission. Set OFF only for a deliberate engine-less build.
+    option(RAWRXD_REQUIRE_DEEP2
+        "Fail configure if a product target is built without the Deep2 engine (build integrity)" ON)
     if(RAWRXD_BUILD_DEEP2_ENGINE AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp)
         # ------------------------------------------------------------------------
         # ENGINE_RECOVERY: the subsystems above were only ever compiled as a link
@@ -4505,6 +4510,10 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         if(TARGET deep2_engine_lib)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE deep2_engine_lib)
             target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE HAVE_DEEP2_ENGINE=1)
+        elseif(RAWRXD_REQUIRE_DEEP2)
+            message(FATAL_ERROR "RawrXD-Win32IDE-Native requires deep2_engine_lib but it is not configured (RAWRXD_BUILD_DEEP2_ENGINE=OFF). The product must link the real Deep2 engine; set RAWRXD_REQUIRE_DEEP2=OFF only for a deliberate engine-less build.")
+        else()
+            message(STATUS "RawrXD-Win32IDE-Native: Deep2 engine target unavailable; building without Deep2 (RAWRXD_REQUIRE_DEEP2=OFF)")
         endif()
         if(TARGET rawrxd_agentic_backend)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_agentic_backend)
@@ -6257,6 +6266,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
             "${CMAKE_BINARY_DIR}/RelWithDebInfo"
             "${CMAKE_BINARY_DIR}/MinSizeRel"
         )
+    elseif(RAWRXD_REQUIRE_DEEP2)
+        message(FATAL_ERROR "RawrXD-CLI-V2 requires deep2_engine_lib but it is not configured (RAWRXD_BUILD_DEEP2_ENGINE=OFF). Set RAWRXD_REQUIRE_DEEP2=OFF only for a deliberate engine-less build.")
     else()
         message(STATUS "RawrXD-CLI-V2: Deep2 engine target unavailable; building Ollama/native HTTP route without Deep2 archive")
     endif()
@@ -6329,6 +6340,8 @@ elseif(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
             "${CMAKE_BINARY_DIR}/RelWithDebInfo"
             "${CMAKE_BINARY_DIR}/MinSizeRel"
         )
+    elseif(RAWRXD_REQUIRE_DEEP2)
+        message(FATAL_ERROR "RawrXD-CLI-V2 requires deep2_engine_lib but it is not configured (RAWRXD_BUILD_DEEP2_ENGINE=OFF). Set RAWRXD_REQUIRE_DEEP2=OFF only for a deliberate engine-less build.")
     else()
         message(STATUS "RawrXD-CLI-V2: Deep2 engine target unavailable; Deep2 route remains disabled")
     endif()
