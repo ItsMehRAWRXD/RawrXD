@@ -7636,12 +7636,15 @@ void Win32IDE::shutdownInference()
 {
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
     
-    if (m_inferenceRunning) {
-        m_inferenceStopRequested = true;
-        if (m_inferenceThread.joinable()) {
-            m_inferenceThread.join();
-        }
-    }
+if (m_inferenceRunning) {
+        m_inferenceStopRequested = true;
+        // Do not join on the UI thread: the worker may be blocked on a model
+        // call, and joining here freezes the message loop (chat-smoke hang).
+        // Detach with the stop flag set; the worker exits on its own.
+        if (m_inferenceThread.joinable()) {
+            m_inferenceThread.detach();
+        }
+    }
     
     m_inferenceRunning = false;
     m_inferenceStopRequested = false;
