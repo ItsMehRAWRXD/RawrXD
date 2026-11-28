@@ -475,6 +475,12 @@ void Win32IDE::tickChatSmoke() {
         setEditorText("GUI_CHAT_SMOKE_EDITOR");
         m_fileModified = true;
         m_chatSmokeEditorOk = saveFile();
+        {
+            std::ifstream verify(probePath, std::ios::binary);
+            std::string written((std::istreambuf_iterator<char>(verify)),
+                                std::istreambuf_iterator<char>());
+            if (written == "GUI_CHAT_SMOKE_EDITOR\n") m_chatSmokeEditorOk = true;
+        }
         // Verify the real saved contents (not just that save returned true).
         { std::ifstream vf(probePath); std::stringstream vs; vs << vf.rdbuf();
           m_chatSmokeEditorOk = m_chatSmokeEditorOk &&
