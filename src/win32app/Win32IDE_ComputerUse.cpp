@@ -274,7 +274,8 @@ void Win32IDE::tickChatSmoke() {
                 << " tokens1=" << (m_chatSmokeSawTokens ? 1 : 0)
                 << " cancel=" << (m_chatSmokeCancelOk ? 1 : 0)
                 << " tokens2=" << (m_chatSmokeSawTokens2 ? 1 : 0)
-                << " editor=" << (m_chatSmokeEditorOk ? 1 : 0) << "\n";
+                << " editor=" << (m_chatSmokeEditorOk ? 1 : 0)
+                << " second=" << (m_chatSmokeSecondReqCompleted ? 1 : 0) << "\n";
             rec << "MODEL_SELECT=" << (m_chatSmokeModelOk ? "PASS" : "FAIL") << "\n"
                 << "MODEL_ID=" << m_chatSmokeModelId << "\n"
                 << "BACKEND=" << (m_chatSmokeBackend.empty() ? "auto" : m_chatSmokeBackend) << "\n"
@@ -477,6 +478,8 @@ std::ofstream rec(m_chatSmokeReceiptPath, std::ios::app);
     }
     if (m_chatSmokePhase == 4) {
         m_chatSmokePhase = 5; // advance before any save to block reentry
+        if (!m_inferenceRunning.load(std::memory_order_acquire))
+            m_chatSmokeSecondReqCompleted = true;
         const std::string probePath =
             (std::filesystem::path(rawrxd::config::AppPaths::resolve().applicationRoot) /
              "evidence" / "chat_smoke_editor.txt").string();
