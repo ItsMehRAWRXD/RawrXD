@@ -290,6 +290,10 @@ void Win32IDE::tickChatSmoke() {
         ChatSmokeMark("CHAT_10 exit");
         ::ExitProcess(pass ? 0u : 2u);
     };
+    // Defensive: the IDT_CHAT_SMOKE timer must only drive the smoke in smoke mode.
+    // If it fires with phase < 0 (normal IDE open), do nothing — otherwise phase 4
+    // would call saveFile() and open the Save dialog repeatedly on startup.
+    if (m_chatSmokePhase < 0) return;
     if (elapsed > 180000ull) { finish(false); return; }
 
     if (m_chatSmokePhase == 0) {
