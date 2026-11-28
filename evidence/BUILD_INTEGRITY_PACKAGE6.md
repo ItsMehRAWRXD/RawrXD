@@ -11,7 +11,7 @@ configured — so a green build could hide a missing required engine.
 
 ## Change
 - New option `RAWRXD_REQUIRE_DEEP2` (default ON).
-- Product guards (`RawrXD-Win32IDE-Native`, `RawrXD-CLI-V2` x2) now:
+- Product guards (`RawrXD-Win32IDE-Native`, `RawrXD-Win32IDE-Native-Ext`, `RawrXD-CLI-V2` x2) now:
   - `if(TARGET deep2_engine_lib)` → link (unchanged);
   - `elseif(RAWRXD_REQUIRE_DEEP2)` → `FATAL_ERROR` (product requires the engine);
   - `else()` → STATUS (deliberate engine-less build, `RAWRXD_REQUIRE_DEEP2=OFF`).
