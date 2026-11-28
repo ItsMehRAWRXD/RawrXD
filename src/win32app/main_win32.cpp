@@ -515,6 +515,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // second request → editor save/open. Writes receipt then ExitProcess.
     if (lpCmdLine && std::strstr(lpCmdLine, "--chat-smoke")) {
         startupTrace("chat-smoke begin");
+        auto argValue = [lpCmdLine](const char* name) {
+            std::string out;
+            const char* p = lpCmdLine ? std::strstr(lpCmdLine, name) : nullptr;
+            if (!p) return out;
+            p += std::strlen(name);
+            while (*p == ' ' || *p == '=') ++p;
+            while (*p && *p != ' ') out += *p++;
+            return out;
+        };
+        const std::string smokeModel = argValue("--smoke-model");
+        const std::string smokeBackend = argValue("--smoke-backend");
+        if (!smokeModel.empty()) SetEnvironmentVariableA("RAWRXD_SMOKE_MODEL", smokeModel.c_str());
+        if (!smokeBackend.empty()) SetEnvironmentVariableA("RAWRXD_SMOKE_BACKEND", smokeBackend.c_str());
         const char* receipt = nullptr;
         if (const char* env = std::getenv("RAWRXD_CHAT_SMOKE_RECEIPT")) {
             if (*env) receipt = env;
