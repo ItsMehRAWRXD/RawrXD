@@ -6,6 +6,7 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdlib>
+#include <thread>
 #if defined(RAWRXD_HAS_COMPUTER_USE)
 #include "ComputerUseBridge.h"
 #include "ExtensionSandboxManager.h"
@@ -375,6 +376,24 @@ void Win32IDE::tickChatSmoke() {
         stageCopilotChatInputUtf8("Reply with exactly: PONG_GUI_SMOKE_1");
         HandleCopilotSend();
         ChatSmokeMark("CHAT_08 sent");
+        // Watchdog thread: the UI thread can block inside the send/inference
+        // path, so the timer alone cannot guarantee a receipt. This thread
+        // always writes a structured outcome and exits the process.
+        std::thread([this] {
+            const ULONGLONG t0 = GetTickCount64();
+            bool saw = false;
+            while (GetTickCount64() - t0 < 90000ull) {
+                if (m_chatSmokeSawTokens) { saw = true; break; }
+                Sleep(100);
+            }
+            std::ofstream rec(m_chatSmokeReceiptPath, std::ios::app);
+            if (rec) {
+                rec << "WATCHDOG_TOKENS=" << (saw ? "PASS" : "FAIL") << "\n";
+                rec.flush();
+                rec.close();
+            }
+            ::ExitProcess(saw ? 0u : 2u);
+        }).detach();
         m_chatSmokePhase = 1;
         return;
     }
