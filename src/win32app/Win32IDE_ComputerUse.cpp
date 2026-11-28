@@ -368,6 +368,11 @@ void Win32IDE::tickChatSmoke() {
     }
     if (m_chatSmokePhase == 1) {
         ChatSmokeMark("CHAT_09 poll tokens");
+        if (elapsed > 30000ull && !m_chatSmokeSawTokens) {
+            ChatSmokeMark("CHAT_09b token timeout");
+            finish(false);
+            return;
+        }
         const std::string out = (m_hwndCopilotChatOutput &&
             IsWindow(m_hwndCopilotChatOutput))
             ? getWindowTextUtf8(m_hwndCopilotChatOutput) : std::string();
