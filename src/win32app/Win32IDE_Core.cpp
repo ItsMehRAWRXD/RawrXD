@@ -28,6 +28,13 @@ extern "C" void ShutdownAICompletion();
 #include "../../include/model_registry.h"
 #include "../../include/multi_file_search.h"
 #include "../core/enterprise_license.h"
+#include "Win32IDE_DebuggerIntegration.hpp"
+#include "ui/CallStackPanel.h"
+
+// DAP debugger lifecycle (Phase 24): a process-wide call-stack panel + integration.
+// Using a global avoids touching the 20k-line Win32IDE header; the integration is a
+// static singleton keyed to this panel.
+namespace { UI::CallStackPanel g_rawrxdCallStackPanel; }
 #include "../core/AmdGpuPowerBackend.hpp"
 #include "../cpu_inference_engine.h"
 #include "../modules/ExtensionLoader.hpp"
@@ -227,6 +234,10 @@ Win32IDE::~Win32IDE()
 // ============================================================================
 LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    // DAP debugger UI bridge first (consumes debugger messages; false otherwise).
+    if (RawrXD::Win32IDE_DebuggerIntegration::HandleMessages(hwnd, uMsg, wParam, lParam))
+        return 0;
+
     Win32IDE* pThis = nullptr;
 
     if (uMsg == WM_NCCREATE)
@@ -1624,6 +1635,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case WM_DESTROY:
             RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_ENTER");
+            RawrXD::Win32IDE_DebuggerIntegration::Shutdown();
             KillTimer(hwnd, IDT_VISIBILITY_WATCHDOG);
             // Parent WM_DESTROY is top-down: children still exist. Detach QuickJS
             // hosts only. Native FreeLibrary / VSCodeExtensionAPI::shutdown /
@@ -3465,6 +3477,9 @@ void Win32IDE::onCreate(HWND hwnd)
             s_onCreateDepth = 0;
         }
     } onCreateGuard;
+
+    // DAP debugger integration (Phase 24): initialize the call-stack panel bridge.
+    RawrXD::Win32IDE_DebuggerIntegration::Initialize(hwnd, &g_rawrxdCallStackPanel);
 
     if (!m_hwndMain || !IsWindow(m_hwndMain))
         m_hwndMain = hwnd;
