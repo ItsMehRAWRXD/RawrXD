@@ -247,6 +247,8 @@ void Win32IDE::tickChatSmoke() {
     if (m_chatSmokePhase < 0) return;
     const ULONGLONG elapsed = GetTickCount64() - m_chatSmokeStartMs;
     auto finish = [this](bool pass) {
+        bool expected = false;
+        if (!m_chatSmokeFinalized.compare_exchange_strong(expected, true)) return;
         if (m_hwndMain) KillTimer(m_hwndMain, IDT_CHAT_SMOKE);
         // Deterministic cooperative shutdown before ExitProcess: signal the
         // worker to stop, then join ONLY when it is already idle. Never join a
@@ -376,23 +378,28 @@ void Win32IDE::tickChatSmoke() {
         stageCopilotChatInputUtf8("Reply with exactly: PONG_GUI_SMOKE_1");
         HandleCopilotSend();
         ChatSmokeMark("CHAT_08 sent");
-        // Watchdog thread: the UI thread can block inside the send/inference
-        // path, so the timer alone cannot guarantee a receipt. This thread
-        // always writes a structured outcome and exits the process.
+        // Watchdog thread: the UI thread can block, so the timer alone cannot
+        // guarantee a failure receipt. It never exits on first tokens; it only
+        // writes intermediate progress and, at the deadline, a final FAIL.
         std::thread([this] {
             const ULONGLONG t0 = GetTickCount64();
-            bool saw = false;
-            while (GetTickCount64() - t0 < 90000ull) {
-                if (m_chatSmokeSawTokens) { saw = true; break; }
+            while (GetTickCount64() - t0 < 180000ull) {
+                if (m_chatSmokeFinalized.load(std::memory_order_acquire)) return;
+                if (m_chatSmokeSawTokens && !m_chatSmokeWatchdogTokensWritten) {
+                    m_chatSmokeWatchdogTokensWritten = true;
+                    std::ofstream mid(m_chatSmokeReceiptPath, std::ios::app);
+                    if (mid) { mid << "WATCHDOG_TOKENS=PASS\n"; mid.flush(); mid.close(); }
+                }
                 Sleep(100);
             }
             std::ofstream rec(m_chatSmokeReceiptPath, std::ios::app);
             if (rec) {
-                rec << "WATCHDOG_TOKENS=" << (saw ? "PASS" : "FAIL") << "\n";
+                rec << "WATCHDOG=TIMEOUT\nPHASE=" << m_chatSmokePhase
+                    << "\nOVERALL=FAIL\n";
                 rec.flush();
                 rec.close();
             }
-            ::ExitProcess(saw ? 0u : 2u);
+            ::ExitProcess(2u);
         }).detach();
         m_chatSmokePhase = 1;
         return;
@@ -445,8 +452,9 @@ void Win32IDE::tickChatSmoke() {
         return;
     }
     if (m_chatSmokePhase == 4) {
-        const char* probePath =
-            "F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013\\chat_smoke_editor.txt";
+        const std::string probePath =
+            (std::filesystem::path(rawrxd::config::AppPaths::resolve().applicationRoot) /
+             "evidence" / "chat_smoke_editor.txt").string();
         {
             std::ofstream ed(probePath, std::ios::trunc);
             if (ed) ed << "GUI_CHAT_SMOKE_EDITOR\n";

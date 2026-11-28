@@ -2933,7 +2933,9 @@ public:
     bool m_chatSmokeModelOk = false;
     std::string m_chatSmokeReceiptPath;
     std::string m_chatSmokeModelId;
-    std::string m_chatSmokeBackend;
+    std::string m_chatSmokeBackend;
+    std::atomic<bool> m_chatSmokeFinalized{false};
+    bool m_chatSmokeWatchdogTokensWritten = false;
     static LRESULT CALLBACK CopilotChatInputProc(HWND hwnd, UINT uMsg,
                                                  WPARAM wParam, LPARAM lParam);
     void installCopilotChatInputSubclass();
