@@ -542,9 +542,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         HWND host = browser.CreateHost(ide.getMainWindow(), hInstance);
         bool ok = host != nullptr;
         if (ok) ok = browser.Navigate(L"about:blank");
-        for (int i = 0; i < 50 && ok; ++i) {
+        for (int i = 0; i < 100 && ok; ++i) {
+            MSG msg;
+            while (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+            }
             if (!browser.CurrentUrl().empty()) break;
-            Sleep(100);
+            Sleep(50);
         }
         const std::wstring url = browser.CurrentUrl();
         std::string receipt = rawrxdEvidence("BROWSER_SMOKE.txt");
