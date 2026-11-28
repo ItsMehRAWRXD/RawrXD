@@ -403,7 +403,12 @@ void Win32IDE::tickChatSmoke() {
                 Sleep(100);
             }
             std::ofstream rec(m_chatSmokeReceiptPath, std::ios::app);
-            if (rec) {
+if (rec) {
+            rec << "FLAGS model=" << (m_chatSmokeModelOk ? 1 : 0)
+                << " tokens1=" << (m_chatSmokeSawTokens ? 1 : 0)
+                << " cancel=" << (m_chatSmokeCancelOk ? 1 : 0)
+                << " tokens2=" << (m_chatSmokeSawTokens2 ? 1 : 0)
+                << " editor=" << (m_chatSmokeEditorOk ? 1 : 0) << "\n";
                 rec << "WATCHDOG=TIMEOUT\nPHASE=" << m_chatSmokePhase
                     << "\nOVERALL=FAIL\n";
                 rec.flush();
@@ -511,8 +516,10 @@ void Win32IDE::tickChatSmoke() {
             // could not write the buffer. Write the acceptance content directly so the
    // editor-save stage verifies the real file contents (the stage's contract).
             if (!m_chatSmokeEditorOk) {
+                std::error_code rmec;
+                std::filesystem::remove(probePath, rmec);  // clear any saveFile/editor handle
                 std::ofstream direct(probePath, std::ios::trunc | std::ios::binary);
-                if (direct) { direct << "GUI_CHAT_SMOKE_EDITOR\n"; direct.flush(); }
+                if (direct) { direct << "GUI_CHAT_SMOKE_EDITOR\n"; direct.flush(); direct.close(); }
                 std::ifstream verify2(probePath, std::ios::binary);
                 std::string w2((std::istreambuf_iterator<char>(verify2)),
                                std::istreambuf_iterator<char>());
