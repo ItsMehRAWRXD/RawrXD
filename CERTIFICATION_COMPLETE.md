@@ -1,3 +1,5 @@
+> **VOID (2026-11-28):** The "certification complete / FULLY CERTIFIED" claims in this document are CONTRADICTED by `evidence/gate_ledger.json` (G15/G16 BLOCKED, G17–G20 OPEN, ~4.5 TPS) and `AUDIT_END_TO_END_2026-11-24.md`. Retained for history only — NOT a certification. See `WORKPACKAGES_2026-11-25.md` §Package 8. `CERTIFIED=0 RELEASE=HELD PROMOTE=0`.
+
 # RawrXD Certification Complete
 ## Full Stack: VAL-050 to VAL-082
 

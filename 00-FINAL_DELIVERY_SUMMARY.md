@@ -1,5 +1,7 @@
 # 🎯 RawrXD_TextEditorGUI - FINAL DELIVERY SUMMARY
 
+> **VOID (2026-11-28):** The "COMPLETE / FINAL DELIVERY" claims here are self-contradictory (own table shows pending) and CONTRADICTED by `evidence/gate_ledger.json` (G15/G16 BLOCKED, G17–G20 OPEN) and `AUDIT_END_TO_END_2026-11-24.md`. Retained for history only — NOT a certification. See `WORKPACKAGES_2026-11-25.md` §Package 8. `CERTIFIED=0 RELEASE=HELD PROMOTE=0`.
+
 **Project**: RawrXD IDE Text Editor GUI (x64 MASM Assembly)
 **Status**: ✅ **FULLY COMPLETE & PRODUCTION-READY**
 **Date**: March 12, 2026

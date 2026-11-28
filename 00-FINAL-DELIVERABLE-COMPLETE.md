@@ -1,5 +1,7 @@
 # 🎉 RawrXD v14.7.3 - FINAL DELIVERABLE COMPLETE
 
+> **VOID (2026-11-28):** The "FINAL DELIVERABLE COMPLETE / PRODUCTION READY / 2–3× AVX-512" claims here are CONTRADICTED by `evidence/gate_ledger.json` (no G-gate; G15/G16 BLOCKED, G17–G20 OPEN, ~4.5 TPS) and `AUDIT_END_TO_END_2026-11-24.md`. Retained for history only — NOT a certification. See `WORKPACKAGES_2026-11-25.md` §Package 8. `CERTIFIED=0 RELEASE=HELD PROMOTE=0`.
+
 **Project:** RawrXD Native IDE  
 **Version:** 14.7.3  
 **Date:** 2026-07-15  
