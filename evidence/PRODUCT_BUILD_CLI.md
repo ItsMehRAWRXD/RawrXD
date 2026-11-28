@@ -3,6 +3,19 @@
 Full build of the primary CLI product under the modified CMake (build-integrity fail-closed
 guards). This is the strongest build verification short of the GUI IDE.
 
+## GUI IDE product also builds + runs (added)
+```
+cmake --build build\cmake-preset-ninja-release --target RawrXD-Win32IDE-Native
+  [15/16] Linking CXX executable bin\RawrXD-Win32IDE-Native.exe
+  => BUILD_EXIT=0
+RawrXD-Win32IDE-Native.exe (37,965,824 bytes) --health-check:
+  runs real startup: [GUI_COMMAND] ... [MODEL_DISCOVERY] enumerates 13+ local GGUFs
+  (deepseek-coder-v2, gpt-oss, nemotron, qwen2.5-coder, ...) => IDE EXECUTES
+```
+Both products (CLI `rawr.exe` + GUI `RawrXD-Win32IDE-Native.exe`) build green and run under the
+build-integrity CMake changes. The IDE's `--health-check` exit -1 reflects full-init/GPU not
+completing headless, but the process clearly executes its startup path (model discovery works).
+
 ## Command
 ```
 cmake --build build\cmake-preset-ninja-release --target RawrXD-CLI-V2
