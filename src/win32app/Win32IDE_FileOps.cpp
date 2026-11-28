@@ -737,7 +737,8 @@ void Win32IDE::saveAll() {
     bool anySaved = false;
     // Save every modified document buffer, not just the active one.
     for (size_t i = 0; i < m_documentBuffers.size(); ++i) {
-        if (m_documentBuffers[i].modified && !m_openDocuments[i].empty()) {
+        if (m_documentBuffers[i].modified && !m_openDocuments[i].empty() &&
+            !m_documentBuffers[i].path.empty()) {
             switchDocumentTab(static_cast<int>(i));
             saveFile();
             anySaved = true;
