@@ -1,0 +1,4151 @@
+﻿{
+    "version":  "1.0.0",
+    "generated_at":  "2026-11-27T21:45:52.5158198-05:00",
+    "total":  690,
+    "production":  626,
+    "diagnostic":  61,
+    "experimental":  null,
+    "deprecated":  2,
+    "variables":  [
+                      {
+                          "name":  "RAWRXD_25_GATE_ACCEPTANCE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_25_GATE_ACCEPTANCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_25_GATE_AUDIT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ACCEPTANCE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ACCEPTANCE_FIXTURE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ACCEPTANCE_GATE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ACCEPTANCE_MARKER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ADAPTIVE_BLACKBOARD_INTELLIGENCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ADAPTIVE_BLACKBOARD_INTELLIGENCE_V3",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ADAPTIVE_BLACKBOARD_INTELLIGENCE_V4",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ADAPTIVE_BLACKBOARD_INTELLIGENCE_V5",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ADAPTIVE_REPAIR_INTELLIGENCE_042",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ADAPTIVE_THROUGHPUT_LOCK_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_ACCEPTANCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_ACCEPTANCE_PROPAGATION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_E2E_RECEIPT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_ESP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_EVIDENCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_FIRST_TOKEN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_LEDGER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_MODE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_READ_PASS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_RELIABILITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_TOKEN_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENT_WORKSPACE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_AGENTTYPES_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_BEFORE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_CONTEXT_SIZE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_E2E_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_EDIT_COMPLETE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_FALLBACK_TASK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_MAX_WALL_SEC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_MODEL_READINESS_20261029",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_QUIET",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_WATCHDOG_STARTUP_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGENTIC_WATCHDOG_WALL_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGGREGATE_BANDWIDTH_GBPS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AGGREGATE_BANDWIDTH_LOCK_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ALIGNED_DATA_START_AUTHORITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ALLOW_CLOUD",
+                          "classification":  "production",
+                          "config_key":  "features.agenticBridge",
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ALLOW_GPU",
+                          "classification":  "production",
+                          "config_key":  "features.vulkanCompute",
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ALLOW_UNSIGNED_EXTENSIONS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ANSWER_LENGTH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_APPLY_HOST_DECODE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ARCH_LLAMA",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ASK_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ATTENTION_SCALE_AB_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ATTN_DECODE_SHADER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AUTHORIZE_EXECUTE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AUTO_APPROVE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AUTO_SET_LAYER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_AUTONOMOUS_AGENT_E2E_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_B3_LOGITS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_B3_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BACKEND",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BATCHED_PREFILL_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BEACONISM_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BG_BM_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BLACKBOARD_FINAL_IMPLEMENTATION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BLACKBOARD_REAL_EXECUTION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BOUNDARY_LAYERS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BOUNDED_RESIDENCY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BPE_ENCODE_DUMP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BRAID_COMPLETION_LAYER_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BRIDGE_CPU_ONLY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BRIDGE_DISABLE_VULKAN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_COMMAND",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_CONFIG",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_EXECUTE_OK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_FUZZ",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_OUTPUT_",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_RECEIPT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_RECEIPT_",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_RESULT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_START",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_TARGET",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_TESTS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BUILD_WIN32IDE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_BURSTCORE_X7",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CACHE_DIR",
+                          "classification":  "production",
+                          "config_key":  "cacheDir",
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CANCEL_RECOVERY_OK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CAUSAL_TIME_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CB_ENABLED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CB_FAILURE_THRESHOLD",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CB_HALF_OPEN_PROBES",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CB_OPEN_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CERTIFICATE_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAIN_OF_THOUGHT_STREAM",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAT_BACKEND",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAT_DEEP2_SYNC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAT_MAX_TOKENS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAT_OK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAT_RUN_ID",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAT_SESSION_ID",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHAT_SMOKE_RECEIPT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHECKPOINT_ATTENTION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHECKPOINT_EMBEDDING",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHECKPOINT_FFN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHECKPOINT_KV_CACHE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHECKPOINT_LOGITS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHECKPOINT_RMSNORM",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CHECKPOINT_SAMPLER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CLANGD",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CLI_CONTRACT_V1_0",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CLI_DISPATCH_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CLI_FATAL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CLI_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_COMPLETION_PROVIDER_INC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_COMPRESSION_CORE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_COMPUTER_USE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_COMPUTER_USE_IDE_VERIFY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_COMPUTER_USE_TESTS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_COMPUTER_USE_TOOLS_CLI",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CONFIG",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CONFIG_DIR",
+                          "classification":  "production",
+                          "config_key":  "configDir",
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CONTEXT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CONTEXT_COMPACT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CORE_DLL_NATIVE_E2E_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CORE_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CT_EQUAL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_CU_ALLOW_PIDS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_D",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_D2_SESSION_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DBG",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEBUG_CONSOLE_READY",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEBUG_CONSOLE_VALUE_42",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEBUG_LAYOUT_OVERLAY",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEBUG_POS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEBUGGEE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DECODE_BLOCKER_ATTRIBUTION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DECODE_FEEDBACK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP_THINKING_INC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ADAPTER_IDENTITY_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ALLOC_TRACE_001",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZ",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ALLOW_ELASTIC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM",
+                          "classification":  "experimental",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ALLOW_UNSAFE_MLA",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_BATCH_ACCOUNTING_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_BATCHED_PREFILL_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_CERT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_CONTEXT_TRUTH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_D1_BATCHED_PREFILL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_D1_PREFILL_PARITY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_DEBUG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_DEVICE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_DISABLE_GPU_GEMV",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_DISABLE_Q4K_GPU",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_DISABLE_Q6K_GPU",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_DLL_EQUIVALENCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ENABLE_TILED4X",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_EXECUTOR_GPU_E2E_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_F16_QUANT_DOT_CLOSURE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_FAILURE_TRUTH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GEMV_STRICT_ORDER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_DISPATCH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_MATMUL_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_QUANT_DOT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_QUANT_DOT_002",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_QUANT_DOT_003",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_QUANT_DOT_CLOSURE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_GPU_TELEMETRY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_IR_BRIDGE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_LAYER_PROBE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_LAZY_LOAD",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_LEGACY_QUANT_GPU_001",
+                          "classification":  "deprecated",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_MLA_DIVERGENCE_003",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_MOE_BATCH_CHUNK_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_MOE_UP_BATCH_DIAG_001",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_NEMOTRON_SSM_SCAN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_NUMERIC_L2_LIMIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_OLLAMA_MODEL_SWEEP_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_ONE_PIPELINE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_PER_TOKEN_PROFILE_001",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_PREFILL_PROGRESS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_PROBE_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_PROBE_PARITY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_QUANTDOT_DISPATCH_COUNTERS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_REAL_MODEL_GENERATION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_REFERENCE_ORACLE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_RESERVATION_LEDGER_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_RESIDENCY_BUDGET_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_RUNTIME_DISPATCH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_RUNTIME_IR_BINDING_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_RUNTIME_PARITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_RUNTIME_TENSOR_MANIFEST_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_SELFTEST_LOSS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_SHADER_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_SPEC_VERIFY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STALL_STATES_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STEP_04",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STRATA_12_GATE_EXECUTION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STRATA_S01",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STRATA_S06",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STRATA_S08",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STRATA_S10",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_STRATA_S11",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_THREADS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEP2_UNIVERSAL_INGEST",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEEPSEEK_TOKENIZER_PARITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEFAULT_DEEP2_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEFAULT_TIMEOUT_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DEV_RELEASE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DISABLE_OLLAMA_FETCH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DOCTOR_BEGIN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DOCTOR_VERDICT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DUAL_GPU_ADMISSION_TELEMETRY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DUAL_GPU_BANDWIDTH_LOCK_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DUAL_GPU_LOCK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DUMP_ATTN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_DUMP_PREROLLBACK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_E2E_BLOCKERS_015_LOCK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_E2E_BLOCKERS_090",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_E2E_BLOCKERS_105",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EARLY_LOCAL_SERVER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EMBED_DIAG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENABLE_ASAN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENABLE_CODEX_EVENTBUS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENABLE_ELASTIC_RESIDENCY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENABLE_HARDENING",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENHANCE_SKIP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENTERPRISE_DEV",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENV",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ENVIRONMENT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EOM_SPIN_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERR_ENGINE_INIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERR_INFERENCE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERR_INVALID_PARAM",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERR_MODEL_NOT_FOUND",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERR_NOT_IMPLEMENTED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERROR_GEN_FAILURE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERROR_INVALID_PARAM",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ERROR_NOT_READY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ESCAPE_HTML",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ESCAPE_JS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EVICT_LIVELOCK_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EVIDENCE_002",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EVIDENCE_IDE_CLAIM_MAX",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EVIDENCE_ROOT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EVIDENCE_SEQ_CAP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXEC_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXEC_TRUTH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXECUTION_AUTHORITY_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXECUTION_POLICY_ACTUAL_E2E_GENERATION_ONLY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXECUTION_TRACE_EMIT_HPP",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXECUTIONIR_STRUCTURAL_AUTHORITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXT_HOST_RECEIPT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXT_RUNTIME_RECEIPT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_EXTERNAL_SCRATCH_STREAM",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FAIL_FAST_GATES",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FFN_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FINAL_FAILED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FINAL_RECOVERED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FIND_VERDICT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FIRST_TOKEN_DIAG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FIRST_TOKEN_LOGITS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FORCE_CPU_INFERENCE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FORCE_DECODE_TOKEN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FORCE_LOCAL_AGENTIC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FORCE_OLLAMA_AGENTIC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FULL_AUDIT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FUNCTIONAL_CHAMPION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_FUTURE_PLAN_REQUIRED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_G04",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_G04_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_G04_GEN_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_G04_TRIAGE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE4_CI_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE4_DISPATCH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE4_DUMP_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE4_KERNEL_GEOMETRY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE4_NUMERIC_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE4_RECONCILE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE7_HYBRID_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE7_MAMBA2_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GATE7_TPS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GEMMA_RMSNORM_ONEPLUS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GEMV_CAPTURE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GENERAL_HEADLESS_AUTONOMOUS_CLI_033",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GENERATION_PARITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GGML_TITAN_BRIDGE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GGUF",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GGUF_ARCH_TAXONOMY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GGUF_DEBUG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GGUF_UNIVERSAL_READER_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GHOSTTEXT_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GHOSTTEXT_TEST_DELAY_A_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GHOSTTEXT_TEST_DELAY_B_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GIT_STATUS_BEGIN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GIT_STATUS_VERDICT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GOVERNOR_CONCURRENCY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_COMPUTE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_COST_PLACE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_DEVICE_CLASS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_DEVICE_RESET",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_DEVICES",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_FUSED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_FWD",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_NAME",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_POLICY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_PROBE_LAYER0",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_ROPE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_SELECT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_UNFUSED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GPU_WEIGHT_READBACK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GQA_ATTENTION_SELFTEST",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GREEDY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GREEDY_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GUARD_5",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_GUI_APPROVE_MUTATIONS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_H11_BATCH_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_H11_KV_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HANG_WATCHDOG_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HARDENING",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HAS_COMPUTER_USE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HAS_QUICKJS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HAVE_ZLIB",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HEALTH_CHECK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HEALTH_PROBE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HEXMAG_SWARM_INTEGRATION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HIDDEN_BLOCKER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HOME",
+                          "classification":  "production",
+                          "config_key":  "applicationRoot",
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HOST_DECODE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HOST_HARDWARE_PROBE_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HTTP_DEBUG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_HTTP_TIMEOUT_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IDE_AUTONOMOUS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IDE_AUTONOMOUS_",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IDE_LABEL_BREADCRUMB_BAR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IDE_LABEL_MAIN_WINDOW",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IDE_LOG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IDIRECTORY_MANAGER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IDLE_SUPERPOSITION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IFILE_READER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IFILE_WRITER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_IMPORT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_INFERENCE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_INFERENCE_ADAPTER_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_INSTANCE_ID",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_INTERFACES_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ISO_IGNORE_OWNER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ISSUE49_HOST_SEED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ISSUE49_TARGET",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_JSON_INCLUDE_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_K2_LAYERS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_KERNEL_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_KV_F16_CACHE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LAVAPATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LAYER_CUT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LINEARW_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LIVE_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LMHEAD_INPUT_CHECK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LMHEAD_SENTINEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOAD_TIMING",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOAD_TIMING_FILE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOCAL_MODEL_E2E_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOCAL_ONLY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOG_CONSOLE_MIRROR",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOG_DIR",
+                          "classification":  "diagnostic",
+                          "config_key":  "logDir",
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOG_FORMAT",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOG_INFO",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOG_LEVEL",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOG_MAX_FILE_BYTES",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOG_MAX_FILES",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LOGITS_FINGERPRINT_001",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LSP_EMBEDDED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_LSP_NO_MAIN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MAIN_WINDOW_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MANIFEST_CACHE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MEDUSA_HEADS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MEM_PRESERVE_PLACEHOLDER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MEM_RELEASE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MEM_REPLACE_PLACEHOLDER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MEM_RESERVE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MEM_RESERVE_PLACEHOLDER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_METRICS_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_METRICS_ENABLED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_METRICS_INTERVAL_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_METRICS_PORT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MLA_DIAGNOSTICS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODEL_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODEL_FIT_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODEL_GENIE_HEADER_EXPORT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODEL_MANIFESTS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODEL_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODEL_ROOT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODEL_SMOKE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_DIFFERENTIAL_CAPTURE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_MULTITOKEN_DECODE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_NATIVE_IR_EXECUTION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_PRODUCTION_RUNTIME_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_RUNTIME_CONSUMPTION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_TEACHER_FORCED_DECODE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_TOKEN0_EXECUTABLE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELGENIE_TOKEN0_EXECUTION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MODELS_DIR",
+                          "classification":  "production",
+                          "config_key":  "modelDir",
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MOE_TIMING",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MOE_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MOUNT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_MULTI_GPU",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NATIVE_ACCEPTANCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NATIVE_CLOUD_API",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NATIVE_IDE_EXT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NATIVE_MODEL_PROTOCOL_COMPLIANCE_129",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NATIVE_TOOL_CHANNEL_INTEGRATION_106",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NEMOTRON_GEOMETRY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NEMOTRON_H_MAMBA2_NUMERIC_PARITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NO_MEDUSA",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NO_MORE_BASELINE_STUBS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NO_QT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NO_TP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NUMERICAL_BOUNDARY_ISOLATION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NVME_BUNNYHOP_CHUNK_MIB",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_NVME_REVERSE_BUNNYHOP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_AGENT_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_CLI_MODEL_SWEEP_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_CLI_MODEL_SWEEP_20261028",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_ENDPOINT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_HEALTH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_KEEP_ALIVE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_LAUNCHER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_NUM_GPU",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OLLAMA_TRACE_PATH",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OMEGA_ROOT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OPEN_DOCUMENT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ORACLE_LOADER_PROBE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_OWNERSHIP_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P0_BISECT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P1_CMD_DIAG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P1_LAZY_REGION_HOTPATCH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P1_NUCOLD_HOTPATCH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P1_UI_MENU_E2E",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P1_UI_SPATIAL_AUTHORITY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P11_FORCE_OLLAMA_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_P3_RUN_ID",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PACKET_MAGIC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PAGE_64KB",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PAGE_NOACCESS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PAGE_READONLY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PALETTE_VERDICT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PARENT_PID",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PARITY_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PARITY_FINAL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PARITY_TRACE_INJECTED",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PATCHRESULT_DEFINED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PE32_EMITTER_MONOLITHIC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PEEK_FINISH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PERFORMANCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PERSISTENT_KV_MAX_TOKENS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PERSISTENT_KV_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PERSISTENT_KV_REQUIRE_GPU",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PEWRITER_FAIL_ALLOC_AFTER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PHI3_FUSED_FFN_UP_FIRST",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_POLYMORPHIC_BLACKBOARD_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_POLYMORPHIC_INTEGRATION_004",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_POLYMORPHIC_NATIVE_EXECUTION_005",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_POWERSHELL_ROOT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PREFILL_CHUNK",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRIMARY_NO_FINAL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROBE_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROBLEMS_FIXTURE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROBLEMS_FIXTURE_RESULT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROBLEMS_FIXTURE_START",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCE_ONE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCT_E2E_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCT_PATH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCT_TPS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCT100",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCTION_HARDENING",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCTION_RUNTIME_LIB",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCTION_SCHEMA_RECONCILIATION_132",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCTION_STANDALONE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PRODUCTION_TESTS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROFILE_COVERAGE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROFILE_IC",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROJ_DIAG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROJECT_SPEC_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROJECT_STATE_MANAGER_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROJECT_WIZARD_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROJECT_WORKFLOW_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROMPT_API",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PROVIDER_TOOL_CHANNEL_PROFILE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_PUPPETEER_BYTE_OPS_INC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_Q2_K",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_Q2K_FROZEN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_Q2K_PRODUCT_DECODE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_Q4_K",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_Q4K_BATCH_SHADER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_Q6K_ASM",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_Q8_0",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_QT_DIRECTORY_MANAGER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_QT_FILE_READER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_QT_FILE_WRITER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_QUANT_PARITY_REGISTRY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_QUANT_ROW4_Q6_SHADER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_QUANT_ROW4_SHADER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_QUANT_ROW8_Q6_SHADER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_READONLY_AUDIT_COMPLETE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_ADMISSION_EVIDENCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_CALIBRATION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_CALIBRATION_CHECKPOINT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_EXPERT_SELECTION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_PRINT_IDENTITY",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_PRUNE_BUDGET_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_PRUNE_BUDGET_002",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_REFERENCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_RETAINED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_RETAINED_OVERRIDE_TIP15_BIND",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_ROUTING_STATE_002",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_SALIENCY_STATE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REAP_TOPOLOGY_001",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REASONING_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REFERENCE_REPRODUCIBILITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RENDERER_INTERFACE_DEFINED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RENT_PIN_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REOBSERVE_AFTER_EACH_PRODUCE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REQUEST_A_DIAG_LOG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REQUIRE_ALL_FEATURES",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REQUIRE_COMPLETED_RUN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REQUIRE_EXIT0",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REQUIRE_ONLY_GOAL_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REQUIRE_QT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REQUIRE_TD11",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RESOURCE_GOVERNOR_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RESUME_TASK_ID",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RETRY_INITIAL_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RETRY_JITTER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RETRY_MAX_ATTEMPTS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RETRY_MAX_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REVERSE_COMPLETION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REVERSE_INTELLIGENCE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_REVERSE_INTELLIGENCE_5050",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ROM_TRACE",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ROOT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RUN_EMBEDDED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_RUN_READINESS_GATES",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SANITIZE_CMD_ARG",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SEARCH_SCOPE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURE_ZERO",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_AUDIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_AUDIT_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_AUDIT_LOG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_AUDIT_RETENTION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_AUDIT_RETENTION_DAYS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_ENCRYPTION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_KEY_FILE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_MAX_REQUEST_BYT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_MAX_REQUEST_BYTES",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_MODEL_EXTENSION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SECURITY_MODEL_EXTENSIONS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SELF_AUDIT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SELF_AUDIT_002",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SEMANTIC_CODE_INTELLIGENCE_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SEMANTIC_SAFE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SERVICE_NAME",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SETTINGS_DIALOG_H",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SHORTCUT_MANAGER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SHUTDOWN_TIMEOUT_MS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SKIP_DEFERRED_HEAVY_INIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SKIP_GPU_POWER_PROBE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SKIP_REVERSE_HOTPATCH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SLINGSHOT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SMOKE_DISCARD_UNSAVED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SMOKE_GGUF",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SNAPSHOT_LAYERS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SOURCE_AUTH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SOVEREIGN_EMIT_FORMATS_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SOVEREIGN_LAB_BLOB_IO_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SOVEREIGN_LINKER_CORPUS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SOVEREIGN_TARGET_MANIFEST_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SPIN_CLOSE_WALL_ATTRIB_0",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SPIN_CLOSE_WALL_ATTRIB_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SRC_ROOT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STAGE_DIGEST",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STAGE_DUMP_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STAGE_DUMP_LAYERS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STAGE_DUMP_MAX_LAYER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STANDALONE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STATIC_ASM",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_CHAT_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_CONTEXT_LIMIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_CTXTEST",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_LIFECYCLE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_NO_EARLY_STOP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_P1A",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_P1B",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_RETENTION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_S01",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_S02",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_S03",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_S08",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_SELFTEST",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_TRACE_TOKENS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STRATA_WEIGHT_CACHE_MB",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STREAM_CANCEL_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_STREAMING_GGUF_LOADER_TARGET_RAWRXD",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SWAP_WINDOW_BYTES",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SWARM_WORKLOAD_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_SYNTHETIC_COMPLETE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_T080_CLICK_TO_LINE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_T10_UIA_MARKER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_T10_UIA_REAL_MARKER_20261104",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_T15_DETERMINISTIC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_T18_T19_GUI_ENDURANCE_SOAK_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_T24_DEPLOYMENT_VERIFICATION_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TARGET_150_TPS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TENSORINFO_TYPE_AUTHORITY_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TERMINAL_FORCE_PIPE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TERMINAL_OLDPROC",
+                          "classification":  "deprecated",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TERMINAL_PANE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TERMINAL_VERDICT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TEST_HOOKS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TEST_MODEL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TEST_RESULT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TEST_START",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TEST_VAR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TICKLATCH_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TIMER_START",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOKENIZER_CERT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOOL_ALLOW_ROOTS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOOL_EXEC_SKIP_IF_UNREACHABLE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOOL_HYGIENE_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOOL_OWNS_FP16_GEMV",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOOLS_APPROVE_MUTATIONS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOOLS_BEGIN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOOLS_VERDICT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOP_LOGITS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TOP_LOGITS_STDERR",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TPS_KILLER_SEAL_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TPS_LIMIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TPS_PHYSICS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TRACE_SLOW_OP_MS",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TRACING_ENABLED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_TRANSPORT_OR_PARSE_ERROR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UIA_HEADLESS",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UIA_SEED_AGENT_EDIT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UNAVAILABLE_IF_NO_REAL_ARC",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UNDO_AFTER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UNDO_BEFORE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UNDO_VERDICT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UNREVERSE_HOTPATCH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UPDATE_URL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_USER_DATA_DIR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_UTF8_ARG_ERROR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_V7_MODE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VALIDATE_CMD_LINE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VALIDATE_HOSTNAME",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VALIDATE_MODEL_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VALIDATE_PATH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VALIDATE_URL",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VERBOSE_LOG",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VERSION",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VERSION_MAJOR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VERSION_MINOR",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VERSION_PATCH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VRAM_BUDGET",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VULKAN_MATMUL_CORRECTNESS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VULKAN_RESOURCE_LIFETIME_022",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VULKAN_REVERSE_ENGINEER_PERMANENT_FIX_028",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VULKAN_ROPE_CORRECTNESS_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VULKAN_SDK_HEADER",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_VULKAN_STUB_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WIN32_FEATURE_ADAPTER_H",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WIN32_NATIVE_DEBUG_BACKEND_H",
+                          "classification":  "diagnostic",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WIN32IDE_CLASS_FWD",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WIN32IDE_COMMAND_PALETTE_HPP",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WISH",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WITH_SOVEREIGN",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WM_COMPILER_DETECTED",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WORKFLOW",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WORKSPACE",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WORKSPACE_ROOT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WOULD_START",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_WRITE_READ_001",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      },
+                      {
+                          "name":  "RAWRXD_ZERO_STAR_CONTRACT",
+                          "classification":  "production",
+                          "config_key":  null,
+                          "source":  "src/include/tools/tests"
+                      }
+                  ]
+}

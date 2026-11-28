@@ -1,0 +1,54 @@
+name: Product Tests (Vulkan)
+
+on:
+  push:
+    branches:
+      - main
+      - integration/**
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  product-tests:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Install Vulkan SDK
+        run: choco install vulkan-sdk -y --no-progress
+
+      - name: Configure product-tests preset
+        shell: pwsh
+        run: |
+          $env:CC = $null
+          $env:CXX = $null
+          cmake --preset product-msvc-tests
+
+      - name: Build product
+        shell: pwsh
+        run: cmake --build --preset product-msvc-tests
+
+      - name: Run full CTest suite
+        shell: pwsh
+        run: ctest --preset product-msvc-tests --output-on-failure
+
+      - name: Upload test receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-test-receipts
+          path: |
+            build/cmake-product-msvc-tests/Testing/Temporary
+            build/cmake-product-msvc-tests/bin
+          if-no-files-found: ignore
