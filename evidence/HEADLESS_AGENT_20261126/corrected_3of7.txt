@@ -1,0 +1,4 @@
+RAWRXD corrected (context reconstruction) campaign — final 2026-11-28
+Process reaped at 7/12 (environment). 3 PASS / 7 = 42.86% (gpt-oss 1/3, deepseek 1/3, qwen3 1/1).
+== Baseline 42.86%. No demonstrated improvement. Reliability ~43%, NOT established.
+Transport done (native, gpt-oss E2E PASS). Reliability limited by model empty-content/non-convergence.
