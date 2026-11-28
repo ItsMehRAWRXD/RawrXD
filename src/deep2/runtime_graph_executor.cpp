@@ -2812,10 +2812,14 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
 // printed at exit as "router_ms=... expert_dispatch_ms=..." for the harness.
 // MoE timing state is defined in moe_timing.cpp (standalone, no ggml deps) so
 // the production benchmark links it without the graph executor.
-extern double g_moe_router_ms;
-extern double g_moe_expert_ms;
-extern unsigned long g_moe_router_calls;
-extern unsigned long g_moe_expert_calls;
+// Defined here (in the RuntimeGraph namespace) so ANY target that compiles the graph
+// executor resolves them. moe_timing_graph.cpp is kept as a non-defining reference TU for
+// targets that list it; moe_timing.cpp keeps separate global copies for its extern "C"
+// accessors (different symbols, no conflict).
+double g_moe_router_ms = 0.0;
+double g_moe_expert_ms = 0.0;
+unsigned long g_moe_router_calls = 0;
+unsigned long g_moe_expert_calls = 0;
 struct MoeTimingGuard {
     bool active;
     std::chrono::steady_clock::time_point t0;

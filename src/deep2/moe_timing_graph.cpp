@@ -9,14 +9,17 @@
 // those, so it can be added to any target that compiles runtime_graph_executor.cpp
 // without touching shared engine sources.
 
+// The namespaced definitions now live in runtime_graph_executor.cpp (so every target that
+// compiles the executor resolves them). This TU is kept as a non-defining reference so
+// targets that list it still link; it intentionally defines nothing.
 namespace RawrXD {
 namespace Deep2 {
 namespace RuntimeGraph {
 
-double g_moe_router_ms = 0.0;
-double g_moe_expert_ms = 0.0;
-unsigned long g_moe_router_calls = 0;
-unsigned long g_moe_expert_calls = 0;
+extern double g_moe_router_ms;
+extern double g_moe_expert_ms;
+extern unsigned long g_moe_router_calls;
+extern unsigned long g_moe_expert_calls;
 
 }  // namespace RuntimeGraph
 }  // namespace Deep2

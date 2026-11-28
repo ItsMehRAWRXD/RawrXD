@@ -1904,6 +1904,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND EXISTS "${
     add_executable(deep2_d1_prefill_parity
         tools/deep2_d1_prefill_parity.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
@@ -2147,6 +2148,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND EXISTS "${CM
     add_executable(deep2_context_scaling
         tools/deep2_context_scaling.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/moe_timing_graph.cpp
         src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
