@@ -211,6 +211,7 @@ void Win32IDE::ChatTraceMark(const char* op) {
 }
 
 void Win32IDE::beginChatSmoke(const char* receiptPath) {
+    if (m_chatSmokePhase >= 0) return; // idempotent: never double-arm
     ChatSmokeMark("CHAT_01 enter beginChatSmoke");
     const std::string root = rawrxd::config::AppPaths::resolve().applicationRoot;
     const std::string defaultReceipt =
@@ -290,6 +291,12 @@ void Win32IDE::tickChatSmoke() {
 
     if (m_chatSmokePhase == 0) {
         ChatSmokeMark("CHAT_02 phase0 model selector check");
+        // Wait for any startup/warmup inference to clear before selecting.
+        if (m_inferenceRunning.load(std::memory_order_acquire)) {
+            HandleCopilotStop();
+            for (int i = 0; i < 250 && m_inferenceRunning.load(std::memory_order_acquire); ++i)
+                Sleep(20);
+        }
         if (!m_hwndModelSelector || !IsWindow(m_hwndModelSelector)) {
             ChatSmokeMark("CHAT_03 model selector HWND invalid");
             return;
