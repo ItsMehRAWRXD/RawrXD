@@ -7951,11 +7951,17 @@ void Win32IDE::generateResponseAsync(
             if (active != 0 && active != requestGeneration) {
                 return;
             }
-            if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
-                active == 0) {
-                // stopInference already released ownership for Request B.
-                return;
-            }
+if (m_inferenceStopRequested.load(std::memory_order_acquire) ||
+                active == 0) {
+                // Stop requested or ownership already released. If this worker
+                // still owns the slot, release it exactly once so a stale stop
+                // flag cannot leave m_inferenceRunning stuck true.
+                if (active == requestGeneration) {
+                    m_activeInferenceGeneration.store(0, std::memory_order_release);
+                    m_inferenceRunning = false;
+                }
+                return;
+            }
             // Clear generation with the busy flag so the next admission can
             // join this drained worker instead of treating it as live.
             m_activeInferenceGeneration.store(0, std::memory_order_release);
