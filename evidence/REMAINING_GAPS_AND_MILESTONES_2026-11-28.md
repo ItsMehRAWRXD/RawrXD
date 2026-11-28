@@ -10,9 +10,16 @@ HEAD 23b844f816 · branch integration/combined-2026-11-25 (pushed).
 
 ## 2. Real bug found by the test suite
 - **deep2_multitoken_decode_parity FAIL**: batched prefill diverges from serial prefill
-  (`S03_PREFILL_PARITY maxAbs=0.495 maxRel=127`, `S03_HIDDEN_PARITY first_divergent_pos=0`).
-  A genuine numerical gap in the batched (multi-token) prefill path vs the serial reference.
-  Milestone to close: make PrefillBatch bit/near-exact vs ExecuteToken (<1e-3).
+  (`S03_PREFILL_PARITY maxAbs=0.495 maxRel=127`, `S03_HIDDEN_PARITY first_divergent_pos=0`,
+  maxAbs 2.13). **Precise localization**: divergence is at POSITION 0 (the first token), so it
+  is NOT a causal-mask / position-N defect — it is the batched layer-major
+  `Deep2Engine::prefillBatched` → `forwardLayerBatched` first-token path (embedding / finalNorm /
+  KV-write ordering) differing from the serial `prefillSerial` → `forwardTokenAllLayers`.
+  Serial: per-token embed→forwardTokenAllLayers(h, t+1)→norm→publish→kv.advance().
+  Batched: embed all n → forwardLayerBatched(layer, batch, base, base+1) layer-major → publish →
+  kv.advanceBy(n). The pos-0 hidden differs => the batched layer pass for the first token is not
+  bit-comparable to the serial one. Milestone: make `forwardLayerBatched` pos-0 output match
+  `forwardTokenAllLayers` (<1e-3). This is a focused GPU/numerical fix, NOT a config gap.
 
 ## 3. Known correctness/perf gaps (from this session's live runs)
 - **GPU Q4_K forward garbled output**: single-GPU Q4_K packed GEMV produces finite-but-wrong
