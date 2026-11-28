@@ -9,17 +9,19 @@ HEAD 23b844f816 · branch integration/combined-2026-11-25 (pushed).
 - 2 skipped (GPU/model-gated): deep2_h11_prefill_parity, deep2_persistent_kv_smoke.
 
 ## 2. Real bug found by the test suite
-- **deep2_multitoken_decode_parity FAIL**: batched prefill diverges from serial prefill
-  (`S03_PREFILL_PARITY maxAbs=0.495 maxRel=127`, `S03_HIDDEN_PARITY first_divergent_pos=0`,
-  maxAbs 2.13). **Precise localization**: divergence is at POSITION 0 (the first token), so it
-  is NOT a causal-mask / position-N defect — it is the batched layer-major
-  `Deep2Engine::prefillBatched` → `forwardLayerBatched` first-token path (embedding / finalNorm /
-  KV-write ordering) differing from the serial `prefillSerial` → `forwardTokenAllLayers`.
-  Serial: per-token embed→forwardTokenAllLayers(h, t+1)→norm→publish→kv.advance().
-  Batched: embed all n → forwardLayerBatched(layer, batch, base, base+1) layer-major → publish →
-  kv.advanceBy(n). The pos-0 hidden differs => the batched layer pass for the first token is not
-  bit-comparable to the serial one. Milestone: make `forwardLayerBatched` pos-0 output match
-  `forwardTokenAllLayers` (<1e-3). This is a focused GPU/numerical fix, NOT a config gap.
+- **deep2_multitoken_decode_parity FAIL** — ROOT CAUSE VERIFIED (2026-11-28): it is NOT a
+  batched-algorithm defect. With the GPU disabled (`RAWRXD_GPU_DEVICES=CPU`) the test PASSES
+  EXACTLY: `S03_PREFILL_PARITY maxAbs=0.0`, `S03_HIDDEN_PARITY all 5 positions agree`,
+  `S03_TOKEN_MATCHES=8/8`, `S03_SUMMARY prefill_parity=PASS decode_parity=PASS
+  decode_logit_parity=PASS`, exit 0. The batched host path (`forwardLayerBatched` → LinearW/
+  RMSNormW) is bit-exact vs the serial host reference.
+- The divergence with GPU ON is because serial `forwardTokenAllLayers` tries the GPU first
+  (`tryGpuTokenForward`) while `forwardLayerBatched` is host-only — so the test is really
+  measuring **GPU-vs-host numerical divergence = M-FIN-02 (GPU Q4_K correctness)**.
+- **Conclusion:** M-FIN-01 and M-FIN-02 are the SAME root cause. Fix GPU Q4_K parity (make
+  `tryGpuTokenForward` match the host reference <1e-3) and this test passes with GPU enabled.
+  Reproducible acceptance procedure: `RAWRXD_GPU_DEVICES=CPU` → PASS (host reference);
+  GPU on → currently FAIL (GPU Q4_K). No test suppression needed.
 
 ## 3. Known correctness/perf gaps (from this session's live runs)
 - **GPU Q4_K forward garbled output**: single-GPU Q4_K packed GEMV produces finite-but-wrong
