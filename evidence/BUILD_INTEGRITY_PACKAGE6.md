@@ -38,6 +38,17 @@ required engine unless the engine-less build is explicitly requested.
 - ggml submodule / rawr-reap / deep2_openai_server / computer_use: lower-priority or
   optional; not product-blocking on the default path.
 
+## Build-level verification (beyond configure)
+Forced a real recompile of a product dependency under the modified CMake:
+```
+cmake --build build\cmake-preset-ninja-release --target rawrxd_production_hardening
+[1/3] Building CXX object .../ProductionRuntime.cpp.obj
+[2/3] Linking CXX static library .../rawrxd_production_hardening.lib
+=> BUILD_EXIT=0
+```
+Confirms the CMake changes do not break the actual compile/link of a real product dependency
+(the D9025 /EHs-/EHa override warnings are pre-existing, unrelated to this change).
+
 ## State
 IMPLEMENTED=1 COMPILED=1(configure) RUNTIME_REACHED=CONFIGURE_OK FUNCTIONALLY_VERIFIED=1
 COMMITTED=1 PUSHED=0
