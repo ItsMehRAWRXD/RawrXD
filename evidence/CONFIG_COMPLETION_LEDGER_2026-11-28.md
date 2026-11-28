@@ -71,7 +71,35 @@ Receipts:
 - `scan_quant.ps1` -> "Patched quantization for 13 entries".
 - `enrich_acquisition.ps1` -> "Enriched 18 acquisition entries".
 
+## Unit U4 — M-CFG-07 portable install acceptance
+
+Commit: (see git log)
+- `cmake --install build/cmake-product-msvc-tests --prefix F:\rawrxd-install-test`
+- Installed: bin/rawr.exe, bin/RawrXD-Win32IDE-Native.exe, lib/*.lib,
+  etc/rawrxd/rawrxd.config.template.json, share/rawrxd/{models,shaders}.
+- `scripts/verify_install.ps1` with all RAWRXD_* variables cleared:
+  `rawr.exe --help` exit 0 -> `PORTABLE_INSTALL=PASS`.
+- Run directory: F:\rawrxd-install-test (outside the repository and build tree).
+
+## ctest receipt (product-msvc-tests)
+
+- 90 tests registered; 89 passed, 2 skipped (#7, #73), 1 failed (#74).
+- `config_core_test` PASS.
+- Total test time 52.62 s.
 ## Blockers
-- `deep2_multitoken_decode_parity` remains failed (M-FIN-01, outside config scope but blocks CTEST=ALL PASS).
-- Two skipped tests (#7, #73) not yet investigated.
-- Full product build not yet re-run to completion after U1.
+
+- `deep2_multitoken_decode_parity` remains failed (M-FIN-01, outside config scope but blocks CTEST=ALL PASS):
+  S03_PREFILL_PARITY maxAbs=4.954717159e-01, S03_HIDDEN_PARITY first_divergent_pos=0 maxAbs=2.126767397e+00,
+  decode=NOT_RUN. Divergence at position 0 points at the batched path's first-token handling
+  (causal mask / KV offset / device split), not at a later position. Next diagnostic: run both
+  legs with a single device and chunk=1 to isolate mask vs device-split, then compare per-layer.
+- Two skipped tests (#7, #73) are model/backend availability gates (return 77), not disabled tests.
+- `model.gguf` quantization remains unknown (header/tensor parse); all other 17 available models have quant.
+- 5 acquisition entries have unknown source/license (families not in the mapping table).
+- GitHub Actions `product-tests.yml` has not been executed on a runner; local ctest receipt is the evidence.
+
+## Configuration milestone status
+
+M-CFG-01..08: implemented with receipts (presets, portable paths, schema/migration, registry v15,
+env inventory 690, CI workflow, install PASS, acquisition/provenance).
+CONFIG_MILESTONES=8/8 (implementation), CONFIG_CERTIFIED=0 (blocked by M-FIN-01 and model-gated skips).
