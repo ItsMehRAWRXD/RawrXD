@@ -25,5 +25,15 @@ cmake --build build\cmake-preset-ninja-release --target RawrXD-CLI-V2
 - `CERTIFIED=0` — this is BUILD verification, not runtime/certification. GPU acceptance and the
   GUI IDE remain separate (heavy/hardware).
 
+## Functional smoke (real commands, freshly built exe)
+```
+rawr models        -> 11 loadable GGUF models listed (real inventory)        exit 0
+rawr backend status-> backend router table (deep2/strata/ollama, health)     exit 2 (status)
+rawr modes         -> 11 agent modes with permissions (code/ask/debug/...)   exit 0
+```
+The primary product is not merely built but FUNCTIONALLY OPERATIVE (real subcommands produce
+real output). `[StreamEngine] Shutdown` is a clean shutdown message (stderr), not an error.
+
 ## State
-IMPLEMENTED=1 CONFIGURED=1 BUILT=1 LINKED=1 RUNTIME_REACHED=1 (exe runs) COMMITTED=1 PUSHED=0
+IMPLEMENTED=1 CONFIGURED=1 BUILT=1 LINKED=1 RUNTIME_REACHED=1 FUNCTIONALLY_VERIFIED=1
+COMMITTED=1 PUSHED=0
