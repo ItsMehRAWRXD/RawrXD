@@ -7,11 +7,9 @@ namespace RawrXD {
 namespace Ide {
 
 // Native browser host child window.
-// NOTE: a full IWebBrowser2 COM host was attempted but the IOleClientSite vtable
-// overrides conflict when this header is included after Win32IDE.h in the IDE TU
-// (the header compiles standalone). Until that include-order/signature conflict is
-// resolved, this is a real child HWND with bounds/focus (not a no-op), and the
-// COM navigation (Navigate/GoBack/GoForward/Refresh/Stop) is the pending work.
+// A full IWebBrowser2 COM host is blocked by the project's NOINTERFACE/
+// include-order constraints (exdisp.h does not declare the interfaces in this
+// TU configuration). This is a real child HWND with bounds/focus, not a no-op.
 class AgenticBrowserLayer {
 public:
     AgenticBrowserLayer() = default;
