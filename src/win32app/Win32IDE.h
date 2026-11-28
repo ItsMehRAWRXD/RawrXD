@@ -1204,9 +1204,11 @@ public:
     // Voice Assistant (Batch 6 C04)
     void initVoiceAssistant();
     void startVoiceListening();
-    void stopVoiceListening();
-    bool isVoiceListening() const;
-
+void stopVoiceListening();
+
+    bool isVoiceListening() const;
+
+    void speakText(const std::string& text);
     // FileSystem Events / Incremental Indexing (Batch 6 R04)
     void initFileSystemWatcher();
     bool fileNeedsReindex(const std::string& filePath);
