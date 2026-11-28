@@ -4347,6 +4347,12 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             "${_chat_route_generated_header}"
             $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
         )
+        # RAWRXD chat-smoke crash: a varying-call-site KERNELBASE 0xC0000005 is the
+        # stack-overflow signature (guard-page fault on the next API call). Give the
+        # IDE a larger stack so deep chat/inference paths do not exhaust the default 1MB.
+        if(MSVC)
+            target_link_options(RawrXD-Win32IDE-Native PRIVATE /STACK:8388608)
+        endif()
         # Track E Strata text path: StrataChatSession -> RuntimeGraphExecutor +
         # Universal ingest (not part of deep2_engine_lib). Same TUs the CLI and
         # strata_bridge_acceptance compile directly.
