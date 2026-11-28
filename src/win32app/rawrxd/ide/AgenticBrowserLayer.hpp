@@ -6,28 +6,27 @@
 namespace RawrXD {
 namespace Ide {
 
-// Native browser host child window. IWebBrowser2 hosting is pending a build
-// configuration where exdisp.h declarations are visible (NOINTERFACE off).
 class AgenticBrowserLayer {
 public:
-    AgenticBrowserLayer() = default;
-    virtual ~AgenticBrowserLayer() = default;
+    AgenticBrowserLayer();
+    ~AgenticBrowserLayer();
+    AgenticBrowserLayer(const AgenticBrowserLayer&) = delete;
+    AgenticBrowserLayer& operator=(const AgenticBrowserLayer&) = delete;
 
-    void setBounds(const RECT& rc) {
-        if (m_hwnd) MoveWindow(m_hwnd, rc.left, rc.top,
-                               rc.right - rc.left, rc.bottom - rc.top, TRUE);
-    }
-    HWND CreateHost(HWND hParent, HINSTANCE hInstance) {
-        if (m_hwnd) return m_hwnd;
-        m_hwnd = CreateWindowW(L"STATIC", L"Agentic Browser",
-                               WS_CHILD | WS_VISIBLE | SS_CENTER,
-                               0, 0, 200, 100, hParent, nullptr, hInstance, nullptr);
-        return m_hwnd;
-    }
-    bool Focus() { if (m_hwnd) SetFocus(m_hwnd); return m_hwnd != nullptr; }
+    void setBounds(const RECT& rc);
+    HWND CreateHost(HWND hParent, HINSTANCE hInstance);
+    bool Navigate(const std::wstring& url);
+    bool Back();
+    bool Forward();
+    bool Reload();
+    bool Stop();
+    bool Focus();
+    std::wstring CurrentUrl();
+    void Shutdown();
 
 private:
-    HWND m_hwnd = nullptr;
+    struct Impl;
+    Impl* impl_ = nullptr;
 };
 
 } // namespace Ide

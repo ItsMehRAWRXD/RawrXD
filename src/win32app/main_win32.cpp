@@ -12,6 +12,7 @@
 #include <dbghelp.h>
 #include <filesystem>
 #include "rawrxd/config/AppPaths.h"
+#include "rawrxd/ide/AgenticBrowserLayer.hpp"
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
 #include "Win32IDE_ExtHostWire.h"
 #endif
@@ -533,6 +534,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             if (*env) receipt = env;
         }
         ide.beginChatSmoke(receipt);
+    }
+
+    // Native browser smoke: real IWebBrowser2 host + navigation.
+    if (lpCmdLine && std::strstr(lpCmdLine, "--browser-smoke")) {
+        RawrXD::Ide::AgenticBrowserLayer browser;
+        HWND host = browser.CreateHost(ide.getMainWindow(), hInstance);
+        bool ok = host != nullptr;
+        if (ok) ok = browser.Navigate(L"about:blank");
+        for (int i = 0; i < 50 && ok; ++i) {
+            if (!browser.CurrentUrl().empty()) break;
+            Sleep(100);
+        }
+        const std::wstring url = browser.CurrentUrl();
+        std::string receipt = rawrxdEvidence("BROWSER_SMOKE.txt");
+        if (const char* env = std::getenv("RAWRXD_BROWSER_SMOKE_RECEIPT")) {
+            if (*env) receipt = env;
+        }
+        std::ofstream rec(receipt, std::ios::trunc);
+        if (rec) {
+            rec << "BROWSER_HOST=" << (host ? "PASS" : "FAIL") << "\n"
+                << "NAVIGATE=" << (ok ? "PASS" : "FAIL") << "\n"
+                << "URL=" << std::string(url.begin(), url.end()) << "\n"
+                << "OVERALL=" << (ok && !url.empty() ? "PASS" : "FAIL") << "\n";
+            rec.flush();
+            rec.close();
+        }
+        browser.Shutdown();
+        ::ExitProcess(ok && !url.empty() ? 0u : 2u);
     }
 
     // A5 native graphical agent E2E: isolated workspace, real agent-panel

@@ -4343,7 +4343,12 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
     endif()
 
     if(RAWRXD_NATIVE_IDE_COMPLETE)
-        add_executable(RawrXD-Win32IDE-Native ${RAWRXD_NATIVE_IDE_SOURCES}
+        add_library(rawrxd_browser STATIC
+        src/win32app/rawrxd/ide/AgenticBrowserLayer.cpp)
+    target_include_directories(rawrxd_browser PRIVATE
+        "${CMAKE_SOURCE_DIR}/src/win32app/rawrxd/ide")
+    target_link_libraries(rawrxd_browser PRIVATE ole32)
+    add_executable(RawrXD-Win32IDE-Native ${RAWRXD_NATIVE_IDE_SOURCES}
             "${_chat_route_generated_header}"
             $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
         )
@@ -4428,6 +4433,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             message(STATUS "RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK")
         endif()
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
+            rawrxd_browser
             comctl32 comdlg32 winhttp ws2_32
             ${RAWRXD_RICHEDIT_LIBS}
               shell32 user32 gdi32 dbghelp
