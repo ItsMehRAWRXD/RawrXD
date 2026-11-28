@@ -270,6 +270,11 @@ void Win32IDE::tickChatSmoke() {
         std::filesystem::create_directories(receiptPath.parent_path(), ec);
         std::ofstream rec(m_chatSmokeReceiptPath, std::ios::trunc);
         if (rec) {
+            rec << "FLAGS model=" << (m_chatSmokeModelOk ? 1 : 0)
+                << " tokens1=" << (m_chatSmokeSawTokens ? 1 : 0)
+                << " cancel=" << (m_chatSmokeCancelOk ? 1 : 0)
+                << " tokens2=" << (m_chatSmokeSawTokens2 ? 1 : 0)
+                << " editor=" << (m_chatSmokeEditorOk ? 1 : 0) << "\n";
             rec << "MODEL_SELECT=" << (m_chatSmokeModelOk ? "PASS" : "FAIL") << "\n"
                 << "MODEL_ID=" << m_chatSmokeModelId << "\n"
                 << "BACKEND=" << (m_chatSmokeBackend.empty() ? "auto" : m_chatSmokeBackend) << "\n"
@@ -402,13 +407,8 @@ void Win32IDE::tickChatSmoke() {
                 }
                 Sleep(100);
             }
-            std::ofstream rec(m_chatSmokeReceiptPath, std::ios::app);
-if (rec) {
-            rec << "FLAGS model=" << (m_chatSmokeModelOk ? 1 : 0)
-                << " tokens1=" << (m_chatSmokeSawTokens ? 1 : 0)
-                << " cancel=" << (m_chatSmokeCancelOk ? 1 : 0)
-                << " tokens2=" << (m_chatSmokeSawTokens2 ? 1 : 0)
-                << " editor=" << (m_chatSmokeEditorOk ? 1 : 0) << "\n";
+std::ofstream rec(m_chatSmokeReceiptPath, std::ios::app);
+            if (rec) {
                 rec << "WATCHDOG=TIMEOUT\nPHASE=" << m_chatSmokePhase
                     << "\nOVERALL=FAIL\n";
                 rec.flush();
