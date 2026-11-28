@@ -1,0 +1,3 @@
+RAWRXD gpt-oss native reliability (isolated exe, uncontended) — 2026-11-28
+gpt-oss:20b native (fallbacks=0): PASS, PASS, INCOMPLETE = 2/3 (67%).
+Transport fully implemented (native accepted). gpt-oss native ~67% (variable). Aggregate (all models) lower due to deepseek/qwen/nemotron compliance.
