@@ -9986,6 +9986,13 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
         {
             std::lock_guard<std::mutex> _rbLock(m_responseBufferMutex);
             session->responseBuffer += response;
+            // Chat-smoke runaway guard: a smoke model that ignores "reply with one
+            // word" can generate unboundedly (observed ~22k callbacks -> KERNELBASE
+            // fault). Cap the smoke response and request a stop. Scoped to the smoke
+    // (m_chatSmokePhase >= 0) so normal long answers are unaffected.
+            if (m_chatSmokePhase >= 0 && session->responseBuffer.size() > 4096) {
+                m_inferenceStopRequested.store(true, std::memory_order_release);
+            }
         }
         if (active && m_hwndCopilotChatOutput && !response.empty()) {
             PostChatTextToUi(response);
