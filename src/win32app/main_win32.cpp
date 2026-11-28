@@ -2,10 +2,12 @@
 #include "IDELogger.h"
 #include "Win32TerminalManager.h"
 #include <windows.h>
+#include <winhttp.h>
 #include <string>
 #include <fstream>
 #include <mutex>
 #include <atomic>
+#include <cstdio>
 #include <cstdlib>
 #include <dbghelp.h>
 #include <filesystem>
@@ -21,6 +23,58 @@ std::string rawrxdRoot() {
 }
 std::string rawrxdEvidence(const std::string& sub) {
     return (std::filesystem::path(rawrxdRoot()) / "evidence" / sub).string();
+}
+
+// --health-check: headless product health (no GUI/GPU). Reports config/model
+// discovery and backend reachability, then exits 0 (healthy) or 1.
+static bool probeOllama11434() {
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-Health/1.0",
+                                     WINHTTP_ACCESS_TYPE_NO_PROXY,
+                                     WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) return false;
+    bool ok = false;
+    HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1", 11434, 0);
+    if (hConnect) {
+        HINTERNET hReq = WinHttpOpenRequest(hConnect, L"GET", L"/api/tags", nullptr,
+                                            WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+        if (hReq) {
+            if (WinHttpSendRequest(hReq, WINHTTP_NO_REQUEST_DATA, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
+                WinHttpReceiveResponse(hReq, nullptr)) {
+                DWORD code = 0, len = sizeof(code);
+                if (WinHttpQueryHeaders(hReq,
+                        WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                        WINHTTP_HEADER_NAME_BY_INDEX, &code, &len, WINHTTP_NO_HEADER_INDEX)) {
+                    ok = (code == 200);
+                }
+            }
+            WinHttpCloseHandle(hReq);
+        }
+        WinHttpCloseHandle(hConnect);
+    }
+    WinHttpCloseHandle(hSession);
+    return ok;
+}
+
+static int runHealthCheck() {
+    namespace fs = std::filesystem;
+    const rawrxd::config::AppPaths paths = rawrxd::config::AppPaths::resolve();
+    size_t modelCount = 0;
+    {
+        std::error_code ec;
+        if (fs::is_directory(paths.modelDir, ec)) {
+            for (const auto& de : fs::directory_iterator(paths.modelDir, ec)) {
+                if (!ec && de.is_regular_file() && de.path().extension() == ".gguf") ++modelCount;
+            }
+        }
+    }
+    const bool ollama = probeOllama11434();
+    std::printf("[HEALTH] applicationRoot=%s\n", paths.applicationRoot.c_str());
+    std::printf("[HEALTH] configDir=%s\n", paths.configDir.c_str());
+    std::printf("[HEALTH] modelDir=%s models=%zu\n", paths.modelDir.c_str(), modelCount);
+    std::printf("[HEALTH] backend ollama:11434=%s\n", ollama ? "UP" : "DOWN");
+    const bool pass = ollama && modelCount > 0;
+    std::printf("IDE_HEALTH=%s\n", pass ? "PASS" : "FAIL");
+    return pass ? 0 : 1;
 }
 LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
 {
@@ -372,6 +426,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     applyUserDataDirFromCmdLine(lpCmdLine);
+
+    // Headless product health: config/model discovery + backend reachability,
+    // then ExitProcess before any GUI/GPU init (no UI races).
+    if (lpCmdLine && std::strstr(lpCmdLine, "--health-check")) {
+        const int hc = runHealthCheck();
+        startupTrace(hc == 0 ? "health-check PASS" : "health-check FAIL");
+        ::ExitProcess(static_cast<UINT>(hc));
+    }
 
     // Terminal product ConPTY smoke: run before IDE ctor (no UI/GPU races).
     // --term-quit ExitProcess happens inside runTermSmoke after receipt.

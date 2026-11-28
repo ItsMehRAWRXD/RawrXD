@@ -77,7 +77,20 @@ AppPaths AppPaths::resolve() {
     if (p.logDir.empty()) p.logDir = join(base, "RawrXD/logs");
 
     p.modelDir = envOrEmpty("RAWRXD_MODELS_DIR");
-    if (p.modelDir.empty()) p.modelDir = join(p.applicationRoot, "models");
+    if (p.modelDir.empty()) {
+        // Portable model discovery: walk up from the application root looking for a
+        // "models" directory (handles bin/ and build-tree layouts), matching the
+        // IDE's discovery. Fall back to applicationRoot/models.
+        std::error_code ec;
+        fs::path probe = fs::path(p.applicationRoot).lexically_normal();
+        for (int depth = 0; depth < 4 && p.modelDir.empty(); ++depth) {
+            const fs::path candidate = probe / "models";
+            if (fs::is_directory(candidate, ec) && !ec) p.modelDir = candidate.string();
+            if (!probe.has_parent_path() || probe.parent_path() == probe) break;
+            probe = probe.parent_path();
+        }
+        if (p.modelDir.empty()) p.modelDir = join(p.applicationRoot, "models");
+    }
     return p;
 }
 
