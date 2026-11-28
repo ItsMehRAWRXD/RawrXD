@@ -216,9 +216,14 @@ void Win32IDE::beginChatSmoke(const char* receiptPath) {
     ChatSmokeMark("CHAT_01 enter beginChatSmoke");
     const std::string root = rawrxd::config::AppPaths::resolve().applicationRoot;
     const std::string defaultReceipt =
-        (std::filesystem::path(root) / "evidence" / "CHAT_SMOKE_RECEIPT.txt").string();
+        (std::filesystem::path(root) / "evidence" /
+         ("CHAT_SMOKE_" + std::to_string(GetCurrentProcessId()) + "_" +
+          std::to_string(GetTickCount64()) + ".txt")).string();
     m_chatSmokeReceiptPath = receiptPath && *receiptPath ? receiptPath : defaultReceipt;
     m_chatSmokePhase = 0;
+    // Log the exact receipt path BEFORE inference so a missing final receipt is
+    // independently observable (which file to inspect).
+    logInfo("[chat-smoke] receipt=" + m_chatSmokeReceiptPath);
     m_chatSmokeStartMs = GetTickCount64();
     m_chatSmokeOutBaseline = 0;
     m_chatSmokeSawTokens = false;
@@ -456,6 +461,7 @@ void Win32IDE::tickChatSmoke() {
         return;
     }
     if (m_chatSmokePhase == 4) {
+        m_chatSmokePhase = 5; // advance before any save to block reentry
         const std::string probePath =
             (std::filesystem::path(rawrxd::config::AppPaths::resolve().applicationRoot) /
              "evidence" / "chat_smoke_editor.txt").string();
@@ -463,8 +469,16 @@ void Win32IDE::tickChatSmoke() {
             std::ofstream ed(probePath, std::ios::trunc);
             if (ed) ed << "GUI_CHAT_SMOKE_EDITOR\n";
         }
-        openFile(probePath);
+        // Predetermined path: no modal Save dialog. Exercise the production
+        // save implementation with m_currentFile already set.
+        m_currentFile = probePath;
+        setEditorText("GUI_CHAT_SMOKE_EDITOR");
+        m_fileModified = true;
         m_chatSmokeEditorOk = saveFile();
+        // Verify the real saved contents (not just that save returned true).
+        { std::ifstream vf(probePath); std::stringstream vs; vs << vf.rdbuf();
+          m_chatSmokeEditorOk = m_chatSmokeEditorOk &&
+              vs.str().find("GUI_CHAT_SMOKE_EDITOR") != std::string::npos; }
         const bool pass = m_chatSmokeModelOk && m_chatSmokeSawTokens &&
             m_chatSmokeCancelOk && m_chatSmokeSawTokens2 && m_chatSmokeEditorOk;
         finish(pass);
