@@ -7366,13 +7366,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/config/AppPaths.cpp")
     add_library(rawrxd_config STATIC
         src/config/AppPaths.cpp
         src/config/ConfigStore.cpp
-        src/config/ModelDiscovery.cpp)
+        src/config/ModelDiscovery.cpp
+        src/tts/TtsEngine.cpp)
     target_include_directories(rawrxd_config PUBLIC
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/src")
     target_compile_features(rawrxd_config PUBLIC cxx_std_17)
     if(WIN32)
-        target_link_libraries(rawrxd_config PUBLIC crypt32)
+        target_link_libraries(rawrxd_config PUBLIC crypt32 ole32)
     endif()
     if(TARGET RawrXD-Win32IDE-Native)
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_config)
@@ -7388,5 +7389,36 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/config/AppPaths.cpp")
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
         add_test(NAME config_core_test COMMAND config_core_test)
     endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/tts/tts_engine_test.cpp")
+        add_executable(tts_engine_test tests/tts/tts_engine_test.cpp)
+        target_link_libraries(tts_engine_test PRIVATE rawrxd_config)
+        target_compile_features(tts_engine_test PRIVATE cxx_std_17)
+        set_target_properties(tts_engine_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+        add_test(NAME tts_engine_test COMMAND tts_engine_test)
+    endif()
     message(STATUS "RawrXD configuration subsystem enabled (rawrxd_config + config_core_test)")
+endif()
+
+# ===========================================================================
+# rawrxd_tts — native Windows SAPI text-to-speech (no external deps, no Qt)
+# ===========================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/tts/tts_sapi.cpp")
+    add_library(rawrxd_tts STATIC src/win32app/tts/tts_sapi.cpp)
+    target_include_directories(rawrxd_tts PUBLIC ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawrxd_tts PUBLIC cxx_std_17)
+    if(WIN32)
+        target_link_libraries(rawrxd_tts PUBLIC sapi ole32 advapi32)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/tts_smoke.cpp")
+        add_executable(tts_smoke tools/tts_smoke.cpp)
+        target_link_libraries(tts_smoke PRIVATE rawrxd_tts)
+        target_compile_features(tts_smoke PRIVATE cxx_std_17)
+        set_target_properties(tts_smoke PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+        if(RAWRXD_BUILD_TESTS)
+            add_test(NAME tts_smoke COMMAND tts_smoke)
+        endif()
+    endif()
+    message(STATUS "rawrxd_tts: native SAPI TTS enabled (rawrxd_tts + tts_smoke)")
 endif()
