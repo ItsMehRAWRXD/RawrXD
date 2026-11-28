@@ -2,7 +2,9 @@
 #include "Win32IDE.h"
 #include "IDELogger.h"
 #include "Win32IDE_AgentStepTimeline.h"
+#include "rawrxd/config/AppPaths.h"
 #include <fstream>
+#include <filesystem>
 #include <cstdlib>
 #if defined(RAWRXD_HAS_COMPUTER_USE)
 #include "ComputerUseBridge.h"
@@ -210,9 +212,10 @@ void Win32IDE::ChatTraceMark(const char* op) {
 
 void Win32IDE::beginChatSmoke(const char* receiptPath) {
     ChatSmokeMark("CHAT_01 enter beginChatSmoke");
-    m_chatSmokeReceiptPath = receiptPath && *receiptPath
-        ? receiptPath
-        : "F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013\\CHAT_SMOKE_RECEIPT.txt";
+    const std::string root = rawrxd::config::AppPaths::resolve().applicationRoot;
+    const std::string defaultReceipt =
+        (std::filesystem::path(root) / "evidence" / "CHAT_SMOKE_RECEIPT.txt").string();
+    m_chatSmokeReceiptPath = receiptPath && *receiptPath ? receiptPath : defaultReceipt;
     m_chatSmokePhase = 0;
     m_chatSmokeStartMs = GetTickCount64();
     m_chatSmokeOutBaseline = 0;
@@ -222,10 +225,18 @@ void Win32IDE::beginChatSmoke(const char* receiptPath) {
     m_chatSmokeEditorOk = false;
     m_chatSmokeModelOk = false;
     m_chatSmokeModelId.clear();
-    if (const char* force = std::getenv("RAWRXD_P11_FORCE_OLLAMA_MODEL")) {
+    if (const char* force = std::getenv("RAWRXD_SMOKE_MODEL")) {
         if (*force) m_chatSmokeModelId = force;
     }
+    if (m_chatSmokeModelId.empty()) {
+        if (const char* force = std::getenv("RAWRXD_P11_FORCE_OLLAMA_MODEL")) {
+            if (*force) m_chatSmokeModelId = force;
+        }
+    }
     if (m_chatSmokeModelId.empty()) m_chatSmokeModelId = "n4-tiny-oracle:latest";
+    if (const char* backend = std::getenv("RAWRXD_SMOKE_BACKEND")) {
+        if (*backend) m_chatSmokeBackend = backend;
+    }
     if (m_hwndMain) SetTimer(m_hwndMain, IDT_CHAT_SMOKE, 250, nullptr);
     logInfo("[chat-smoke] begin model=" + m_chatSmokeModelId);
 }
@@ -244,16 +255,25 @@ void Win32IDE::tickChatSmoke() {
             drainCancelledInferenceWorker();
         }
         m_chatSmokePhase = -1;
-        CreateDirectoryA("F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013", nullptr);
+        const std::filesystem::path receiptPath(m_chatSmokeReceiptPath);
+        std::error_code ec;
+        std::filesystem::create_directories(receiptPath.parent_path(), ec);
         std::ofstream rec(m_chatSmokeReceiptPath, std::ios::trunc);
         if (rec) {
             rec << "MODEL_SELECT=" << (m_chatSmokeModelOk ? "PASS" : "FAIL") << "\n"
                 << "MODEL_ID=" << m_chatSmokeModelId << "\n"
+                << "BACKEND=" << (m_chatSmokeBackend.empty() ? "auto" : m_chatSmokeBackend) << "\n"
+                << "PHASE=" << m_chatSmokePhase << "\n"
+                << "ELAPSED_MS=" << (GetTickCount64() - m_chatSmokeStartMs) << "\n"
                 << "TOKENS_1=" << (m_chatSmokeSawTokens ? "PASS" : "FAIL") << "\n"
                 << "CANCEL=" << (m_chatSmokeCancelOk ? "PASS" : "FAIL") << "\n"
                 << "TOKENS_2=" << (m_chatSmokeSawTokens2 ? "PASS" : "FAIL") << "\n"
                 << "EDITOR_SAVE=" << (m_chatSmokeEditorOk ? "PASS" : "FAIL") << "\n"
                 << "OVERALL=" << (pass ? "PASS" : "FAIL") << "\n";
+            // ExitProcess does not unwind, so the stream destructor never runs;
+            // flush/close explicitly or the receipt is lost.
+            rec.flush();
+            rec.close();
         }
         logInfo(pass ? "[chat-smoke] PASS" : "[chat-smoke] FAIL");
         ChatSmokeMark("CHAT_10 teardown: drain worker");
@@ -288,12 +308,19 @@ void Win32IDE::tickChatSmoke() {
             if (data < 0 || static_cast<size_t>(data) >= m_availableModels.size())
                 continue;
             const auto& e = m_availableModels[static_cast<size_t>(data)];
-            if (e.source == ChatModelEntry::Source::Ollama &&
+            if ((e.source == ChatModelEntry::Source::Ollama ||
+                 e.source == ChatModelEntry::Source::LocalFile) &&
                 e.identifier == m_chatSmokeModelId) {
                 comboRow = r; break;
             }
         }
         if (comboRow < 0 && elapsed > 45000ull) {
+            // Prefer an Ollama model; otherwise deterministically pick the smallest
+            // local GGUF (fastest cold-start smoke). Validates availability (file
+            // exists) and size (memory-admission proxy) rather than blindly index 0.
+            size_t bestLocal = static_cast<size_t>(-1);
+            int bestRow = -1;
+            std::string bestId;
             for (int r = 0; r < count; ++r) {
                 const LRESULT data = SendMessage(
                     m_hwndModelSelector, CB_GETITEMDATA, static_cast<WPARAM>(r), 0);
@@ -304,6 +331,18 @@ void Win32IDE::tickChatSmoke() {
                     m_chatSmokeModelId = e.identifier;
                     comboRow = r; break;
                 }
+                if (e.source == ChatModelEntry::Source::LocalFile) {
+                    std::error_code ec;
+                    const auto sz = std::filesystem::file_size(
+                        std::filesystem::path(e.identifier), ec);
+                    if (!ec && sz < bestLocal) {
+                        bestLocal = sz; bestRow = r; bestId = e.identifier;
+                    }
+                }
+            }
+            if (comboRow < 0 && bestRow >= 0) {
+                comboRow = bestRow;
+                m_chatSmokeModelId = bestId;
             }
         }
         if (comboRow < 0) return;
@@ -313,7 +352,8 @@ void Win32IDE::tickChatSmoke() {
         onModelSelectionChanged();
         ChatSmokeMark("CHAT_06 model selected");
         m_chatSmokeModelOk =
-            m_selectedChatModel.source == ChatModelEntry::Source::Ollama &&
+            (m_selectedChatModel.source == ChatModelEntry::Source::Ollama ||
+             m_selectedChatModel.source == ChatModelEntry::Source::LocalFile) &&
             !m_selectedChatModel.identifier.empty();
         if (!m_chatSmokeModelOk) return;
         m_chatSmokeOutBaseline = (m_hwndCopilotChatOutput &&
