@@ -1,0 +1,4 @@
+BROWSER_HOST=PASS
+NAVIGATE=PASS
+URL=https://example.com/
+OVERALL=PASS

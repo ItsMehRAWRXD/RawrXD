@@ -541,7 +541,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         RawrXD::Ide::AgenticBrowserLayer browser;
         HWND host = browser.CreateHost(ide.getMainWindow(), hInstance);
         bool ok = host != nullptr;
-        if (ok) ok = browser.Navigate(L"about:blank");
+        std::wstring target = L"about:blank";
+        if (const char* env = std::getenv("RAWRXD_BROWSER_URL")) {
+            if (*env) target = std::wstring(env, env + std::strlen(env));
+        }
+        if (ok) ok = browser.Navigate(target);
         for (int i = 0; i < 100 && ok; ++i) {
             MSG msg;
             while (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
