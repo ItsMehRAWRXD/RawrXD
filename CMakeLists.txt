@@ -6944,6 +6944,7 @@ if(RAWRXD_BUILD_SECURITY_LIB)
             tests/main_hardening_tests.cpp
             src/gguf_loader.cpp
             src/gguf_vocab_resolver.cpp
+            src/codec/compression_core.cpp
         )
         target_include_directories(rawrxd_loader_hardening_tests PRIVATE
             ${CMAKE_SOURCE_DIR}/include
@@ -7212,6 +7213,8 @@ endif()
 add_executable(rawrxd_check
   src/toolchain/linker/rawrxd_check.c
   src/toolchain/linker/coff_reader.c
+  src/toolchain/linker/elf_reader.c
+  src/toolchain/linker/mach_o_reader.c
 )
 target_include_directories(rawrxd_check PRIVATE
   ${CMAKE_SOURCE_DIR}/src/toolchain/linker
