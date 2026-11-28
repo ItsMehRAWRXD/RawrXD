@@ -7719,8 +7719,12 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
         if (!bResults) { WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return ""; }
         bResults = WinHttpReceiveResponse(hRequest, NULL);
         std::string raw;
-        if (bResults) {
-            DWORD dwSize = 0; do {
+        if (bResults) {
+            // Bound the read loop: without a receive timeout, a stream that stays
+            // open blocks QueryDataAvailable forever -> BACKEND_REQUEST_END never
+            // runs -> m_inferenceRunning stays set (SECOND_REQUEST_COMPLETION fails).
+            WinHttpSetTimeouts(hRequest, 0, 0, 0, 30000);
+            DWORD dwSize = 0; do {
                 if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) break;
                 if (!dwSize) break;
                 std::string chunk; chunk.resize(dwSize);
