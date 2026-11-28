@@ -474,6 +474,10 @@ void Win32IDE::tickChatSmoke() {
         m_currentFile = probePath;
         setEditorText("GUI_CHAT_SMOKE_EDITOR");
         m_fileModified = true;
+        appendToOutput("SMOKE_SAVE path=" + m_currentFile +
+                           " editorLen=" + std::to_string(GetWindowTextLengthW(m_hwndEditor)) +
+                           " modified=" + (m_fileModified ? "1" : "0") + "\n",
+                       "Output", OutputSeverity::Info);
         m_chatSmokeEditorOk = saveFile();
         {
             std::ifstream verify(probePath, std::ios::binary);

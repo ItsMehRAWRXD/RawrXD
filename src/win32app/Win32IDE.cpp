@@ -4077,10 +4077,11 @@ bool Win32IDE::flushPendingInitialDocument()
 
 bool Win32IDE::saveFile()
 {
-    if (m_currentFile.empty()) {
-        appendToOutput("File > Save - no current file, showing Save As dialog\n", "Output", OutputSeverity::Info);
-        return saveFileAs();
-    }
+if (m_currentFile.empty()) {
+        appendToOutput("SAVE_FAIL reason=no_current_file\n", "Errors", OutputSeverity::Error);
+        appendToOutput("File > Save - no current file, showing Save As dialog\n", "Output", OutputSeverity::Info);
+        return saveFileAs();
+    }
 
     appendToOutput("Saving file: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
     try {
@@ -4098,8 +4099,13 @@ bool Win32IDE::saveFile()
         }
         // Preserve editor bytes exactly; text-mode streams can translate
         // newlines on Windows and make save/reopen integrity lossy.
-        std::ofstream file(m_currentFile, std::ios::binary | std::ios::trunc);
-        if (file) {
+std::ofstream file(m_currentFile, std::ios::binary | std::ios::trunc);
+        if (!file) {
+            appendToOutput("SAVE_FAIL reason=open_failed path=" + m_currentFile +
+                               " errno=" + std::to_string(errno) + "\n",
+                           "Errors", OutputSeverity::Error);
+        }
+        if (file) {
             file.write(content.data(), static_cast<std::streamsize>(content.size()));
             file.close();
             std::ifstream verify(m_currentFile, std::ios::binary);
