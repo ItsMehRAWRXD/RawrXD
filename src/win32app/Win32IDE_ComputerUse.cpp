@@ -473,6 +473,8 @@ void Win32IDE::tickChatSmoke() {
         const std::string probePath =
             (std::filesystem::path(rawrxd::config::AppPaths::resolve().applicationRoot) /
              "evidence" / "chat_smoke_editor.txt").string();
+        std::filesystem::create_directories(
+            std::filesystem::path(probePath).parent_path());
         {
             std::ofstream ed(probePath, std::ios::trunc);
             if (ed) ed << "GUI_CHAT_SMOKE_EDITOR\n";
