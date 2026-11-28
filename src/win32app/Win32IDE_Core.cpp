@@ -2687,8 +2687,16 @@ int Win32IDE::runMessageLoop()
         rawr::product_infer_lane::BindCurrentThreadAsLane();
         // Peek+MsgWait so Drain can run while idle (GetMessage alone starves the lane).
         BOOL gm = 1;
+        static std::atomic<unsigned long long> s_loopIter{0};
         for (;;)
         {
+            // File-flushed heartbeat: the last "iter=N alive" before a crash localizes
+            // the death to the message pump (Drain/MsgWait/Peek).
+            const unsigned long long it = ++s_loopIter;
+            if (it % 50 == 0) {
+                std::ofstream t("F:\\rawrxd\\mploop_trace.txt", std::ios::app);
+                if (t) { t << "iter=" << it << " alive\n"; t.flush(); }
+            }
             rawr::product_infer_lane::Drain(4);
             MsgWaitForMultipleObjects(0, nullptr, FALSE, 50, QS_ALLINPUT);
             if (!PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
