@@ -6,6 +6,8 @@
 namespace RawrXD {
 namespace Ide {
 
+// Native browser host placeholder retained until IWebBrowser2 hosting is
+// completed. It is a real child window with bounds/focus, not a no-op.
 class AgenticBrowserLayer {
 public:
     AgenticBrowserLayer() = default;
@@ -23,6 +25,8 @@ public:
                                0, 0, 200, 100, hParent, nullptr, hInstance, nullptr);
         return m_hwnd;
     }
+
+    bool Focus() { if (m_hwnd) SetFocus(m_hwnd); return m_hwnd != nullptr; }
 
 private:
     HWND m_hwnd = nullptr;
