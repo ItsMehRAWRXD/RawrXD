@@ -1,0 +1,169 @@
+﻿{
+    "version":  "1.0.0",
+    "resumable_downloads":  true,
+    "verify_before_register":  true,
+    "entries":  [
+                    {
+                        "path":  "models/bigdaddygnative_latest.gguf",
+                        "sha256":  "d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a",
+                        "size_bytes":  25463410912,
+                        "source_url":  "",
+                        "revision":  "",
+                        "license":  "unknown",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/deepseek-coder-v2_16b.gguf",
+                        "sha256":  "5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046",
+                        "size_bytes":  8905109984,
+                        "source_url":  "https://huggingface.co/deepseek-ai/deepseek-coder-6.7B-instruct-GGUF",
+                        "revision":  "main",
+                        "license":  "MIT",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/deepseek-r1_32b.gguf",
+                        "sha256":  "6150cb382311b69f09cc0f9a1b69fc029cbd742b66bb8ec531aa5ecf5c613e93",
+                        "size_bytes":  19851335552,
+                        "source_url":  "https://huggingface.co/deepseek-ai/deepseek-coder-6.7B-instruct-GGUF",
+                        "revision":  "main",
+                        "license":  "MIT",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/gemma3_latest.gguf",
+                        "sha256":  "aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25",
+                        "size_bytes":  3338792448,
+                        "source_url":  "https://huggingface.co/google/gemma-3-4b-it-GGUF",
+                        "revision":  "main",
+                        "license":  "Gemma Terms of Use",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/gpt-oss_latest.gguf",
+                        "sha256":  "e7b273f9636059a689e3ddcab3716e4f65abe0143ac978e46673ad0e52d09efb",
+                        "size_bytes":  13793422144,
+                        "source_url":  "https://huggingface.co/openai/gpt-oss-20b-GGUF",
+                        "revision":  "main",
+                        "license":  "Apache-2.0",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/kiminoto_T0.0.1_latest.gguf",
+                        "sha256":  "dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c",
+                        "size_bytes":  6594462816,
+                        "source_url":  "",
+                        "revision":  "",
+                        "license":  "unknown",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/model.gguf",
+                        "sha256":  "b93f9d0d7ac89dfdbe732c3cb36d334138c2646a62a1cc7010a46389a474d41d",
+                        "size_bytes":  4120,
+                        "source_url":  "",
+                        "revision":  "",
+                        "license":  "unknown",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/nemotron-3.5-lightning_30b.gguf",
+                        "sha256":  "5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3",
+                        "size_bytes":  25430738944,
+                        "source_url":  "https://huggingface.co/nvidia/Llama-3_3-Nemotron-Super-49B-v1-GGUF",
+                        "revision":  "main",
+                        "license":  "NVIDIA Open Model License",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/nemotron-3.5-lightning-30b-Q4_K_M.gguf",
+                        "sha256":  "5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3",
+                        "size_bytes":  25430738944,
+                        "source_url":  "https://huggingface.co/nvidia/Llama-3_3-Nemotron-Super-49B-v1-GGUF",
+                        "revision":  "main",
+                        "license":  "NVIDIA Open Model License",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/nemotron-3-nano_4b.gguf",
+                        "sha256":  "527db2cf6c705d8fabb95693d038d9c06b4a2b0b8b0a4bbdbd01212d37242970",
+                        "size_bytes":  2837586496,
+                        "source_url":  "https://huggingface.co/nvidia/Llama-3_3-Nemotron-Super-49B-v1-GGUF",
+                        "revision":  "main",
+                        "license":  "NVIDIA Open Model License",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/ornith-1.5_35b.gguf",
+                        "sha256":  "aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a",
+                        "size_bytes":  21713462848,
+                        "source_url":  "",
+                        "revision":  "",
+                        "license":  "unknown",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/pdurugyan_qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2_latest.gguf",
+                        "sha256":  "9be227448d319e6a7acca8056b71bf7d9a2c6b2811986e6658a9dedc208d0ada",
+                        "size_bytes":  5629105408,
+                        "source_url":  "https://huggingface.co/Qwen/Qwen3-8B-GGUF",
+                        "revision":  "main",
+                        "license":  "Apache-2.0",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/qwen2.5-coder_1.5b-base.gguf",
+                        "sha256":  "6a77366395772462c84f0c4d226ac404674327cbe78c01e4391cc7e0c698851e",
+                        "size_bytes":  986048512,
+                        "source_url":  "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF",
+                        "revision":  "main",
+                        "license":  "Apache-2.0",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/qwen2.5-coder-7b-instruct.Q4_K_M.gguf",
+                        "sha256":  "1664fccab734674a50763490a8c6931b70e3f2f8ec10031b54806d30e5f956b6",
+                        "size_bytes":  4683074336,
+                        "source_url":  "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF",
+                        "revision":  "main",
+                        "license":  "Apache-2.0",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/starcoder2_15b.gguf",
+                        "sha256":  "dc5deb763c383b81460256a0ac7e40b320c3b01632727ea407e386002588d417",
+                        "size_bytes":  9065400160,
+                        "source_url":  "https://huggingface.co/bigcode/starcoder2-15b-GGUF",
+                        "revision":  "main",
+                        "license":  "BigCode OpenRAIL-M",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/test_mini.gguf",
+                        "sha256":  "dd3cca8206bfdcfa964348489843a9eb381fde95b4704b633488669e95ff8e2c",
+                        "size_bytes":  16992,
+                        "source_url":  "",
+                        "revision":  "",
+                        "license":  "unknown",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/tinyllama.gguf",
+                        "sha256":  "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+                        "size_bytes":  668788096,
+                        "source_url":  "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+                        "revision":  "main",
+                        "license":  "Apache-2.0",
+                        "shards_complete":  true
+                    },
+                    {
+                        "path":  "models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+                        "sha256":  "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+                        "size_bytes":  668788096,
+                        "source_url":  "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+                        "revision":  "main",
+                        "license":  "Apache-2.0",
+                        "shards_complete":  true
+                    }
+                ]
+}
