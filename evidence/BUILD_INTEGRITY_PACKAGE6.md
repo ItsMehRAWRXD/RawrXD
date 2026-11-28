@@ -10,11 +10,13 @@ configured — so a green build could hide a missing required engine.
 - File: `CMakeLists.txt` (+13)
 
 ## Change
-- New option `RAWRXD_REQUIRE_DEEP2` (default ON).
-- Product guards (`RawrXD-Win32IDE-Native`, `RawrXD-Win32IDE-Native-Ext`, `RawrXD-CLI-V2` x2) now:
-  - `if(TARGET deep2_engine_lib)` → link (unchanged);
-  - `elseif(RAWRXD_REQUIRE_DEEP2)` → `FATAL_ERROR` (product requires the engine);
-  - `else()` → STATUS (deliberate engine-less build, `RAWRXD_REQUIRE_DEEP2=OFF`).
+- New option `RAWRXD_REQUIRE_PRODUCT_DEPS` (default ON; generalized from the initial
+  deep2-only `RAWRXD_REQUIRE_DEEP2`).
+- Product dependency guards now fail closed:
+  - `deep2_engine_lib`: `RawrXD-Win32IDE-Native`, `RawrXD-Win32IDE-Native-Ext`, `RawrXD-CLI-V2` x2;
+  - `rawrxd_production_hardening` (documented "hard dependency of the IDE"): `RawrXD-Win32IDE-Native`.
+  - Pattern: `if(TARGET …)` link; `elseif(RAWRXD_REQUIRE_PRODUCT_DEPS)` → `FATAL_ERROR`;
+    `else()` → STATUS/WARNING (deliberate dependency-less build, `RAWRXD_REQUIRE_PRODUCT_DEPS=OFF`).
 
 ## Verification (cmake 4.4.2 + Ninja, ~2 s configure)
 | Configure | Result |
