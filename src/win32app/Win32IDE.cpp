@@ -4149,9 +4149,15 @@ bool Win32IDE::saveFile()
     return false;
 }
 
-bool Win32IDE::saveFileAs()
-{
-    if (!m_hwndMain || !IsWindow(m_hwndMain)) {
+bool Win32IDE::saveFileAs()
+{
+    // Re-entrancy guard: a modal GetSaveFileName runs a nested message loop that can
+    // re-deliver the Save command (stuck accelerator / timer). Without this, the
+    // dialog opened over and over on startup. Only one Save dialog at a time.
+    static bool s_saveDialogOpen = false;
+    if (s_saveDialogOpen) return false;
+    struct DialogGuard { bool& f; explicit DialogGuard(bool& x) : f(x) { f = true; } ~DialogGuard() { f = false; } } _dlgGuard(s_saveDialogOpen);
+    if (!m_hwndMain || !IsWindow(m_hwndMain)) {
         appendToOutput("File > Save As rejected: main window is unavailable\n",
                        "Errors", OutputSeverity::Error);
         return false;
