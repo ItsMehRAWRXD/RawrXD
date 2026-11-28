@@ -162,7 +162,7 @@ static std::string buildJsonError(int statusCode,
 }
 
 static std::string buildJsonResponse(const json& j, int statusCode = 200) {
-    return buildHttpResponse(statusCode, "OK", "application/json", j.dump());
+    return buildHttpResponse(statusCode, "OK", "application/json", j.dump(-1, ' ', false, json::error_handler_t::replace));
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ static std::string serializeChatCompletion(const ChatCompletionResponse& resp) {
             {"total_tokens", resp.usage.totalTokens}
         }}
     };
-    return j.dump();
+    return j.dump(-1, ' ', false, json::error_handler_t::replace);
 }
 
 static std::string serializeStreamChunk(const ChatCompletionStreamChunk& chunk) {
@@ -218,7 +218,7 @@ static std::string serializeStreamChunk(const ChatCompletionStreamChunk& chunk) 
         {"model", chunk.model},
         {"choices", choices}
     };
-    return j.dump();
+    return j.dump(-1, ' ', false, json::error_handler_t::replace);
 }
 
 // ---------------------------------------------------------------------------
@@ -600,6 +600,41 @@ static void handleConnection(SOCKET clientSock,
                         return true;
                     }
                 );
+
+                // Fail closed: if GPU was explicitly requested but the engine
+                // disabled the Vulkan lane (GPU forward fault -> host fallback),
+                // do not silently serve CPU output. Return a clear failure.
+                // A legitimate zero-token GPU run (Vulkan still enabled) is NOT
+                // treated as an error here.
+                {
+                    const char* gpuReqEnv = std::getenv("RAWRXD_ALLOW_GPU");
+                    const bool gpuRequested = gpuReqEnv && gpuReqEnv[0] == '1';
+                    if (gpuRequested && !engine->isVulkanEnabled()) {
+                        if (result.generatedTokens == 0) {
+                            // Empty output caused by a GPU forward fault: fail closed
+                            // rather than returning HTTP 200 with silent empty content.
+                            std::fprintf(stderr,
+                                "[OpenAI] GPU_FORWARD_FAILED requested=1 vulkanEnabled=0 "
+                                "generated=0 - refusing silent empty/CPU fallback\n");
+                            std::fflush(stderr);
+                            std::string errResp = buildJsonError(
+                                500, "server_error",
+                                "GPU forward failed (invalid hidden state); --vulkan was "
+                                "requested but the Vulkan lane was disabled. Refusing "
+                                "silent CPU fallback.");
+                            send(clientSock, errResp.c_str(), static_cast<int>(errResp.size()), 0);
+                            statusCode = 500;
+                            goto done;
+                        }
+                        // Host fallback produced valid tokens: serve them, but surface
+                        // (do not silently hide) that the GPU lane was disabled.
+                        std::fprintf(stderr,
+                            "[OpenAI] GPU_FALLBACK_TO_HOST requested=1 generated=%zu "
+                            "(GPU lane disabled after forward fault; serving host result)\n",
+                            result.generatedTokens);
+                        std::fflush(stderr);
+                    }
+                }
 
                 try {
                     ChatCompletionResponse resp{};
