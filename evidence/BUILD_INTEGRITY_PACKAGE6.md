@@ -28,6 +28,16 @@ configured — so a green build could hide a missing required engine.
 The silent-omission path is closed: a product can no longer configure green without the
 required engine unless the engine-less build is explicitly requested.
 
+## Coverage of the other Package 6 REQUIRED guards
+- `rawrxd_gpu_compute` (vulkan_compute): **transitively covered** — `deep2_engine_lib`
+  PUBLIC-links `rawrxd_gpu_compute` (CMakeLists.txt:3748-3749), and deep2 is now fail-closed
+  (RAWRXD_REQUIRE_PRODUCT_DEPS). Source-missing is already `FATAL` at :3304
+  (`ENABLE_VULKAN=ON but vulkan_compute.cpp missing`). The CLI's direct
+  `if(TARGET rawrxd_gpu_compute)` is therefore redundant. `ENABLE_VULKAN=OFF` remains a valid
+  dependency-less config.
+- ggml submodule / rawr-reap / deep2_openai_server / computer_use: lower-priority or
+  optional; not product-blocking on the default path.
+
 ## State
 IMPLEMENTED=1 COMPILED=1(configure) RUNTIME_REACHED=CONFIGURE_OK FUNCTIONALLY_VERIFIED=1
 COMMITTED=1 PUSHED=0
