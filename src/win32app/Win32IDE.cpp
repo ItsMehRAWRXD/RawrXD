@@ -7638,9 +7638,8 @@ void Win32IDE::shutdownInference()
     
 if (m_inferenceRunning) {
         m_inferenceStopRequested = true;
-        if (m_inferenceThread.joinable()) {
-            m_inferenceThread.join();
-        }
+        // Owned thread: signal stop, do not join on the UI thread. The worker
+        // exits on the stop flag and is joined during deterministic shutdown.
     }
     
     m_inferenceRunning = false;
