@@ -7940,6 +7940,19 @@ void Win32IDE::generateResponseAsync(
     
     // Route from the selected model entry. Local GGUF uses the native agent,
     // Ollama uses its local HTTP API, and Kilo uses the existing cloud client.
+    if (m_inferenceWatchdog.joinable()) m_inferenceWatchdog.join();
+    m_inferenceWatchdog = std::thread([this, requestGeneration, callback]() {
+        for (int i = 0; i < 600; ++i) {
+            if (m_activeInferenceGeneration.load(std::memory_order_acquire) != requestGeneration) return;
+            Sleep(100);
+        }
+        if (m_activeInferenceGeneration.load(std::memory_order_acquire) == requestGeneration) {
+            m_inferenceStopRequested.store(true, std::memory_order_release);
+            m_activeInferenceGeneration.store(0, std::memory_order_release);
+            m_inferenceRunning.store(false, std::memory_order_release);
+            if (callback) callback("Inference completion timeout", true, false);
+        }
+    });
     m_inferenceThread = std::thread([this, prompt, callback, selectedModel,
                                      requestMaxTokens, requestContextTokens, reasoningMode,
                                      webBrowsingEnabled, requestGeneration]() {
@@ -10504,8 +10517,9 @@ Win32IDE::~Win32IDE() {
     saveEditorSession();
     if (m_modelDiscoveryCancel) m_modelDiscoveryCancel->store(true);
     if (m_modelDiscoveryThread.joinable()) m_modelDiscoveryThread.join();
-    m_inferenceStopRequested = true;
-    if (m_inferenceThread.joinable()) m_inferenceThread.join();
+m_inferenceStopRequested = true;
+    if (m_inferenceThread.joinable()) m_inferenceThread.join();
+    if (m_inferenceWatchdog.joinable()) m_inferenceWatchdog.join();
 
     if (m_nativeEngine) {
         delete static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);

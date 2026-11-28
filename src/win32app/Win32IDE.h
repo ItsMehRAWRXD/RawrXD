@@ -2048,7 +2048,8 @@ private:
     std::atomic<void*> m_ollamaHttpRequest{nullptr};
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
-    std::thread m_inferenceThread;
+    std::thread m_inferenceThread;
+    std::thread m_inferenceWatchdog;
     std::mutex m_inferenceMutex;
     std::function<void(const std::string&, bool, bool)> m_inferenceCallback;
     void abortActiveOllamaHttp();
