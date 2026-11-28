@@ -544,7 +544,7 @@ void Win32IDE::paintMultiCursorIndicators(HDC hdc) {
 
         // Get the screen position of this cursor via EM_POSFROMCHAR
         POINTL pt;
-        SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)c.charPos, (LPARAM)&pt);
+        SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&pt, (LPARAM)c.charPos);
 
         // Get font metrics for caret height
         int lineIdx = (int)SendMessage(m_hwndEditor, EM_LINEFROMCHAR, c.charPos, 0);
@@ -561,8 +561,8 @@ void Win32IDE::paintMultiCursorIndicators(HDC hdc) {
             int selEnd   = std::max(c.anchorPos, c.charPos);
 
             POINTL selStartPt, selEndPt;
-            SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)selStart, (LPARAM)&selStartPt);
-            SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)selEnd, (LPARAM)&selEndPt);
+            SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&selStartPt, (LPARAM)selStart);
+            SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&selEndPt, (LPARAM)selEnd);
 
             // Simple single-line selection rectangle
             if (selStartPt.y == selEndPt.y) {

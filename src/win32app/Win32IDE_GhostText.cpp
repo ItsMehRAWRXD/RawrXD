@@ -315,11 +315,16 @@ void NativeGhostTextController::positionHint() {
     // Anchor to resolved caret; SEL_EMPTY (0) from EM_EXGETSEL is success.
     const long caret = (m_caretCp >= 0) ? m_caretCp : resolveCaretCp();
     if (caret >= 0) {
-        const LRESULT packed = SendMessageW(
-            m_editor, EM_POSFROMCHAR, static_cast<WPARAM>(caret), 0);
-        if (packed != -1) {
-            POINT clientPoint{static_cast<SHORT>(LOWORD(packed)),
-                              static_cast<SHORT>(HIWORD(packed))};
+        // EM_POSFROMCHAR: wParam = pointer to POINTL that RECEIVES the position,
+        // lParam = character index. Passing the index as wParam and NULL (0) as the
+        // output pointer made the Rich Edit write to NULL -> 0xC0000005 in
+        // Msftedit!CTxtEdit::OnPosFromChar. Pass a valid POINTL and the caret index.
+        POINTL pt{};
+        const LRESULT ok = SendMessageW(
+            m_editor, EM_POSFROMCHAR, reinterpret_cast<WPARAM>(&pt),
+            static_cast<LPARAM>(caret));
+        if (ok) {
+            POINT clientPoint{pt.x, pt.y};
             ClientToScreen(m_editor, &clientPoint);
             p = clientPoint;
         }
