@@ -469,7 +469,8 @@ std::ofstream rec(m_chatSmokeReceiptPath, std::ios::app);
         // Advance to editor-save testing on tokens (independent of completion), so
         // the save stage is exercised even if finalization lags.
         if (m_chatSmokeSawTokens2 || elapsed > 150000ull) {
-            m_chatSmokeSecondReqCompleted = m_chatSmokeSecondReqCompleted || done;
+            m_chatSmokeSecondReqCompleted = m_chatSmokeSecondReqCompleted ||
+                !m_inferenceRunning.load(std::memory_order_acquire);
             m_chatSmokePhase = 4;
         }
         return;
