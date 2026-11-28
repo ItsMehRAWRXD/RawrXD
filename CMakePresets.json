@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 7,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 20,
@@ -14,6 +14,64 @@
       "binaryDir": "${sourceDir}/build/cmake-preset-ninja-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "product",
+      "displayName": "Product (Vulkan + Deep2 + hardening + LTO)",
+      "description": "M-CFG-01 reproducible product preset: Vulkan on, Deep2 engine on, product deps required, hardening + LTO. No tests (use product-tests for the full suite).",
+      "inherits": "ninja-release",
+      "binaryDir": "${sourceDir}/build/cmake-preset-product",
+      "cacheVariables": {
+        "ENABLE_VULKAN": "ON",
+        "RAWRXD_BUILD_DEEP2_ENGINE": "ON",
+        "RAWRXD_REQUIRE_PRODUCT_DEPS": "ON",
+        "RAWRXD_BUILD_TESTS": "OFF"
+      },
+      "environment": {
+        "CC": null,
+        "CXX": null
+      }
+    },
+    {
+      "name": "product-tests",
+      "displayName": "Product + full test suite",
+      "description": "M-CFG-01 product-tests preset: the product configuration plus the complete registered CTest suite.",
+      "inherits": "product",
+      "binaryDir": "${sourceDir}/build/cmake-preset-product-tests",
+      "cacheVariables": {
+        "RAWRXD_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "install",
+      "displayName": "Product install tree",
+      "description": "M-CFG-01 install preset: product configuration staged into build/install for portable deployment.",
+      "inherits": "product",
+      "binaryDir": "${sourceDir}/build/cmake-preset-install",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/install"
+      }
+    },
+    {
+      "name": "product-msvc",
+      "displayName": "Product (MSVC, Windows)",
+      "description": "Windows product preset pinned to cl/clang-cl-free MSVC toolchain; avoids ambient cc shadowing.",
+      "inherits": "product",
+      "binaryDir": "${sourceDir}/build/cmake-product-msvc",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "product-msvc-tests",
+      "displayName": "Product + tests (MSVC, Windows)",
+      "description": "MSVC product configuration with the full registered CTest suite.",
+      "inherits": "product-msvc",
+      "binaryDir": "${sourceDir}/build/cmake-product-msvc-tests",
+      "cacheVariables": {
+        "RAWRXD_BUILD_TESTS": "ON"
       }
     },
     {
@@ -67,6 +125,27 @@
       "configurePreset": "ninja-release"
     },
     {
+      "name": "product",
+      "configurePreset": "product"
+    },
+    {
+      "name": "product-tests",
+      "configurePreset": "product-tests"
+    },
+    {
+      "name": "install",
+      "configurePreset": "install",
+      "targets": ["install"]
+    },
+    {
+      "name": "product-msvc",
+      "configurePreset": "product-msvc"
+    },
+    {
+      "name": "product-msvc-tests",
+      "configurePreset": "product-msvc-tests"
+    },
+    {
       "name": "linux-ninja-release",
       "configurePreset": "linux-ninja-release"
     },
@@ -81,6 +160,52 @@
     {
       "name": "ios-xcode-release",
       "configurePreset": "ios-xcode-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "product-msvc-tests",
+      "displayName": "CTest: full registered suite (MSVC product)",
+      "configurePreset": "product-msvc-tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "product-tests",
+      "displayName": "CTest: full registered suite (product-tests)",
+      "configurePreset": "product-tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "test",
+      "displayName": "CTest: full registered suite (product-tests)",
+      "configurePreset": "product-tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      }
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "package",
+      "displayName": "Package: product (ZIP)",
+      "configurePreset": "product",
+      "generators": ["ZIP"]
     }
   ]
 }

@@ -7357,3 +7357,36 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2/native_logit_parity_test.cpp")
     add_test(NAME native_logit_parity_test COMMAND native_logit_parity_test)
     message(STATUS "Native logit parity/capture tools enabled")
 endif()
+
+# Portable install / package rules (M-CFG-01 / M-CFG-07).
+include(${CMAKE_SOURCE_DIR}/cmake/Install.cmake OPTIONAL)
+
+# Authoritative native configuration subsystem (M-CFG-02 / M-CFG-03 / M-CFG-04).
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/config/AppPaths.cpp")
+    add_library(rawrxd_config STATIC
+        src/config/AppPaths.cpp
+        src/config/ConfigStore.cpp
+        src/config/ModelDiscovery.cpp)
+    target_include_directories(rawrxd_config PUBLIC
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/src")
+    target_compile_features(rawrxd_config PUBLIC cxx_std_17)
+    if(WIN32)
+        target_link_libraries(rawrxd_config PUBLIC crypt32)
+    endif()
+    if(TARGET RawrXD-Win32IDE-Native)
+        target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_config)
+    endif()
+    if(TARGET RawrXD-CLI-V2)
+        target_link_libraries(RawrXD-CLI-V2 PRIVATE rawrxd_config)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/config/config_core_test.cpp")
+        add_executable(config_core_test tests/config/config_core_test.cpp)
+        target_link_libraries(config_core_test PRIVATE rawrxd_config)
+        target_compile_features(config_core_test PRIVATE cxx_std_17)
+        set_target_properties(config_core_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+        add_test(NAME config_core_test COMMAND config_core_test)
+    endif()
+    message(STATUS "RawrXD configuration subsystem enabled (rawrxd_config + config_core_test)")
+endif()

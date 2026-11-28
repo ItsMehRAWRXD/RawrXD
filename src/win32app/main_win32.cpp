@@ -8,16 +8,25 @@
 #include <atomic>
 #include <cstdlib>
 #include <dbghelp.h>
+#include <filesystem>
+#include "rawrxd/config/AppPaths.h"
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
 #include "Win32IDE_ExtHostWire.h"
 #endif
 
 namespace {
+std::string rawrxdRoot() {
+    static const std::string root = rawrxd::config::AppPaths::resolve().applicationRoot;
+    return root;
+}
+std::string rawrxdEvidence(const std::string& sub) {
+    return (std::filesystem::path(rawrxdRoot()) / "evidence" / sub).string();
+}
 LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
 {
-    CreateDirectoryA("F:\\rawrxd\\evidence\\production_win32_crash_20261118", nullptr);
-    const char* path = "F:\\rawrxd\\evidence\\production_win32_crash_20261118\\RawrXD-Win32IDE-Native.dmp";
-    HANDLE file = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+    CreateDirectoryA(rawrxdEvidence("production_win32_crash_20261118").c_str(), nullptr);
+    const std::string path = rawrxdEvidence("production_win32_crash_20261118\\RawrXD-Win32IDE-Native.dmp");
+    HANDLE file = CreateFileA(path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file != INVALID_HANDLE_VALUE) {
         MINIDUMP_EXCEPTION_INFORMATION info{};
@@ -40,7 +49,7 @@ LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
         CloseHandle(file);
     }
     HANDLE log = CreateFileA(
-        "F:\\rawrxd\\evidence\\production_win32_crash_20261118\\exception_stack.txt",
+        rawrxdEvidence("production_win32_crash_20261118\\exception_stack.txt").c_str(),
         GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL, nullptr);
     if (log != INVALID_HANDLE_VALUE) {
@@ -79,7 +88,7 @@ LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
         // (the previous 0-byte-log failure mode).
         SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
         const bool symReady =
-            SymInitialize(GetCurrentProcess(), "F:\\rawrxd\\build\\bin\\Release", TRUE) != FALSE;
+            SymInitialize(GetCurrentProcess(), (rawrxdRoot() + "\\build\\bin\\Release").c_str(), TRUE) != FALSE;
         for (USHORT i = 0; i < count; ++i) {
             const DWORD64 address = reinterpret_cast<DWORD64>(frames[i]);
             char modName[MAX_PATH];
@@ -130,7 +139,7 @@ LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
 
 void startupTrace(const char* message)
 {
-    std::ofstream trace("F:\\rawrxd\\startup_trace.log", std::ios::app);
+    std::ofstream trace((rawrxdRoot() + "\\startup_trace.log").c_str(), std::ios::app);
     if (trace) trace << message << '\n';
 }
 
@@ -154,7 +163,7 @@ __declspec(noinline) static int stopTerminalSeh(Win32TerminalManager* term)
 int runTermSmoke(const char* lpCmdLine)
 {
     const char* receiptPath =
-        "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\term_smoke_receipt.txt";
+        rawrxdEvidence("FULL_FEATURE_ONESHOT_001\\artifacts\\term_smoke_receipt.txt").c_str();
     startupTrace("runTermSmoke entered");
     try {
         std::mutex mu;
@@ -209,7 +218,7 @@ int runTermSmoke(const char* lpCmdLine)
         // Write receipt BEFORE stop so a ConPTY teardown crash still leaves
         // measurable START/CONPTY/ALIVE evidence for the harness.
         CreateDirectoryA(
-            "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts", nullptr);
+            rawrxdEvidence("FULL_FEATURE_ONESHOT_001\\artifacts").c_str(), nullptr);
         std::ofstream rec(receiptPath, std::ios::trunc);
         if (rec) {
             rec << "START=" << (started ? "PASS" : "FAIL") << "\n"
@@ -323,7 +332,7 @@ static LONG WINAPI RawrxdCrashFilter(EXCEPTION_POINTERS* ep)
                   "[CRASH] code=0x%08lX addr=%p module=%s tid=%lu\n",
                   (unsigned long)code, addr, module, (unsigned long)GetCurrentThreadId());
     std::FILE* f = nullptr;
-    if (fopen_s(&f, "F:\\rawrxd\\evidence\\IDE_CRASH.log", "a") == 0 && f) {
+    if (fopen_s(&f, rawrxdEvidence("IDE_CRASH.log").c_str(), "a") == 0 && f) {
         fputs(line, f);
         fclose(f);
     }
@@ -454,13 +463,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // A5 native graphical agent E2E: isolated workspace, real agent-panel
     // submission path, host verdict -> receipt -> ExitProcess.
     if (lpCmdLine && std::strstr(lpCmdLine, "--agent-e2e-test")) {
-        CreateDirectoryA("F:\\rawrxd\\evidence\\AGENT_E2E", nullptr);
-        const char* receipt = "F:\\rawrxd\\evidence\\AGENT_E2E\\receipt.txt";
+        CreateDirectoryA(rawrxdEvidence("AGENT_E2E").c_str(), nullptr);
+        std::string receipt = rawrxdEvidence("AGENT_E2E\\receipt.txt");
         if (const char* env = std::getenv("RAWRXD_AGENT_E2E_RECEIPT")) {
             if (*env) receipt = env;
         }
         startupTrace("agent-e2e-test begin");
-        ide.beginAgentE2ETest(receipt);
+        ide.beginAgentE2ETest(receipt.c_str());
     }
 
     bool extQuit = false;

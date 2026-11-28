@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "editor": {
     "fontFamily": "Consolas",
     "fontSize": 14,
@@ -31,24 +32,24 @@
   },
   "ollama": {
     "baseUrl": "http://localhost:11434",
-    "model": "llama2",
+    "model": "tinyllama-1.1b-chat-v1.0.Q4_K_M",
     "timeout": 30
   },
   "modelServer": {
     "proxyPort": 3000,
     "aiPort": 3001,
-    "configPath": "D:\\rawrxd\\ide\\model-server\\config.json",
+    "configPath": "ide/model-server/config.json",
     "tiinyAI": {
       "port": 45100,
-      "command": "D:\\rawrxd\\bin\\tiinyai.exe"
+      "command": "bin/tiinyai.exe"
     },
     "gguf": {
       "port": 45101,
-      "command": "D:\\rawrxd\\build_ide_output\\CodexAIReverseEngine.exe"
+      "command": "bin/rawrxd-model-server.exe"
     },
     "pyre": {
       "port": 45102,
-      "command": "D:\\rawrxd\\build_ide_output\\CodexAIReverseEngine.exe"
+      "command": "bin/rawrxd-model-server.exe"
     }
   },
   "agent": {
@@ -105,7 +106,7 @@
     "debugger": true,
     "gitIntegration": true,
     "metricsExport": true,
-    "vulkanCompute": false,
+    "vulkanCompute": true,
     "speculativeDecoding": true,
     "flashAttention": true,
     "voiceAutomation": true
