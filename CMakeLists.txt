@@ -7367,7 +7367,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/config/AppPaths.cpp")
         src/config/AppPaths.cpp
         src/config/ConfigStore.cpp
         src/config/ModelDiscovery.cpp
-        src/tts/TtsEngine.cpp)
+        src/tts/TtsEngine.cpp
+        src/stt/SttEngine.cpp)
     target_include_directories(rawrxd_config PUBLIC
         "${CMAKE_SOURCE_DIR}/include"
         "${CMAKE_SOURCE_DIR}/src")
@@ -7396,6 +7397,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/config/AppPaths.cpp")
         set_target_properties(tts_engine_test PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
         add_test(NAME tts_engine_test COMMAND tts_engine_test)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/stt/stt_engine_test.cpp")
+        add_executable(stt_engine_test tests/stt/stt_engine_test.cpp)
+        target_link_libraries(stt_engine_test PRIVATE rawrxd_config)
+        target_compile_features(stt_engine_test PRIVATE cxx_std_17)
+        set_target_properties(stt_engine_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+        add_test(NAME stt_engine_test COMMAND stt_engine_test)
     endif()
     message(STATUS "RawrXD configuration subsystem enabled (rawrxd_config + config_core_test)")
 endif()
