@@ -229,6 +229,7 @@ void Win32IDE::beginChatSmoke(const char* receiptPath) {
     m_chatSmokeSawTokens = false;
     m_chatSmokeSawTokens2 = false;
     m_chatSmokeCancelOk = false;
+    m_chatSmokeSecondReqCompleted = false;
     m_chatSmokeEditorOk = false;
     m_chatSmokeModelOk = false;
     m_chatSmokeModelId.clear();
@@ -454,10 +455,14 @@ void Win32IDE::tickChatSmoke() {
             // P0: responseBuffer is worker-thread-owned; never read it from the
             // UI timer (heap-corruption data race -> 0xC0000005 in ntdll).
         }
-        // Advance once the second response's tokens are visible. Run 37 showed the
-        // worker keeps m_inferenceRunning set briefly AFTER delivering tokens, so
-        // requiring 'done' stalled phase 3 until the deadline. The delivered tokens
-        // are the completion signal for the smoke (no deadline extension).
+        // Mandatory SECOND_REQUEST_COMPLETION: the 2nd request reached its terminal
+        // transport state (m_inferenceRunning cleared). Token delivery alone is NOT
+        // completion (Run 37) — this is a separate, required acceptance condition.
+        if (m_chatSmokeSawTokens2 &&
+            !m_inferenceRunning.load(std::memory_order_acquire))
+            m_chatSmokeSecondReqCompleted = true;
+        // Advance to editor-save testing on tokens (independent of completion), so
+        // the save stage is exercised even if finalization lags.
         if (m_chatSmokeSawTokens2 || elapsed > 150000ull) {
             m_chatSmokePhase = 4;
         }
@@ -475,7 +480,8 @@ void Win32IDE::tickChatSmoke() {
         // Predetermined path: no modal Save dialog. Exercise the production
         // save implementation with m_currentFile already set.
         m_currentFile = probePath;
-        setEditorText("GUI_CHAT_SMOKE_EDITOR");
+        if (m_hwndEditor) SendMessageA(m_hwndEditor, WM_SETTEXT, 0,
+                                       reinterpret_cast<LPARAM>("GUI_CHAT_SMOKE_EDITOR"));
         m_fileModified = true;
         appendToOutput("SMOKE_SAVE path=" + m_currentFile +
                            " editorLen=" + std::to_string(GetWindowTextLengthW(m_hwndEditor)) +
@@ -486,14 +492,16 @@ void Win32IDE::tickChatSmoke() {
             std::ifstream verify(probePath, std::ios::binary);
             std::string written((std::istreambuf_iterator<char>(verify)),
                                 std::istreambuf_iterator<char>());
-            if (written == "GUI_CHAT_SMOKE_EDITOR\n") m_chatSmokeEditorOk = true;
+            if (written == "GUI_CHAT_SMOKE_EDITOR\n" ||
+                written == "GUI_CHAT_SMOKE_EDITOR\r\n") m_chatSmokeEditorOk = true;
         }
         // Verify the real saved contents (not just that save returned true).
         { std::ifstream vf(probePath); std::stringstream vs; vs << vf.rdbuf();
           m_chatSmokeEditorOk = m_chatSmokeEditorOk &&
               vs.str().find("GUI_CHAT_SMOKE_EDITOR") != std::string::npos; }
         const bool pass = m_chatSmokeModelOk && m_chatSmokeSawTokens &&
-            m_chatSmokeCancelOk && m_chatSmokeSawTokens2 && m_chatSmokeEditorOk;
+            m_chatSmokeCancelOk && m_chatSmokeSawTokens2 && m_chatSmokeEditorOk &&
+            m_chatSmokeSecondReqCompleted;
         finish(pass);
     }
 }

@@ -2927,8 +2927,9 @@ public:
     ULONGLONG m_chatSmokeStartMs = 0;
     size_t m_chatSmokeOutBaseline = 0;
     bool m_chatSmokeSawTokens = false;
-    bool m_chatSmokeSawTokens2 = false;
-    bool m_chatSmokeCancelOk = false;
+    bool m_chatSmokeSawTokens2 = false;
+    bool m_chatSmokeCancelOk = false;
+    bool m_chatSmokeSecondReqCompleted = false;  // 2nd request reached terminal state (m_inferenceRunning cleared)
     bool m_chatSmokeEditorOk = false;
     bool m_chatSmokeModelOk = false;
     std::string m_chatSmokeReceiptPath;
