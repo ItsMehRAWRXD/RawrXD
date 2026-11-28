@@ -454,8 +454,11 @@ void Win32IDE::tickChatSmoke() {
             // P0: responseBuffer is worker-thread-owned; never read it from the
             // UI timer (heap-corruption data race -> 0xC0000005 in ntdll).
         }
-        const bool done = !m_inferenceRunning.load(std::memory_order_acquire);
-        if ((m_chatSmokeSawTokens2 && done) || elapsed > 150000ull) {
+        // Advance once the second response's tokens are visible. Run 37 showed the
+        // worker keeps m_inferenceRunning set briefly AFTER delivering tokens, so
+        // requiring 'done' stalled phase 3 until the deadline. The delivered tokens
+        // are the completion signal for the smoke (no deadline extension).
+        if (m_chatSmokeSawTokens2 || elapsed > 150000ull) {
             m_chatSmokePhase = 4;
         }
         return;
