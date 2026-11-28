@@ -58,6 +58,7 @@ bool ModelHub::SendControlCommand(const std::string& command, std::string& respo
     HINTERNET session = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                     WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!session) { error = "WinHttpOpen failed"; return false; }
+    WinHttpSetTimeouts(session, 10000, 10000, 10000, 10000);
     HINTERNET connect = WinHttpConnect(session, host, uc.nPort, 0);
     if (!connect) { error = "WinHttpConnect failed"; WinHttpCloseHandle(session); return false; }
     HINTERNET request = WinHttpOpenRequest(connect, L"POST", path, nullptr,
@@ -89,6 +90,17 @@ bool ModelHub::SendControlCommand(const std::string& command, std::string& respo
         if (!WinHttpReadData(request, buffer, bytes, &bytes) || bytes == 0) break;
         response.append(buffer, bytes);
     } while (bytes == 4096);
+
+    DWORD status = 0;
+    DWORD statusLen = sizeof(status);
+    if (WinHttpQueryHeaders(request,
+                            WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                            WINHTTP_HEADER_NAME_BY_INDEX, &status, &statusLen,
+                            WINHTTP_NO_HEADER_INDEX) && status != 200) {
+        error = "HTTP status " + std::to_string(status);
+    } else if (response.find("\"status\"") == std::string::npos) {
+        error = "response missing status field";
+    }
 
     WinHttpCloseHandle(request);
     WinHttpCloseHandle(connect);
