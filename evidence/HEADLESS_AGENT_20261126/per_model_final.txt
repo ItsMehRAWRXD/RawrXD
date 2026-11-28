@@ -1,0 +1,6 @@
+RAWRXD per-model native reliability (isolated, uncontended) — final 2026-11-28
+gpt-oss:20b : native 2/3 (67%), fallbacks=0 — completes.
+qwen3:8b    : native (fallbacks=0) but 0/2 — model non-convergence.
+deepseek    : text-only (schema 400).
+nemotron     : native but empty-prone (0/3 prior).
+=> Transport CORRECT (native accepted 3/4). Reliability = per-model compliance (gpt-oss best; qwen3/deepseek/nemotron non-convergent). Not a transport defect.
